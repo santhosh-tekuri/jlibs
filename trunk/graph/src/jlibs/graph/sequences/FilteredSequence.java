@@ -6,7 +6,7 @@ import jlibs.graph.Filter;
 /**
  * @author Santhosh Kumar T
  */
-public class FilteredSequence<E> implements Sequence<E>{
+public class FilteredSequence<E> extends AbstractSequence<E>{
     private Sequence<E> delegate;
     private Filter<E> filter;
 
@@ -15,8 +15,10 @@ public class FilteredSequence<E> implements Sequence<E>{
         this.filter = filter;
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+    
     @Override
-    public E next(){
+    protected E findNext(){
         while(true){
             E elem = delegate.next();
             if(elem==null || filter.select(elem))
@@ -24,13 +26,15 @@ public class FilteredSequence<E> implements Sequence<E>{
         }
     }
 
-    @Override
-    public E current(){
-        return delegate.current();
-    }
-
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){
+        super.reset();
+        _reset();
+    }
+
+    private void _reset(){
         delegate.reset();
     }
 

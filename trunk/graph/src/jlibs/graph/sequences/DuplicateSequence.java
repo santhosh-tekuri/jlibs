@@ -20,6 +20,18 @@ public class DuplicateSequence<E> extends AbstractSequence<E>{
         _reset();
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+
+    private int pos;
+
+    @Override
+    protected E findNext(){
+        pos++;
+        return pos<=count ? elem : null;
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){
         super.reset();
@@ -30,16 +42,15 @@ public class DuplicateSequence<E> extends AbstractSequence<E>{
         pos = 0;
     }
 
-    private int pos;
-
-    @Override
-    protected E findNext(){
-        pos++;
-        return pos<=count ? elem : null;
-    }
-
     @Override
     public DuplicateSequence<E> copy(){
-        return null;
+        return new DuplicateSequence<E>(elem, count);
+    }
+
+    /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
+
+    @Override
+    public int length(){
+        return count;
     }
 }

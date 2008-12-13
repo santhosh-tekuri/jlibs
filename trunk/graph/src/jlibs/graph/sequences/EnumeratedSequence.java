@@ -1,7 +1,5 @@
 package jlibs.graph.sequences;
 
-import jlibs.graph.Sequence;
-
 import java.util.Enumeration;
 
 /**
@@ -14,11 +12,15 @@ public class EnumeratedSequence<E> extends AbstractSequence<E>{
         this.enumer = enumer;
     }
 
+    /*-------------------------------------------------[ Advaning ]---------------------------------------------------*/
+    
     @Override
     protected E findNext(){
         return enumer.hasMoreElements() ? enumer.nextElement() : null;
     }
 
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){
         throw new UnsupportedOperationException();

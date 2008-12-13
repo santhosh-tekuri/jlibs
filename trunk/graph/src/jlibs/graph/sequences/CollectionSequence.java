@@ -1,26 +1,29 @@
 package jlibs.graph.sequences;
 
-import jlibs.graph.Sequence;
-
-import java.util.Iterator;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
  */
 public class CollectionSequence<E> extends AbstractSequence<E>{
     private Collection<E> collection;
-    private Iterator<E> iter;
 
     public CollectionSequence(Collection<E> collection){
         this.collection = collection;
         _reset();
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+
+    private Iterator<E> iter;
+
     @Override
     protected E findNext(){
         return iter.hasNext() ? iter.next() : null;
     }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
 
     @Override
     public void reset(){
@@ -35,5 +38,12 @@ public class CollectionSequence<E> extends AbstractSequence<E>{
     @Override
     public CollectionSequence<E> copy(){
         return new CollectionSequence<E>(collection);
+    }
+
+    /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
+
+    @Override
+    public int length(){
+        return collection.size();
     }
 }

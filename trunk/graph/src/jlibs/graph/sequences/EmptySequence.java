@@ -15,16 +15,32 @@ public final class EmptySequence<E> implements Sequence<E>{
 
     private EmptySequence(){}
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+
+    @Override
+    public boolean hasNext(){
+        return false;
+    }
+
     @Override
     public E next(){
         return null;
     }
+
+    /*-------------------------------------------------[ Query ]---------------------------------------------------*/
 
     @Override
     public E current(){
         return null;
     }
 
+    @Override
+    public int length(){
+        return 0;
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){}
 

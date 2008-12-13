@@ -26,7 +26,17 @@ public class ArraySequence<E> extends AbstractSequence<E>{
         _reset();
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+
     private int pos;
+
+    @Override
+    protected E findNext(){
+        pos++;
+        return pos<end ? array[pos] : null;
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
 
     @Override
     public void reset(){
@@ -39,13 +49,14 @@ public class ArraySequence<E> extends AbstractSequence<E>{
     }
 
     @Override
-    protected E findNext(){
-        pos++;
-        return pos<end ? array[pos] : null;
-    }
-
-    @Override
     public ArraySequence<E> copy(){
         return new ArraySequence<E>(array, start, end);
+    }
+
+    /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
+
+    @Override
+    public int length(){
+        return end-start;
     }
 }
