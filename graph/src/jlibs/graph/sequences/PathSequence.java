@@ -16,8 +16,18 @@ public class PathSequence<E> extends AbstractSequence<Path>{
         _reset();
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+
     private int pos;
 
+    @Override
+    protected Path findNext(){
+        E elem = delegate.next();
+        return elem==null ? null : path.append(elem, pos++);
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){
         super.reset();
@@ -30,13 +40,14 @@ public class PathSequence<E> extends AbstractSequence<Path>{
     }
 
     @Override
-    protected Path findNext(){
-        E elem = delegate.next();
-        return elem==null ? null : path.append(elem, pos++);
-    }
-
-    @Override
     public Sequence<Path> copy(){
         return new PathSequence<E>(path, delegate.copy());
+    }
+
+    /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
+
+    @Override
+    public int length(){
+        return delegate.length();
     }
 }

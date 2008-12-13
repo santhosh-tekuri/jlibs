@@ -23,6 +23,8 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
         _reset();
     }
 
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+
     @Override
     public void reset(){
         super.reset();
@@ -35,9 +37,16 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
         stack.push(new Element(new DuplicateSequence<E>(elem)));
     }
 
+    @Override
+    public PreorderWalker<E> copy(){
+        return new PreorderWalker<E>(elem, navigator);
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     private Stack<Element> stack = new Stack<Element>();
     private Path path;
-    
+
     private class Element{
         boolean breakpoint;
         Sequence<E> seq;
@@ -47,8 +56,6 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
         }
     }
 
-    /*-------------------------------------------------[ AbstractSequence ]---------------------------------------------------*/
-    
     @Override
     protected E findNext(){
         // pop empty sequences
@@ -74,11 +81,6 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
             path = path==null ? new Path(current) : path.append(current);
             return current;
         }
-    }
-
-    @Override
-    public PreorderWalker<E> copy(){
-        return new PreorderWalker<E>(elem, navigator);
     }
 
     /*-------------------------------------------------[ Walker ]---------------------------------------------------*/

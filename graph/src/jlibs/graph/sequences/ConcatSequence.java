@@ -13,6 +13,24 @@ public class ConcatSequence<E> extends AbstractSequence<E>{
         _reset();
     }
 
+    /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
+    
+    private int curSeq;
+
+    @Override
+    protected E findNext(){
+        while(curSeq<sequences.length){
+            E elem = sequences[curSeq].next();
+            if(elem==null)
+                curSeq++;
+            else
+                return elem;
+        }
+        return null;
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+    
     @Override
     public void reset(){
         super.reset();
@@ -20,25 +38,21 @@ public class ConcatSequence<E> extends AbstractSequence<E>{
     }
 
     private void _reset(){
-        curVisitor = 0;
-    }
-
-    private int curVisitor;
-    
-    @Override
-    protected E findNext(){
-        while(curVisitor<sequences.length){
-            E elem = sequences[curVisitor].next();
-            if(elem==null)
-                curVisitor++;
-            else
-                return elem;
-        }
-        return null;
+        curSeq = 0;
     }
 
     @Override
     public ConcatSequence<E> copy(){
         return null;
+    }
+
+    /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
+
+    @Override
+    public int length(){
+        int len = 0;
+        for(Sequence<E> seq: sequences)
+            len += seq.length();
+        return len;
     }
 }

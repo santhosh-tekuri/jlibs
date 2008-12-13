@@ -20,12 +20,4 @@ public class SequenceUtil{
         List<E> list = addAll(new LinkedList<E>(), seq);
         return list.toArray((C[])Array.newInstance(clazz, list.size()));
     }
-
-    public static <E> int getLength(Sequence<E> seq){
-        int len = 0;
-        while(seq.next()!=null)
-            len++;
-        seq.reset();
-        return len;
-    }
 }
