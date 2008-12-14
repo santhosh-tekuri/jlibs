@@ -27,7 +27,17 @@ public final class EmptySequence<E> implements Sequence<E>{
         return null;
     }
 
+    @Override
+    public E next(int count){
+        return null;
+    }
+
     /*-------------------------------------------------[ Query ]---------------------------------------------------*/
+
+    @Override
+    public int index(){
+        return 0;
+    }
 
     @Override
     public E current(){

@@ -1,31 +1,29 @@
 package jlibs.graph.sequences;
 
-import jlibs.graph.Path;
-import jlibs.graph.Sequence;
-
 /**
  * @author Santhosh Kumar T
  */
-public class PathSequence<E> extends AbstractSequence<Path>{
-    private Path path;
-    private Sequence<E> delegate;
+public class TOCSequence extends AbstractSequence<String>{
+    private int number;
+    private int count;
 
-    public PathSequence(Path path, Sequence<E> delegate){
-        this.path = path;
-        this.delegate = delegate;
-        _reset();
+    public TOCSequence(int number, int count){
+        this.number = number;
+        this.count = count;
     }
 
     /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
 
+    private int index;
+
     @Override
-    protected Path findNext(){
-        E elem = delegate.next();
-        return elem==null ? null : path.append(elem, index()+1);
+    protected String findNext(){
+        index++;
+        return index<=count ? number+"."+index : null;
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
-    
+
     @Override
     public void reset(){
         super.reset();
@@ -33,18 +31,18 @@ public class PathSequence<E> extends AbstractSequence<Path>{
     }
 
     private void _reset(){
-        delegate.reset();
+        index = 0;
     }
 
     @Override
-    public Sequence<Path> copy(){
-        return new PathSequence<E>(path, delegate.copy());
+    public TOCSequence copy(){
+        return new TOCSequence(number, count);
     }
 
     /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
 
     @Override
     public int length(){
-        return delegate.length();
+        return count;
     }
 }

@@ -1,10 +1,7 @@
 package jlibs.graph.walkers;
 
 import jlibs.graph.*;
-import jlibs.graph.sequences.AbstractSequence;
-import jlibs.graph.sequences.DuplicateSequence;
-import jlibs.graph.sequences.EmptySequence;
-import jlibs.graph.sequences.EnumeratedSequence;
+import jlibs.graph.sequences.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -34,7 +31,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
     private void _reset(){
         path = null;
         stack.clear();
-        stack.push(new Element(new DuplicateSequence<E>(elem)));
+        stack.push(new Children(new DuplicateSequence<E>(elem)));
     }
 
     @Override
@@ -44,14 +41,14 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
     
-    private Stack<Element> stack = new Stack<Element>();
+    private Stack<Children> stack = new Stack<Children>();
     private Path path;
 
-    private class Element{
+    private class Children{
         boolean breakpoint;
-        Sequence<E> seq;
+        Sequence<? extends E> seq;
 
-        public Element(Sequence<E> seq){
+        public Children(Sequence<? extends E> seq){
             this.seq = seq;
         }
     }
@@ -60,7 +57,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
     protected E findNext(){
         // pop empty sequences
         while(!stack.isEmpty()){
-            Element elem = stack.peek();
+            Children elem = stack.peek();
             if(elem.seq.next()==null){
                 if(elem.breakpoint)
                     return null;
@@ -77,7 +74,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
             return null;
         else{
             E current = stack.peek().seq.current();
-            stack.push(new Element(navigator.children(current)));
+            stack.push(new Children(navigator.children(current)));
             path = path==null ? new Path(current) : path.append(current);
             return current;
         }
@@ -109,8 +106,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
     public void resume(){
         if(isPaused()){
             stack.peek().breakpoint = false;
-            finished = false;
-            current = (E)path.getElement();
+            current.set(current.index()-1, (E)path.getElement());
         }
     }
 
@@ -127,7 +123,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
-        PreorderWalker<DefaultMutableTreeNode> seq = new PreorderWalker<DefaultMutableTreeNode>((DefaultMutableTreeNode)tree.getModel().getRoot(), new Navigator<DefaultMutableTreeNode>(){
+        final PreorderWalker<DefaultMutableTreeNode> seq = new PreorderWalker<DefaultMutableTreeNode>((DefaultMutableTreeNode)tree.getModel().getRoot(), new Navigator<DefaultMutableTreeNode>(){
             @Override
             public Sequence<DefaultMutableTreeNode> children(DefaultMutableTreeNode elem){
                 return new EnumeratedSequence<DefaultMutableTreeNode>(elem.children());
@@ -141,7 +137,7 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
             public boolean preProcess(DefaultMutableTreeNode elem, Path path){
                 for(int i=0; i<indent; i++)
                     System.out.print("   ");
-                System.out.println(elem);
+                System.out.println(elem+" "+seq.index());
                 indent++;
                 return true;
             }

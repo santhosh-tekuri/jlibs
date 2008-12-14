@@ -17,7 +17,7 @@ public abstract class AbstractSequence<E> implements Sequence<E>{
 
     @Override
     public boolean hasNext(){
-        if(finished)
+        if(current.finished())
             return false;
         else if(!advanced){
             next = findNext();
@@ -26,34 +26,66 @@ public abstract class AbstractSequence<E> implements Sequence<E>{
         return next!=null;
     }
 
-    protected boolean finished;
-
     @Override
     public final E next(){
-        if(finished)
+        if(current.finished())
             return null;
         else if(advanced){
             advanced = false;
-            current = next;
+            current.set(next);
             next = null;
         }else
-            current = findNext();
+            current.set(findNext());
 
-        if(current==null)
-            finished = true;
+        return current.get();
+    }
 
-        return current;
+    @Override
+    public final E next(int count){
+        if(current.finished())
+            return null;
+        
+        if(count<=0)
+            return current();
+        else if(count==1)
+            return next();
+
+        if(advanced){
+            next();
+            return next(count-1);
+        }
+
+        Element<E> elem = findNext(count);
+        if(elem==null){
+            while(count>0){
+                if(next()==null)
+                    break;
+                count--;
+            }
+        }else
+            current = elem;
+        
+        return current();
     }
 
     protected abstract E findNext();
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected Element<E> findNext(int count){
+        return null;
+    }
 
     /*-------------------------------------------------[ Query ]---------------------------------------------------*/
     
-    protected E current;
+    protected Element<E> current = new Element<E>();
+
+    @Override
+    public int index(){
+        return current.index();
+    }
 
     @Override
     public final E current(){
-        return current;
+        return current.get();
     }
 
     @Override
@@ -70,8 +102,9 @@ public abstract class AbstractSequence<E> implements Sequence<E>{
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     private void _reset(){
-        current = next = null;
-        advanced = finished = false;
+        current.reset();
+        next = null;
+        advanced = false;
     }
 
     public void reset(){
