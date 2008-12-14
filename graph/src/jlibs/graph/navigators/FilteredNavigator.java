@@ -18,7 +18,7 @@ public class FilteredNavigator<E> implements Navigator<E>{
     }
 
     @Override
-    public Sequence<E> children(E elem){
+    public Sequence<? extends E> children(E elem){
         return new FilteredSequence<E>(navigator.children(elem), filter);
     }
 }

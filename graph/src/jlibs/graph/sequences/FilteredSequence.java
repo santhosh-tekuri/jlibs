@@ -7,10 +7,10 @@ import jlibs.graph.Filter;
  * @author Santhosh Kumar T
  */
 public class FilteredSequence<E> extends AbstractSequence<E>{
-    private Sequence<E> delegate;
+    private Sequence<? extends E> delegate;
     private Filter<E> filter;
 
-    public FilteredSequence(Sequence<E> delegate, Filter<E> filter){
+    public FilteredSequence(Sequence<? extends E> delegate, Filter<E> filter){
         this.delegate = delegate;
         this.filter = filter;
     }
