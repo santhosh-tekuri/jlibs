@@ -45,7 +45,10 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
     }
     
     protected String process(XSAttributeUse attrUse){
-        return '@'+process((XSObject)attrUse);
+        String str = '@' + process((XSObject)attrUse);
+        if(!attrUse.getRequired())
+            str += '?';
+        return str;
     }
 
     protected String process(XSParticle particle){
