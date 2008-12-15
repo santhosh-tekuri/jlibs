@@ -24,7 +24,7 @@ public class XSFontStyleVisitor extends PathReflectionVisitor<Object, Integer>{
         return STYLE_NONE;
     }
 
-    private Integer getStyle(){
+    private int getStyle(){
         if(path.getParentPath()==null)
             return STYLE_NONE;
         else if(path.getParentPath().getElement() instanceof XSParticle){
@@ -36,21 +36,26 @@ public class XSFontStyleVisitor extends PathReflectionVisitor<Object, Integer>{
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    protected Integer process(XSModelGroup modelGroup){
+    protected int process(XSNamespaceItem nsItem){
+        return STYLE_MANDATORY;
+    }
+
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected int process(XSModelGroup modelGroup){
         return getStyle();
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    protected Integer process(XSElementDeclaration elem){
+    protected int process(XSElementDeclaration elem){
         return getStyle();
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    protected Integer process(XSWildcard wildcard){
+    protected int process(XSWildcard wildcard){
         return getStyle();
     }
 
-    protected Integer process(XSAttributeUse attrUse){
+    protected int process(XSAttributeUse attrUse){
         if(!attrUse.getRequired())
             return STYLE_OPTIONAL;
         else
