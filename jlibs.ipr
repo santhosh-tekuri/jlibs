@@ -226,6 +226,7 @@
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/graph/graph.iml" filepath="$PROJECT_DIR$/graph/graph.iml" />
       <module fileurl="file://$PROJECT_DIR$/swing/swing.iml" filepath="$PROJECT_DIR$/swing/swing.iml" />
       <module fileurl="file://$PROJECT_DIR$/utils/utils.iml" filepath="$PROJECT_DIR$/utils/utils.iml" />
@@ -259,14 +260,33 @@
   <component name="libraryTable">
     <library name="testng">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/3rdparty/testng-5.8-jdk14.jar!/" />
+        <root url="jar://$PROJECT_DIR$/3rdparty/testng-5.8-jdk15.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="file:///Users/santhosh/Java/TestNG/testng-5.8/src/main" />
+        <root url="file:///Users/santhosh/Java/TestNG/testng-5.8/src/jdk15" />
+      </SOURCES>
     </library>
     <library name="outline">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/3rdparty/org-netbeans-swing-outline.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="xerces">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/3rdparty/xercesImpl.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="file:///Users/santhosh/Java/Xerces/src/xerces-2_9_1/src" />
+      </SOURCES>
+    </library>
+    <library name="annotations">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/3rdparty/annotations.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
