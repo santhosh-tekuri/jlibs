@@ -1,6 +1,7 @@
 package jlibs.xml;
 
-import org.xml.sax.helpers.NamespaceSupport;
+import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.MyNamespaceSupport;
 
 import java.lang.reflect.Field;
 
@@ -47,7 +48,7 @@ public interface Namespaces{
     /** Envelope namespace as defined by SOAP 1.1 **/
     String URI_SOAPENV = "http://schemas.xmlsoap.org/soap/envelope/"; //NOI18N
 
-    NamespaceSupport SUGGESTED = new NamespaceSupport(){
+    MyNamespaceSupport SUGGESTED = new MyNamespaceSupport(){
         {
             for(Field field: Namespaces.class.getFields()){
                 if(field.getName().startsWith("URI_")) //NOI18N
@@ -55,8 +56,8 @@ public interface Namespaces{
                         String prefix = field.getName().substring("URI_".length()).toLowerCase(); //NOI18N
                         String uri = (String)field.get(null);
                         declarePrefix(prefix, uri);
-                    } catch(IllegalAccessException e){ //this should never happen
-                        e.printStackTrace();
+                    } catch(IllegalAccessException ex){
+                        throw new ImpossibleException(ex);
                     }
             }
         }
