@@ -8,9 +8,9 @@ import jlibs.graph.Sequence;
  */
 public class PathSequence<E> extends AbstractSequence<Path>{
     private Path path;
-    private Sequence<E> delegate;
+    private Sequence<? extends E> delegate;
 
-    public PathSequence(Path path, Sequence<E> delegate){
+    public PathSequence(Path path, Sequence<? extends E> delegate){
         this.path = path;
         this.delegate = delegate;
         _reset();
