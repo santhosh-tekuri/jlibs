@@ -1,5 +1,7 @@
 package jlibs.graph.sequences;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -7,11 +9,14 @@ public class DuplicateSequence<E> extends AbstractSequence<E>{
     private E elem;
     private int count;
 
-    public DuplicateSequence(E elem){
+    public DuplicateSequence(@NotNull E elem){
         this(elem, 1);
     }
 
-    public DuplicateSequence(E elem, int count){
+    public DuplicateSequence(@NotNull E elem, int count){
+        //noinspection ConstantConditions
+        if(elem==null)
+            throw new IllegalArgumentException("elem can't be null");
         if(count<0)
             throw new IllegalArgumentException(String.format("can't duplicate %d times", count));
         
