@@ -6,9 +6,9 @@ import jlibs.graph.Sequence;
  * @author Santhosh Kumar T
  */
 public class ConcatSequence<E> extends AbstractSequence<E>{
-    private Sequence<E> sequences[];
+    private Sequence<? extends E> sequences[];
 
-    public ConcatSequence(Sequence<E>... sequences){
+    public ConcatSequence(Sequence<? extends E>... sequences){
         this.sequences = sequences;
         _reset();
     }
@@ -39,14 +39,14 @@ public class ConcatSequence<E> extends AbstractSequence<E>{
 
     private void _reset(){
         curSeq = 0;
-        for(Sequence<E> seq: sequences)
+        for(Sequence<? extends E> seq: sequences)
             seq.reset();
     }
 
     @Override
     public ConcatSequence<E> copy(){
         @SuppressWarnings({"unchecked"})
-        Sequence<E> sequences[] = new Sequence[this.sequences.length];
+        Sequence<? extends E> sequences[] = new Sequence[this.sequences.length];
         for(int i=0; i<sequences.length; i++)
             sequences[i] = this.sequences[i].copy();
         return new ConcatSequence<E>(sequences);
@@ -57,7 +57,7 @@ public class ConcatSequence<E> extends AbstractSequence<E>{
     @Override
     public int length(){
         int len = 0;
-        for(Sequence<E> seq: sequences)
+        for(Sequence<? extends E> seq: sequences)
             len += seq.length();
         return len;
     }
