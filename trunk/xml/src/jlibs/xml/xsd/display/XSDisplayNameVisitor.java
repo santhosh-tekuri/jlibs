@@ -80,9 +80,11 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
     }
 
     protected String process(XSWildcard wildcard){
+        String str;
         switch(wildcard.getConstraintType()){
             case XSWildcard.NSCONSTRAINT_ANY :
-                return "<*:*>";
+                str = "<*:*>";
+                break;
             case XSWildcard.NSCONSTRAINT_LIST:
                 StringBuilder buff = new StringBuilder();
                 StringList list = wildcard.getNsConstraintList();
@@ -91,18 +93,30 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
                         buff.append('|');
                     buff.append(nsSupport.findPrefix(list.item(i)));
                 }
-                return "<"+buff+":*>";
+                if(buff.toString().equals("null"))
+                    str = "<*>";
+                else
+                    str = "<"+buff+":*>";
+                break;
             case XSWildcard.NSCONSTRAINT_NOT:
                 buff = new StringBuilder();
                 list = wildcard.getNsConstraintList();
                 for(int i=0; i<list.getLength(); i++){
-                    if(buff.length()>0)
-                        buff.append(',');
-                    buff.append(nsSupport.findPrefix(list.item(i)));
+                    String prefix = nsSupport.findPrefix(list.item(i));
+                    if(prefix!=null){
+                        if(buff.length()>0)
+                            buff.append(',');
+                        buff.append(prefix);
+                    }
                 }
-                return "<!("+buff+"):*>";
+                if(buff.toString().indexOf(",")==-1)
+                    str = "<!"+buff+":*>";
+                else
+                    str = "<!("+buff+"):*>";
+                break;
             default:
                 throw new ImpossibleException("Invalid Constraint: "+wildcard.getConstraintType());
         }
+        return addCardinal(str);
     }
 }
