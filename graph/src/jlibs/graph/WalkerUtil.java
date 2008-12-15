@@ -3,10 +3,13 @@ package jlibs.graph;
 import jlibs.graph.navigators.FilteredNavigator;
 import jlibs.graph.sequences.ArraySequence;
 import jlibs.graph.sequences.EmptySequence;
-import jlibs.graph.walkers.PreorderWalker;
 import jlibs.graph.visitors.StaticVisitor;
+import jlibs.graph.walkers.PreorderWalker;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -37,7 +40,7 @@ public class WalkerUtil{
         walk(walker, new StaticVisitor<E, Processor<E>>(processor));
     }
 
-    public static <E> List<E> topologicalSort(Sequence<E> elements, final Navigator<E> navigator){
+    public static <E> List<E> topologicalSort(Sequence<E> elements, Navigator<E> navigator){
         final List<E> unvisitedElements = SequenceUtil.addAll(new LinkedList<E>(), elements);
         Navigator<E> filteredNavigator = new FilteredNavigator<E>(navigator, new Filter<E>(){
             @Override
@@ -60,6 +63,14 @@ public class WalkerUtil{
                     result.add(0, elem);
                 }
             });
+        }
+
+        for(int i=0; i<result.size(); i++){
+            Sequence<? extends E> seq = navigator.children(result.get(i));
+            for(E elem; (elem=seq.next())!=null;){
+                if(result.indexOf(elem)<i)
+                    throw new IllegalArgumentException("the given graph contains cycle");
+            }
         }
         return result;
     }
