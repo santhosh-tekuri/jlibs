@@ -2,6 +2,7 @@ package jlibs.graph.visitors;
 
 import jlibs.graph.Sequence;
 import jlibs.graph.Visitor;
+import jlibs.graph.sequences.CollectionSequence;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class ClassVisitor<R> implements Visitor<Class<?>, R>{
     @Override
     public R visit(Class<?> elem){
         if(topologicalSequence==null)
-            topologicalSequence = ClassSorter.sort(map.keySet());
+            topologicalSequence = new CollectionSequence<Class<?>>(ClassSorter.sort(map.keySet()));
 
         topologicalSequence.reset();
         for(Class<?> clazz; (clazz=topologicalSequence.next())!=null;){

@@ -2,6 +2,7 @@ package jlibs.graph.visitors;
 
 import jlibs.graph.Sequence;
 import jlibs.graph.Visitor;
+import jlibs.graph.sequences.CollectionSequence;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ public abstract class ReflectionVisitor<E, R> implements Visitor<E, R>{
             }
         }
 
-        seq = ClassSorter.sort(methodMap.keySet());
+        seq = new CollectionSequence<Class<?>>(ClassSorter.sort(methodMap.keySet()));
     }
 
     public void generateCode(){
