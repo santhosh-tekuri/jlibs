@@ -9,6 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="graph" exported="" />
     <orderEntry type="library" exported="" name="outline" level="project" />
+    <orderEntry type="library" exported="" name="xerces" level="project" />
+    <orderEntry type="module" module-name="core" />
   </component>
 </module>
 
