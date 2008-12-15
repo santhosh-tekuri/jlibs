@@ -1,17 +1,17 @@
 package jlibs.xml.xsd.sequences;
 
 import jlibs.graph.sequences.AbstractSequence;
-import org.apache.xerces.xs.XSNamedMap;
-import org.apache.xerces.xs.XSObject;
+import org.apache.xerces.xs.XSNamespaceItem;
+import org.apache.xerces.xs.XSNamespaceItemList;
 
 /**
  * @author Santhosh Kumar T
  */
-public class XSNamedMapSequence<E extends XSObject> extends AbstractSequence<E>{
-    private XSNamedMap map;
+public class XSNamespaceItemListSequence extends AbstractSequence<XSNamespaceItem>{
+    private XSNamespaceItemList list;
 
-    public XSNamedMapSequence(XSNamedMap map){
-        this.map = map;
+    public XSNamespaceItemListSequence(XSNamespaceItemList list){
+        this.list = list;
         _reset();
     }
 
@@ -20,13 +20,12 @@ public class XSNamedMapSequence<E extends XSObject> extends AbstractSequence<E>{
     private int i;
 
     @Override
-    @SuppressWarnings({"unchecked"})
-    protected E findNext(){
-        return (E)map.item(++i);
+    protected XSNamespaceItem findNext(){
+        return list.item(++i);
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
-    
+
     @Override
     public void reset(){
         super.reset();
@@ -38,14 +37,14 @@ public class XSNamedMapSequence<E extends XSObject> extends AbstractSequence<E>{
     }
 
     @Override
-    public XSNamedMapSequence<E> copy(){
-        return new XSNamedMapSequence<E>(map);
+    public XSNamespaceItemListSequence copy(){
+        return new XSNamespaceItemListSequence(list);
     }
 
     /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
 
     @Override
     public int length(){
-        return map.getLength();
+        return list.getLength();
     }
 }

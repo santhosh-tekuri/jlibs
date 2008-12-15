@@ -7,7 +7,7 @@ import org.apache.xerces.xs.XSObjectList;
 /**
  * @author Santhosh Kumar T
  */
-public class XSObjectListSequence extends AbstractSequence<XSObject>{
+public class XSObjectListSequence<E extends XSObject> extends AbstractSequence<E>{
     private XSObjectList list;
 
     public XSObjectListSequence(XSObjectList list){
@@ -20,8 +20,9 @@ public class XSObjectListSequence extends AbstractSequence<XSObject>{
     private int i;
 
     @Override
-    protected XSObject findNext(){
-        return list.item(++i);
+    @SuppressWarnings({"unchecked"})
+    protected E findNext(){
+        return (E)list.item(++i);
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
@@ -33,12 +34,12 @@ public class XSObjectListSequence extends AbstractSequence<XSObject>{
     }
 
     private void _reset(){
-        i = 0;
+        i = -1;
     }
 
     @Override
-    public XSObjectListSequence copy(){
-        return new XSObjectListSequence(list);
+    public XSObjectListSequence<E> copy(){
+        return new XSObjectListSequence<E>(list);
     }
 
     /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
