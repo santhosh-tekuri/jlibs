@@ -11,6 +11,10 @@
                 <xs:element name="from" type="xs:string"/>
                 <xs:element name="heading" type="xs:string"/>
                 <xs:element name="body" type="xs:string"/>
+                <xs:any namespace="##any"/>
+                <xs:any namespace="##local"/>
+                <xs:any namespace="##other"/>
+                <xs:any namespace="##targetNamespace"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
