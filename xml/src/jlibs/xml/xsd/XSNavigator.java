@@ -1,11 +1,11 @@
 package jlibs.xml.xsd;
 
-import jlibs.graph.Sequence;
-import jlibs.graph.Navigator;
-import jlibs.graph.sequences.EmptySequence;
-import jlibs.graph.sequences.DuplicateSequence;
-import jlibs.graph.sequences.ConcatSequence;
-import jlibs.graph.visitors.ReflectionVisitor;
+import jlibs.core.graph.Sequence;
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.sequences.EmptySequence;
+import jlibs.core.graph.sequences.DuplicateSequence;
+import jlibs.core.graph.sequences.ConcatSequence;
+import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.xml.xsd.sequences.XSNamespaceItemListSequence;
 import jlibs.xml.xsd.sequences.XSNamedMapSequence;
 import jlibs.xml.xsd.sequences.XSObjectListSequence;

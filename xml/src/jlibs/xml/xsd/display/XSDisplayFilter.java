@@ -1,7 +1,7 @@
 package jlibs.xml.xsd.display;
 
-import jlibs.graph.Filter;
-import jlibs.graph.visitors.ReflectionVisitor;
+import jlibs.core.graph.Filter;
+import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.xml.Namespaces;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSParticle;
