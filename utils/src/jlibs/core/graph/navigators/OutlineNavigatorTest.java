@@ -1,7 +1,7 @@
-package jlibs.graph.navigators;
+package jlibs.core.graph.navigators;
 
-import jlibs.graph.Navigator;
-import jlibs.graph.Path;
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.Path;
 import jlibs.swing.outline.DefaultColumn;
 import jlibs.swing.outline.DefaultRenderDataProvider;
 import jlibs.swing.outline.DefaultRowModel;

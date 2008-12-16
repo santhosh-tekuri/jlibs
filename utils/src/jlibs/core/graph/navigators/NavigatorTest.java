@@ -1,4 +1,4 @@
-package jlibs.graph.navigators;
+package jlibs.core.graph.navigators;
 
 import org.xml.sax.SAXException;
 
