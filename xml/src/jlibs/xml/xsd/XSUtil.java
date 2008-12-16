@@ -1,6 +1,6 @@
 package jlibs.xml.xsd;
 
-import jlibs.xml.sax.MyNamespaceSupport;
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSObject;
