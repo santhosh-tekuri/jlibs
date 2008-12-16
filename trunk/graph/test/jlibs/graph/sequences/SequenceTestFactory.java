@@ -1,7 +1,9 @@
 package jlibs.graph.sequences;
 
 import org.testng.annotations.Factory;
-import jlibs.graph.Sequence;
+import jlibs.core.graph.Sequence;
+import jlibs.core.graph.sequences.CollectionSequence;
+import jlibs.core.graph.sequences.ArraySequence;
 
 public class SequenceTestFactory{
     @Factory

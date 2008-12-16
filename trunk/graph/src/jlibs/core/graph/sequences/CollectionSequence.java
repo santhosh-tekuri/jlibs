@@ -1,27 +1,26 @@
-package jlibs.graph.sequences;
+package jlibs.core.graph.sequences;
 
-import jlibs.core.graph.sequences.AbstractSequence;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
  */
-public class TOCSequence extends AbstractSequence<String>{
-    private int number;
-    private int count;
+public class CollectionSequence<E> extends AbstractSequence<E>{
+    private Collection<E> collection;
 
-    public TOCSequence(int number, int count){
-        this.number = number;
-        this.count = count;
+    public CollectionSequence(Collection<E> collection){
+        this.collection = collection;
+        _reset();
     }
 
     /*-------------------------------------------------[ Advancing ]---------------------------------------------------*/
 
-    private int index;
+    private Iterator<E> iter;
 
     @Override
-    protected String findNext(){
-        index++;
-        return index<=count ? number+"."+index : null;
+    protected E findNext(){
+        return iter.hasNext() ? iter.next() : null;
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
@@ -33,18 +32,18 @@ public class TOCSequence extends AbstractSequence<String>{
     }
 
     private void _reset(){
-        index = 0;
+        iter = collection.iterator();
     }
 
     @Override
-    public TOCSequence copy(){
-        return new TOCSequence(number, count);
+    public CollectionSequence<E> copy(){
+        return new CollectionSequence<E>(collection);
     }
 
     /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
 
     @Override
     public int length(){
-        return count;
+        return collection.size();
     }
 }
