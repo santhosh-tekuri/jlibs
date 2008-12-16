@@ -4,18 +4,24 @@ import org.xml.sax.helpers.NamespaceSupport;
 import jlibs.xml.Namespaces;
 import jlibs.core.lang.Util;
 
+import java.util.Properties;
+
 /**
  * @author Santhosh Kumar T
  */
 public class MyNamespaceSupport extends NamespaceSupport{
-    private MyNamespaceSupport suggested;
+    private Properties suggested;
 
     public MyNamespaceSupport(){
-        this(Namespaces.SUGGESTED);
+        this(Namespaces.getSuggested());
     }
 
-    public MyNamespaceSupport(MyNamespaceSupport suggested){
+    public MyNamespaceSupport(Properties suggested){
         this.suggested = suggested;
+    }
+
+    public void suggestPrefix(String prefix, String uri){
+        suggested.put(prefix, uri);
     }
 
     public String findPrefix(String uri){
@@ -23,19 +29,27 @@ public class MyNamespaceSupport extends NamespaceSupport{
             uri = "";
         String prefix = getPrefix(uri);
         if(prefix==null){
-            if(Util.equals(uri, getURI("")))
+            String defaultURI = getURI("");
+            if(defaultURI==null)
+                defaultURI = "";
+            if(Util.equals(uri, defaultURI))
                 prefix = "";
         }
         return prefix;
     }
 
-    public boolean declarePrefix(String uri){
-        String prefix = suggested.findPrefix(uri);
+    public String declarePrefix(String uri){
+        String prefix = findPrefix(uri);
         if(prefix==null){
-            int i = 1;
-            while(getURI(prefix="ns"+i)!=null)
-                i++;
+            prefix = suggested.getProperty(uri);
+            if(prefix==null){
+                int i = 1;
+                while(getURI(prefix="ns"+i)!=null)
+                    i++;
+
+            }
+            declarePrefix(prefix, uri);
         }
-        return declarePrefix(prefix, uri);
+        return prefix;
     }
 }
