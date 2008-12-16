@@ -1,6 +1,6 @@
 package jlibs.xml.xsd.sequences;
 
-import jlibs.graph.sequences.AbstractSequence;
+import jlibs.core.graph.sequences.AbstractSequence;
 import org.apache.xerces.xs.XSNamespaceItem;
 import org.apache.xerces.xs.XSNamespaceItemList;
 

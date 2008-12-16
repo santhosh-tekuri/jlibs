@@ -1,6 +1,6 @@
 package jlibs.xml.xsd.display;
 
-import jlibs.graph.visitors.PathReflectionVisitor;
+import jlibs.core.graph.visitors.PathReflectionVisitor;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.xsd.XSUtil;
 import org.apache.xerces.xs.*;

@@ -1,9 +1,9 @@
 package jlibs.xml.xsd.display;
 
-import jlibs.graph.Filter;
-import jlibs.graph.Navigator;
-import jlibs.graph.Path;
-import jlibs.graph.visitors.PathReflectionVisitor;
+import jlibs.core.graph.Filter;
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.Path;
+import jlibs.core.graph.visitors.PathReflectionVisitor;
 import org.apache.xerces.xs.XSParticle;
 
 /**

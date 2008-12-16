@@ -1,6 +1,6 @@
 package jlibs.xml.xsd.display;
 
-import jlibs.graph.visitors.PathReflectionVisitor;
+import jlibs.core.graph.visitors.PathReflectionVisitor;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSWildcard;
