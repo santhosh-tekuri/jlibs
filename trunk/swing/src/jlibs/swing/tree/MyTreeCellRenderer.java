@@ -1,6 +1,6 @@
 package jlibs.swing.tree;
 
-import jlibs.graph.Visitor;
+import jlibs.core.graph.Visitor;
 
 import javax.swing.*;
 import javax.swing.tree.TreeCellRenderer;

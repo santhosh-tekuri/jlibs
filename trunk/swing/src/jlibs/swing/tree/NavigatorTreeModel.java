@@ -1,7 +1,7 @@
 package jlibs.swing.tree;
 
-import jlibs.graph.Navigator;
-import jlibs.graph.SequenceUtil;
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.SequenceUtil;
 
 /**
  * @author Santhosh Kumar T
