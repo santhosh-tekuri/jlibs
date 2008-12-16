@@ -16,13 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list name="Failed commit: Default" comment="restructured packages" />
-    <list default="true" readonly="true" name="Default" comment="restructured packages">
+    <list default="true" readonly="true" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/swing/swing.iml" afterPath="$PROJECT_DIR$/swing/swing.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/xml/xml.iml" afterPath="$PROJECT_DIR$/xml/xml.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/OutlineNavigatorTest.java" afterPath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/OutlineNavigatorTest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/utils.iml" afterPath="$PROJECT_DIR$/utils/utils.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jlibs.ipr" afterPath="$PROJECT_DIR$/jlibs.ipr" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/NavigatorTest.java" afterPath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/NavigatorTest.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jlibs.iws" afterPath="$PROJECT_DIR$/jlibs.iws" />
     </list>
     <ignored path="jlibs.iws" />
@@ -704,13 +699,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/walkers/PreorderWalker.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/Sequence.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="14" column="24" selection-start="487" selection-end="487" vertical-scroll-proportion="0.47975078">
@@ -719,6 +707,20 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/visitors/ClassVisitor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/swing/src/jlibs/swing/outline/DefaultColumn.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="18" column="51" selection-start="401" selection-end="401" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/walkers/PreorderWalker.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
