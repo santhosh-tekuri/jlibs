@@ -15,8 +15,14 @@
     <option name="historyRevisionsNumber" value="4" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" readonly="true" name="Default" comment="">
+    <list name="Failed commit: Default" comment="restructured packages" />
+    <list default="true" readonly="true" name="Default" comment="restructured packages">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/swing/swing.iml" afterPath="$PROJECT_DIR$/swing/swing.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/xml/xml.iml" afterPath="$PROJECT_DIR$/xml/xml.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/OutlineNavigatorTest.java" afterPath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/OutlineNavigatorTest.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/utils.iml" afterPath="$PROJECT_DIR$/utils/utils.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jlibs.ipr" afterPath="$PROJECT_DIR$/jlibs.ipr" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/NavigatorTest.java" afterPath="$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/NavigatorTest.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jlibs.iws" afterPath="$PROJECT_DIR$/jlibs.iws" />
     </list>
     <ignored path="jlibs.iws" />
@@ -96,17 +102,7 @@
     <favorites_list name="jlibs" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="XSDisplayNameVisitor.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/xsd/display/XSDisplayNameVisitor.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -122,14 +118,7 @@
     <option name="LAST_EDITED_TAB_NAME" />
   </component>
   <component name="PackagesPane">
-    <subPane>
-      <PATH>
-        <PATH_ELEMENT>
-          <option name="myItemId" value="jlibs" />
-          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
-        </PATH_ELEMENT>
-      </PATH>
-    </subPane>
+    <subPane />
   </component>
   <component name="ProjectLevelVcsManager">
     <OptionsSetting value="true" id="Add" />
@@ -162,7 +151,7 @@
       <showMembers />
       <showModules />
       <showLibraryContents />
-      <hideEmptyPackages />
+      <hideEmptyPackages ProjectPane="true" />
       <abbreviatePackageNames />
       <showStructure Scope="false" PackagesPane="false" ProjectPane="false" />
       <autoscrollToSource />
@@ -183,7 +172,7 @@
     <property name="options.splitter.details.proportions" value="0.29739442" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="options.lastSelected" value="fileTemplates" />
+    <property name="options.lastSelected" value="reference.settingsdialog.IDE.editor.colors.Font" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="false" />
   </component>
@@ -194,34 +183,122 @@
       <recent name="jlibs.xml.xsd" />
       <recent name="jlibs.graph.filters" />
     </key>
+    <key name="IntroduceConstantDialog.RECENTS_KEY">
+      <recent name="" />
+    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="jlibs.jlibs.core.graph" />
+      <recent name="jlibs.core.lang" />
       <recent name="jlibs.xml.xsd.display" />
       <recent name="jlibs.xml" />
       <recent name="jlibs.swing.tree" />
-      <recent name="jlibs.graph.walkers" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ObjectInputSource">
-    <tempConfiguration default="false" name="ObjectInputSource" type="Application" factoryName="Application" enabled="false" merge="false" runner="emma">
-      <option name="MAIN_CLASS_NAME" value="jlibs.xml.sax.ObjectInputSource" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="xml" />
-      <envs />
-      <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="51807" />
-        <option name="TRANSPORT" value="0" />
-        <option name="LOCAL" value="true" />
-      </RunnerSettings>
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Debug" />
-      <ConfigurationWrapper RunnerId="Run" />
+  <component name="RestoreUpdateTree">
+    <UpdateInfo date="12/16/08 9:47 PM" ActionInfo="_Update">
+      <UpdatedFiles>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Updated from server" />
+          <option name="myStatusName" value="Changed on server" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="CHANGED_ON_SERVER" />
+          <FILE-GROUP>
+            <option name="myUpdateName" value="Updated" />
+            <option name="myStatusName" value="Changed" />
+            <option name="mySupportsDeletion" value="false" />
+            <option name="myCanBeAbsent" value="false" />
+            <option name="myId" value="UPDATED" />
+          </FILE-GROUP>
+          <FILE-GROUP>
+            <option name="myUpdateName" value="Created" />
+            <option name="myStatusName" value="Created" />
+            <option name="mySupportsDeletion" value="false" />
+            <option name="myCanBeAbsent" value="false" />
+            <option name="myId" value="CREATED" />
+            <PATH vcs="svn" revision="58">$PROJECT_DIR$/core/src/jlibs</PATH>
+          </FILE-GROUP>
+          <FILE-GROUP>
+            <option name="myUpdateName" value="Deleted" />
+            <option name="myStatusName" value="Deleted" />
+            <option name="mySupportsDeletion" value="false" />
+            <option name="myCanBeAbsent" value="true" />
+            <option name="myId" value="REMOVED_FROM_REPOSITORY" />
+          </FILE-GROUP>
+          <FILE-GROUP>
+            <option name="myUpdateName" value="Restored" />
+            <option name="myStatusName" value="Will be restored" />
+            <option name="mySupportsDeletion" value="false" />
+            <option name="myCanBeAbsent" value="false" />
+            <option name="myId" value="RESTORED" />
+          </FILE-GROUP>
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Modified" />
+          <option name="myStatusName" value="Modified" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="MODIFIED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Skipped" />
+          <option name="myStatusName" value="Skipped" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="SKIPPED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Merged with conflicts" />
+          <option name="myStatusName" value="Will be merged with conflicts" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="MERGED_WITH_CONFLICTS" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Merged" />
+          <option name="myStatusName" value="Will be merged" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="MERGED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Not in repository" />
+          <option name="myStatusName" value="Not in repository" />
+          <option name="mySupportsDeletion" value="true" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="UNKNOWN" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Locally added" />
+          <option name="myStatusName" value="Locally added" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="LOCALLY_ADDED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Locally removed" />
+          <option name="myStatusName" value="Locally removed" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="LOCALLY_REMOVED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Switched" />
+          <option name="myStatusName" value="Switched" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="SWITCHED" />
+        </FILE-GROUP>
+      </UpdatedFiles>
+    </UpdateInfo>
+  </component>
+  <component name="RunManager" selected="JavaScript Debug.test.htm">
+    <tempConfiguration default="false" name="test.htm" type="JavascriptDebugSession" factoryName="Local">
+      <JSDebuggerConfigurationSettings>
+        <option name="fileUrl" value="file://$PROJECT_DIR$/core/src/jlibs/core/lang/test.htm" />
+      </JSDebuggerConfigurationSettings>
+      <RunnerSettings RunnerId="JavascriptDebugRunner" />
+      <ConfigurationWrapper RunnerId="JavascriptDebugRunner" />
       <method>
         <option name="Make" value="true" />
       </method>
@@ -271,6 +348,11 @@
       <properties />
       <listeners />
     </configuration>
+    <configuration default="true" type="JavascriptDebugSession" factoryName="Local">
+      <JSDebuggerConfigurationSettings>
+        <option name="fileUrl" />
+      </JSDebuggerConfigurationSettings>
+    </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit" enabled="false" merge="false" runner="emma">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -304,7 +386,7 @@
       <envs />
     </configuration>
     <configuration default="false" name="NavigatorTest" type="Application" factoryName="Application" enabled="false" merge="false" runner="emma">
-      <option name="MAIN_CLASS_NAME" value="jlibs.graph.navigators.NavigatorTest" />
+      <option name="MAIN_CLASS_NAME" value="jlibs.core.graph.navigators.NavigatorTest" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -328,12 +410,12 @@
       </method>
     </configuration>
     <configuration default="false" name="SequenceTestFactory" type="TestNG" factoryName="TestNG" enabled="false" merge="false" sample_coverage="true" runner="emma">
-      <module name="graph" />
+      <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="SUITE_NAME" value="" />
       <option name="PACKAGE_NAME" value="jlibs.graph.sequences" />
-      <option name="MAIN_CLASS_NAME" value="jlibs.graph.sequences.SequenceTestFactory" />
+      <option name="MAIN_CLASS_NAME" value="jlibs.core.gaph.sequences.SequenceTestFactory" />
       <option name="METHOD_NAME" value="testReset" />
       <option name="GROUP_NAME" value="" />
       <option name="TEST_OBJECT" value="CLASS" />
@@ -361,7 +443,7 @@
     <list size="3">
       <item index="0" class="java.lang.String" itemvalue="Application.NavigatorTest" />
       <item index="1" class="java.lang.String" itemvalue="TestNG.SequenceTestFactory" />
-      <item index="2" class="java.lang.String" itemvalue="Application.ObjectInputSource" />
+      <item index="2" class="java.lang.String" itemvalue="JavaScript Debug.test.htm" />
     </list>
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>
@@ -420,7 +502,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="22" width="1920" height="1103" extended-state="0" />
+    <frame x="1" y="23" width="1920" height="1103" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Dataflow to this" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
@@ -431,7 +513,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5411298" sideWeight="0.5" order="1" side_tool="false" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32903865" sideWeight="0.5" order="12" side_tool="false" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32903865" sideWeight="0.5" order="12" side_tool="false" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24959914" sideWeight="0.5" order="1" side_tool="false" />
@@ -441,7 +523,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3997862" sideWeight="0.5" order="0" side_tool="false" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5609514" sideWeight="0.5" order="3" side_tool="false" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32903865" sideWeight="0.5" order="11" side_tool="false" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" />
@@ -456,7 +538,7 @@
     <option name="PERFORM_CHECKOUT_IN_BACKGROUND" value="true" />
     <option name="PERFORM_ADD_REMOVE_IN_BACKGROUND" value="true" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="restructured packages" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="REFORMAT_BEFORE_FILE_COMMIT" value="false" />
@@ -467,9 +549,6 @@
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="core library" />
-    <MESSAGE value="added nullity checks" />
-    <MESSAGE value="corrected class sorting logic" />
     <MESSAGE value="topologicalsort now checks for cycle" />
     <MESSAGE value="* renamed DefaultNavigator to FilteredTreeNavigator&#10;* takes Navigator in constructor instead of Visitor" />
     <MESSAGE value="project config changes" />
@@ -485,13 +564,16 @@
     <MESSAGE value="removed unused method" />
     <MESSAGE value="added different any elements" />
     <MESSAGE value="ask xsd url" />
-    <MESSAGE value="project config" />
     <MESSAGE value="ui tweaking" />
     <MESSAGE value="* corrected iml&#10;* added suggestPrefix()" />
     <MESSAGE value="* changed from interface to class&#10;* used properties instead of NamespaceSupport" />
     <MESSAGE value="sax framework" />
-    <MESSAGE value="initial commit" />
     <MESSAGE value="refactoring" />
+    <MESSAGE value="project config" />
+    <MESSAGE value="* make it work with charsequence&#10;* added isWhitespace(...)" />
+    <MESSAGE value="initial commit" />
+    <MESSAGE value="added serialization methods" />
+    <MESSAGE value="restructured packages" />
   </component>
   <component name="VssConfiguration">
     <option name="CLIENT_PATH" value="" />
@@ -539,122 +621,104 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/org/xml/sax/SAXParseException.java">
+    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/java/lang/CharSequence.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="13" selection-start="1344" selection-end="1344" vertical-scroll-proportion="0.0">
+        <state line="34" column="29" selection-start="1332" selection-end="1344" vertical-scroll-proportion="0.0">
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/org/xml/sax/ErrorHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="72" column="40" selection-start="3011" selection-end="3011" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/helpers/MyNamespaceSupport.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="57" selection-start="468" selection-end="521" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/org/xml/sax/ext/LexicalHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="164" column="24" selection-start="6593" selection-end="6593" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/org/xml/sax/ext/DefaultHandler2.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="34" selection-start="1339" selection-end="1339" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/SAXDelegate2.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="106" selection-start="1979" selection-end="1979" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/SAXProperties.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="11" selection-start="419" selection-end="419" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/org/xml/sax/ext/DeclHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="104" column="45" selection-start="4132" selection-end="4132" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/SAXDelegate.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="8" column="26" selection-start="149" selection-end="149" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/AbstractXMLReader.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="0" selection-start="546" selection-end="546" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/XMLWriter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="54" selection-start="283" selection-end="283" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/java/lang/String.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="663" column="24" selection-start="23820" selection-end="23820" vertical-scroll-proportion="0.0">
+        <state line="662" column="19" selection-start="23789" selection-end="23789" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/lang/StringUtil.java">
+    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/src.jar!/src/javax/xml/transform/Transformer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="41" selection-start="175" selection-end="175" vertical-scroll-proportion="0.0">
+        <state line="297" column="25" selection-start="12667" selection-end="12667" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/ObjectInputSource.java">
+    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/transform/TransformerUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="239" column="25" selection-start="8104" selection-end="8104" vertical-scroll-proportion="1.1712538">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/helpers/NamespaceSupportReader.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="41" selection-start="507" selection-end="507" vertical-scroll-proportion="0.6214953">
+        <state line="19" column="68" selection-start="838" selection-end="838" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/xsd/display/XSDisplayNameVisitor.java">
+    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/sax/ObjectInputSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="35" column="48" selection-start="949" selection-end="949" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/test/jlibs/core/gaph/sequences/TOCSequence.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="7" column="13" selection-start="134" selection-end="134" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/NavigatorTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="13" selection-start="191" selection-end="191" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/swing/src/jlibs/swing/outline/ClassColumn.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="15" column="47" selection-start="353" selection-end="353" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/test/jlibs/core/gaph/sequences/SequenceTestFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="49" selection-start="548" selection-end="548" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/src/jlibs/core/graph/navigators/OutlineNavigatorTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="65" column="57" selection-start="2736" selection-end="2736" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/xml/src/jlibs/xml/xsd/XSNavigator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/walkers/PreorderWalker.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/Sequence.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="24" selection-start="487" selection-end="487" vertical-scroll-proportion="0.47975078">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/src/jlibs/core/graph/visitors/ClassVisitor.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
