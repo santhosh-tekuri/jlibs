@@ -1,22 +1,23 @@
 package jlibs.xml.sax;
 
+import jlibs.core.lang.StringUtil;
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import jlibs.xml.transform.TransformerUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.namespace.QName;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Enumeration;
 import java.util.Stack;
-import java.io.OutputStreamWriter;
-
-import jlibs.core.lang.StringUtil;
-import jlibs.xml.sax.helpers.MyNamespaceSupport;
 
 /**
  * @author Santhosh Kumar T
@@ -240,10 +241,31 @@ public abstract class ObjectInputSource<E> extends InputSource{
         return this;
     }
 
+    /*-------------------------------------------------[ Serialization ]---------------------------------------------------*/
+
+    private SAXSource createSource(){
+        return new SAXSource(new XMLWriter(), this);
+    }
+
+    public void writeInto(Writer writer, boolean omitXMLDeclaration, int indentAmount) throws TransformerException{
+        Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, null);
+        transformer.transform(createSource(), new StreamResult(writer));
+    }
+
+    public void writeInto(OutputStream out, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
+        Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, encoding);
+        transformer.transform(createSource(), new StreamResult(out));
+    }
+
+    public void writeInto(String systemID, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
+        Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, encoding);
+        transformer.transform(createSource(), new StreamResult(systemID));
+    }
+
     /*-------------------------------------------------[ Test ]---------------------------------------------------*/
     
     public static void main(String[] args) throws Exception{
-        InputSource source = new ObjectInputSource<String>(null){
+        new ObjectInputSource<String>(null){
             @Override
             protected void write(String obj) throws SAXException{
                 String google = "http://google.com";
@@ -254,6 +276,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 declarePrefix("google", google);
                 declarePrefix("yahoo", yahoo);
                 declarePrefix("http://msn.com");
+                
                 startElement(google, "hello");
                 addAttribute("name", "value");
                 addElement("xyz", "helloworld");
@@ -261,12 +284,6 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 addComment("this is comment");
                 addCDATA("this is sample cdata");
             }
-        };
-
-        TransformerFactory factory = TransformerFactory.newInstance();
-        factory.setAttribute("indent-number", "4");
-        Transformer transformer = factory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.transform(new SAXSource(new XMLWriter(), source), new StreamResult(new OutputStreamWriter(System.out, "utf-8")));
+        }.writeInto(new OutputStreamWriter(System.out, "utf-8"), false, 4);
     }
 }
