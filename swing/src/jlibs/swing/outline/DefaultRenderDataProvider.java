@@ -5,7 +5,7 @@ import org.netbeans.swing.outline.RenderDataProvider;
 import javax.swing.*;
 import java.awt.*;
 
-import jlibs.graph.Visitor;
+import jlibs.core.graph.Visitor;
 import jlibs.swing.EmptyIcon;
 
 /**

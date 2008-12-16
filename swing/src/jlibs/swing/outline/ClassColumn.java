@@ -1,6 +1,6 @@
 package jlibs.swing.outline;
 
-import jlibs.graph.Path;
+import jlibs.core.graph.Path;
 
 /**
  * @author Santhosh Kumar T

@@ -1,6 +1,6 @@
 package jlibs.swing.outline;
 
-import jlibs.graph.Visitor;
+import jlibs.core.graph.Visitor;
 
 /**
  * @author Santhosh Kumar T
