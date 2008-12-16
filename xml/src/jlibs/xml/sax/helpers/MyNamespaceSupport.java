@@ -1,4 +1,4 @@
-package jlibs.xml.sax;
+package jlibs.xml.sax.helpers;
 
 import org.xml.sax.helpers.NamespaceSupport;
 import jlibs.xml.Namespaces;
