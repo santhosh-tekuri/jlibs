@@ -1,7 +1,7 @@
 package jlibs.graph.sequences;
 
-import jlibs.graph.Sequence;
-import jlibs.graph.SequenceUtil;
+import jlibs.core.graph.Sequence;
+import jlibs.core.graph.SequenceUtil;
 import org.testng.ITest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
