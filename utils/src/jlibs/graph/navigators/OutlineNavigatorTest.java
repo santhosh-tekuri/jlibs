@@ -6,7 +6,7 @@ import jlibs.swing.outline.DefaultColumn;
 import jlibs.swing.outline.DefaultRenderDataProvider;
 import jlibs.swing.outline.DefaultRowModel;
 import jlibs.swing.tree.NavigatorTreeModel;
-import jlibs.xml.sax.MyNamespaceSupport;
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.xsd.XSNavigator;
 import jlibs.xml.xsd.XSParser;
 import jlibs.xml.xsd.XSUtil;
