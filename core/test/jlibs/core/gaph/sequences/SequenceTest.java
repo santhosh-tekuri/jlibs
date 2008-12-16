@@ -1,4 +1,4 @@
-package jlibs.graph.sequences;
+package jlibs.core.gaph.sequences;
 
 import jlibs.core.graph.Sequence;
 import jlibs.core.graph.SequenceUtil;

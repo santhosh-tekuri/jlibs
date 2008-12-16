@@ -1,4 +1,4 @@
-package jlibs.graph.sequences;
+package jlibs.core.gaph.sequences;
 
 import org.testng.annotations.Factory;
 import jlibs.core.graph.Sequence;
