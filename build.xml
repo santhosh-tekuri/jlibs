@@ -1,0 +1,31 @@
+<project default="install">
+    <target name="clean">
+        <ant dir="core" target="clean" inheritAll="false"/>
+        <ant dir="xml" target="clean" inheritAll="false"/>
+        <ant dir="swing" target="clean" inheritAll="false"/>
+        <ant dir="utils" target="clean" inheritAll="false"/>
+
+        <delete dir="installer"/>
+    </target>
+
+    <target name="install">
+        <ant dir="core" inheritAll="false"/>
+        <ant dir="xml" inheritAll="false"/>
+        <ant dir="swing" inheritAll="false"/>
+        <ant dir="utils" inheritAll="false"/>
+
+        <copy todir="installer">
+            <fileset dir=".">
+                <include name="3rdparty/*.jar"/>
+                <exclude name="3rdparty/testng*.jar"/>
+            </fileset>
+        </copy>
+        <copy todir="installer" flatten="true">
+            <fileset dir=".">
+                <include name="*/build/*.jar"/>
+            </fileset>
+        </copy>
+
+        <zip destfile="jlibs.zip" basedir="installer"/>
+    </target>
+</project>
