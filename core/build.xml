@@ -1,0 +1,7 @@
+<project name="core" default="archive">
+    <path id="classpath">
+        <pathelement location="../3rdparty/annotations.jar"/>
+    </path>
+
+    <import file="../common.xml"/>
+</project>
