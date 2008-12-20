@@ -173,17 +173,37 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     /*-------------------------------------------------[ end-element ]---------------------------------------------------*/
 
-    public ObjectInputSource<E> endElement() throws SAXException{
+    private QName findEndElement() throws SAXException{
         finishStartElement();
         QName qname = elemStack.pop();
+        if(qname==null)
+            throw new SAXException("can't find matching start element");
+        return qname;
+    }
+
+    private ObjectInputSource<E> endElement(QName qname) throws SAXException{
         xml.endElement(qname.getNamespaceURI(), qname.getLocalPart(), toString(qname));
 
         Enumeration enumer = nsSupport.getDeclaredPrefixes();
         while(enumer.hasMoreElements())
             xml.endPrefixMapping((String)enumer.nextElement());
         nsSupport.popContext();
-
         return this;
+    }
+
+    public ObjectInputSource<E> endElement(String uri, String name) throws SAXException{
+        QName qname = findEndElement();
+        if(!qname.getNamespaceURI().equals(uri) || !qname.getLocalPart().equals(name))
+            throw new SAXException("expected </"+toString(qname)+'>');
+        return endElement(qname);
+    }
+
+    public ObjectInputSource<E> endElement(String name) throws SAXException{
+        return endElement("", name);
+    }
+
+    public ObjectInputSource<E> endElement() throws SAXException{
+        return endElement(findEndElement());
     }
 
     public ObjectInputSource<E> endElements() throws SAXException{
