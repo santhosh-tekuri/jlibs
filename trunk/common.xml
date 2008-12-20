@@ -1,0 +1,25 @@
+<project name="core" default="archive">
+    <target name="compile">
+        <mkdir dir="build/classes"/>
+        <javac srcdir="src" destdir="build/classes"
+               includeAntRuntime="false"
+               debug="true" debuglevel="lines,vars,source">
+            <classpath>
+                <path refid="classpath"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="archive" depends="compile">
+        <jar destfile="build/jlibs-${ant.project.name}.jar">
+            <fileset dir="build/classes"/>
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+</project>
