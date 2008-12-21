@@ -1,4 +1,4 @@
-<project name="core" default="archive">
+<project name="common" default="archive">
     <target name="compile">
         <mkdir dir="build/classes"/>
         <javac srcdir="src" destdir="build/classes"
