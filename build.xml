@@ -23,8 +23,15 @@
         <copy todir="installer" flatten="true">
             <fileset dir=".">
                 <include name="*/build/*.jar"/>
+                <include name="*/*.sh"/>
+                <include name="*/*.bat"/>
             </fileset>
         </copy>
+        
+        <dirname property="ant.dir" file="${ant.file}"/>
+        <exec executable="sh" failonerror="false">
+            <arg line="-c 'find ${ant.dir}/installer -name *.sh | xargs chmod +x'"/>
+        </exec>
 
         <zip destfile="jlibs.zip" basedir="installer"/>
     </target>
