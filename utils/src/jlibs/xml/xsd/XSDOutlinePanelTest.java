@@ -19,7 +19,7 @@ public class XSDOutlinePanelTest extends JFrame{
     private XSDOutlinePanel xsdOutline;
 
     public XSDOutlinePanelTest(){
-        super("XSDOutlinePanel Test");
+        super("XSD Viewer");
         JPanel contents = (JPanel)getContentPane();
         contents.setLayout(new BorderLayout(5, 5));
         contents.setBorder(new EmptyBorder(10, 10, 10, 10));
