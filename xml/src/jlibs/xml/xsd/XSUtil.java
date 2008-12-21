@@ -1,6 +1,7 @@
 package jlibs.xml.xsd;
 
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import jlibs.core.lang.StringUtil;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSObject;
@@ -28,6 +29,6 @@ public class XSUtil{
             return "";
         String ns = obj.getNamespace();
         String prefix = nsSupport.findPrefix(ns==null ? "" : ns);
-        return prefix==null ? obj.getName() : prefix+':'+obj.getName();
+        return StringUtil.isEmpty(prefix) ? obj.getName() : prefix+':'+obj.getName();
     }
 }
