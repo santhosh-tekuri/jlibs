@@ -25,7 +25,6 @@ public class Namespaces{
 
     public static final String URI_XSL   = "http://www.w3.org/1999/XSL/Transform";                     //NOI18N
     public static final String URI_BPWS  = "http://schemas.xmlsoap.org/ws/2003/03/business-process/";  //NOI18N
-    public static final String URI_FESB  = "http://www.fiorano.com/ws/2005/08/business-process/";      //NOI18N
     public static final String URI_XHTML = "http://www.w3.org/1999/xhtml";                             //NOI18N
     public static final String URI_XPATH  = "http://www.w3.org/TR/1999/REC-xpath-19991116";            //NOI18N
     public static final String URI_PLINK = "http://schemas.xmlsoap.org/ws/2003/05/partner-link/";      //NOI18N
