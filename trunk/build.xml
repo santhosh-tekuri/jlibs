@@ -1,7 +1,7 @@
 <project default="install">
     <taskdef resource="net/sf/antcontrib/antcontrib.properties">
         <classpath>
-            <pathelement location="3rdparty/ant-contrib"/>
+            <pathelement location="3rdparty/ant-contrib.jar"/>
         </classpath>
     </taskdef>
 
