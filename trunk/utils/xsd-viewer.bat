@@ -1,3 +1,5 @@
+@ECHO off
+
 set CLASSPATH=3rdparty\annotations.jar;jlibs-core.jar
 set CLASSPATH=%CLASSPATH%;3rdparty\xercesImpl.jar;jlibs-xml.jar
 set CLASSPATH=%CLASSPATH%;3rdparty\org-netbeans-swing-outline.jar;jlibs-swing.jar
