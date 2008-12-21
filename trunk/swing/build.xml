@@ -4,6 +4,7 @@
         <pathelement location="../3rdparty/xercesImpl.jar"/>
         <pathelement location="../3rdparty/org-netbeans-swing-outline.jar"/>
         <pathelement location="../core/build/jlibs-core.jar"/>
+        <pathelement location="../xml/build/jlibs-xml.jar"/>
     </path>
 
     <import file="../common.xml"/>
