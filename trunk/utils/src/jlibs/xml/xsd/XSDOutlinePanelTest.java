@@ -27,18 +27,21 @@ public class XSDOutlinePanelTest extends JFrame{
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JLabel("File/URL"), BorderLayout.WEST);
-        JTextField textField = new JTextField();
-        panel.add(textField);
+        final JTextField uriText = new JTextField();
+        panel.add(uriText);
         panel.add(new JButton(new AbstractAction("Browse..."){
             @Override
             public void actionPerformed(ActionEvent ae){
                 JFileChooser chooser = new JFileChooser();
                 chooser.setFileFilter(new FileNameExtensionFilter("XMLSchema Files", "xsd"));
-                chooser.showOpenDialog(XSDOutlinePanelTest.this);
+                if(chooser.showOpenDialog(XSDOutlinePanelTest.this)==JFileChooser.APPROVE_OPTION){
+                    uriText.setText(chooser.getSelectedFile().toString());
+                    SwingUtil.doAction(uriText);
+                }
             }
         }), BorderLayout.EAST);
 
-        textField.addActionListener(new ActionListener(){
+        uriText.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent ae){
                 JTextField textField = (JTextField)ae.getSource();
@@ -50,10 +53,15 @@ public class XSDOutlinePanelTest extends JFrame{
             }
         });
         contents.add(panel, BorderLayout.SOUTH);
-        SwingUtil.setInitialFocus(this, textField);
+        SwingUtil.setInitialFocus(this, uriText);
     }
 
     public static void main(String[] args){
+        try{
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }catch(Exception ex){
+            // ignore
+        }
         XSDOutlinePanelTest frame = new XSDOutlinePanelTest();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(700, 500);
