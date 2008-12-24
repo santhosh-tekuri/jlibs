@@ -7,14 +7,18 @@ import jlibs.core.graph.sequences.ArraySequence;
 import jlibs.core.graph.sequences.EmptySequence;
 
 import java.io.File;
+import java.io.FileFilter;
 
 /**
  * @author Santhosh Kumar T
  */
 public class FileNavigator extends Navigator2<File> implements Convertor<File, String>{
-    public static final FileNavigator INSTANCE = new FileNavigator();
+    public static final FileNavigator INSTANCE = new FileNavigator(null);
 
-    private FileNavigator(){}
+    private FileFilter filter;
+    public FileNavigator(FileFilter filter){
+        this.filter = filter;
+    }
     
     @Override
     public File parent(File elem){
@@ -24,7 +28,7 @@ public class FileNavigator extends Navigator2<File> implements Convertor<File, S
     @Override
     public Sequence<? extends File> children(File elem){
         if(elem.isDirectory())
-            return new ArraySequence<File>(elem.listFiles());
+            return new ArraySequence<File>(filter!=null ? elem.listFiles(filter) : elem.listFiles());
         else
             return EmptySequence.getInstance();
     }
