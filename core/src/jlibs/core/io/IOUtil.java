@@ -1,26 +1,11 @@
 package jlibs.core.io;
 
-import jlibs.core.lang.StringUtil;
-
 import java.io.*;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  * @author Santhosh Kumar T
  */
 public class IOUtil{
-    public static URL toURL(String systemID){
-        if(StringUtil.isWhitespace(systemID))
-            return null;
-        systemID = systemID.trim();
-        try{
-            return new URL(systemID);
-        }catch(MalformedURLException ex){
-            return FileUtil.toURL(new File(systemID));
-        }
-    }
-
     public static void pump(InputStream is, OutputStream os, boolean closeIn, boolean closeOut) throws IOException{
         byte buff[] = new byte[1024];
         int len;
