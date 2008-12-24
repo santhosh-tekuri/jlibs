@@ -35,6 +35,14 @@ public final class Path{
         return parentPath;
     }
 
+    public Path getParentPath(Class clazz){
+        Path path = this;
+        do{
+            path = path.parentPath;
+        }while(path!=null && !clazz.isInstance(path.elem));
+        return path;
+    }
+
     public Object getElement(){
         return elem;
     }
