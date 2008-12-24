@@ -32,6 +32,7 @@ public class XSDOutlinePanel extends JPanel{
         super(new BorderLayout());
 
         add(new JScrollPane(outline), BorderLayout.CENTER);
+        outline.setRootVisible(false);
         outline.setShowGrid(false);
         outline.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
     }
