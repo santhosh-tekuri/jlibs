@@ -111,6 +111,9 @@ public abstract class Navigator2<E> implements Navigator<E>{
     }
 
     public String getRelativePath(E fromElem, E toElem, Convertor<E, String> convertor, String separator, boolean predicates){
+        if(fromElem==toElem)
+            return ".";
+        
         E sharedAncestor = getSharedAncestor(fromElem, toElem);
         if(sharedAncestor==null)
             return null;
@@ -154,6 +157,9 @@ public abstract class Navigator2<E> implements Navigator<E>{
     }
 
     public E resolve(E node, String path, Convertor<E, String> convertor, String separator){
+        if(path.equals("."))
+            return node;
+        
         String tokens[] = Pattern.compile(separator, Pattern.LITERAL).split(path);
         for(String token: tokens){
             int predicate = 1;
