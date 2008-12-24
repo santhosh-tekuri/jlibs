@@ -7,10 +7,7 @@ import jlibs.core.graph.Path;
 import jlibs.core.graph.Walker;
 import jlibs.core.graph.walkers.PreorderWalker;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -32,6 +29,8 @@ public class FileUtil{
         }
     }
 
+    /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
+    
     public static void delete(@NotNull File file) throws IOException{
         if(!file.exists())
             return;
@@ -66,6 +65,42 @@ public class FileUtil{
         }
     }
 
+    public static void deleteEmptyDirs(File directory) throws IOException{
+        if(directory.isFile())
+            return;
+        Walker<File> walker = new PreorderWalker<File>(directory, new FileNavigator(new FileFilter(){
+            @Override
+            public boolean accept(File file){
+                return file.isDirectory();
+            }
+        }));
+        try{
+            WalkerUtil.walk(walker, new Processor<File>(){
+                @Override
+                public boolean preProcess(File file, Path path){
+                    return true;
+                }
+
+                @Override
+                public void postProcess(File file, Path path){
+                    try{
+                        if(file.list().length==0)
+                            delete(file);
+                    }catch(IOException ex){
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+        }catch(RuntimeException ex){
+            if(ex.getCause() instanceof IOException)
+                throw (IOException)ex.getCause();
+            else
+                throw ex;
+        }
+    }
+
+    /*-------------------------------------------------[ MkDir ]---------------------------------------------------*/
+    
     public static void mkdir(File file) throws IOException{
         if(!file.mkdir())
             throw new IOException("couldn't create directory: "+file);
