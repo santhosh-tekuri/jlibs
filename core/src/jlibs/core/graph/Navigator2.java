@@ -8,16 +8,20 @@ import java.util.regex.Pattern;
 public abstract class Navigator2<E> implements Navigator<E>{
     public abstract E parent(E elem);
 
-    public int getHeight(E elem){
-        if(elem==null)
+    public int getHeight(E fromElem, E toElem){
+        if(fromElem==null)
             return -1;
 
         int ht = 0;
-        while(elem!=null){
-            elem = parent(elem);
+        while(fromElem!=toElem){
+            fromElem = parent(fromElem);
             ht++;
         }
         return ht;
+    }
+
+    public int getHeight(E elem){
+        return getHeight(elem, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -159,7 +163,7 @@ public abstract class Navigator2<E> implements Navigator<E>{
     public E resolve(E node, String path, Convertor<E, String> convertor, String separator){
         if(path.equals("."))
             return node;
-        
+
         String tokens[] = Pattern.compile(separator, Pattern.LITERAL).split(path);
         for(String token: tokens){
             int predicate = 1;
