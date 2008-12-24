@@ -11,13 +11,17 @@ import java.util.Stack;
  * @author Santhosh Kumar T
  */
 public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
-    private E elem;
+    private Sequence<? extends E> seq;
     private Navigator<E> navigator;
 
-    public PreorderWalker(E elem, Navigator<E> navigator){
-        this.elem = elem;
+    public PreorderWalker(Sequence<? extends E> seq, Navigator<E> navigator){
+        this.seq = seq;
         this.navigator = navigator;
         _reset();
+    }
+
+    public PreorderWalker(E elem, Navigator<E> navigator){
+        this(new DuplicateSequence<E>(elem), navigator);
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
@@ -31,12 +35,12 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
     private void _reset(){
         path = null;
         stack.clear();
-        stack.push(new Children(new DuplicateSequence<E>(elem)));
+        stack.push(new Children(seq.copy()));
     }
 
     @Override
     public PreorderWalker<E> copy(){
-        return new PreorderWalker<E>(elem, navigator);
+        return new PreorderWalker<E>(seq.copy(), navigator);
     }
 
     /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
