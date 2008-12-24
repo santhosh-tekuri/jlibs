@@ -1,6 +1,8 @@
 package jlibs.swing;
 
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -32,6 +34,37 @@ public class SwingUtil{
             if(event==null)
                 event = new ActionEvent(textField, ActionEvent.ACTION_PERFORMED, command, System.currentTimeMillis(), 0);
             listener.actionPerformed(event);
+        }
+    }
+
+    public static void setText(JTextComponent textComp, String text){
+        if(text==null)
+            text = "";
+        
+        if(textComp.getCaret() instanceof DefaultCaret){
+            DefaultCaret caret = (DefaultCaret)textComp.getCaret();
+            int updatePolicy = caret.getUpdatePolicy();
+            caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+            try{
+                textComp.setText(text);
+            }finally{
+                caret.setUpdatePolicy(updatePolicy);
+            }
+        }else{
+            int mark = textComp.getCaret().getMark();
+            int dot = textComp.getCaretPosition();
+            try{
+                textComp.setText(text);
+            }finally{
+                int len = textComp.getDocument().getLength();
+                if(mark>len)
+                    mark = len;
+                if(dot>len)
+                    dot = len;
+                textComp.setCaretPosition(mark);
+                if(dot!=mark)
+                    textComp.moveCaretPosition(dot);
+            }
         }
     }
 }
