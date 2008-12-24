@@ -32,7 +32,7 @@ public class TemplateMatcher{
         while(cursor<input.length() && matcher.find(cursor)){
             buff.append(input.subSequence(cursor, matcher.start()));
             String value = resolver.resolve(matcher.group(1));
-            buff.append(value!=null ? value : matcher.group(1));
+            buff.append(value!=null ? value : matcher.group());
             cursor = matcher.end();
         }
         buff.append(input.subSequence(cursor, input.length()));
@@ -96,6 +96,8 @@ public class TemplateMatcher{
         System.out.println(new TemplateMatcher("${", "}").replace("this is ${santhosh}ghgjh\n ${kumar} sdf ${tekuri}abc", new VariableResolver(){
             @Override
             public String resolve(String variable){
+                if(variable.equals("santhosh"))
+                    return null;
                 return variable.toUpperCase();
             }
         }));
