@@ -1,5 +1,7 @@
 package jlibs.core.graph;
 
+import java.util.regex.Pattern;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -106,5 +108,73 @@ public abstract class Navigator2<E> implements Navigator<E>{
             buff.insert(0, convertor.convert(elem));
         }
         return buff.toString();
+    }
+
+    public String getRelativePath(E fromElem, E toElem, Convertor<E, String> convertor, String separator, boolean predicates){
+        E sharedAncestor = getSharedAncestor(fromElem, toElem);
+        if(sharedAncestor==null)
+            return null;
+
+        StringBuilder buff1 = new StringBuilder();
+        while(!fromElem.equals(sharedAncestor)){
+            if(buff1.length()>0)
+                buff1.append(separator);
+            buff1.append("..");
+            fromElem = parent(fromElem);
+        }
+
+        StringBuilder buff2 = new StringBuilder();
+        while(!toElem.equals(sharedAncestor)){
+            if(buff2.length()>0)
+                buff2.insert(0, separator);
+
+            String name = convertor.convert(parent(toElem));
+            if(predicates){
+                Sequence<? extends E> children = children(toElem);
+                int predicate = 1;
+                while(children.hasNext()){
+                    E child = children.next();
+                    if(child==toElem)
+                        break;
+                    if(name.equals(convertor.convert(child)))
+                        predicate++;
+                }
+                if(predicate>1)
+                    name += '['+predicate+']';
+            }
+            buff2.insert(0, name);
+
+            toElem = parent(toElem);
+        }
+
+        if(buff1.length()>0 && buff2.length()>0)
+            return buff1+separator+buff2;
+        else
+            return buff1.length()>0 ? buff1.toString() : buff2.toString();
+    }
+
+    public E resolve(E node, String path, Convertor<E, String> convertor, String separator){
+        String tokens[] = Pattern.compile(separator, Pattern.LITERAL).split(path);
+        for(String token: tokens){
+            int predicate = 1;
+            int openBrace = token.lastIndexOf('[');
+            if(openBrace!=-1){
+                predicate = Integer.parseInt(token.substring(openBrace+1, token.length()-1));
+                token = token.substring(0, openBrace);
+            }
+
+            Sequence<? extends E> children = children(node);
+            while(children.hasNext()){
+                E child = children.next();
+                if(token.equals(convertor.convert(child))){
+                    if(predicate==1){
+                        node = child;
+                        break;
+                    }else
+                        predicate--;
+                }
+            }
+        }
+        return null;
     }
 }
