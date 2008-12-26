@@ -6,11 +6,11 @@ import java.util.Iterator;
 /**
  * @author Santhosh Kumar T
  */
-public class CollectionSequence<E> extends AbstractSequence<E>{
-    private Collection<E> collection;
+public class IterableSequence<E> extends AbstractSequence<E>{
+    private Iterable<E> iterable;
 
-    public CollectionSequence(Collection<E> collection){
-        this.collection = collection;
+    public IterableSequence(Iterable<E> iterable){
+        this.iterable = iterable;
         _reset();
     }
 
@@ -32,18 +32,21 @@ public class CollectionSequence<E> extends AbstractSequence<E>{
     }
 
     private void _reset(){
-        iter = collection.iterator();
+        iter = iterable.iterator();
     }
 
     @Override
-    public CollectionSequence<E> copy(){
-        return new CollectionSequence<E>(collection);
+    public IterableSequence<E> copy(){
+        return new IterableSequence<E>(iterable);
     }
 
     /*-------------------------------------------------[ Optimization ]---------------------------------------------------*/
 
     @Override
     public int length(){
-        return collection.size();
+        if(iterable instanceof Collection)
+            return ((Collection<?>) iterable).size();
+        else
+            return super.length();
     }
 }
