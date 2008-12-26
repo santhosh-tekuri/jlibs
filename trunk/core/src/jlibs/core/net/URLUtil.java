@@ -25,6 +25,16 @@ public class URLUtil{
         }
     }
 
+    /**
+     * returns Query Parameters in specified uri as <code>Map</code>.
+     * key will be param name and value wil be param value.
+     *
+     * @param uri       The string to be parsed into a URI
+     * @param encoding  if null, <code>UTF-8</code> will be used
+     * 
+     * @throws URISyntaxException               in case of invalid uri
+     * @throws UnsupportedEncodingException     if named character encoding is not supported
+     */
     public static Map<String, String> getQueryParams(String uri, String encoding) throws URISyntaxException, UnsupportedEncodingException{
         if(encoding==null)
             encoding = "UTF-8";
