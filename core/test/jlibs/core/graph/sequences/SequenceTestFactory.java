@@ -1,9 +1,7 @@
 package jlibs.core.graph.sequences;
 
-import org.testng.annotations.Factory;
 import jlibs.core.graph.Sequence;
-import jlibs.core.graph.sequences.CollectionSequence;
-import jlibs.core.graph.sequences.ArraySequence;
+import org.testng.annotations.Factory;
 
 public class SequenceTestFactory{
     @Factory
@@ -11,7 +9,7 @@ public class SequenceTestFactory{
     public static SequenceTest[] createTests(){
         Sequence sequences[] = new Sequence[]{
             new TOCSequence(1, 10),
-            new CollectionSequence(System.getProperties().entrySet()),
+            new IterableSequence(System.getProperties().entrySet()),
             new ArraySequence(System.getProperties().entrySet().toArray()),
         };
 

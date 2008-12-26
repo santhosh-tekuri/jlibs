@@ -3,7 +3,7 @@ package jlibs.core.graph.visitors;
 import jlibs.core.graph.Sequence;
 import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.sequences.FilteredSequence;
-import jlibs.core.graph.sequences.CollectionSequence;
+import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.Filter;
 import jlibs.core.graph.Navigator;
 
@@ -29,6 +29,6 @@ public class ClassSorter{
     }
 
     public static List<Class<?>> sort(Collection<Class<?>> classes){
-        return sort(new CollectionSequence<Class<?>>(classes));
+        return sort(new IterableSequence<Class<?>>(classes));
     }
 }
