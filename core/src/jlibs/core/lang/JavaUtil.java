@@ -61,6 +61,9 @@ public class JavaUtil{
             System.gc();
     }
 
+    /**
+     * calls <code>{@link #gc()}</code> <code>count</code> times
+     */
     public static void gc(int count){
         for(;count!=0; count--)
             gc();
