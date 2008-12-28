@@ -1,6 +1,7 @@
 package jlibs.xml.xsd.display;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.StringUtil;
 import jlibs.core.graph.visitors.PathReflectionVisitor;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.xsd.XSUtil;
@@ -96,7 +97,7 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
                         buff.append('|');
                     buff.append(nsSupport.findPrefix(list.item(i)));
                 }
-                if(buff.toString().equals("null"))
+                if(buff.length()==0)
                     str = "<*>";
                 else
                     str = "<"+buff+":*>";
@@ -106,7 +107,7 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
                 list = wildcard.getNsConstraintList();
                 for(int i=0; i<list.getLength(); i++){
                     String prefix = nsSupport.findPrefix(list.item(i));
-                    if(prefix!=null){
+                    if(!StringUtil.isEmpty(prefix)){
                         if(buff.length()>0)
                             buff.append(',');
                         buff.append(prefix);
