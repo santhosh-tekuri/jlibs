@@ -27,7 +27,7 @@ public int hashCode(){
 i.e, we simply add hashCode of each member and return it;<br>
 while doing this, we should be careful to check whether a member is null;
 
-Using `Util.hashCode(Object...)` you can simplify this as below:
+Using [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/Util.java Util.hashCode(Object...)] you can simplify this as below:
 
 {{{
 import jlibs.core.lang.Util;
