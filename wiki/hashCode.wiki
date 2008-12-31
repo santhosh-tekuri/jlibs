@@ -20,7 +20,7 @@ public int hashCode(){
         hashCode += name.hashCode();
     if(email!=null)
         hashCode += email.hashCode();
-    return hashCode();
+    return hashCode;
 }
 }}}
 
