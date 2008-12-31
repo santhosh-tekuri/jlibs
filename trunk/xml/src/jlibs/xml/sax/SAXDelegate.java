@@ -2,13 +2,14 @@ package jlibs.xml.sax;
 
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.IOException;
 
 /**
  * @author Santhosh Kumar T
  */
-public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, ErrorHandler{
+public class SAXDelegate extends DefaultHandler{
 
     /*-------------------------------------------------[ ContentHandler ]---------------------------------------------------*/
     
@@ -147,5 +148,14 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
     public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName) throws SAXException{
         if(dtdHandler!=null)
             dtdHandler.unparsedEntityDecl(name, publicId, systemId, notationName);
+    }
+
+    /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
+
+    public void setDefaultHandler(DefaultHandler handler){
+        setContentHandler(handler);
+        setEntityResolver(handler);
+        setErrorHandler(handler);
+        setDTDHandler(handler);
     }
 }
