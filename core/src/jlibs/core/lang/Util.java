@@ -7,8 +7,9 @@ import java.util.Arrays;
  */
 public class Util{
     /**
-     * returns hashCode of given argument.
-     * if argument is null, then returns 0
+     * returns hashCode of given arguments.
+     * if any argument is null, then it considers
+     * its hasCode as zero
      */
     public static int hashCode(Object... objects){
         int hashCode = 0;
