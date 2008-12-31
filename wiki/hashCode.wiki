@@ -34,6 +34,6 @@ import jlibs.core.lang.Util;
 
 @Override
 public int hashCode(){
-    return age + Util.hashCode(name) + Util.hashCode(email);
+    return Util.hashCode(age, name, email);
 }
 }}}
