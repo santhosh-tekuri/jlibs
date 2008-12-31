@@ -2,17 +2,22 @@ package jlibs.xml.sax;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import jlibs.xml.sax.helpers.NamespaceSupportReader;
 import jlibs.xml.transform.TransformerUtil;
+import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.NamespaceSupport;
 
 import javax.xml.namespace.QName;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -36,7 +41,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
     /*-------------------------------------------------[ bootstrap ]---------------------------------------------------*/
     
     private XMLWriter xml;
-    void writeInto(XMLWriter xml) throws SAXException{
+    void writeInto(XMLWriter xml)throws ParserConfigurationException, SAXException, IOException{
         this.xml = xml;
         nsSupport.reset();
         attrs.clear();
@@ -56,7 +61,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
         }
     }
     
-    protected abstract void write(E obj) throws SAXException;
+    protected abstract void write(E obj) throws ParserConfigurationException, SAXException, IOException;
     
     /*-------------------------------------------------[ Namespaces ]---------------------------------------------------*/
 
@@ -85,6 +90,20 @@ public abstract class ObjectInputSource<E> extends InputSource{
         String prefix = declarePrefix(uri);
         return prefix.length()==0 ? localPart : prefix+':'+localPart;
     }
+
+    private void startPrefixMapping(NamespaceSupport nsSupport) throws SAXException{
+        Enumeration enumer = nsSupport.getDeclaredPrefixes();
+        while(enumer.hasMoreElements()){
+            String prefix = (String) enumer.nextElement();
+            xml.startPrefixMapping(prefix, nsSupport.getURI(prefix));
+        }
+    }
+
+    private void endPrefixMapping(NamespaceSupport nsSupport) throws SAXException{
+        Enumeration enumer = nsSupport.getDeclaredPrefixes();
+        while(enumer.hasMoreElements())
+            xml.endPrefixMapping((String)enumer.nextElement());
+    }
     
     /*-------------------------------------------------[ start-element ]---------------------------------------------------*/
 
@@ -97,11 +116,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     private void finishStartElement() throws SAXException{
         if(elem!=null){
-            Enumeration enumer = nsSupport.getDeclaredPrefixes();
-            while(enumer.hasMoreElements()){
-                String prefix = (String) enumer.nextElement();
-                xml.startPrefixMapping(prefix, nsSupport.getURI(prefix));
-            }
+            startPrefixMapping(nsSupport);
             nsSupport.pushContext();
 
             elemStack.push(elem);
@@ -184,9 +199,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
     private ObjectInputSource<E> endElement(QName qname) throws SAXException{
         xml.endElement(qname.getNamespaceURI(), qname.getLocalPart(), toString(qname));
 
-        Enumeration enumer = nsSupport.getDeclaredPrefixes();
-        while(enumer.hasMoreElements())
-            xml.endPrefixMapping((String)enumer.nextElement());
+        endPrefixMapping(nsSupport);
         nsSupport.popContext();
         return this;
     }
@@ -230,6 +243,66 @@ public abstract class ObjectInputSource<E> extends InputSource{
         SAXParseException saxException = new SAXParseException(msg, null, ex);
         xml.fatalError(saxException);
         throw saxException;
+    }
+
+    /*-------------------------------------------------[ XML ]---------------------------------------------------*/
+
+    public ObjectInputSource<E> addXML(InputSource is, boolean excludeRoot) throws ParserConfigurationException, SAXException, IOException{
+        if(excludeRoot){
+            NamespaceSupportReader nsReader = new NamespaceSupportReader(false){
+                private int depth = 0;
+
+                @Override
+                public void startElement(String namespaceURI, String localName, String qualifiedName, Attributes atts) throws SAXException{
+                    depth++;
+                    if(depth==2)
+                        ObjectInputSource.this.startPrefixMapping(getNamespaceSupport());
+                    super.startElement(namespaceURI, localName, qualifiedName, atts);
+
+                }
+
+                @Override
+                public void endElement(String uri, String localName, String qName) throws SAXException{
+                    super.endElement(uri, localName, qName);
+                    if(depth==2)
+                        ObjectInputSource.this.endPrefixMapping(getNamespaceSupport());
+                    depth--;
+                }
+            };
+            SAXDelegate delegate = new SAXDelegate(){
+                private int depth = 0;
+
+                @Override
+                public void startPrefixMapping(String prefix, String uri) throws SAXException{
+                    if(depth>0)
+                        super.startPrefixMapping(prefix, uri);
+                }
+
+                @Override
+                public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException{
+                    depth++;
+                    if(depth>1)
+                        super.startElement(uri, localName, qName, atts);
+                }
+
+                @Override
+                public void endElement(String uri, String localName, String qName) throws SAXException{
+                    if(depth>1)
+                        super.endElement(uri, localName, qName);
+                    depth--;
+                }
+
+                @Override
+                public void endPrefixMapping(String prefix) throws SAXException{
+                    if(depth>0)
+                        super.endPrefixMapping(prefix);
+                }
+            };
+            delegate.setDefaultHandler(xml);
+            nsReader.parse(is, delegate);
+        }else
+            SAXUtil.newSAXParser(true, false).parse(is, xml);
+        return this;
     }
 
     /*-------------------------------------------------[ Others ]---------------------------------------------------*/
@@ -287,7 +360,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
     public static void main(String[] args) throws Exception{
         new ObjectInputSource<String>(null){
             @Override
-            protected void write(String obj) throws SAXException{
+            protected void write(String obj) throws ParserConfigurationException, SAXException, IOException{
                 String google = "http://google.com";
                 String yahoo = "http://yahoo.com";
 
@@ -301,6 +374,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 addAttribute("name", "value");
                 addElement("xyz", "helloworld");
                 addElement(google, "hai", "test");
+                addXML(new InputSource("xml/xsds/note.xsd"), true);
                 addComment("this is comment");
                 addCDATA("this is sample cdata");
             }
