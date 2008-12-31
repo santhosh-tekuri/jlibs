@@ -1,0 +1,39 @@
+#summary computing hashCode
+
+Let us say you have Employee class defined as below:
+
+{{{
+public class Employee{
+    private String name;
+    private String email;
+    private int age;
+}
+}}}
+
+We can implement hasCode() as follows:
+
+{{{
+@Override
+public int hashCode(){
+    int hashCode = age;
+    if(name!=null)
+        hashCode += name.hashCode();
+    if(email!=null)
+        hashCode += email.hashCode();
+    return hashCode();
+}
+}}}
+
+i.e, we simply add hashCode of each member and return it;<br>
+while doing this, we should be careful to check whether a member is null;
+
+Using Util.hashCode(Object) you can simplify this as below:
+
+{{{
+import jlibs.core.lang.Util;
+
+@Override
+public int hashCode(){
+    return age + Util.hashCode(name) + Util.hashCode(email);
+}
+}}}
