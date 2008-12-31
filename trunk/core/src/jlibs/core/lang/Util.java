@@ -10,8 +10,13 @@ public class Util{
      * returns hashCode of given argument.
      * if argument is null, then returns 0
      */
-    public static int hashCode(Object obj){
-        return obj!=null ? obj.hashCode() : 0;
+    public static int hashCode(Object... objects){
+        int hashCode = 0;
+        for(Object obj: objects){
+            if(obj!=null)
+                hashCode += obj.hashCode();
+        }
+        return hashCode;
     }
 
     /**
