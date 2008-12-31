@@ -7,20 +7,6 @@ import java.util.Arrays;
  */
 public class Util{
     /**
-     * returns hashCode of given arguments.
-     * if any argument is null, then it considers
-     * its hasCode as zero
-     */
-    public static int hashCode(Object... objects){
-        int hashCode = 0;
-        for(Object obj: objects){
-            if(obj!=null)
-                hashCode += obj.hashCode();
-        }
-        return hashCode;
-    }
-
-    /**
      * Returns true if given two objects are same.
      *
      * null values are handled as follows:
@@ -37,7 +23,7 @@ public class Util{
         else if(obj1.getClass().isArray()){
             if(obj2.getClass().isArray()){
                 if(obj1 instanceof Object[] && obj2 instanceof Object[])
-                    return Arrays.equals((Object[])obj1, (Object[])obj2);
+                    return Arrays.deepEquals((Object[])obj1, (Object[])obj2);
                 else if(obj1 instanceof boolean[] && obj2 instanceof boolean[])
                     return Arrays.equals((boolean[])obj1, (boolean[])obj2);
                 else if(obj1 instanceof char[] && obj2 instanceof char[])
@@ -55,10 +41,56 @@ public class Util{
                 else if(obj1 instanceof double[] && obj2 instanceof double[])
                     return Arrays.equals((double[])obj1, (double[])obj2);
                 else
-                    return false;
+                    throw new ImpossibleException("couldn't do equals for"+obj1.getClass().getComponentType().getSimpleName()+"[]");
             }else
                 return false;
         }else
             return obj1.equals(obj2);
+    }
+
+    /*-------------------------------------------------[ HashCode ]---------------------------------------------------*/
+    
+    /**
+     * returns hashCode of given argument.
+     * if argument is null, returns 0
+     */
+    public static int hashCode(Object obj){
+        if(obj==null)
+            return 0;
+        else if(obj.getClass().isArray()){
+            if(obj instanceof Object[])
+                return Arrays.deepHashCode((Object[])obj);
+            else if(obj instanceof boolean[])
+                return Arrays.hashCode((boolean[])obj);
+            else if(obj instanceof char[])
+                return Arrays.hashCode((char[])obj);
+            else if(obj instanceof byte[])
+                return Arrays.hashCode((byte[])obj);
+            else if(obj instanceof short[])
+                return Arrays.hashCode((short[])obj);
+            else if(obj instanceof int[])
+                return Arrays.hashCode((int[])obj);
+            else if(obj instanceof long[])
+                return Arrays.hashCode((long[])obj);
+            else if(obj instanceof float[])
+                return Arrays.hashCode((float[])obj);
+            else if(obj instanceof double[])
+                return Arrays.hashCode((double[])obj);
+            else
+                throw new ImpossibleException("couldn't find hascode for"+obj.getClass().getComponentType().getSimpleName()+"[]");
+        }else
+            return obj.hashCode();
+    }
+
+    /**
+     * returns hashCode of given arguments.
+     * if any argument is null, then it considers
+     * its hashCode as zero
+     */
+    public static int hashCode(Object... objects){
+        int hashCode = 0;
+        for(Object obj: objects)
+            hashCode += hashCode(obj);
+        return hashCode;
     }
 }
