@@ -27,13 +27,26 @@ public int hashCode(){
 i.e, we simply add hashCode of each member and return it;<br>
 while doing this, we should be careful to check whether a member is null;
 
-Using [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/Util.java#9 Util.hashCode(Object...)] you can simplify this as below:
+Using [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/Util.java#85 Util.hashCode(Object...)] you can simplify this as below:
 
 {{{
 import jlibs.core.lang.Util;
 
 @Override
 public int hashCode(){
-    return Util.hashCode(age, name, email);
+    return age + Util.hashCode(name, email);
 }
 }}}
+
+Here JVM implitly creates an array containing name and email. If you want to avoid extra array creation, you could use [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/Util.java#53 Util.hashCode(Object)] as below:
+
+{{{
+import jlibs.core.lang.Util;
+
+@Override
+public int hashCode(){
+    return age + Util.hashCode(name) + Util.hashCode(email);
+}
+}}}
+
+*NOTE:* `Util.hashCode(...)` uses `java.util.Arrays` to compute hashCode for arrays.
