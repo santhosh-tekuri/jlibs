@@ -10,7 +10,7 @@ public class Employee{
 }
 }}}
 
-We can implement hasCode() as follows:
+We can implement `hasCode()` as follows:
 
 {{{
 @Override
@@ -27,7 +27,7 @@ public int hashCode(){
 i.e, we simply add hashCode of each member and return it;<br>
 while doing this, we should be careful to check whether a member is null;
 
-Using Util.hashCode(Object...) you can simplify this as below:
+Using `Util.hashCode(Object...)` you can simplify this as below:
 
 {{{
 import jlibs.core.lang.Util;
