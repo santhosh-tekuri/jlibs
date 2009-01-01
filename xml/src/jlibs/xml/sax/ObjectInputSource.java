@@ -219,6 +219,22 @@ public abstract class ObjectInputSource<E> extends InputSource{
         return endElement(findEndElement());
     }
 
+    /*-------------------------------------------------[ end-elements ]---------------------------------------------------*/
+    
+    public ObjectInputSource<E> endElements(String uri, String name) throws SAXException{
+        QName qname = findEndElement();
+        while(true){
+            endElement(qname);
+            if(qname.getNamespaceURI().equals(uri) && qname.getLocalPart().equals(name))
+                break;
+        }
+        return this;
+    }
+
+    public ObjectInputSource<E> endElements(String name) throws SAXException{
+        return endElements("", name);
+    }
+
     public ObjectInputSource<E> endElements() throws SAXException{
         finishStartElement();
         while(!elemStack.isEmpty())
