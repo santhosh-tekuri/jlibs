@@ -12,6 +12,6 @@ public class SAXInputSource<E extends SAXProducer> extends ObjectInputSource<E>{
 
     @Override
     protected void write(E obj) throws SAXException{
-        obj.writeInto(this);
+        add(obj);
     }
 }

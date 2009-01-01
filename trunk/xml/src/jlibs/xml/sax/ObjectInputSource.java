@@ -35,7 +35,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
     /*-------------------------------------------------[ bootstrap ]---------------------------------------------------*/
     
     private XMLWriter xml;
-    void writeInto(XMLWriter xml)throws SAXException{
+    void writeTo(XMLWriter xml)throws SAXException{
         this.xml = xml;
         nsSupport.reset();
         attrs.clear();
@@ -47,8 +47,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
             xml.startDocument();
             mark();
             write(obj);
-            endElements();
-            release();
+            release(0);
             xml.endDocument();
         }catch(RuntimeException ex){
             throw new SAXException(ex);
@@ -106,17 +105,26 @@ public abstract class ObjectInputSource<E> extends InputSource{
     private Stack<QName> elemStack = new Stack<QName>();
     private QName elem;
 
-    public void mark() throws SAXException{
+    private int marks = -1;
+    public int mark() throws SAXException{
         finishStartElement();
         elemStack.push(null);
+        return ++marks;
     }
 
-    public void release() throws SAXException{
-        if(elemStack.isEmpty())
+    public int release() throws SAXException{
+        if(marks==-1 || elemStack.empty())
             throw new SAXException("no mark found to be released");
+        endElements();
         if(elemStack.peek()!=null)
             throw new SAXException("expected </"+toString(elemStack.peek())+'>');
         elemStack.pop();
+        return --marks;
+    }
+
+    public void release(int mark) throws SAXException{
+        while(marks>=mark)
+            release();
     }
 
     private String toString(QName qname){
@@ -220,7 +228,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     private QName findEndElement() throws SAXException{
         finishStartElement();
-        if(elemStack.isEmpty() || elemStack.peek()==null)
+        if(elemStack.empty() || elemStack.peek()==null)
             throw new SAXException("can't find matching start element");
         return elemStack.pop();
     }
@@ -266,7 +274,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     public ObjectInputSource<E> endElements() throws SAXException{
         finishStartElement();
-        while(!elemStack.isEmpty() && elemStack.peek()!=null)
+        while(!elemStack.empty() && elemStack.peek()!=null)
             endElement();
         return this;
     }
@@ -388,7 +396,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     /*-------------------------------------------------[ Others ]---------------------------------------------------*/
 
-    public ObjectInputSource<E> processingInstruction(String target, String data) throws SAXException{
+    public ObjectInputSource<E> addProcessingInstruction(String target, String data) throws SAXException{
         xml.processingInstruction(target, data);
         return this;
     }
@@ -403,8 +411,22 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     public ObjectInputSource<E> add(SAXProducer saxProducer) throws SAXException{
         if(saxProducer!=null){
+            QName qname = saxProducer.getRootElement();
+            add(saxProducer, qname.getNamespaceURI(), qname.getLocalPart());
+        }
+        return this;
+    }
+
+    public ObjectInputSource<E> add(SAXProducer saxProducer, String name) throws SAXException{
+        return add(saxProducer, "", name);
+    }
+    
+    public ObjectInputSource<E> add(SAXProducer saxProducer, String uri, String name) throws SAXException{
+        if(saxProducer!=null){
             mark();
-            saxProducer.writeInto(this);
+            startElement(uri, name);
+            saxProducer.writeAttributes(this);
+            saxProducer.writeContent(this);
             endElements();
             release();
         }
@@ -413,8 +435,8 @@ public abstract class ObjectInputSource<E> extends InputSource{
 
     /*-------------------------------------------------[ DTD ]---------------------------------------------------*/
 
-    public ObjectInputSource<E> addPublicDTD(String name, String publicId) throws SAXException{
-        xml.startDTD(name, publicId, null);
+    public ObjectInputSource<E> addPublicDTD(String name, String publicId, String systemID) throws SAXException{
+        xml.startDTD(name, publicId, systemID);
         xml.endDTD();
         return this;
     }
@@ -431,17 +453,17 @@ public abstract class ObjectInputSource<E> extends InputSource{
         return new SAXSource(new XMLWriter(), this);
     }
 
-    public void writeInto(Writer writer, boolean omitXMLDeclaration, int indentAmount) throws TransformerException{
+    public void writeTo(Writer writer, boolean omitXMLDeclaration, int indentAmount) throws TransformerException{
         Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, null);
         transformer.transform(createSource(), new StreamResult(writer));
     }
 
-    public void writeInto(OutputStream out, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
+    public void writeTo(OutputStream out, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
         Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, encoding);
         transformer.transform(createSource(), new StreamResult(out));
     }
 
-    public void writeInto(String systemID, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
+    public void writeTo(String systemID, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException{
         Transformer transformer = TransformerUtil.newTransformer(null, omitXMLDeclaration, indentAmount, encoding);
         transformer.transform(createSource(), new StreamResult(systemID));
     }
@@ -455,7 +477,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 String google = "http://google.com";
                 String yahoo = "http://yahoo.com";
 
-                processingInstruction("san", "test='1.2'");
+                addProcessingInstruction("san", "test='1.2'");
 
                 declarePrefix("google", google);
                 declarePrefix("yahoo", yahoo);
@@ -469,6 +491,6 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 addComment("this is comment");
                 addCDATA("this is sample cdata");
             }
-        }.writeInto(new OutputStreamWriter(System.out, "utf-8"), false, 4);
+        }.writeTo(new OutputStreamWriter(System.out, "utf-8"), false, 4);
     }
 }
