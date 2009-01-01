@@ -1,0 +1,319 @@
+#summary Creating XML using SAX
+
+Consider `Company` class containing array of `Employee`;
+
+{{{
+class Company{
+    String name;
+    Employee employees[];
+
+    Company(String name, Employee... employees){
+        this.name = name;
+        this.employees = employees;
+    }
+}
+
+class Employee{
+    String id;
+    String name;
+    String email;
+    int age;
+
+    Employee(String id, String name, String email, int age){
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.age = age;
+    }
+}
+}}}
+
+*ObjectInputSource:*
+
+This is an extension of `org.xml.sax.InputSource` with single abstract method:
+{{{
+protected abstract void write(E obj) throws SAXException;
+}}}
+
+`InputSource` wraps `systemID` or `OutputStream` or `Reader` which is source of xml;<br>
+Similarly, `ObjectInputSource` wraps a java object, which is the source of xml:
+{{{
+new ObjectInputSource<E>(E obj)
+}}}
+
+It is job of its subclass to override `write(E obj)` and fire SAX events.
+
+To help subclasses, it contains methods to generate SAX events like:<br>
+    `startElement(String name)`<br>
+    `addAttribute(String name, String value)`<br>
+    `endElement(String name)`<br>
+    etc.
+
+Let us write an implementation of `ObjectInputSource` for `Company`;
+
+{{{
+import jlibs.xml.sax.ObjectInputSource;
+import org.xml.sax.SAXException;
+
+class CompanyInputSource extends ObjectInputSource<Company>{
+    public CompanyInputSource(Company company){
+        super(company);
+    }
+
+    @Override
+    protected void write(Company company) throws SAXException{
+        startElement("company");
+        addAttribute("name", company.name);
+        for(Employee emp: company.employees){
+            startElement("employee");
+            addAttribute("id", emp.id);
+            addAttribute("age", ""+emp.age);
+            addElement("name", emp.name);
+            addElement("email", emp.email);
+            endElement("employee");
+        }
+        endElement("company");
+    }
+}
+}}}
+
+*Creating XML:*
+
+To create XML, now we can do the following:
+
+{{{
+import javax.xml.transform.TransformerException;
+
+public static void main(String[] args) throws TransformerException, XMLStreamException{
+    Employee scott = new Employee("1", "scott", "scott@gmail.com", 20);
+    Employee alice = new Employee("2", "alice", "alice@gmail.com", 25);
+    Company company = new Company("MyCompany", scott, alice);
+
+    // print company to System.out as xml
+    new CompanyInputSource(company).writeTo(System.out, false, 4, null);
+}
+}}}
+
+Running this prints following:
+
+{{{
+<?xml version="1.0" encoding="UTF-8"?>
+<company name="MyCompany">
+    <employee id="1" age="20">
+        <name>scott</name>
+        <email>scott@gmail.com</email>
+    </employee>
+    <employee id="2" age="25">
+        <name>alice</name>
+        <email>alice@gmail.com</email>
+    </employee>
+</company>
+}}}
+
+`ObjectInputSource` contains several methods to serialize the SAX events:
+{{{
+public void writeTo(Writer writer, boolean omitXMLDeclaration, int indentAmount) throws TransformerException
+public void writeTo(OutputStream out, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException
+public void writeTo(String systemID, boolean omitXMLDeclaration, int indentAmount, String encoding) throws TransformerException
+}}}
+
+if `encoding` is null, then it defaults to default XML encoding(`UTF-8`);<br>
+These `writeTo(...)` methods use Identity Trasformer;
+
+*NULL Friendly*
+
+The methods to fire SAX events are `null` friendly. it means:
+{{{
+addAttribute("id", emp.id);
+}}}
+
+will not add attribute if `emp.id=null`. So you no longer need to write as below:
+{{{
+if(emp.id!=null)
+    addAttribute("id", emp.id);
+}}}
+
+`null` friendly methods, avoid code clutter and make it more readable.
+
+*Method Chaining*
+
+The methods to fire SAX events return `this`. So method calls can be chained to produce more readable code
+{{{
+startElement("employee")
+    .addAttribute("id", emp.id)
+    .addAttribute("age", ""+emp.age);
+}}}
+instead of
+{{{
+startElement("employee");
+addAttribute("id", emp.id);
+addAttribute("age", ""+emp.age);
+}}}
+
+*Simple Text Only Elements*
+
+You can do following:
+{{{
+addElement("email", emp.email);
+}}}
+instead of
+{{{
+if(emp.email!=null){
+    startElement("email");
+    addText(emp.email);
+    endElement("email");
+}
+}}}
+
+there is also `addCDATAElement(...)` available
+
+*End Element*
+
+To end element, we do:
+{{{
+endElement("employee");
+}}}
+
+If you mis-spell element name here, it will throw `SAXException`:
+    `org.xml.sax.SAXException: expected </employee>`
+
+there is also another variation of `endElement` with no arguments;
+{{{
+endElement();
+}}}
+This will implicitly find the recent element started and ends it.
+
+suppose we have:
+{{{
+endElement("elem3");
+endElement("elem2");
+endElement("elem1");
+}}}
+the same can be done in single line as below:
+{{{
+endElements("elem1");
+}}}
+This will do endElement() until `elem1` is closed;
+
+To end all elements started, do:
+{{{
+endElements();
+}}}
+
+*NOTE:*
+
+ * `endElements()` will do nothing if all elements are already closed;
+ * `endElements()` is implictly called before `writeTo(...)`. So you can safely ignore trailing end elements of xml
+
+*Mark and Release*
+
+{{{
+startElement("elem1");
+...
+startElement("elem2");
+....
+mark();
+startElement("elem3");
+....
+startElement("elem4");
+.....
+release(); // will close elem4 and elem3 i.e upto the mark and clears the mark
+endElement("elem2");
+}}}
+
+release() must be called prior to ending Elements before the mark. i.e,
+
+{{{
+startElement("elem1");
+...
+mark();
+....
+endElement("elem1"); // will throw SAXException: can't find matching start element
+}}}
+
+*NOTE:*
+
+ * You can mark as many times as possible. i.e, multiple marks can exist;<br>
+ * endElements() will only end elements which are started after recent mark.
+ * `release()` implictly does end elements
+
+you can also release any mark, instead of last mark as below:
+
+{{{
+int mark = mark();
+...
+mark();
+...
+mark();
+...
+release(mark);
+}}}
+
+when you call `mark()`, it returns the number of mark;<br>
+first call to `mark()` returns 1. next call to `mark()` will return 2, if earlier mark is not released;
+
+NOTE:
+there is an implicit mark 0, which should not be released by user. it is used by `ObjectInputSource`;
+
+*DTD*
+{{{
+addSystemDTD("company", "company.dtd");
+}}}
+will produce<br>
+
+`<!DOCTYPE company SYSTEM "company.dtd">`
+
+
+{{{
+addPublicDTD("company", "-//W3C//DTD XHTML 1.0 Transitional//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd");
+}}}
+will produce
+
+`<!DOCTYPE company PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">`
+
+*Adding XML*
+
+{{{
+startElement("elem1");
+addXML("<test><test1>first</test1><test2>second</test2></test>", false);
+endElement();
+}}}
+will produce:
+
+{{{
+<elem1>
+    <test>
+        <test1>first</test1>
+        <test2>second</test2>
+    </test>
+</elem1>
+}}}
+
+The first argument should be well-formed xml string;
+second argument will tell whether to ignore root element or not;
+when used `true` in above sample it will produce:
+{{{
+<elem1>
+    <test1>first</test1>
+    <test2>second</test2>
+</elem1>
+}}}
+
+there are following other variations of addXML(...) available:
+{{{
+public ObjectInputSource<E> addXML(InputSource is, boolean excludeRoot) throws SAXException
+}}}
+
+for example, you could write:
+{{{
+addXML(new InputSource("notes.xml"), true);
+}}}
+
+*Miscellaneous*
+{{{
+addComment("this is comment");
+addCDATA("this is inside cdata");
+
+// to produce: <?xml-stylesheet href="classic.xsl" type="text/xml"?>
+addProcessingInstruction("xml-stylesheet", "href=\"classic.xsl\" type=\"text/xml\"");
+}}}
