@@ -17,7 +17,7 @@ public class XMLWriter extends AbstractXMLReader{
     @SuppressWarnings({"unchecked"})
     public void parse(InputSource input) throws SAXException, IOException{
         if(input instanceof ObjectInputSource)
-            ((ObjectInputSource)input).writeInto(this);
+            ((ObjectInputSource)input).writeTo(this);
         else
             throw new IOException("can't parse "+input);
     }
