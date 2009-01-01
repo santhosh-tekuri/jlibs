@@ -24,6 +24,7 @@
             <fileset dir=".">
                 <include name="3rdparty/*.jar"/>
                 <exclude name="3rdparty/testng*.jar"/>
+                <exclude name="3rdparty/ant*.jar"/>
             </fileset>
         </copy>
         <copy todir="installer" flatten="true">
@@ -33,6 +34,11 @@
                 <include name="*/*.bat"/>
             </fileset>
         </copy>
+        <zip destfile="installer/sources.zip">
+            <fileset dir=".">
+                <include name="*/src/**"/>
+            </fileset>
+        </zip>
         
         <if>
             <not>
