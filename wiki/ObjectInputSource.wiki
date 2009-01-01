@@ -347,7 +347,7 @@ You can notice that, we didn't tell what prefix to use.<br>
 
 *Standard Namespaces*
 
-*jlibs.xml.Namespaces* class contains most frequently used namespaces like:
+`jlibs.xml.Namespaces` class contains most frequently used namespaces like:
 {{{
 public static final String URI_XSD   = "http://www.w3.org/2001/XMLSchema";
 public static final String URI_XSI   = "http://www.w3.org/2001/XMLSchema-instance";
