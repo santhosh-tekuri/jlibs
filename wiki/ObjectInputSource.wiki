@@ -317,3 +317,167 @@ addCDATA("this is inside cdata");
 // to produce: <?xml-stylesheet href="classic.xsl" type="text/xml"?>
 addProcessingInstruction("xml-stylesheet", "href=\"classic.xsl\" type=\"text/xml\"");
 }}}
+
+*Namespaces*
+
+{{{
+static final String URI_JLIBS = "http://jlibs.org";
+static final String URI_COMP = "http://mycompany.com";
+static final String URI_EMP = "http://employee.com";
+
+startElement(URI_COMP, "company")
+    .addAttribute("name", "mycompany")
+    .addAttribute(URI_JLIBS, "version", "0.1")
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "scott")
+        .addElement(URI_EMP, "email", "scott@google.com")
+        .endElement();
+}}}
+will produce the following:
+{{{
+<ns1:company xmlns:ns1="http://mycompany.com" name="mycompany" ns2:version="0.1" xmlns:ns2="http://jlibs.org">
+    <ns3:employee xmlns:ns3="http://employee.com" name="scott">
+        <ns3:email>scott@google.com</ns3:email>
+    </ns3:employee>
+</ns1:company>
+}}}
+
+You can notice that, we didn't tell what prefix to use.<br>
+`ObjectInputSource` is intelligent enough to generate prefixes automatically as ns1, ns2 etc...
+
+*Standard Namespaces*
+
+*jlibs.xml.Namespaces* class contains most frequently used namespaces like:
+{{{
+public static final String URI_XSD   = "http://www.w3.org/2001/XMLSchema";
+public static final String URI_XSI   = "http://www.w3.org/2001/XMLSchema-instance";
+public static final String URI_XSL   = "http://www.w3.org/1999/XSL/Transform";
+}}}
+
+`Namespaces.suggestPrefix(String uri)` suggests most commonly used prefix for any of these standard prefixes;
+{{{
+String prefix = Namespaces.suggestPrefix(Namespaces.URI_XSD); // prefix will be "xsd"
+}}}
+
+`ObjectInputSource` uses suggested prefixes from `Namespaces` if available; For example:
+{{{
+import static jlibs.xml.Namespaces.*;
+
+startElement(URI_XSD, "element")
+    .addAttribute("name", "employee")
+    .addAttribute("type", "employeeType");
+}}}
+will produce the following:
+{{{
+<xsd:element xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="employee" type="employeeType"/>
+}}}
+
+*Suggesting Prefixes*
+
+{{{
+public void suggestPrefix(String prefix, String uri)
+}}}
+
+this method can be used to suggest prefix for given uri;<br>
+Note that, using this method you can even ovverride the prefixes for standard namespaces, if needed. 
+
+{{{
+suggestPrefix(URI_JLIBS, "jlibs");
+suggestPrefix(URI_COMP, "comp");
+suggestPrefix(URI_EMP, "emp");
+
+startElement(URI_COMP, "company")
+    .addAttribute("name", "mycompany")
+    .addAttribute(URI_JLIBS, "version", "0.1")
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "scott")
+        .addElement(URI_EMP, "email", "scott@google.com")
+        .endElement();
+}}}
+will produce the following:
+{{{
+<comp:company xmlns:comp="http://mycompany.com" name="mycompany" jlibs:version="0.1" xmlns:jlibs="http://jlibs.org">
+    <emp:employee xmlns:emp="http://employee.com" name="scott">
+        <emp:email>scott@google.com</emp:email>
+    </emp:employee>
+</comp:company>
+}}}
+
+*Declaring Prefixes*
+
+When you declare prefix, xmlns attribute will be added to generated xml;<br>
+This could be handy in following situation:
+
+{{{
+startElement(URI_COMP, "company")
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "scott")
+        .endElement()
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "alice")
+        .endElement()
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "alean")
+        .endElement();
+}}}
+produces the following:
+{{{
+<ns1:company xmlns:ns1="http://mycompany.com">
+    <ns2:employee xmlns:ns2="http://employee.com" name="scott"/>
+    <ns2:employee xmlns:ns2="http://employee.com" name="alice"/>
+    <ns2:employee xmlns:ns2="http://employee.com" name="alean"/>
+</ns1:company>
+}}}
+
+In output, you can notice that `ns2` is declared in each `<employee>` element.<br>
+The xml is looking cluttered because of this. If we could have defined `ns2` in `<company>`, it would be better.<br>
+To do this:
+{{{
+declarePrefix(URI_EMP);
+
+startElement(URI_COMP, "company")
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "scott")
+        .endElement()
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "alice")
+        .endElement()
+    .startElement(URI_EMP, "employee")
+        .addAttribute("name", "alean")
+        .endElement();
+}}}
+now the above code produces:
+{{{
+<ns2:company xmlns:ns2="http://mycompany.com" xmlns:ns1="http://employee.com">
+    <ns1:employee name="scott"/>
+    <ns1:employee name="alice"/>
+    <ns1:employee name="alean"/>
+</ns2:company>
+}}}
+
+there is also another variant of `declarePrefix(...)`
+{{{
+public boolean declarePrefix(String prefix, String uri)
+}}}
+using this, you can specify prefix of your wish.
+
+*Computing QNames*
+
+{{{
+declarePrefix("emp", URI_EMP);
+
+startElement(URI_XSD, "schema");
+startElement(URI_XSD, "element")
+    .addAttribute("name", "employee")
+    .addAttribute("type", toQName(URI_EMP, "emloyeeType"));
+}}}
+will produce following:
+{{{
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:emp="http://employee.com">
+    <xsd:element name="employee" type="emp:emloyeeType"/>
+</xsd:schema>
+}}}
+
+here the value of `@type` is a qname which should be valid. i.e you want to use correct prefix<br>
+`toQName(uri, localPart)` will return the correct qname string.<br>
+if the given uri is not yet declared, it will be declared automatically.
