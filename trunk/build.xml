@@ -11,7 +11,12 @@
         <ant dir="swing" target="clean" inheritAll="false"/>
         <ant dir="utils" target="clean" inheritAll="false"/>
 
-        <delete dir="installer"/>
+        <delete>
+            <fileset dir=".">
+                <include name="installer/**"/>
+                <include name="jlibs*.zip"/>
+            </fileset>
+        </delete>
     </target>
 
     <target name="install">
@@ -37,6 +42,7 @@
         <zip destfile="installer/sources.zip">
             <fileset dir=".">
                 <include name="*/src/**"/>
+                <exclude name="wiki/**"/>
             </fileset>
         </zip>
         
@@ -51,6 +57,10 @@
                 </exec>
             </then>
         </if>
-        <zip destfile="jlibs.zip" basedir="installer"/>
+        
+        <tstamp>
+            <format property="time" pattern="yyyy-MM-dd-HHmm"/>
+        </tstamp>
+        <zip destfile="jlibs_${time}.zip" basedir="installer"/>
     </target>
 </project>
