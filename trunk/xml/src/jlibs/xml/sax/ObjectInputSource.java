@@ -81,7 +81,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
         return new QName(uri, localPart, declarePrefix(uri));
     }
 
-    private String toString(String uri, String localPart){
+    public String toQName(String uri, String localPart){
         String prefix = declarePrefix(uri);
         return prefix.length()==0 ? localPart : prefix+':'+localPart;
     }
@@ -200,7 +200,7 @@ public abstract class ObjectInputSource<E> extends InputSource{
         if(elem==null)
             throw new SAXException("no start element found to associate this attribute");
         if(value!=null)
-            attrs.addAttribute(uri, name, toString(uri, name), "CDATA", value);
+            attrs.addAttribute(uri, name, toQName(uri, name), "CDATA", value);
         return this;
     }
 
