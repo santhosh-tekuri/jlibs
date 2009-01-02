@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
 /**
  * @author Santhosh Kumar T
  */
-public class JavaUtil{
+public class RuntimeUtil{
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static String getPID() throws IOException{
         String pid = System.getProperty("pid"); //NOI18N
@@ -27,7 +27,7 @@ public class JavaUtil{
                     tempFile = File.createTempFile("getpids", "exe"); //NOI18N
 
                     // extract the embedded getpids.exe file from the jar and save it to above file
-                    IOUtil.pump(JavaUtil.class.getResourceAsStream("getpids.exe"), new FileOutputStream(tempFile), true, true); //NOI18N
+                    IOUtil.pump(RuntimeUtil.class.getResourceAsStream("getpids.exe"), new FileOutputStream(tempFile), true, true); //NOI18N
                     cmd = new String[]{ tempFile.getAbsolutePath() };
                 }
                 if(cmd!=null){
@@ -69,8 +69,16 @@ public class JavaUtil{
             gc();
     }
 
-    public static void main(String[] args) throws IOException{
-        System.out.println(getPID());
-        gc(5);
+    /**
+     * This method guarantees that garbage colleciton is
+     * done after JVM shutdown is initialized
+     */
+    public static void gcOnExit(){
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run(){
+                gc();
+            }
+        });
     }
 }
