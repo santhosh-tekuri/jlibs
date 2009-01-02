@@ -14,7 +14,7 @@
         <delete>
             <fileset dir=".">
                 <include name="installer/**"/>
-                <include name="jlibs*.zip"/>
+                <include name="*.zip"/>
             </fileset>
         </delete>
     </target>
@@ -61,6 +61,7 @@
         <tstamp>
             <format property="time" pattern="yyyy-MM-dd-HHmm"/>
         </tstamp>
-        <zip destfile="jlibs_${time}.zip" basedir="installer"/>
+        <zip destfile="jlibs_${time}.zip" basedir="installer" excludes="3rdparty/***"/>
+        <zip destfile="3rdparty.zip" basedir="installer/3rdparty"/>
     </target>
 </project>
