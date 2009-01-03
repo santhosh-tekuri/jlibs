@@ -4,6 +4,44 @@
            xmlns="http://www.w3schools.com"
            elementFormDefault="qualified">
 
+    
+    <xs:element name="anyElement">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any namespace="##any"/>
+                <xs:any namespace="##local"/>
+                <xs:any namespace="##other"/>
+                <xs:any namespace="##targetNamespace"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="simpleElement" type="xs:string"/>
+    <xs:element name="elementWithRefElement">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="simpleElement"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="enumeratedElement" type="shape"/>
+    <xs:simpleType name="shape">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="circle"/>
+            <xs:enumeration value="triangle"/>
+            <xs:enumeration value="square"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="restrictedIntegerElement" type="EarthSurfaceElevation"/>
+    <xs:simpleType name= "EarthSurfaceElevation">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="-1290"/>
+            <xs:maxExclusive value="29035"/>
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:element name="note">
         <xs:complexType>
             <xs:sequence>
@@ -11,10 +49,6 @@
                 <xs:element name="from" type="xs:string"/>
                 <xs:element name="heading" type="xs:string"/>
                 <xs:element name="body" type="xs:string"/>
-                <xs:any namespace="##any"/>
-                <xs:any namespace="##local"/>
-                <xs:any namespace="##other"/>
-                <xs:any namespace="##targetNamespace"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
