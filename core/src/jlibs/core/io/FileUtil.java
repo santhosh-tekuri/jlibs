@@ -1,17 +1,17 @@
 package jlibs.core.io;
 
-import jlibs.core.lang.ImpossibleException;
-import jlibs.core.graph.WalkerUtil;
-import jlibs.core.graph.Processor;
 import jlibs.core.graph.Path;
+import jlibs.core.graph.Processor;
 import jlibs.core.graph.Walker;
+import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.core.lang.ImpossibleException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.net.URL;
 import java.net.MalformedURLException;
-
-import org.jetbrains.annotations.NotNull;
+import java.net.URL;
+import java.util.Stack;
 
 /**
  * @author Santhosh Kumar T
@@ -20,6 +20,11 @@ public class FileUtil{
     public static final String PATH_SEPARATOR = File.pathSeparator;
     public static final String SEPARATOR = File.separator;
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+    public static final File JAVA_HOME = new File(System.getProperty("java.home"));
+    public static final File USER_HOME = new File(System.getProperty("user.home"));
+    public static final File USER_DIR = new File(System.getProperty("user.dir"));
+    public static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 
     public static @NotNull URL toURL(@NotNull File file){
         try{
@@ -30,7 +35,11 @@ public class FileUtil{
     }
 
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
-    
+
+    /**
+     * deletes specified file or directory
+     * if given file/dir doesn't exist, simply returns
+     */
     public static void delete(@NotNull File file) throws IOException{
         if(!file.exists())
             return;
@@ -100,37 +109,78 @@ public class FileUtil{
     }
 
     /*-------------------------------------------------[ MkDir ]---------------------------------------------------*/
+
+    /**
+     * create specified directory if doesn't exist.
+     */
+    public static void mkdir(File dir) throws IOException{
+        if(!dir.exists() && !dir.mkdir())
+            throw new IOException("couldn't create directory: "+dir);
+    }
+
+    /**
+     * create specified directory if doesn't exist.
+     * if any parent diretories doesn't exist they will
+     * be created implicitly
+     */
+    public static void mkdirs(File dir) throws IOException{
+        if(!dir.exists() && !dir.mkdirs())
+            throw new IOException("couldn't create directory: "+dir);
+    }
+
+    /*-------------------------------------------------[ Copy ]---------------------------------------------------*/
     
-    public static void mkdir(File file) throws IOException{
-        if(!file.mkdir())
-            throw new IOException("couldn't create directory: "+file);
+    public static interface FileCreator{
+        public void createFile(File sourceFile, File targetFile) throws IOException;
+        public String translate(String name);
     }
 
-    public static void mkdirs(File file) throws IOException{
-        if(!file.mkdirs())
-            throw new IOException("couldn't create directory: "+file);
-    }
-
-    public static void copy(File sourceFile, final File targetFile) throws IOException{
-        if(sourceFile.isFile())
+    private static final FileCreator CREATOR = new FileCreator(){
+        public void createFile(File sourceFile, File targetFile) throws IOException{
+            mkdirs(targetFile.getParentFile());
             IOUtil.pump(new FileInputStream(sourceFile), new FileOutputStream(targetFile), true, true);
+        }
+
+        public String translate(String name){
+            return name;
+        }
+    };
+
+    public static void copyInto(File source, final File targetDir) throws IOException{
+        copyInto(source, targetDir, CREATOR);
+    }
+
+    public static void copy(File source, final File target) throws IOException{
+        copy(source, target, CREATOR);
+    }
+
+    public static void copyInto(File source, File targetDir, FileCreator creator) throws IOException{
+        File target = new File(targetDir,creator.translate(source.getName()));
+        copy(source, target, creator);
+    }
+
+    public static void copy(File source, final File target, final FileCreator creator) throws IOException{
+        if(source.isFile())
+            creator.createFile(source, target);
         else{
             try{
-                mkdirs(targetFile);
+                mkdirs(target);
 
-                Walker<File> walker = new PreorderWalker<File>(sourceFile, FileNavigator.INSTANCE);
+                Walker<File> walker = new PreorderWalker<File>(source, FileNavigator.INSTANCE);
                 walker.next();
+                final Stack<File> stack = new Stack<File>();
+                stack.push(target);
                 WalkerUtil.walk(walker, new Processor<File>(){
-                    File target = targetFile;
-
                     @Override
                     public boolean preProcess(File source, Path path){
-                        target = new File(target, source.getName());
+                        File result = stack.peek();
+                        result = new File(result, creator.translate(source.getName()));
+                        stack.push(result);
                         try{
                             if(source.isDirectory())
-                                mkdir(target);
+                                mkdirs(result);
                             else
-                                IOUtil.pump(new FileInputStream(source), new FileOutputStream(target), true, true);
+                                creator.createFile(source, result);
                         }catch(IOException ex){
                             throw new RuntimeException(ex);
                         }
@@ -139,7 +189,7 @@ public class FileUtil{
 
                     @Override
                     public void postProcess(File source, Path path){
-                        target = target.getParentFile();
+                        stack.pop();
                     }
                 });
             }catch(IOException ex){
@@ -152,6 +202,6 @@ public class FileUtil{
     }
 
     public static void main(String[] args) throws IOException{
-        copy(new File("/Users/santhosh/Downloads/xml-schemas"), new File("/Users/santhosh/Downloads/xml-schemas1"));
+        copyInto(new File("/Users/santhosh/Downloads/xml-schemas"), new File("/Users/santhosh/Downloads/Incomplete"));
     }
 }
