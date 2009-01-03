@@ -72,7 +72,7 @@ Hai santhosh, you are using JVM from Apple Inc..
 public String resolve(String variable)
 }}}
 
-*Using with writers*
+*Using with writers:*
 
 let us say you have file `template.txt` which contains:
 {{{
@@ -94,7 +94,7 @@ Hai santhosh,
     your mail to scott@gmail.com has been sent successfully.
 }}}
 
-*Copying Files/Directories*
+*Copying Files/Directories:*
 
 `TemplateMatcher` provides method to copy files/directories:
 {{{
@@ -102,8 +102,8 @@ public void copyInto(File source, File targetDir, Map<String, String> variables)
 }}}
 
 Name of each file and directory is treated as a template.<br>
-if name of directory is `${xyz}` after applying templates resolves to "a/b/c",<br>
-it expands into the directory structure `a/b/c`;
+If name of directory is `${xyz}` after applying template, if resolves to `"a/b/c"`,<br>
+then it expands into the directory structure `a/b/c`;
 
 for example we have following directory structure:
 
@@ -111,7 +111,7 @@ for example we have following directory structure:
 ${root}
   |- ${class}.java
 }}}
-and content of ${class}.java file is:
+and content of `${class}.java` file is:
 {{{
 package ${rootpackage};
 
@@ -138,7 +138,7 @@ org
  |-example
     |-MyClass.java
 }}}
-and content of MyClass.java will be:
+and content of `MyClass.java` will be:
 {{{
 package org.example;
 
