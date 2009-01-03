@@ -1,5 +1,7 @@
 package jlibs.core.util.regex;
 
+import jlibs.core.io.FileUtil;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
@@ -69,6 +71,26 @@ public class TemplateMatcher{
 
     public void replace(Reader reader, Writer writer, Map<String, String> variables) throws IOException{
         replace(reader, writer, new MapVariableResolver(variables));
+    }
+
+    /*-------------------------------------------------[ File Copy ]---------------------------------------------------*/
+    
+    public void copyInto(File source, File targetDir, final VariableResolver resolver) throws IOException{
+        FileUtil.copyInto(source, targetDir, new FileUtil.FileCreator(){
+            @Override
+            public void createFile(File sourceFile, File targetFile) throws IOException{
+                replace(new FileReader(sourceFile), new FileWriter(targetFile), resolver);
+            }
+
+            @Override
+            public String translate(String name){
+                return replace(name, resolver);
+            }
+        });
+    }
+
+    public void copyInto(File source, File targetDir, Map<String, String> variables) throws IOException{
+        copyInto(source, targetDir, new MapVariableResolver(variables));
     }
 
     /*-------------------------------------------------[ VariableResolver ]---------------------------------------------------*/
