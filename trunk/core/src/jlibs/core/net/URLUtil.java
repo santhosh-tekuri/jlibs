@@ -2,6 +2,7 @@ package jlibs.core.net;
 
 import jlibs.core.io.FileUtil;
 import jlibs.core.lang.StringUtil;
+import jlibs.core.lang.ImpossibleException;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -22,6 +23,17 @@ public class URLUtil{
             return new URL(systemID);
         }catch(MalformedURLException ex){
             return FileUtil.toURL(new File(systemID));
+        }
+    }
+
+    public static String toSystemID(URL url){
+        try{
+            if("file".equals(url.getProtocol()))
+                return new File(url.toURI()).getAbsolutePath();
+            else
+                return url.toString();
+        }catch(URISyntaxException ex){
+            throw new ImpossibleException(ex);
         }
     }
 
