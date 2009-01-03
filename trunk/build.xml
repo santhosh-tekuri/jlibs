@@ -27,6 +27,7 @@
 
         <copy todir="installer">
             <fileset dir=".">
+                <include name="readme.txt"/>
                 <include name="3rdparty/*.jar"/>
                 <exclude name="3rdparty/testng*.jar"/>
                 <exclude name="3rdparty/ant*.jar"/>
@@ -61,7 +62,7 @@
         <tstamp>
             <format property="time" pattern="yyyy-MM-dd-HHmm"/>
         </tstamp>
-        <zip destfile="jlibs_${time}.zip" basedir="installer" excludes="3rdparty/***"/>
+        <zip destfile="jlibs_${time}.zip" basedir="installer" excludes="3rdparty/**"/>
         <zip destfile="3rdparty.zip" basedir="installer/3rdparty"/>
     </target>
 </project>
