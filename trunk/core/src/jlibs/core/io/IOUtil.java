@@ -6,12 +6,16 @@ import java.io.*;
  * @author Santhosh Kumar T
  */
 public class IOUtil{
+    public static ByteArrayOutputStream pump(InputStream is, boolean closeIn) throws IOException{
+        return pump(is, new ByteArrayOutputStream(), closeIn, true);
+    }
+
     /**
      * Reads data from <code>is</code> and writes it into <code>os</code>.
      * <code>is</code> and <code>os</code> are closed if <code>closeIn</code> and <code>closeOut</code>
      * are true respectively.
      */
-    public static void pump(InputStream is, OutputStream os, boolean closeIn, boolean closeOut) throws IOException{
+    public static <T extends OutputStream> T pump(InputStream is, T os, boolean closeIn, boolean closeOut) throws IOException{
         byte buff[] = new byte[1024];
         int len;
         try{
@@ -26,6 +30,11 @@ public class IOUtil{
                     os.close();
             }
         }
+        return os;
+    }
+
+    public static CharArrayWriter pump(Reader reader, boolean closeReader) throws IOException{
+        return pump(reader, new CharArrayWriter(), closeReader, true);
     }
 
     /**
@@ -33,7 +42,7 @@ public class IOUtil{
      * <code>reader</code> and <code>writer</code> are closed if <code>closeReader</code> and <code>closeWriter</code>
      * are true respectively.
      */
-    public static void pump(Reader reader, Writer writer, boolean closeReader, boolean closeWriter) throws IOException{
+    public static <T extends Writer> T pump(Reader reader, T writer, boolean closeReader, boolean closeWriter) throws IOException{
         char buff[] = new char[1024];
         int len;
         try{
@@ -48,5 +57,6 @@ public class IOUtil{
                     writer.close();
             }
         }
+        return writer;
     }
 }
