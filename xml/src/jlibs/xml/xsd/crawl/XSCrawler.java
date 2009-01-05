@@ -24,10 +24,8 @@ public class XSCrawler extends XMLCrawler{
     }
 
     public static void main(String[] args) throws Exception{
-        String dir = "/Users/santhosh/Sonoa/Workspaces/SVN/design_studio_3060/plugins/com.sonoa.eclipse.schemas/crawler";
-        String xsd = "/Users/santhosh/Sonoa/Workspaces/SVN/design_studio_3060/plugins/com.sonoa.eclipse.schemas/schemas/sci/service/service.xsd";
-//        String dir = "xml/xsds/a.xsd";
-//        String xsd = "xml/xsds/a.xsd";
+        String dir = "xml/xsds/crawl";
+        String xsd = "xml/xsds/a.xsd";
         InputSource document = new InputSource(xsd);
         FileUtil.delete(new File(dir));
         new XSCrawler().crawlInto(document, new File(dir));
