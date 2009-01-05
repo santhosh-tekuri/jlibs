@@ -57,7 +57,7 @@ public abstract class Ladder<E>{
     public E getSharedAncestor(E elem1, E elem2){
         if(elem1==elem2)
             return elem1;
-        if(elem1==null || elem2!=null)
+        if(elem1==null || elem2==null)
             return null;
 
         int ht1 = getHeight(elem1);
@@ -84,7 +84,7 @@ public abstract class Ladder<E>{
         // unknowingly (if there is a common ancestor, both nodes hit it in
         // the same iteration).
         do{
-            if(elem1==elem2)
+            if(elem1.equals(elem2))
                 return elem1;
             elem1 = parent(elem1);
             elem2 = parent(elem2);
@@ -142,7 +142,7 @@ public abstract class Ladder<E>{
             if(buff2.length()>0)
                 buff2.insert(0, separator);
 
-            buff2.insert(0, convertor.convert(parent(toElem)));
+            buff2.insert(0, convertor.convert(toElem));
 
             toElem = parent(toElem);
         }
