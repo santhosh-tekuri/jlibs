@@ -17,7 +17,7 @@ import javax.xml.parsers.ParserConfigurationException;
  * @author Santhosh Kumar T
  */
 public class NamespaceSupportReader extends XMLFilterImpl{
-    private MyNamespaceSupport nsSupport = new MyNamespaceSupport();
+    protected MyNamespaceSupport nsSupport = new MyNamespaceSupport();
 
     public NamespaceSupportReader(boolean nsPrefixes) throws ParserConfigurationException, SAXException{
         this(SAXUtil.newSAXParser(true, nsPrefixes).getXMLReader());
