@@ -1,5 +1,7 @@
 package jlibs.core.lang;
 
+import java.util.StringTokenizer;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -27,5 +29,16 @@ public class StringUtil{
             }
         }
         return true;
+    }
+
+    public static String[] getTokens(String str, String delim, boolean trim){
+        StringTokenizer stok = new StringTokenizer(str, delim);
+        String tokens[] = new String[stok.countTokens()];
+        for(int i=0; i<tokens.length; i++){
+            tokens[i] = stok.nextToken();
+            if(trim)
+                tokens[i] = tokens[i].trim();
+        }
+        return tokens;
     }
 }
