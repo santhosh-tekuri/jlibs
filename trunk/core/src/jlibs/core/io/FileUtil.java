@@ -34,6 +34,36 @@ public class FileUtil{
         }
     }
 
+    public static File findFreeFile(File file){
+        if(!file.exists())
+            return file;
+
+        String fileName = file.getName();
+        int dot = fileName.lastIndexOf('.');
+        if(dot==-1){
+            int i = 0;
+            File dir = file.getParentFile();
+            while(true){
+                i++;
+                file = new File(dir, fileName+i);
+                if(!file.exists())
+                    return file;
+            }
+        }else{
+            String name = fileName.substring(0, dot);
+            String ext = fileName.substring(dot+1);
+
+            int i = 0;
+            File dir = file.getParentFile();
+            while(true){
+                i++;
+                file = new File(dir, name+i+'.'+ext);
+                if(!file.exists())
+                    return file;
+            }
+        }
+    }
+
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
 
     /**
