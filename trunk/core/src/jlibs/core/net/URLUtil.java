@@ -3,6 +3,7 @@ package jlibs.core.net;
 import jlibs.core.io.FileUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.ArrayUtil;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -15,6 +16,14 @@ import java.util.regex.Pattern;
  * @author Santhosh Kumar T
  */
 public class URLUtil{
+    public static URI toURI(URL url){
+        try{
+            return url.toURI();
+        }catch(URISyntaxException ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
     public static URL toURL(String systemID){
         if(StringUtil.isWhitespace(systemID))
             return null;
@@ -35,6 +44,10 @@ public class URLUtil{
         }catch(URISyntaxException ex){
             throw new ImpossibleException(ex);
         }
+    }
+
+    public static URI resolve(URL base, URL url){
+        return toURI(base).resolve(toURI(url));
     }
 
     /**
@@ -63,6 +76,28 @@ public class URLUtil{
             map.put(name, value);
         }
         return map;
+    }
+
+    public static String suggestFile(URI uri, String... extensions){
+        if(extensions==null || extensions.length==0)
+            throw new IllegalArgumentException("atleast one extension must be specified");
+        
+        String path = uri.getPath();
+        String tokens[] = StringUtil.getTokens(path, "/", true);
+        String file = tokens[tokens.length-1];
+        int dot = file.indexOf(".");
+        if(dot==-1){
+            String query = uri.getQuery();
+            if(query!=null){
+                query = query.toLowerCase();
+                if(ArrayUtil.contains(extensions, query))
+                    return file+'.'+query;
+            }
+            return file+'.'+extensions[0];
+        }else if(ArrayUtil.contains(extensions, file.substring(dot+1)))
+            return file;
+        else
+            return file.substring(0, dot+1)+extensions[0];
     }
 
     public static void main(String[] args) throws Exception{
