@@ -1,0 +1,8 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://www.example.com/N2"
+ targetNamespace="http://www.example.com/N2">
+
+ <xs:import schemaLocation="file:/Volumes/Softwares/Personal/jlibs/xml/xsds/imports/c.xsd" namespace="http://www.example.com/N1"/>
+ <xs:import schemaLocation="../a.xsd" namespace="http://www.example.com/N1"/>
+
+</xs:schema>
