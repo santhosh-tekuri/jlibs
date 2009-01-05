@@ -3,7 +3,7 @@ package jlibs.xml.sax;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.sax.helpers.NamespaceSupportReader;
-import jlibs.xml.transform.TransformerUtil;
+import jlibs.xml.xsl.TransformerUtil;
 import org.xml.sax.*;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.NamespaceSupport;

@@ -1,4 +1,4 @@
-package jlibs.xml.transform;
+package jlibs.xml.xsl;
 
 import jlibs.core.lang.StringUtil;
 
