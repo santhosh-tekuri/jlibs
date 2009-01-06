@@ -1,6 +1,7 @@
 package jlibs.xml.wsdl.crawl;
 
 import jlibs.xml.sax.crawl.XMLCrawler;
+import jlibs.core.io.FileUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -24,5 +25,13 @@ public class WSDLCrawler extends XMLCrawler{
 
     public File crawlInto(InputSource document, File dir) throws TransformerException, IOException{
         return crawlInto(document, dir, "wsdl");
+    }
+
+    public static void main(String[] args) throws Exception{
+        String dir = "xml/xsds/crawl";
+        String xsd = "https://fps.amazonaws.com/doc/2007-01-08/AmazonFPS.wsdl";
+        InputSource document = new InputSource(xsd);
+        FileUtil.delete(new File(dir));
+        new WSDLCrawler().crawlInto(document, new File(dir));
     }
 }
