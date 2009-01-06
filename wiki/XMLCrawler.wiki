@@ -115,7 +115,7 @@ in second case, it tests whether guessed extension `cgi` is a valid one by check
 
 *AttributeLink:*
 
-'XMLCrawler` simply does its job of crawling. It has no knowledge of
+`XMLCrawler` simply does its job of crawling. It has no knowledge of
  * whether a particular element's attribute is a link
  * how to resolve a link
  * to crawl or not, a particular link
@@ -125,5 +125,29 @@ in second case, it tests whether guessed extension `cgi` is a valid one by check
 It is `AttributeLink` which decides all of the above. So you can override `AttributeLink` methods to suit your needs.
 
 For this we first need to understand how `AttributeLink` manages all above tasks.
+{{{
+public boolean matches(List<QName> path);
+public String resolve(Attributes atts);
+public File suggestFile(File sourceFile, String location);
+public void repair(AttributesImpl atts, String newLocation);
+}}}
 
-This post is not complete. will be finishing soon
+Above are methods in `AttributeLink`;
+
+`matches(...)` tells whether this Link is interested in this element. The argument `path` gives the complete path to the element.<br>
+This method tells `XMLCralwler` that, this link definition understands the current element.
+
+`resolve(....)` method should return the location of referred document. it can be relative URL. It simply returns the indented attribute value and returns it;
+
+it can return null also.
+for example:
+{{{
+<xsd:import namespace="..."/>
+}}}
+in this case, the link definition might not know, how to resolve this. so it can return null.
+
+`suggestFile(...)` will tell you where to save the referred document. You can return null, to indicate that the referred document should not be crawled/saved;
+
+the last method `repair(...)` is called to update, the attribute value which is link; This method is called irrespective of whether `suggestFile(...)` returns null or not null. If `suggestFile(...)` returns null, the second argument will be absolute url, other it will be relative path to the suggested file. Actually you don't need to worry about this. You just simply update correct corresponding attribute value.
+
+`AttributeLink` has default implementation for all. The only method, to be overriden in most cases will be `suggestFile(....)`
