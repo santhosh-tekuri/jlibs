@@ -29,8 +29,8 @@ public class WSDLCrawler extends XMLCrawler{
 
     public static void main(String[] args) throws Exception{
         String dir = "xml/xsds/crawl";
-        String xsd = "https://fps.amazonaws.com/doc/2007-01-08/AmazonFPS.wsdl";
-        InputSource document = new InputSource(xsd);
+        String wsdl = "https://fps.amazonaws.com/doc/2007-01-08/AmazonFPS.wsdl";
+        InputSource document = new InputSource(wsdl);
         FileUtil.delete(new File(dir));
         new WSDLCrawler().crawlInto(document, new File(dir));
     }
