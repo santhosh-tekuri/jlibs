@@ -1,6 +1,6 @@
 #summary Crawling XML Files
 
-A [http://en.wikipedia.org/wiki/Web_crawler WebCrawler], takes url of html document as input. It parses the html document and finds the resources referred by `<a href="...">` in that document. It repeats the same process on the html resources referred and so on. While doing this it saves the resources into local filesystem.
+A [http://en.wikipedia.org/wiki/Web_crawler WebCrawler] takes url of html document as input. It parses the html document and finds the resources referred by `<a href="...">` in that document. It repeats the same process on the html resources referred and so on. While doing this it saves the resources into local filesystem.
 
 Similarly `jlibs.xml.sax.crawl.XMLCrawler` is for XML Files.
 
@@ -93,4 +93,37 @@ String dir = "d:\\crawl";
 crawler.crawlInto(new InputSource(xsd), new File(dir), "xsd"); // third argument is possible extensions
 }}}
 
-This post is not yet finished. will finish it soon.....
+The last argument of following is `String... extensions`
+{{{
+new AttributeLink(...)
+XMLCrawler.crawlInto(...)
+XMLCrawler.crawl(...)
+}}}
+
+why does it require extensions at all.
+
+XMLCrawler can guess the extension for given URL, to its best. But for example:
+{{{
+<wsdl:import namespace="http://mywebsite.com" schemaLocation="http://mywebsite.com/samle/test"/>
+<wsdl:import namespace="http://mywebsite.com" schemaLocation="http://mywebsite.com/samle/test.cgi"/>
+}}}
+in first case, `XMLCrawler` has no knowlege of what extension to use;<br>
+in second case, `XMLCrawler` guesses the extension as `cgi`, which is wrong
+
+in first case, 'XMLCrawler` will use the first extension among the extensions given.<br>
+in second case, it tests whether guessed extension `cgi` is a valid one by checking whether possible extensions given has `cgi`
+
+*AttributeLink:*
+
+'XMLCrawler` simply does its job of crawling. It has no knowledge of
+ * whether a particular element's attribute is a link
+ * how to resolve a link
+ * to crawl or not, a particular link
+ * if has to crawl, where should I save it.
+ * how to correct a link to refer to locally saved document
+
+It is `AttributeLink` which decides all of the above. So you can override `AttributeLink` methods to suit your needs.
+
+For this we first need to understand how `AttributeLink` manages all above tasks.
+
+This post is not complete. will be finishing soon
