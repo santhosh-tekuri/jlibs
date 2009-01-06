@@ -1,2 +1,96 @@
-#summary Coming soon ...
-Coming soon ...
+#summary Crawling XML Files
+
+A [http://en.wikipedia.org/wiki/Web_crawler WebCrawler], takes url of html document as input. It parses the html document and finds the resources referred by `<a href="...">` in that document. It repeats the same process on the html resources referred and so on. While doing this it saves the resources into local filesystem.
+
+Similarly `jlibs.xml.sax.crawl.XMLCrawler` is for XML Files.
+
+However an xml document can refer to another xml document in many ways. for example:
+
+XMLSchema uses `<xsd:import>` and `<xsd:include>`<br>
+WSDL uses `<wsdl:import`, `<wsdl:include>`, `<xsd:import>` and `<xsd:include>`
+
+i.e each type of xml document has its own way of referring other xml documents.
+
+you need to tell `XMLCrawler`, what type links are expected in a particular xml document.
+
+There are preconfigured subclasses of 'XMLCrawler`
+{{{
+jlibs.xml.xsd.crawl.XSCrawler    // for XMLSchema Documents
+jlibs.xml.wsdl.crawl.WSDLCrawler // for WSDL Documents
+jlibs.xml.xsl.crawl.XSLCrawler   // for XML StyleSheets
+}}}
+
+*Usage:*
+
+{{{
+import jlibs.xml.wsdl.crawl.WSDLCrawler;
+
+String dir = "d:\\crawl"; // directory where to save crawled documents
+String wsdl = "https://fps.amazonaws.com/doc/2007-01-08/AmazonFPS.wsdl"; // wsdl to be crawled
+
+new WSDLCrawler().crawlInto(new InputSource(wsdl), new File(dir));
+}}}
+
+All xml documents are saved into the specified directory. After running above code, you will find following files in `d:\crawl` directory
+{{{
+AmazonFPS.wsdl
+AmazonFPS.xsd
+}}}
+It never overwrites any existing file in that directory. So if you run the above code twice, you will see following files in `d:\crawl` directory
+{{{
+AmazonFPS1.wsdl
+AmazonFPS1.xsd
+AmazonFPS.wsdl
+AmazonFPS.xsd
+}}}
+
+you could also do:
+{{{
+new WSDLCrawler().crawl(new InputSource(wsdl), new File("d:\\crawl\\target.wsdl"));
+}}}
+
+`crawl(...)` method's second argument is the file where to save the document specified in first argument. It will save all referred documents in the containing directory of second argument.
+for example, the above creates following files in `d:\crawl`
+{{{
+target.wsdl
+AmazonFPS.xsd
+}}}
+
+*NOTE:* All files are saved directly in given directory, i.e, no subdirectories are created.
+-------------------------------
+`XMLCrawler` is not an abstract class. You can use it but needs to be configured before crawling.
+
+XSLCrawler, WSDLCrawler and XSCrawler are just preconfigured subclasses provided in jlibs for ease of use;
+
+Let us see how to configure XMLCrawler for XMLSchema Documents.
+
+{{{
+import jlibs.xml.sax.crawl.XMLCrawler;
+import jlibs.xml.sax.crawl.AttributeLink;
+import jlibs.xml.Namespaces;
+
+XMLCrawler crawler = new XMLCrawler();
+
+// first define all possible links
+
+/* /xsd:schema/xsd:import/@schemaLocation */
+AttributeLink xsImport = new AttributeLink("schemaLocation", "xsd");
+xsImport.pushElement(Namespaces.URI_XSD, "schema");
+xsImport.pushElement(Namespaces.URI_XSD, "import");
+
+/* /xsd:schema/xsd:include/@schemaLocation */
+AttributeLink xsInclude = new AttributeLink("schemaLocation", "xsd");
+xsInclude.pushElement(Namespaces.URI_XSD, "schema");
+xsInclude.pushElement(Namespaces.URI_XSD, "include");
+
+// now add link definitions to crawler
+crawler.addLink(xsImport);
+crawler.addLink(xsInclude);
+
+// now crawler is ready for use
+String xsd = "http://somesite.com/xsds/complex.xsd";
+String dir = "d:\\crawl";
+crawler.crawlInto(new InputSource(xsd), new File(dir), "xsd"); // third argument is possible extensions
+}}}
+
+This post is not yet finished. will finish it soon.....
