@@ -1,0 +1,149 @@
+#summary Avoid code cluttering when interacting with EDT
+
+Let us have a look at following code;
+{{{
+
+// should be called only in EDT
+public Result method1(){
+    ...
+}
+
+public void method2(Result result){
+    ...    
+}
+
+public void perform(){
+    Result result = method1();
+    method2(result);
+}
+}}}
+
+Assume that, `perform()` method can be called any thread (gui or non-gui thread);<br>
+and `method2()` requires the `result` returned by `method1()`;
+
+then we must change `perform()` method as below:
+{{{
+public void perform(){
+    final Result result[] = { null };
+    Runnable runnable = new Runnable(){
+        public void run(){
+            result[0] = method1();
+        }
+    };
+    if(SwingUtilities.isEventDispatchThread())
+        runnable.run();
+    else{
+        try{
+            SwingUtilities.invokeAndWait(runnable);
+        }catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    method2(result[0]);
+}
+}}}
+
+with jlibs, you can do:
+
+{{{
+import jlibs.swing.EDT;
+import jlibs.core.lang.Task;
+
+public void perform(){
+    Result result = EDT.INSTANCE.execute(new Task<Result>(){
+        public Result run(){
+            return method1();
+        }
+    });
+    method2(result);
+}
+}}}
+
+This avoids code clutter, and makes more readable than earlier one;
+
+Let us say `method1()` can throw checked exception; Then `perform()` implementation would look as below:
+
+{{{
+// should be called only in EDT
+public Result method1() throws SomeException{
+    ....
+}
+
+public void perform() throws SomeException{
+    final SomeException ex[] = { null };
+    final Result result[] = { null };
+    Runnable runnable = new Runnable(){
+        public void run(){
+            try{
+                result[0] = method1();
+            }catch(SomeException e){
+                ex[0] = e;
+            }
+        }
+    };
+    if(SwingUtilities.isEventDispatchThread())
+        runnable.run();
+    else{
+        try{
+            SwingUtilities.invokeAndWait(runnable);
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+    if(ex[0]!=null)
+        throw ex[0];
+
+    method2(result[0]);
+}
+}}}
+
+with JLibs, you can do:
+
+{{{
+import jlibs.swing.EDT;
+import jlibs.core.lang.ThrowableTask;
+
+public void perform() throws SomeException{
+    Result result = EDT.INSTANCE.execute(new ThrowableTask<Result, SomeException>(SomeException.class){
+        public Result run() throws SomeException{
+            return method1();
+        }
+    });
+    method2(result);
+}
+}}}
+
+---------------
+
+`ThrowableTask<R, E>`:
+ * R - return type
+ * E - exception that can be thrown
+
+the constructor of `ThrowableTask` requires the `Exception` class as argument, so that it can use `Class.isInstance(ex)`;
+
+The abstract method to be overridden is:
+{{{
+public R run() throws E
+}}}
+
+`ThrowableTask` can be converted to `Runnable` as below:
+{{{
+ThrowableTask task = ....
+Runnable runnable = task.asRunnable();
+}}}
+
+`Task<R>` is just a subclass of `ThrowableTask<R, E>` where E is `RuntimeException`;
+
+--------------
+
+`EDT` extends `jlibs.core.lang.ThreadTasker`
+
+like `EDT`, you can create a subclass of `ThreadTasker` for `SWT` and use it;
+
+*Miscellaneous*
+
+{{{
+EDT.INSTANCE.isValid() // to check whether calling thread is event dispatch thread or not
+EDT.INSTANCE.executeLater(Runnable) // equivalent to SwingUtilities.invokeLater(Runnable)
+}}}
