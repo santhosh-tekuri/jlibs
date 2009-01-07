@@ -24,7 +24,12 @@ public class EDT extends ThreadTasker{
         }catch(InterruptedException ex){
             throw new RuntimeException(ex);
         } catch(InvocationTargetException ex){
-            throw new RuntimeException(ex.getCause()!=null ? ex.getCause() : ex);
+            if(ex.getCause()==null)
+                throw new RuntimeException(ex);
+            else if(ex.getCause() instanceof RuntimeException)
+                throw (RuntimeException)ex.getCause();
+            else
+                throw new RuntimeException(ex.getCause());
         }
     }
 
