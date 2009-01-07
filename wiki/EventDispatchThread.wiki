@@ -18,7 +18,7 @@ public void perform(){
 }
 }}}
 
-Assume that, `perform()` method can be called any thread (gui or non-gui thread);<br>
+Assume that, `perform()` method can be called by any thread (gui or non-gui thread);<br>
 and `method2()` requires the `result` returned by `method1()`;
 
 then we must change `perform()` method as below:
