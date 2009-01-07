@@ -1,4 +1,4 @@
-#summary Garbage Collection && Finalization
+#summary Garbage Collection & Finalization
 
 *Force GC*
 
@@ -37,7 +37,7 @@ for more details see [http://java.sun.com/developer/technicalArticles/javase/fin
 
 Moreover `finalize()` is somewhat messy. In finalize what if we pass self reference to some other
 object. Then there is a chance that, after `finalize()` is called, the object might be reachable
-and thus cannot be GCed. In future when GC finds that the same object is no longer reachange,
+and thus cannot be GCed. In future when GC finds that the same object is no longer reachable,
 it will call `finalize()` method again. Thus there is a chance that `finalize()` could be called
 more than once for a given object.
 
