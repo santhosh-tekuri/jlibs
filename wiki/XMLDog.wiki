@@ -1,3 +1,198 @@
 #summary Using SAX to Sniff XML
 
-coming soon....
+`XMLDog` is a dog that is trained to sniff xml documents.
+
+We give set of xpaths to `XMLDog` and ask to sniff some xml document. It uses SAX and with one pass over the document it evaluates all the given xpaths.
+
+Let use see an example:
+
+{{{
+import jlibs.xml.DefaultNamespaceContext;
+import jlibs.xml.Namespaces;
+import jlibs.xml.sax.sniff.Node;
+import jlibs.xml.sax.sniff.XMLDog;
+import org.xml.sax.InputSource;
+
+// namespace context used to resolve prefixes in xpath
+DefaultNamespaceContext nsContext = new DefaultNamespaceContext(); // an implementation of javax.xml.namespace.NamespaceContext
+nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
+
+XMLDog dog = new XMLDog(nsContext);
+
+//add xpath
+Node node = dog.add("//xsd:any/@namespace", -1); // 2nd argument is no of minumim hits reqd. "-1" means infinity
+// Node contains compliled xpath
+
+//start sniffing
+dog.sniff(new InputSource("test.xml"));
+
+// see results
+System.out.println("XPath: "+node.getXPath());
+System.out.println("Hits: "+node.getHitCount());
+
+System.out.println("results:");
+List<String> result = node.getResult(); // result will always be List of Strings
+for(String str: result)
+    System.out.println("\t"+str);
+}}}
+
+let us say we have test.xml with following contents:
+{{{
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.w3schools.com"
+           xmlns="http://www.w3schools.com"
+           elementFormDefault="qualified">
+
+
+    <xs:element name="anyElement">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any namespace="##any"/>
+                <xs:any namespace="##local"/>
+                <xs:any namespace="##other"/>
+                <xs:any namespace="##targetNamespace"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="simpleElement" type="xs:string"/>
+    <xs:element name="elementWithRefElement">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="simpleElement"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="note">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="to" type="xs:string"/>
+                <xs:element name="from" type="xs:string"/>
+                <xs:element name="heading" type="xs:string"/>
+                <xs:element name="body" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="personinfo">
+        <xs:sequence>
+            <xs:element name="firstname" type="xs:string"/>
+            <xs:element name="lastname" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+}}}
+
+Running above code, will print following to console:
+{{{
+XPath: //xsd:any/@namespace
+Hits: 4
+results:
+	##any
+	##local
+	##other
+	##targetNamespace
+}}}
+
+*Node:*
+
+When you add xpath to `XMLDog`, it returns `Node` object. This object contains the compiled xpath.
+
+`Node` implements `toString()`;
+
+{{{
+dog.sniff(new InputSource("test.xml"));
+System.out.println(node);
+}}}
+prints:
+{{{
+//xsd:any/@namespace
+	1: ##any
+	2: ##local
+	3: ##other
+	4: ##targetNamespace
+}}}
+
+*Multiple XPath Evaluation:*
+
+XMLDog is smart enough to evaluate multiple xpaths in single SAX parse over given xml document;
+
+{{{
+Node nodes[] = {
+    dog.add("//xsd:any/@namespace", -1),
+    dog.add("xsd:schema//xsd:complexType/@name", 10),
+    dog.add("xsd:schema/xsd:any/@namespace", 10),
+    dog.add("//xsd:sequence/xsd:any/@namespace", 10)
+};
+dog.sniff(new InputSource("test.xml"));
+
+for(Node node: nodes)
+    System.out.println(node);
+}}}
+prints:
+{{{
+//xsd:any/@namespace
+	1: ##any
+	2: ##local
+	3: ##other
+	4: ##targetNamespace
+
+/xsd:schema//xsd:complexType/@name
+	1: personinfo
+
+/xsd:schema/xsd:any/@namespace
+	no matches
+
+//xsd:sequence/xsd:any/@namespace
+	1: ##any
+	2: ##local
+	3: ##other
+	4: ##targetNamespace
+}}}
+
+*Partial SAX Parsing:*
+
+{{{
+Node node = dog.add("/xsd:schema/@targetNamespace", 1);
+dog.sniff(new InputSource("test.xml"));
+}}}
+
+Here the second argument to `dog.add(...)` is `1`. This means we want only one hit for this xpath;
+
+in this case, `XMLDog` doesn't parse `test.xml` completely. it parses upto `startElement` of root and skips SAX parsing of rest of document.
+
+`XMLDog` might also give more number of results for an xpath than we asked for.
+suppose we have:
+{{{
+dog.add("/xsd:schema/xsd:element/@name", 1);
+dog.add("//xsd:any/@targetnamespace", -1);
+}}}
+
+here second xpath, requires complete document parse. During this, if it findds more than one match for first xpath, it returns those results also;
+
+*XPath Support:*
+
+`XMLDog` doesn't support complete xpath spec.
+
+it supports simple xpaths and descendent-or-self axis.
+but it doesn't support xpaths when given like this:
+    `/child::elem1/child::elem2`
+
+it understands only abbreviated sytax.
+
+`text()` is also supported. ex: /elem1/elem2/text()
+
+*Miscellaneous:*
+
+ * Same instanceof `XMLDog` can be used to sniff many documents, but one after other.
+{{{
+for(File xmlFile: dir.listFiles()){
+    dog.sniff(new InputSource(xmlFile);
+    // do something with xpath result
+}
+}}}
+
+ * when an xpath represents an element, the result list will be empty. In this case you simply use `node.getHitCount()`
+ * `XMLDog` will be useful to evalue simple xpaths on xml documents at fast rate, and big xml documents  
