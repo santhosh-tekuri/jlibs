@@ -26,7 +26,7 @@ import java.io.CharArrayWriter;
 public class SAXHandler extends DefaultHandler{
     protected MyNamespaceSupport nsSupport;
 
-    protected CharArrayWriter contents;
+    protected CharArrayWriter contents = new CharArrayWriter();
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException{
