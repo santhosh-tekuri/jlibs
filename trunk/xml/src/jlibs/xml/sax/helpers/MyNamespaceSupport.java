@@ -1,3 +1,18 @@
+/**
+ * JLibs: Common Utilities for Java
+ * Copyright (C) 2009  Santhosh Kumar T
+ * <p/>
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * <p/>
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ */
+
 package jlibs.xml.sax.helpers;
 
 import jlibs.core.lang.Util;
@@ -6,6 +21,7 @@ import org.xml.sax.helpers.NamespaceSupport;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -89,6 +105,19 @@ public class MyNamespaceSupport extends NamespaceSupport{
         while(getURI(prefix+i)!=null)
             i++;
         return prefix+i;
+    }
+
+
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public Enumeration<String> getPrefixes(String uri){
+        return super.getPrefixes(uri);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public Enumeration<String> getPrefixes(){
+        return super.getPrefixes();
     }
 
     public static void main(String[] args){

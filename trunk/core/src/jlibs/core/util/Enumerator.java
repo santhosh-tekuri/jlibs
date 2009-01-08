@@ -13,30 +13,33 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.swing;
+package jlibs.core.util;
 
-import javax.swing.*;
-import java.awt.*;
+import java.util.Iterator;
+import java.util.Enumeration;
 
 /**
  * @author Santhosh Kumar T
  */
-public class EmptyIcon implements Icon{
-    public static final EmptyIcon INSTANCE = new EmptyIcon();
+public class Enumerator<E> implements Iterator<E>{
+    private Enumeration<E> enumer;
 
-    private EmptyIcon(){}
-    
-    @Override
-    public void paintIcon(Component c, Graphics g, int x, int y){
+    public Enumerator(Enumeration<E> enumer){
+        this.enumer = enumer;
     }
 
     @Override
-    public int getIconWidth(){
-        return 0;
+    public boolean hasNext(){
+        return enumer.hasMoreElements();
     }
 
     @Override
-    public int getIconHeight(){
-        return 0;
+    public E next(){
+        return enumer.nextElement();
+    }
+
+    @Override
+    public void remove(){
+        throw new UnsupportedOperationException();
     }
 }
