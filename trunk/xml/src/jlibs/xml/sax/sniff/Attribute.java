@@ -40,4 +40,13 @@ class Attribute extends Node{
         else
             return '@'+qname.getLocalPart();
     }
+
+    @Override
+    protected boolean canMerge(Node node){
+        if(node.getClass()==getClass()){
+            Attribute that = (Attribute)node;
+            return qname.equals(that.qname);
+        }
+        return false;
+    }
 }

@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.jaxen.saxpath.SAXPathException;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,7 +33,11 @@ public class XMLDog{
         root = new Root(nsContext);
     }
 
-    public Node add(String xpath, int minHits){
+    public Node add(String xpath) throws SAXPathException{
+        return add(xpath, -1);
+    }
+
+    public Node add(String xpath, int minHits) throws SAXPathException{
         if(minHits<0)
             minHits = Integer.MAX_VALUE;
         return root.add(xpath, minHits);

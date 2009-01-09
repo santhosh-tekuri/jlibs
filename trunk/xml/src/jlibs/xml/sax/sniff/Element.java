@@ -42,4 +42,13 @@ class Element extends Node{
         else
             return qname.getLocalPart();
     }
+
+    @Override
+    protected boolean canMerge(Node node){
+        if(node.getClass()==getClass()){
+            Element that = (Element)node;
+            return qname.equals(that.qname);
+        }
+        return false;
+    }
 }

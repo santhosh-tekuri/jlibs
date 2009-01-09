@@ -27,4 +27,9 @@ class Text extends Node{
     protected String getStep(){
         return "text()";
     }
+
+    @Override
+    protected boolean canMerge(Node node){
+        return node.getClass()==getClass();
+    }
 }
