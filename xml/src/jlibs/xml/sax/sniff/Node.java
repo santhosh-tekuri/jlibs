@@ -20,6 +20,7 @@ import org.xml.sax.Attributes;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -231,5 +232,33 @@ public abstract class Node{
             }
         }
         return buff.toString();
+    }
+
+    protected abstract boolean canMerge(Node node);
+
+    protected final Map<Node, Node> merge(Node that, Map<Node, Node> map){
+        for(Node thatChild: that.children){
+            boolean merged = false;
+            for(Node thisChild: this.children){
+                if(thatChild.canMerge(thisChild)){
+                    map.put(thatChild, thisChild);
+                    thisChild.merge(thatChild, map);
+                    merged = true;
+                    break;
+                }
+            }
+            if(!merged){
+                this.children.add(thatChild);
+                thatChild.parent = this;
+                thatChild.setRoot(root);
+            }
+        }
+        return map;
+    }
+
+    private void setRoot(Root root){
+        this.root = root;
+        for(Node child: children)
+            child.setRoot(root);
     }
 }

@@ -17,10 +17,10 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
+import org.jaxen.saxpath.SAXPathException;
 
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.namespace.QName;
-import java.util.regex.Pattern;
+import java.util.HashMap;
 
 /**
  * @author Santhosh Kumar T
@@ -41,56 +41,21 @@ class Root extends Node{
         super.reset();
     }
     
-    public Node add(String xpath, int minHits){
+    public Node add(String xpath, int minHits) throws SAXPathException{
+        if(!xpath.startsWith("/"))
+            xpath = '/'+xpath;
         Node node = add(xpath);
         node.setMinHits(minHits);
         return node;
     }
     
-    private Node add(String xpath){
-        if(xpath.startsWith("/"))
-            xpath = xpath.substring(1);
-
-        Node node = this;
-        String tokens[] = Pattern.compile("/", Pattern.LITERAL).split(xpath);
-        for(String token: tokens){
-            if(token.equals("text()")){
-                Text text = node.findText();
-                if(text==null)
-                    text = new Text(node);
-                node = text;
-            }else if(token.equals("")){
-                Descendant desc = node.findDescendant(true);
-                if(desc==null)
-                    desc = new DescendantSelf(node);
-                node = desc;
-            }else{
-                boolean attribute = token.startsWith("@");
-                if(attribute)
-                    token = token.substring(1);
-
-                QName qname;
-                int colon = token.indexOf(':');
-                if(colon!=-1){
-                    String prefix = token.substring(0, colon);
-                    String uri = nsContext.getNamespaceURI(prefix);
-                    qname = new QName(uri, token.substring(colon+1), prefix);
-                }else
-                    qname = new QName("", token, "");
-                if(attribute){
-                    Attribute attr = node.findAttribute(qname.getNamespaceURI(), qname.getLocalPart());
-                    if(attr==null)
-                        attr = new Attribute(node, qname);
-                    node = attr;
-                }else{
-                    Element elem = node.findElement(qname);
-                    if(elem==null)
-                        elem = new Element(node, qname);
-                    node = elem;
-                }
-            }
-        }
-        return node;
+    private XPathParser parser;
+    private Node add(String xpath) throws SAXPathException{
+        if(parser==null)
+            parser = new XPathParser(nsContext);
+        Node node = parser.parse(xpath);
+        Node merged = root.merge(node.root, new HashMap<Node, Node>()).get(node);
+        return merged!=null ? merged : node;
     }
 
     @Override
@@ -98,7 +63,12 @@ class Root extends Node{
         return "";
     }
 
-    public static void main(String[] args){
+    @Override
+    protected boolean canMerge(Node node){
+        return node.getClass()==getClass();
+    }
+
+    public static void main(String[] args) throws SAXPathException{
         DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
         nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
         Root root = new Root(nsContext);

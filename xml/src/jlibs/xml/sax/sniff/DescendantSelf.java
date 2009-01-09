@@ -27,4 +27,9 @@ class DescendantSelf extends Descendant implements Self{
     protected String getStep(){
         return "";
     }
+
+    @Override
+    protected boolean canMerge(Node node){
+        return node.getClass()==getClass();
+    }
 }
