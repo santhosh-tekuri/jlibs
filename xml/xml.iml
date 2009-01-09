@@ -9,7 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="outline" level="project" />
     <orderEntry type="library" exported="" name="xerces" level="project" />
-    <orderEntry type="module" module-name="core" />
+    <orderEntry type="module" module-name="core" exported="" />
+    <orderEntry type="library" exported="" name="jaxen" level="project" />
   </component>
 </module>
 
