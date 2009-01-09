@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff;
 
 import org.xml.sax.Attributes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,16 +36,7 @@ abstract class Descendant extends Node{
 
     @Override
     protected List<Node> matchStartElement(String uri, String name){
-        List<Node> list = new ArrayList<Node>();
-
-        for(Node child: children){
-            if(child.matchesElement(uri, name)){
-                list.add(child.hit());
-                Descendant desc = child.findDescendant(true);
-                if(desc!=null)
-                    list.add(desc.hit());
-            }
-        }
+        List<Node> list = matchChildren(uri, name);
 
         depth++;
         list.add(this);
@@ -56,17 +46,11 @@ abstract class Descendant extends Node{
 
     @Override
     protected void matchAttributes(Attributes attributes){
-        for(int i=0; i<attributes.getLength(); i++){
-            Attribute attribute = findAttribute(attributes.getURI(i), attributes.getLocalName(i));
-            if(attribute!=null)
-                attribute.hit(attributes.getValue(i));
-        }
+        _matchAttributes(attributes);
     }
 
     @Override
     protected void matchText(StringContent content){
-        Text text = findText();
-        if(text!=null)
-            text.hit(content.toString());
+        _matchText(content);
     }
 }
