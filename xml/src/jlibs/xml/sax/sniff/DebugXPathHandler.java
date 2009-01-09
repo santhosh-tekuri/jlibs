@@ -136,10 +136,12 @@ public class DebugXPathHandler implements XPathHandler{
     @Override
     public void startPredicate() throws SAXPathException{
         println("startPredicate");
+        depth++;
     }
 
     @Override
     public void endPredicate() throws SAXPathException{
+        depth--;
         println("endPredicate");
     }
 
@@ -276,6 +278,6 @@ public class DebugXPathHandler implements XPathHandler{
         XPathHandler handler = new DebugXPathHandler();
         handler = TeeProxy.create(XPathHandler.class, handler, new DefaultXPathHandler());
         reader.setXPathHandler(handler);
-        reader.parse("/child::elem1//elem2/elem3/@abcd");
+        reader.parse("/elem1/elem2[1]/elem3");
     }
 }

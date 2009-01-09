@@ -18,5 +18,5 @@ package jlibs.xml.sax.sniff;
 /**
  * @author Santhosh Kumar T
  */
-interface Self{
+interface AutoMatch{
 }
