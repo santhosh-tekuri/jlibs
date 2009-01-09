@@ -138,21 +138,27 @@ public abstract class Node{
     }
 
     protected int depth;
-    protected List<Node> matchStartElement(String uri, String name){
+    protected final List<Node> matchChildren(String uri, String name){
         List<Node> list = new ArrayList<Node>();
         for(Node child: children){
             if(child.matchesElement(uri, name)){
                 list.add(child.hit());
                 Descendant desc = child.findDescendant(true);
-                if(desc!=null){
+                if(desc!=null)
                     list.add(desc.hit());
-                }
             }
         }
+        return list;
+    }
+
+    protected List<Node> matchStartElement(String uri, String name){
+        List<Node> list = matchChildren(uri, name);
+
         if(list.size()==0){
             depth++;
             list.add(this);
         }
+        
         return list;
     }
 
@@ -171,22 +177,28 @@ public abstract class Node{
         }
     }
 
-    protected void matchAttributes(Attributes attributes){
-        if(depth==0){
-            for(int i=0; i<attributes.getLength(); i++){
-                Attribute attribute = findAttribute(attributes.getURI(i), attributes.getLocalName(i));
-                if(attribute!=null)
-                    attribute.hit(attributes.getValue(i));
-            }
+    protected final void _matchAttributes(Attributes attributes){
+        for(int i=0; i<attributes.getLength(); i++){
+            Attribute attribute = findAttribute(attributes.getURI(i), attributes.getLocalName(i));
+            if(attribute!=null)
+                attribute.hit(attributes.getValue(i));
         }
     }
 
+    protected void matchAttributes(Attributes attributes){
+        if(depth==0)
+            _matchAttributes(attributes);
+    }
+
+    protected final void _matchText(StringContent content){
+        Text text = findText();
+        if(text!=null)
+            text.hit(content.toString());
+    }
+
     protected void matchText(StringContent content){
-        if(depth==0){
-            Text text = findText();
-            if(text!=null)
-                text.hit(content.toString());
-        }
+        if(depth==0)
+            _matchText(content);
     }
 
     protected abstract String getStep();
