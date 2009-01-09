@@ -79,14 +79,34 @@ public abstract class Node{
         return null;
     }
 
-    protected Descendant findDescendant(boolean self){
-        for(Node node: children){
-            if(node instanceof Self==self){
-                if(node instanceof Descendant)
-                    return (Descendant)node;
-            }
+//    protected Descendant findDescendant(boolean self){
+//        for(Node node: children){
+//            if(node instanceof AutoMatch==self){
+//                if(node instanceof Descendant)
+//                    return (Descendant)node;
+//            }
+//        }
+//        return null;
+//    }
+
+    protected List<Match> findMatches(){
+        List<Match> list = new ArrayList<Match>(children.size());
+
+        for(Node child: children){
+            if(child instanceof Match)
+                list.add((Match)child);
         }
-        return null;
+        return list;
+    }
+
+    protected List<Node> findAutoMatches(){
+        List<Node> list = new ArrayList<Node>(children.size());
+
+        for(Node child: children){
+            if(child instanceof AutoMatch)
+                list.add(child);
+        }
+        return list;
     }
 
     /*-------------------------------------------------[ Hitting ]---------------------------------------------------*/
@@ -139,21 +159,26 @@ public abstract class Node{
     }
 
     protected int depth;
-    protected final List<Node> matchChildren(String uri, String name){
+    protected final List<Node> matchChildren(String uri, String name, int pos){
         List<Node> list = new ArrayList<Node>();
         for(Node child: children){
             if(child.matchesElement(uri, name)){
                 list.add(child.hit());
-                Descendant desc = child.findDescendant(true);
-                if(desc!=null)
-                    list.add(desc.hit());
+
+                for(Match matchNode: child.findMatches()){
+                    if(matchNode.matchesStartElement(uri, name, pos))
+                        list.add(((Node)matchNode).hit());
+                }
+
+                for(Node autoMatchNode: child.findAutoMatches())
+                    list.add(autoMatchNode.hit());
             }
         }
         return list;
     }
 
-    protected List<Node> matchStartElement(String uri, String name){
-        List<Node> list = matchChildren(uri, name);
+    protected List<Node> matchStartElement(String uri, String name, int pos){
+        List<Node> list = matchChildren(uri, name, pos);
 
         if(list.size()==0){
             depth++;
@@ -168,7 +193,7 @@ public abstract class Node{
             depth--;
             return this;
         }else{
-            if(this instanceof Self){
+            if(this instanceof Match || this instanceof AutoMatch){
                 if(parent.parent==null)
                     return parent;
                 else
@@ -207,10 +232,15 @@ public abstract class Node{
     public String getXPath(){
         StringBuilder buff = new StringBuilder();
         Node node = this;
+        String separator = "/";
         while(node!=null){
             if(buff.length()>0)
-                buff.insert(0, '/');
+                buff.insert(0, separator);
             buff.insert(0, node.getStep());
+            if(node instanceof Position)
+                separator = "";
+            else
+                separator = "/";
             node = node.parent;
         }
         if(buff.length()>0 && buff.charAt(0)!='/')

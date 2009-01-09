@@ -144,24 +144,27 @@ public class XPathParser implements XPathHandler{
         throw new SAXPathException("unsupprted");
     }
 
+    private boolean insidePredicate;
     @Override
     public void startPredicate() throws SAXPathException{
-        throw new SAXPathException("predicate is unsupprted");
+        insidePredicate = true;
+//        throw new SAXPathException("predicate is unsupprted");
     }
 
     @Override
     public void endPredicate() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        insidePredicate = false;
+//        throw new SAXPathException("unsupprted");
     }
 
     @Override
     public void startFilterExpr() throws SAXPathException{
-        throw new SAXPathException("filter expression is unsupprted");
+//        throw new SAXPathException("filter expression is unsupprted");
     }
 
     @Override
     public void endFilterExpr() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+//        throw new SAXPathException("unsupprted");
     }
 
     @Override
@@ -243,12 +246,18 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void number(int number) throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        if(insidePredicate)
+            current = new Position(current, number);
+        else
+            throw new SAXPathException("unsupprted");
     }
 
     @Override
     public void number(double number) throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        if(insidePredicate)
+            current = new Position(current, (int)number);
+        else
+            throw new SAXPathException("unsupprted");
     }
 
     @Override

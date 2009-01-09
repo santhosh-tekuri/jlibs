@@ -35,8 +35,8 @@ abstract class Descendant extends Node{
     }
 
     @Override
-    protected List<Node> matchStartElement(String uri, String name){
-        List<Node> list = matchChildren(uri, name);
+    protected List<Node> matchStartElement(String uri, String name, int pos){
+        List<Node> list = matchChildren(uri, name, pos);
 
         depth++;
         list.add(this);

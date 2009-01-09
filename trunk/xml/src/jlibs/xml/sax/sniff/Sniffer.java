@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.ClarkName;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -24,9 +25,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -41,8 +40,11 @@ class Sniffer extends DefaultHandler{
     protected CharArrayWriter contents = new CharArrayWriter();
     private StringContent text = new StringContent(contents);
 
+    /*-------------------------------------------------[ Context ]---------------------------------------------------*/
+
     private Set<Node> context = new HashSet<Node>();
     private Set<Node> newContext = new HashSet<Node>();
+
 
     private void updateContext(){
         Set<Node> temp = context;
@@ -51,29 +53,53 @@ class Sniffer extends DefaultHandler{
         newContext.clear();
     }
 
+    /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
+
+    private ArrayDeque<Map<String, Integer>> predicateStack = new ArrayDeque<Map<String, Integer>>();
+
+    private int updatePredicate(String uri, String localName){
+        Map<String, Integer> map = predicateStack.peekFirst();
+        String clarkName = ClarkName.valueOf(uri, localName);
+        Integer predicate = map.get(clarkName);
+        if(predicate==null)
+            predicate = 1;
+        else
+            predicate += 1;
+        map.put(clarkName, predicate);
+
+        predicateStack.addFirst(new HashMap<String, Integer>());
+        
+        return predicate;
+    }
+
+    /*-------------------------------------------------[ Events ]---------------------------------------------------*/
+    
     @Override
     public void startDocument() throws SAXException{
         context.clear();
         newContext.clear();
-
+        predicateStack.clear();
+        
         root.reset();
         context.add(root);
-        Descendant desc = root.findDescendant(true);
-        if(desc!=null)
-            context.add(desc);
+
+        for(Node autoMatchNode: root.findAutoMatches())
+            context.add(autoMatchNode);
 
         contents.reset();
         text.reset();
+
+        predicateStack.push(new HashMap<String, Integer>());
     }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
         //System.out.println("<"+localName+">");
-
+        int predicate = updatePredicate(uri, localName);
         text.reset();
         for(Node current: context){
             current.matchText(text);
-            List<Node> list = current.matchStartElement(uri, localName);
+            List<Node> list = current.matchStartElement(uri, localName, predicate);
             for(Node node: list)
                 node.matchAttributes(attributes);
             newContext.addAll(list);
@@ -91,6 +117,7 @@ class Sniffer extends DefaultHandler{
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
         //System.out.println("</"+localName+">");
+        predicateStack.removeFirst();
         text.reset();
         for(Node current: context){
             current.matchText(text);

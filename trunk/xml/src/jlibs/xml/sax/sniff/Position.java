@@ -18,18 +18,30 @@ package jlibs.xml.sax.sniff;
 /**
  * @author Santhosh Kumar T
  */
-class DescendantSelf extends Descendant implements AutoMatch{
-    protected DescendantSelf(Node parent){
+public class Position extends Node implements Match{
+    private int pos;
+    
+    protected Position(Node parent, int pos){
         super(parent);
+        this.pos = pos;
+    }
+
+    @Override
+    public boolean matchesStartElement(String uri, String name, int pos){
+        return this.pos==pos;
     }
 
     @Override
     protected String getStep(){
-        return "";
+        return "["+pos+"]";
     }
 
     @Override
     protected boolean canMerge(Node node){
-        return node.getClass()==getClass();
+        if(node.getClass()==getClass()){
+            Position that = (Position)node;
+            return this.pos==that.pos;
+        }
+        return false;
     }
 }
