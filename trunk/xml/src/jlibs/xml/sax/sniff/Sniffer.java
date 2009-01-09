@@ -38,13 +38,23 @@ class Sniffer extends DefaultHandler{
         this.root = root;
     }
 
-    private Set<Node> context = new HashSet<Node>();
     protected CharArrayWriter contents = new CharArrayWriter();
     private StringContent text = new StringContent(contents);
+
+    private Set<Node> context = new HashSet<Node>();
+    private Set<Node> newContext = new HashSet<Node>();
+
+    private void updateContext(){
+        Set<Node> temp = context;
+        context = newContext;
+        newContext = temp;
+        newContext.clear();
+    }
 
     @Override
     public void startDocument() throws SAXException{
         context.clear();
+        newContext.clear();
 
         root.reset();
         context.add(root);
@@ -59,7 +69,6 @@ class Sniffer extends DefaultHandler{
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
         //System.out.println("<"+localName+">");
-        Set<Node> newContext = new HashSet<Node>();
 
         text.reset();
         for(Node current: context){
@@ -69,9 +78,9 @@ class Sniffer extends DefaultHandler{
                 node.matchAttributes(attributes);
             newContext.addAll(list);
         }
+        updateContext();
         text.reset();
         contents.reset();
-        context = newContext;
     }
 
     @Override
@@ -82,15 +91,14 @@ class Sniffer extends DefaultHandler{
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
         //System.out.println("</"+localName+">");
-        Set<Node> newContext = new HashSet<Node>();
         text.reset();
         for(Node current: context){
             current.matchText(text);
             newContext.add(current.matchEndElement());
         }
+        updateContext();
         text.reset();
         contents.reset();
-        context = newContext;
     }
 
     public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
