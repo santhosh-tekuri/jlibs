@@ -94,7 +94,10 @@ class Sniffer extends DefaultHandler{
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
-        //System.out.println("<"+localName+">");
+//        System.out.print("<"+localName);
+//        for(int i=0; i<attributes.getLength(); i++)
+//            System.out.format(" %s='%s'", attributes.getQName(i), attributes.getValue(i));
+//        System.out.println(">");
         int predicate = updatePredicate(uri, localName);
         text.reset();
         for(Node current: context){
@@ -116,7 +119,7 @@ class Sniffer extends DefaultHandler{
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
-        //System.out.println("</"+localName+">");
+//        System.out.println("</"+localName+">");
         predicateStack.removeFirst();
         text.reset();
         for(Node current: context){

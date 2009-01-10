@@ -28,7 +28,7 @@ import java.util.HashMap;
 class Root extends Node{
     protected int totalMinHits;
     protected int timer;
-    private NamespaceContext nsContext;
+    protected NamespaceContext nsContext;
 
     public Root(NamespaceContext nsContext){
         super(null);

@@ -20,35 +20,17 @@ import javax.xml.namespace.QName;
 /**
  * @author Santhosh Kumar T
  */
-class Element extends Node{
-    private QName qname;
+class Element extends QNameNode{
 
-    protected Element(Node parent, QName qname){
-        super(parent);
-        this.qname = qname;
+    protected Element(Node parent, QName qname, String namespace){
+        super(parent, qname, namespace);
     }
 
     /*-------------------------------------------------[ Matching ]---------------------------------------------------*/
 
     @Override
+    @SuppressWarnings({"SimplifiableIfStatement"})
     public boolean matchesElement(String uri, String name){
-        return qname.getNamespaceURI().equals(uri) && qname.getLocalPart().equals(name);
-    }
-
-    @Override
-    protected String getStep(){
-        if(qname.getPrefix().length()>0)
-            return qname.getPrefix()+':'+qname.getLocalPart();
-        else
-            return qname.getLocalPart();
-    }
-
-    @Override
-    protected boolean canMerge(Node node){
-        if(node.getClass()==getClass()){
-            Element that = (Element)node;
-            return qname.equals(that.qname);
-        }
-        return false;
+        return matchesQName(uri, name);
     }
 }
