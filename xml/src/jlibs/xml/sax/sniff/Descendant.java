@@ -39,7 +39,7 @@ abstract class Descendant extends Node{
         List<Node> list = matchChildren(uri, name, pos);
 
         depth++;
-        list.add(this);
+        list.add(hit());
 
         return list;
     }
