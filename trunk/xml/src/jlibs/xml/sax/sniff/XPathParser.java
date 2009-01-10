@@ -80,12 +80,19 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startNameStep(int axis, String prefix, String localName) throws SAXPathException{
+        QName qname = null;
+        String namespace = null;
+        if(!localName.equals("*"))
+            qname = new QName(nsContext.getNamespaceURI(prefix), localName, prefix);
+        else if(prefix.length()>0)
+            namespace = nsContext.getNamespaceURI(prefix); 
+
         switch(axis){
             case Axis.CHILD:
-                current = new Element(current, new QName(nsContext.getNamespaceURI(prefix), localName, prefix));
+                current = new Element(current, qname, namespace);
                 break;
             case Axis.ATTRIBUTE:
-                current = new Attribute(current, new QName(nsContext.getNamespaceURI(prefix), localName, prefix));
+                current = new Attribute(current, qname, namespace);
                 break;
             default:
                 throw new SAXPathException(Axis.lookup(axis)+" axis is unsupprted");

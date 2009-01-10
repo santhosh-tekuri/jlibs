@@ -20,33 +20,19 @@ import javax.xml.namespace.QName;
 /**
  * @author Santhosh Kumar T
  */
-class Attribute extends Node{
-    private QName qname;
+class Attribute extends QNameNode{
 
-    public Attribute(Node parent, QName qname){
-        super(parent);
-        this.qname = qname;
+    public Attribute(Node parent, QName qname, String namespace){
+        super(parent, qname, namespace);
     }
 
     @Override
     public boolean matchesAttribute(String uri, String name){
-        return qname.getNamespaceURI().equals(uri) && qname.getLocalPart().equals(name);
+        return matchesQName(uri, name);
     }
 
     @Override
     protected String getStep(){
-        if(qname.getPrefix().length()>0)
-            return '@'+qname.getPrefix()+':'+qname.getLocalPart();
-        else
-            return '@'+qname.getLocalPart();
-    }
-
-    @Override
-    protected boolean canMerge(Node node){
-        if(node.getClass()==getClass()){
-            Attribute that = (Attribute)node;
-            return qname.equals(that.qname);
-        }
-        return false;
+        return '@'+super.getStep();
     }
 }
