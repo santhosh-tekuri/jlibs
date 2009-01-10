@@ -291,4 +291,14 @@ public abstract class Node{
         for(Node child: children)
             child.setRoot(root);
     }
+
+    protected void verifyIntegrity(){
+        if(parent!=null && root!=parent.root)
+            throw new IllegalStateException();
+        for(Node child: children){
+            if(child.parent!=this)
+                throw new IllegalStateException();
+            child.verifyIntegrity();
+        }
+    }
 }
