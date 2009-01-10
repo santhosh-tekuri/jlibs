@@ -27,6 +27,8 @@ import java.io.IOException;
  * @author Santhosh Kumar T
  */
 public class XMLDog{
+    public static boolean debug = false;
+    
     private Root root;
 
     public XMLDog(NamespaceContext nsContext){

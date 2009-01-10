@@ -15,8 +15,9 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.ClarkName;
+import jlibs.xml.sax.SAXDebugHandler;
+import jlibs.xml.sax.SAXUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -51,6 +52,21 @@ class Sniffer extends DefaultHandler{
         context = newContext;
         newContext = temp;
         newContext.clear();
+    }
+
+    private void println(String message, Collection<Node> context){
+        if(XMLDog.debug){
+            System.out.println(message+" ->");
+            if(context.size()==0)
+                System.out.println("    Empty");
+            else{
+                for(Node node: context){
+                    System.out.print("    ");
+                    node.println();
+                }
+            }
+            System.out.println();
+        }
     }
 
     /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
@@ -94,22 +110,38 @@ class Sniffer extends DefaultHandler{
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
-//        System.out.print("<"+localName);
-//        for(int i=0; i<attributes.getLength(); i++)
-//            System.out.format(" %s='%s'", attributes.getQName(i), attributes.getValue(i));
-//        System.out.println(">");
         int predicate = updatePredicate(uri, localName);
+
+        if(XMLDog.debug)
+            System.out.println("\npredicate: "+predicate);
+        println("current context", context);
+        
         text.reset();
         for(Node current: context){
+            if(XMLDog.debug){
+                System.out.print("matching -> \n    ");
+                current.println();
+            }
+
             current.matchText(text);
             List<Node> list = current.matchStartElement(uri, localName, predicate);
+
+            println("matched", list);
+
             for(Node node: list)
                 node.matchAttributes(attributes);
             newContext.addAll(list);
+
+            if(XMLDog.debug)
+                System.out.println();
         }
+        println("new context", newContext);
+        
         updateContext();
         text.reset();
         contents.reset();
+        if(XMLDog.debug)
+            System.out.println("-----------------------------------------------------");
     }
 
     @Override
@@ -119,21 +151,29 @@ class Sniffer extends DefaultHandler{
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
-//        System.out.println("</"+localName+">");
         predicateStack.removeFirst();
         text.reset();
+        println("\ncurrent context", context);
         for(Node current: context){
+            if(XMLDog.debug)
+                System.out.print("matching -> \n    ");
             current.matchText(text);
             newContext.add(current.matchEndElement());
+            println("new context", newContext);
         }
         updateContext();
         text.reset();
         contents.reset();
+        if(XMLDog.debug)
+            System.out.println("-----------------------------------------------------");
     }
 
     public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
         try{
-            SAXUtil.newSAXParser(true, false).parse(source, this);
+            DefaultHandler handler = this;
+            if(XMLDog.debug)
+                handler = new SAXDebugHandler(handler);
+            SAXUtil.newSAXParser(true, false).parse(source, handler);
         }catch(RuntimeException ex){
             if(ex!=Root.EVALUATION_FINISHED)
                 throw ex;

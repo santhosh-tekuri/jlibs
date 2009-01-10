@@ -22,7 +22,7 @@ import javax.xml.namespace.QName;
 /**
  * @author Santhosh Kumar T
  */
-public class QNameNode extends Node{
+public abstract class QNameNode extends Node{
     private QName qname;
     private String namespace;
 

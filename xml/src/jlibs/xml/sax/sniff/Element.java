@@ -33,4 +33,9 @@ class Element extends QNameNode{
     public boolean matchesElement(String uri, String name){
         return matchesQName(uri, name);
     }
+
+    protected void println(){
+        System.out.format("<%s>", getStep());
+        super.println();
+    }
 }

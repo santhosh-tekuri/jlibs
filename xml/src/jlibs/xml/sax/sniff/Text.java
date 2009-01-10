@@ -32,4 +32,9 @@ class Text extends Node{
     protected boolean canMerge(Node node){
         return node.getClass()==getClass();
     }
+
+    protected void println(){
+        System.out.print("[Text]");
+        super.println();
+    }
 }
