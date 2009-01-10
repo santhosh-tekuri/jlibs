@@ -32,4 +32,9 @@ class DescendantSelf extends Descendant implements AutoMatch{
     protected boolean canMerge(Node node){
         return node.getClass()==getClass();
     }
+
+    protected void println(){
+        System.out.print("[DescendantSelf]");
+        super.println();
+    }
 }

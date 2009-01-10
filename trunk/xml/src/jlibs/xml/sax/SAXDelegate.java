@@ -25,6 +25,11 @@ import java.io.IOException;
  * @author Santhosh Kumar T
  */
 public class SAXDelegate extends DefaultHandler{
+    public SAXDelegate(){}
+
+    public SAXDelegate(DefaultHandler delegate){
+        setDefaultHandler(delegate);
+    }
 
     /*-------------------------------------------------[ ContentHandler ]---------------------------------------------------*/
     

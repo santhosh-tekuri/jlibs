@@ -68,6 +68,11 @@ class Root extends Node{
         return node.getClass()==getClass();
     }
 
+    protected void println(){
+        System.out.print("[Root]");
+        super.println();
+    }
+
     public static void main(String[] args) throws SAXPathException{
         DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
         nsContext.declarePrefix("xsd", Namespaces.URI_XSD);

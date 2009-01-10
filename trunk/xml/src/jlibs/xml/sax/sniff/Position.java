@@ -44,4 +44,9 @@ public class Position extends Node implements Match{
         }
         return false;
     }
+
+    protected void println(){
+        System.out.format("[Position:%d]", pos);
+        super.println();
+    }
 }

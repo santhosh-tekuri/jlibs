@@ -35,4 +35,9 @@ class Attribute extends QNameNode{
     protected String getStep(){
         return '@'+super.getStep();
     }
+
+    protected void println(){
+        System.out.print(getStep());
+        super.println();
+    }
 }

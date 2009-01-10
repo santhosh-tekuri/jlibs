@@ -206,8 +206,14 @@ public abstract class Node{
     protected final void _matchAttributes(Attributes attributes){
         for(int i=0; i<attributes.getLength(); i++){
             Attribute attribute = findAttribute(attributes.getURI(i), attributes.getLocalName(i));
-            if(attribute!=null)
+            if(attribute!=null){
                 attribute.hit(attributes.getValue(i));
+
+                if(XMLDog.debug){
+                    System.out.print("attributeHit -> ");
+                    attribute.println();
+                }
+            }
         }
     }
 
@@ -300,5 +306,9 @@ public abstract class Node{
                 throw new IllegalStateException();
             child.verifyIntegrity();
         }
+    }
+
+    protected void println(){
+        System.out.format(" :: depth:%d hitcount:%d lastresult:%s%n", depth, hitCount, result.size()>0?result.get(result.size()-1):"");
     }
 }
