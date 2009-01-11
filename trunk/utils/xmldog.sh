@@ -5,4 +5,4 @@ CLASSPATH=$CLASSPATH:3rdparty/xercesImpl.jar:$CLASSPATH:3rdparty/jaxen-1.1.1.jar
 CLASSPATH=$CLASSPATH:3rdparty/org-netbeans-swing-outline.jar:jlibs-swing.jar
 CLASSPATH=$CLASSPATH:jlibs-utils.jar
 
-java -classpath $CLASSPATH jlibs.xml.xsd.XSDOutlinePanelTest
+java -classpath $CLASSPATH jlibs.xml.sax.sniff.XPathPerformanceTest xpaths.xml
