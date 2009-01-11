@@ -37,7 +37,10 @@ public class DefaultNamespaceContext implements NamespaceContext{
 
     @Override
     public String getNamespaceURI(String prefix){
-        return nsSupport.getURI(prefix);
+        String uri = nsSupport.getURI(prefix);
+        if(prefix.equals("") && uri==null)
+            uri = "";
+        return uri;
     }
 
     @Override
