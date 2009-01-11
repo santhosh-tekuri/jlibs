@@ -147,7 +147,7 @@ public class XPathPerformanceTest{
             stream.println("    dog result : "+dogResult);
             stream.println("  dog hitcount : "+dogResult.size());
             stream.flush();
-            i++;
+
             System.out.println("-------------------------------------------------");
             System.out.flush();
         }

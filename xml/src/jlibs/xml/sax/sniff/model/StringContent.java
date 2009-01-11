@@ -15,21 +15,36 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import java.io.CharArrayWriter;
+
 /**
  * @author Santhosh Kumar T
  */
-public class Text extends Node{
-    public Text(Node parent){
-        super(parent);
+public class StringContent{
+    private CharArrayWriter writer = new CharArrayWriter();
+
+    public void write(char ch[], int start, int length){
+        writer.write(ch, start, length);
     }
 
-    @Override
-    public boolean matchesText(StringContent content){
-        return true;
+    public void reset(){
+        writer.reset();
     }
 
+    private String str;
+
+    public void resetCache(){
+        str = null;
+    }
+
+    public boolean isEmpty(){
+        return writer.size()==0;
+    }
+    
     @Override
     public String toString(){
-        return "text()";
+        if(str==null)
+            return str = writer.size()>0 ? writer.toString() : null;
+        return str;
     }
 }

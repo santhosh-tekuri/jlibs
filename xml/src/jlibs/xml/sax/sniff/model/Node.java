@@ -62,7 +62,7 @@ public abstract class Node{
         return false;
     }
 
-    public boolean matchesText(String text){
+    public boolean matchesText(StringContent content){
         return false;
     }
 

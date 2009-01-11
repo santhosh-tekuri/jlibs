@@ -15,20 +15,20 @@
 
 package jlibs.xml.sax.sniff;
 
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.ClarkName;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.ClarkName;
+import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.sax.sniff.model.StringContent;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.*;
-import java.io.CharArrayWriter;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -43,7 +43,7 @@ public class Sniffer extends DefaultHandler{
             root.print();
     }
 
-    private CharArrayWriter contents = new CharArrayWriter();
+    private StringContent contents = new StringContent();
     private XPathResults results;
 
     /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
@@ -90,14 +90,13 @@ public class Sniffer extends DefaultHandler{
             System.out.println();
         
         int pos = updatePosition(uri, localName);
-        String text = contents.size()>0 ? contents.toString() : null;
-
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
-            if(text!=null)
-                context.matchText(text);
+            context.matchText(contents);
             newContexts.addAll(context.startElement(uri, localName, pos));
         }
+        contents.resetCache();
+
 
         updateContexts(newContexts);
 
@@ -123,16 +122,14 @@ public class Sniffer extends DefaultHandler{
             System.out.println();
         
         positionStack.removeFirst();
-        String text = contents.size()>0 ? contents.toString() : null;
-
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
-            if(text!=null)
-                context.matchText(text);
+            context.matchText(contents);
             Sniffer.Context newContext = context.endElement();
             if(!newContexts.contains(newContext))
                 newContexts.add(newContext);
         }
+        contents.resetCache();
         
         updateContexts(newContexts);
         contents.reset();
@@ -203,12 +200,12 @@ public class Sniffer extends DefaultHandler{
 //            return parent;
         }
 
-        public void matchText(String text){
-            if(depth<=0){
+        public void matchText(StringContent contents){
+            if(!contents.isEmpty() && depth<=0){
                 for(Node child: node.children){
-                    if(child.matchesText(text))
-                        results.add(child, text);
-                    checkConstraints(child, text);
+                    if(child.matchesText(contents))
+                        results.add(child, contents.toString());
+                    checkConstraints(child, contents);
                 }
             }
         }
@@ -224,12 +221,12 @@ public class Sniffer extends DefaultHandler{
             }
         }
         
-        private void checkConstraints(Node child, String text){
+        private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
-                if(constraint.matchesText(text)){
+                if(constraint.matchesText(contents)){
                     if(constraint.userGiven)
-                        results.add(constraint, text);
-                    checkConstraints(constraint, text);
+                        results.add(constraint, contents.toString());
+                    checkConstraints(constraint, contents);
                 }
             }
         }
