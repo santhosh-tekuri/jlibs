@@ -13,28 +13,27 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model.axis;
+
+import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.AxisNode;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
-class DescendantSelf extends Descendant implements AutoMatch{
-    protected DescendantSelf(Node parent){
-        super(parent);
+public class Child extends AxisNode{
+    public Child(Node parent){
+        super(parent, Axis.CHILD);
     }
 
     @Override
-    protected String getStep(){
-        return "";
+    public boolean matchesElement(String uri, String name, int position){
+        return true;
     }
 
     @Override
-    protected boolean canMerge(Node node){
-        return node.getClass()==getClass();
-    }
-
-    protected void println(){
-        System.out.print("[DescendantSelf]");
-        super.println();
+    public String toString(){
+        return "child::";
     }
 }

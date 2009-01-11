@@ -13,29 +13,23 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model;
 
-import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 
 /**
  * @author Santhosh Kumar T
  */
-class Element extends QNameNode{
-
-    protected Element(Node parent, QName qname, String namespace){
-        super(parent, qname, namespace);
+public class Root extends Node{
+    public NamespaceContext nsContext;
+    
+    public Root(NamespaceContext nsContext){
+        root = this;
+        this.nsContext = nsContext;
     }
-
-    /*-------------------------------------------------[ Matching ]---------------------------------------------------*/
 
     @Override
-    @SuppressWarnings({"SimplifiableIfStatement"})
-    public boolean matchesElement(String uri, String name){
-        return matchesQName(uri, name);
-    }
-
-    protected void println(){
-        System.out.format("<%s>", getStep());
-        super.println();
+    public String toString(){
+        return "Root";
     }
 }

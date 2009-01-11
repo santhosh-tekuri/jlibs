@@ -13,31 +13,32 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model.axis;
 
-import javax.xml.namespace.QName;
+import org.jaxen.saxpath.Axis;
+import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.model.Node;
 
 /**
  * @author Santhosh Kumar T
  */
-class Attribute extends QNameNode{
-
-    public Attribute(Node parent, QName qname, String namespace){
-        super(parent, qname, namespace);
+public class Descendant extends AxisNode{
+    public Descendant(Node parent){
+        super(parent, Axis.DESCENDANT);
     }
 
     @Override
-    public boolean matchesAttribute(String uri, String name){
-        return matchesQName(uri, name);
+    public boolean matchesElement(String uri, String name, int position){
+        return true;
     }
 
     @Override
-    protected String getStep(){
-        return '@'+super.getStep();
+    public boolean consumable(){
+        return true;
     }
 
-    protected void println(){
-        System.out.print(getStep());
-        super.println();
+    @Override
+    public String toString(){
+        return "Descendant";
     }
 }
