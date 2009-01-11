@@ -13,40 +13,23 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Position extends Node implements Match{
-    private int pos;
-    
-    protected Position(Node parent, int pos){
+public class Text extends Node{
+    public Text(Node parent){
         super(parent);
-        this.pos = pos;
     }
 
     @Override
-    public boolean matchesStartElement(String uri, String name, int pos){
-        return this.pos==pos;
+    public boolean matchesText(String text){
+        return true;
     }
 
     @Override
-    protected String getStep(){
-        return "["+pos+"]";
-    }
-
-    @Override
-    protected boolean canMerge(Node node){
-        if(node.getClass()==getClass()){
-            Position that = (Position)node;
-            return this.pos==that.pos;
-        }
-        return false;
-    }
-
-    protected void println(){
-        System.out.format("[Position:%d]", pos);
-        super.println();
+    public String toString(){
+        return "text()";
     }
 }

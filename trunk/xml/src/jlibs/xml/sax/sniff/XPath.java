@@ -15,26 +15,27 @@
 
 package jlibs.xml.sax.sniff;
 
-import java.io.CharArrayWriter;
+import jlibs.xml.sax.sniff.model.Node;
+
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-class StringContent{
-    private CharArrayWriter writer = new CharArrayWriter();
+public class XPath{
+    String xpath;
+    List<Node> nodes;
+    int minHits;
 
-    public StringContent(CharArrayWriter writer){
-        this.writer = writer;
+    public XPath(String xpath, List<Node> nodes){
+        this.xpath = xpath;
+        this.nodes = nodes;
+        for(Node node: nodes)
+            node.userGiven = true;
     }
 
-    private String str;
+    @Override
     public String toString(){
-        if(str==null)
-            str = writer.toString();
-        return str;
-    }
-
-    public void reset(){
-        str = null;
+        return xpath;
     }
 }

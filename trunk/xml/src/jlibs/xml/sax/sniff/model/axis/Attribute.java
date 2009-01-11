@@ -13,10 +13,27 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model.axis;
+
+import org.jaxen.saxpath.Axis;
+import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.model.Node;
 
 /**
  * @author Santhosh Kumar T
  */
-interface AutoMatch{
+public class Attribute extends AxisNode{
+    public Attribute(Node parent){
+        super(parent, Axis.ATTRIBUTE);
+    }
+
+    @Override
+    public boolean matchesAttribute(String uri, String name, String value){
+        return true;
+    }
+
+    @Override
+    public String toString(){
+        return "attribute::";
+    }
 }

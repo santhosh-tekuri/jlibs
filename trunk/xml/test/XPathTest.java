@@ -15,10 +15,12 @@
 
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.sniff.Node;
+import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.sax.sniff.XMLDog;
+import jlibs.xml.sax.sniff.XPathResults;
 import org.w3c.dom.Attr;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 import javax.xml.xpath.XPath;
@@ -36,11 +38,19 @@ public class XPathTest{
     private String xpath;
     private DefaultNamespaceContext nsContext;
 
+    private Document doc;
     public List<String> usingJDK() throws Exception{
         InputSource source = new InputSource(file);
+        if(doc==null)
+            doc = DOMUtil.newDocumentBuilder(true, false, false).parse(source);
+
         XPath xpathObj = XPathFactory.newInstance().newXPath();
         xpathObj.setNamespaceContext(nsContext);
-        NodeList nodeSet = (NodeList)xpathObj.evaluate(xpath, source, XPathConstants.NODESET);
+        NodeList nodeSet;
+        if(doc!=null)
+            nodeSet = (NodeList)xpathObj.evaluate(xpath, doc, XPathConstants.NODESET);
+        else
+            nodeSet = (NodeList)xpathObj.evaluate(xpath, source, XPathConstants.NODESET);
 
         List<String> result = new ArrayList<String>();
         for(int i=0; i<nodeSet.getLength(); i++){
@@ -51,12 +61,12 @@ public class XPathTest{
         return result;
     }
 
-    public Node usingXMLDog() throws Exception{
+    public List<String> usingXMLDog() throws Exception{
         InputSource source = new InputSource(file);
         XMLDog dog = new XMLDog(nsContext);
-        Node node = dog.add(xpath);
-        dog.sniff(source);
-        return node;
+        jlibs.xml.sax.sniff.XPath xpathObj = dog.add(xpath);
+        XPathResults results = dog.sniff(source);
+        return results.getResult(xpathObj);
     }
 
     public void run() throws Exception{
@@ -86,14 +96,14 @@ public class XPathTest{
             while(i<input.length){
                 total++;
                 xpath = input[i];
+                long time = System.nanoTime();
                 List<String> jdkResult = usingJDK();
-                Node node = usingXMLDog();
+                long jdkTime = System.nanoTime() - time;
+                time = System.nanoTime();
+                List<String> dogResult = usingXMLDog();
+                long dogTime = System.nanoTime() - time;
 
-                boolean matched;
-                if(node.getHitCount()==node.getResult().size())
-                    matched = jdkResult.equals(node.getResult());
-                else
-                    matched = jdkResult.size()==node.getHitCount();
+                boolean matched = jdkResult.equals(dogResult);
 
                 PrintStream stream = System.out;
                 if(matched){
@@ -108,8 +118,11 @@ public class XPathTest{
                 stream.println("         xpath : "+xpath);
                 stream.println("    jdk result : "+jdkResult);
                 stream.println("  jdk hitcount : "+jdkResult.size());
-                stream.println("    dog result : "+node.getResult());
-                stream.println("  dog hitcount : "+node.getHitCount());
+                stream.println("      jdk time : "+jdkTime);
+                stream.println("    dog result : "+dogResult);
+                stream.println("      dog time : "+dogTime);
+                stream.println("        WINNER : "+(dogTime<=jdkTime ? "XMLDog" : "Xalan"));
+                stream.println("    Difference : "+(dogTime-jdkTime));
                 stream.flush();
                 i++;
                 System.out.println("-------------------------------------------------");
