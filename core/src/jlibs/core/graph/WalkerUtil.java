@@ -90,6 +90,26 @@ public class WalkerUtil{
         return result;
     }
 
+    public static <E> void print(Walker<E> walker, final Visitor<E, String> visitor){
+        walk(walker, new Processor<E>(){
+            int indent = 0;
+
+            @Override
+            public boolean preProcess(E elem, Path path){
+                for(int i=0; i<indent; i++)
+                    System.out.print("   ");
+                System.out.println(visitor!=null ? visitor.visit(elem) : elem.toString());
+                indent++;
+                return true;
+            }
+
+            @Override
+            public void postProcess(E elem, Path path){
+                indent--;
+            }
+        });
+    }
+
     public static void main(String[] args){
         ArraySequence<String> elements = new ArraySequence<String>("undershorts", "socks", "pants", "shoes", "watch", "belt", "shirt", "tie", "jacket");
         System.out.println(topologicalSort(elements, new Navigator<String>(){

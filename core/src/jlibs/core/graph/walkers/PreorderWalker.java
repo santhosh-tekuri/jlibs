@@ -130,8 +130,8 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
     }
 
     public static void main(String[] args){
-        Class c1 = Number.class;
-        Class c2 = Integer.class;
+        Class<Number> c1 = Number.class;
+        Class<Integer> c2 = Integer.class;
         System.out.println(c1.isAssignableFrom(c2));
         System.out.println(c1.isAssignableFrom(c2));
 
@@ -144,30 +144,11 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
 
         final PreorderWalker<DefaultMutableTreeNode> seq = new PreorderWalker<DefaultMutableTreeNode>((DefaultMutableTreeNode)tree.getModel().getRoot(), new Navigator<DefaultMutableTreeNode>(){
             @Override
+            @SuppressWarnings({"unchecked"})
             public Sequence<DefaultMutableTreeNode> children(DefaultMutableTreeNode elem){
                 return new EnumeratedSequence<DefaultMutableTreeNode>(elem.children());
             }
         });
-
-        WalkerUtil.walk(seq, new Processor<DefaultMutableTreeNode>(){
-            int indent = 0;
-
-            @Override
-            public boolean preProcess(DefaultMutableTreeNode elem, Path path){
-                for(int i=0; i<indent; i++)
-                    System.out.print("   ");
-                System.out.println(elem+" "+seq.index());
-                indent++;
-                return true;
-            }
-
-            @Override
-            public void postProcess(DefaultMutableTreeNode elem, Path path){
-                indent--;
-//                for(int i=0; i<indent; i++)
-//                    System.out.print("   ");
-//                System.out.println("</"+elem+">"+path);
-            }
-        });
+        WalkerUtil.print(seq, null);
     }
 }
