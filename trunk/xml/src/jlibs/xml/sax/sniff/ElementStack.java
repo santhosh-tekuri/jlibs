@@ -32,6 +32,10 @@ public class ElementStack{
         this.root = root;
     }
 
+    public void reset(){
+        stack.clear();
+    }
+    
     public void push(String uri, String name, int pos){
         stack.push(qname(uri, name)+'['+pos+']');
     }
