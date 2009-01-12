@@ -2,7 +2,7 @@
     <testcase xmlns:xs="http://www.w3.org/2001/XMLSchema"
               xmlns:abc="http://www.w3schools.com"
               >
-        <file>sample.xml</file>
+        <file>xmlFiles/sample.xml</file>
 
         <xpath>/xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema/xs:complexType</xpath>
@@ -23,4 +23,19 @@
         <xpath>xs:schema/xs:any/@namespace</xpath>
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
     </testcase>
+
+    <testcase>
+        <file>xmlFiles/much_ado.xml</file>
+
+        <xpath>/descendant::ACT</xpath>
+        <xpath>descendant::ACT</xpath>
+        <xpath>/PLAY/TITLE</xpath>
+        <xpath>descendant::ACT</xpath>
+        <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
+        <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
+        <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::*</xpath>
+        <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
+        <xpath>/PLAY/ACT/SCENE[1]</xpath>
+    </testcase>
+
 </xpaths>
