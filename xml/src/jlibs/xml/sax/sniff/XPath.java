@@ -30,8 +30,6 @@ public class XPath{
     public XPath(String xpath, List<Node> nodes){
         this.xpath = xpath;
         this.nodes = nodes;
-        for(Node node: nodes)
-            node.userGiven = true;
     }
 
     @Override

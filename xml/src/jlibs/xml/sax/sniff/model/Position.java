@@ -30,4 +30,9 @@ public class Position extends Node{
     public boolean matchesElement(String uri, String name, int position){
         return pos==position;
     }
+
+    @Override
+    public String toString(){
+        return "["+pos+"]";
+    }
 }

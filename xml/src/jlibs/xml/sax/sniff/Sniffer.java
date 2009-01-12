@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.ClarkName;
+import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.sniff.model.Node;
@@ -46,6 +47,35 @@ public class Sniffer extends DefaultHandler{
     private StringContent contents = new StringContent();
     private XPathResults results;
 
+    /*-------------------------------------------------[ Element Stack ]---------------------------------------------------*/
+
+    private ArrayDeque<String> elemStack = new ArrayDeque<String>();
+
+    private Object elementResult = new Object(){
+        @Override
+        public String toString(){
+            StringBuilder buff = new StringBuilder();
+            for(String elem: elemStack){
+                buff.append('/');
+                buff.append(elem);
+            }
+            return buff.toString();
+        }
+    };
+
+    private String toString(String uri, String name){
+        String prefix;
+        if(root.nsContext instanceof DefaultNamespaceContext)
+            prefix = ((DefaultNamespaceContext)root.nsContext).declarePrefix(uri);
+        else
+            prefix = root.nsContext.getPrefix(uri);
+        
+        if(prefix!=null)
+            return prefix.length()==0 ? name : prefix+':'+name;
+        else
+            return ClarkName.valueOf(uri, name);
+    }
+    
     /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
 
     private ArrayDeque<Map<String, Integer>> positionStack = new ArrayDeque<Map<String, Integer>>();
@@ -90,6 +120,8 @@ public class Sniffer extends DefaultHandler{
             System.out.println();
         
         int pos = updatePosition(uri, localName);
+        elemStack.addLast(toString(uri, localName)+'['+pos+']');
+
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
             context.matchText(contents);
@@ -122,6 +154,8 @@ public class Sniffer extends DefaultHandler{
             System.out.println();
         
         positionStack.removeFirst();
+        elemStack.removeLast();
+        
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
             context.matchText(contents);
@@ -204,7 +238,7 @@ public class Sniffer extends DefaultHandler{
             if(!contents.isEmpty() && depth<=0){
                 for(Node child: node.children){
                     if(child.matchesText(contents))
-                        results.add(child, contents.toString());
+                        results.hit(child, contents);
                     checkConstraints(child, contents);
                 }
             }
@@ -213,8 +247,7 @@ public class Sniffer extends DefaultHandler{
         private void checkConstraints(Node child, String uri, String name, int pos, List<Context> newContexts){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
-                    if(constraint.userGiven)
-                        results.add(constraint, "true");
+                    results.hit(constraint, elementResult);
                     newContexts.add(childContext(constraint));
                     checkConstraints(constraint, uri, name, pos, newContexts);
                 }
@@ -224,8 +257,7 @@ public class Sniffer extends DefaultHandler{
         private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
                 if(constraint.matchesText(contents)){
-                    if(constraint.userGiven)
-                        results.add(constraint, contents.toString());
+                    results.hit(constraint, contents);
                     checkConstraints(constraint, contents);
                 }
             }
@@ -242,17 +274,9 @@ public class Sniffer extends DefaultHandler{
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
-                        if(child.userGiven)
-                            results.add(child, "true");
+                        results.hit(child, elementResult);
                         newContexts.add(childContext(child));
                         checkConstraints(child, uri, name, pos, newContexts);
-//                        for(Node constraint: child.constraints){
-//                            if(constraint.matchesElement(uri, name, pos)){
-//                                if(constraint.userGiven)
-//                                    results.add(constraint, "true");
-//                                newContexts.add(childContext(constraint));
-//                            }
-//                        }
                     }
                 }
                 if(node.consumable()){
@@ -280,13 +304,10 @@ public class Sniffer extends DefaultHandler{
 
                     for(Node child: node.children){
                         if(child.matchesAttribute(uri, name, value)){
-                            if(child.userGiven)
-                                results.add(child, value);
+                            results.hit(child, value);
                             for(Node constraint: child.constraints){
-                                if(constraint.matchesAttribute(uri, name, value)){
-                                    if(constraint.userGiven)
-                                        results.add(constraint, value);
-                                }
+                                if(constraint.matchesAttribute(uri, name, value))
+                                    results.hit(constraint, value);
                             }
                         }
                     }
