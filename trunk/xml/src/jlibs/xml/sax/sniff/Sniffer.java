@@ -280,6 +280,7 @@ public class Sniffer extends DefaultHandler implements Debuggable{
                     }
                 }
                 if(node.consumable()){
+                    results.hit(node, elementStack);
                     depth--;
                     contexts.add(this);
                     checkConstraints(node, uri, name, pos);
@@ -363,9 +364,8 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             if(debug)
                 System.out.println("COMPLETE DOCUMENT IS NOT PARSED !!!");
         }
-        if(debug){
+        if(debug)
             System.out.println("max contexts: "+maxInstCount);
-        }
         return results;
     }
 }
