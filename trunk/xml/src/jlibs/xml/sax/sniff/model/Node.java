@@ -15,10 +15,7 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.core.graph.Navigator;
-import jlibs.core.graph.Sequence;
-import jlibs.core.graph.Walker;
-import jlibs.core.graph.WalkerUtil;
+import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
@@ -30,8 +27,6 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public abstract class Node{
-    public boolean userGiven;
-    
     Root root;
     public Node parent;
     public List<AxisNode> children = new ArrayList<AxisNode>();
@@ -50,10 +45,12 @@ public abstract class Node{
         }
     }
 
+    /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
+    
     public boolean consumable(){
         return false;
     }
-    
+
     public boolean matchesElement(String uri, String name, int position){
         return false;
     }
@@ -66,6 +63,22 @@ public abstract class Node{
         return false;
     }
 
+    /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
+
+    public List<Node> requires = new ArrayList<Node>();
+    public List<Node> requiredBy = new ArrayList<Node>();
+
+    public void requires(Node node){
+        requires.add(node);
+        node.requiredBy.add(this);
+    }
+
+    public boolean resultInteresed(){
+        return requiredBy.size()>0;
+    }
+
+    /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
+    
     public void print(){
         Navigator<Node> navigator = new Navigator<Node>(){
             @Override
@@ -74,6 +87,14 @@ public abstract class Node{
             }
         };
         Walker<Node> walker = new PreorderWalker<Node>(this, navigator);
-        WalkerUtil.print(walker, null);
+        WalkerUtil.print(walker, new Visitor<Node, String>(){
+            @Override
+            public String visit(Node elem){
+                String str = elem.toString();
+                if(elem.resultInteresed())
+                    str += "--> resultInteresed";
+                return str;
+            }
+        });
     }
 }

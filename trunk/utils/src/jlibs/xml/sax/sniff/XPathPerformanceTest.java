@@ -60,9 +60,17 @@ public class XPathPerformanceTest{
                 Node node = nodeSet.item(i);
                 if(node instanceof Attr)
                     result.add(node.getNodeValue());
-                else if(node instanceof Element)
-                    result.add("true");
-                else if(node instanceof Text)
+                else if(node instanceof Element){
+                    StringBuilder buff = new StringBuilder();
+                    while(!(node instanceof Document)){
+                        String prefix = nsContext.getPrefix(node.getNamespaceURI());
+                        buff.insert(0, "["+DOMUtil.getPosition((Element)node)+"]");
+                        buff.insert(0, prefix.length()==0 ? node.getLocalName() : prefix+':'+node.getLocalName());
+                        buff.insert(0, '/');
+                        node = node.getParentNode();
+                    }
+                    result.add(buff.toString());
+                }else if(node instanceof Text)
                     result.add(node.getNodeValue());
             }
             results.add(result);
@@ -114,19 +122,19 @@ public class XPathPerformanceTest{
             }
         });
 
-        int total=0, failed=0;
+        int failed=0;
+
         long time = System.nanoTime();
-        List<List<String>> jdkResults = usingJDK();
-        long jdkTime = System.nanoTime() - time;
-        time = System.nanoTime();
         List<List<String>> dogResults = usingXMLDog();
         long dogTime = System.nanoTime() - time;
+
+        time = System.nanoTime();
+        List<List<String>> jdkResults = usingJDK();
+        long jdkTime = System.nanoTime() - time;
 
         PrintStream stream = System.out;
 
         for(int i=0; i<xpaths.size(); i++){
-            total++;
-
             List<String> jdkResult = jdkResults.get(i);
             List<String> dogResult = dogResults.get(i);
 
@@ -151,13 +159,14 @@ public class XPathPerformanceTest{
             System.out.println("-------------------------------------------------");
             System.out.flush();
         }
-        System.out.format("testcases are executed: total=%d failed=%d %n", total, failed);
+        System.out.format("testcases are executed: total=%d failed=%d %n", xpaths.size(), failed);
 
         stream.println("      jdk time : "+jdkTime+" nanoseconds");
         stream.println("      dog time : "+dogTime+" nanoseconds");
-        stream.println("        WINNER : "+(dogTime<=jdkTime ? "XMLDog" : "XALAN"));
+        double faster = (1.0*Math.max(dogTime, jdkTime)/Math.min(dogTime, jdkTime));
+        stream.format("        WINNER : %s (%.2fx faster) %n", dogTime<=jdkTime ? "XMLDog" : "XALAN", faster);
         long diff = Math.abs(dogTime - jdkTime);
-        stream.println("    Difference : "+ diff + " nanoseconds/"+ diff/1E-09+" seconds");
+        stream.format("    Difference : %d nanoseconds/%.2f seconds %n", diff, diff*1E-09);
 
         System.out.println("\n--------------------------------------------------------------\n\n");
     }

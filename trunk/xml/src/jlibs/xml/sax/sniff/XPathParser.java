@@ -28,6 +28,8 @@ import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * @author Santhosh Kumar T
@@ -48,6 +50,9 @@ public class XPathParser implements XPathHandler{
         currents.clear();
         currents.add(root);
         reader.parse(xpath);
+
+        for(Node node: currents)
+            node.requires(node);
         return new XPath(xpath, currents);
     }
 
@@ -64,7 +69,10 @@ public class XPathParser implements XPathHandler{
     public void endPathExpr() throws SAXPathException{}
 
     @Override
-    public void startAbsoluteLocationPath() throws SAXPathException{}
+    public void startAbsoluteLocationPath() throws SAXPathException{
+        currents.clear();
+        currents.add(root);
+    }
 
     @Override
     public void endAbsoluteLocationPath() throws SAXPathException{}
@@ -184,17 +192,16 @@ public class XPathParser implements XPathHandler{
         throw new SAXPathException("unsupprted");
     }
 
-    private boolean insidePredicate;
+    private Deque<List<Node>> predicates = new ArrayDeque<List<Node>>();
+
     @Override
     public void startPredicate() throws SAXPathException{
-        insidePredicate = true;
-//        throw new SAXPathException("predicate is unsupprted");
+        predicates.addLast(new ArrayList<Node>(currents));
     }
 
     @Override
     public void endPredicate() throws SAXPathException{
-        insidePredicate = false;
-//        throw new SAXPathException("unsupprted");
+//        currents = predicates.removeLast();
     }
 
     @Override
@@ -286,7 +293,7 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void number(int number) throws SAXPathException{
-        if(insidePredicate){
+        if(predicates.size()>0){
             List<Node> newCurrents = new ArrayList<Node>();
             for(Node current: currents){
                 Position found = null;
@@ -344,8 +351,9 @@ public class XPathParser implements XPathHandler{
         String xpaths[] = {
 //            "//xsd:any/@namespace",
 //            "//@name",
-            "/xsd:schema//xsd:complexType/@name",
-            "/xsd:schema/xsd:any/@namespace",
+//            "a/b",
+//            "/xsd:schema//xsd:complexType/@name",
+            "/xsd:schema/xsd:any[xyz[@namespace]]/mno",
 //            "/xsd:sequence/xsd:any/xs:element/@namespace",
         };
 

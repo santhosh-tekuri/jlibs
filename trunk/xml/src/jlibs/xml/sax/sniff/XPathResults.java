@@ -33,20 +33,22 @@ public class XPathResults{
         this.minHits = minHits;
     }
 
-    public void add(Node node, String value){
-        results.add(value);
+    public void hit(Node node, Object resultWrapper){
+        if(node.resultInteresed()){
+            results.add(resultWrapper.toString());
 
-        List<Integer> list = map.get(node);
-        if(list==null)
-            map.put(node, list=new ArrayList<Integer>());
-        list.add(results.size()-1);
-        if(Sniffer.debug)
-            System.out.format("Hit %2d: %s ---> %s %n", results.size(), node, value);
+            List<Integer> list = map.get(node);
+            if(list==null)
+                map.put(node, list=new ArrayList<Integer>());
+            list.add(results.size()-1);
+            if(Sniffer.debug)
+                System.out.format("Hit %2d: %s ---> %s %n", results.size(), node, resultWrapper);
 
-        if(minHits>0){
-            minHits--;
-            if(minHits==0)
-                throw STOP_PARSING;
+            if(minHits>0){
+                minHits--;
+                if(minHits==0)
+                    throw STOP_PARSING;
+            }
         }
     }
 
