@@ -1,24 +1,26 @@
-<xpaths xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        xmlns:abc="http://www.w3schools.com"
-        >
-    <file>sample.xml</file>
+<xpaths>
+    <testcase xmlns:xs="http://www.w3.org/2001/XMLSchema"
+              xmlns:abc="http://www.w3schools.com"
+              >
+        <file>sample.xml</file>
 
-    <xpath>/xs:schema/@targetNamespace</xpath>
-    <xpath>/xs:schema/xs:complexType</xpath>
-    <xpath>/xs:schema/xs:complexType/@name</xpath>
-    <xpath>/xs:schema/*/@name</xpath>
-    <xpath>/xs:schema/xs:*/@name</xpath>
-    <xpath>xs:schema//xs:element/@name</xpath>
-    <xpath>/xs:schema/descendant-or-self::xs:element/@name</xpath>
-    <xpath>/xs:schema/descendant-or-self::xs:schema/@targetNamespace</xpath>
-    <xpath>/xs:schema//@name</xpath>
-    <xpath>/xs:schema//text()</xpath>
-    <xpath>/xs:schema/@*</xpath>
-    <xpath>/xs:schema/@abc:*</xpath>
-    <xpath>/xs:schema/*/xs:complexType/@name</xpath>
-    <xpath>//xs:any[2]/@namespace</xpath>
-    <xpath>//@name</xpath>
-    <xpath>xs:schema//xs:complexType/@name</xpath>
-    <xpath>xs:schema/xs:any/@namespace</xpath>
-    <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
+        <xpath>/xs:schema/@targetNamespace</xpath>
+        <xpath>/xs:schema/xs:complexType</xpath>
+        <xpath>/xs:schema/xs:complexType/@name</xpath>
+        <xpath>/xs:schema/*/@name</xpath>
+        <xpath>/xs:schema/xs:*/@name</xpath>
+        <xpath>xs:schema//xs:element/@name</xpath>
+        <xpath>/xs:schema/descendant-or-self::xs:element/@name</xpath>
+        <xpath>/xs:schema/descendant-or-self::xs:schema/@targetNamespace</xpath>
+        <xpath>/xs:schema//@name</xpath>
+        <xpath>/xs:schema//text()</xpath>
+        <xpath>/xs:schema/@*</xpath>
+        <xpath>/xs:schema/@abc:*</xpath>
+        <xpath>/xs:schema/*/xs:complexType/@name</xpath>
+        <xpath>//xs:any[2]/@namespace</xpath>
+        <xpath>//@name</xpath>
+        <xpath>xs:schema//xs:complexType/@name</xpath>
+        <xpath>xs:schema/xs:any/@namespace</xpath>
+        <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
+    </testcase>
 </xpaths>
