@@ -29,7 +29,7 @@
             <fileset dir=".">
                 <include name="readme.txt"/>
                 <include name="xpaths.xml"/>
-                <include name="sample.xml"/>
+                <include name="xmlFiles/*"/>
                 <include name="3rdparty/*.jar"/>
                 <exclude name="3rdparty/testng*.jar"/>
                 <exclude name="3rdparty/ant*.jar"/>
@@ -65,6 +65,6 @@
             <format property="time" pattern="yyyy-MM-dd-HHmm"/>
         </tstamp>
         <zip destfile="jlibs_${time}.zip" basedir="installer" excludes="3rdparty/**"/>
-        <zip destfile="3rdparty.zip" basedir="installer/3rdparty"/>
+        <zip destfile="3rdparty_${time}.zip" basedir="installer/3rdparty"/>
     </target>
 </project>
