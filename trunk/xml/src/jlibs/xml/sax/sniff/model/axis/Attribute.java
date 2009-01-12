@@ -25,6 +25,7 @@ import jlibs.xml.sax.sniff.model.Node;
 public class Attribute extends AxisNode{
     public Attribute(Node parent){
         super(parent, Axis.ATTRIBUTE);
+        parent.hasAttibuteChild = true;
     }
 
     @Override
