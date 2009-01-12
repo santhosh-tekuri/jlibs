@@ -28,6 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
@@ -79,7 +80,7 @@ public class Sniffer extends DefaultHandler{
 
         for(Context context: contexts){
             context.matchText(contents);
-            newContexts.addAll(context.startElement(uri, localName, pos));
+            context.startElement(uri, localName, pos);
         }
         contents.reset();
         updateContexts();
@@ -124,10 +125,17 @@ public class Sniffer extends DefaultHandler{
     private List<Context> newContexts = new ArrayList<Context>();
 
     private void println(String message, List<Context> contexts){
+        println(message, contexts, 0);
+    }
+
+    private void println(String message, List<Context> contexts, int from){
         if(debug){
             System.out.println(message+" ->");
-            for(Context context: contexts)
-                System.out.println("     "+context);
+            if(contexts.size()==from)
+                return;
+            Iterator iter = contexts.listIterator(from);
+            while(iter.hasNext())
+                System.out.println("     "+iter.next());
             System.out.println();
         }
     }
@@ -216,8 +224,8 @@ public class Sniffer extends DefaultHandler{
         public List<Context> startElement(String uri, String name, int pos){
             String message = toString();
 
-            List<Context> newContexts = new ArrayList<Context>();
-            
+            int contextsSize = newContexts.size();
+
             if(depth>0){
                 depth++;
                 newContexts.add(this);
@@ -241,7 +249,7 @@ public class Sniffer extends DefaultHandler{
                 }
             }
 
-            println(message, newContexts);
+            println(message, newContexts, contextsSize);
             return newContexts;
         }
 
