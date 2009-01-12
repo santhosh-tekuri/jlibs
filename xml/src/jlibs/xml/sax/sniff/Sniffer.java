@@ -83,8 +83,10 @@ public class Sniffer extends DefaultHandler implements Debuggable{
         contexts.update();
 
         // match attributes
-        for(Context newContext: contexts)
-            newContext.matchAttributes(attrs);
+        if(contexts.hasAttributeChild){
+            for(Context newContext: contexts)
+                newContext.matchAttributes(attrs);
+        }
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -132,7 +134,10 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             return iter.reset(current);
         }
 
+        public boolean hasAttributeChild;
+        public boolean nextHasAttributeChild;
         public void add(Context context){
+            nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
             next.add(context);
         }
 
@@ -140,12 +145,18 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             if(!next.contains(context))
                 add(context);
         }
+
         public void update(){
             List<Context> temp = current;
             current = next;
             next = temp;
             next.clear();
-            printCurrent("newContext");
+
+            hasAttributeChild = nextHasAttributeChild;
+            nextHasAttributeChild = false;
+
+            if(debug)
+                printCurrent("newContext");
         }
 
         private int mark;

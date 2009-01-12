@@ -33,6 +33,8 @@ public abstract class Node{
     public List<AxisNode> children = new ArrayList<AxisNode>();
     public List<Node> constraints = new ArrayList<Node>();
 
+    public boolean hasAttibuteChild;
+
     protected Node(){}
     public Node(Node node){
         this.root = node.root;
