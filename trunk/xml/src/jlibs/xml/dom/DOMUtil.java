@@ -19,6 +19,11 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import jlibs.core.lang.Util;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -29,5 +34,20 @@ public class DOMUtil{
         factory.setValidating(validating);
         factory.setCoalescing(coalescing);
         return factory.newDocumentBuilder();
+    }
+
+    public static int getPosition(Element elem){
+        int pos = 1;
+        NodeList list = elem.getParentNode().getChildNodes();
+        for(int i=0; i<list.getLength(); i++){
+            Node node = list.item(i);
+            if(node==elem)
+                break;
+            if(node instanceof Element
+                    && Util.equals(node.getNamespaceURI(), elem.getNamespaceURI())
+                    && node.getLocalName().equals(elem.getLocalName()))
+                pos++;
+        }
+        return pos;
     }
 }
