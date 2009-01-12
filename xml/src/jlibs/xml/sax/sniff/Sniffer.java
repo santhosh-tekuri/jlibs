@@ -56,8 +56,11 @@ public class Sniffer extends DefaultHandler{
             System.out.println("-----------------------------------------------------------------");
 
         contexts.clear();
+        newContexts.clear();
+        
         contents.reset();
         positionStack.reset();
+        elementStack.reset();
         
         contexts.add(new Context(root));
 
@@ -74,16 +77,15 @@ public class Sniffer extends DefaultHandler{
         int pos = positionStack.push(uri, localName);
         elementStack.push(uri, localName, pos);
 
-        List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
             context.matchText(contents);
             newContexts.addAll(context.startElement(uri, localName, pos));
         }
         contents.reset();
-        updateContexts(newContexts);
+        updateContexts();
 
         // match attributes
-        for(Context newContext: newContexts)
+        for(Context newContext: contexts)
             newContext.matchAttributes(attrs);
 
         if(debug)
@@ -103,7 +105,6 @@ public class Sniffer extends DefaultHandler{
         positionStack.pop();
         elementStack.pop();
         
-        List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
             context.matchText(contents);
             Sniffer.Context newContext = context.endElement();
@@ -111,7 +112,7 @@ public class Sniffer extends DefaultHandler{
                 newContexts.add(newContext);
         }
         contents.reset();
-        updateContexts(newContexts);
+        updateContexts();
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -120,6 +121,7 @@ public class Sniffer extends DefaultHandler{
     /*-------------------------------------------------[ Contexts ]---------------------------------------------------*/
     
     private List<Context> contexts = new ArrayList<Context>();
+    private List<Context> newContexts = new ArrayList<Context>();
 
     private void println(String message, List<Context> contexts){
         if(debug){
@@ -130,8 +132,11 @@ public class Sniffer extends DefaultHandler{
         }
     }
     
-    private void updateContexts(List<Context> newContexts){
+    private void updateContexts(){
+        List<Context> temp = contexts;
         contexts = newContexts;
+        newContexts = temp;
+        newContexts.clear();
         println("newContext", contexts);
     }
 
