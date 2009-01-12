@@ -15,13 +15,10 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.xml.ClarkName;
-import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
-import jlibs.xml.sax.sniff.model.StringContent;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -29,7 +26,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -40,60 +38,15 @@ public class Sniffer extends DefaultHandler{
 
     public Sniffer(Root root){
         this.root = root;
+        elementStack = new ElementStack(root);
         if(debug)
             root.print();
     }
 
     private StringContent contents = new StringContent();
+    private PositionStack positionStack = new PositionStack();
+    private ElementStack elementStack;
     private XPathResults results;
-
-    /*-------------------------------------------------[ Element Stack ]---------------------------------------------------*/
-
-    private ArrayDeque<String> elemStack = new ArrayDeque<String>();
-
-    private Object elementResult = new Object(){
-        @Override
-        public String toString(){
-            StringBuilder buff = new StringBuilder();
-            for(String elem: elemStack){
-                buff.append('/');
-                buff.append(elem);
-            }
-            return buff.toString();
-        }
-    };
-
-    private String toString(String uri, String name){
-        String prefix;
-        if(root.nsContext instanceof DefaultNamespaceContext)
-            prefix = ((DefaultNamespaceContext)root.nsContext).declarePrefix(uri);
-        else
-            prefix = root.nsContext.getPrefix(uri);
-        
-        if(prefix!=null)
-            return prefix.length()==0 ? name : prefix+':'+name;
-        else
-            return ClarkName.valueOf(uri, name);
-    }
-    
-    /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
-
-    private ArrayDeque<Map<String, Integer>> positionStack = new ArrayDeque<Map<String, Integer>>();
-
-    private int updatePosition(String uri, String localName){
-        Map<String, Integer> map = positionStack.peekFirst();
-        String clarkName = ClarkName.valueOf(uri, localName);
-        Integer predicate = map.get(clarkName);
-        if(predicate==null)
-            predicate = 1;
-        else
-            predicate += 1;
-        map.put(clarkName, predicate);
-
-        positionStack.addFirst(new HashMap<String, Integer>());
-
-        return predicate;
-    }
 
     /*-------------------------------------------------[ Events ]---------------------------------------------------*/
     
@@ -104,10 +57,9 @@ public class Sniffer extends DefaultHandler{
 
         contexts.clear();
         contents.reset();
-        positionStack.clear();
+        positionStack.reset();
         
         contexts.add(new Context(root));
-        positionStack.push(new HashMap<String, Integer>());
 
         println("Contexts", contexts);
         if(debug)
@@ -119,25 +71,20 @@ public class Sniffer extends DefaultHandler{
         if(debug)
             System.out.println();
         
-        int pos = updatePosition(uri, localName);
-        elemStack.addLast(toString(uri, localName)+'['+pos+']');
+        int pos = positionStack.push(uri, localName);
+        elementStack.push(uri, localName, pos);
 
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
             context.matchText(contents);
             newContexts.addAll(context.startElement(uri, localName, pos));
         }
-        contents.resetCache();
-
-
+        contents.reset();
         updateContexts(newContexts);
 
         // match attributes
         for(Context newContext: newContexts)
             newContext.matchAttributes(attrs);
-
-
-        contents.reset();
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -153,8 +100,8 @@ public class Sniffer extends DefaultHandler{
         if(debug)
             System.out.println();
         
-        positionStack.removeFirst();
-        elemStack.removeLast();
+        positionStack.pop();
+        elementStack.pop();
         
         List<Context> newContexts = new ArrayList<Context>();
         for(Context context: contexts){
@@ -163,10 +110,8 @@ public class Sniffer extends DefaultHandler{
             if(!newContexts.contains(newContext))
                 newContexts.add(newContext);
         }
-        contents.resetCache();
-        
-        updateContexts(newContexts);
         contents.reset();
+        updateContexts(newContexts);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -247,7 +192,7 @@ public class Sniffer extends DefaultHandler{
         private void checkConstraints(Node child, String uri, String name, int pos, List<Context> newContexts){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
-                    results.hit(constraint, elementResult);
+                    results.hit(constraint, elementStack);
                     newContexts.add(childContext(constraint));
                     checkConstraints(constraint, uri, name, pos, newContexts);
                 }
@@ -274,7 +219,7 @@ public class Sniffer extends DefaultHandler{
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
-                        results.hit(child, elementResult);
+                        results.hit(child, elementStack);
                         newContexts.add(childContext(child));
                         checkConstraints(child, uri, name, pos, newContexts);
                     }

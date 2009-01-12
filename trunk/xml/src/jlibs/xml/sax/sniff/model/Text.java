@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.StringContent;
+
 /**
  * @author Santhosh Kumar T
  */
