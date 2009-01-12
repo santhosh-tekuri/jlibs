@@ -37,11 +37,11 @@ public class ElementStack{
     }
     
     public void push(String uri, String name, int pos){
-        stack.push(qname(uri, name)+'['+pos+']');
+        stack.addLast(qname(uri, name)+'['+pos+']');
     }
 
     public void pop(){
-        stack.pop();
+        stack.removeLast();
     }
 
     private String qname(String uri, String name){
