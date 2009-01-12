@@ -56,4 +56,8 @@ public class DefaultNamespaceContext implements NamespaceContext{
     public void declarePrefix(String prefix, String uri){
         nsSupport.declarePrefix(prefix, uri);
     }
+
+    public String declarePrefix(String uri){
+        return nsSupport.declarePrefix(uri);
+    }
 }
