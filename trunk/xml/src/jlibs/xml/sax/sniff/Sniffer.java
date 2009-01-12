@@ -45,6 +45,7 @@ public class Sniffer extends DefaultHandler{
     }
 
     private StringContent contents = new StringContent();
+    private Contexts contexts = new Contexts();
     private PositionStack positionStack = new PositionStack();
     private ElementStack elementStack;
     private XPathResults results;
@@ -56,16 +57,12 @@ public class Sniffer extends DefaultHandler{
         if(debug)
             System.out.println("-----------------------------------------------------------------");
 
-        contexts.clear();
-        newContexts.clear();
-        
         contents.reset();
+        contexts.reset(new Context(root));
         positionStack.reset();
         elementStack.reset();
         
-        contexts.add(new Context(root));
-
-        println("Contexts", contexts);
+        contexts.printCurrent("Contexts");
         if(debug)
             System.out.println("-----------------------------------------------------------------");
     }
@@ -83,7 +80,7 @@ public class Sniffer extends DefaultHandler{
             context.startElement(uri, localName, pos);
         }
         contents.reset();
-        updateContexts();
+        contexts.update();
 
         // match attributes
         for(Context newContext: contexts)
@@ -108,44 +105,80 @@ public class Sniffer extends DefaultHandler{
         
         for(Context context: contexts){
             context.matchText(contents);
-            Sniffer.Context newContext = context.endElement();
-            if(!newContexts.contains(newContext))
-                newContexts.add(newContext);
+            contexts.addUnique(context.endElement());
         }
         contents.reset();
-        updateContexts();
+        contexts.update();
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
     }
 
     /*-------------------------------------------------[ Contexts ]---------------------------------------------------*/
-    
-    private List<Context> contexts = new ArrayList<Context>();
-    private List<Context> newContexts = new ArrayList<Context>();
 
-    private void println(String message, List<Context> contexts){
-        println(message, contexts, 0);
-    }
+    static class Contexts implements Iterable<Context>{
+        private List<Context> current = new ArrayList<Context>();
+        private List<Context> next = new ArrayList<Context>();
 
-    private void println(String message, List<Context> contexts, int from){
-        if(debug){
-            System.out.println(message+" ->");
-            if(contexts.size()==from)
-                return;
-            Iterator iter = contexts.listIterator(from);
-            while(iter.hasNext())
-                System.out.println("     "+iter.next());
-            System.out.println();
+        public void reset(Context context){
+            current.clear();
+            next.clear();
+            current.add(context);
         }
-    }
-    
-    private void updateContexts(){
-        List<Context> temp = contexts;
-        contexts = newContexts;
-        newContexts = temp;
-        newContexts.clear();
-        println("newContext", contexts);
+
+        ResettableIterator<Context> iter = new ResettableIterator<Context>(current);
+        @Override
+        public Iterator<Context> iterator(){
+            return iter.reset(current);
+        }
+
+        public void add(Context context){
+            next.add(context);
+        }
+
+        public void addUnique(Context context){
+            if(!next.contains(context))
+                add(context);
+        }
+        public void update(){
+            List<Context> temp = current;
+            current = next;
+            next = temp;
+            next.clear();
+            printCurrent("newContext");
+        }
+
+        private int mark;
+
+        public void mark(){
+            mark = next.size();
+        }
+
+        public int markSize(){
+            return next.size()-mark;
+        }
+
+        /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
+
+        private void println(String message, List<Context> contexts, int from){
+            if(debug){
+                System.out.println(message+" ->");
+                if(contexts.size()==from)
+                    return;
+                Iterator iter = contexts.listIterator(from);
+                while(iter.hasNext())
+                    System.out.println("     "+iter.next());
+                System.out.println();
+            }
+        }
+
+        public void printCurrent(String message){
+            println(message, current, 0);
+        }
+
+        public void printNext(String message){
+            println(message, next, mark);
+        }
     }
 
     static int maxInstCount;
@@ -160,7 +193,7 @@ public class Sniffer extends DefaultHandler{
             instCount++;
             maxInstCount = Math.max(maxInstCount, instCount);
         }
-        
+
         Context(Root root){
             this();
 //            parentDepths = new int[0];
@@ -175,7 +208,7 @@ public class Sniffer extends DefaultHandler{
 //            context.parentDepths = new int[parentDepths.length+1];
 //            System.arraycopy(parentDepths, 0, context.parentDepths, 0, parentDepths.length);
 //            context.parentDepths[context.parentDepths.length-1] = depth;
-            
+
             return context;
         }
 
@@ -202,16 +235,16 @@ public class Sniffer extends DefaultHandler{
             }
         }
 
-        private void checkConstraints(Node child, String uri, String name, int pos, List<Context> newContexts){
+        private void checkConstraints(Node child, String uri, String name, int pos){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
                     results.hit(constraint, elementStack);
-                    newContexts.add(childContext(constraint));
-                    checkConstraints(constraint, uri, name, pos, newContexts);
+                    contexts.add(childContext(constraint));
+                    checkConstraints(constraint, uri, name, pos);
                 }
             }
         }
-        
+
         private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
                 if(constraint.matchesText(contents)){
@@ -221,36 +254,35 @@ public class Sniffer extends DefaultHandler{
             }
         }
 
-        public List<Context> startElement(String uri, String name, int pos){
+        public void startElement(String uri, String name, int pos){
             String message = toString();
 
-            int contextsSize = newContexts.size();
+            contexts.mark();
 
             if(depth>0){
                 depth++;
-                newContexts.add(this);
+                contexts.add(this);
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
                         results.hit(child, elementStack);
-                        newContexts.add(childContext(child));
-                        checkConstraints(child, uri, name, pos, newContexts);
+                        contexts.add(childContext(child));
+                        checkConstraints(child, uri, name, pos);
                     }
                 }
                 if(node.consumable()){
                     depth--;
-                    newContexts.add(this);
-                    checkConstraints(node, uri, name, pos, newContexts);
+                    contexts.add(this);
+                    checkConstraints(node, uri, name, pos);
                 }else{
-                    if(newContexts.size()==0){
+                    if(contexts.markSize()==0){
                         depth++;
-                        newContexts.add(this);
+                        contexts.add(this);
                     }
                 }
             }
 
-            println(message, newContexts, contextsSize);
-            return newContexts;
+            contexts.printNext(message);
         }
 
         public void matchAttributes(Attributes attrs){
@@ -281,7 +313,7 @@ public class Sniffer extends DefaultHandler{
                     depth--;
                 else
                     depth++;
-                
+
                 return this;
             }
         }
