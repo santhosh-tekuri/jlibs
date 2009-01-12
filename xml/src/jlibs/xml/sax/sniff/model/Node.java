@@ -19,6 +19,7 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.xml.sax.sniff.StringContent;
 
 import java.util.ArrayList;
 import java.util.List;

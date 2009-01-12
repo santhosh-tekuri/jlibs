@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model;
+package jlibs.xml.sax.sniff;
 
 import java.io.CharArrayWriter;
 
@@ -29,22 +29,19 @@ public class StringContent{
 
     public void reset(){
         writer.reset();
-    }
-
-    private String str;
-
-    public void resetCache(){
-        str = null;
+        cahcedString = null;
     }
 
     public boolean isEmpty(){
         return writer.size()==0;
     }
+
+    private String cahcedString;
     
     @Override
     public String toString(){
-        if(str==null)
-            return str = writer.size()>0 ? writer.toString() : null;
-        return str;
+        if(cahcedString==null)
+            return cahcedString = writer.size()>0 ? writer.toString() : null;
+        return cahcedString;
     }
 }
