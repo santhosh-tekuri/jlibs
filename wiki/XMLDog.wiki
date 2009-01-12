@@ -192,17 +192,17 @@ SUCCESSFULL:
 .........
 
 -------------------------------------------------
-testcases are executed: total=9 failed=0
-      jdk time : 98067000 nanoseconds
-      dog time : 35723000 nanoseconds
-        *WINNER : XMLDog*
-    Difference : 62344000 nanoseconds/6.2344E16 seconds
+testcases are executed: total=18 failed=0 
+      jdk time : 130050000 nanoseconds
+      dog time : 54477000 nanoseconds
+        WINNER : XMLDog (2.39x faster) 
+    Difference : 75573000 nanoseconds/0.08 seconds 
 
 --------------------------------------------------------------
 }}}
 
 The result clealy says that `XMLDog` won over `Xalan`.<br>
-`XMLDog` is 6.2 seconds faster than `Xalan`;
+`XMLDog` is 2.39x faster than `Xalan`;
 
 The source code of testcase is [http://code.google.com/p/jlibs/source/browse/trunk/utils/src/jlibs/xml/sax/sniff/XPathPerformanceTest.java here]
 
