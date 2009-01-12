@@ -33,8 +33,7 @@ import java.util.Iterator;
 /**
  * @author Santhosh Kumar T
  */
-public class Sniffer extends DefaultHandler{
-    static boolean debug = XMLDog.debug;
+public class Sniffer extends DefaultHandler implements Debuggable{
     private Root root;
 
     public Sniffer(Root root){
@@ -61,10 +60,11 @@ public class Sniffer extends DefaultHandler{
         contexts.reset(new Context(root));
         positionStack.reset();
         elementStack.reset();
-        
-        contexts.printCurrent("Contexts");
-        if(debug)
+
+        if(debug){
+            contexts.printCurrent("Contexts");
             System.out.println("-----------------------------------------------------------------");
+        }
     }
 
     @Override
@@ -161,15 +161,13 @@ public class Sniffer extends DefaultHandler{
         /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
 
         private void println(String message, List<Context> contexts, int from){
-            if(debug){
-                System.out.println(message+" ->");
-                if(contexts.size()==from)
-                    return;
-                Iterator iter = contexts.listIterator(from);
-                while(iter.hasNext())
-                    System.out.println("     "+iter.next());
-                System.out.println();
-            }
+            System.out.println(message+" ->");
+            if(contexts.size()==from)
+                return;
+            Iterator iter = contexts.listIterator(from);
+            while(iter.hasNext())
+                System.out.println("     "+iter.next());
+            System.out.println();
         }
 
         public void printCurrent(String message){
@@ -282,7 +280,8 @@ public class Sniffer extends DefaultHandler{
                 }
             }
 
-            contexts.printNext(message);
+            if(debug)
+                contexts.printNext(message);
         }
 
         public void matchAttributes(Attributes attrs){

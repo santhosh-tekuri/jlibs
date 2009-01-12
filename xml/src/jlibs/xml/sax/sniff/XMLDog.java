@@ -30,9 +30,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public class XMLDog{
-    public static boolean debug = false;
-
+public class XMLDog implements Debuggable{
     private Root root;
 
     public XMLDog(NamespaceContext nsContext){
@@ -64,9 +62,9 @@ public class XMLDog{
         return new Sniffer(root).sniff(source, infiniteHits ? -1 : totalMinHits);
     }
 
+    /*-------------------------------------------------[ Testing ]---------------------------------------------------*/
+    
     public static void main(String[] args) throws Exception{
-        XMLDog.debug = false;
-
         DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
         nsContext.declarePrefix("xs", Namespaces.URI_XSD);
         nsContext.declarePrefix("abc", "http://abc.com");
@@ -74,24 +72,25 @@ public class XMLDog{
         XMLDog dog = new XMLDog(nsContext);
 
         XPath xpaths[] = {
-//              dog.add("/xs:schema/@targetNamespace", 1),
-//              dog.add("/xs:schema/xs:complexType", -1),
-//              dog.add("/xs:schema/xs:complexType/@name", -1),
-//              dog.add("/xs:schema/*/@name", -1),
-//              dog.add("/xs:schema/xs:*/@name", -1),
-//              dog.add("xs:schema//xs:element/@name", -1),
-//            dog.add("/xs:schema/descendant-or-self::xs:element/@name"),
-//            dog.add("/xs:schema/descendant-or-self::xs:schema/@targetNamespace"),
-//            dog.add("/xs:schema//@name"),
-//            dog.add("/xs:schema//text()", -1),
-//            dog.add("/xs:schema/@*", -1),
-//            dog.add("/xs:schema/@abc:*", -1),
-//            dog.add("/xs:schema/*/xs:complexType/@name", -1),
-//            dog.add("//xs:any[2]/@namespace", -1),
-//            dog.add("//@name"),
-//            dog.add("xs:schema//xs:complexType/@name", 10),
-//            dog.add("xs:schema/xs:any/@namespace", 10),
-//            dog.add("//xs:sequence/child::xs:any/@namespace")
+            dog.add("/xs:schema/@targetNamespace", 1),
+            dog.add("/xs:schema/xs:complexType", -1),
+            dog.add("/xs:schema/xs:complexType/@name", -1),
+            dog.add("/xs:schema/*/@name", -1),
+            dog.add("/xs:schema/xs:*/@name", -1),
+            dog.add("xs:schema//xs:element/@name", -1),
+            dog.add("/xs:schema/descendant-or-self::xs:element/@name"),
+            dog.add("/xs:schema/descendant-or-self::xs:schema/@targetNamespace"),
+            dog.add("/xs:schema//@name"),
+            dog.add("/xs:schema//text()", -1),
+            dog.add("/xs:schema/@*", -1),
+            dog.add("/xs:schema/@abc:*", -1),
+            dog.add("/xs:schema/*/xs:complexType/@name", -1),
+            dog.add("//*", -1),
+            dog.add("//xs:any[2]/@namespace", -1),
+            dog.add("//@name"),
+            dog.add("xs:schema//xs:complexType/@name", 10),
+            dog.add("xs:schema/xs:any/@namespace", 10),
+            dog.add("//xs:sequence/child::xs:any/@namespace")
         };
         InputSource source = new InputSource("/Volumes/Softwares/Personal/jlibs/wiki/src/wiki/dog/test.xml");
         XPathResults results = dog.sniff(source);
