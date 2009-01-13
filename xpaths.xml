@@ -2,7 +2,7 @@
     <testcase xmlns:xs="http://www.w3.org/2001/XMLSchema"
               xmlns:abc="http://www.w3schools.com"
               >
-        <file>xmlFiles/sample.xml</file>
+        <file>xmlFiles/note.xml</file>
 
         <xpath>/xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema/xs:complexType</xpath>
@@ -27,6 +27,61 @@
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
     </testcase>
 
+    <testcase>
+        <file>xmlFiles/sample.xml</file>
+        
+        <!-- simple queries -->
+        <xpath>/root</xpath>
+        <xpath>/root/pub</xpath>
+        <xpath>/root/pub/book</xpath>
+        <xpath>/root/*/book</xpath>
+        <xpath>/*/*/book</xpath>
+        <xpath>/root/pub/*</xpath>
+        <xpath>/root/*/*</xpath>
+        <xpath>/*/*/*</xpath>
+        <xpath>/*/*</xpath>
+        <xpath>/*</xpath>
+        <xpath>*</xpath>
+        <xpath>/root/*</xpath>
+        <xpath>/*/*</xpath>
+
+        <!-- simple queries with closure-->
+        <xpath>/root//pub</xpath>
+        <xpath>/root/pub//book</xpath>
+        <xpath>/root/*//book</xpath>
+        <xpath>/*/*//book</xpath>
+        <xpath>/root//pub/*</xpath>
+        <xpath>/root//*/*</xpath>
+        <xpath>/*//*/*</xpath>
+        <xpath>//*</xpath>
+        <xpath>//*/*</xpath>
+        <xpath>/*//*</xpath>
+        <xpath>//pub/book</xpath>
+        <xpath>//Body</xpath>
+
+        <!-- descendant-or-self, descendant and self axes -->
+		<xpath>/root/pub/descendant-or-self::*</xpath>
+		<xpath>/root/pub/descendant-or-self::pub</xpath>
+		<xpath>//book/pub/descendant-or-self::*</xpath>
+		<xpath>//book/pub/descendant-or-self::pub</xpath>
+		<xpath>/root/pub/descendant::*</xpath>
+		<xpath>/root/pub/descendant::pub</xpath>
+		<xpath>//book/pub/descendant::*</xpath>
+		<xpath>//book/pub/descendant::pub</xpath>
+
+        <!-- node tests -->
+        <xpath>/root/pub/book/*</xpath>
+        <xpath>/root/pub/book/text()</xpath>
+        <xpath>/root/pub/book/@*</xpath>
+        <xpath>/root/pub/book/@id</xpath>
+        <xpath>//book/*</xpath>
+        <xpath>//book/text()</xpath>
+        <xpath>//book/@*</xpath>
+        <xpath>//@*</xpath>
+        <xpath>//@id</xpath>
+
+    </testcase>
+    
     <testcase>
         <file>xmlFiles/much_ado.xml</file>
 

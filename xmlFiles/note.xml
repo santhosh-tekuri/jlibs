@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.w3schools.com"
+           xmlns="http://www.w3schools.com"
+           xmlns:abc="http://www.w3schools.com"
+           elementFormDefault="qualified"
+           abc:sdf="sdjfkdjkf"
+           name="rootname"
+        >
+
+
+    <xs:element name="anyElement">
+        <abc:complexType>
+            <xs:any namespace="##any"/>
+            <xs:sequence>
+                <xs:any namespace="##local"/>
+                <xs:any namespace="##other"/>
+                <xs:any namespace="##targetNamespace"/>
+            </xs:sequence>
+        </abc:complexType>
+    </xs:element>
+
+    <xs:element name="simpleElement" type="xs:string"/>
+    <xs:element name="elementWithRefElement">
+        <xs:complexType name="abc">
+            <xs:sequence>
+                <xs:element ref="simpleElement"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="note">
+        <xs:complexType name="xyz">
+            <xs:sequence>
+                <xs:element name="to" type="xs:string"/>
+                <xs:element name="from" type="xs:string"/>
+                <xs:element name="heading" type="xs:string"/>
+                <xs:element name="body" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="personinfo">
+        <xs:sequence>
+            <xs:element name="firstname" type="xs:string"/>
+            <xs:element name="lastname" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
