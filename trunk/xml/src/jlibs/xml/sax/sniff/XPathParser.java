@@ -168,6 +168,9 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
+        if(axis==Axis.SELF)
+            return; //do nothing
+        
         List<Node> newCurrents = new ArrayList<Node>();
         if(axis==Axis.DESCENDANT_OR_SELF){
             axis = Axis.DESCENDANT;
