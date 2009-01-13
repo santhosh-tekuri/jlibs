@@ -51,16 +51,24 @@ public class XPathParser implements XPathHandler{
         currents.add(root);
         reader.parse(xpath);
 
-        for(Node node: currents)
-            node.requires(node);
-        return new XPath(xpath, currents);
+        return predicate!=null ? new XPath(xpath, predicate) : new XPath(xpath, currents);
     }
 
     @Override
     public void startXPath() throws SAXPathException{}
 
     @Override
-    public void endXPath() throws SAXPathException{}
+    public void endXPath() throws SAXPathException{
+        if(predicate!=null){
+            predicate = new Predicate(predicate);
+            predicate.userGiven = true;
+            for(Node current: currents)
+                current.predicates.add(predicate);
+        }else{
+            for(Node node: currents)
+                node.userGiven = true;
+        }
+    }
 
     @Override
     public void startPathExpr() throws SAXPathException{}
@@ -70,6 +78,8 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startAbsoluteLocationPath() throws SAXPathException{
+        if(!pathStack.isEmpty())
+            pathStack.push(pathStack.pop()+1); 
         currents.clear();
         currents.add(root);
     }
@@ -79,13 +89,12 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startRelativeLocationPath() throws SAXPathException{
-        throw new SAXPathException("relative location path is unsupprted");
+        if(!pathStack.isEmpty())
+            pathStack.push(pathStack.pop()+1);
     }
 
     @Override
-    public void endRelativeLocationPath() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
-    }
+    public void endRelativeLocationPath() throws SAXPathException{}
 
     @Override
     public void startNameStep(int axis, String prefix, String localName) throws SAXPathException{
@@ -193,15 +202,26 @@ public class XPathParser implements XPathHandler{
     }
 
     private Deque<List<Node>> predicates = new ArrayDeque<List<Node>>();
+    private ArrayDeque<Integer> pathStack = new ArrayDeque<Integer>();
 
     @Override
     public void startPredicate() throws SAXPathException{
-        predicates.addLast(new ArrayList<Node>(currents));
+        predicates.push(new ArrayList<Node>(currents));
+        pathStack.push(0);
     }
 
+    private Predicate predicate;
     @Override
     public void endPredicate() throws SAXPathException{
-//        currents = predicates.removeLast();
+        if(pathStack.pop()>0){
+            List<Node> list = predicates.pop();
+            predicate = new Predicate(currents.toArray(new Node[currents.size()]));
+            for(Node node: list)
+                node.predicates.add(predicate);
+            currents = list;
+        }else
+            predicates.pop();
+
     }
 
     @Override
@@ -353,8 +373,8 @@ public class XPathParser implements XPathHandler{
 //            "//@name",
 //            "a/b",
 //            "/xsd:schema//xsd:complexType/@name",
-            "/xsd:schema/xsd:any[xyz[@namespace]]/mno",
-//            "/xsd:sequence/xsd:any/xs:element/@namespace",
+            "/xsd:schema/xsd:any[xyz/qwe[abc/def]]/mno",
+//            "/xsd:sequence/xsd:any[2]/xs:element/@namespace",
         };
 
         for(String xpath: xpaths){
