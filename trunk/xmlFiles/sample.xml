@@ -1,49 +1,100 @@
 <?xml version="1.0"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="http://www.w3schools.com"
-           xmlns="http://www.w3schools.com"
-           xmlns:abc="http://www.w3schools.com"
-           elementFormDefault="qualified"
-           abc:sdf="sdjfkdjkf"
-           name="rootname"
-        >
+<!-- This comment belongs to Document Node -->
 
+<?xml-stylesheet href="XSL\Sample.html.xsl" type="text/xsl"?>
 
-    <xs:element name="anyElement">
-        <abc:complexType>
-            <xs:any namespace="##any"/>
-            <xs:sequence>
-                <xs:any namespace="##local"/>
-                <xs:any namespace="##other"/>
-                <xs:any namespace="##targetNamespace"/>
-            </xs:sequence>
-        </abc:complexType>
-    </xs:element>
+<root doc-id="Sample.xml" purpose="test" xml:lang="en-us">
+    
+    <!-- This is first comment of root node -->
+<?odbc-to-xml table="test" ?>
+    
+    <pub>
+        <book id="1" FirstBook="true">
+            <price>12.00</price>
+            <name>NameA1</name>
+            <author>AuthorA1</author>
+            <price type="discount">10.00</price>
+            <cost_price>15</cost_price>
+        </book>
+        <book id="2">
+            <price>14.00</price>
+            <name>NameA2B2</name>
+            <author>AuthorA2</author>
+            <author>AuthorB2</author>
+            <cost_price>8</cost_price>
+            <price type="discount">12.00</price>
+            <pub>
+                <book>
+                    <name>NameZ</name>
+                    <author>AuthorZ</author>
+                </book>
+                <year>1999</year>
+            </pub>
+        </book>
+        <year>2002</year>
+    </pub>
+    
+    <!-- This is second comment of root node -->
+    <XMLFragment2>
+        <env:Envelope xmlns:env="http://mysoap">
+            <Body>
+                <Header>
+                    <Body>header_body</Body>
+                </Header>
+            </Body>
+            <Body>
+                <Order id="11">
+                    <Header>order_header1</Header>
+                    <Customer>X</Customer>
+                </Order>
+                <Order id="12">
+                    <Header>order_header2</Header>
+                    <Detail>
+                        <temp />
+                        <Item>
+                            <Price symbol="$">2</Price>
+                        </Item>
+                        <Item>
+                            <Price symbol="Y">100</Price>
+                            <Price symbol="$">200</Price>
+                        </Item>
+                    </Detail>
+                </Order>
+            </Body>
+        </env:Envelope>
+        
 
-    <xs:element name="simpleElement" type="xs:string"/>
-    <xs:element name="elementWithRefElement">
-        <xs:complexType name="abc">
-            <xs:sequence>
-                <xs:element ref="simpleElement"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name="note">
-        <xs:complexType name="xyz">
-            <xs:sequence>
-                <xs:element name="to" type="xs:string"/>
-                <xs:element name="from" type="xs:string"/>
-                <xs:element name="heading" type="xs:string"/>
-                <xs:element name="body" type="xs:string"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:complexType name="personinfo">
-        <xs:sequence>
-            <xs:element name="firstname" type="xs:string"/>
-            <xs:element name="lastname" type="xs:string"/>
-        </xs:sequence>
-    </xs:complexType>
-</xs:schema>
+        <set_dns xmlns="http://default1">
+            <chapter>
+                <para>1 - default namespace1</para>
+                <para>2 - default namespace1</para>
+            </chapter>
+            <chapter xmlns="http://default2">
+                <para>3 - default namespace2</para>
+            </chapter>
+            <chapter>
+                <para>4 - default namespace1</para>
+            </chapter>
+            <unset_dns xmlns="">
+                <chapter>
+                    <para>1 - no default namespace</para>
+                    <para>2 - no default namespace</para>
+                </chapter>
+                <chapter xmlns="">
+                    <para>3 - no default namespace</para>
+                </chapter>
+                <chapter>
+                    <para>4 - no default namespace</para>
+                </chapter>
+            </unset_dns>
+            <chapter>
+                <para>5 - default namespace1</para>
+            </chapter>
+            <chapter xmlns="http://default3">
+                <para>6 - default namespace3</para>
+            </chapter>
+        </set_dns>
+        
+    </XMLFragment2>
+    
+</root> 
