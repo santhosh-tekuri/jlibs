@@ -42,13 +42,16 @@ import java.util.Enumeration;
 public class XPathPerformanceTest{
     public List<List<String>> translateJDKResults(TestCase testCase){
         List<List<String>> results = new ArrayList<List<String>>();
+        int test = 0;
         for(NodeList nodeSet: testCase.jdkResult){
+            testCase.hasAttributes.add(false);
             List<String> result = new ArrayList<String>();
             for(int i=0; i<nodeSet.getLength(); i++){
                 Node node = nodeSet.item(i);
-                if(node instanceof Attr)
+                if(node instanceof Attr){
                     result.add(node.getNodeValue());
-                else if(node instanceof Element){
+                    testCase.hasAttributes.set(test, true);
+                }else if(node instanceof Element){
                     StringBuilder buff = new StringBuilder();
                     while(!(node instanceof Document)){
                         String prefix = testCase.nsContext.getPrefix(node.getNamespaceURI());
@@ -62,6 +65,7 @@ public class XPathPerformanceTest{
                     result.add(node.getNodeValue());
             }
             results.add(result);
+            test++;
         }
         return results;
     }
@@ -129,9 +133,10 @@ public class XPathPerformanceTest{
                 List<String> jdkResult = jdkResults.get(i);
                 List<String> dogResult = testCase.dogResult.get(i);
 
-                if(testCase.xpaths.get(i).contains("@")){
+                if(testCase.hasAttributes.get(i)){
                     Collections.sort(jdkResult);
                     Collections.sort(dogResult);
+                    System.out.println("sorting results...");
                 }
 
                 boolean matched = jdkResult.equals(dogResult);
@@ -176,6 +181,7 @@ public class XPathPerformanceTest{
 class TestCase{
     String file;
     List<String> xpaths = new ArrayList<String>();
+    List<Boolean> hasAttributes = new ArrayList<Boolean>();
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     Document doc;
 
