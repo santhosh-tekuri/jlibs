@@ -27,7 +27,10 @@
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
     </testcase>
 
-    <testcase>
+    <testcase xmlns:env="http://mysoap"
+              xmlns:dns1="http://default1"
+              xmlns:dns2="http://default2"
+              xmlns:dns3="http://default3">
         <file>xmlFiles/sample.xml</file>
         
         <!-- simple queries -->
@@ -80,6 +83,31 @@
         <xpath>//@*</xpath>
         <xpath>//@id</xpath>
 
+        <!-- unabbreviated axes -->
+        <xpath>/root/pub/book/attribute::*</xpath>
+        <xpath>/root/pub/book/attribute::id</xpath>
+        <xpath>//book/attribute::*</xpath>
+        <xpath>//book/pub/descendant-or-self::*</xpath>
+
+        <!-- other tests -->
+		<xpath>/root//*</xpath>
+		<xpath>/root/pub/descendant-or-self::*</xpath>
+
+        <!-- namespace prefix -->
+        <xpath>/root/XMLFragment2/env:Envelope</xpath>
+        <xpath>/root/*/env:*</xpath>
+        <xpath>/root//env:Envelope</xpath>
+        <xpath>//env:*</xpath>
+        <xpath>//dns1:*</xpath>
+        <xpath>//dns2:*</xpath>
+        <xpath>//dns3:*</xpath>
+        <xpath>//chapter</xpath>
+        <xpath>//para</xpath>
+
+        <!-- position -->
+        <xpath>/root/pub/book[ 1 ]</xpath>
+        <xpath>//book/price[ 1 ]</xpath>
+        <xpath>//book/price[ 2 ]</xpath>
     </testcase>
     
     <testcase>
