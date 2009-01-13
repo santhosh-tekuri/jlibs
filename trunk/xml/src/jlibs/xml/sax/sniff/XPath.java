@@ -16,20 +16,28 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Predicate;
 
 import java.util.List;
+import java.util.Collections;
 
 /**
  * @author Santhosh Kumar T
  */
 public class XPath{
     String xpath;
-    List<Node> nodes;
+    List<Node> nodes = Collections.emptyList();
+    Predicate predicate;
     int minHits;
 
     public XPath(String xpath, List<Node> nodes){
         this.xpath = xpath;
         this.nodes = nodes;
+    }
+
+    public XPath(String xpath, Predicate predicate){
+        this.xpath = xpath;
+        this.predicate = predicate;
     }
 
     @Override

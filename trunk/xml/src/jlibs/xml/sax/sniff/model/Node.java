@@ -68,16 +68,12 @@ public abstract class Node{
 
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
-    public List<Node> requires = new ArrayList<Node>();
-    public List<Node> requiredBy = new ArrayList<Node>();
+    public List<Predicate> predicates = new ArrayList<Predicate>();
+    public List<Predicate> memberOf = new ArrayList<Predicate>();
 
-    public void requires(Node node){
-        requires.add(node);
-        node.requiredBy.add(this);
-    }
-
+    public boolean userGiven;
     public boolean resultInteresed(){
-        return requiredBy.size()>0;
+        return userGiven || predicates.size()>0 || memberOf.size()>0;
     }
 
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
@@ -94,8 +90,18 @@ public abstract class Node{
             @Override
             public String visit(Node elem){
                 String str = elem.toString();
-                if(elem.resultInteresed())
-                    str += "--> resultInteresed";
+                if(elem.userGiven)
+                    str += " --> userGiven";
+                if(elem.predicates.size()>0){
+                    str += " --> ";
+                    for(Predicate predicate: elem.predicates)
+                        str += predicate+" ";
+                }
+                if(elem.memberOf.size()>0){
+                    str += " ==>";
+                    for(Predicate predicate: elem.memberOf)
+                        str += predicate+" ";
+                }
                 return str;
             }
         });

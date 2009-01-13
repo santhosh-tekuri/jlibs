@@ -6,6 +6,9 @@
 
         <xpath>/xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema/xs:complexType</xpath>
+        <xpath>/xs:schema/xs:element[xs:complexType/@name]/@name</xpath>
+        <xpath>/xs:schema/xs:element[xs:complexType]/@name</xpath>
+        <xpath>/xs:schema/xs:element/@name</xpath>
         <xpath>/xs:schema/xs:complexType/@name</xpath>
         <xpath>/xs:schema/*/@name</xpath>
         <xpath>/xs:schema/xs:*/@name</xpath>
