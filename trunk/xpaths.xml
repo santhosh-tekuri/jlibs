@@ -47,6 +47,8 @@
         <xpath>*</xpath>
         <xpath>/root/*</xpath>
         <xpath>/*/*</xpath>
+        <xpath>.</xpath>
+        <xpath>./*</xpath>
 
         <!-- simple queries with closure-->
         <xpath>/root//pub</xpath>
@@ -71,7 +73,10 @@
 		<xpath>/root/pub/descendant::pub</xpath>
 		<xpath>//book/pub/descendant::*</xpath>
 		<xpath>//book/pub/descendant::pub</xpath>
-
+		<xpath>//book/*/self::*</xpath>
+        <xpath>//book/*/self::pub</xpath>
+        <xpath>//book/pub/self::pub</xpath>
+        
         <!-- node tests -->
         <xpath>/root/pub/book/*</xpath>
         <xpath>/root/pub/book/text()</xpath>
@@ -108,8 +113,121 @@
         <xpath>/root/pub/book[ 1 ]</xpath>
         <xpath>//book/price[ 1 ]</xpath>
         <xpath>//book/price[ 2 ]</xpath>
+		<xpath>//*/temp[1]/.</xpath>
+        <xpath>//*/temp[4]/.</xpath>
+        <xpath>//temp[4]/.</xpath>
     </testcase>
-    
+
+    <testcase>
+        <file>xmlFiles/numbers.xml</file>
+
+        <xpath>/numbers/set/nr</xpath>
+        <xpath>/numbers/set/nr/@value</xpath>
+        <xpath>/numbers/set</xpath>
+        <xpath>/numbers/set[1]</xpath>
+        <xpath>/numbers/set[2]</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/underscore.xml</file>
+
+        <xpath>/root/@a</xpath>
+        <xpath>/root/@_a</xpath>
+        <xpath>/root/b</xpath>
+        <xpath>/root/_b</xpath>
+    </testcase>
+
+    <testcase xmlns:topic="http://www.oreilly.com/topics">
+        <file>xmlFiles/contents.xml</file>
+
+        <xpath>//@*</xpath>
+        <xpath>/child::node()//@*</xpath>
+        <xpath>//@topic:focus</xpath>
+        <xpath>/child::node()//@topic:focus</xpath>
+        <xpath>/child::node()//@topic:*</xpath>
+        <xpath>//@topic:*</xpath>
+        <xpath>/text()</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/evaluate.xml</file>
+
+        <xpath>//jumps/*</xpath>
+        <xpath>//jumps/object</xpath>
+        <xpath>//jumps/object/dog</xpath>
+        <xpath>//jumps/*/dog</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/web.xml</file>
+
+        <xpath>/web-app/servlet/servlet-name</xpath>
+        <xpath>/web-app/servlet[1]/servlet-name</xpath>
+        <xpath>/web-app/servlet[1]/servlet-name/text()</xpath>
+        <xpath>/web-app/servlet[2]/servlet-name</xpath>
+        <xpath>/web-app/servlet[2]/servlet-name/text()</xpath>
+
+        <!-- test Axes -->
+        <xpath>/*/servlet</xpath>
+        <xpath>//servlet</xpath>
+        <xpath>/web-app/descendant::servlet</xpath>
+        <xpath>/web-app/descendant-or-self::servlet</xpath>
+        <xpath>descendant::*</xpath>
+        <xpath>/descendant::servlet</xpath>
+        <xpath>/descendant-or-self::servlet</xpath>
+        <xpath>descendant-or-self::servlet</xpath>
+        <xpath>descendant::servlet</xpath>
+        <xpath>descendant-or-self::*</xpath>
+        <xpath>/*/descendant-or-self::*</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/fibo.xml</file>
+
+        <xpath>/*/fibonacci[2]</xpath>
+        <xpath>/*/fibonacci</xpath>
+    </testcase>
+
+    <testcase xmlns:dummy="dummyNamespace"
+              xmlns:x="noNamespace">
+        <file>xmlFiles/defaultNamespace.xml</file>
+
+        <xpath>/a/b/c</xpath>
+        <xpath>/x:a/x:b/x:c</xpath>
+        <xpath>/dummy:a/dummy:b/dummy:c</xpath>
+        <xpath>/dummy:a/dummy:*/dummy:c</xpath>
+        <xpath>/dummy:*/dummy:*/dummy:c</xpath>
+        <xpath>/dummy:*/dummy:*/dummy:*</xpath>
+        <xpath>/dummy:*//dummy:*</xpath>
+        <xpath>//dummy:*</xpath>
+    </testcase>
+
+    <testcase xmlns:foo="fooNamespace"
+              xmlns:voo="fooNamespace"
+			  xmlns:bar="barNamespace"
+              xmlns:alias="fooNamespace">
+        <file>xmlFiles/namespaces.xml</file>
+
+        <xpath>/*</xpath>
+        <xpath>/foo:a</xpath>
+        <xpath>/foo:a/b</xpath>
+        <xpath>/foo:a/b/c</xpath>
+        <xpath>/foo:a/foo:d/foo:e</xpath>
+        <xpath>/foo:a/foo:x/foo:y</xpath>
+        <xpath>/foo:a/bar:f</xpath>
+        <xpath>/voo:a/b/c</xpath>
+        <xpath>/voo:a/bar:f</xpath>
+        <xpath>/foo:a/alias:x/alias:y</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/text.xml</file>
+
+        <xpath>/foo/bar/text()</xpath>
+        <xpath>/web-app/servlet[1]/servlet-name</xpath>
+        <xpath>/web-app/servlet[1]/servlet-name/text()</xpath>
+    </testcase>
+
     <testcase>
         <file>xmlFiles/much_ado.xml</file>
 
@@ -117,6 +235,7 @@
         <xpath>descendant::ACT</xpath>
         <xpath>/PLAY/TITLE</xpath>
         <xpath>descendant::ACT</xpath>
+        <xpath>descendant::SPEAKER</xpath>
         <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
         <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
         <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::*</xpath>
