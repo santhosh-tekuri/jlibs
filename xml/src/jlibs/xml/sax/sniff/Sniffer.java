@@ -73,6 +73,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
+        results.resultWrapper = contents;
         for(Context context: contexts)
             context.matchText(contents);
         contents.reset();
@@ -80,6 +81,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void comment(char[] ch, int start, int length) throws SAXException{
+        results.resultWrapper = contents;
         for(Context context: contexts)
             context.matchText(contents);
         contents.reset();
@@ -93,8 +95,13 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         int pos = positionStack.push(uri, localName);
         elementStack.push(uri, localName, pos);
 
+        results.resultWrapper = contents;
         for(Context context: contexts){
             context.matchText(contents);
+        }
+
+        results.resultWrapper = elementStack;
+        for(Context context: contexts){
             context.startElement(uri, localName, pos);
         }
         contents.reset();
@@ -102,8 +109,16 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         // match attributes
         if(contexts.hasAttributeChild){
-            for(Context newContext: contexts)
-                newContext.matchAttributes(attrs);
+            for(int i=0; i<attrs.getLength(); i++){
+                String attrUri = attrs.getURI(i);
+                String attrName = attrs.getLocalName(i);
+                String attrValue = attrs.getValue(i);
+                results.resultWrapper = attrValue;
+                for(Context newContext: contexts)
+                    newContext.matchAttribute(attrUri, attrName, attrValue);
+            }
+//            for(Context newContext: contexts)
+//                newContext.matchAttributes(attrs);
         }
 
         if(debug)
@@ -123,6 +138,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         positionStack.pop();
         elementStack.pop();
 
+        results.resultWrapper = contents;
         ArrayDeque<Context> stack = new ArrayDeque<Context>();
         for(int i=contexts.current.size()-1; i>=0; i--){
             Context context = contexts.current.get(i);
@@ -263,7 +279,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
                     checkConstraints(node, contents);
                 for(Node child: node.children){
                     if(child.matchesText(contents))
-                        results.hit(this, child, contents);
+                        results.hit(this, child);
                     checkConstraints(child, contents);
                 }
             }
@@ -272,7 +288,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         private void checkConstraints(Node child, String uri, String name, int pos){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
-                    if(results.hit(this, constraint, elementStack)){
+                    if(results.hit(this, constraint)){
                         contexts.add(childContext(constraint));
                         checkConstraints(constraint, uri, name, pos);
                     }
@@ -283,7 +299,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
                 if(constraint.matchesText(contents)){
-                    results.hit(this, constraint, contents);
+                    results.hit(this, constraint);
                     checkConstraints(constraint, contents);
                 }
             }
@@ -300,14 +316,14 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
-                        if(results.hit(this, child, elementStack)){
+                        if(results.hit(this, child)){
                             contexts.add(childContext(child));
                             checkConstraints(child, uri, name, pos);
                         }
                     }
                 }
                 if(node.consumable()){
-                    if(results.hit(this, node, elementStack)){
+                    if(results.hit(this, node)){
                         depth--;
                         contexts.add(this);
                         checkConstraints(node, uri, name, pos);
@@ -324,20 +340,14 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
                 contexts.printNext(message);
         }
 
-        public void matchAttributes(Attributes attrs){
+        public void matchAttribute(String uri, String name, String value){
             if(depth<=0){
-                for(int i=0; i<attrs.getLength(); i++){
-                    String uri = attrs.getURI(i);
-                    String name = attrs.getLocalName(i);
-                    String value = attrs.getValue(i);
-
-                    for(Node child: node.children){
-                        if(child.matchesAttribute(uri, name, value)){
-                            results.hit(this, child, value);
-                            for(Node constraint: child.constraints){
-                                if(constraint.matchesAttribute(uri, name, value))
-                                    results.hit(this, constraint, value);
-                            }
+                for(Node child: node.children){
+                    if(child.matchesAttribute(uri, name, value)){
+                        results.hit(this, child);
+                        for(Node constraint: child.constraints){
+                            if(constraint.matchesAttribute(uri, name, value))
+                                results.hit(this, constraint);
                         }
                     }
                 }
