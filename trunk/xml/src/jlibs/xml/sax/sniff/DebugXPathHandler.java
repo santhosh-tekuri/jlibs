@@ -278,6 +278,6 @@ public class DebugXPathHandler implements XPathHandler{
         XPathHandler handler = new DebugXPathHandler();
         handler = TeeProxy.create(XPathHandler.class, handler, new DefaultXPathHandler());
         reader.setXPathHandler(handler);
-        reader.parse("/xsd:schema/xsd:any[xyz[@namespace]]/mno");
+        reader.parse("/xs:schema/xs:element/.");
     }
 }
