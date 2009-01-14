@@ -132,7 +132,8 @@ public class XPathResults implements Debuggable{
     Map<Position, Map<ChildContext, Integer>> childHitCount = new HashMap<Position, Map<ChildContext, Integer>>();
     Map<Position, Integer> descendantHitCount = new HashMap<Position, Integer>();
 
-    public boolean hit(Sniffer.Context context, Node node, Object resultWrapper){
+    Object resultWrapper;
+    public boolean hit(Sniffer.Context context, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
             if(position.axis==Axis.DESCENDANT){
@@ -160,7 +161,10 @@ public class XPathResults implements Debuggable{
         }
 
         if(node.resultInteresed()){
-            results.add(resultWrapper.toString());
+            if(resultWrapper!=null){
+                results.add(resultWrapper.toString());
+                resultWrapper = null;
+            }
 
             if(node.userGiven)
                 addResult(node, results.size()-1);

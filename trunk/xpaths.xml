@@ -126,6 +126,7 @@
         <xpath>//dns3:*</xpath>
         <xpath>//chapter</xpath>
         <xpath>//para</xpath>
+        <xpath>//*//temp[1]/.</xpath>
 
         <!-- position -->
         <xpath>/root/pub/book[ 1 ]</xpath>
@@ -134,6 +135,7 @@
 		<xpath>//*/temp[1]/.</xpath>
         <xpath>//*/temp[4]/.</xpath>
         <xpath>//temp[4]/.</xpath>
+        <xpath>//book/*[ 2 ]</xpath>
 
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
