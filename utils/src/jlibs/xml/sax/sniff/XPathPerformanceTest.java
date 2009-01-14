@@ -115,11 +115,13 @@ public class XPathPerformanceTest{
         for(TestCase testCase: testCases)
             testCase.dogResult = testCase.usingXMLDog();
         long dogTime = System.nanoTime() - time;
-
+        System.out.println("XMLDog finished evaluation");
+        
         time = System.nanoTime();
         for(TestCase testCase: testCases)
             testCase.jdkResult = testCase.usingJDK();
         long jdkTime = System.nanoTime() - time;
+        System.out.println("Xalan finished");
 
         int total= 0;
         int failed = 0;
