@@ -19,6 +19,7 @@
         <xpath>/xs:schema/descendant-or-self::xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema//@name</xpath>
         <xpath>/xs:schema//text()</xpath>
+        <xpath>//text()</xpath>
         <xpath>/xs:schema/@*</xpath>
         <xpath>/xs:schema/@abc:*</xpath>
         <xpath>/xs:schema/*/xs:complexType/@name</xpath>
@@ -108,6 +109,7 @@
         <!-- other tests -->
 		<xpath>/root//*</xpath>
 		<xpath>/root/pub/descendant-or-self::*</xpath>
+        <xpath>//text()</xpath>
 
         <!-- namespace prefix -->
         <xpath>/root/XMLFragment2/env:Envelope</xpath>
