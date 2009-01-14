@@ -163,6 +163,8 @@
         <xpath>/child::node()//@topic:*</xpath>
         <xpath>//@topic:*</xpath>
         <xpath>/text()</xpath>
+        <xpath>//text()</xpath>
+        <xpath>/descendant-or-self::text()</xpath>
     </testcase>
 
     <testcase>
