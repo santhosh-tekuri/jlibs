@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model.axis;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.StringContent;
 import org.jaxen.saxpath.Axis;
 
 /**
@@ -29,6 +30,11 @@ public class Child extends AxisNode{
 
     @Override
     public boolean matchesElement(String uri, String name, int position){
+        return true;
+    }
+
+    @Override
+    public boolean matchesText(StringContent content){
         return true;
     }
 
