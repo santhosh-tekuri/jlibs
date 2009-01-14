@@ -17,14 +17,17 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +37,7 @@ import java.util.ArrayDeque;
 /**
  * @author Santhosh Kumar T
  */
-public class Sniffer extends DefaultHandler implements Debuggable{
+public class Sniffer extends DefaultHandler2 implements Debuggable{
     private Root root;
 
     public Sniffer(Root root){
@@ -66,6 +69,20 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             contexts.printCurrent("Contexts");
             System.out.println("-----------------------------------------------------------------");
         }
+    }
+
+    @Override
+    public void processingInstruction(String target, String data) throws SAXException{
+        for(Context context: contexts)
+            context.matchText(contents);
+        contents.reset();
+    }
+
+    @Override
+    public void comment(char[] ch, int start, int length) throws SAXException{
+        for(Context context: contexts)
+            context.matchText(contents);
+        contents.reset();
     }
 
     @Override
@@ -371,7 +388,9 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);
-            SAXUtil.newSAXParser(true, false).parse(source, handler);
+            SAXParser parser = SAXUtil.newSAXParser(true, false);
+            parser.getXMLReader().setProperty(SAXProperties.LEXICAL_HANDLER, handler);
+            parser.parse(source, handler);
         }catch(RuntimeException ex){
             if(ex!=XPathResults.STOP_PARSING)
                 throw ex;
