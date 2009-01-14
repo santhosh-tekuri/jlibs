@@ -4,6 +4,8 @@
               >
         <file>xmlFiles/note.xml</file>
 
+        <xpath>/descendant::xs:element[2]</xpath>
+        <xpath>//xs:element[2]</xpath>
         <xpath>/xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema/xs:complexType</xpath>
         <xpath>/xs:schema/xs:element[xs:complexType/@name]/@name</xpath>
@@ -25,6 +27,15 @@
         <xpath>xs:schema//xs:complexType/@name</xpath>
         <xpath>xs:schema/xs:any/@namespace</xpath>
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/positions.xml</file>
+
+        <xpath>/descendant::E2[2]</xpath>
+        <xpath>/descendant::*/E2[2]</xpath>
+        <xpath>/X/E1/E2[2]</xpath>
+        <xpath>/Root/E1/E2[E4]/E3/@name</xpath>
     </testcase>
 
     <testcase xmlns:env="http://mysoap"
@@ -116,6 +127,9 @@
 		<xpath>//*/temp[1]/.</xpath>
         <xpath>//*/temp[4]/.</xpath>
         <xpath>//temp[4]/.</xpath>
+
+        <!-- other tests -->
+        <xpath>/root//self::*</xpath>
     </testcase>
 
     <testcase>
@@ -166,6 +180,7 @@
         <xpath>/web-app/servlet[1]/servlet-name/text()</xpath>
         <xpath>/web-app/servlet[2]/servlet-name</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/text()</xpath>
+        <xpath>/web-app/servlet[2][servlet-name]/*</xpath>
 
         <!-- test Axes -->
         <xpath>/*/servlet</xpath>
@@ -226,6 +241,28 @@
         <xpath>/foo/bar/text()</xpath>
         <xpath>/web-app/servlet[1]/servlet-name</xpath>
         <xpath>/web-app/servlet[1]/servlet-name/text()</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/organization.xml</file>
+
+        <!-- unabbreviated axes -->
+        <xpath>//@empID</xpath>
+        <xpath>//@*</xpath>
+        <xpath>/*//self::*</xpath>
+        <xpath>//self::*/name</xpath>
+        <xpath>//child::president</xpath>
+        <xpath>//child::name</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/moreover.xml</file>
+
+        <xpath>/*</xpath>
+        <xpath>/*/article</xpath>
+        <xpath>//*</xpath>
+        <xpath>//article</xpath>
+        <xpath>/*/*[@code]</xpath>
     </testcase>
 
     <testcase>
