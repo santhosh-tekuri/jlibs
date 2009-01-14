@@ -32,10 +32,11 @@ public class Position extends Node{
 
     @Override
     public boolean matchesElement(String uri, String name, int position){
-        if(axis==Axis.CHILD)
-            return pos==position;
-        else
-            return true;
+        return true;
+//        if(axis==Axis.CHILD)
+//            return pos==position;
+//        else
+//            return true;
     }
 
     @Override

@@ -263,7 +263,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
                     checkConstraints(node, contents);
                 for(Node child: node.children){
                     if(child.matchesText(contents))
-                        results.hit(depth, child, contents);
+                        results.hit(this, child, contents);
                     checkConstraints(child, contents);
                 }
             }
@@ -272,7 +272,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         private void checkConstraints(Node child, String uri, String name, int pos){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
-                    if(results.hit(depth, constraint, elementStack)){
+                    if(results.hit(this, constraint, elementStack)){
                         contexts.add(childContext(constraint));
                         checkConstraints(constraint, uri, name, pos);
                     }
@@ -283,7 +283,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
                 if(constraint.matchesText(contents)){
-                    results.hit(depth, constraint, contents);
+                    results.hit(this, constraint, contents);
                     checkConstraints(constraint, contents);
                 }
             }
@@ -300,14 +300,14 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
-                        if(results.hit(depth, child, elementStack)){
+                        if(results.hit(this, child, elementStack)){
                             contexts.add(childContext(child));
                             checkConstraints(child, uri, name, pos);
                         }
                     }
                 }
                 if(node.consumable()){
-                    if(results.hit(depth, node, elementStack)){
+                    if(results.hit(this, node, elementStack)){
                         depth--;
                         contexts.add(this);
                         checkConstraints(node, uri, name, pos);
@@ -333,10 +333,10 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
                     for(Node child: node.children){
                         if(child.matchesAttribute(uri, name, value)){
-                            results.hit(depth, child, value);
+                            results.hit(this, child, value);
                             for(Node constraint: child.constraints){
                                 if(constraint.matchesAttribute(uri, name, value))
-                                    results.hit(depth, constraint, value);
+                                    results.hit(this, constraint, value);
                             }
                         }
                     }
@@ -346,7 +346,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         public Context endElement(){
             if(depth==0){
-                results.clearHitCounts(depth, node);
+                results.clearHitCounts(this, node);
                 results.clearPredicateCache(depth, node);
                 return parentContext();
             }else{
@@ -354,7 +354,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 //                    results.clearHitCounts(depth, node);
                     depth--;
                 }else{
-                    results.clearHitCounts(depth, node);
+                    results.clearHitCounts(this, node);
                     depth++;
                 }
 
