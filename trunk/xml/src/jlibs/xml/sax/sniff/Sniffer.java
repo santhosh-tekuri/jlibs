@@ -275,8 +275,10 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         public void matchText(StringContent contents){
             if(!contents.isEmpty() && depth<=0){
-                if(node.consumable())
+                if(node.consumable()){
+                    results.hit(this, node);
                     checkConstraints(node, contents);
+                }
                 for(Node child: node.children){
                     if(child.matchesText(contents))
                         results.hit(this, child);
