@@ -99,6 +99,9 @@
         <xpath>//book/@*</xpath>
         <xpath>//@*</xpath>
         <xpath>//@id</xpath>
+        <xpath>/root/pub/node()/*</xpath>
+        <xpath>//book/node()</xpath>
+        <xpath>/root/pub/book/node()</xpath>
 
         <!-- unabbreviated axes -->
         <xpath>/root/pub/book/attribute::*</xpath>
@@ -110,6 +113,8 @@
 		<xpath>/root//*</xpath>
 		<xpath>/root/pub/descendant-or-self::*</xpath>
         <xpath>//text()</xpath>
+        <xpath>/descendant::node()/text()</xpath>
+        <xpath>/descendant-or-self::node()/text()</xpath>
 
         <!-- namespace prefix -->
         <xpath>/root/XMLFragment2/env:Envelope</xpath>
@@ -165,6 +170,7 @@
         <xpath>/text()</xpath>
         <xpath>//text()</xpath>
         <xpath>/descendant-or-self::text()</xpath>
+        <xpath>/descendant-or-self::node()/text()</xpath>
     </testcase>
 
     <testcase>
