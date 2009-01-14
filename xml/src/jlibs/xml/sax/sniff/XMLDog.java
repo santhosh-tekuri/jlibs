@@ -72,6 +72,8 @@ public class XMLDog implements Debuggable{
         XMLDog dog = new XMLDog(nsContext);
 
         XPath xpaths[] = {
+            dog.add("/xs:schema//text()"),
+            dog.add("/descendant::text()"),
             dog.add("/descendant::E2[2]"),
             dog.add("/descendant::*/E2[2]"),
             dog.add("/X/E1/E2[2]"),
