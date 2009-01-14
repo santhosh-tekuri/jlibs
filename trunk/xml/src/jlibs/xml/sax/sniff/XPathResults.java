@@ -105,7 +105,7 @@ public class XPathResults implements Debuggable{
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
-    Map<Position, Map<Integer, Integer>> childHitCount = new HashMap<Position, Map<Integer, Integer>>();
+//    Map<Position, Map<Integer, Integer>> childHitCount = new HashMap<Position, Map<Integer, Integer>>();
     Map<Position, Integer> descendantHitCount = new HashMap<Position, Integer>();
 
     public boolean hit(int depth, Node node, Object resultWrapper){
@@ -120,19 +120,20 @@ public class XPathResults implements Debuggable{
                 descendantHitCount.put(position, pos);
                 if(pos!=position.pos)
                     return false;
-            }else if(position.axis==Axis.CHILD){
-                Map<Integer, Integer> map = childHitCount.get(position);
-                if(map==null)
-                    childHitCount.put(position, map=new HashMap<Integer, Integer>());
-                Integer pos = map.get(depth);
-                if(pos==null)
-                    pos = 1;
-                else
-                    pos++;
-                map.put(depth, pos);
-                if(pos!=position.pos)
-                    return false;
             }
+//            else if(position.axis==Axis.CHILD){
+//                Map<Integer, Integer> map = childHitCount.get(position);
+//                if(map==null)
+//                    childHitCount.put(position, map=new HashMap<Integer, Integer>());
+//                Integer pos = map.get(depth);
+//                if(pos==null)
+//                    pos = 1;
+//                else
+//                    pos++;
+//                map.put(depth, pos);
+//                if(pos!=position.pos)
+//                    return false;
+//            }
         }
 
         if(node.resultInteresed()){
@@ -239,19 +240,19 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    private void clearChildHitCounts(int depth, Node node){
-        for(Node constraint: node.constraints){
-            if(constraint instanceof Position){
-                Position position = (Position)constraint;
-                if(position.axis==Axis.CHILD){
-                    Map<Integer, Integer> map = childHitCount.get(position);
-                    if(map!=null)
-                        map.remove(depth);
-                }
-            }
-            clearChildHitCounts(depth, constraint);
-        }
-    }
+//    private void clearChildHitCounts(int depth, Node node){
+//        for(Node constraint: node.constraints){
+//            if(constraint instanceof Position){
+//                Position position = (Position)constraint;
+//                if(position.axis==Axis.CHILD){
+//                    Map<Integer, Integer> map = childHitCount.get(position);
+//                    if(map!=null)
+//                        map.remove(depth);
+//                }
+//            }
+//            clearChildHitCounts(depth, constraint);
+//        }
+//    }
 
     private void clearDescendantHitCounts(Node node){
         for(Node constraint: node.constraints){
@@ -263,8 +264,8 @@ public class XPathResults implements Debuggable{
     }
 
     void clearHitCounts(int depth, Node node){
-        for(Node child: node.children)
-            clearChildHitCounts(depth, child);
+//        for(Node child: node.children)
+//            clearChildHitCounts(depth, child);
         
         if(node instanceof Descendant && depth==0){
             clearDescendantHitCounts(node);

@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import org.jaxen.saxpath.Axis;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -30,9 +32,9 @@ public class Position extends Node{
 
     @Override
     public boolean matchesElement(String uri, String name, int position){
-//        if(axis==Axis.CHILD)
-//            return pos==position;
-//        else
+        if(axis==Axis.CHILD)
+            return pos==position;
+        else
             return true;
     }
 
