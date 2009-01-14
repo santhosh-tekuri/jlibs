@@ -29,15 +29,16 @@ public class Predicate{
 
     public Predicate(Node... nodes){
         for(Node node: nodes){
-            if(node.predicates.size()>0){
-                for(Predicate predicate: node.predicates){
-                    predicates.add(predicate);
-                    predicate.memberOf.add(this);
-                }
-            }else{
+            // commented code needs be moved into xpathparser to support nested predicates
+//            if(node.predicates.size()>0){
+//                for(Predicate predicate: node.predicates){
+//                    predicates.add(predicate);
+//                    predicate.memberOf.add(this);
+//                }
+//            }else{
                 this.nodes.add(node);
                 node.memberOf.add(this);
-            }
+//            }
         }
     }
 
@@ -49,9 +50,10 @@ public class Predicate{
     @Override
     public String toString(){
         StringBuilder buff1 = new StringBuilder();
+        if(userGiven)
+            buff1.append("userGiven ");
         for(Node node: nodes){
-            if(buff1.length()>0)
-                buff1.append(", ");
+            buff1.append(", ");
             buff1.append(node);
         }
 

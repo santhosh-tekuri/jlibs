@@ -19,16 +19,21 @@ package jlibs.xml.sax.sniff.model;
  * @author Santhosh Kumar T
  */
 public class Position extends Node{
+    public int axis;
     public int pos;
 
-    public Position(Node node, int pos){
+    public Position(Node node, int axis, int pos){
         super(node);
+        this.axis = axis;
         this.pos = pos;
     }
 
     @Override
     public boolean matchesElement(String uri, String name, int position){
-        return pos==position;
+//        if(axis==Axis.CHILD)
+//            return pos==position;
+//        else
+            return true;
     }
 
     @Override

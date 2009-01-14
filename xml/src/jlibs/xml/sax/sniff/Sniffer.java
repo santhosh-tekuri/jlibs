@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
+import java.util.ArrayDeque;
 
 /**
  * @author Santhosh Kumar T
@@ -104,11 +105,16 @@ public class Sniffer extends DefaultHandler implements Debuggable{
         
         positionStack.pop();
         elementStack.pop();
-        
-        for(Context context: contexts){
+
+        ArrayDeque<Context> stack = new ArrayDeque<Context>();
+        for(int i=contexts.current.size()-1; i>=0; i--){
+            Context context = contexts.current.get(i);
             context.matchText(contents);
-            contexts.addUnique(context.endElement());
+            stack.push(context.endElement());
         }
+        while(!stack.isEmpty())
+            contexts.addUnique(stack.pop());
+
         contents.reset();
         contexts.update();
 
@@ -238,7 +244,7 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             if(!contents.isEmpty() && depth<=0){
                 for(Node child: node.children){
                     if(child.matchesText(contents))
-                        results.hit(child, contents);
+                        results.hit(depth, child, contents);
                     checkConstraints(child, contents);
                 }
             }
@@ -247,9 +253,10 @@ public class Sniffer extends DefaultHandler implements Debuggable{
         private void checkConstraints(Node child, String uri, String name, int pos){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
-                    results.hit(constraint, elementStack);
-                    contexts.add(childContext(constraint));
-                    checkConstraints(constraint, uri, name, pos);
+                    if(results.hit(depth, constraint, elementStack)){
+                        contexts.add(childContext(constraint));
+                        checkConstraints(constraint, uri, name, pos);
+                    }
                 }
             }
         }
@@ -257,7 +264,7 @@ public class Sniffer extends DefaultHandler implements Debuggable{
         private void checkConstraints(Node child, StringContent contents){
             for(Node constraint: child.constraints){
                 if(constraint.matchesText(contents)){
-                    results.hit(constraint, contents);
+                    results.hit(depth, constraint, contents);
                     checkConstraints(constraint, contents);
                 }
             }
@@ -274,16 +281,18 @@ public class Sniffer extends DefaultHandler implements Debuggable{
             }else{
                 for(Node child: node.children){
                     if(child.matchesElement(uri, name, pos)){
-                        results.hit(child, elementStack);
-                        contexts.add(childContext(child));
-                        checkConstraints(child, uri, name, pos);
+                        if(results.hit(depth, child, elementStack)){
+                            contexts.add(childContext(child));
+                            checkConstraints(child, uri, name, pos);
+                        }
                     }
                 }
                 if(node.consumable()){
-                    results.hit(node, elementStack);
-                    depth--;
-                    contexts.add(this);
-                    checkConstraints(node, uri, name, pos);
+                    if(results.hit(depth, node, elementStack)){
+                        depth--;
+                        contexts.add(this);
+                        checkConstraints(node, uri, name, pos);
+                    }
                 }else{
                     if(contexts.markSize()==0){
                         depth++;
@@ -305,10 +314,10 @@ public class Sniffer extends DefaultHandler implements Debuggable{
 
                     for(Node child: node.children){
                         if(child.matchesAttribute(uri, name, value)){
-                            results.hit(child, value);
+                            results.hit(depth, child, value);
                             for(Node constraint: child.constraints){
                                 if(constraint.matchesAttribute(uri, name, value))
-                                    results.hit(constraint, value);
+                                    results.hit(depth, constraint, value);
                             }
                         }
                     }
@@ -317,13 +326,18 @@ public class Sniffer extends DefaultHandler implements Debuggable{
         }
 
         public Context endElement(){
-            if(depth==0)
+            if(depth==0){
+                results.clearHitCounts(depth, node);
+                results.clearPredicateCache(depth, node);
                 return parentContext();
-            else{
-                if(depth>0)
+            }else{
+                if(depth>0){
+//                    results.clearHitCounts(depth, node);
                     depth--;
-                else
+                }else{
+                    results.clearHitCounts(depth, node);
                     depth++;
+                }
 
                 return this;
             }

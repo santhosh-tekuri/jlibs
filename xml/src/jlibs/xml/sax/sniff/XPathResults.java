@@ -16,7 +16,10 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.model.axis.Descendant;
+import org.jaxen.saxpath.Axis;
 
 import java.util.*;
 
@@ -36,29 +39,65 @@ public class XPathResults implements Debuggable{
     }
 
     private Map<Predicate, PredicateResult> cachedMap = new HashMap<Predicate, PredicateResult>();
+
     class PredicateResult{
         public List<Node> nodes = new ArrayList<Node>();
         public List<Predicate> predicates = new ArrayList<Predicate>();
+
+        public Map<Predicate, ArrayDeque<Integer>> predicateResultMap = new HashMap<Predicate, ArrayDeque<Integer>>();
         public ArrayDeque<Integer> resultStack = new ArrayDeque<Integer>();
 
         public PredicateResult(Predicate predicate){
             nodes.addAll(predicate.nodes);
             predicates.addAll(predicate.predicates);
+
+            for(Predicate p: predicate.memberOf)
+                predicateResultMap.put(p, new ArrayDeque<Integer>());
+        }
+
+        public void addResult(){
+            resultStack.push(results.size()-1);
+            for(ArrayDeque<Integer> stack: predicateResultMap.values())
+                stack.push(results.size()-1);
+        }
+
+        public void removeResult(Node node){
+            resultStack.pop();
+        }
+        
+        public void removeResult(Predicate p){
+            predicateResultMap.get(p).pop();
         }
 
         public Integer hit(Node node){
             nodes.remove(node);
-            return getResult();
+            return getResult(node);
         }
 
         public Integer hit(Predicate predicate){
             predicates.remove(predicate);
-            return getResult();
+            return getResult(predicate);
         }
 
-        public Integer getResult(){
-            if(nodes.size()==0 && predicates.size()==0 && !resultStack.isEmpty())
-                return resultStack.pop();
+        public Integer getResult(Node node){
+            return canGiveResult() ? resultStack.peek() : null;
+        }
+
+        public Integer getResult(Predicate p){
+            if(canGiveResult()){
+                ArrayDeque<Integer> stack = predicateResultMap.get(p);
+                return stack==null ? null : stack.peek();
+            }else
+                return null;
+        }
+
+        private boolean canGiveResult(){
+            return nodes.size()==0 && predicates.size()==0 && !resultStack.isEmpty();
+        }
+
+        private Integer getResult(){
+            if(canGiveResult())
+                return resultStack.peek();
             else
                 return null;
         }
@@ -66,7 +105,36 @@ public class XPathResults implements Debuggable{
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
-    public void hit(Node node, Object resultWrapper){
+    Map<Position, Map<Integer, Integer>> childHitCount = new HashMap<Position, Map<Integer, Integer>>();
+    Map<Position, Integer> descendantHitCount = new HashMap<Position, Integer>();
+
+    public boolean hit(int depth, Node node, Object resultWrapper){
+        if(node instanceof Position){
+            Position position = (Position)node;
+            if(position.axis==Axis.DESCENDANT){
+                Integer pos = descendantHitCount.get(position);
+                if(pos==null)
+                    pos = 1;
+                else
+                    pos++;
+                descendantHitCount.put(position, pos);
+                if(pos!=position.pos)
+                    return false;
+            }else if(position.axis==Axis.CHILD){
+                Map<Integer, Integer> map = childHitCount.get(position);
+                if(map==null)
+                    childHitCount.put(position, map=new HashMap<Integer, Integer>());
+                Integer pos = map.get(depth);
+                if(pos==null)
+                    pos = 1;
+                else
+                    pos++;
+                map.put(depth, pos);
+                if(pos!=position.pos)
+                    return false;
+            }
+        }
+
         if(node.resultInteresed()){
             results.add(resultWrapper.toString());
 
@@ -77,34 +145,90 @@ public class XPathResults implements Debuggable{
                 PredicateResult predicateResult = cachedMap.get(predicate);
                 if(predicateResult==null)
                     cachedMap.put(predicate, predicateResult=new PredicateResult(predicate));
-                predicateResult.resultStack.push(results.size()-1);
+                predicateResult.addResult();
                 if(Sniffer.debug)
                     System.out.format("Cached Predicate Result %2d: %s ---> %s %n", results.size(), node, resultWrapper);
+
+                checkMembers(predicate);
+
+//                Integer result = predicateResult.getResult();
+//                if(result!=null){
+//                    if(predicate.userGiven)
+//                        addResult(predicate, result);
+//                    hitMemberOf(predicate);
+//                }
             }
+            
             for(Predicate member: node.memberOf){
                 PredicateResult predicateResult = cachedMap.get(member);
                 Integer result = predicateResult.hit(node);
                 if(result!=null){
-                    if(member.userGiven)
+                    if(member.userGiven){
                         addResult(member, result);
-                    hit(member);
+                        predicateResult.removeResult(node);
+                    }
+                    int consumed = hitMemberOf(member);
+//                    if(consumed>0)
+//                        predicateResult.removeResult();
+                }
+            }
+            
+            for(Predicate predicate: node.predicates){
+                if(node.memberOf.contains(predicate))
+                    return true;
+                PredicateResult predicateResult = cachedMap.get(predicate);
+                if(predicateResult!=null){
+                    Integer result = predicateResult.getResult(node);
+                    if(result!=null){
+                        if(predicate.userGiven){
+                            addResult(predicate, result);
+                            predicateResult.removeResult(node);
+                        }
+                        hitMemberOf(predicate);
+                    }
                 }
             }
         }
+        return true;
     }
 
-    private void hit(Predicate predicate){
+    private int checkMembers(Predicate predicate){
+        int consumed = 0;
+        for(Predicate member: predicate.predicates){
+            PredicateResult predicateResult = cachedMap.get(member);
+            if(predicateResult!=null){
+                consumed++;
+                Integer result = predicateResult.getResult(predicate);
+                if(result!=null){
+                    if(predicate.userGiven)
+                        cachedMap.get(predicate).hit(member);
+                    checkMembers(member);
+                }
+            }
+        }
+        return consumed;
+    }
+
+    private int hitMemberOf(Predicate predicate){
+        int consumed = 0;
         for(Predicate member: predicate.memberOf){
             PredicateResult predicateResult = cachedMap.get(member);
             if(predicateResult!=null){
+                consumed++;
                 Integer result = predicateResult.hit(predicate);
+                if(member.userGiven){
+                    Integer userResult = predicateResult.getResult((Node)null);
+                    if(userResult!=null){
+                        addResult(member, userResult);
+                        predicateResult.removeResult((Node)null);
+                    }
+                }
                 if(result!=null){
-                    if(member.userGiven)
-                        addResult(member, result);
-                    hit(member);
+                    hitMemberOf(member);
                 }
             }
         }
+        return consumed;
     }
 
     private void hit(){
@@ -113,6 +237,60 @@ public class XPathResults implements Debuggable{
             if(minHits==0)
                 throw STOP_PARSING;
         }
+    }
+
+    private void clearChildHitCounts(int depth, Node node){
+        for(Node constraint: node.constraints){
+            if(constraint instanceof Position){
+                Position position = (Position)constraint;
+                if(position.axis==Axis.CHILD){
+                    Map<Integer, Integer> map = childHitCount.get(position);
+                    if(map!=null)
+                        map.remove(depth);
+                }
+            }
+            clearChildHitCounts(depth, constraint);
+        }
+    }
+
+    private void clearDescendantHitCounts(Node node){
+        for(Node constraint: node.constraints){
+            if(constraint instanceof Position)
+                descendantHitCount.remove(constraint);
+            else
+                clearDescendantHitCounts(constraint);
+        }
+    }
+
+    void clearHitCounts(int depth, Node node){
+        for(Node child: node.children)
+            clearChildHitCounts(depth, child);
+        
+        if(node instanceof Descendant && depth==0){
+            clearDescendantHitCounts(node);
+        }
+    }
+
+    void clearPredicateCache(int depth, Node node){
+        for(Predicate predicate: node.predicates){
+            for(Node n: predicate.nodes){
+                while(n!=null){
+                    n = n.parent;
+                    if(n==node){
+                        clearCache(predicate);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void clearCache(Predicate predicate){
+        if(debug)
+            System.out.println("cleared cache of: "+predicate);
+        cachedMap.remove(predicate);
+        for(Predicate member: predicate.memberOf)
+            clearCache(member);
     }
 
     /*-------------------------------------------------[ Add Result ]---------------------------------------------------*/

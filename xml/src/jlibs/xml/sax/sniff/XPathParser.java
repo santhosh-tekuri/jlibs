@@ -60,10 +60,20 @@ public class XPathParser implements XPathHandler{
     @Override
     public void endXPath() throws SAXPathException{
         if(predicate!=null){
-            predicate = new Predicate(predicate);
-            predicate.userGiven = true;
-            for(Node current: currents)
-                current.predicates.add(predicate);
+            Predicate newPredicate = null;
+            for(Node current: currents){
+                if(!current.memberOf.contains(predicate)){
+                    if(newPredicate==null){
+                        newPredicate = new Predicate(predicate);
+                        newPredicate.userGiven = true;
+                    }
+                    current.predicates.add(newPredicate);
+                }else
+                    predicate.userGiven = true;
+            }
+            
+            if(newPredicate!=null)
+                predicate = newPredicate;
         }else{
             for(Node node: currents)
                 node.userGiven = true;
@@ -166,6 +176,8 @@ public class XPathParser implements XPathHandler{
         throw new SAXPathException("unsupprted");
     }
 
+    private int currentAxis;
+
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
         if(axis==Axis.SELF)
@@ -189,6 +201,8 @@ public class XPathParser implements XPathHandler{
             newCurrents.add(found);
         }
         currents = newCurrents;
+
+        currentAxis = axis;
     }
 
     @Override
@@ -224,7 +238,6 @@ public class XPathParser implements XPathHandler{
             currents = list;
         }else
             predicates.pop();
-
     }
 
     @Override
@@ -330,7 +343,7 @@ public class XPathParser implements XPathHandler{
                     }
                 }
                 if(found==null)
-                    found = new Position(current, number);
+                    found = new Position(current, currentAxis, number);
                 newCurrents.add(found);
             }
             currents = newCurrents;
@@ -376,7 +389,9 @@ public class XPathParser implements XPathHandler{
 //            "//@name",
 //            "a/b",
 //            "/xsd:schema//xsd:complexType/@name",
-            "/xsd:schema/xsd:any[xyz/qwe[abc/def]]/mno",
+//            "/xsd:schema/xsd:any[xyz/qwe[abc/def]]/mno",
+//            "e1/e2[e4]/e3/@name",
+                "//e2"
 //            "/xsd:sequence/xsd:any[2]/xs:element/@namespace",
         };
 
