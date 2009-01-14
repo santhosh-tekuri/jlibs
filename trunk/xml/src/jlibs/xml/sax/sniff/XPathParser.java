@@ -118,9 +118,6 @@ public class XPathParser implements XPathHandler{
         if(StringUtil.isEmpty(uri) && localName==null)
             uri = null;
 
-        if(uri==null/* && localName==null*/) // localName is always null: idea is intelligent
-            return;
-
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents){
             QNameNode found = null;
