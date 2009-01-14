@@ -18,12 +18,19 @@ package jlibs.xml.sax;
 import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.ext.DeclHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Santhosh Kumar T
  */
 public class SAXDelegate2 extends SAXDelegate implements LexicalHandler, DeclHandler{
+    public SAXDelegate2(){
+    }
+
+    public SAXDelegate2(DefaultHandler delegate){
+        super(delegate);
+    }
 
     /*-------------------------------------------------[ LexicalHandler ]---------------------------------------------------*/
 
@@ -104,5 +111,15 @@ public class SAXDelegate2 extends SAXDelegate implements LexicalHandler, DeclHan
     public void externalEntityDecl(String name, String publicId, String systemId) throws SAXException{
         if(declHandler!=null)
             declHandler.externalEntityDecl(name, publicId, systemId);
+    }
+
+    /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
+
+    public void setDefaultHandler(DefaultHandler handler){
+        super.setDefaultHandler(handler);
+        if(handler instanceof LexicalHandler)
+            setLexicalHandler((LexicalHandler)handler);
+        if(handler instanceof DeclHandler)
+            setDeclHandler((DeclHandler)handler);
     }
 }

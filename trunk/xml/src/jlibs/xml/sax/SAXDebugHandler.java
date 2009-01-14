@@ -22,7 +22,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * @author Santhosh Kumar T
  */
-public class SAXDebugHandler extends SAXDelegate{
+public class SAXDebugHandler extends SAXDelegate2{
     public SAXDebugHandler(DefaultHandler delegate){
         super(delegate);
     }
