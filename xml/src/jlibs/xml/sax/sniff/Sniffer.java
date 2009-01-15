@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.SAXDebugHandler;
-import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.SAXProperties;
+import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
@@ -30,9 +30,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
-import java.util.ArrayDeque;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -139,14 +138,10 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         elementStack.pop();
 
         results.resultWrapper = contents;
-        ArrayDeque<Context> stack = new ArrayDeque<Context>();
-        for(int i=contexts.current.size()-1; i>=0; i--){
-            Context context = contexts.current.get(i);
+        for(Context context: contexts){
             context.matchText(contents);
-            stack.push(context.endElement());
+            contexts.addUnique(context.endElement());
         }
-        while(!stack.isEmpty())
-            contexts.addUnique(stack.pop());
 
         contents.reset();
         contexts.update();
