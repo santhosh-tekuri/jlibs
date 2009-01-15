@@ -33,6 +33,6 @@ public class ProcessingInstruction extends Node{
 
     @Override
     public String toString(){
-        return "comment()";
+        return name==null ? "processing-instruction()" : "processing-instruction('"+name+"')";
     }
 }
