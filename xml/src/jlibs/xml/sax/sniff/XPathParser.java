@@ -172,6 +172,8 @@ public class XPathParser implements XPathHandler{
     }
 
     private int currentAxis;
+    private boolean self;
+    private int selfAxis;
 
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
@@ -179,10 +181,18 @@ public class XPathParser implements XPathHandler{
             return; //do nothing
         
         List<Node> newCurrents = new ArrayList<Node>();
-        if(axis==Axis.DESCENDANT_OR_SELF){
+        int prevAxis = axis;
+        if(axis==Axis.DESCENDANT_OR_SELF)
             axis = Axis.DESCENDANT;
+        else if(axis==Axis.ANCESTOR_OR_SELF)
+            axis = Axis.ANCESTOR;
+
+        self = prevAxis!=axis;
+        if(self){
+            selfAxis = prevAxis;
             newCurrents.addAll(currents);
         }
+
         for(Node current: currents){
             AxisNode found = null;
             for(AxisNode child: current.children){
@@ -322,25 +332,35 @@ public class XPathParser implements XPathHandler{
             throw new SAXPathException("Union expression is unsupprted");
     }
 
+    private Position createPosition(Node current, int axis, int pos){
+        Position found = null;
+        for(Node child: current.constraints){
+            if(child instanceof Position){
+                Position position = (Position)child;
+                if(position.pos==pos){
+                    found = position;
+                    break;
+                }
+            }
+        }
+        if(found==null)
+            found = new Position(current, axis, pos);
+        
+        return found;
+    }
+
     @Override
     public void number(int number) throws SAXPathException{
         if(predicates.size()>0){
             List<Node> newCurrents = new ArrayList<Node>();
-            for(Node current: currents){
-                Position found = null;
-                for(Node child: current.constraints){
-                    if(child instanceof Position){
-                        Position position = (Position)child;
-                        if(position.pos==number){
-                            found = position;
-                            break;
-                        }
-                    }
-                }
-                if(found==null)
-                    found = new Position(current, currentAxis, number);
-                newCurrents.add(found);
+
+            if(!self){
+                for(Node current: currents)
+                    newCurrents.add(createPosition(current, currentAxis, number));
+            }else{
+                throw new SAXPathException("numbered predicate is not supported on "+Axis.lookup(selfAxis));                
             }
+
             currents = newCurrents;
         }else
             throw new SAXPathException("unsupprted");
