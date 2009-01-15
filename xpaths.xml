@@ -265,6 +265,7 @@
     <testcase>
         <file>xmlFiles/organization.xml</file>
 
+        <xpath>/descendant::node()</xpath>
         <xpath>//child::node()</xpath>
         <xpath>//self::node()/attribute::empdate</xpath>
         
@@ -286,6 +287,12 @@
         <xpath>//*</xpath>
         <xpath>//article</xpath>
         <xpath>/*/*[@code]</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/id.xml</file>
+
+        <xpath>/foo</xpath>
     </testcase>
 
     <testcase>
