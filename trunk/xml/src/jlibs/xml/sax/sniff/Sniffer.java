@@ -72,18 +72,12 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
-        results.resultWrapper = contents;
-        for(Context context: contexts)
-            context.matchText(contents);
-        contents.reset();
+        contexts.matchText(contents);
     }
 
     @Override
     public void comment(char[] ch, int start, int length) throws SAXException{
-        results.resultWrapper = contents;
-        for(Context context: contexts)
-            context.matchText(contents);
-        contents.reset();
+        contexts.matchText(contents);
     }
 
     @Override
@@ -94,31 +88,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         int pos = positionStack.push(uri, localName);
         elementStack.push(uri, localName, pos);
 
-        results.resultWrapper = contents;
-        for(Context context: contexts){
-            context.matchText(contents);
-        }
-
-        results.resultWrapper = elementStack;
-        for(Context context: contexts){
-            context.startElement(uri, localName, pos);
-        }
-        contents.reset();
-        contexts.update();
-
-        // match attributes
-        if(contexts.hasAttributeChild){
-            for(int i=0; i<attrs.getLength(); i++){
-                String attrUri = attrs.getURI(i);
-                String attrName = attrs.getLocalName(i);
-                String attrValue = attrs.getValue(i);
-                results.resultWrapper = attrValue;
-                for(Context newContext: contexts)
-                    newContext.matchAttribute(attrUri, attrName, attrValue);
-            }
-//            for(Context newContext: contexts)
-//                newContext.matchAttributes(attrs);
-        }
+        contexts.matchText(contents);
+        contexts.startElement(uri, localName, pos);
+        contexts.matchAttributes(attrs);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -137,14 +109,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         positionStack.pop();
         elementStack.pop();
 
-        results.resultWrapper = contents;
-        for(Context context: contexts){
-            context.matchText(contents);
-            contexts.addUnique(context.endElement());
-        }
-
-        contents.reset();
-        contexts.update();
+        contexts.endElement(contents);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -152,7 +117,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     /*-------------------------------------------------[ Contexts ]---------------------------------------------------*/
 
-    static class Contexts implements Iterable<Context>{
+    class Contexts implements Iterable<Context>{
         private List<Context> current = new ArrayList<Context>();
         private List<Context> next = new ArrayList<Context>();
 
@@ -201,6 +166,45 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         public int markSize(){
             return next.size()-mark;
+        }
+
+        /*-------------------------------------------------[ Matching ]---------------------------------------------------*/
+
+        public void matchText(StringContent contents){
+            results.resultWrapper = contents;
+            for(Context context: this)
+                context.matchText(contents);
+            contents.reset();
+        }
+
+        public void startElement(String uri, String name, int pos){
+            results.resultWrapper = elementStack;
+            for(Context context: this)
+                context.startElement(uri, name, pos);
+            update();
+        }
+
+        public void matchAttributes(Attributes attrs){
+            if(hasAttributeChild){
+                for(int i=0; i<attrs.getLength(); i++){
+                    String attrUri = attrs.getURI(i);
+                    String attrName = attrs.getLocalName(i);
+                    String attrValue = attrs.getValue(i);
+                    results.resultWrapper = attrValue;
+                    for(Context newContext: this)
+                        newContext.matchAttribute(attrUri, attrName, attrValue);
+                }
+            }
+        }
+
+        public void endElement(StringContent contents){
+            results.resultWrapper = contents;
+            for(Context context: this){
+                context.matchText(contents);
+                addUnique(context.endElement());
+            }
+            contents.reset();
+            update();
         }
 
         /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
