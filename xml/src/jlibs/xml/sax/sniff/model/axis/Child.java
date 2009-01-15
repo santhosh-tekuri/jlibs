@@ -39,6 +39,16 @@ public class Child extends AxisNode{
     }
 
     @Override
+    public boolean matchesComment(String content){
+        return true;
+    }
+
+    @Override
+    public boolean matchesProcessingInstruction(String content){
+        return true;
+    }
+
+    @Override
     public String toString(){
         return "child::";
     }

@@ -66,6 +66,14 @@ public abstract class Node{
         return false;
     }
 
+    public boolean matchesComment(String content){
+        return false;
+    }
+
+    public boolean matchesProcessingInstruction(String content){
+        return false;
+    }
+
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
     public List<Predicate> predicates = new ArrayList<Predicate>();

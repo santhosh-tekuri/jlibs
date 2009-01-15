@@ -142,13 +142,16 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startCommentNodeStep(int axis) throws SAXPathException{
-        throw new SAXPathException("comment node is unsupprted");
+        startAllNodeStep(axis);
+
+        List<Node> newCurrents = new ArrayList<Node>();
+        for(Node current: currents)
+            newCurrents.add(createComment(current));
+        currents = newCurrents;
     }
 
     @Override
-    public void endCommentNodeStep() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
-    }
+    public void endCommentNodeStep() throws SAXPathException{}
 
     private int currentAxis;
     private boolean self;
@@ -184,13 +187,16 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startProcessingInstructionNodeStep(int axis, String name) throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        startAllNodeStep(axis);
+
+        List<Node> newCurrents = new ArrayList<Node>();
+        for(Node current: currents)
+            newCurrents.add(createProcessingInstruction(current));
+        currents = newCurrents;
     }
 
     @Override
-    public void endProcessingInstructionNodeStep() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
-    }
+    public void endProcessingInstructionNodeStep() throws SAXPathException{}
 
     private Deque<List<Node>> predicateContext = new ArrayDeque<List<Node>>();
     private ArrayDeque<Integer> pathStack = new ArrayDeque<Integer>();
@@ -398,6 +404,34 @@ public class XPathParser implements XPathHandler{
         }
         if(found==null)
             found = new Text(current);
+
+        return found;
+    }
+
+    private Comment createComment(Node current){
+        Comment found = null;
+        for(Node child: current.constraints){
+            if(child instanceof Comment){
+                found = (Comment)child;
+                break;
+            }
+        }
+        if(found==null)
+            found = new Comment(current);
+
+        return found;
+    }
+
+    private ProcessingInstruction createProcessingInstruction(Node current){
+        ProcessingInstruction found = null;
+        for(Node child: current.constraints){
+            if(child instanceof ProcessingInstruction){
+                found = (ProcessingInstruction)child;
+                break;
+            }
+        }
+        if(found==null)
+            found = new ProcessingInstruction(current);
 
         return found;
     }
