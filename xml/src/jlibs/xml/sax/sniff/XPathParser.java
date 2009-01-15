@@ -306,9 +306,14 @@ public class XPathParser implements XPathHandler{
 
             if(!self){
                 for(Node current: currents)
-                    newCurrents.add(createPosition(current, currentAxis, number));
+                    newCurrents.add(createPosition(current, currentAxis, number, null));
             }else{
-                throw new SAXPathException("numbered predicate is not supported on "+Axis.lookup(selfAxis));                
+                int half = currents.size()/2;
+
+                for(int i=0; i<half; i++)
+                    newCurrents.add(createPosition(currents.get(i), Axis.CHILD, number, null));
+                for(int i=half; i<currents.size(); i++)
+                    newCurrents.add(createPosition(currents.get(i), selfAxis, number, (Position)newCurrents.get(i-half)));
             }
 
             currents = newCurrents;
@@ -343,19 +348,23 @@ public class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ Create Helpers ]---------------------------------------------------*/
     
-    private Position createPosition(Node current, int axis, int pos){
+    private Position createPosition(Node current, int axis, int pos, Position selfPosition){
         Position found = null;
         for(Node child: current.constraints){
             if(child instanceof Position){
                 Position position = (Position)child;
-                if(position.pos==pos){
+                if(position.axis==axis && position.pos==pos){
                     found = position;
                     break;
                 }
             }
         }
-        if(found==null)
+        if(found==null){
             found = new Position(current, axis, pos);
+            found.selfPosition = selfPosition;
+            if(selfPosition!=null)
+                selfPosition.selfPosition = found;
+        }
 
         return found;
     }

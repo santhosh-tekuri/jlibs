@@ -4,6 +4,9 @@
               >
         <file>xmlFiles/note.xml</file>
 
+        <xpath>/xs:schema/descendant-or-self::*[1]</xpath>
+        <xpath>/xs:schema/descendant-or-self::*[3]</xpath>
+        <xpath>/xs:schema/descendant-or-self::*[4]/@namespace</xpath>
         <xpath>/descendant::xs:element[2]</xpath>
         <xpath>//xs:element[2]</xpath>
         <xpath>/xs:schema/@targetNamespace</xpath>
