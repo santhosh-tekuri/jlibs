@@ -28,7 +28,7 @@
         <copy todir="installer">
             <fileset dir=".">
                 <include name="readme.txt"/>
-                <include name="xpaths.xml"/>
+                <include name="xpaths*.xml"/>
                 <include name="xmlFiles/*"/>
                 <include name="3rdparty/*.jar"/>
                 <exclude name="3rdparty/testng*.jar"/>
