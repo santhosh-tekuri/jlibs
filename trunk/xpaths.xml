@@ -146,6 +146,15 @@
         
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
+
+        <!-- nested predicates -->
+        <xpath>/root/pub[ book[ name ]]/book</xpath>
+        <xpath>/root/pub/book[ pub[ book[ name ]]]</xpath>
+        <xpath>/root/pub[ book ]/book[ pub[ book[ name ]]]</xpath>
+        <xpath>/root/pub[ book[ pub[ book[ name ]]]]/book[ pub[ book[ name ]]]</xpath>
+
+        <!-- closure in predicate -->
+        <xpath>//pub[.//book//author]</xpath>
     </testcase>
 
     <testcase>
