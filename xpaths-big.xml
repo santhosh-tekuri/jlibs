@@ -1,0 +1,14 @@
+<xpaths>
+    <testcase>
+        <file>xmlFiles/big/bioinfo_big.xml</file>
+
+        <xpath>/bix/command/@id</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/big/po.xml</file>
+
+        <xpath>/purchaseOrder/shipTo/@country</xpath>
+    </testcase>
+
+</xpaths>
