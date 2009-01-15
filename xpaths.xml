@@ -189,6 +189,18 @@
         <xpath>//text()</xpath>
         <xpath>/descendant-or-self::text()</xpath>
         <xpath>/descendant-or-self::node()/text()</xpath>
+        <xpath>/processing-instruction()</xpath>
+        <xpath>//processing-instruction()</xpath>
+        <xpath>/comment()</xpath>
+        <xpath>//comment()</xpath>
+        <xpath>/*/comment()</xpath>
+        <xpath>/child::node()/comment()</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/pi.xml</file>
+
+        <xpath>//processing-instruction()</xpath>
     </testcase>
 
     <testcase>
