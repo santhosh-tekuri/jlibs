@@ -117,21 +117,8 @@ public class XPathParser implements XPathHandler{
             uri = null;
 
         List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents){
-            QNameNode found = null;
-            for(Node child: current.constraints){
-                if(child instanceof QNameNode){
-                    QNameNode qname = (QNameNode)child;
-                    if(Util.equals(uri, qname.uri) && Util.equals(localName, qname.name)){
-                        found = qname;
-                        break;
-                    }
-                }
-            }
-            if(found==null)
-                found = new QNameNode(current, uri, localName);
-            newCurrents.add(found);
-        }
+        for(Node current: currents)
+            newCurrents.add(createQNameNode(current, uri, localName));
         currents = newCurrents;
     }
 
@@ -143,18 +130,8 @@ public class XPathParser implements XPathHandler{
         startAllNodeStep(axis);
 
         List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents){
-            Text found = null;
-            for(Node child: current.constraints){
-                if(child instanceof Text){
-                    found = (Text)child;
-                    break;
-                }
-            }
-            if(found==null)
-                found = new Text(current);
-            newCurrents.add(found);
-        }
+        for(Node current: currents)
+            newCurrents.add(createText(current));
         currents = newCurrents;
     }
 
@@ -193,20 +170,10 @@ public class XPathParser implements XPathHandler{
             newCurrents.addAll(currents);
         }
 
-        for(Node current: currents){
-            AxisNode found = null;
-            for(AxisNode child: current.children){
-                if(child.type==axis){
-                    found = child;
-                    break;
-                }
-            }
-            if(found==null)
-                found = AxisNode.newInstance(current, axis);
-            newCurrents.add(found);
-        }
-        currents = newCurrents;
+        for(Node current: currents)
+            newCurrents.add(createAxisNode(current, axis));
 
+        currents = newCurrents;
         currentAxis = axis;
     }
 
@@ -332,23 +299,6 @@ public class XPathParser implements XPathHandler{
             throw new SAXPathException("Union expression is unsupprted");
     }
 
-    private Position createPosition(Node current, int axis, int pos){
-        Position found = null;
-        for(Node child: current.constraints){
-            if(child instanceof Position){
-                Position position = (Position)child;
-                if(position.pos==pos){
-                    found = position;
-                    break;
-                }
-            }
-        }
-        if(found==null)
-            found = new Position(current, axis, pos);
-        
-        return found;
-    }
-
     @Override
     public void number(int number) throws SAXPathException{
         if(predicates.size()>0){
@@ -390,4 +340,69 @@ public class XPathParser implements XPathHandler{
     public void endFunction() throws SAXPathException{
         throw new SAXPathException("unsupprted");
     }
+
+    /*-------------------------------------------------[ Create Helpers ]---------------------------------------------------*/
+    
+    private Position createPosition(Node current, int axis, int pos){
+        Position found = null;
+        for(Node child: current.constraints){
+            if(child instanceof Position){
+                Position position = (Position)child;
+                if(position.pos==pos){
+                    found = position;
+                    break;
+                }
+            }
+        }
+        if(found==null)
+            found = new Position(current, axis, pos);
+
+        return found;
+    }
+
+    private AxisNode createAxisNode(Node current, int axis){
+        AxisNode found = null;
+        for(AxisNode child: current.children){
+            if(child.type==axis){
+                found = child;
+                break;
+            }
+        }
+        if(found==null)
+            found = AxisNode.newInstance(current, axis);
+
+        return found;
+    }
+
+    private Text createText(Node current){
+        Text found = null;
+        for(Node child: current.constraints){
+            if(child instanceof Text){
+                found = (Text)child;
+                break;
+            }
+        }
+        if(found==null)
+            found = new Text(current);
+
+        return found;
+    }
+
+    private QNameNode createQNameNode(Node current, String uri, String name){
+        QNameNode found = null;
+        for(Node child: current.constraints){
+            if(child instanceof QNameNode){
+                QNameNode qname = (QNameNode)child;
+                if(Util.equals(uri, qname.uri) && Util.equals(name, qname.name)){
+                    found = qname;
+                    break;
+                }
+            }
+        }
+        if(found==null)
+            found = new QNameNode(current, uri, name);
+
+        return found;
+    }
+
 }
