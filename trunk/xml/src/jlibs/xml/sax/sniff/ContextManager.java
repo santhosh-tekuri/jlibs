@@ -32,7 +32,12 @@ public class ContextManager implements Debuggable{
     }
     
     public void reset(Root root, ElementStack elementStack){
-        contexts.reset(new Context(root));
+        Context rootContext = new Context(root);
+        contexts.reset(rootContext);
+
+        results.resultWrapper = "/";
+        results.hit(rootContext, root);
+
         this.elementStack = elementStack;
 
         if(debug){
@@ -46,6 +51,18 @@ public class ContextManager implements Debuggable{
         for(Context context: contexts)
             context.matchText(contents);
         contents.reset();
+    }
+
+    public void matchComment(String contents){
+        results.resultWrapper = contents;
+        for(Context context: contexts)
+            context.matchComment(contents);
+    }
+
+    public void matchProcessingInstruction(String contents){
+        results.resultWrapper = contents;
+        for(Context context: contexts)
+            context.matchProcessingInstruction(contents);
     }
 
     public void elementStarted(String uri, String name, int pos){
@@ -122,36 +139,90 @@ public class ContextManager implements Debuggable{
 //            return parent;
         }
 
+        /*-------------------------------------------------[ Comment ]---------------------------------------------------*/
+        
+        public void matchComment(String contents){
+            if(!contents.isEmpty() && depth<=0){
+                if(node.consumable()){
+                    results.hit(this, node);
+                    checkCommentConstraints(node, contents);
+                }
+                for(Node child: node.children){
+                    if(child.matchesComment(contents))
+                        results.hit(this, child);
+                    checkCommentConstraints(child, contents);
+                }
+            }
+        }
+
+        private void checkCommentConstraints(Node child, String contents){
+            for(Node constraint: child.constraints){
+                if(constraint.matchesComment(contents)){
+                    results.hit(this, constraint);
+                    checkCommentConstraints(constraint, contents);
+                }
+            }
+        }
+
+        /*-------------------------------------------------[ ProcessingInstruction ]---------------------------------------------------*/
+        
+        public void matchProcessingInstruction(String contents){
+            if(!contents.isEmpty() && depth<=0){
+                if(node.consumable()){
+                    results.hit(this, node);
+                    checkProcessingInstructionConstraints(node, contents);
+                }
+                for(Node child: node.children){
+                    if(child.matchesProcessingInstruction(contents))
+                        results.hit(this, child);
+                    checkProcessingInstructionConstraints(child, contents);
+                }
+            }
+        }
+
+        private void checkProcessingInstructionConstraints(Node child, String contents){
+            for(Node constraint: child.constraints){
+                if(constraint.matchesProcessingInstruction(contents)){
+                    results.hit(this, constraint);
+                    checkProcessingInstructionConstraints(constraint, contents);
+                }
+            }
+        }
+
+        /*-------------------------------------------------[ Text ]---------------------------------------------------*/
+        
         public void matchText(StringContent contents){
             if(!contents.isEmpty() && depth<=0){
                 if(node.consumable()){
                     results.hit(this, node);
-                    checkConstraints(node, contents);
+                    checkTextConstraints(node, contents);
                 }
                 for(Node child: node.children){
                     if(child.matchesText(contents))
                         results.hit(this, child);
-                    checkConstraints(child, contents);
+                    checkTextConstraints(child, contents);
                 }
             }
         }
 
-        private void checkConstraints(Node child, String uri, String name, int pos){
+        private void checkTextConstraints(Node child, StringContent contents){
+            for(Node constraint: child.constraints){
+                if(constraint.matchesText(contents)){
+                    results.hit(this, constraint);
+                    checkTextConstraints(constraint, contents);
+                }
+            }
+        }
+
+        /*-------------------------------------------------[ Element & Attributes ]---------------------------------------------------*/
+        
+        private void checkElementConstraints(Node child, String uri, String name, int pos){
             for(Node constraint: child.constraints){
                 if(constraint.matchesElement(uri, name, pos)){
                     if(results.hit(this, constraint)){
                         contexts.add(childContext(constraint));
-                        checkConstraints(constraint, uri, name, pos);
+                        checkElementConstraints(constraint, uri, name, pos);
                     }
-                }
-            }
-        }
-
-        private void checkConstraints(Node child, StringContent contents){
-            for(Node constraint: child.constraints){
-                if(constraint.matchesText(contents)){
-                    results.hit(this, constraint);
-                    checkConstraints(constraint, contents);
                 }
             }
         }
@@ -169,7 +240,7 @@ public class ContextManager implements Debuggable{
                     if(child.matchesElement(uri, name, pos)){
                         if(results.hit(this, child)){
                             contexts.add(childContext(child));
-                            checkConstraints(child, uri, name, pos);
+                            checkElementConstraints(child, uri, name, pos);
                         }
                     }
                 }
@@ -177,7 +248,7 @@ public class ContextManager implements Debuggable{
                     if(results.hit(this, node)){
                         depth--;
                         contexts.add(this);
-                        checkConstraints(node, uri, name, pos);
+                        checkElementConstraints(node, uri, name, pos);
                     }
                 }else{
                     if(contexts.markSize()==0){

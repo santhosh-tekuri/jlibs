@@ -13,34 +13,14 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.axis;
-
-import org.jaxen.saxpath.Axis;
-import jlibs.xml.sax.sniff.model.AxisNode;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.StringContent;
+package jlibs.xml.sax.sniff.model;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Descendant extends AxisNode{
-    public Descendant(Node parent){
-        super(parent, Axis.DESCENDANT);
-    }
-
-    @Override
-    public boolean matchesElement(String uri, String name, int position){
-        return true;
-    }
-
-    @Override
-    public boolean matchesText(StringContent content){
-        return true;
-    }
-
-    @Override
-    public boolean matchesComment(String content){
-        return true;
+public class ProcessingInstruction extends Node{
+    public ProcessingInstruction(Node parent){
+        super(parent);
     }
 
     @Override
@@ -49,12 +29,7 @@ public class Descendant extends AxisNode{
     }
 
     @Override
-    public boolean consumable(){
-        return true;
-    }
-
-    @Override
     public String toString(){
-        return "Descendant";
+        return "comment()";
     }
 }

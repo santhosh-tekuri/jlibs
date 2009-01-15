@@ -19,6 +19,7 @@ import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.sax.helpers.SAXHandler;
 import jlibs.xml.sax.helpers.NamespaceSupportReader;
+import jlibs.core.lang.NotImplementedException;
 import org.w3c.dom.*;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -63,6 +64,15 @@ public class XPathPerformanceTest{
                     result.add(buff.toString());
                 }else if(node instanceof Text)
                     result.add(node.getNodeValue());
+                else if(node instanceof Comment)
+                    result.add(node.getNodeValue());
+                else if(node instanceof ProcessingInstruction){
+                    ProcessingInstruction pi = (ProcessingInstruction)node;
+                    result.add(String.format("<?%s %s?>", pi.getTarget(), pi.getData()));
+                }else if(node instanceof Document)
+                    result.add("/");
+                else
+                    throw new NotImplementedException(node.getClass().getName());
             }
             results.add(result);
             test++;
@@ -188,7 +198,7 @@ class TestCase{
     Document doc;
 
     public void createDocument() throws ParserConfigurationException, IOException, SAXException{
-        doc = DOMUtil.newDocumentBuilder(true, false, false).parse(new InputSource(file));
+        doc = DOMUtil.newDocumentBuilder(true, false).parse(new InputSource(file));
     }
 
     List<NodeList> jdkResult;
