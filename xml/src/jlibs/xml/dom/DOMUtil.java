@@ -15,24 +15,29 @@
 
 package jlibs.xml.dom;
 
+import jlibs.core.lang.Util;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
-import jlibs.core.lang.Util;
 
 /**
  * @author Santhosh Kumar T
  */
 public class DOMUtil{
-    public static DocumentBuilder newDocumentBuilder(boolean nsAware, boolean validating, boolean coalescing) throws ParserConfigurationException{
+    public static DocumentBuilder newDocumentBuilder(boolean nsAware, boolean validating) throws ParserConfigurationException{
+        return newDocumentBuilder(nsAware, validating, false, false);
+    }
+
+    public static DocumentBuilder newDocumentBuilder(boolean nsAware, boolean validating, boolean coalescing, boolean ignoreComments) throws ParserConfigurationException{
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(nsAware);
         factory.setValidating(validating);
         factory.setCoalescing(coalescing);
+        factory.setIgnoringComments(ignoreComments);
         return factory.newDocumentBuilder();
     }
 
