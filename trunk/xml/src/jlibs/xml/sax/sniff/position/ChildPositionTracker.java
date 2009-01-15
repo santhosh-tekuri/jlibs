@@ -48,18 +48,33 @@ public class ChildPositionTracker implements PositionTracker{
             clearHitCounts(context, child);
     }
 
+    DescendantPositionTracker descendantPositionTracker;
     private void clearHitCounts(ContextManager.Context context, Node node){
         for(Node constraint: node.constraints){
             if(constraint instanceof Position){
                 Position position = (Position)constraint;
                 if(position.axis==Axis.CHILD){
                     Map<ChildContext, Integer> map = childHitCount.get(position);
-                    if(map!=null)
+                    if(map!=null){
                         map.remove(new ChildContext(context));
+                        if(position.selfPosition!=null)
+                            descendantPositionTracker.clearHitCounts(position.selfPosition);
+                    }
                 }
             }
             clearHitCounts(context, constraint);
         }
+    }
+
+    public int getHitCount(ContextManager.Context context, Position position){
+        Map<ChildContext, Integer> map = childHitCount.get(position);
+        if(map==null)
+            childHitCount.put(position, map=new HashMap<ChildContext, Integer>());
+        Integer pos = map.get(new ChildContext(context));
+        if(pos==null)
+            pos = 0;
+
+        return pos;
     }
 
     class ChildContext{

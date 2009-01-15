@@ -21,7 +21,6 @@ import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
 import jlibs.xml.sax.sniff.position.ChildPositionTracker;
 import jlibs.xml.sax.sniff.position.DescendantPositionTracker;
-import jlibs.xml.sax.sniff.position.PositionTracker;
 import org.jaxen.saxpath.Axis;
 
 import java.util.*;
@@ -132,8 +131,8 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    private PositionTracker childPositionTracker = new ChildPositionTracker();
-    private PositionTracker descendantPositionTracker = new DescendantPositionTracker();
+    private ChildPositionTracker childPositionTracker = new ChildPositionTracker();
+    private DescendantPositionTracker descendantPositionTracker = new DescendantPositionTracker(childPositionTracker);
 
     Object resultWrapper;
     public boolean hit(ContextManager.Context context, Node node){
@@ -141,6 +140,7 @@ public class XPathResults implements Debuggable{
             Position position = (Position)node;
             switch(position.axis){
                 case Axis.DESCENDANT:
+                case Axis.DESCENDANT_OR_SELF:
                     if(!descendantPositionTracker.hit(context, position))
                         return false;
                     break;
