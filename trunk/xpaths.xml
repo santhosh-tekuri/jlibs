@@ -105,6 +105,14 @@
         <xpath>/root/pub/node()/*</xpath>
         <xpath>//book/node()</xpath>
         <xpath>/root/pub/book/node()</xpath>
+        <xpath>/comment()</xpath>
+        <xpath>//comment()</xpath>
+        <xpath>/root//comment()</xpath>
+        <xpath>/processing-instruction()</xpath>
+        <xpath>//processing-instruction()</xpath>
+        <xpath>/root//processing-instruction()</xpath>
+        <xpath>/descendant::*/comment()</xpath>
+        <xpath>/descendant-or-self::node()/comment()</xpath>
 
         <!-- unabbreviated axes -->
         <xpath>/root/pub/book/attribute::*</xpath>
@@ -290,6 +298,7 @@
 
         <xpath>/descendant::node()</xpath>
         <xpath>//child::node()</xpath>
+        <xpath>//child::comment()</xpath>
         <xpath>//self::node()/attribute::empdate</xpath>
         
         <!-- unabbreviated axes -->
