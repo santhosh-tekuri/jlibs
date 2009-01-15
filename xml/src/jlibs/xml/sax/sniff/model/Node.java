@@ -70,7 +70,7 @@ public abstract class Node{
         return false;
     }
 
-    public boolean matchesProcessingInstruction(String content){
+    public boolean matchesProcessingInstruction(String name){
         return false;
     }
 

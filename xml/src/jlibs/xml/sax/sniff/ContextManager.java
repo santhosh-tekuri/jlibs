@@ -59,10 +59,10 @@ public class ContextManager implements Debuggable{
             context.matchComment(contents);
     }
 
-    public void matchProcessingInstruction(String contents){
-        results.resultWrapper = contents;
+    public void matchProcessingInstruction(String target, String data){
+        results.resultWrapper = String.format("<?%s %s?>", target, data);
         for(Context context: contexts)
-            context.matchProcessingInstruction(contents);
+            context.matchProcessingInstruction(target);
     }
 
     public void elementStarted(String uri, String name, int pos){
@@ -166,16 +166,16 @@ public class ContextManager implements Debuggable{
 
         /*-------------------------------------------------[ ProcessingInstruction ]---------------------------------------------------*/
         
-        public void matchProcessingInstruction(String contents){
-            if(!contents.isEmpty() && depth<=0){
+        public void matchProcessingInstruction(String name){
+            if(depth<=0){
                 if(node.consumable()){
                     results.hit(this, node);
-                    checkProcessingInstructionConstraints(node, contents);
+                    checkProcessingInstructionConstraints(node, name);
                 }
                 for(Node child: node.children){
-                    if(child.matchesProcessingInstruction(contents))
+                    if(child.matchesProcessingInstruction(name))
                         results.hit(this, child);
-                    checkProcessingInstructionConstraints(child, contents);
+                    checkProcessingInstructionConstraints(child, name);
                 }
             }
         }

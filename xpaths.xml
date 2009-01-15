@@ -201,6 +201,8 @@
         <file>xmlFiles/pi.xml</file>
 
         <xpath>//processing-instruction()</xpath>
+        <xpath>//processing-instruction('cheese')</xpath>
+        <xpath>//processing-instruction('toast')</xpath>
     </testcase>
 
     <testcase>
