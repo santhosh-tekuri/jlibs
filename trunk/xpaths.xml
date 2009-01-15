@@ -115,6 +115,7 @@
         <xpath>//text()</xpath>
         <xpath>/descendant::node()/text()</xpath>
         <xpath>/descendant-or-self::node()/text()</xpath>
+        <xpath>/root/descendant-or-self::*/descendant-or-self::*</xpath>
 
         <!-- namespace prefix -->
         <xpath>/root/XMLFragment2/env:Envelope</xpath>
@@ -258,6 +259,9 @@
     <testcase>
         <file>xmlFiles/organization.xml</file>
 
+        <xpath>//child::node()</xpath>
+        <xpath>//self::node()/attribute::empdate</xpath>
+        
         <!-- unabbreviated axes -->
         <xpath>//@empID</xpath>
         <xpath>//@*</xpath>
@@ -265,6 +269,7 @@
         <xpath>//self::*/name</xpath>
         <xpath>//child::president</xpath>
         <xpath>//child::name</xpath>
+        <xpath>/descendant::node()</xpath>
     </testcase>
 
     <testcase>
