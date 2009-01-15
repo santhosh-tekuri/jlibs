@@ -15,10 +15,13 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.model.axis.Descendant;
+import jlibs.xml.sax.sniff.position.ChildPositionTracker;
+import jlibs.xml.sax.sniff.position.DescendantPositionTracker;
+import jlibs.xml.sax.sniff.position.PositionTracker;
 import org.jaxen.saxpath.Axis;
 
 import java.util.*;
@@ -129,34 +132,24 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    Map<Position, Map<ChildContext, Integer>> childHitCount = new HashMap<Position, Map<ChildContext, Integer>>();
-    Map<Position, Integer> descendantHitCount = new HashMap<Position, Integer>();
+    private PositionTracker childPositionTracker = new ChildPositionTracker();
+    private PositionTracker descendantPositionTracker = new DescendantPositionTracker();
 
     Object resultWrapper;
     public boolean hit(ContextManager.Context context, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
-            if(position.axis==Axis.DESCENDANT){
-                Integer pos = descendantHitCount.get(position);
-                if(pos==null)
-                    pos = 1;
-                else
-                    pos++;
-                descendantHitCount.put(position, pos);
-                if(pos!=position.pos)
-                    return false;
-            }else if(position.axis==Axis.CHILD){
-                Map<ChildContext, Integer> map = childHitCount.get(position);
-                if(map==null)
-                    childHitCount.put(position, map=new HashMap<ChildContext, Integer>());
-                Integer pos = map.get(new ChildContext(context));
-                if(pos==null)
-                    pos = 1;
-                else
-                    pos++;
-                map.put(new ChildContext(context), pos);
-                if(pos!=position.pos)
-                    return false;
+            switch(position.axis){
+                case Axis.DESCENDANT:
+                    if(!descendantPositionTracker.hit(context, position))
+                        return false;
+                    break;
+                case Axis.CHILD:
+                    if(!childPositionTracker.hit(context, position))
+                        return false;
+                    break;
+                default:
+                    throw new NotImplementedException("position predicate is not implemented for "+Axis.lookup(position.axis)+" axis");
             }
         }
 
@@ -267,36 +260,38 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    private void clearChildHitCounts(ContextManager.Context context, Node node){
-        for(Node constraint: node.constraints){
-            if(constraint instanceof Position){
-                Position position = (Position)constraint;
-                if(position.axis==Axis.CHILD){
-                    Map<ChildContext, Integer> map = childHitCount.get(position);
-                    if(map!=null)
-                        map.remove(new ChildContext(context));
-                }
-            }
-            clearChildHitCounts(context, constraint);
-        }
-    }
-
-    private void clearDescendantHitCounts(Node node){
-        for(Node constraint: node.constraints){
-            if(constraint instanceof Position)
-                descendantHitCount.remove(constraint);
-            else
-                clearDescendantHitCounts(constraint);
-        }
-    }
-
+//    private void clearChildHitCounts(ContextManager.Context context, Node node){
+//        for(Node constraint: node.constraints){
+//            if(constraint instanceof Position){
+//                Position position = (Position)constraint;
+//                if(position.axis==Axis.CHILD){
+//                    Map<ChildContext, Integer> map = childHitCount.get(position);
+//                    if(map!=null)
+//                        map.remove(new ChildContext(context));
+//                }
+//            }
+//            clearChildHitCounts(context, constraint);
+//        }
+//    }
+//
+//    private void clearDescendantHitCounts(Node node){
+//        for(Node constraint: node.constraints){
+//            if(constraint instanceof Position)
+//                descendantHitCount.remove(constraint);
+//            else
+//                clearDescendantHitCounts(constraint);
+//        }
+//    }
+//
     void clearHitCounts(ContextManager.Context context, Node node){
-        for(Node child: node.children)
-            clearChildHitCounts(context, child);
-        
-        if(node instanceof Descendant && context.depth==0){
-            clearDescendantHitCounts(node);
-        }
+        childPositionTracker.contextEnded(context);
+        descendantPositionTracker.contextEnded(context);
+//        for(Node child: node.children)
+//            clearChildHitCounts(context, child);
+//
+//        if(node instanceof Descendant && context.depth==0){
+//            clearDescendantHitCounts(node);
+//        }
     }
 
     void clearPredicateCache(int depth, Node node){
