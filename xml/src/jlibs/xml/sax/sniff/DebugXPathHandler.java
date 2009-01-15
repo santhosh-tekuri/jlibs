@@ -15,15 +15,22 @@
 
 package jlibs.xml.sax.sniff;
 
-import org.jaxen.saxpath.*;
+import org.jaxen.saxpath.Axis;
+import org.jaxen.saxpath.SAXPathException;
+import org.jaxen.saxpath.XPathHandler;
+import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
-import org.jaxen.saxpath.helpers.DefaultXPathHandler;
-import jlibs.core.lang.reflect.TeeProxy;
 
 /**
  * @author Santhosh Kumar T
  */
 public class DebugXPathHandler implements XPathHandler{
+    public void debug(String xpath) throws SAXPathException{
+        XPathReader reader = XPathReaderFactory.createReader();
+        reader.setXPathHandler(this);
+        reader.parse(xpath);
+    }
+    
     private int depth = 0;
 
     public void println(String str, Object... args){
@@ -271,13 +278,5 @@ public class DebugXPathHandler implements XPathHandler{
     @Override
     public void endFunction() throws SAXPathException{
         println("endFunction");
-    }
-
-    public static void main(String[] args) throws SAXPathException{
-        XPathReader reader = XPathReaderFactory.createReader();
-        XPathHandler handler = new DebugXPathHandler();
-        handler = TeeProxy.create(XPathHandler.class, handler, new DefaultXPathHandler());
-        reader.setXPathHandler(handler);
-        reader.parse("/xs:schema/xs:element/.");
     }
 }

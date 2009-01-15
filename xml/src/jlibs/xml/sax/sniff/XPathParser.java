@@ -17,19 +17,17 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.Util;
-import jlibs.xml.DefaultNamespaceContext;
-import jlibs.xml.Namespaces;
 import jlibs.xml.sax.sniff.model.*;
+import org.jaxen.saxpath.Axis;
 import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathHandler;
 import org.jaxen.saxpath.XPathReader;
-import org.jaxen.saxpath.Axis;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -371,32 +369,5 @@ public class XPathParser implements XPathHandler{
     @Override
     public void endFunction() throws SAXPathException{
         throw new SAXPathException("unsupprted");
-    }
-
-    public static void main(String[] args) throws SAXPathException{
-        DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
-        nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
-        nsContext.declarePrefix("xs", Namespaces.URI_XSD);
-
-        Root root = new Root(nsContext);
-        XPathParser parser = new XPathParser(root);
-
-        String xpaths[] = {
-//            "//xsd:any/@namespace",
-//            "//@name",
-//            "a/b",
-//            "/xsd:schema//xsd:complexType/@name",
-//            "/xsd:schema/xsd:any[xyz/qwe[abc/def]]/mno",
-//            "e1/e2[e4]/e3/@name",
-                "//e2"
-//            "/xsd:sequence/xsd:any[2]/xs:element/@namespace",
-        };
-
-        for(String xpath: xpaths){
-            XPath xp = parser.parse(xpath);
-            System.out.println(xp.xpath+"\n");
-            root.print();
-            System.out.println("-----------------------------------------------------------");            
-        }
     }
 }
