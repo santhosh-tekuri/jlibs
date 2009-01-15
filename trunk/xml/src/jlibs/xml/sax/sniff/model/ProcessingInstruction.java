@@ -19,13 +19,16 @@ package jlibs.xml.sax.sniff.model;
  * @author Santhosh Kumar T
  */
 public class ProcessingInstruction extends Node{
-    public ProcessingInstruction(Node parent){
+    public String name;
+
+    public ProcessingInstruction(Node parent, String name){
         super(parent);
+        this.name = name;
     }
 
     @Override
-    public boolean matchesProcessingInstruction(String content){
-        return true;
+    public boolean matchesProcessingInstruction(String name){
+        return this.name==null || this.name.equals(name);
     }
 
     @Override

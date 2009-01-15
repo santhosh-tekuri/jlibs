@@ -191,7 +191,7 @@ public class XPathParser implements XPathHandler{
 
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents)
-            newCurrents.add(createProcessingInstruction(current));
+            newCurrents.add(createProcessingInstruction(current, name));
         currents = newCurrents;
     }
 
@@ -422,16 +422,22 @@ public class XPathParser implements XPathHandler{
         return found;
     }
 
-    private ProcessingInstruction createProcessingInstruction(Node current){
+    private ProcessingInstruction createProcessingInstruction(Node current, String name){
+        if(StringUtil.isEmpty(name)) // saxpath returns "" for processing-instruction()
+            name = null;
+        
         ProcessingInstruction found = null;
         for(Node child: current.constraints){
             if(child instanceof ProcessingInstruction){
-                found = (ProcessingInstruction)child;
-                break;
+                ProcessingInstruction pi = (ProcessingInstruction)child;
+                if(Util.equals(name, pi.name)){
+                    found = (ProcessingInstruction)child;
+                    break;
+                }
             }
         }
         if(found==null)
-            found = new ProcessingInstruction(current);
+            found = new ProcessingInstruction(current, name);
 
         return found;
     }

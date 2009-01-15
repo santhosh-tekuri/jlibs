@@ -44,7 +44,7 @@ public class Descendant extends AxisNode{
     }
 
     @Override
-    public boolean matchesProcessingInstruction(String content){
+    public boolean matchesProcessingInstruction(String name){
         return true;
     }
 

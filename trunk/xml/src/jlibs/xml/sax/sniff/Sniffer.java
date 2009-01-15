@@ -63,7 +63,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
         contextManager.matchText(contents);
-        contextManager.matchProcessingInstruction(String.format("<?%s %s?>", target, data));
+        contextManager.matchProcessingInstruction(target, data);
     }
 
     @Override
