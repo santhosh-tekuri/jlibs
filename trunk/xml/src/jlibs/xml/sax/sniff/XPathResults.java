@@ -350,8 +350,8 @@ public class XPathResults implements Debuggable{
                 indexes.addAll(list);
         }
 
-        if(xpath.predicate!=null){
-            List<Integer> list = predicateResultsMap.get(xpath.predicate);
+        for(Predicate predicate: xpath.predicates){
+            List<Integer> list = predicateResultsMap.get(predicate);
             if(list!=null)
                 indexes.addAll(list);
         }

@@ -34,6 +34,7 @@ import java.util.List;
  */
 public class XPathParser implements XPathHandler{
     private Root root;
+
     public XPathParser(Root root){
         this.root = root;
     }
@@ -49,7 +50,7 @@ public class XPathParser implements XPathHandler{
         currents.add(root);
         reader.parse(xpath);
 
-        return predicate!=null ? new XPath(xpath, predicate) : new XPath(xpath, currents);
+        return predicates.size()>0 ? new XPath(xpath, predicates, true) : new XPath(xpath, currents);
     }
 
     @Override
@@ -57,21 +58,22 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void endXPath() throws SAXPathException{
-        if(predicate!=null){
-            Predicate newPredicate = null;
-            for(Node current: currents){
+        if(predicates.size()>0){
+            ArrayList<Predicate> newPredicates = new ArrayList<Predicate>();
+            for(int i=0; i<currents.size(); i++){
+                Node current = currents.get(i);
+                Predicate predicate = predicates.get(i);
                 if(!current.memberOf.contains(predicate)){
-                    if(newPredicate==null){
-                        newPredicate = new Predicate(predicate);
-                        newPredicate.userGiven = true;
-                    }
+                    Predicate newPredicate = new Predicate(predicate);
+                    newPredicate.userGiven = true;
                     current.predicates.add(newPredicate);
+                    newPredicates.add(newPredicate);
                 }else
                     predicate.userGiven = true;
             }
             
-            if(newPredicate!=null)
-                predicate = newPredicate;
+            if(newPredicates.size()>0)
+                predicates = newPredicates;
         }else{
             for(Node node: currents)
                 node.userGiven = true;
@@ -190,26 +192,29 @@ public class XPathParser implements XPathHandler{
         throw new SAXPathException("unsupprted");
     }
 
-    private Deque<List<Node>> predicates = new ArrayDeque<List<Node>>();
+    private Deque<List<Node>> predicateContext = new ArrayDeque<List<Node>>();
     private ArrayDeque<Integer> pathStack = new ArrayDeque<Integer>();
 
     @Override
     public void startPredicate() throws SAXPathException{
-        predicates.push(new ArrayList<Node>(currents));
+        predicates.clear();
+        predicateContext.push(new ArrayList<Node>(currents));
         pathStack.push(0);
     }
 
-    private Predicate predicate;
+    private ArrayList<Predicate> predicates = new ArrayList<Predicate>();
     @Override
     public void endPredicate() throws SAXPathException{
         if(pathStack.pop()>0){
-            List<Node> list = predicates.pop();
-            predicate = new Predicate(currents.toArray(new Node[currents.size()]));
-            for(Node node: list)
-                node.predicates.add(predicate);
+            List<Node> list = predicateContext.pop();
+            for(int i=0; i<list.size(); i++){
+                Predicate predicate = new Predicate(currents.get(i));
+                predicates.add(predicate);
+                list.get(i).predicates.add(predicate);
+            }
             currents = list;
         }else
-            predicates.pop();
+            predicateContext.pop();
     }
 
     @Override
@@ -301,7 +306,7 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void number(int number) throws SAXPathException{
-        if(predicates.size()>0){
+        if(predicateContext.size()>0){
             List<Node> newCurrents = new ArrayList<Node>();
 
             if(!self){
@@ -413,5 +418,4 @@ public class XPathParser implements XPathHandler{
 
         return found;
     }
-
 }

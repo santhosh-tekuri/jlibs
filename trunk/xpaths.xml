@@ -141,6 +141,9 @@
         <xpath>//temp[4]/.</xpath>
         <xpath>//book/*[ 2 ]</xpath>
 
+        <!-- nested paths -->
+        <xpath>//Price[@symbol]</xpath>
+        
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
     </testcase>

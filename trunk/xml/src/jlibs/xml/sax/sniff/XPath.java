@@ -20,6 +20,7 @@ import jlibs.xml.sax.sniff.model.Predicate;
 
 import java.util.List;
 import java.util.Collections;
+import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
@@ -27,7 +28,7 @@ import java.util.Collections;
 public class XPath{
     String xpath;
     List<Node> nodes = Collections.emptyList();
-    Predicate predicate;
+    List<Predicate> predicates = new ArrayList<Predicate>();
     int minHits;
 
     public XPath(String xpath, List<Node> nodes){
@@ -35,9 +36,9 @@ public class XPath{
         this.nodes = nodes;
     }
 
-    public XPath(String xpath, Predicate predicate){
+    public XPath(String xpath, List<Predicate> predicates, boolean dummy){
         this.xpath = xpath;
-        this.predicate = predicate;
+        this.predicates = predicates;
     }
 
     @Override
