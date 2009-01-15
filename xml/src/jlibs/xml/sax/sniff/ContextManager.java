@@ -80,10 +80,10 @@ public class ContextManager implements Debuggable{
 
     int maxInstCount;
     int instCount;
-    class Context{
-        Context parent;
-        Node node;
-        int depth;
+    public class Context{
+        public Context parent;
+        public Node node;
+        public int depth;
 //        int parentDepths[];
 
         private Context(){
