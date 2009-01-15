@@ -106,10 +106,10 @@ public class XPathResults implements Debuggable{
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
     class ChildContext{
-        Sniffer.Context context;
+        ContextManager.Context context;
         int depth;
 
-        ChildContext(Sniffer.Context context){
+        ChildContext(ContextManager.Context context){
             this.context = context;
             depth = context.depth;
         }
@@ -133,7 +133,7 @@ public class XPathResults implements Debuggable{
     Map<Position, Integer> descendantHitCount = new HashMap<Position, Integer>();
 
     Object resultWrapper;
-    public boolean hit(Sniffer.Context context, Node node){
+    public boolean hit(ContextManager.Context context, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
             if(position.axis==Axis.DESCENDANT){
@@ -267,7 +267,7 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    private void clearChildHitCounts(Sniffer.Context context, Node node){
+    private void clearChildHitCounts(ContextManager.Context context, Node node){
         for(Node constraint: node.constraints){
             if(constraint instanceof Position){
                 Position position = (Position)constraint;
@@ -290,7 +290,7 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    void clearHitCounts(Sniffer.Context context, Node node){
+    void clearHitCounts(ContextManager.Context context, Node node){
         for(Node child: node.children)
             clearChildHitCounts(context, child);
         

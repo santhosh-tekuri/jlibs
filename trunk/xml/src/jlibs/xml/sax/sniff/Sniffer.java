@@ -18,7 +18,6 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -29,9 +28,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -47,10 +43,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     private StringContent contents = new StringContent();
-    private Contexts contexts = new Contexts();
+    private ContextManager contextManager;
     private PositionStack positionStack = new PositionStack();
     private ElementStack elementStack;
-    private XPathResults results;
 
     /*-------------------------------------------------[ Events ]---------------------------------------------------*/
     
@@ -60,24 +55,19 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             System.out.println("-----------------------------------------------------------------");
 
         contents.reset();
-        contexts.reset(new Context(root));
+        contextManager.reset(root, elementStack);
         positionStack.reset();
         elementStack.reset();
-
-        if(debug){
-            contexts.printCurrent("Contexts");
-            System.out.println("-----------------------------------------------------------------");
-        }
     }
 
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
-        contexts.matchText(contents);
+        contextManager.matchText(contents);
     }
 
     @Override
     public void comment(char[] ch, int start, int length) throws SAXException{
-        contexts.matchText(contents);
+        contextManager.matchText(contents);
     }
 
     @Override
@@ -88,9 +78,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         int pos = positionStack.push(uri, localName);
         elementStack.push(uri, localName, pos);
 
-        contexts.matchText(contents);
-        contexts.startElement(uri, localName, pos);
-        contexts.matchAttributes(attrs);
+        contextManager.matchText(contents);
+        contextManager.elementStarted(uri, localName, pos);
+        contextManager.matchAttributes(attrs);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -109,295 +99,17 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         positionStack.pop();
         elementStack.pop();
 
-        contexts.endElement(contents);
+        contextManager.elementEnded(contents);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
-    }
-
-    /*-------------------------------------------------[ Contexts ]---------------------------------------------------*/
-
-    class Contexts implements Iterable<Context>{
-        private List<Context> current = new ArrayList<Context>();
-        private List<Context> next = new ArrayList<Context>();
-
-        public void reset(Context context){
-            current.clear();
-            next.clear();
-            current.add(context);
-        }
-
-        ResettableIterator<Context> iter = new ResettableIterator<Context>(current);
-        @Override
-        public Iterator<Context> iterator(){
-            return iter.reset(current);
-        }
-
-        public boolean hasAttributeChild;
-        public boolean nextHasAttributeChild;
-        public void add(Context context){
-            nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
-            next.add(context);
-        }
-
-        public void addUnique(Context context){
-            if(!next.contains(context))
-                add(context);
-        }
-
-        public void update(){
-            List<Context> temp = current;
-            current = next;
-            next = temp;
-            next.clear();
-
-            hasAttributeChild = nextHasAttributeChild;
-            nextHasAttributeChild = false;
-
-            if(debug)
-                printCurrent("newContext");
-        }
-
-        private int mark;
-
-        public void mark(){
-            mark = next.size();
-        }
-
-        public int markSize(){
-            return next.size()-mark;
-        }
-
-        /*-------------------------------------------------[ Matching ]---------------------------------------------------*/
-
-        public void matchText(StringContent contents){
-            results.resultWrapper = contents;
-            for(Context context: this)
-                context.matchText(contents);
-            contents.reset();
-        }
-
-        public void startElement(String uri, String name, int pos){
-            results.resultWrapper = elementStack;
-            for(Context context: this)
-                context.startElement(uri, name, pos);
-            update();
-        }
-
-        public void matchAttributes(Attributes attrs){
-            if(hasAttributeChild){
-                for(int i=0; i<attrs.getLength(); i++){
-                    String attrUri = attrs.getURI(i);
-                    String attrName = attrs.getLocalName(i);
-                    String attrValue = attrs.getValue(i);
-                    results.resultWrapper = attrValue;
-                    for(Context newContext: this)
-                        newContext.matchAttribute(attrUri, attrName, attrValue);
-                }
-            }
-        }
-
-        public void endElement(StringContent contents){
-            results.resultWrapper = contents;
-            for(Context context: this){
-                context.matchText(contents);
-                addUnique(context.endElement());
-            }
-            contents.reset();
-            update();
-        }
-
-        /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
-
-        private void println(String message, List<Context> contexts, int from){
-            System.out.println(message+" ->");
-            if(contexts.size()==from)
-                return;
-            Iterator iter = contexts.listIterator(from);
-            while(iter.hasNext())
-                System.out.println("     "+iter.next());
-            System.out.println();
-        }
-
-        public void printCurrent(String message){
-            println(message, current, 0);
-        }
-
-        public void printNext(String message){
-            println(message, next, mark);
-        }
-    }
-
-    static int maxInstCount;
-    static int instCount;
-    class Context{
-        Context parent;
-        Node node;
-        int depth;
-//        int parentDepths[];
-
-        private Context(){
-            instCount++;
-            maxInstCount = Math.max(maxInstCount, instCount);
-        }
-
-        Context(Root root){
-            this();
-//            parentDepths = new int[0];
-            node = root;
-        }
-
-        public Context childContext(Node child){
-            Context context = new Context();
-            context.node = child;
-            context.parent = this;
-
-//            context.parentDepths = new int[parentDepths.length+1];
-//            System.arraycopy(parentDepths, 0, context.parentDepths, 0, parentDepths.length);
-//            context.parentDepths[context.parentDepths.length-1] = depth;
-
-            return context;
-        }
-
-        public Context parentContext(){
-            instCount--;
-            return parent;
-
-//            Context parent = new Context();
-//            parent.node = node.parent;
-//            parent.depth = parentDepths[parentDepths.length-1];
-//
-//            parent.parentDepths = new int[parentDepths.length-1];
-//            System.arraycopy(parentDepths, 0, parent.parentDepths, 0, parent.parentDepths.length);
-//            return parent;
-        }
-
-        public void matchText(StringContent contents){
-            if(!contents.isEmpty() && depth<=0){
-                if(node.consumable()){
-                    results.hit(this, node);
-                    checkConstraints(node, contents);
-                }
-                for(Node child: node.children){
-                    if(child.matchesText(contents))
-                        results.hit(this, child);
-                    checkConstraints(child, contents);
-                }
-            }
-        }
-
-        private void checkConstraints(Node child, String uri, String name, int pos){
-            for(Node constraint: child.constraints){
-                if(constraint.matchesElement(uri, name, pos)){
-                    if(results.hit(this, constraint)){
-                        contexts.add(childContext(constraint));
-                        checkConstraints(constraint, uri, name, pos);
-                    }
-                }
-            }
-        }
-
-        private void checkConstraints(Node child, StringContent contents){
-            for(Node constraint: child.constraints){
-                if(constraint.matchesText(contents)){
-                    results.hit(this, constraint);
-                    checkConstraints(constraint, contents);
-                }
-            }
-        }
-
-        public void startElement(String uri, String name, int pos){
-            String message = toString();
-
-            contexts.mark();
-
-            if(depth>0){
-                depth++;
-                contexts.add(this);
-            }else{
-                for(Node child: node.children){
-                    if(child.matchesElement(uri, name, pos)){
-                        if(results.hit(this, child)){
-                            contexts.add(childContext(child));
-                            checkConstraints(child, uri, name, pos);
-                        }
-                    }
-                }
-                if(node.consumable()){
-                    if(results.hit(this, node)){
-                        depth--;
-                        contexts.add(this);
-                        checkConstraints(node, uri, name, pos);
-                    }
-                }else{
-                    if(contexts.markSize()==0){
-                        depth++;
-                        contexts.add(this);
-                    }
-                }
-            }
-
-            if(debug)
-                contexts.printNext(message);
-        }
-
-        public void matchAttribute(String uri, String name, String value){
-            if(depth<=0){
-                for(Node child: node.children){
-                    if(child.matchesAttribute(uri, name, value)){
-                        results.hit(this, child);
-                        for(Node constraint: child.constraints){
-                            if(constraint.matchesAttribute(uri, name, value))
-                                results.hit(this, constraint);
-                        }
-                    }
-                }
-            }
-        }
-
-        public Context endElement(){
-            if(depth==0){
-                results.clearHitCounts(this, node);
-                results.clearPredicateCache(depth, node);
-                return parentContext();
-            }else{
-                if(depth>0){
-//                    results.clearHitCounts(depth, node);
-                    depth--;
-                }else{
-                    results.clearHitCounts(this, node);
-                    depth++;
-                }
-
-                return this;
-            }
-        }
-
-        @Override
-        public int hashCode(){
-            return depth + node.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj){
-            if(obj instanceof Context){
-                Context that = (Context)obj;
-                return this.depth==that.depth && this.node==that.node;
-            }else
-                return false;
-        }
-
-        @Override
-        public String toString(){
-            return "["+depth+"] "+node;
-        }
     }
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/
 
     public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
         try{
-            results = new XPathResults(minHits);
+            contextManager = new ContextManager(minHits);
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);
@@ -411,7 +123,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
                 System.out.println("COMPLETE DOCUMENT IS NOT PARSED !!!");
         }
         if(debug)
-            System.out.println("max contexts: "+maxInstCount);
-        return results;
+            System.out.println("max contexts: "+contextManager.maxInstCount);
+        return contextManager.results;
     }
 }
