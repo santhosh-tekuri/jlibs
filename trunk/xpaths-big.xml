@@ -1,3 +1,12 @@
+<!--
+test suite to run xpath on "http://www.ximpleware.com/xmls.zip"
+download the above zip, extract it and put xml files in xmlFiles/big directory
+
+modify xmldog.sh/xmldog.bat to run this testsuite
+
+NOTE: Xalan fails to run with default JVM memory. So you might need to
+      increase jvm memory using jvm arguments in xmldog.sh/xmldog.bat
+-->
 <xpaths>
     <testcase>
         <file>xmlFiles/big/bioinfo_big.xml</file>
