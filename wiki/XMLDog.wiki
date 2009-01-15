@@ -2,13 +2,14 @@
 
 ==UPDATED 1==
 
- * numbered predicates (/elem1/elem[2]) was working only for child axis. now it works perfectly for descendant, descendant-or-self axis also
+ * numbered predicates (`/elem1/elem[2]`) was working only for child axis. now it works perfectly for descendant, descendant-or-self axis also
  * node() test is supported
  * simple predicate filtering added (elem1/elem2[@name]), but not thoroughly tested. nested predicate filtering is not yet supported;
  * 196 xpaths are added to testsuite to verify various scenarios;
  * tested XMLDog with big xml files (about 25 MB and 75 MB).
    you can find xpath-big.xml testsuite in jlibs installation. It has instructions to run, because those big xml files are not bundled with jlibs.<br>
    you need to download it from the url specified in those instructions
+ * many bug fixes
  * code cleanup
 
 ==UPDATED==
