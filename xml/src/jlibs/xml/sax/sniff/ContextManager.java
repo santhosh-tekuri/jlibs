@@ -76,10 +76,10 @@ public class ContextManager implements Debuggable{
             context.matchProcessingInstruction(target);
     }
 
-    public void elementStarted(String uri, String name, int pos){
+    public void elementStarted(String uri, String name){
         results.resultWrapper = elementStack;
         for(Context context: contexts)
-            context.startElement(uri, name, pos);
+            context.startElement(uri, name);
         contexts.update();
     }
 
@@ -227,18 +227,18 @@ public class ContextManager implements Debuggable{
 
         /*-------------------------------------------------[ Element & Attributes ]---------------------------------------------------*/
         
-        private void checkElementConstraints(Node child, String uri, String name, int pos){
+        private void checkElementConstraints(Node child, String uri, String name){
             for(Node constraint: child.constraints()){
-                if(constraint.matchesElement(uri, name, pos)){
+                if(constraint.matchesElement(uri, name)){
                     if(results.hit(this, constraint)){
                         contexts.add(childContext(constraint));
-                        checkElementConstraints(constraint, uri, name, pos);
+                        checkElementConstraints(constraint, uri, name);
                     }
                 }
             }
         }
 
-        public void startElement(String uri, String name, int pos){
+        public void startElement(String uri, String name){
             String message = toString();
 
             contexts.mark();
@@ -248,10 +248,10 @@ public class ContextManager implements Debuggable{
                 contexts.add(this);
             }else{
                 for(Node child: node.children()){
-                    if(child.matchesElement(uri, name, pos)){
+                    if(child.matchesElement(uri, name)){
                         if(results.hit(this, child)){
                             contexts.add(childContext(child));
-                            checkElementConstraints(child, uri, name, pos);
+                            checkElementConstraints(child, uri, name);
                         }
                     }
                 }
@@ -259,7 +259,7 @@ public class ContextManager implements Debuggable{
                     if(results.hit(this, node)){
                         depth--;
                         contexts.add(this);
-                        checkElementConstraints(node, uri, name, pos);
+                        checkElementConstraints(node, uri, name);
                     }
                 }else{
                     if(contexts.markSize()==0){

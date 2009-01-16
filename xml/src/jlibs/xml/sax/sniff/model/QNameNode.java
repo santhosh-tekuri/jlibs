@@ -54,7 +54,7 @@ public class QNameNode extends Node{
     }
 
     @Override
-    public boolean matchesElement(String uri, String name, int position){
+    public boolean matchesElement(String uri, String name){
         return matchesQName(uri, name);
     }
 

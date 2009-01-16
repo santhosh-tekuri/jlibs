@@ -81,7 +81,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         elementStack.push(uri, localName, pos);
 
         contextManager.matchText(contents);
-        contextManager.elementStarted(uri, localName, pos);
+        contextManager.elementStarted(uri, localName);
         contextManager.matchAttributes(attrs);
 
         if(debug)
