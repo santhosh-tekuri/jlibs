@@ -17,14 +17,13 @@ package jlibs.xml.sax.sniff.model.axis;
 
 import jlibs.xml.sax.sniff.StringContent;
 import jlibs.xml.sax.sniff.model.AxisNode;
-import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Descendant extends AxisNode{
-    public Descendant(){
-        super(Axis.DESCENDANT);
+    public Descendant(int axis){
+        super(axis);
     }
 
     @Override

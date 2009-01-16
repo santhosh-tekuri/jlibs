@@ -15,13 +15,9 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.position.ChildPositionTracker;
-import jlibs.xml.sax.sniff.position.DescendantPositionTracker;
-import org.jaxen.saxpath.Axis;
 
 import java.util.*;
 
@@ -107,50 +103,14 @@ public class XPathResults implements Debuggable{
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
-    class ChildContext{
-        ContextManager.Context context;
-        int depth;
-
-        ChildContext(ContextManager.Context context){
-            this.context = context;
-            depth = context.depth;
-        }
-
-        @Override
-        public boolean equals(Object obj){
-            if(obj instanceof ChildContext){
-                ChildContext that = (ChildContext)obj;
-                return this.context==that.context && this.depth==that.depth;
-            }else
-                return false;
-        }
-
-        @Override
-        public int hashCode(){
-            return System.identityHashCode(context)+depth;
-        }
-    }
-
-    private ChildPositionTracker childPositionTracker = new ChildPositionTracker();
-    private DescendantPositionTracker descendantPositionTracker = new DescendantPositionTracker(childPositionTracker);
+    private PositionTracker positionTracker = new PositionTracker();
 
     Object resultWrapper;
     public boolean hit(ContextManager.Context context, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
-            switch(position.axis){
-                case Axis.DESCENDANT:
-                case Axis.DESCENDANT_OR_SELF:
-                    if(!descendantPositionTracker.hit(context, position))
-                        return false;
-                    break;
-                case Axis.CHILD:
-                    if(!childPositionTracker.hit(context, position))
-                        return false;
-                    break;
-                default:
-                    throw new NotImplementedException("position predicate is not implemented for "+Axis.lookup(position.axis)+" axis");
-            }
+            if(!positionTracker.hit(context, position))
+                return false;
         }
 
         if(node.resultInteresed()){
@@ -180,7 +140,7 @@ public class XPathResults implements Debuggable{
 //                }
             }
             
-            for(Predicate member: node.memberOf){
+            for(Predicate member: node.memberOf()){
                 PredicateResult predicateResult = cachedMap.get(member);
                 Integer result = predicateResult.hit(node);
                 if(result!=null){
@@ -260,38 +220,8 @@ public class XPathResults implements Debuggable{
         }
     }
 
-//    private void clearChildHitCounts(ContextManager.Context context, Node node){
-//        for(Node constraint: node.constraints){
-//            if(constraint instanceof Position){
-//                Position position = (Position)constraint;
-//                if(position.axis==Axis.CHILD){
-//                    Map<ChildContext, Integer> map = childHitCount.get(position);
-//                    if(map!=null)
-//                        map.remove(new ChildContext(context));
-//                }
-//            }
-//            clearChildHitCounts(context, constraint);
-//        }
-//    }
-//
-//    private void clearDescendantHitCounts(Node node){
-//        for(Node constraint: node.constraints){
-//            if(constraint instanceof Position)
-//                descendantHitCount.remove(constraint);
-//            else
-//                clearDescendantHitCounts(constraint);
-//        }
-//    }
-//
     void clearHitCounts(ContextManager.Context context, Node node){
-        childPositionTracker.contextEnded(context);
-        descendantPositionTracker.contextEnded(context);
-//        for(Node child: node.children)
-//            clearChildHitCounts(context, child);
-//
-//        if(node instanceof Descendant && context.depth==0){
-//            clearDescendantHitCounts(node);
-//        }
+        positionTracker.contextEnded(context);
     }
 
     void clearPredicateCache(int depth, Node node){

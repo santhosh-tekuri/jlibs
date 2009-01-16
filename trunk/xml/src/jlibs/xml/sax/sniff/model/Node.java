@@ -65,7 +65,7 @@ public abstract class Node{
 
     /*-------------------------------------------------[ Constraints ]---------------------------------------------------*/
 
-    public List<Node> constraints = new ArrayList<Node>();
+    private List<Node> constraints = new ArrayList<Node>();
 
     public Iterable<Node> constraints(){
         return constraints;
@@ -73,7 +73,7 @@ public abstract class Node{
 
     @SuppressWarnings({"unchecked"})
     public <N extends Node> N addConstraint(N node){
-        for(Node constraint: children()){
+        for(Node constraint: constraints()){
             if(constraint.equivalent(node)){
                 return (N)constraint;
             }

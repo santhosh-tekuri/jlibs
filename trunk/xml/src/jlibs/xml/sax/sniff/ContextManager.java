@@ -17,7 +17,11 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.xml.sax.Attributes;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
@@ -32,11 +36,18 @@ public class ContextManager implements Debuggable{
     }
     
     public void reset(Root root, ElementStack elementStack){
-        Context rootContext = new Context(root);
-        contexts.reset(rootContext);
+        List<Context> list = new ArrayList<Context>();
+        list.add(new Context(root));
+        for(Node node: root.constraints()){
+            if(node instanceof Descendant)
+                list.add(new Context(node));
+        }
+
+        contexts.reset(list);
 
         results.resultWrapper = "/";
-        results.hit(rootContext, root);
+        for(Context context: list)
+            results.hit(context, root);
 
         this.elementStack = elementStack;
 
@@ -108,7 +119,7 @@ public class ContextManager implements Debuggable{
             maxInstCount = Math.max(maxInstCount, instCount);
         }
 
-        Context(Root root){
+        public Context(Node root){
             this();
 //            parentDepths = new int[0];
             node = root;
@@ -156,7 +167,7 @@ public class ContextManager implements Debuggable{
         }
 
         private void checkCommentConstraints(Node child, String contents){
-            for(Node constraint: child.constraints){
+            for(Node constraint: child.constraints()){
                 if(constraint.matchesComment(contents)){
                     results.hit(this, constraint);
                     checkCommentConstraints(constraint, contents);
@@ -181,7 +192,7 @@ public class ContextManager implements Debuggable{
         }
 
         private void checkProcessingInstructionConstraints(Node child, String contents){
-            for(Node constraint: child.constraints){
+            for(Node constraint: child.constraints()){
                 if(constraint.matchesProcessingInstruction(contents)){
                     results.hit(this, constraint);
                     checkProcessingInstructionConstraints(constraint, contents);
@@ -206,7 +217,7 @@ public class ContextManager implements Debuggable{
         }
 
         private void checkTextConstraints(Node child, StringContent contents){
-            for(Node constraint: child.constraints){
+            for(Node constraint: child.constraints()){
                 if(constraint.matchesText(contents)){
                     results.hit(this, constraint);
                     checkTextConstraints(constraint, contents);
@@ -217,7 +228,7 @@ public class ContextManager implements Debuggable{
         /*-------------------------------------------------[ Element & Attributes ]---------------------------------------------------*/
         
         private void checkElementConstraints(Node child, String uri, String name, int pos){
-            for(Node constraint: child.constraints){
+            for(Node constraint: child.constraints()){
                 if(constraint.matchesElement(uri, name, pos)){
                     if(results.hit(this, constraint)){
                         contexts.add(childContext(constraint));
@@ -267,7 +278,7 @@ public class ContextManager implements Debuggable{
                 for(Node child: node.children()){
                     if(child.matchesAttribute(uri, name, value)){
                         results.hit(this, child);
-                        for(Node constraint: child.constraints){
+                        for(Node constraint: child.constraints()){
                             if(constraint.matchesAttribute(uri, name, value))
                                 results.hit(this, constraint);
                         }
