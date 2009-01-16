@@ -103,40 +103,48 @@ public class DebugXPathHandler implements XPathHandler{
     @Override
     public void startTextNodeStep(int axis) throws SAXPathException{
         println("startTextNodeStep(%s)", Axis.lookup(axis));
+        depth++;
     }
 
     @Override
     public void endTextNodeStep() throws SAXPathException{
+        depth--;
         println("endTextNodeStep");
     }
 
     @Override
     public void startCommentNodeStep(int axis) throws SAXPathException{
         println("startCommentNodeStep(%s)", Axis.lookup(axis));
+        depth++;
     }
 
     @Override
     public void endCommentNodeStep() throws SAXPathException{
+        depth--;
         println("endCommentNodeStep");
     }
 
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
         println("startAllNodeStep(%s)", Axis.lookup(axis));
+        depth++;
     }
 
     @Override
     public void endAllNodeStep() throws SAXPathException{
+        depth--;
         println("endAllNodeStep");
     }
 
     @Override
     public void startProcessingInstructionNodeStep(int axis, String name) throws SAXPathException{
         println("startProcessingInstructionNodeStep(%s, %s)", Axis.lookup(axis), name);
+        depth++;
     }
 
     @Override
     public void endProcessingInstructionNodeStep() throws SAXPathException{
+        depth--;
         println("endProcessingInstructionNodeStep");
     }
 
@@ -191,50 +199,60 @@ public class DebugXPathHandler implements XPathHandler{
     @Override
     public void startEqualityExpr() throws SAXPathException{
         println("startEqualityExpr");
+        depth++;
     }
 
     @Override
     public void endEqualityExpr(int equalityOperator) throws SAXPathException{
+        depth--;
         println("endEqualityExpr(%s)", equalityOperator);
     }
 
     @Override
     public void startRelationalExpr() throws SAXPathException{
         println("startRelationalExpr");
+        depth++;
     }
 
     @Override
     public void endRelationalExpr(int relationalOperator) throws SAXPathException{
+        depth--;
         println("endRelationalExpr(%s)", relationalOperator);
     }
 
     @Override
     public void startAdditiveExpr() throws SAXPathException{
         println("startAdditiveExpr");
+        depth++;
     }
 
     @Override
     public void endAdditiveExpr(int additiveOperator) throws SAXPathException{
+        depth--;
         println("endAdditiveExpr");
     }
 
     @Override
     public void startMultiplicativeExpr() throws SAXPathException{
         println("startMultiplicativeExpr");
+        depth++;
     }
 
     @Override
     public void endMultiplicativeExpr(int multiplicativeOperator) throws SAXPathException{
+        depth--;
         println("endMultiplicativeExpr");
     }
 
     @Override
     public void startUnaryExpr() throws SAXPathException{
         println("startUnaryExpr");
+        depth++;
     }
 
     @Override
     public void endUnaryExpr(int unaryOperator) throws SAXPathException{
+        depth--;
         println("endUnaryExpr");
     }
 
@@ -246,8 +264,8 @@ public class DebugXPathHandler implements XPathHandler{
 
     @Override
     public void endUnionExpr(boolean create) throws SAXPathException{
-        println("endUnionExpr(%s)", create);
         depth--;
+        println("endUnionExpr(%s)", create);
     }
 
     @Override
@@ -273,10 +291,12 @@ public class DebugXPathHandler implements XPathHandler{
     @Override
     public void startFunction(String prefix, String functionName) throws SAXPathException{
         println("startFunction('%s', '%s')", prefix, functionName);
+        depth++;
     }
 
     @Override
     public void endFunction() throws SAXPathException{
+        depth--;
         println("endFunction");
     }
 }
