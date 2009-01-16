@@ -16,7 +16,6 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.StringUtil;
-import jlibs.core.lang.Util;
 import jlibs.xml.sax.sniff.model.*;
 import org.jaxen.saxpath.Axis;
 import org.jaxen.saxpath.SAXPathException;
@@ -66,7 +65,7 @@ public class XPathParser implements XPathHandler{
                 if(!current.memberOf.contains(predicate)){
                     Predicate newPredicate = new Predicate(predicate);
                     newPredicate.userGiven = true;
-                    current.predicates.add(newPredicate);
+                    current.addPredicate(newPredicate);
                     newPredicates.add(newPredicate);
                 }else
                     predicate.userGiven = true;
@@ -120,7 +119,7 @@ public class XPathParser implements XPathHandler{
 
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents)
-            newCurrents.add(createQNameNode(current, uri, localName));
+            newCurrents.add(current.addConstraint(new QNameNode(uri, localName)));
         currents = newCurrents;
     }
 
@@ -133,7 +132,7 @@ public class XPathParser implements XPathHandler{
 
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents)
-            newCurrents.add(createText(current));
+            newCurrents.add(current.addConstraint(new Text()));
         currents = newCurrents;
     }
 
@@ -146,7 +145,7 @@ public class XPathParser implements XPathHandler{
 
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents)
-            newCurrents.add(createComment(current));
+            newCurrents.add(current.addConstraint(new Comment()));
         currents = newCurrents;
     }
 
@@ -176,7 +175,7 @@ public class XPathParser implements XPathHandler{
         }
 
         for(Node current: currents)
-            newCurrents.add(createAxisNode(current, axis));
+            newCurrents.add(current.addChild(AxisNode.newInstance(axis)));
 
         currents = newCurrents;
         currentAxis = axis;
@@ -187,11 +186,14 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startProcessingInstructionNodeStep(int axis, String name) throws SAXPathException{
+        if(StringUtil.isEmpty(name)) // saxpath gives name="" for processing-instruction() i.e without argument
+            name = null;
+
         startAllNodeStep(axis);
 
         List<Node> newCurrents = new ArrayList<Node>();
         for(Node current: currents)
-            newCurrents.add(createProcessingInstruction(current, name));
+            newCurrents.add(current.addConstraint(new ProcessingInstruction(name)));
         currents = newCurrents;
     }
 
@@ -216,7 +218,7 @@ public class XPathParser implements XPathHandler{
             for(int i=0; i<list.size(); i++){
                 Predicate predicate = new Predicate(currents.get(i));
                 predicates.add(predicate);
-                list.get(i).predicates.add(predicate);
+                list.get(i).addPredicate(predicate);
             }
             currents = list;
         }else
@@ -317,14 +319,14 @@ public class XPathParser implements XPathHandler{
 
             if(!self){
                 for(Node current: currents)
-                    newCurrents.add(createPosition(current, currentAxis, number, null));
+                    newCurrents.add(current.addConstraint(new Position(currentAxis, number, null)));
             }else{
                 int half = currents.size()/2;
 
                 for(int i=0; i<half; i++)
-                    newCurrents.add(createPosition(currents.get(i), Axis.CHILD, number, null));
+                    newCurrents.add(currents.get(i).addConstraint(new Position(Axis.CHILD, number, null)));
                 for(int i=half; i<currents.size(); i++)
-                    newCurrents.add(createPosition(currents.get(i), selfAxis, number, (Position)newCurrents.get(i-half)));
+                    newCurrents.add(currents.get(i).addConstraint(new Position(selfAxis, number, (Position)newCurrents.get(i-half))));
             }
 
             currents = newCurrents;
@@ -355,107 +357,5 @@ public class XPathParser implements XPathHandler{
     @Override
     public void endFunction() throws SAXPathException{
         throw new SAXPathException("unsupprted");
-    }
-
-    /*-------------------------------------------------[ Create Helpers ]---------------------------------------------------*/
-    
-    private Position createPosition(Node current, int axis, int pos, Position selfPosition){
-        Position found = null;
-        for(Node child: current.constraints){
-            if(child instanceof Position){
-                Position position = (Position)child;
-                if(position.axis==axis && position.pos==pos){
-                    found = position;
-                    break;
-                }
-            }
-        }
-        if(found==null){
-            found = new Position(current, axis, pos);
-            found.selfPosition = selfPosition;
-            if(selfPosition!=null)
-                selfPosition.selfPosition = found;
-        }
-
-        return found;
-    }
-
-    private AxisNode createAxisNode(Node current, int axis){
-        AxisNode found = null;
-        for(AxisNode child: current.children){
-            if(child.type==axis){
-                found = child;
-                break;
-            }
-        }
-        if(found==null)
-            found = AxisNode.newInstance(current, axis);
-
-        return found;
-    }
-
-    private Text createText(Node current){
-        Text found = null;
-        for(Node child: current.constraints){
-            if(child instanceof Text){
-                found = (Text)child;
-                break;
-            }
-        }
-        if(found==null)
-            found = new Text(current);
-
-        return found;
-    }
-
-    private Comment createComment(Node current){
-        Comment found = null;
-        for(Node child: current.constraints){
-            if(child instanceof Comment){
-                found = (Comment)child;
-                break;
-            }
-        }
-        if(found==null)
-            found = new Comment(current);
-
-        return found;
-    }
-
-    private ProcessingInstruction createProcessingInstruction(Node current, String name){
-        if(StringUtil.isEmpty(name)) // saxpath returns "" for processing-instruction()
-            name = null;
-        
-        ProcessingInstruction found = null;
-        for(Node child: current.constraints){
-            if(child instanceof ProcessingInstruction){
-                ProcessingInstruction pi = (ProcessingInstruction)child;
-                if(Util.equals(name, pi.name)){
-                    found = (ProcessingInstruction)child;
-                    break;
-                }
-            }
-        }
-        if(found==null)
-            found = new ProcessingInstruction(current, name);
-
-        return found;
-    }
-
-    private QNameNode createQNameNode(Node current, String uri, String name){
-        QNameNode found = null;
-        for(Node child: current.constraints){
-            if(child instanceof QNameNode){
-                QNameNode qname = (QNameNode)child;
-                if(Util.equals(uri, qname.uri) && Util.equals(name, qname.name)){
-                    found = qname;
-                    break;
-                }
-            }
-        }
-        if(found==null)
-            found = new QNameNode(current, uri, name);
-
-        return found;
     }
 }

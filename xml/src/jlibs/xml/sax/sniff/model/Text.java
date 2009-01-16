@@ -21,8 +21,9 @@ import jlibs.xml.sax.sniff.StringContent;
  * @author Santhosh Kumar T
  */
 public class Text extends Node{
-    public Text(Node parent){
-        super(parent);
+    @Override
+    public boolean equivalent(Node node){
+        return node.getClass()==getClass();
     }
 
     @Override

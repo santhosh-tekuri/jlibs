@@ -15,26 +15,19 @@
 
 package jlibs.xml.sax.sniff.model.axis;
 
-import org.jaxen.saxpath.Axis;
 import jlibs.xml.sax.sniff.model.AxisNode;
-import jlibs.xml.sax.sniff.model.Node;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Attribute extends AxisNode{
-    public Attribute(Node parent){
-        super(parent, Axis.ATTRIBUTE);
-        parent.hasAttibuteChild = true;
+    public Attribute(){
+        super(Axis.ATTRIBUTE);
     }
 
     @Override
     public boolean matchesAttribute(String uri, String name, String value){
         return true;
-    }
-
-    @Override
-    public String toString(){
-        return "attribute::";
     }
 }

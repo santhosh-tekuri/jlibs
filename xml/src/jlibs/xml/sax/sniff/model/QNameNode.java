@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff.model;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.Util;
 
 /**
  * @author Santhosh Kumar T
@@ -24,12 +25,20 @@ public class QNameNode extends Node{
     public String uri;
     public String name;
 
-    public QNameNode(Node parent, String uri, String name){
-        super(parent);
+    public QNameNode(String uri, String name){
         this.uri = uri;
         this.name = name;
         if(uri==null && name!=null)
             throw new IllegalArgumentException();
+    }
+
+    @Override
+    public boolean equivalent(Node node){
+        if(node.getClass()==getClass()){
+            QNameNode that=  (QNameNode)node;
+            return Util.equals(this.uri, that.uri) && Util.equals(this.name, that.name);
+        }
+        return false;
     }
 
     @SuppressWarnings({"SimplifiableIfStatement"})

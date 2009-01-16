@@ -23,10 +23,26 @@ public class Position extends Node{
     public int pos;
     public Position selfPosition;
 
-    public Position(Node node, int axis, int pos){
-        super(node);
+    public Position(int axis, int pos){
         this.axis = axis;
         this.pos = pos;
+    }
+
+    public Position(int axis, int pos, Position selfPosition){
+        this.axis = axis;
+        this.pos = pos;
+        this.selfPosition = selfPosition;
+        if(selfPosition!=null)
+            selfPosition.selfPosition = this;
+    }
+
+    @Override
+    public boolean equivalent(Node node){
+        if(node.getClass()==getClass()){
+            Position that = (Position)node;
+            return this.axis==that.axis && this.pos==that.pos;
+        }else
+            return false;
     }
 
     @Override

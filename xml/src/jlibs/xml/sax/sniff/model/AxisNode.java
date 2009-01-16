@@ -25,9 +25,14 @@ import jlibs.xml.sax.sniff.model.axis.Descendant;
  */
 public abstract class AxisNode extends Node{
     public int type; 
-    protected AxisNode(Node parent, int type){
-        super(parent);
+
+    protected AxisNode(int type){
         this.type = type;
+    }
+
+    @Override
+    public boolean equivalent(Node node){
+        return node.getClass()==getClass();
     }
 
     @Override
@@ -35,14 +40,14 @@ public abstract class AxisNode extends Node{
         return Axis.lookup(type)+"::";
     }
 
-    public static AxisNode newInstance(Node parent, int type){
+    public static AxisNode newInstance(int type){
         switch(type){
             case Axis.CHILD:
-                return new Child(parent);
+                return new Child();
             case Axis.ATTRIBUTE:
-                return new Attribute(parent);
+                return new Attribute();
             case Axis.DESCENDANT:
-                return new Descendant(parent);
+                return new Descendant();
             default:
                 throw new UnsupportedOperationException("unsupported axis: "+Axis.lookup(type));
         }

@@ -44,7 +44,7 @@ public class ChildPositionTracker implements PositionTracker{
     }
 
     public void contextEnded(ContextManager.Context context){
-        for(Node child: context.node.children)
+        for(Node child: context.node.children())
             clearHitCounts(context, child);
     }
 

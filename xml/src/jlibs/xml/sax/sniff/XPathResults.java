@@ -162,7 +162,7 @@ public class XPathResults implements Debuggable{
             if(node.userGiven)
                 addResult(node, results.size()-1);
 
-            for(Predicate predicate: node.predicates){
+            for(Predicate predicate: node.predicates()){
                 PredicateResult predicateResult = cachedMap.get(predicate);
                 if(predicateResult==null)
                     cachedMap.put(predicate, predicateResult=new PredicateResult(predicate));
@@ -194,7 +194,7 @@ public class XPathResults implements Debuggable{
                 }
             }
             
-            for(Predicate predicate: node.predicates){
+            for(Predicate predicate: node.predicates()){
                 if(node.memberOf.contains(predicate))
                     return true;
                 PredicateResult predicateResult = cachedMap.get(predicate);
@@ -295,7 +295,7 @@ public class XPathResults implements Debuggable{
     }
 
     void clearPredicateCache(int depth, Node node){
-        for(Predicate predicate: node.predicates){
+        for(Predicate predicate: node.predicates()){
             for(Node n: predicate.nodes){
                 while(n!=null){
                     n = n.parent;
