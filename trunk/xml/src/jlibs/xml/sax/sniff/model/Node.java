@@ -24,28 +24,90 @@ import jlibs.xml.sax.sniff.StringContent;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jaxen.saxpath.Axis;
+
 /**
  * @author Santhosh Kumar T
  */
 public abstract class Node{
     Root root;
     public Node parent;
-    public List<AxisNode> children = new ArrayList<AxisNode>();
-    public List<Node> constraints = new ArrayList<Node>();
 
     public boolean hasAttibuteChild;
 
-    protected Node(){}
-    public Node(Node node){
-        this.root = node.root;
+    public abstract boolean equivalent(Node node);
+    
+    /*-------------------------------------------------[ Children ]---------------------------------------------------*/
+    
+    private List<AxisNode> children = new ArrayList<AxisNode>();
 
-        if(this instanceof AxisNode){
-            this.parent = node;
-            node.children.add((AxisNode)this);
-        }else{
-            this.parent = node.parent;
-            node.constraints.add(this);
+    public Iterable<AxisNode> children(){
+        return children;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public <N extends AxisNode> N addChild(N axisNode){
+        for(AxisNode child: children()){
+            if(child.equivalent(axisNode)){
+                return (N)child;
+            }
         }
+
+        children.add(axisNode);
+        axisNode.parent = this;
+        axisNode.root = root;
+
+        if(axisNode.type==Axis.ATTRIBUTE)
+            hasAttibuteChild = true;
+
+        return axisNode;
+    }
+
+    /*-------------------------------------------------[ Constraints ]---------------------------------------------------*/
+
+    public List<Node> constraints = new ArrayList<Node>();
+
+    public Iterable<Node> constraints(){
+        return constraints;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public <N extends Node> N addConstraint(N node){
+        for(Node constraint: children()){
+            if(constraint.equivalent(node)){
+                return (N)constraint;
+            }
+        }
+        constraints.add(node);
+        node.parent = this.parent;
+        node.root = root;
+        return node;
+    }
+
+    /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
+
+    private List<Predicate> predicates = new ArrayList<Predicate>();
+
+    public Iterable<Predicate> predicates(){
+        return predicates;
+    }
+
+    public Predicate addPredicate(Predicate predicate){
+        predicates.add(predicate);
+        return predicate;
+    }
+
+    /*-------------------------------------------------[ Member-Of ]---------------------------------------------------*/
+
+    public List<Predicate> memberOf = new ArrayList<Predicate>();
+
+    public Iterable<Predicate> memberOf(){
+        return memberOf;
+    }
+
+    public Predicate addMemberOf(Predicate predicate){
+        memberOf.add(predicate);
+        return predicate;
     }
 
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
@@ -75,9 +137,6 @@ public abstract class Node{
     }
 
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
-
-    public List<Predicate> predicates = new ArrayList<Predicate>();
-    public List<Predicate> memberOf = new ArrayList<Predicate>();
 
     public boolean userGiven;
     public boolean resultInteresed(){

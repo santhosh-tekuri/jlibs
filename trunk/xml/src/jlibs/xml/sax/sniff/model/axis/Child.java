@@ -15,17 +15,16 @@
 
 package jlibs.xml.sax.sniff.model.axis;
 
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.AxisNode;
 import jlibs.xml.sax.sniff.StringContent;
+import jlibs.xml.sax.sniff.model.AxisNode;
 import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Child extends AxisNode{
-    public Child(Node parent){
-        super(parent, Axis.CHILD);
+    public Child(){
+        super(Axis.CHILD);
     }
 
     @Override

@@ -147,7 +147,7 @@ public class ContextManager implements Debuggable{
                     results.hit(this, node);
                     checkCommentConstraints(node, contents);
                 }
-                for(Node child: node.children){
+                for(Node child: node.children()){
                     if(child.matchesComment(contents))
                         results.hit(this, child);
                     checkCommentConstraints(child, contents);
@@ -172,7 +172,7 @@ public class ContextManager implements Debuggable{
                     results.hit(this, node);
                     checkProcessingInstructionConstraints(node, name);
                 }
-                for(Node child: node.children){
+                for(Node child: node.children()){
                     if(child.matchesProcessingInstruction(name))
                         results.hit(this, child);
                     checkProcessingInstructionConstraints(child, name);
@@ -197,7 +197,7 @@ public class ContextManager implements Debuggable{
                     results.hit(this, node);
                     checkTextConstraints(node, contents);
                 }
-                for(Node child: node.children){
+                for(Node child: node.children()){
                     if(child.matchesText(contents))
                         results.hit(this, child);
                     checkTextConstraints(child, contents);
@@ -236,7 +236,7 @@ public class ContextManager implements Debuggable{
                 depth++;
                 contexts.add(this);
             }else{
-                for(Node child: node.children){
+                for(Node child: node.children()){
                     if(child.matchesElement(uri, name, pos)){
                         if(results.hit(this, child)){
                             contexts.add(childContext(child));
@@ -264,7 +264,7 @@ public class ContextManager implements Debuggable{
 
         public void matchAttribute(String uri, String name, String value){
             if(depth<=0){
-                for(Node child: node.children){
+                for(Node child: node.children()){
                     if(child.matchesAttribute(uri, name, value)){
                         results.hit(this, child);
                         for(Node constraint: child.constraints){

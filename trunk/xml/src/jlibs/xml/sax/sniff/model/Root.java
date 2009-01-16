@@ -29,6 +29,11 @@ public class Root extends Node{
     }
 
     @Override
+    public boolean equivalent(Node node){
+        return node.getClass()==getClass();
+    }
+
+    @Override
     public String toString(){
         return "Root";
     }

@@ -19,8 +19,9 @@ package jlibs.xml.sax.sniff.model;
  * @author Santhosh Kumar T
  */
 public class Comment extends Node{
-    public Comment(Node parent){
-        super(parent);
+    @Override
+    public boolean equivalent(Node node){
+        return node.getClass()==getClass();
     }
 
     @Override

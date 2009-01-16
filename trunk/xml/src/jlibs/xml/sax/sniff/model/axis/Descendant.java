@@ -15,17 +15,16 @@
 
 package jlibs.xml.sax.sniff.model.axis;
 
-import org.jaxen.saxpath.Axis;
-import jlibs.xml.sax.sniff.model.AxisNode;
-import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.StringContent;
+import jlibs.xml.sax.sniff.model.AxisNode;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Descendant extends AxisNode{
-    public Descendant(Node parent){
-        super(parent, Axis.DESCENDANT);
+    public Descendant(){
+        super(Axis.DESCENDANT);
     }
 
     @Override
@@ -51,10 +50,5 @@ public class Descendant extends AxisNode{
     @Override
     public boolean consumable(){
         return true;
-    }
-
-    @Override
-    public String toString(){
-        return "Descendant";
     }
 }

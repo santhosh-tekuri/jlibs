@@ -15,15 +15,25 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.core.lang.Util;
+
 /**
  * @author Santhosh Kumar T
  */
 public class ProcessingInstruction extends Node{
     public String name;
 
-    public ProcessingInstruction(Node parent, String name){
-        super(parent);
+    public ProcessingInstruction(String name){
         this.name = name;
+    }
+
+    @Override
+    public boolean equivalent(Node node){
+        if(node.getClass()==getClass()){
+            ProcessingInstruction that = (ProcessingInstruction)node;
+            return Util.equals(this.name,  that.name);
+        }else
+            return false;
     }
 
     @Override
