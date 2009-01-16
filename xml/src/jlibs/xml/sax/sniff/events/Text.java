@@ -13,34 +13,26 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.axis;
+package jlibs.xml.sax.sniff.events;
 
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.StringContent;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Descendant extends AxisNode{
-    public Descendant(int axis){
-        super(axis);
+public class Text extends Event{
+    private StringContent contents;
+
+    public Text(StringContent contents){
+        this.contents = contents;
     }
 
     @Override
-    public boolean matches(Event event){
-        switch(event.type()){
-            case Event.ELEMENT:
-            case Event.TEXT:
-            case Event.COMMENT:
-            case Event.PI:
-                return true;
-            default:
-                return false;
-        }
+    public int type(){
+        return TEXT;
     }
 
-    @Override
-    public boolean consumable(Event event){
-        return matches(event);
+    public void setData(){
+        setResultWrapper(contents);
     }
 }

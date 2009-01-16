@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.events.Event;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -25,8 +27,8 @@ public class Comment extends Node{
     }
 
     @Override
-    public boolean matchesComment(String content){
-        return true;
+    public boolean matches(Event event){
+        return event.type()==Event.COMMENT;
     }
 
     @Override

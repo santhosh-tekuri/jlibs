@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.events.Event;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -37,8 +39,8 @@ public class Position extends Node{
     }
 
     @Override
-    public boolean matchesElement(String uri, String name){
-        return true;
+    public boolean matches(Event event){
+        return event.type()==Event.ELEMENT;
     }
 
     @Override

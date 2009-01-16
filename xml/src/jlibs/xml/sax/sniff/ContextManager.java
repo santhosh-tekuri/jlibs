@@ -15,13 +15,16 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.xml.sax.sniff.events.Attribute;
+import jlibs.xml.sax.sniff.events.Document;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.xml.sax.Attributes;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -29,13 +32,13 @@ import java.util.ArrayList;
 public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
     protected XPathResults results;
-    private ElementStack elementStack;
 
     public ContextManager(int minHits){
         results = new XPathResults(minHits);
     }
     
-    public void reset(Root root, ElementStack elementStack){
+    private Document document = new Document();
+    public void reset(Root root){
         List<Context> list = new ArrayList<Context>();
         list.add(new Context(root));
         for(Node node: root.constraints()){
@@ -45,11 +48,9 @@ public class ContextManager implements Debuggable{
 
         contexts.reset(list);
 
-        results.resultWrapper = "/";
+        document.setData();
         for(Context context: list)
-            results.hit(context, root);
-
-        this.elementStack = elementStack;
+            results.hit(context, document, root);
 
         if(debug){
             contexts.printCurrent("Contexts");
@@ -57,52 +58,27 @@ public class ContextManager implements Debuggable{
         }
     }
 
-    public void matchText(StringContent contents){
-        results.resultWrapper = contents;
+    public void match(Event event){
         for(Context context: contexts)
-            context.matchText(contents);
-        contents.reset();
+            context.match(event);
+        if(event.type()==Event.ELEMENT)
+            contexts.update();
     }
 
-    public void matchComment(String contents){
-        results.resultWrapper = contents;
-        for(Context context: contexts)
-            context.matchComment(contents);
-    }
-
-    public void matchProcessingInstruction(String target, String data){
-        results.resultWrapper = String.format("<?%s %s?>", target, data);
-        for(Context context: contexts)
-            context.matchProcessingInstruction(target);
-    }
-
-    public void elementStarted(String uri, String name){
-        results.resultWrapper = elementStack;
-        for(Context context: contexts)
-            context.startElement(uri, name);
-        contexts.update();
-    }
-
+    private Attribute attr = new Attribute();
     public void matchAttributes(Attributes attrs){
         if(contexts.hasAttributeChild){
             for(int i=0; i<attrs.getLength(); i++){
-                String attrUri = attrs.getURI(i);
-                String attrName = attrs.getLocalName(i);
-                String attrValue = attrs.getValue(i);
-                results.resultWrapper = attrValue;
-                for(Context newContext: contexts)
-                    newContext.matchAttribute(attrUri, attrName, attrValue);
+                attr.setData(attrs, i);
+                for(Context context: contexts)
+                    context.match(attr);
             }
         }
     }
 
-    public void elementEnded(StringContent contents){
-        results.resultWrapper = contents;
-        for(Context context: contexts){
-            context.matchText(contents);
+    public void elementEnded(){
+        for(Context context: contexts)
             contexts.addUnique(context.endElement());
-        }
-        contents.reset();
         contexts.update();
     }
 
@@ -150,138 +126,60 @@ public class ContextManager implements Debuggable{
 //            return parent;
         }
 
-        /*-------------------------------------------------[ Comment ]---------------------------------------------------*/
-        
-        public void matchComment(String contents){
-            if(!contents.isEmpty() && depth<=0){
-                if(node.consumable()){
-                    results.hit(this, node);
-                    checkCommentConstraints(node, contents);
-                }
-                for(Node child: node.children()){
-                    if(child.matchesComment(contents))
-                        results.hit(this, child);
-                    checkCommentConstraints(child, contents);
-                }
-            }
-        }
 
-        private void checkCommentConstraints(Node child, String contents){
-            for(Node constraint: child.constraints()){
-                if(constraint.matchesComment(contents)){
-                    results.hit(this, constraint);
-                    checkCommentConstraints(constraint, contents);
-                }
-            }
-        }
+        public void match(Event event){
+            boolean changeContext = event.hasChildren();
 
-        /*-------------------------------------------------[ ProcessingInstruction ]---------------------------------------------------*/
-        
-        public void matchProcessingInstruction(String name){
-            if(depth<=0){
-                if(node.consumable()){
-                    results.hit(this, node);
-                    checkProcessingInstructionConstraints(node, name);
-                }
-                for(Node child: node.children()){
-                    if(child.matchesProcessingInstruction(name))
-                        results.hit(this, child);
-                    checkProcessingInstructionConstraints(child, name);
-                }
-            }
-        }
-
-        private void checkProcessingInstructionConstraints(Node child, String contents){
-            for(Node constraint: child.constraints()){
-                if(constraint.matchesProcessingInstruction(contents)){
-                    results.hit(this, constraint);
-                    checkProcessingInstructionConstraints(constraint, contents);
-                }
-            }
-        }
-
-        /*-------------------------------------------------[ Text ]---------------------------------------------------*/
-        
-        public void matchText(StringContent contents){
-            if(!contents.isEmpty() && depth<=0){
-                if(node.consumable()){
-                    results.hit(this, node);
-                    checkTextConstraints(node, contents);
-                }
-                for(Node child: node.children()){
-                    if(child.matchesText(contents))
-                        results.hit(this, child);
-                    checkTextConstraints(child, contents);
-                }
-            }
-        }
-
-        private void checkTextConstraints(Node child, StringContent contents){
-            for(Node constraint: child.constraints()){
-                if(constraint.matchesText(contents)){
-                    results.hit(this, constraint);
-                    checkTextConstraints(constraint, contents);
-                }
-            }
-        }
-
-        /*-------------------------------------------------[ Element & Attributes ]---------------------------------------------------*/
-        
-        private void checkElementConstraints(Node child, String uri, String name){
-            for(Node constraint: child.constraints()){
-                if(constraint.matchesElement(uri, name)){
-                    if(results.hit(this, constraint)){
-                        contexts.add(childContext(constraint));
-                        checkElementConstraints(constraint, uri, name);
-                    }
-                }
-            }
-        }
-
-        public void startElement(String uri, String name){
+            @SuppressWarnings({"UnusedAssignment"})
             String message = toString();
 
             contexts.mark();
-
+            
             if(depth>0){
-                depth++;
-                contexts.add(this);
+                if(changeContext){
+                    depth++;
+                    contexts.add(this);
+                }
             }else{
                 for(Node child: node.children()){
-                    if(child.matchesElement(uri, name)){
-                        if(results.hit(this, child)){
-                            contexts.add(childContext(child));
-                            checkElementConstraints(child, uri, name);
+                    if(child.matches(event)){
+                        if(results.hit(this, event, child)){
+                            if(changeContext)
+                                contexts.add(childContext(child));
+                            matchConstraints(child, event);
                         }
                     }
                 }
-                if(node.consumable()){
-                    if(results.hit(this, node)){
-                        depth--;
-                        contexts.add(this);
-                        checkElementConstraints(node, uri, name);
+                if(node.consumable(event)){
+                    if(results.hit(this, event, node)){
+                        if(changeContext){
+                            depth--;
+                            contexts.add(this);
+                        }
+                        matchConstraints(node, event);
                     }
                 }else{
-                    if(contexts.markSize()==0){
+                    if(changeContext && contexts.markSize()==0){
                         depth++;
                         contexts.add(this);
                     }
                 }
             }
 
-            if(debug)
+            //noinspection ConstantConditions
+            if(debug && changeContext)
                 contexts.printNext(message);
         }
 
-        public void matchAttribute(String uri, String name, String value){
-            if(depth<=0){
-                for(Node child: node.children()){
-                    if(child.matchesAttribute(uri, name, value)){
-                        results.hit(this, child);
-                        for(Node constraint: child.constraints()){
-                            if(constraint.matchesAttribute(uri, name, value))
-                                results.hit(this, constraint);
-                        }
+        private void matchConstraints(Node child, Event event){
+            boolean elementEvent = event.type()==Event.ELEMENT;
+
+            for(Node constraint: child.constraints()){
+                if(constraint.matches(event)){
+                    if(results.hit(this, event, constraint)){
+                        if(elementEvent)
+                            contexts.add(childContext(constraint));
+                        matchConstraints(constraint, event);
                     }
                 }
             }

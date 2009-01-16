@@ -296,13 +296,24 @@ public class XPathParser implements XPathHandler{
         throw new SAXPathException("unsupprted");
     }
 
+    private Function function;
     @Override
     public void startFunction(String prefix, String functionName) throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        Function function = null;
+        if(prefix.length()==0){
+            if(functionName.equals("name"))
+                function = new Name();
+        }
+        
+        if(function==null){
+            String qname = prefix.length()>0 ? prefix+':'+functionName : functionName;
+            throw new SAXPathException("unsupprted function "+qname+"()");
+        }else
+            this.function = function;
     }
 
     @Override
     public void endFunction() throws SAXPathException{
-        throw new SAXPathException("unsupprted");
+        current.addConstraint(function);
     }
 }

@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff.model.axis;
 
 import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
 /**
@@ -27,7 +28,7 @@ public class Attribute extends AxisNode{
     }
 
     @Override
-    public boolean matchesAttribute(String uri, String name, String value){
-        return true;
+    public boolean matches(Event event){
+        return event.type()==Event.ATTRIBUTE;
     }
 }

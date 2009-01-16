@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.axis;
 
-import jlibs.xml.sax.sniff.StringContent;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.AxisNode;
 import org.jaxen.saxpath.Axis;
 
@@ -28,27 +28,15 @@ public class Child extends AxisNode{
     }
 
     @Override
-    public boolean matchesElement(String uri, String name){
-        return true;
-    }
-
-    @Override
-    public boolean matchesText(StringContent content){
-        return true;
-    }
-
-    @Override
-    public boolean matchesComment(String content){
-        return true;
-    }
-
-    @Override
-    public boolean matchesProcessingInstruction(String name){
-        return true;
-    }
-
-    @Override
-    public String toString(){
-        return "child::";
+    public boolean matches(Event event){
+        switch(event.type()){
+            case Event.ELEMENT:
+            case Event.TEXT:
+            case Event.COMMENT:
+            case Event.PI:
+                return true;
+            default:
+                return false;
+        }
     }
 }

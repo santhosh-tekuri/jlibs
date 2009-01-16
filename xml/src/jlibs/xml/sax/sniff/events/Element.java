@@ -13,34 +13,36 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.axis;
+package jlibs.xml.sax.sniff.events;
 
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.AxisNode;
+import jlibs.xml.sax.sniff.ElementStack;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Descendant extends AxisNode{
-    public Descendant(int axis){
-        super(axis);
+public class Element extends Event{
+    private ElementStack elemStack;
+
+    public Element(ElementStack elemStack){
+        this.elemStack = elemStack;
     }
 
     @Override
-    public boolean matches(Event event){
-        switch(event.type()){
-            case Event.ELEMENT:
-            case Event.TEXT:
-            case Event.COMMENT:
-            case Event.PI:
-                return true;
-            default:
-                return false;
-        }
+    public int type(){
+        return ELEMENT;
     }
 
     @Override
-    public boolean consumable(Event event){
-        return matches(event);
+    public boolean hasChildren(){
+        return true;
+    }
+
+    public String uri;
+    public String name;
+
+    public void setData(String uri, String name){
+        this.uri = uri;
+        this.name = name;
+        setResultWrapper(elemStack);
     }
 }
