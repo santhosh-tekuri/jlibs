@@ -116,7 +116,7 @@ public abstract class Node{
         return false;
     }
 
-    public boolean matchesElement(String uri, String name, int position){
+    public boolean matchesElement(String uri, String name){
         return false;
     }
 
