@@ -19,12 +19,11 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
-import jlibs.xml.sax.sniff.StringContent;
+import jlibs.xml.sax.sniff.events.Event;
+import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
@@ -112,30 +111,14 @@ public abstract class Node{
 
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
     
-    public boolean consumable(){
+    public boolean consumable(Event event){
         return false;
     }
 
-    public boolean matchesElement(String uri, String name){
+    public boolean matches(Event event){
         return false;
     }
-
-    public boolean matchesAttribute(String uri, String name, String value){
-        return false;
-    }
-
-    public boolean matchesText(StringContent content){
-        return false;
-    }
-
-    public boolean matchesComment(String content){
-        return false;
-    }
-
-    public boolean matchesProcessingInstruction(String name){
-        return false;
-    }
-
+    
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
     public boolean userGiven;

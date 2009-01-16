@@ -17,6 +17,9 @@ package jlibs.xml.sax.sniff.model;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.Util;
+import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.Element;
+import jlibs.xml.sax.sniff.events.Attribute;
 
 /**
  * @author Santhosh Kumar T
@@ -54,13 +57,17 @@ public class QNameNode extends Node{
     }
 
     @Override
-    public boolean matchesElement(String uri, String name){
-        return matchesQName(uri, name);
-    }
-
-    @Override
-    public boolean matchesAttribute(String uri, String name, String value){
-        return matchesQName(uri, name);
+    public boolean matches(Event event){
+        switch(event.type()){
+            case Event.ELEMENT:
+                Element elem = (Element)event;
+                return matchesQName(elem.uri, elem.name);
+            case Event.ATTRIBUTE:
+                Attribute attr = (Attribute)event;
+                return matchesQName(attr.uri, attr.name);
+            default:
+                return false;
+        }
     }
 
     @Override

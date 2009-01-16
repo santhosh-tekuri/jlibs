@@ -16,6 +16,8 @@
 package jlibs.xml.sax.sniff.model;
 
 import jlibs.core.lang.Util;
+import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.PI;
 
 /**
  * @author Santhosh Kumar T
@@ -37,8 +39,12 @@ public class ProcessingInstruction extends Node{
     }
 
     @Override
-    public boolean matchesProcessingInstruction(String name){
-        return this.name==null || this.name.equals(name);
+    public boolean matches(Event event){
+        if(event.type()==Event.PI){
+            PI pi = (PI)event;
+            return this.name==null || this.name.equals(pi.target);
+        }else
+            return false;
     }
 
     @Override

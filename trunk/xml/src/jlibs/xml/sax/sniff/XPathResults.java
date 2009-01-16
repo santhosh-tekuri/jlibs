@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.events.Event;
 
 import java.util.*;
 
@@ -105,8 +106,7 @@ public class XPathResults implements Debuggable{
 
     private PositionTracker positionTracker = new PositionTracker();
 
-    Object resultWrapper;
-    public boolean hit(ContextManager.Context context, Node node){
+    public boolean hit(ContextManager.Context context, Event event, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
             if(!positionTracker.hit(context, position))
@@ -114,10 +114,9 @@ public class XPathResults implements Debuggable{
         }
 
         if(node.resultInteresed()){
-            if(resultWrapper!=null){
+            Object resultWrapper = event.getResultWrapper();
+            if(resultWrapper!=null)
                 results.add(resultWrapper.toString());
-                resultWrapper = null;
-            }
 
             if(node.userGiven)
                 addResult(node, results.size()-1);

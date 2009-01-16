@@ -19,6 +19,7 @@ import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.sax.sniff.events.*;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -38,6 +39,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     public Sniffer(Root root){
         this.root = root;
         elementStack = new ElementStack(root);
+        element = new Element(elementStack);
         if(debug)
             root.print();
     }
@@ -47,6 +49,20 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     private PositionStack positionStack = new PositionStack();
     private ElementStack elementStack;
 
+    // events
+    private Element element;
+    private Text text = new Text(contents);
+    private Comment comment = new Comment();
+    private PI pi = new PI();
+
+    private void matchText(){
+        if(!contents.isEmpty()){
+            text.setData();
+            contextManager.match(text);
+            contents.reset();
+        }
+    }
+    
     /*-------------------------------------------------[ Events ]---------------------------------------------------*/
     
     @Override
@@ -55,21 +71,26 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             System.out.println("-----------------------------------------------------------------");
 
         contents.reset();
-        contextManager.reset(root, elementStack);
+        contextManager.reset(root);
         positionStack.reset();
         elementStack.reset();
     }
 
+
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
-        contextManager.matchText(contents);
-        contextManager.matchProcessingInstruction(target, data);
+        matchText();
+
+        pi.setData(target, data);
+        contextManager.match(pi);
     }
 
     @Override
     public void comment(char[] ch, int start, int length) throws SAXException{
-        contextManager.matchText(contents);
-        contextManager.matchComment(new String(ch, start, length));
+        matchText();
+        
+        comment.setData(ch, start, length);
+        contextManager.match(comment);
     }
 
     @Override
@@ -80,8 +101,11 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         int pos = positionStack.push(uri, localName);
         elementStack.push(uri, localName, pos);
 
-        contextManager.matchText(contents);
-        contextManager.elementStarted(uri, localName);
+        matchText();
+
+        element.setData(uri, localName);
+        contextManager.match(element);
+
         contextManager.matchAttributes(attrs);
 
         if(debug)
@@ -101,12 +125,12 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         positionStack.pop();
         elementStack.pop();
 
-        contextManager.elementEnded(contents);
+        matchText();
+        contextManager.elementEnded();
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
     }
-
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/
 

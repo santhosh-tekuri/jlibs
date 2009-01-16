@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.StringContent;
+import jlibs.xml.sax.sniff.events.Event;
 
 /**
  * @author Santhosh Kumar T
@@ -27,8 +27,8 @@ public class Text extends Node{
     }
 
     @Override
-    public boolean matchesText(StringContent content){
-        return true;
+    public boolean matches(Event event){
+        return event.type()==Event.TEXT;
     }
 
     @Override
