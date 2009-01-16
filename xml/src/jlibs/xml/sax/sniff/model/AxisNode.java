@@ -47,7 +47,8 @@ public abstract class AxisNode extends Node{
             case Axis.ATTRIBUTE:
                 return new Attribute();
             case Axis.DESCENDANT:
-                return new Descendant();
+            case Axis.DESCENDANT_OR_SELF:
+                return new Descendant(type);
             default:
                 throw new UnsupportedOperationException("unsupported axis: "+Axis.lookup(type));
         }

@@ -23,10 +23,7 @@ import org.jaxen.saxpath.XPathHandler;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -39,17 +36,16 @@ public class XPathParser implements XPathHandler{
     }
 
     private XPathReader reader;
-    private List<Node> currents = new ArrayList<Node>();    
+    private Node current;
     public XPath parse(String xpath) throws SAXPathException{
         if(reader==null){
             reader = XPathReaderFactory.createReader();
             reader.setXPathHandler(this);
         }
-        currents.clear();
-        currents.add(root);
+        current = root;
         reader.parse(xpath);
 
-        return predicates.size()>0 ? new XPath(xpath, predicates, true) : new XPath(xpath, currents);
+        return predicates.size()>0 ? new XPath(xpath, predicates, true) : new XPath(xpath, Collections.singletonList(current));
     }
 
     @Override
@@ -59,9 +55,9 @@ public class XPathParser implements XPathHandler{
     public void endXPath() throws SAXPathException{
         if(predicates.size()>0){
             ArrayList<Predicate> newPredicates = new ArrayList<Predicate>();
-            for(int i=0; i<currents.size(); i++){
-                Node current = currents.get(i);
-                Predicate predicate = predicates.get(i);
+//            for(int i=0; i<currents.size(); i++){
+//                Node current = currents.get(i);
+                Predicate predicate = predicates.get(0);
                 if(!current.memberOf.contains(predicate)){
                     Predicate newPredicate = new Predicate(predicate);
                     newPredicate.userGiven = true;
@@ -69,13 +65,12 @@ public class XPathParser implements XPathHandler{
                     newPredicates.add(newPredicate);
                 }else
                     predicate.userGiven = true;
-            }
+//            }
             
             if(newPredicates.size()>0)
                 predicates = newPredicates;
         }else{
-            for(Node node: currents)
-                node.userGiven = true;
+            current.userGiven = true;
         }
     }
 
@@ -88,9 +83,8 @@ public class XPathParser implements XPathHandler{
     @Override
     public void startAbsoluteLocationPath() throws SAXPathException{
         if(!pathStack.isEmpty())
-            pathStack.push(pathStack.pop()+1); 
-        currents.clear();
-        currents.add(root);
+            pathStack.push(pathStack.pop()+1);
+        current = root;
     }
 
     @Override
@@ -117,10 +111,7 @@ public class XPathParser implements XPathHandler{
         if(StringUtil.isEmpty(uri) && localName==null)
             uri = null;
 
-        List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents)
-            newCurrents.add(current.addConstraint(new QNameNode(uri, localName)));
-        currents = newCurrents;
+        current = current.addConstraint(new QNameNode(uri, localName));
     }
 
     @Override
@@ -129,11 +120,7 @@ public class XPathParser implements XPathHandler{
     @Override
     public void startTextNodeStep(int axis) throws SAXPathException{
         startAllNodeStep(axis);
-
-        List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents)
-            newCurrents.add(current.addConstraint(new Text()));
-        currents = newCurrents;
+        current = current.addConstraint(new Text());
     }
 
     @Override
@@ -142,42 +129,26 @@ public class XPathParser implements XPathHandler{
     @Override
     public void startCommentNodeStep(int axis) throws SAXPathException{
         startAllNodeStep(axis);
-
-        List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents)
-            newCurrents.add(current.addConstraint(new Comment()));
-        currents = newCurrents;
+        current = current.addConstraint(new Comment());
     }
 
     @Override
     public void endCommentNodeStep() throws SAXPathException{}
 
     private int currentAxis;
-    private boolean self;
-    private int selfAxis;
 
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
         if(axis==Axis.SELF)
             return; //do nothing
         
-        List<Node> newCurrents = new ArrayList<Node>();
-        int prevAxis = axis;
-        if(axis==Axis.DESCENDANT_OR_SELF)
-            axis = Axis.DESCENDANT;
-        else if(axis==Axis.ANCESTOR_OR_SELF)
-            axis = Axis.ANCESTOR;
+        AxisNode axisNode = AxisNode.newInstance(axis);
+        boolean self = axis==Axis.DESCENDANT_OR_SELF || axis==Axis.ANCESTOR_OR_SELF;
+        if(self)
+            current = current.addConstraint(axisNode);
+        else
+            current = current.addChild(axisNode);
 
-        self = prevAxis!=axis;
-        if(self){
-            selfAxis = prevAxis;
-            newCurrents.addAll(currents);
-        }
-
-        for(Node current: currents)
-            newCurrents.add(current.addChild(AxisNode.newInstance(axis)));
-
-        currents = newCurrents;
         currentAxis = axis;
     }
 
@@ -190,23 +161,19 @@ public class XPathParser implements XPathHandler{
             name = null;
 
         startAllNodeStep(axis);
-
-        List<Node> newCurrents = new ArrayList<Node>();
-        for(Node current: currents)
-            newCurrents.add(current.addConstraint(new ProcessingInstruction(name)));
-        currents = newCurrents;
+        current = current.addConstraint(new ProcessingInstruction(name));
     }
 
     @Override
     public void endProcessingInstructionNodeStep() throws SAXPathException{}
 
-    private Deque<List<Node>> predicateContext = new ArrayDeque<List<Node>>();
+    private Deque<Node> predicateContext = new ArrayDeque<Node>();
     private ArrayDeque<Integer> pathStack = new ArrayDeque<Integer>();
 
     @Override
     public void startPredicate() throws SAXPathException{
         predicates.clear();
-        predicateContext.push(new ArrayList<Node>(currents));
+        predicateContext.push(current);
         pathStack.push(0);
     }
 
@@ -214,26 +181,20 @@ public class XPathParser implements XPathHandler{
     @Override
     public void endPredicate() throws SAXPathException{
         if(pathStack.pop()>0){
-            List<Node> list = predicateContext.pop();
-            for(int i=0; i<list.size(); i++){
-                Predicate predicate = new Predicate(currents.get(i));
-                predicates.add(predicate);
-                list.get(i).addPredicate(predicate);
-            }
-            currents = list;
+            Node context = predicateContext.pop();
+            Predicate predicate = new Predicate(current);
+            predicates.add(predicate);
+            context.addPredicate(predicate);
+            current = context;
         }else
             predicateContext.pop();
     }
 
     @Override
-    public void startFilterExpr() throws SAXPathException{
-//        throw new SAXPathException("filter expression is unsupprted");
-    }
+    public void startFilterExpr() throws SAXPathException{}
 
     @Override
-    public void endFilterExpr() throws SAXPathException{
-//        throw new SAXPathException("unsupprted");
-    }
+    public void endFilterExpr() throws SAXPathException{}
 
     @Override
     public void startOrExpr() throws SAXPathException{}
@@ -314,23 +275,9 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void number(int number) throws SAXPathException{
-        if(predicateContext.size()>0){
-            List<Node> newCurrents = new ArrayList<Node>();
-
-            if(!self){
-                for(Node current: currents)
-                    newCurrents.add(current.addConstraint(new Position(currentAxis, number, null)));
-            }else{
-                int half = currents.size()/2;
-
-                for(int i=0; i<half; i++)
-                    newCurrents.add(currents.get(i).addConstraint(new Position(Axis.CHILD, number, null)));
-                for(int i=half; i<currents.size(); i++)
-                    newCurrents.add(currents.get(i).addConstraint(new Position(selfAxis, number, (Position)newCurrents.get(i-half))));
-            }
-
-            currents = newCurrents;
-        }else
+        if(predicateContext.size()>0)
+            current = current.addConstraint(new Position(currentAxis, number));
+        else
             throw new SAXPathException("unsupprted");
     }
 

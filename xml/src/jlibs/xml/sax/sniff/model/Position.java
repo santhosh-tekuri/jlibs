@@ -21,19 +21,10 @@ package jlibs.xml.sax.sniff.model;
 public class Position extends Node{
     public int axis;
     public int pos;
-    public Position selfPosition;
 
     public Position(int axis, int pos){
         this.axis = axis;
         this.pos = pos;
-    }
-
-    public Position(int axis, int pos, Position selfPosition){
-        this.axis = axis;
-        this.pos = pos;
-        this.selfPosition = selfPosition;
-        if(selfPosition!=null)
-            selfPosition.selfPosition = this;
     }
 
     @Override

@@ -15,10 +15,11 @@
 
 package jlibs.xml.sax.sniff;
 
-import java.util.List;
+import jlibs.xml.sax.sniff.ContextManager.Context;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-import jlibs.xml.sax.sniff.ContextManager.Context;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -27,10 +28,10 @@ class Contexts implements Iterable<Context>, Debuggable{
     private List<Context> current = new ArrayList<Context>();
     private List<Context> next = new ArrayList<Context>();
 
-    public void reset(Context context){
+    public void reset(List<Context> list){
         current.clear();
         next.clear();
-        current.add(context);
+        current.addAll(list);
     }
 
     ResettableIterator<Context> iter = new ResettableIterator<Context>(current);
