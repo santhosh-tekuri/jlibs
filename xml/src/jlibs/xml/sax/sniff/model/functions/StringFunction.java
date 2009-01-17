@@ -16,26 +16,41 @@
 package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.PI;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Count extends Function{
+public class StringFunction extends Function{
     @Override
     public String getName(){
-        return "count";
+        return "string";
     }
 
     @Override
     public boolean singleHit(){
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean consumable(Event event){
+        return true;
     }
 
     @Override
     public String evaluate(Event event, String lastResult){
-        if(lastResult==null)
-            return "1";
-        else
-            return String.valueOf(Integer.parseInt(lastResult)+1);
+        switch(event.type()){
+            case Event.TEXT:
+            case Event.COMMENT:
+                return lastResult!=null ? lastResult+event.getResult() : event.getResult();
+            case Event.ATTRIBUTE:
+                return axis==Axis.ATTRIBUTE ? event.getResult() : lastResult;
+            case Event.PI:
+                PI pi = (PI)event;
+                return lastResult!=null ? lastResult+pi.data : pi.data;
+            default:
+                return lastResult;
+        }
     }
 }

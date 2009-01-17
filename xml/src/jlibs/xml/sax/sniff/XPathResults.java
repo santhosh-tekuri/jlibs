@@ -15,14 +15,12 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.xml.sax.sniff.events.DocumentOrder;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
 import jlibs.xml.sax.sniff.model.functions.Function;
-import jlibs.xml.sax.sniff.model.functions.SingleHitFunction;
-import jlibs.xml.sax.sniff.model.functions.ConsumableHitFunction;
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.events.DocumentOrder;
 
 import java.util.*;
 
@@ -121,15 +119,32 @@ public class XPathResults implements Debuggable{
             if(node instanceof Function){
                 Function function = (Function)node;
                 if(node.userGiven){ // functions have single result
-                    if(function instanceof SingleHitFunction){
-                        if(resultsMap.get(function)==null)
-                            addResult(function, ((SingleHitFunction)function).evaluate(event));
-                    }else if(function instanceof ConsumableHitFunction){
+                    if(function.singleHit()){
+                        if(function.consumable(event)){
+                            if(context.node!=node){
+                                if(resultsMap.get(function)==null){
+                                    addResult(function, function.evaluate(event, null));
+                                    return true;
+                                }else
+                                    return false;
+                            }else{
+                                String lastResult = null;
+                                Map<Integer, String> results = resultsMap.get(function);
+                                if(results!=null)
+                                    lastResult = results.remove(results.keySet().iterator().next());
+                                addResult(function, function.evaluate(event, lastResult));
+                                return true;
+                            }
+                        }else{
+                            if(resultsMap.get(function)==null)
+                                addResult(function, function.evaluate(event, null));
+                        }
+                    }else{
                         String lastResult = null;
                         Map<Integer, String> results = resultsMap.get(function);
                         if(results!=null)
                             lastResult = results.remove(results.keySet().iterator().next());
-                        addResult(function, ((ConsumableHitFunction)function).evaluate(event, lastResult));
+                        addResult(function, function.evaluate(event, lastResult));
                     }
                 }
                 return false;

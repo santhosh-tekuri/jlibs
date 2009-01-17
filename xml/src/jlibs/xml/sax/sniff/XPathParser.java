@@ -280,7 +280,7 @@ public class XPathParser implements XPathHandler{
     @Override
     public void number(int number) throws SAXPathException{
         if(predicateContext.size()>0)
-            current = current.addConstraint(new Position(currentAxis, number));
+            current = current.addConstraint(new Position(number));
         else
             throw new SAXPathException("unsupprted");
     }
@@ -311,6 +311,7 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void endFunction() throws SAXPathException{
+        function.axis = currentAxis;
         current = current.addConstraint(function);
         predicates.clear();
     }

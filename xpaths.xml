@@ -174,6 +174,11 @@
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>count(/descendant::node())</xpath>
+
+        <!-- string() function -->
+        <xpath>string(//book)</xpath>
+        <xpath>string(//book[2])</xpath>
+        <xpath>string(//book/@*)</xpath>
     </testcase>
 
     <testcase>
@@ -222,6 +227,7 @@
         <xpath>//processing-instruction()</xpath>
         <xpath>//processing-instruction('cheese')</xpath>
         <xpath>//processing-instruction('toast')</xpath>
+        <xpath>string(//processing-instruction('toast'))</xpath>
     </testcase>
 
     <testcase>

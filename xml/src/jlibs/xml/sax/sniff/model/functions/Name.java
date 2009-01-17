@@ -23,13 +23,18 @@ import jlibs.core.lang.NotImplementedException;
 /**
  * @author Santhosh Kumar T
  */
-public class Name extends SingleHitFunction{
+public class Name extends Function{
     public String getName(){
         return "name";
     }
-    
+
     @Override
-    public String evaluate(Event event){
+    public boolean singleHit(){
+        return true;
+    }
+
+    @Override
+    public String evaluate(Event event, String lastResult){
         switch(event.type()){
             case Event.ELEMENT:
                 return ((Element)event).name;
