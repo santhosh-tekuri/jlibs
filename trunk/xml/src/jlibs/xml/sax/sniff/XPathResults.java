@@ -18,7 +18,9 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.model.Function;
+import jlibs.xml.sax.sniff.model.functions.Function;
+import jlibs.xml.sax.sniff.model.functions.SingleHitFunction;
+import jlibs.xml.sax.sniff.model.functions.ConsumableHitFunction;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.DocumentOrder;
 
@@ -118,8 +120,18 @@ public class XPathResults implements Debuggable{
         if(node.resultInteresed()){
             if(node instanceof Function){
                 Function function = (Function)node;
-                if(node.userGiven && resultsMap.get(node)==null) // functions have single result
-                    addResult(node, function.evaluate(event));
+                if(node.userGiven){ // functions have single result
+                    if(function instanceof SingleHitFunction){
+                        if(resultsMap.get(function)==null)
+                            addResult(function, ((SingleHitFunction)function).evaluate(event));
+                    }else if(function instanceof ConsumableHitFunction){
+                        String lastResult = null;
+                        Map<Integer, String> results = resultsMap.get(function);
+                        if(results!=null)
+                            lastResult = results.remove(results.keySet().iterator().next());
+                        addResult(function, ((ConsumableHitFunction)function).evaluate(event, lastResult));
+                    }
+                }
                 return false;
             }
 

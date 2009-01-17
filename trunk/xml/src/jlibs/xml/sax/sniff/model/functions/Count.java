@@ -13,30 +13,24 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model;
+package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.events.Event;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Function extends Node{
-    public abstract String getName();
-    public abstract String evaluate(Event event);
-
-
+public class Count extends ConsumableHitFunction{
     @Override
-    public boolean matches(Event event){
-        return true;
+    public String getName(){
+        return "count()";
     }
 
     @Override
-    public boolean equivalent(Node node){
-        return node.getClass()==getClass();
-    }
-
-    @Override
-    public String toString(){
-        return getName()+"()";
+    public String evaluate(Event event, String lastResult){
+        if(lastResult==null)
+            return "1";
+        else
+            return String.valueOf(Integer.parseInt(lastResult)+1);
     }
 }

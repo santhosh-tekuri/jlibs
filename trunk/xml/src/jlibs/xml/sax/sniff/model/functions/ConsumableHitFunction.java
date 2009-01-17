@@ -13,30 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model;
+package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.events.Element;
-import jlibs.xml.sax.sniff.events.Attribute;
-import jlibs.core.lang.NotImplementedException;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Name extends Function{
-    public String getName(){
-        return "name";
-    }
-    
-    @Override
-    public String evaluate(Event event){
-        switch(event.type()){
-            case Event.ELEMENT:
-                return ((Element)event).name;
-            case Event.ATTRIBUTE:
-                return ((Attribute)event).name;
-            default:
-                throw new NotImplementedException("name() for "+ event.type());
-        }
-    }
+public abstract class ConsumableHitFunction extends Function{
+    public abstract String evaluate(Event event, String lastResult);
 }

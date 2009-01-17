@@ -17,7 +17,7 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.model.Function;
+import jlibs.xml.sax.sniff.model.functions.Function;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
