@@ -15,10 +15,10 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.events.Element;
-import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.core.lang.NotImplementedException;
+import jlibs.xml.sax.sniff.events.Attribute;
+import jlibs.xml.sax.sniff.events.Element;
+import jlibs.xml.sax.sniff.events.Event;
 
 /**
  * @author Santhosh Kumar T
@@ -43,5 +43,10 @@ public class Name extends Function{
             default:
                 throw new NotImplementedException("name() for "+ event.type());
         }
+    }
+
+    @Override
+    public String defaultResult(){
+        return "";
     }
 }

@@ -177,7 +177,8 @@ public class XPathResults implements Debuggable{
                         addResult(member, result);
                         predicateResult.removeResult(node);
                     }
-                    int consumed = hitMemberOf(member);
+                    hitMemberOf(member);
+//                    int consumed = hitMemberOf(member);
 //                    if(consumed>0)
 //                        predicateResult.removeResult();
                 }
@@ -306,8 +307,10 @@ public class XPathResults implements Debuggable{
 
         for(Node node: xpath.nodes){
             Map<Integer, String> map = resultsMap.get(node);
-            if(map!=null)
+            if(map!=null && !map.isEmpty())
                 results.putAll(map);
+            else if(node instanceof Function)
+                results.put(-1, ((Function)node).defaultResult());
         }
 
         for(Predicate predicate: xpath.predicates){

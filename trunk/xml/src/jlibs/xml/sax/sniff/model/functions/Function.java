@@ -15,19 +15,18 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
+import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.core.lang.NotImplementedException;
 
 /**
  * @author Santhosh Kumar T
  */
 public abstract class Function extends Node{
-    public int axis;
-    
     public abstract String getName();
     public abstract boolean singleHit();
     public abstract String evaluate(Event event, String lastResult);
+    public abstract String defaultResult();
     
     @Override
     public boolean matches(Event event){
