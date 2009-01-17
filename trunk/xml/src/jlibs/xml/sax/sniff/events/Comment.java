@@ -19,6 +19,10 @@ package jlibs.xml.sax.sniff.events;
  * @author Santhosh Kumar T
  */
 public class Comment extends Event{
+    public Comment(DocumentOrder documentOrder){
+        super(documentOrder);
+    }
+
     @Override
     public int type(){
         return COMMENT;

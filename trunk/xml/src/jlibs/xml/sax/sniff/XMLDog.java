@@ -41,9 +41,9 @@ public class XMLDog implements Debuggable{
     private boolean infiniteHits;
     private int totalMinHits;
     public XPath add(String xpath, int minHits) throws SAXPathException{
-        if(!xpath.startsWith("/"))
-            xpath = "/"+xpath;
-
+//        if(!xpath.startsWith("/"))
+//            xpath = "/"+xpath;
+//
         XPath compiledXPath = new XPathParser(root).parse(xpath);
         compiledXPath.minHits = minHits;
 

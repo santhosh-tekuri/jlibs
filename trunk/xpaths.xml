@@ -244,6 +244,15 @@
         <xpath>descendant::servlet</xpath>
         <xpath>descendant-or-self::*</xpath>
         <xpath>/*/descendant-or-self::*</xpath>
+
+        <!-- name() function -->
+        <xpath>name(/*)</xpath>
+        <xpath>name(/*/child::*)</xpath>
+        <xpath>name(/node())</xpath>
+        <xpath>name(/*)</xpath>
+        <xpath>name(/child::*)</xpath>
+        <xpath>name(/child::node())</xpath>
+        <xpath>name(./*)</xpath>
     </testcase>
 
     <testcase>

@@ -17,7 +17,10 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.model.Function;
 
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
@@ -36,9 +39,18 @@ public class XPath{
         this.nodes = nodes;
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     public XPath(String xpath, List<Predicate> predicates, boolean dummy){
         this.xpath = xpath;
         this.predicates = predicates;
+    }
+
+    public QName resultType(){
+        for(Node node: nodes){
+            if(node instanceof Function)
+                return XPathConstants.STRING;
+        }
+        return XPathConstants.NODESET;
     }
 
     @Override

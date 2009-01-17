@@ -26,6 +26,10 @@ public abstract class Event{
     public static final int COMMENT = 4;
     public static final int PI = 5;
 
+    protected Event(DocumentOrder documentOrder){
+        this.documentOrder = documentOrder;
+    }
+
     public abstract int type();
 
     public boolean hasChildren(){
@@ -33,16 +37,13 @@ public abstract class Event{
     }
 
     private Object resultWrapper;
-    public Object getResultWrapper(){
-        if(resultWrapper==null)
-            return null;
-
-        Object temp = resultWrapper;
-        resultWrapper = null;
-        return temp;
+    public String getResult(){
+        return resultWrapper.toString();
     }
 
+    private final DocumentOrder documentOrder;
     public void setResultWrapper(Object resultWrapper){
         this.resultWrapper = resultWrapper;
+        documentOrder.increment();
     }
 }

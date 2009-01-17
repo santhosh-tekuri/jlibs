@@ -21,6 +21,10 @@ import org.xml.sax.Attributes;
  * @author Santhosh Kumar T
  */
 public class Attribute extends Event{
+    public Attribute(DocumentOrder documentOrder){
+        super(documentOrder);
+    }
+
     @Override
     public int type(){
         return ATTRIBUTE;

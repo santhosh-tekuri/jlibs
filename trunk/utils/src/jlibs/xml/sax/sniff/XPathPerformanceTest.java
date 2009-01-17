@@ -15,27 +15,27 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.dom.DOMUtil;
-import jlibs.xml.sax.helpers.SAXHandler;
 import jlibs.xml.sax.helpers.NamespaceSupportReader;
-import jlibs.core.lang.NotImplementedException;
+import jlibs.xml.sax.helpers.SAXHandler;
 import org.w3c.dom.*;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
 import java.io.CharArrayWriter;
-import java.io.PrintStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -44,36 +44,42 @@ public class XPathPerformanceTest{
     public List<List<String>> translateJDKResults(TestCase testCase){
         List<List<String>> results = new ArrayList<List<String>>();
         int test = 0;
-        for(NodeList nodeSet: testCase.jdkResult){
+        for(Object obj: testCase.jdkResult){
             testCase.hasAttributes.add(false);
             List<String> result = new ArrayList<String>();
-            for(int i=0; i<nodeSet.getLength(); i++){
-                Node node = nodeSet.item(i);
-                if(node instanceof Attr){
-                    result.add(node.getNodeValue());
-                    testCase.hasAttributes.set(test, true);
-                }else if(node instanceof Element){
-                    StringBuilder buff = new StringBuilder();
-                    while(!(node instanceof Document)){
-                        String prefix = testCase.nsContext.getPrefix(node.getNamespaceURI());
-                        buff.insert(0, "["+DOMUtil.getPosition((Element)node)+"]");
-                        buff.insert(0, prefix.length()==0 ? node.getLocalName() : prefix+':'+node.getLocalName());
-                        buff.insert(0, '/');
-                        node = node.getParentNode();
-                    }
-                    result.add(buff.toString());
-                }else if(node instanceof Text)
-                    result.add(node.getNodeValue());
-                else if(node instanceof Comment)
-                    result.add(node.getNodeValue());
-                else if(node instanceof ProcessingInstruction){
-                    ProcessingInstruction pi = (ProcessingInstruction)node;
-                    result.add(String.format("<?%s %s?>", pi.getTarget(), pi.getData()));
-                }else if(node instanceof Document)
-                    result.add("/");
-                else
-                    throw new NotImplementedException(node.getClass().getName());
-            }
+
+            if(obj instanceof NodeList){
+                NodeList nodeSet = (NodeList)obj;
+                for(int i=0; i<nodeSet.getLength(); i++){
+                    Node node = nodeSet.item(i);
+                    if(node instanceof Attr){
+                        result.add(node.getNodeValue());
+                        testCase.hasAttributes.set(test, true);
+                    }else if(node instanceof Element){
+                        StringBuilder buff = new StringBuilder();
+                        while(!(node instanceof Document)){
+                            String prefix = testCase.nsContext.getPrefix(node.getNamespaceURI());
+                            buff.insert(0, "["+DOMUtil.getPosition((Element)node)+"]");
+                            buff.insert(0, prefix.length()==0 ? node.getLocalName() : prefix+':'+node.getLocalName());
+                            buff.insert(0, '/');
+                            node = node.getParentNode();
+                        }
+                        result.add(buff.toString());
+                    }else if(node instanceof Text)
+                        result.add(node.getNodeValue());
+                    else if(node instanceof Comment)
+                        result.add(node.getNodeValue());
+                    else if(node instanceof ProcessingInstruction){
+                        ProcessingInstruction pi = (ProcessingInstruction)node;
+                        result.add(String.format("<?%s %s?>", pi.getTarget(), pi.getData()));
+                    }else if(node instanceof Document)
+                        result.add("/");
+                    else
+                        throw new NotImplementedException(node.getClass().getName());
+                }
+            }else if(obj instanceof String)
+                result.add((String)obj);
+            
             results.add(result);
             test++;
         }
@@ -193,6 +199,7 @@ public class XPathPerformanceTest{
 class TestCase{
     String file;
     List<String> xpaths = new ArrayList<String>();
+    List<QName> resultTypes = new ArrayList<QName>();
     List<Boolean> hasAttributes = new ArrayList<Boolean>();
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     Document doc;
@@ -201,16 +208,16 @@ class TestCase{
         doc = DOMUtil.newDocumentBuilder(true, false).parse(new InputSource(file));
     }
 
-    List<NodeList> jdkResult;
-    public List<NodeList> usingJDK() throws Exception{
+    List<Object> jdkResult;
+    public List<Object> usingJDK() throws Exception{
         if(doc==null)
             createDocument();
 
-        List<NodeList> results = new ArrayList<NodeList>(xpaths.size());
-        for(String xpath: xpaths){
+        List<Object> results = new ArrayList<Object>(xpaths.size());
+        for(int i=0; i<xpaths.size(); i++){
             XPath xpathObj = XPathFactory.newInstance().newXPath();
             xpathObj.setNamespaceContext(nsContext);
-            results.add((NodeList)xpathObj.evaluate(xpath, doc, XPathConstants.NODESET));
+            results.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
         }
         return results;
     }
@@ -220,8 +227,10 @@ class TestCase{
         InputSource source = new InputSource(file);
         XMLDog dog = new XMLDog(nsContext);
         jlibs.xml.sax.sniff.XPath xpathObjs[] = new jlibs.xml.sax.sniff.XPath[xpaths.size()];
-        for(int i=0; i<xpaths.size(); i++)
+        for(int i=0; i<xpaths.size(); i++){
             xpathObjs[i] = dog.add(xpaths.get(i));
+            resultTypes.add(xpathObjs[i].resultType());
+        }
 
         XPathResults dogResults = dog.sniff(source);
 

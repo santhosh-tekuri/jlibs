@@ -39,7 +39,8 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     public Sniffer(Root root){
         this.root = root;
         elementStack = new ElementStack(root);
-        element = new Element(elementStack);
+        element = new Element(documentOrder, elementStack);
+
         if(debug)
             root.print();
     }
@@ -50,10 +51,13 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     private ElementStack elementStack;
 
     // events
+    private DocumentOrder documentOrder = new DocumentOrder();
+    private Document document = new Document(documentOrder);
     private Element element;
-    private Text text = new Text(contents);
-    private Comment comment = new Comment();
-    private PI pi = new PI();
+    private Attribute attribute = new Attribute(documentOrder);
+    private Text text = new Text(documentOrder, contents);
+    private Comment comment = new Comment(documentOrder);
+    private PI pi = new PI(documentOrder);
 
     private void matchText(){
         if(!contents.isEmpty()){
@@ -70,8 +74,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println("-----------------------------------------------------------------");
 
+        documentOrder.reset();
         contents.reset();
-        contextManager.reset(root);
+        contextManager.reset(document, root);
         positionStack.reset();
         elementStack.reset();
     }
@@ -106,7 +111,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         element.setData(uri, localName);
         contextManager.match(element);
 
-        contextManager.matchAttributes(attrs);
+        contextManager.matchAttributes(attribute, attrs);
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -136,7 +141,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
         try{
-            contextManager = new ContextManager(minHits);
+            contextManager = new ContextManager(documentOrder, minHits);
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);

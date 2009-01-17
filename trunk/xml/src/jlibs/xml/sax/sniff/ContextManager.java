@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Document;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.DocumentOrder;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
@@ -33,12 +34,11 @@ public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
     protected XPathResults results;
 
-    public ContextManager(int minHits){
-        results = new XPathResults(minHits);
+    public ContextManager(DocumentOrder documentOrder, int minHits){
+        results = new XPathResults(documentOrder, minHits);
     }
     
-    private Document document = new Document();
-    public void reset(Root root){
+    public void reset(Document document, Root root){
         List<Context> list = new ArrayList<Context>();
         list.add(new Context(root));
         for(Node node: root.constraints()){
@@ -65,8 +65,7 @@ public class ContextManager implements Debuggable{
             contexts.update();
     }
 
-    private Attribute attr = new Attribute();
-    public void matchAttributes(Attributes attrs){
+    public void matchAttributes(Attribute attr, Attributes attrs){
         if(contexts.hasAttributeChild){
             for(int i=0; i<attrs.getLength(); i++){
                 attr.setData(attrs, i);
@@ -172,12 +171,12 @@ public class ContextManager implements Debuggable{
         }
 
         private void matchConstraints(Node child, Event event){
-            boolean elementEvent = event.type()==Event.ELEMENT;
+            boolean changeContext = event.hasChildren();
 
             for(Node constraint: child.constraints()){
                 if(constraint.matches(event)){
                     if(results.hit(this, event, constraint)){
-                        if(elementEvent)
+                        if(changeContext)
                             contexts.add(childContext(constraint));
                         matchConstraints(constraint, event);
                     }
@@ -187,7 +186,7 @@ public class ContextManager implements Debuggable{
 
         public Context endElement(){
             if(depth==0){
-                results.clearHitCounts(this, node);
+                results.clearHitCounts(this);
                 results.clearPredicateCache(depth, node);
                 return parentContext();
             }else{
@@ -195,7 +194,7 @@ public class ContextManager implements Debuggable{
 //                    results.clearHitCounts(depth, node);
                     depth--;
                 }else{
-                    results.clearHitCounts(this, node);
+                    results.clearHitCounts(this);
                     depth++;
                 }
 
