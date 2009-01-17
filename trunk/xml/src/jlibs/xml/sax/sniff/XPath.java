@@ -21,9 +21,9 @@ import jlibs.xml.sax.sniff.model.functions.Function;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
-import java.util.List;
-import java.util.Collections;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -48,7 +48,7 @@ public class XPath{
     public QName resultType(){
         for(Node node: nodes){
             if(node instanceof Function)
-                return XPathConstants.STRING;
+                return ((Function)node).returnType();
         }
         return XPathConstants.NODESET;
     }

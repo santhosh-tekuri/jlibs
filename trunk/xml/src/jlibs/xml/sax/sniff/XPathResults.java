@@ -31,7 +31,7 @@ public class XPathResults implements Debuggable{
     static final RuntimeException STOP_PARSING = new RuntimeException();
     
     int minHits = -1;
-    private Map<Node, Map<Integer, String>> resultsMap = new HashMap<Node, Map<Integer, String>>();
+    private Map<Node, TreeMap<Integer, String>> resultsMap = new HashMap<Node, TreeMap<Integer, String>>();
     private Map<Predicate, Map<Integer, String>> predicateResultsMap = new HashMap<Predicate, Map<Integer, String>>();
 
     private DocumentOrder documentOrder;
@@ -128,11 +128,7 @@ public class XPathResults implements Debuggable{
                                 }else
                                     return false;
                             }else{
-                                String lastResult = null;
-                                Map<Integer, String> results = resultsMap.get(function);
-                                if(results!=null)
-                                    lastResult = results.remove(results.keySet().iterator().next());
-                                addResult(function, function.evaluate(event, lastResult));
+                                evaluateWithLastResult(function, event);
                                 return true;
                             }
                         }else{
@@ -140,11 +136,16 @@ public class XPathResults implements Debuggable{
                                 addResult(function, function.evaluate(event, null));
                         }
                     }else{
-                        String lastResult = null;
-                        Map<Integer, String> results = resultsMap.get(function);
-                        if(results!=null)
-                            lastResult = results.remove(results.keySet().iterator().next());
-                        addResult(function, function.evaluate(event, lastResult));
+                        if(function.consumable(event)){
+                            if(context.node!=node){
+                                joinResults(function);
+                                addResult(function, function.evaluate(event, null));
+                            }else
+                                evaluateWithLastResult(function, event);
+                            
+                            return true;
+                        }else
+                            evaluateWithLastResult(function, event);
                     }
                 }
                 return false;
@@ -279,9 +280,9 @@ public class XPathResults implements Debuggable{
     /*-------------------------------------------------[ Add Result ]---------------------------------------------------*/
 
     private void addResult(Node node, String result){
-        Map<Integer, String> map = resultsMap.get(node);
+        TreeMap<Integer, String> map = resultsMap.get(node);
         if(map==null)
-            resultsMap.put(node, map=new HashMap<Integer, String>());
+            resultsMap.put(node, map=new TreeMap<Integer, String>());
         map.put(documentOrder.get(), result);
         if(debug)
             System.out.format("Node-Hit %2d: %s ---> %s %n", map.size(), node, result);
@@ -300,16 +301,41 @@ public class XPathResults implements Debuggable{
         hit();
     }
 
+    /*-------------------------------------------------[ Functions ]---------------------------------------------------*/
+    
+    private void evaluateWithLastResult(Function function, Event event){
+        String lastResult = null;
+        TreeMap<Integer, String> results = resultsMap.get(function);
+        if(results!=null)
+            lastResult = results.remove(results.lastKey());
+        addResult(function, function.evaluate(event, lastResult));
+    }
+
+    private void joinResults(Function function){
+        joinResults(function, resultsMap.get(function));
+    }
+
+    private void joinResults(Function function, TreeMap<Integer, String> results){
+        if(results!=null && results.size()==2){
+            String result1 = results.remove(results.firstKey());
+            String result2 = results.lastEntry().getValue();
+            String result = function.join(result1, result2);
+            results.put(results.lastKey(), result);
+        }
+    }
+
     /*-------------------------------------------------[ Get Result ]---------------------------------------------------*/
 
     public List<String> getResult(XPath xpath){
         Map<Integer, String> results = new TreeMap<Integer, String>();
 
         for(Node node: xpath.nodes){
-            Map<Integer, String> map = resultsMap.get(node);
-            if(map!=null && !map.isEmpty())
+            TreeMap<Integer, String> map = resultsMap.get(node);
+            if(map!=null && !map.isEmpty()){
+                if(node instanceof Function)
+                    joinResults((Function) node, map);
                 results.putAll(map);
-            else if(node instanceof Function)
+            }else if(node instanceof Function)
                 results.put(-1, ((Function)node).defaultResult());
         }
 

@@ -79,6 +79,10 @@ public class XPathPerformanceTest{
                 }
             }else if(obj instanceof String)
                 result.add((String)obj);
+            else if(obj instanceof Double)
+                result.add(obj.toString());
+            else
+                throw new NotImplementedException(obj.getClass().getName());
             
             results.add(result);
             test++;
