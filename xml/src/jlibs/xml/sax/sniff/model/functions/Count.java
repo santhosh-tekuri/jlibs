@@ -38,4 +38,9 @@ public class Count extends Function{
         else
             return String.valueOf(Integer.parseInt(lastResult)+1);
     }
+
+    @Override
+    public String defaultResult(){
+        return "0";
+    }
 }

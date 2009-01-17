@@ -17,11 +17,10 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Document;
-import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.DocumentOrder;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
-import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.xml.sax.Attributes;
 
 import java.util.ArrayList;
@@ -41,16 +40,14 @@ public class ContextManager implements Debuggable{
     public void reset(Document document, Root root){
         List<Context> list = new ArrayList<Context>();
         list.add(new Context(root));
-        for(Node node: root.constraints()){
-            if(node instanceof Descendant)
-                list.add(new Context(node));
-        }
+        for(Node node: root.constraints())
+            list.add(new Context(node));
 
         contexts.reset(list);
 
         document.setData();
         for(Context context: list)
-            results.hit(context, document, root);
+            results.hit(context, document, context.node);
 
         if(debug){
             contexts.printCurrent("Contexts");

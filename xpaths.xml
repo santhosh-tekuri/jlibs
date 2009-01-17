@@ -174,11 +174,15 @@
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>count(/descendant::node())</xpath>
+        <xpath>count(/nonexistingelement)</xpath>
 
         <!-- string() function -->
         <xpath>string(//book)</xpath>
         <xpath>string(//book[2])</xpath>
         <xpath>string(//book/@*)</xpath>
+        <xpath>string(/)</xpath>
+        <xpath>string(//book/text())</xpath>
+        <xpath>string(/nonexistingelement)</xpath>
     </testcase>
 
     <testcase>
@@ -270,6 +274,7 @@
         <xpath>name(/child::*)</xpath>
         <xpath>name(/child::node())</xpath>
         <xpath>name(./*)</xpath>
+        <xpath>name(/nonexistingelement)</xpath>
 
         <!-- count() function -->
         <xpath>count(/*/servlet)</xpath>

@@ -139,8 +139,6 @@ public class XPathParser implements XPathHandler{
     @Override
     public void endCommentNodeStep() throws SAXPathException{}
 
-    private int currentAxis;
-
     @Override
     public void startAllNodeStep(int axis) throws SAXPathException{
         if(axis==Axis.SELF)
@@ -152,8 +150,6 @@ public class XPathParser implements XPathHandler{
             current = current.addConstraint(axisNode);
         else
             current = current.addChild(axisNode);
-
-        currentAxis = axis;
     }
 
     @Override
@@ -311,7 +307,6 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void endFunction() throws SAXPathException{
-        function.axis = currentAxis;
         current = current.addConstraint(function);
         predicates.clear();
     }

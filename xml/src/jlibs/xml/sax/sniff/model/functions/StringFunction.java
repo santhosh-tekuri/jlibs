@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
-import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
@@ -41,16 +40,27 @@ public class StringFunction extends Function{
     @Override
     public String evaluate(Event event, String lastResult){
         switch(event.type()){
+            case Event.DOCUMENT:
+            case Event.ELEMENT:
+                return lastResult==null ? "" : lastResult;
+
             case Event.TEXT:
-            case Event.COMMENT:
                 return lastResult!=null ? lastResult+event.getResult() : event.getResult();
+
+            case Event.COMMENT:
             case Event.ATTRIBUTE:
-                return axis==Axis.ATTRIBUTE ? event.getResult() : lastResult;
+                return lastResult==null ? event.getResult() : lastResult;
+            
             case Event.PI:
-                PI pi = (PI)event;
-                return lastResult!=null ? lastResult+pi.data : pi.data;
+                return lastResult==null ? ((PI)event).data : lastResult;
+            
             default:
                 return lastResult;
         }
+    }
+
+    @Override
+    public String defaultResult(){
+        return "";
     }
 }
