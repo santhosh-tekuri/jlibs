@@ -23,8 +23,12 @@ import jlibs.core.lang.NotImplementedException;
  * @author Santhosh Kumar T
  */
 public abstract class Function extends Node{
+    public int axis;
+    
     public abstract String getName();
-
+    public abstract boolean singleHit();
+    public abstract String evaluate(Event event, String lastResult);
+    
     @Override
     public boolean matches(Event event){
         return true;
@@ -45,6 +49,8 @@ public abstract class Function extends Node{
             return new Name();
         else if("count".equals(name))
             return new Count();
+        else if("string".equals(name))
+            return new StringFunction();
         else
             throw new NotImplementedException("function "+name+"() is not supported");
     }

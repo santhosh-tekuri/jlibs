@@ -9,7 +9,7 @@
 <?odbc-to-xml table="test" ?>
     
     <pub>
-        <book id="1" FirstBook="true">
+        <book FirstBook="true" id="1">
             <price>12.00</price>
             <name>NameA1</name>
             <author>AuthorA1</author>
