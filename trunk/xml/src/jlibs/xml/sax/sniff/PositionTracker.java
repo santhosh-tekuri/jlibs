@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
-import org.jaxen.saxpath.Axis;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,11 +52,9 @@ public class PositionTracker{
         for(Node constraint: node.constraints()){
             if(constraint instanceof Position){
                 Position position = (Position)constraint;
-                if(position.axis==Axis.CHILD){
-                    Map<ContextIdentity, Integer> map = childHitCount.get(position);
-                    if(map!=null)
-                        map.remove(new ContextIdentity(context));
-                }
+                Map<ContextIdentity, Integer> map = childHitCount.get(position);
+                if(map!=null)
+                    map.remove(new ContextIdentity(context));
             }
             clearHitCounts(context, constraint);
         }

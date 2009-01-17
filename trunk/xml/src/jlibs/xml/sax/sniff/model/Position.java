@@ -21,11 +21,9 @@ import jlibs.xml.sax.sniff.events.Event;
  * @author Santhosh Kumar T
  */
 public class Position extends Node{
-    public int axis;
     public int pos;
 
-    public Position(int axis, int pos){
-        this.axis = axis;
+    public Position(int pos){
         this.pos = pos;
     }
 
@@ -33,7 +31,7 @@ public class Position extends Node{
     public boolean equivalent(Node node){
         if(node.getClass()==getClass()){
             Position that = (Position)node;
-            return this.axis==that.axis && this.pos==that.pos;
+            return this.pos==that.pos;
         }else
             return false;
     }
