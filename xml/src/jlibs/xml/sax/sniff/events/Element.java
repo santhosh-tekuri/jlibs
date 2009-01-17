@@ -23,7 +23,8 @@ import jlibs.xml.sax.sniff.ElementStack;
 public class Element extends Event{
     private ElementStack elemStack;
 
-    public Element(ElementStack elemStack){
+    public Element(DocumentOrder documentOrder, ElementStack elemStack){
+        super(documentOrder);
         this.elemStack = elemStack;
     }
 

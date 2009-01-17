@@ -314,6 +314,6 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void endFunction() throws SAXPathException{
-        current.addConstraint(function);
+        current = current.addConstraint(function);
     }
 }

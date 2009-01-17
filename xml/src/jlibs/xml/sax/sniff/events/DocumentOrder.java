@@ -15,25 +15,21 @@
 
 package jlibs.xml.sax.sniff.events;
 
-import jlibs.xml.sax.sniff.StringContent;
-
 /**
  * @author Santhosh Kumar T
  */
-public class Text extends Event{
-    private StringContent contents;
+public class DocumentOrder{
+    private int order;
 
-    public Text(DocumentOrder documentOrder, StringContent contents){
-        super(documentOrder);
-        this.contents = contents;
+    public int get(){
+        return order;
     }
 
-    @Override
-    public int type(){
-        return TEXT;
+    public void increment(){
+        order++;
     }
 
-    public void setData(){
-        setResultWrapper(contents);
+    public void reset(){
+        order = 0;
     }
 }

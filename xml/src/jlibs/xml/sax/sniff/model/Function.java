@@ -15,15 +15,28 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.events.Event;
+
 /**
  * @author Santhosh Kumar T
  */
 public abstract class Function extends Node{
     public abstract String getName();
-    public abstract String hit();
+    public abstract String evaluate(Event event);
+
+
+    @Override
+    public boolean matches(Event event){
+        return true;
+    }
 
     @Override
     public boolean equivalent(Node node){
         return node.getClass()==getClass();
+    }
+
+    @Override
+    public String toString(){
+        return getName()+"()";
     }
 }

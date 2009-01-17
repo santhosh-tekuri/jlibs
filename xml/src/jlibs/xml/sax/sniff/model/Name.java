@@ -15,6 +15,11 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.Element;
+import jlibs.xml.sax.sniff.events.Attribute;
+import jlibs.core.lang.NotImplementedException;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -24,7 +29,14 @@ public class Name extends Function{
     }
     
     @Override
-    public String hit(){
-        return null;
+    public String evaluate(Event event){
+        switch(event.type()){
+            case Event.ELEMENT:
+                return ((Element)event).name;
+            case Event.ATTRIBUTE:
+                return ((Attribute)event).name;
+            default:
+                throw new NotImplementedException("name() for "+ event.type());
+        }
     }
 }

@@ -19,6 +19,10 @@ package jlibs.xml.sax.sniff.events;
  * @author Santhosh Kumar T
  */
 public class PI extends Event{
+    public PI(DocumentOrder documentOrder){
+        super(documentOrder);
+    }
+
     @Override
     public int type(){
         return PI;

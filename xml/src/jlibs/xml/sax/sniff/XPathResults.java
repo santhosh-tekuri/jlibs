@@ -18,7 +18,9 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.model.Function;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.DocumentOrder;
 
 import java.util.*;
 
@@ -29,11 +31,12 @@ public class XPathResults implements Debuggable{
     static final RuntimeException STOP_PARSING = new RuntimeException();
     
     int minHits = -1;
-    private List<String> results = new ArrayList<String>();
-    private Map<Node, List<Integer>> resultsMap = new HashMap<Node, List<Integer>>();
-    private Map<Predicate, List<Integer>> predicateResultsMap = new HashMap<Predicate, List<Integer>>();
+    private Map<Node, Map<Integer, String>> resultsMap = new HashMap<Node, Map<Integer, String>>();
+    private Map<Predicate, Map<Integer, String>> predicateResultsMap = new HashMap<Predicate, Map<Integer, String>>();
 
-    public XPathResults(int minHits){
+    private DocumentOrder documentOrder;
+    public XPathResults(DocumentOrder documentOrder, int minHits){
+        this.documentOrder = documentOrder;
         this.minHits = minHits;
     }
 
@@ -43,62 +46,61 @@ public class XPathResults implements Debuggable{
         public List<Node> nodes = new ArrayList<Node>();
         public List<Predicate> predicates = new ArrayList<Predicate>();
 
-        public Map<Predicate, ArrayDeque<Integer>> predicateResultMap = new HashMap<Predicate, ArrayDeque<Integer>>();
-        public ArrayDeque<Integer> resultStack = new ArrayDeque<Integer>();
+        public Map<Predicate, TreeMap<Integer, String>> predicateResultMap = new HashMap<Predicate, TreeMap<Integer, String>>();
+        public TreeMap<Integer, String> resultStack = new TreeMap<Integer, String>();
 
+        private Predicate predicate;
         public PredicateResult(Predicate predicate){
+            this.predicate = predicate;
             nodes.addAll(predicate.nodes);
             predicates.addAll(predicate.predicates);
 
             for(Predicate p: predicate.memberOf)
-                predicateResultMap.put(p, new ArrayDeque<Integer>());
+                predicateResultMap.put(p, new TreeMap<Integer, String>());
         }
 
-        public void addResult(){
-            resultStack.push(results.size()-1);
-            for(ArrayDeque<Integer> stack: predicateResultMap.values())
-                stack.push(results.size()-1);
+        public void addResult(String result){
+            resultStack.put(documentOrder.get(), result);
+            for(TreeMap<Integer, String> stack: predicateResultMap.values())
+                stack.put(documentOrder.get(), result);
+            
+            if(Sniffer.debug)
+                System.out.format("Cached Predicate Result %2d: %s ---> %s %n", resultStack.size(), predicate, result);
         }
 
         public void removeResult(Node node){
-            resultStack.pop();
+            resultStack.remove(resultStack.lastKey());
         }
         
         public void removeResult(Predicate p){
-            predicateResultMap.get(p).pop();
+            TreeMap<Integer, String> map = predicateResultMap.get(p);
+            map.remove(map.lastKey());
         }
 
-        public Integer hit(Node node){
+        public Map.Entry<Integer, String> hit(Node node){
             nodes.remove(node);
             return getResult(node);
         }
 
-        public Integer hit(Predicate predicate){
+        public Map.Entry<Integer, String> hit(Predicate predicate){
             predicates.remove(predicate);
             return getResult(predicate);
         }
 
-        public Integer getResult(Node node){
-            return canGiveResult() ? resultStack.peek() : null;
+        public Map.Entry<Integer, String> getResult(Node node){
+            return canGiveResult() ? resultStack.lastEntry() : null;
         }
 
-        public Integer getResult(Predicate p){
+        public Map.Entry<Integer, String> getResult(Predicate p){
             if(canGiveResult()){
-                ArrayDeque<Integer> stack = predicateResultMap.get(p);
-                return stack==null ? null : stack.peek();
+                TreeMap<Integer, String> stack = predicateResultMap.get(p);
+                return stack==null ? null : stack.lastEntry();
             }else
                 return null;
         }
 
         private boolean canGiveResult(){
             return nodes.size()==0 && predicates.size()==0 && !resultStack.isEmpty();
-        }
-
-        private Integer getResult(){
-            if(canGiveResult())
-                return resultStack.peek();
-            else
-                return null;
         }
     }
 
@@ -114,20 +116,21 @@ public class XPathResults implements Debuggable{
         }
 
         if(node.resultInteresed()){
-            Object resultWrapper = event.getResultWrapper();
-            if(resultWrapper!=null)
-                results.add(resultWrapper.toString());
+            if(node instanceof Function){
+                Function function = (Function)node;
+                if(node.userGiven && resultsMap.get(node)==null) // functions have single result
+                    addResult(node, function.evaluate(event));
+                return false;
+            }
 
             if(node.userGiven)
-                addResult(node, results.size()-1);
+                addResult(node, event.getResult());
 
             for(Predicate predicate: node.predicates()){
                 PredicateResult predicateResult = cachedMap.get(predicate);
                 if(predicateResult==null)
                     cachedMap.put(predicate, predicateResult=new PredicateResult(predicate));
-                predicateResult.addResult();
-                if(Sniffer.debug)
-                    System.out.format("Cached Predicate Result %2d: %s ---> %s %n", results.size(), node, resultWrapper);
+                predicateResult.addResult(event.getResult());
 
                 checkMembers(predicate);
 
@@ -141,7 +144,7 @@ public class XPathResults implements Debuggable{
             
             for(Predicate member: node.memberOf()){
                 PredicateResult predicateResult = cachedMap.get(member);
-                Integer result = predicateResult.hit(node);
+                Map.Entry<Integer, String> result = predicateResult.hit(node);
                 if(result!=null){
                     if(member.userGiven){
                         addResult(member, result);
@@ -158,7 +161,7 @@ public class XPathResults implements Debuggable{
                     return true;
                 PredicateResult predicateResult = cachedMap.get(predicate);
                 if(predicateResult!=null){
-                    Integer result = predicateResult.getResult(node);
+                    Map.Entry<Integer, String> result = predicateResult.getResult(node);
                     if(result!=null){
                         if(predicate.userGiven){
                             addResult(predicate, result);
@@ -178,7 +181,7 @@ public class XPathResults implements Debuggable{
             PredicateResult predicateResult = cachedMap.get(member);
             if(predicateResult!=null){
                 consumed++;
-                Integer result = predicateResult.getResult(predicate);
+                Map.Entry<Integer, String> result = predicateResult.getResult(predicate);
                 if(result!=null){
                     if(predicate.userGiven)
                         cachedMap.get(predicate).hit(member);
@@ -195,9 +198,9 @@ public class XPathResults implements Debuggable{
             PredicateResult predicateResult = cachedMap.get(member);
             if(predicateResult!=null){
                 consumed++;
-                Integer result = predicateResult.hit(predicate);
+                Map.Entry<Integer, String> result = predicateResult.hit(predicate);
                 if(member.userGiven){
-                    Integer userResult = predicateResult.getResult((Node)null);
+                    Map.Entry<Integer, String> userResult = predicateResult.getResult((Node)null);
                     if(userResult!=null){
                         addResult(member, userResult);
                         predicateResult.removeResult((Node)null);
@@ -219,7 +222,7 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    void clearHitCounts(ContextManager.Context context, Node node){
+    void clearHitCounts(ContextManager.Context context){
         positionTracker.contextEnded(context);
     }
 
@@ -247,24 +250,24 @@ public class XPathResults implements Debuggable{
 
     /*-------------------------------------------------[ Add Result ]---------------------------------------------------*/
 
-    private void addResult(Node node, Integer result){
-        List<Integer> list = resultsMap.get(node);
-        if(list==null)
-            resultsMap.put(node, list=new ArrayList<Integer>());
-        list.add(result);
+    private void addResult(Node node, String result){
+        Map<Integer, String> map = resultsMap.get(node);
+        if(map==null)
+            resultsMap.put(node, map=new HashMap<Integer, String>());
+        map.put(documentOrder.get(), result);
         if(debug)
-            System.out.format("Node-Hit %2d: %s ---> %s %n", results.size(), node, results.get(result));
+            System.out.format("Node-Hit %2d: %s ---> %s %n", map.size(), node, result);
 
         hit();
     }
 
-    private void addResult(Predicate predicate, Integer result){
-        List<Integer> list = predicateResultsMap.get(predicate);
-        if(list==null)
-            predicateResultsMap.put(predicate, list=new ArrayList<Integer>());
-        list.add(result);
+    private void addResult(Predicate predicate, Map.Entry<Integer, String> result){
+        Map<Integer, String> map = predicateResultsMap.get(predicate);
+        if(map==null)
+            predicateResultsMap.put(predicate, map=new HashMap<Integer, String>());
+        map.put(result.getKey(), result.getValue());
         if(debug)
-            System.out.format("Predicate-Hit %2d: %s ---> %s %n", results.size(), predicate, results.get(result));
+            System.out.format("Predicate-Hit %2d: %s ---> %s %n", map.size(), predicate, result);
 
         hit();
     }
@@ -272,23 +275,20 @@ public class XPathResults implements Debuggable{
     /*-------------------------------------------------[ Get Result ]---------------------------------------------------*/
 
     public List<String> getResult(XPath xpath){
-        TreeSet<Integer> indexes = new TreeSet<Integer>();
+        Map<Integer, String> results = new TreeMap<Integer, String>();
+
         for(Node node: xpath.nodes){
-            List<Integer> list = resultsMap.get(node);
-            if(list!=null)
-                indexes.addAll(list);
+            Map<Integer, String> map = resultsMap.get(node);
+            if(map!=null)
+                results.putAll(map);
         }
 
         for(Predicate predicate: xpath.predicates){
-            List<Integer> list = predicateResultsMap.get(predicate);
-            if(list!=null)
-                indexes.addAll(list);
+            Map<Integer, String> map = predicateResultsMap.get(predicate);
+            if(map!=null)
+                results.putAll(map);
         }
 
-        List<String> result = new ArrayList<String>();
-        for(int i: indexes)
-            result.add(results.get(i));
-        
-        return result;
+        return new ArrayList<String>(results.values());
     }
 }
