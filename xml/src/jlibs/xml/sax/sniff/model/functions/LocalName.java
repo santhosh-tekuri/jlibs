@@ -23,9 +23,9 @@ import jlibs.xml.sax.sniff.events.Event;
 /**
  * @author Santhosh Kumar T
  */
-public class Name extends Function{
+public class LocalName extends Function{
     public String getName(){
-        return "name";
+        return "local-name";
     }
 
     @Override
@@ -37,11 +37,11 @@ public class Name extends Function{
     public String evaluate(Event event, String lastResult){
         switch(event.type()){
             case Event.ELEMENT:
-                return ((Element)event).qname;
+                return ((Element)event).name;
             case Event.ATTRIBUTE:
-                return ((Attribute)event).qname;
+                return ((Attribute)event).name;
             default:
-                throw new NotImplementedException("name() for "+ event.type());
+                throw new NotImplementedException("local-name() for "+ event.type());
         }
     }
 

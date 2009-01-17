@@ -31,6 +31,7 @@
         <xpath>xs:schema//xs:complexType/@name</xpath>
         <xpath>xs:schema/xs:any/@namespace</xpath>
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
+        <xpath>name(/*/*/*)</xpath>
     </testcase>
 
     <testcase>
@@ -183,6 +184,16 @@
         <xpath>string(/)</xpath>
         <xpath>string(//book/text())</xpath>
         <xpath>string(/nonexistingelement)</xpath>
+
+        <!-- sum() function -->
+        <xpath>sum(/root/pub/book/price)</xpath>
+        <xpath>sum(/root[ pub/book/author ]/pub/book/price)</xpath>
+        <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book/price)</xpath>
+        <xpath>sum(/root/pub/book[ author ]/price)</xpath>
+        <xpath>sum(/root/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
+        <xpath>sum(//Price)</xpath>
     </testcase>
 
     <testcase>
@@ -287,6 +298,8 @@
         <xpath>/*/fibonacci[2]</xpath>
         <xpath>/*/fibonacci</xpath>
         <xpath>count(/*/fibonacci)</xpath>        
+        <xpath>sum(//fibonacci)</xpath>
+        <xpath>sum(//fibonacci/@index)</xpath>
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
@@ -379,6 +392,13 @@
 
         <xpath>count(descendant::ACT)</xpath>
         <xpath>count(/PLAY/ACT/SCENE[1])</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/sum.xml</file>
+
+        <xpath>sum(//one)</xpath>
+        <xpath>sum(//two)</xpath>
     </testcase>
 
 </xpaths>

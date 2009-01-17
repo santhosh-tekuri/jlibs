@@ -19,6 +19,9 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -26,6 +29,11 @@ public abstract class Function extends Node{
     public abstract String getName();
     public abstract boolean singleHit();
     public abstract String evaluate(Event event, String lastResult);
+
+    public String join(String result1, String result2){
+        throw new NotImplementedException(getClass().getName());
+    }
+    
     public abstract String defaultResult();
     
     @Override
@@ -38,6 +46,10 @@ public abstract class Function extends Node{
         return node.getClass()==getClass();
     }
 
+    public QName returnType(){
+        return XPathConstants.STRING;
+    }
+    
     @Override
     public String toString(){
         return getName()+"()";
@@ -46,10 +58,16 @@ public abstract class Function extends Node{
     public static Function newInstance(String name){
         if("name".equals(name))
             return new Name();
+        else if("local-name".equals(name))
+            return new LocalName();
+        else if("namespace-uri".equals(name))
+            return new NamespaceURI();
         else if("count".equals(name))
             return new Count();
         else if("string".equals(name))
             return new StringFunction();
+        else if("sum".equals(name))
+            return new Sum();
         else
             throw new NotImplementedException("function "+name+"() is not supported");
     }

@@ -40,10 +40,12 @@ public class Element extends Event{
 
     public String uri;
     public String name;
+    public String qname;
 
-    public void setData(String uri, String name){
+    public void setData(String uri, String name, String qname){
         this.uri = uri;
         this.name = name;
+        this.qname = qname;
         setResultWrapper(elemStack);
     }
 }

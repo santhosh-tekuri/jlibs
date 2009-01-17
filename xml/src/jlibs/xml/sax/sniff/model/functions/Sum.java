@@ -13,33 +13,39 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.events;
+package jlibs.xml.sax.sniff.model.functions;
 
-import org.xml.sax.Attributes;
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Attribute extends Event{
-    public Attribute(DocumentOrder documentOrder){
-        super(documentOrder);
+public class Sum extends StringFunction{
+    @Override
+    public String getName(){
+        return "sum";
     }
 
     @Override
-    public int type(){
-        return ATTRIBUTE;
+    public boolean singleHit(){
+        return false;
     }
 
-    public String uri;
-    public String name;
-    public String qname;
-    public String value;
+    public String join(String result1, String result2){
+        try{
+            return String.valueOf(Double.parseDouble(result1)+Double.parseDouble(result2));
+        }catch(NumberFormatException ex){
+            return "NaN";
+        }
+    }
 
-    public void setData(Attributes attrs, int index){
-        uri = attrs.getURI(index);
-        name = attrs.getLocalName(index);
-        qname = attrs.getQName(index);
-        value = attrs.getValue(index);
-        setResultWrapper(value);
+    public QName returnType(){
+        return XPathConstants.NUMBER;
+    }
+
+    @Override
+    public String defaultResult(){
+        return "0.0";
     }
 }

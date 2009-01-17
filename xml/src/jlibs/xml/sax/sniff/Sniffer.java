@@ -18,8 +18,8 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.events.*;
+import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -108,7 +108,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         matchText();
 
-        element.setData(uri, localName);
+        element.setData(uri, localName, qName);
         contextManager.match(element);
 
         contextManager.matchAttributes(attribute, attrs);

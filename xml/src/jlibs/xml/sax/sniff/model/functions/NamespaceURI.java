@@ -23,9 +23,9 @@ import jlibs.xml.sax.sniff.events.Event;
 /**
  * @author Santhosh Kumar T
  */
-public class Name extends Function{
+public class NamespaceURI extends Function{
     public String getName(){
-        return "name";
+        return "namespace-uri";
     }
 
     @Override
@@ -37,11 +37,11 @@ public class Name extends Function{
     public String evaluate(Event event, String lastResult){
         switch(event.type()){
             case Event.ELEMENT:
-                return ((Element)event).qname;
+                return ((Element)event).uri;
             case Event.ATTRIBUTE:
-                return ((Attribute)event).qname;
+                return ((Attribute)event).uri;
             default:
-                throw new NotImplementedException("name() for "+ event.type());
+                throw new NotImplementedException("namespace-uri() for "+ event.type());
         }
     }
 
