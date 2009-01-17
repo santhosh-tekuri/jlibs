@@ -127,6 +127,7 @@
         <xpath>/descendant::node()/text()</xpath>
         <xpath>/descendant-or-self::node()/text()</xpath>
         <xpath>/root/descendant-or-self::*/descendant-or-self::*</xpath>
+        <xpath>count(/root/descendant-or-self::node())</xpath>        
 
         <!-- namespace prefix -->
         <xpath>/root/XMLFragment2/env:Envelope</xpath>
@@ -163,6 +164,16 @@
 
         <!-- closure in predicate -->
         <xpath>//pub[.//book//author]</xpath>
+
+        <!-- count() used at the top level -->
+        <xpath>count(/root/pub/book/price)</xpath>
+        <xpath>count(/root[ pub/book/author ]/pub/book/price)</xpath>
+        <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book/price)</xpath>
+        <xpath>count(/root/pub/book[ author ]/price)</xpath>
+        <xpath>count(/root/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
+        <xpath>count(/descendant::node())</xpath>
     </testcase>
 
     <testcase>
@@ -253,6 +264,10 @@
         <xpath>name(/child::*)</xpath>
         <xpath>name(/child::node())</xpath>
         <xpath>name(./*)</xpath>
+
+        <!-- count() function -->
+        <xpath>count(/*/servlet)</xpath>
+        <xpath>count(//servlet)</xpath>
     </testcase>
 
     <testcase>
@@ -260,6 +275,7 @@
 
         <xpath>/*/fibonacci[2]</xpath>
         <xpath>/*/fibonacci</xpath>
+        <xpath>count(/*/fibonacci)</xpath>        
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
@@ -349,6 +365,9 @@
         <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::*</xpath>
         <xpath>/PLAY/ACT[2]/SCENE[1]/descendant::SPEAKER</xpath>
         <xpath>/PLAY/ACT/SCENE[1]</xpath>
+
+        <xpath>count(descendant::ACT)</xpath>
+        <xpath>count(/PLAY/ACT/SCENE[1])</xpath>
     </testcase>
 
 </xpaths>

@@ -17,13 +17,17 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
+import jlibs.xml.sax.sniff.model.functions.Function;
 import org.jaxen.saxpath.Axis;
 import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathHandler;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 
 /**
  * @author Santhosh Kumar T
@@ -299,21 +303,15 @@ public class XPathParser implements XPathHandler{
     private Function function;
     @Override
     public void startFunction(String prefix, String functionName) throws SAXPathException{
-        Function function = null;
-        if(prefix.length()==0){
-            if(functionName.equals("name"))
-                function = new Name();
-        }
-        
-        if(function==null){
-            String qname = prefix.length()>0 ? prefix+':'+functionName : functionName;
-            throw new SAXPathException("unsupprted function "+qname+"()");
-        }else
-            this.function = function;
+        if(prefix.length()>0)
+            throw new SAXPathException("unsupprted function "+prefix+':'+functionName+"()");
+
+        function = Function.newInstance(functionName);
     }
 
     @Override
     public void endFunction() throws SAXPathException{
         current = current.addConstraint(function);
+        predicates.clear();
     }
 }
