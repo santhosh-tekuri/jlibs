@@ -37,6 +37,12 @@
     <testcase>
         <file>xmlFiles/positions.xml</file>
 
+        <xpath>/child::node()</xpath>
+        <xpath>/child::*</xpath>
+        <xpath>/descendant::node()</xpath>
+        <xpath>/descendant::*</xpath>
+        <xpath>/descendant-or-self::node()</xpath>
+        <xpath>/descendant-or-self::*</xpath>
         <xpath>/descendant::E2[2]</xpath>
         <xpath>/descendant::*/E2[2]</xpath>
         <xpath>/X/E1/E2[2]</xpath>

@@ -28,10 +28,10 @@ class Contexts implements Iterable<Context>, Debuggable{
     private List<Context> current = new ArrayList<Context>();
     private List<Context> next = new ArrayList<Context>();
 
-    public void reset(List<Context> list){
+    public void reset(Context rootContext){
         current.clear();
         next.clear();
-        current.addAll(list);
+        current.add(rootContext);
     }
 
     ResettableIterator<Context> iter = new ResettableIterator<Context>(current);

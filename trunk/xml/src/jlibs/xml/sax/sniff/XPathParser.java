@@ -88,7 +88,7 @@ public class XPathParser implements XPathHandler{
     public void startAbsoluteLocationPath() throws SAXPathException{
         if(!pathStack.isEmpty())
             pathStack.push(pathStack.pop()+1);
-        current = root;
+        current = current.addChild(new DocumentNode());
     }
 
     @Override
@@ -96,6 +96,9 @@ public class XPathParser implements XPathHandler{
 
     @Override
     public void startRelativeLocationPath() throws SAXPathException{
+        if(current==root)
+            current = current.addChild(new DocumentNode());
+        
         if(!pathStack.isEmpty())
             pathStack.push(pathStack.pop()+1);
     }
