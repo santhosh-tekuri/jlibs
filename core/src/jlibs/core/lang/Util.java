@@ -15,6 +15,13 @@
 
 package jlibs.core.lang;
 
+import jlibs.core.io.Bytes;
+
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 /**
@@ -107,5 +114,35 @@ public class Util{
         for(Object obj: objects)
             hashCode += hashCode(obj);
         return hashCode;
+    }
+
+    @SuppressWarnings({"ThrowableInstanceNeverThrown", "unchecked"})
+    public static <T> T clone(T obj) throws CloneNotSupportedException{
+        if(obj==null)
+            return null;
+        
+        try{
+            if(obj instanceof Cloneable){
+                Method method = obj.getClass().getMethod("clone");
+                if(!Modifier.isPublic(method.getModifiers()))
+                    method.setAccessible(true);
+                return (T)method.invoke(obj);
+            }else if(obj instanceof Serializable){
+                Bytes bytes = new Bytes();
+                ObjectOutputStream objOut = new ObjectOutputStream(bytes.out());
+                objOut.writeObject(obj);
+                objOut.close();
+                ObjectInputStream objIn = new ObjectInputStream(bytes.in());
+                return (T)objIn.readObject();
+            }else
+                throw new CloneNotSupportedException(obj.getClass().getName());
+        }catch(Exception ex){
+            CloneNotSupportedException cloneEx;
+            if(ex instanceof CloneNotSupportedException)
+                throw cloneEx = (CloneNotSupportedException)ex;
+            else
+                cloneEx = (CloneNotSupportedException)new CloneNotSupportedException().initCause(ex);
+            throw cloneEx;
+        }
     }
 }
