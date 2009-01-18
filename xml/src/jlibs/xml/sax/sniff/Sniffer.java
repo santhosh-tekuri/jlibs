@@ -47,7 +47,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     private StringContent contents = new StringContent();
     private ContextManager contextManager = new ContextManager();
-    private PositionStack positionStack = new PositionStack();
     private ElementStack elementStack;
 
     // events
@@ -100,8 +99,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println();
         
-        int pos = positionStack.push(uri, localName);
-        elementStack.push(uri, localName, pos);
+        elementStack.push(uri, localName);
 
         matchText();
 
@@ -124,7 +122,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println();
         
-        positionStack.pop();
         elementStack.pop();
 
         matchText();
@@ -143,7 +140,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         documentOrder.reset();
         contents.reset();
         contextManager.reset(root, results);
-        positionStack.reset();
         elementStack.reset();
     }
 
