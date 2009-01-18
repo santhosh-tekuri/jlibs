@@ -15,13 +15,16 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.Util;
+
 import javax.xml.namespace.NamespaceContext;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Root extends Node{
-    public NamespaceContext nsContext;
+    public transient NamespaceContext nsContext;
     
     public Root(NamespaceContext nsContext){
         root = this;
@@ -36,5 +39,17 @@ public class Root extends Node{
     @Override
     public String toString(){
         return "Root";
+    }
+
+    /*-------------------------------------------------[ Cloning ]---------------------------------------------------*/
+
+    public Root copy(){
+        try{
+            Root root = Util.clone(this);
+            root.nsContext = nsContext;
+            return root;
+        }catch(CloneNotSupportedException ex){
+            throw new ImpossibleException(ex);
+        }
     }
 }
