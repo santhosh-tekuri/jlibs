@@ -46,7 +46,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     private StringContent contents = new StringContent();
-    private ContextManager contextManager;
+    private ContextManager contextManager = new ContextManager();
     private PositionStack positionStack = new PositionStack();
     private ElementStack elementStack;
 
@@ -74,11 +74,8 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println("-----------------------------------------------------------------");
 
-        documentOrder.reset();
-        contents.reset();
-        contextManager.reset(document, root);
-        positionStack.reset();
-        elementStack.reset();
+        document.setData();
+        contextManager.match(document);
     }
 
 
@@ -139,9 +136,20 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/
 
+    private void reset(XPathResults results){
+        if(debug)
+            System.out.println("-----------------------------------------------------------------");
+
+        documentOrder.reset();
+        contents.reset();
+        contextManager.reset(root, results);
+        positionStack.reset();
+        elementStack.reset();
+    }
+
     public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
         try{
-            contextManager = new ContextManager(documentOrder, minHits);
+            reset(new XPathResults(documentOrder, minHits));
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);

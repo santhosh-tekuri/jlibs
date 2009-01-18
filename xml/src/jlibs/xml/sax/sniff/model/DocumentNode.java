@@ -13,32 +13,31 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.events;
+package jlibs.xml.sax.sniff.model;
+
+import jlibs.xml.sax.sniff.events.Event;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Document extends Event{
-    public Document(DocumentOrder documentOrder){
-        super(documentOrder);
+public class DocumentNode extends AxisNode{
+    public DocumentNode(){
+        super(Axis.INVALID_AXIS);
     }
 
     @Override
-    public int type(){
-        return DOCUMENT;
+    public boolean equivalent(Node node){
+        return node.getClass()==getClass();
     }
 
     @Override
-    public boolean hasChildren(){
-        return true;
+    public boolean matches(Event event){
+        return event.type()==Event.DOCUMENT;
     }
 
-    public void setData(){
-        setResultWrapper(this);
-    }
-    
     @Override
     public String toString(){
-        return "/";
+        return "Document";
     }
 }

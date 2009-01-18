@@ -29,6 +29,7 @@ public class Descendant extends AxisNode{
     @Override
     public boolean matches(Event event){
         switch(event.type()){
+            case Event.DOCUMENT:
             case Event.ELEMENT:
             case Event.TEXT:
             case Event.COMMENT:

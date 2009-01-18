@@ -16,15 +16,10 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.events.Attribute;
-import jlibs.xml.sax.sniff.events.Document;
-import jlibs.xml.sax.sniff.events.DocumentOrder;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -33,32 +28,18 @@ public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
     protected XPathResults results;
 
-    public ContextManager(DocumentOrder documentOrder, int minHits){
-        results = new XPathResults(documentOrder, minHits);
-    }
-    
-    public void reset(Document document, Root root){
-        List<Context> list = new ArrayList<Context>();
-        list.add(new Context(root));
-        for(Node node: root.constraints())
-            list.add(new Context(node));
+    public void reset(Root root, XPathResults results){
+        this.results = results;
+        contexts.reset(new Context(root));
 
-        contexts.reset(list);
-
-        document.setData();
-        for(Context context: list)
-            results.hit(context, document, context.node);
-
-        if(debug){
+        if(debug)
             contexts.printCurrent("Contexts");
-            System.out.println("-----------------------------------------------------------------");
-        }
     }
 
     public void match(Event event){
         for(Context context: contexts)
             context.match(event);
-        if(event.type()==Event.ELEMENT)
+        if(event.hasChildren())
             contexts.update();
     }
 
