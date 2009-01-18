@@ -144,8 +144,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
+        XPathResults results = new XPathResults(documentOrder, minHits);
+        reset(results);
         try{
-            reset(new XPathResults(documentOrder, minHits));
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);
@@ -160,6 +161,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         }
         if(debug)
             System.out.println("max contexts: "+contextManager.maxInstCount);
-        return contextManager.results;
+        
+        return results;
     }
 }
