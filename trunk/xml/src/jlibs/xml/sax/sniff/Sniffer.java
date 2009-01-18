@@ -159,8 +159,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             if(debug)
                 System.out.println("COMPLETE DOCUMENT IS NOT PARSED !!!");
         }
-        if(debug)
-            System.out.println("max contexts: "+contextManager.maxInstCount);
         
         return results;
     }
