@@ -108,7 +108,7 @@ public class XPathResults implements Debuggable{
 
     private PositionTracker positionTracker = new PositionTracker();
 
-    public boolean hit(ContextManager.Context context, Event event, Node node){
+    public boolean hit(Context context, Event event, Node node){
         if(node instanceof Position){
             Position position = (Position)node;
             if(!positionTracker.hit(context, position))
@@ -251,7 +251,7 @@ public class XPathResults implements Debuggable{
         }
     }
 
-    void clearHitCounts(ContextManager.Context context){
+    void clearHitCounts(Context context){
         positionTracker.contextEnded(context);
     }
 

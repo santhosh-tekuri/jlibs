@@ -15,8 +15,6 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.xml.sax.sniff.ContextManager.Context;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

@@ -27,7 +27,7 @@ import java.util.Map;
 public class PositionTracker{
     Map<Position, Map<ContextIdentity, Integer>> childHitCount = new HashMap<Position, Map<ContextIdentity, Integer>>();
 
-    public boolean hit(ContextManager.Context context, Position position){
+    public boolean hit(Context context, Position position){
         if(position.parent!=context.node)
             context = context.parent;
         
@@ -43,12 +43,12 @@ public class PositionTracker{
         return pos==position.pos;
     }
 
-    public void contextEnded(ContextManager.Context context){
+    public void contextEnded(Context context){
         for(Node child: context.node.children())
             clearHitCounts(context, child);
     }
 
-    private void clearHitCounts(ContextManager.Context context, Node node){
+    private void clearHitCounts(Context context, Node node){
         for(Node constraint: node.constraints()){
             if(constraint instanceof Position){
                 Position position = (Position)constraint;
@@ -60,7 +60,7 @@ public class PositionTracker{
         }
     }
 
-    public int getHitCount(ContextManager.Context context, Position position){
+    public int getHitCount(Context context, Position position){
         Map<ContextIdentity, Integer> map = childHitCount.get(position);
         if(map==null)
             childHitCount.put(position, map=new HashMap<ContextIdentity, Integer>());
@@ -72,10 +72,10 @@ public class PositionTracker{
     }
 
     static final class ContextIdentity{
-        ContextManager.Context context;
+        Context context;
         int depth;
 
-        ContextIdentity(ContextManager.Context context){
+        ContextIdentity(Context context){
             this.context = context;
             depth = context.depth;
         }
