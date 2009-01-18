@@ -31,6 +31,7 @@ import java.util.List;
 public abstract class Node{
     Root root;
     public Node parent;
+    public Node constraintParent;
 
     public boolean hasAttibuteChild;
 
@@ -78,6 +79,7 @@ public abstract class Node{
             }
         }
         constraints.add(node);
+        node.constraintParent = this;
         node.parent = this.parent;
         node.root = root;
         return node;
