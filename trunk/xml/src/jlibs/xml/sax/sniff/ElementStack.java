@@ -15,8 +15,8 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.ClarkName;
+import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.sniff.model.Root;
 
 import java.util.ArrayDeque;
@@ -25,6 +25,7 @@ import java.util.ArrayDeque;
  * @author Santhosh Kumar T
  */
 public class ElementStack{
+    PositionStack positionStack = new PositionStack();
     private ArrayDeque<String> stack = new ArrayDeque<String>();
     private Root root;
 
@@ -33,14 +34,17 @@ public class ElementStack{
     }
 
     public void reset(){
+        positionStack.reset();
         stack.clear();
     }
     
-    public void push(String uri, String name, int pos){
+    public void push(String uri, String name){
+        int pos = positionStack.push(uri, name);
         stack.addLast(qname(uri, name)+'['+pos+']');
     }
 
     public void pop(){
+        positionStack.pop();
         stack.removeLast();
     }
 
