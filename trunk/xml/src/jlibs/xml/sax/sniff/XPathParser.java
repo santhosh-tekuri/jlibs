@@ -63,9 +63,8 @@ public class XPathParser implements XPathHandler{
 //                Node current = currents.get(i);
                 Predicate predicate = predicates.get(0);
                 if(!current.memberOf.contains(predicate)){
-                    Predicate newPredicate = new Predicate(predicate);
+                    Predicate newPredicate = current.addPredicate(new Predicate(predicate));
                     newPredicate.userGiven = true;
-                    current.addPredicate(newPredicate);
                     newPredicates.add(newPredicate);
                 }else
                     predicate.userGiven = true;
@@ -185,9 +184,8 @@ public class XPathParser implements XPathHandler{
     public void endPredicate() throws SAXPathException{
         if(pathStack.pop()>0){
             Node context = predicateContext.pop();
-            Predicate predicate = new Predicate(current);
+            Predicate predicate = context.addPredicate(new Predicate(current));
             predicates.add(predicate);
-            context.addPredicate(predicate);
             current = context;
         }else
             predicateContext.pop();
