@@ -15,18 +15,20 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Predicate{
+    public Node parentNode;
     public List<Node> nodes = new ArrayList<Node>();
     public List<Predicate> predicates = new ArrayList<Predicate>();
     public List<Predicate> memberOf = new ArrayList<Predicate>();
     public boolean userGiven;
 
+    @SuppressWarnings({"ManualArrayToCollectionCopy"})
     public Predicate(Node... nodes){
         for(Node node: nodes){
             // commented code needs be moved into xpathparser to support nested predicates
@@ -37,14 +39,18 @@ public class Predicate{
 //                }
 //            }else{
                 this.nodes.add(node);
-                node.memberOf.add(this);
+//                node.memberOf.add(this);
 //            }
         }
     }
 
     public Predicate(Predicate predicate){
         predicates.add(predicate);
-        predicate.memberOf.add(this);
+//        predicate.memberOf.add(this);
+    }
+
+    public boolean equivalent(Predicate predicate){
+        return nodes.equals(predicate.nodes) && predicates.equals(predicate.predicates);
     }
 
     @Override

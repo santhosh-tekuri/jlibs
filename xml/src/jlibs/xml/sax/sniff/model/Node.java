@@ -48,9 +48,8 @@ public abstract class Node{
     @SuppressWarnings({"unchecked"})
     public <N extends AxisNode> N addChild(N axisNode){
         for(AxisNode child: children()){
-            if(child.equivalent(axisNode)){
+            if(child.equivalent(axisNode))
                 return (N)child;
-            }
         }
 
         children.add(axisNode);
@@ -74,9 +73,8 @@ public abstract class Node{
     @SuppressWarnings({"unchecked"})
     public <N extends Node> N addConstraint(N node){
         for(Node constraint: constraints()){
-            if(constraint.equivalent(node)){
+            if(constraint.equivalent(node))
                 return (N)constraint;
-            }
         }
         constraints.add(node);
         node.constraintParent = this;
@@ -94,7 +92,17 @@ public abstract class Node{
     }
 
     public Predicate addPredicate(Predicate predicate){
+        for(Predicate p: predicates){
+            if(p.equivalent(predicate))
+                return p;
+        }
+
         predicates.add(predicate);
+        predicate.parentNode = this;
+        for(Node member: predicate.nodes)
+            member.memberOf.add(predicate);
+        for(Predicate member: predicate.predicates)
+            member.memberOf.add(predicate);
         return predicate;
     }
 
