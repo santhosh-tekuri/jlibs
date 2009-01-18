@@ -29,9 +29,15 @@ import java.io.IOException;
  */
 public class XMLDog implements Debuggable{
     private Root root;
+    private boolean threadSafe;
 
     public XMLDog(NamespaceContext nsContext){
+        this(nsContext, false);
+    }
+    
+    public XMLDog(NamespaceContext nsContext, boolean threadSafe){
         root = new Root(nsContext);
+        this.threadSafe = threadSafe;
     }
 
     public XPath add(String xpath) throws SAXPathException{
@@ -56,6 +62,7 @@ public class XMLDog implements Debuggable{
     }
 
     public XPathResults sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
-        return new Sniffer(root).sniff(source, infiniteHits ? -1 : totalMinHits);
+        Root r = threadSafe ? root.copy() : root;
+        return new Sniffer(r).sniff(source, infiniteHits ? -1 : totalMinHits);
     }
 }

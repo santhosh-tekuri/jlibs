@@ -144,7 +144,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
-        XPathResults results = new XPathResults(documentOrder, minHits);
+        XPathResults results = new XPathResults(root, documentOrder, minHits);
         reset(results);
         try{
             DefaultHandler handler = this;

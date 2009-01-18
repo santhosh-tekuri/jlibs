@@ -20,6 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.functions.Function;
 
 import java.util.*;
@@ -34,8 +35,10 @@ public class XPathResults implements Debuggable{
     private Map<Node, TreeMap<Integer, String>> resultsMap = new HashMap<Node, TreeMap<Integer, String>>();
     private Map<Predicate, Map<Integer, String>> predicateResultsMap = new HashMap<Predicate, Map<Integer, String>>();
 
+    private Root root;
     private DocumentOrder documentOrder;
-    public XPathResults(DocumentOrder documentOrder, int minHits){
+    public XPathResults(Root root, DocumentOrder documentOrder, int minHits){
+        this.root = root;
         this.documentOrder = documentOrder;
         this.minHits = minHits;
     }
@@ -330,6 +333,7 @@ public class XPathResults implements Debuggable{
         Map<Integer, String> results = new TreeMap<Integer, String>();
 
         for(Node node: xpath.nodes){
+            node = node.locateIn(root);
             TreeMap<Integer, String> map = resultsMap.get(node);
             if(map!=null && !map.isEmpty()){
                 if(node instanceof Function)
@@ -340,6 +344,7 @@ public class XPathResults implements Debuggable{
         }
 
         for(Predicate predicate: xpath.predicates){
+            predicate = predicate.locateIn(root);
             Map<Integer, String> map = predicateResultsMap.get(predicate);
             if(map!=null)
                 results.putAll(map);

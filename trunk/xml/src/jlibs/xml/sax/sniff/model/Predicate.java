@@ -15,13 +15,14 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Predicate{
+public class Predicate implements Serializable{
     public Node parentNode;
     public List<Node> nodes = new ArrayList<Node>();
     public List<Predicate> predicates = new ArrayList<Predicate>();
@@ -53,6 +54,16 @@ public class Predicate{
         return nodes.equals(predicate.nodes) && predicates.equals(predicate.predicates);
     }
 
+    public Predicate locateIn(Root root){
+        Node node = parentNode.locateIn(root);
+        if(parentNode==node)
+            return this;
+        else{
+            int i = parentNode.predicates.indexOf(this);
+            return node.predicates.get(i);
+        }
+    }
+    
     @Override
     public String toString(){
         StringBuilder buff1 = new StringBuilder();

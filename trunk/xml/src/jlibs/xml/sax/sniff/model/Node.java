@@ -22,13 +22,15 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
+import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Node{
+public abstract class Node implements Serializable{
     Root root;
     public Node parent;
     public Node constraintParent;
@@ -85,7 +87,7 @@ public abstract class Node{
 
     /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
 
-    private List<Predicate> predicates = new ArrayList<Predicate>();
+    protected List<Predicate> predicates = new ArrayList<Predicate>();
 
     public Iterable<Predicate> predicates(){
         return predicates;
@@ -134,6 +136,45 @@ public abstract class Node{
     public boolean userGiven;
     public boolean resultInteresed(){
         return userGiven || predicates.size()>0 || memberOf.size()>0;
+    }
+
+    /*-------------------------------------------------[ Locate ]---------------------------------------------------*/
+
+    @SuppressWarnings({"SuspiciousMethodCalls"})
+    public Node locateIn(Root root){
+//        root.print();
+        if(this.root==root)
+            return this;
+
+        ArrayDeque<Integer> typeStack = new ArrayDeque<Integer>();
+        ArrayDeque<Integer> indexStack = new ArrayDeque<Integer>();
+        Node node = this;
+        while(node!=null){
+            if(node.constraintParent!=null){
+                typeStack.push(2);
+                indexStack.push(node.constraintParent.constraints.indexOf(node));
+                node = node.constraintParent;
+            }else if(node.parent!=null){
+                typeStack.push(1);
+                indexStack.push(node.parent.children.indexOf(node));
+                node = node.parent;
+            }else
+                break;
+        }
+
+        node = root;
+        while(!indexStack.isEmpty()){
+            switch(typeStack.pop()){
+                case 1:
+                    node = node.children.get(indexStack.pop());
+                    break;
+                case 2:
+                    node = node.constraints.get(indexStack.pop());
+                    break;
+            }
+        }
+
+        return node;
     }
 
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
