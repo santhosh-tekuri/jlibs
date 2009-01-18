@@ -26,7 +26,7 @@ import org.xml.sax.Attributes;
  */
 public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
-    protected XPathResults results;
+    private XPathResults results;
 
     public void reset(Root root, XPathResults results){
         this.results = results;
