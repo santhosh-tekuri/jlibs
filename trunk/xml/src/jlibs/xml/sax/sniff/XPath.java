@@ -29,10 +29,9 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class XPath{
-    String xpath;
+    private String xpath;
     List<Node> nodes = Collections.emptyList();
     List<Predicate> predicates = new ArrayList<Predicate>();
-    int minHits;
 
     public XPath(String xpath, List<Node> nodes){
         this.xpath = xpath;
@@ -43,6 +42,15 @@ public class XPath{
     public XPath(String xpath, List<Predicate> predicates, boolean dummy){
         this.xpath = xpath;
         this.predicates = predicates;
+    }
+
+    int minHits;
+    public void setMinHits(int minHits){
+        this.minHits = minHits;
+        for(Node node: nodes)
+            node.hits.setMin(minHits);
+        for(Predicate predicate: predicates)
+            predicate.hits.setMin(minHits);
     }
 
     public QName resultType(){

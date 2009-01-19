@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.core.lang.NotImplementedException;
+import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 
@@ -28,14 +29,7 @@ import javax.xml.xpath.XPathConstants;
 public abstract class Function extends Node{
     public abstract String getName();
     public abstract boolean singleHit();
-    public abstract String evaluate(Event event, String lastResult);
 
-    public String join(String result1, String result2){
-        throw new NotImplementedException(getClass().getName());
-    }
-    
-    public abstract String defaultResult();
-    
     @Override
     public boolean matches(Event event){
         return true;
@@ -55,6 +49,73 @@ public abstract class Function extends Node{
         return getName()+"()";
     }
 
+    /*-------------------------------------------------[ Evaluate ]---------------------------------------------------*/
+
+    public abstract String evaluate(Event event, String lastResult);
+    
+    public void evaluateWithLastResult(Event event){
+        String lastResult = null;
+        if(results!=null)
+            lastResult = results.remove(results.lastKey());
+        addResult(event.order(), evaluate(event, lastResult));
+    }
+
+    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
+    
+    public String join(String result1, String result2){
+        throw new NotImplementedException(getClass().getName());
+    }
+
+    public void joinResults(){
+        if(results!=null && results.size()==2){
+            String result1 = results.remove(results.firstKey());
+            String result2 = results.lastEntry().getValue();
+            String result = join(result1, result2);
+            results.put(results.lastKey(), result);
+        }
+    }
+
+    public abstract String defaultResult();
+
+    /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
+
+    public boolean hit(Context context, Event event){
+        if(!userGiven)
+            return false;
+        
+        if(singleHit()){
+            if(consumable(event)){
+                if(context.node!=this){
+                    if(!hasResult()){
+                        addResult(event.order(), evaluate(event, null));
+                        return true;
+                    }else
+                        return false;
+                }else{
+                    evaluateWithLastResult(event);
+                    return true;
+                }
+            }else{
+                if(!hasResult())
+                    addResult(event.order(), evaluate(event, null));
+            }
+        }else{
+            if(consumable(event)){
+                if(context.node!=this){
+                    joinResults();
+                    addResult(event.order(), evaluate(event, null));
+                }else
+                    evaluateWithLastResult(event);
+
+                return true;
+            }else
+                evaluateWithLastResult(event);
+        }
+        return false;
+    }
+
+    /*-------------------------------------------------[ Factory ]---------------------------------------------------*/
+    
     public static Function newInstance(String name){
         if("name".equals(name))
             return new Name();

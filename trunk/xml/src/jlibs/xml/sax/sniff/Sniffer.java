@@ -19,6 +19,7 @@ import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.sniff.events.*;
+import jlibs.xml.sax.sniff.model.HitManager;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -133,19 +134,18 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/
 
-    private void reset(XPathResults results){
+    private void reset(){
         if(debug)
             System.out.println("-----------------------------------------------------------------");
 
         documentOrder.reset();
         contents.reset();
-        contextManager.reset(root, results);
+        contextManager.reset(root);
         elementStack.reset();
     }
 
-    public XPathResults sniff(InputSource source, int minHits) throws ParserConfigurationException, SAXException, IOException{
-        XPathResults results = new XPathResults(root, documentOrder, minHits);
-        reset(results);
+    public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
+        reset();
         try{
             DefaultHandler handler = this;
             if(debug)
@@ -154,12 +154,10 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             parser.getXMLReader().setProperty(SAXProperties.LEXICAL_HANDLER, handler);
             parser.parse(source, handler);
         }catch(RuntimeException ex){
-            if(ex!=XPathResults.STOP_PARSING)
+            if(ex!=HitManager.STOP_PARSING)
                 throw ex;
             if(debug)
                 System.out.println("COMPLETE DOCUMENT IS NOT PARSED !!!");
         }
-        
-        return results;
     }
 }

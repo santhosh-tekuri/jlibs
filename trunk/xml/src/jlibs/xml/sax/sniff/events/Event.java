@@ -30,6 +30,10 @@ public abstract class Event{
         this.documentOrder = documentOrder;
     }
 
+    public int order(){
+        return documentOrder.get();
+    }
+    
     public abstract int type();
 
     public boolean hasChildren(){

@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Position;
 
 /**
  * @author Santhosh Kumar T
@@ -56,7 +57,21 @@ public class Context implements Debuggable{
     }
 
 
-    public void match(Event event, Contexts contexts, XPathResults results){
+    @SuppressWarnings({"SimplifiableIfStatement"})
+    private boolean hit(Event event, Node node){
+        if(node instanceof Position){
+            Position position = (Position)node;
+            if(!position.hit(this))
+                return false;
+        }
+
+        if(node.resultInteresed())
+            return node.hit(this, event);
+        else
+            return true;
+    }
+
+    public void match(Event event, Contexts contexts){
         boolean changeContext = event.hasChildren();
 
         @SuppressWarnings({"UnusedAssignment"})
@@ -72,20 +87,20 @@ public class Context implements Debuggable{
         }else{
             for(Node child: node.children()){
                 if(child.matches(event)){
-                    if(results.hit(this, event, child)){
+                    if(hit(event, child)){
                         if(changeContext)
                             contexts.add(childContext(child));
-                        matchConstraints(child, event, contexts, results);
+                        matchConstraints(child, event, contexts);
                     }
                 }
             }
             if(node.consumable(event)){
-                if(results.hit(this, event, node)){
+                if(hit(event, node)){
                     if(changeContext){
                         depth--;
                         contexts.add(this);
                     }
-                    matchConstraints(node, event, contexts, results);
+                    matchConstraints(node, event, contexts);
                 }
             }else{
                 if(changeContext && contexts.markSize()==0){
@@ -100,31 +115,29 @@ public class Context implements Debuggable{
             contexts.printNext(message);
     }
 
-    private void matchConstraints(Node child, Event event, Contexts contexts, XPathResults results){
+    private void matchConstraints(Node child, Event event, Contexts contexts){
         boolean changeContext = event.hasChildren();
 
         for(Node constraint: child.constraints()){
             if(constraint.matches(event)){
-                if(results.hit(this, event, constraint)){
+                if(hit(event, constraint)){
                     if(changeContext)
                         contexts.add(childContext(constraint));
-                    matchConstraints(constraint, event, contexts, results);
+                    matchConstraints(constraint, event, contexts);
                 }
             }
         }
     }
 
-    public Context endElement(XPathResults results){
+    public Context endElement(){
         if(depth==0){
-            results.clearHitCounts(this);
-            results.clearPredicateCache(depth, node);
+            node.endingContext(this);
             return parentContext();
         }else{
-            if(depth>0){
-//                    results.clearHitCounts(depth, node);
+            if(depth>0)
                 depth--;
-            }else{
-                results.clearHitCounts(this);
+            else{
+                node.endingContext(this);
                 depth++;
             }
 
@@ -149,5 +162,35 @@ public class Context implements Debuggable{
     @Override
     public String toString(){
         return "["+depth+"] "+node;
+    }
+
+    /*-------------------------------------------------[ Identity ]---------------------------------------------------*/
+    
+    public Object identity(){
+        return new ContextIdentity(this);
+    }
+    
+    static final class ContextIdentity{
+        Context context;
+        int depth;
+
+        ContextIdentity(Context context){
+            this.context = context;
+            depth = context.depth;
+        }
+
+        @Override
+        public boolean equals(Object obj){
+            if(obj instanceof ContextIdentity){
+                ContextIdentity that = (ContextIdentity)obj;
+                return this.context==that.context && this.depth==that.depth;
+            }else
+                return false;
+        }
+
+        @Override
+        public int hashCode(){
+            return System.identityHashCode(context)+depth;
+        }
     }
 }

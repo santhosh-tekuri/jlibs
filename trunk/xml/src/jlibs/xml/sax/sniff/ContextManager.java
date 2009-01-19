@@ -25,10 +25,8 @@ import org.xml.sax.Attributes;
  */
 public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
-    private XPathResults results;
 
-    public void reset(Root root, XPathResults results){
-        this.results = results;
+    public void reset(Root root){
         contexts.reset(new Context(root));
 
         if(debug)
@@ -37,7 +35,7 @@ public class ContextManager implements Debuggable{
 
     public void match(Event event){
         for(Context context: contexts)
-            context.match(event, contexts, results);
+            context.match(event, contexts);
         if(event.hasChildren())
             contexts.update();
     }
@@ -47,14 +45,14 @@ public class ContextManager implements Debuggable{
             for(int i=0; i<attrs.getLength(); i++){
                 attr.setData(attrs, i);
                 for(Context context: contexts)
-                    context.match(attr, contexts, results);
+                    context.match(attr, contexts);
             }
         }
     }
 
     public void elementEnded(){
         for(Context context: contexts)
-            contexts.addUnique(context.endElement(results));
+            contexts.addUnique(context.endElement());
         contexts.update();
     }
 }
