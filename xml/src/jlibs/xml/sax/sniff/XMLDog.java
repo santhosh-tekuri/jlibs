@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Root;
 import org.jaxen.saxpath.SAXPathException;
 import org.xml.sax.InputSource;
@@ -23,46 +24,57 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
  */
 public class XMLDog implements Debuggable{
     private Root root;
-    private boolean threadSafe;
 
     public XMLDog(NamespaceContext nsContext){
-        this(nsContext, false);
-    }
-    
-    public XMLDog(NamespaceContext nsContext, boolean threadSafe){
         root = new Root(nsContext);
-        this.threadSafe = threadSafe;
     }
 
     public XPath add(String xpath) throws SAXPathException{
         return add(xpath, -1);
     }
 
-    private boolean infiniteHits;
-    private int totalMinHits;
+    private ArrayList<XPath> xpaths = new ArrayList<XPath>();
     public XPath add(String xpath, int minHits) throws SAXPathException{
-//        if(!xpath.startsWith("/"))
-//            xpath = "/"+xpath;
-//
         XPath compiledXPath = new XPathParser(root).parse(xpath);
-        compiledXPath.minHits = minHits;
-
-        if(minHits<0)
-            infiniteHits = true;
-        if(!infiniteHits)
-            totalMinHits += minHits;
-
+        compiledXPath.setMinHits(minHits);
+        xpaths.add(compiledXPath);
+        
         return compiledXPath;
     }
 
     public XPathResults sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
-        Root r = threadSafe ? root.copy() : root;
-        return new Sniffer(r).sniff(source, infiniteHits ? -1 : totalMinHits);
+        Root r = root;
+
+        boolean clone = false;
+        synchronized(this){
+            clone = r.using;
+            if(!clone)
+                r.using = true;
+        }
+
+        if(clone){
+            r = new Root(root.nsContext);
+            try{
+                for(XPath xpath: xpaths)
+                    new XPathParser(r).parse(xpath.toString()).setMinHits(xpath.minHits);
+            }catch(SAXPathException ex){
+                throw new ImpossibleException(ex);
+            }
+        }
+
+        try{
+            new Sniffer(r).sniff(source);
+            return new XPathResults(r, xpaths);
+        }finally{
+            if(!clone)
+                r.reset();
+        }
     }
 }

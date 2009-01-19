@@ -15,19 +15,21 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import jlibs.xml.sax.sniff.Debuggable;
+
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Predicate implements Serializable{
+public class Predicate implements Debuggable{
     public Node parentNode;
     public List<Node> nodes = new ArrayList<Node>();
     public List<Predicate> predicates = new ArrayList<Predicate>();
     public List<Predicate> memberOf = new ArrayList<Predicate>();
     public boolean userGiven;
+
+    public HitManager hits = new HitManager();
 
     @SuppressWarnings({"ManualArrayToCollectionCopy"})
     public Predicate(Node... nodes){
@@ -89,5 +91,112 @@ public class Predicate implements Serializable{
 //        }
 
         return "["+buff1+"]";
+    }
+
+    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
+
+    public TreeMap<Integer, String> results;
+
+    public void addResult(int docOrder, String result){
+        if(results==null)
+            results = new TreeMap<Integer, String>();
+        results.put(docOrder, result);
+
+        if(debug)
+            System.out.format("Predicate-Hit %2d: %s ---> %s %n", results.size(), this, result);
+    }
+
+    public boolean hasResult(){
+        return results!=null && results.size()>0;
+    }
+
+    /*-------------------------------------------------[ Cache ]---------------------------------------------------*/
+
+    private Cache cache;
+
+    public boolean hasCache(){
+        return cache!=null;
+    }
+    
+    public Cache cache(){
+        if(cache==null)
+            cache = new Cache();
+        return cache;
+    }
+
+    public void clearCache(){
+        if(debug)
+            System.out.println("cleared cache of: "+this);
+
+        cache = null;
+        for(Predicate member: memberOf)
+            member.clearCache();
+    }
+
+    public class Cache{
+        public List<Node> nodes = new ArrayList<Node>();
+        public List<Predicate> predicates = new ArrayList<Predicate>();
+
+        public Map<Predicate, TreeMap<Integer, String>> predicateResultMap = new HashMap<Predicate, TreeMap<Integer, String>>();
+        public TreeMap<Integer, String> resultStack = new TreeMap<Integer, String>();
+
+        public Cache(){
+            nodes.addAll(Predicate.this.nodes);
+            predicates.addAll(Predicate.this.predicates);
+
+            for(Predicate p: memberOf)
+                predicateResultMap.put(p, new TreeMap<Integer, String>());
+        }
+
+        public void addResult(int docOrder, String result){
+            resultStack.put(docOrder, result);
+            for(TreeMap<Integer, String> stack: predicateResultMap.values())
+                stack.put(docOrder, result);
+
+            if(debug)
+                System.out.format("Cached Predicate Result %2d: %s ---> %s %n", resultStack.size(), Predicate.this, result);
+        }
+
+        public void removeResult(Node node){
+            resultStack.remove(resultStack.lastKey());
+        }
+
+        public void removeResult(Predicate p){
+            TreeMap<Integer, String> map = predicateResultMap.get(p);
+            map.remove(map.lastKey());
+        }
+
+        public Map.Entry<Integer, String> hit(Node node){
+            nodes.remove(node);
+            return getResult(node);
+        }
+
+        public Map.Entry<Integer, String> hit(Predicate predicate){
+            predicates.remove(predicate);
+            return getResult(predicate);
+        }
+
+        public Map.Entry<Integer, String> getResult(Node node){
+            return canGiveResult() ? resultStack.lastEntry() : null;
+        }
+
+        public Map.Entry<Integer, String> getResult(Predicate p){
+            if(canGiveResult()){
+                TreeMap<Integer, String> stack = predicateResultMap.get(p);
+                return stack==null ? null : stack.lastEntry();
+            }else
+                return null;
+        }
+
+        private boolean canGiveResult(){
+            return nodes.size()==0 && predicates.size()==0 && !resultStack.isEmpty();
+        }
+    }
+
+    /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
+
+    public void reset(){
+        results = null;
+        cache = null;
     }
 }

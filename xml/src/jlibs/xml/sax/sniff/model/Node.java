@@ -19,18 +19,17 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
-import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Node implements Serializable{
+public abstract class Node implements Debuggable{
     Root root;
     public Node parent;
     public Node constraintParent;
@@ -38,7 +37,9 @@ public abstract class Node implements Serializable{
     public boolean hasAttibuteChild;
 
     public abstract boolean equivalent(Node node);
-    
+
+    public HitManager hits = new HitManager();
+        
     /*-------------------------------------------------[ Children ]---------------------------------------------------*/
     
     private List<AxisNode> children = new ArrayList<AxisNode>();
@@ -57,6 +58,7 @@ public abstract class Node implements Serializable{
         children.add(axisNode);
         axisNode.parent = this;
         axisNode.root = root;
+        axisNode.hits.totalHits = root.hits.totalHits;
 
         if(axisNode.type==Axis.ATTRIBUTE)
             hasAttibuteChild = true;
@@ -82,6 +84,7 @@ public abstract class Node implements Serializable{
         node.constraintParent = this;
         node.parent = this.parent;
         node.root = root;
+        node.hits.totalHits = root.hits.totalHits;
         return node;
     }
 
@@ -101,6 +104,7 @@ public abstract class Node implements Serializable{
 
         predicates.add(predicate);
         predicate.parentNode = this;
+        predicate.hits.totalHits = root.hits.totalHits;
         for(Node member: predicate.nodes)
             member.memberOf.add(predicate);
         for(Predicate member: predicate.predicates)
@@ -142,7 +146,6 @@ public abstract class Node implements Serializable{
 
     @SuppressWarnings({"SuspiciousMethodCalls"})
     public Node locateIn(Root root){
-//        root.print();
         if(this.root==root)
             return this;
 
@@ -177,6 +180,146 @@ public abstract class Node implements Serializable{
         return node;
     }
 
+    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
+
+    public TreeMap<Integer, String> results;
+
+    public void addResult(int docOrder, String result){
+        if(results==null)
+            results = new TreeMap<Integer, String>();
+        results.put(docOrder, result);
+        hits.hit();
+
+        if(debug)
+            System.out.format("Node-Hit %2d: %s ---> %s %n", results.size(), this, result);
+    }
+
+    public boolean hasResult(){
+        return results!=null && results.size()>0;
+    }
+
+    /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
+
+    public boolean hit(Context context, Event event){
+        if(userGiven)
+            addResult(event.order(), event.getResult());
+
+        for(Predicate predicate: predicates()){
+            predicate.cache().addResult(event.order(), event.getResult());
+            checkMembers(predicate);
+        }
+
+        for(Predicate member: memberOf()){
+            Predicate.Cache cache = member.cache();
+            Map.Entry<Integer, String> result = cache.hit(this);
+            if(result!=null){
+                if(member.userGiven){
+                    member.addResult(result.getKey(), result.getValue());
+                    cache.removeResult(this);
+                }
+                hitMemberOf(member);
+            }
+        }
+
+        for(Predicate predicate: predicates()){
+            if(memberOf.contains(predicate))
+                return true;
+            if(predicate.hasCache()){
+                Predicate.Cache cache = predicate.cache();
+                Map.Entry<Integer, String> result = cache.getResult(this);
+                if(result!=null){
+                    if(predicate.userGiven){
+                        predicate.addResult(result.getKey(), result.getValue());
+                        cache.removeResult(this);
+                    }
+                    hitMemberOf(predicate);
+                }
+            }
+        }
+
+        return true;
+    }
+    
+    private void checkMembers(Predicate predicate){
+        for(Predicate member: predicate.predicates){
+            if(member.hasCache()){
+                Predicate.Cache cache = member.cache();
+                Map.Entry<Integer, String> result = cache.getResult(predicate);
+                if(result!=null){
+                    if(predicate.userGiven)
+                        predicate.cache().hit(member);
+                    checkMembers(member);
+                }
+            }
+        }
+    }
+
+    private void hitMemberOf(Predicate predicate){
+        for(Predicate member: predicate.memberOf){
+            if(member.hasCache()){
+                Predicate.Cache cache = member.cache();
+                Map.Entry<Integer, String> result = cache.hit(predicate); // NOTE dont move this line
+                if(member.userGiven){
+                    Map.Entry<Integer, String> userResult = cache.getResult((Node)null);
+                    if(userResult!=null){
+                        member.addResult(userResult.getKey(), userResult.getValue());
+                        cache.removeResult((Node)null);
+                    }
+                }
+                if(result!=null){
+                    hitMemberOf(member);
+                }
+            }
+        }
+    }
+
+    /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
+
+    public void endingContext(Context context){
+        if(context.depth==0)
+            clearPredicateCache();
+        
+        for(Node child: context.node.children())
+            clearHitCounts(context, child);
+    }
+
+    private void clearPredicateCache(){
+        for(Predicate predicate: predicates()){
+            for(Node n: predicate.nodes){
+                while(n!=null){
+                    n = n.parent;
+                    if(n==this){
+                        predicate.clearCache();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void clearHitCounts(Context context, Node node){
+        for(Node constraint: node.constraints()){
+            if(constraint instanceof Position){
+                Position position = (Position)constraint;
+                position.clearHitCount(context);
+            }
+            clearHitCounts(context, constraint);
+        }
+    }
+
+    /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
+
+    public void reset(){
+        hits.reset();
+        results = null;
+        for(Node child: children())
+            child.reset();
+        for(Node constraint: constraints())
+            constraint.reset();
+        for(Predicate predicate: predicates())
+            predicate.reset();
+    }
+    
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
     
     public void print(){

@@ -15,7 +15,11 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -44,5 +48,41 @@ public class Position extends Node{
     @Override
     public String toString(){
         return "["+pos+"]";
+    }
+
+    /*-------------------------------------------------[ Tracking ]---------------------------------------------------*/
+
+    private Map<Object, Integer> map = new HashMap<Object, Integer>();
+
+    public boolean hit(Context context){
+        if(parent!=context.node)
+            context = context.parent;
+
+        Integer pos = map.get(context.identity());
+        if(pos==null)
+            pos = 1;
+        else
+            pos++;
+        map.put(context.identity(), pos);
+        return this.pos == pos;
+    }
+
+    public void clearHitCount(Context context){
+        map.remove(context.identity());
+    }
+
+    public int getHitCount(Context context){
+        Integer pos = map.get(context.identity());
+        if(pos==null)
+            pos = 0;
+        return pos;
+    }
+
+    /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
+
+    @Override
+    public void reset(){
+        map.clear();
+        super.reset();
     }
 }

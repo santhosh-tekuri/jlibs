@@ -23,23 +23,24 @@ import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
+ * @unused
  */
 public class PositionTracker{
-    Map<Position, Map<ContextIdentity, Integer>> childHitCount = new HashMap<Position, Map<ContextIdentity, Integer>>();
+    Map<Position, Map<Object, Integer>> childHitCount = new HashMap<Position, Map<Object, Integer>>();
 
     public boolean hit(Context context, Position position){
         if(position.parent!=context.node)
             context = context.parent;
         
-        Map<ContextIdentity, Integer> map = childHitCount.get(position);
+        Map<Object, Integer> map = childHitCount.get(position);
         if(map==null)
-            childHitCount.put(position, map=new HashMap<ContextIdentity, Integer>());
-        Integer pos = map.get(new ContextIdentity(context));
+            childHitCount.put(position, map=new HashMap<Object, Integer>());
+        Integer pos = map.get(context.identity());
         if(pos==null)
             pos = 1;
         else
             pos++;
-        map.put(new ContextIdentity(context), pos);
+        map.put(context.identity(), pos);
         return pos==position.pos;
     }
 
@@ -52,46 +53,22 @@ public class PositionTracker{
         for(Node constraint: node.constraints()){
             if(constraint instanceof Position){
                 Position position = (Position)constraint;
-                Map<ContextIdentity, Integer> map = childHitCount.get(position);
+                Map<Object, Integer> map = childHitCount.get(position);
                 if(map!=null)
-                    map.remove(new ContextIdentity(context));
+                    map.remove(context.identity());
             }
             clearHitCounts(context, constraint);
         }
     }
 
     public int getHitCount(Context context, Position position){
-        Map<ContextIdentity, Integer> map = childHitCount.get(position);
+        Map<Object, Integer> map = childHitCount.get(position);
         if(map==null)
-            childHitCount.put(position, map=new HashMap<ContextIdentity, Integer>());
-        Integer pos = map.get(new ContextIdentity(context));
+            childHitCount.put(position, map=new HashMap<Object, Integer>());
+        Integer pos = map.get(context.identity());
         if(pos==null)
             pos = 0;
 
         return pos;
-    }
-
-    static final class ContextIdentity{
-        Context context;
-        int depth;
-
-        ContextIdentity(Context context){
-            this.context = context;
-            depth = context.depth;
-        }
-
-        @Override
-        public boolean equals(Object obj){
-            if(obj instanceof ContextIdentity){
-                ContextIdentity that = (ContextIdentity)obj;
-                return this.context==that.context && this.depth==that.depth;
-            }else
-                return false;
-        }
-
-        @Override
-        public int hashCode(){
-            return System.identityHashCode(context)+depth;
-        }
     }
 }
