@@ -25,6 +25,7 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -40,7 +41,7 @@ public class XMLDog implements Debuggable{
         return add(xpath, -1);
     }
 
-    private ArrayList<XPath> xpaths = new ArrayList<XPath>();
+    private List<XPath> xpaths = new ArrayList<XPath>();
     public XPath add(String xpath, int minHits) throws SAXPathException{
         XPath compiledXPath = new XPathParser(root).parse(xpath);
         compiledXPath.setMinHits(minHits);
@@ -50,31 +51,36 @@ public class XMLDog implements Debuggable{
     }
 
     public XPathResults sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
-        Root r = root;
+        Root _root = root;
+        List<XPath> _xpaths = this.xpaths;
 
         boolean clone = false;
         synchronized(this){
-            clone = r.using;
+            clone = _root.using;
             if(!clone)
-                r.using = true;
+                _root.using = true;
         }
 
         if(clone){
-            r = new Root(root.nsContext);
+            _root = new Root(root.nsContext);
             try{
-                for(XPath xpath: xpaths)
-                    new XPathParser(r).parse(xpath.toString()).setMinHits(xpath.minHits);
+                _xpaths = new ArrayList<XPath>(xpaths.size());
+                for(XPath xpath: xpaths){
+                    XPath _xpath = new XPathParser(_root).parse(xpath.toString());
+                    _xpath.setMinHits(xpath.minHits);
+                    _xpaths.add(_xpath);
+                }
             }catch(SAXPathException ex){
                 throw new ImpossibleException(ex);
             }
         }
 
         try{
-            new Sniffer(r).sniff(source);
-            return new XPathResults(r, xpaths);
+            new Sniffer(_root).sniff(source);
+            return new XPathResults(_xpaths);
         }finally{
             if(!clone)
-                r.reset();
+                _root.reset();
         }
     }
 }

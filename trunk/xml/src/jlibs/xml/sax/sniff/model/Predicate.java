@@ -15,21 +15,16 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.Debuggable;
-
 import java.util.*;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Predicate implements Debuggable{
+public class Predicate extends Results{
     public Node parentNode;
     public List<Node> nodes = new ArrayList<Node>();
     public List<Predicate> predicates = new ArrayList<Predicate>();
     public List<Predicate> memberOf = new ArrayList<Predicate>();
-    public boolean userGiven;
-
-    public HitManager hits = new HitManager();
 
     @SuppressWarnings({"ManualArrayToCollectionCopy"})
     public Predicate(Node... nodes){
@@ -91,23 +86,6 @@ public class Predicate implements Debuggable{
 //        }
 
         return "["+buff1+"]";
-    }
-
-    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
-
-    public TreeMap<Integer, String> results;
-
-    public void addResult(int docOrder, String result){
-        if(results==null)
-            results = new TreeMap<Integer, String>();
-        results.put(docOrder, result);
-
-        if(debug)
-            System.out.format("Predicate-Hit %2d: %s ---> %s %n", results.size(), this, result);
-    }
-
-    public boolean hasResult(){
-        return results!=null && results.size()>0;
     }
 
     /*-------------------------------------------------[ Cache ]---------------------------------------------------*/
@@ -196,7 +174,7 @@ public class Predicate implements Debuggable{
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     public void reset(){
-        results = null;
+        super.reset();
         cache = null;
     }
 }
