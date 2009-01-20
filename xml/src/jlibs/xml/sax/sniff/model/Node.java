@@ -20,16 +20,18 @@ import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.Context;
-import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Node implements Debuggable{
+public abstract class Node extends Results{
     Root root;
     public Node parent;
     public Node constraintParent;
@@ -38,8 +40,6 @@ public abstract class Node implements Debuggable{
 
     public abstract boolean equivalent(Node node);
 
-    public HitManager hits = new HitManager();
-        
     /*-------------------------------------------------[ Children ]---------------------------------------------------*/
     
     private List<AxisNode> children = new ArrayList<AxisNode>();
@@ -137,7 +137,6 @@ public abstract class Node implements Debuggable{
     
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
-    public boolean userGiven;
     public boolean resultInteresed(){
         return userGiven || predicates.size()>0 || memberOf.size()>0;
     }
@@ -178,24 +177,6 @@ public abstract class Node implements Debuggable{
         }
 
         return node;
-    }
-
-    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
-
-    public TreeMap<Integer, String> results;
-
-    public void addResult(int docOrder, String result){
-        if(results==null)
-            results = new TreeMap<Integer, String>();
-        results.put(docOrder, result);
-        hits.hit();
-
-        if(debug)
-            System.out.format("Node-Hit %2d: %s ---> %s %n", results.size(), this, result);
-    }
-
-    public boolean hasResult(){
-        return results!=null && results.size()>0;
     }
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
@@ -310,8 +291,7 @@ public abstract class Node implements Debuggable{
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     public void reset(){
-        hits.reset();
-        results = null;
+        super.reset();
         for(Node child: children())
             child.reset();
         for(Node constraint: constraints())

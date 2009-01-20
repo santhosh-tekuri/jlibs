@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.functions.Function;
 
 import java.util.*;
@@ -26,19 +25,18 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class XPathResults implements Debuggable{
-    private Map<XPath, List<String>> map;
+    private Map<String, List<String>> map;
 
-    public XPathResults(Root root, List<XPath> xpaths){
-        map = new HashMap<XPath, List<String>>(xpaths.size());
+    public XPathResults(List<XPath> xpaths){
+        map = new HashMap<String, List<String>>(xpaths.size());
         for(XPath xpath: xpaths)
-            map.put(xpath, collectResult(root, xpath));
+            map.put(xpath.toString(), collectResult(xpath));
     }
 
-    private List<String> collectResult(Root root, XPath xpath){
+    private List<String> collectResult(XPath xpath){
         Map<Integer, String> results = new TreeMap<Integer, String>();
 
         for(Node node: xpath.nodes){
-            node = node.locateIn(root);
             if(node instanceof Function){
                 Function function = (Function)node;
                 function.joinResults();
@@ -51,7 +49,6 @@ public class XPathResults implements Debuggable{
         }
 
         for(Predicate predicate: xpath.predicates){
-            predicate = predicate.locateIn(root);
             if(predicate.hasResult())
                 results.putAll(predicate.results);
         }
@@ -60,6 +57,6 @@ public class XPathResults implements Debuggable{
     }
 
     public List<String> getResult(XPath xpath){
-        return map.get(xpath);
+        return map.get(xpath.toString());
     }
 }
