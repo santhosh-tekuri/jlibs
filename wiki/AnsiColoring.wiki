@@ -44,7 +44,7 @@ ansi.out("hello ansi world");
 similarly there are various handy methods provided in `Ansi`:
 {{{
 Ansi.outln(String msg); // print given msg to console in ansi format followed by new line
-Ansi.format(String format, Object... args)
+Ansi.outFormat(String format, Object... args)
 
 // to print to System.err
 Ansi.err(String msg);
