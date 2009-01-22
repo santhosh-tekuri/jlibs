@@ -1,0 +1,146 @@
+#summary Ansi Colors in Console
+
+First see the example:
+
+{{{
+import jlibs.core.lang.Ansi;
+
+Ansi ansi = new Ansi(Ansi.Attribute.BRIGHT, Ansi.Color.BLUE, Ansi.Color.WHITE);
+ansi.out("hello ansi world");
+}}}
+
+will produce following output:
+
+http://jlibs.googlecode.com/svn/trunk/wiki/Ansi1.png
+
+*Ansi:*
+
+`jlibs.core.lang.Ansi` constains two enums one for attributes and another for colors;
+
+`Ansi.Attribute` enum contains various attributes like BRIGHT, DIM, UNDERLINE etc,.<br>
+`Ansi.Color` enum contains various colors like BLACK, RED, GREEN etc,.
+
+The constructor of `Ansi` is of the following form:
+{{{
+public Ansi(Attribute attr, Color foreground, Color background)
+}}}
+
+all arguments can take null. for example if forground is null, it won't change foreground color.
+
+Wrapping a string with special ansi control sequences and printing onto ansi supported console will result the ansi colors shown.
+
+{{{
+String msg = ansi.colorize("hello ansi world"); // msg is original string wrapped with ansi control sequences
+System.out.println(msg);
+}}}
+
+The above code will print `hello ansi world` in specified ansi format.
+
+the above two lines can be replaced with `Ansi.out(...)` as follows:
+{{{
+ansi.out("hello ansi world");
+}}}
+
+similarly there are various handy methods provided in `Ansi`:
+{{{
+Ansi.outln(String msg); // print given msg to console in ansi format followed by new line
+Ansi.format(String format, Object... args)
+
+// to print to System.err
+Ansi.err(String msg);
+Ansi.errln(String msg);
+Ansi.errFormat(String format, Object... args);
+}}}
+
+*Ansi Support*:
+
+Ansi might not be supported on all systems. Ansi is mostly supported by all unix operating systems.
+
+`Ansi.SUPPORTED` is a final boolean, that can be used to check whether your console supports Ansi format;
+
+`Ansi` class uses simple checks to decide whether ansi is supported or not. Sometimes it may do wrong guess. In such cases you can override its decision using following system property:
+{{{
+-DAnsi=true
+or
+-DAnsi=false
+}}}
+
+if `Ansi.SUPPORTED` is false, any ansi method will not produce ansi control sequences. so you can safely use:
+{{{
+ansi.out("hello ansi world");
+}}}
+irrespective of ansi is supported or not. if ansi is not supported, this will simply do `System.out.print("hello ansi world")`
+
+*Ansi Formatter:*
+
+JLibs provides an implementation of `java.util.logging.Formatter`, to use ansi in logging. This class is:
+{{{
+jlibs.core.util.logging.AnsiFormatter;
+}}}
+
+Let us see usage of `AnsiFormatter`:
+{{{
+Logger logger = LogManager.getLogManager().getLogger("");
+logger.setLevel(Level.FINEST);
+
+Handler handler = logger.getHandlers()[0];
+handler.setLevel(Level.FINEST);
+handler.setFormatter(new AnsiFormatter());
+
+for(Level level: map.keySet())
+    logger.log(level, "this is "+level+" message");
+}}}
+
+will produce following output:
+
+http://jlibs.googlecode.com/svn/trunk/wiki/Ansi2.png
+
+`AnsiFormatter` has public constants to access `Ansi` instance used for each level:
+{{{
+public class AnsiFormatter extends Formatter{
+    public static final Ansi SEVERE;
+    public static final Ansi WARNING;
+    public static final Ansi INFO;
+    public static final Ansi CONFIG;
+    public static final Ansi FINE;
+    public static final Ansi FINER;
+    public static final Ansi FINEST;
+
+    ...
+}
+}}}
+
+These constants are made public, so that you can use them any where. for example you can do:
+
+{{{
+import static jlibs.core.util.logging.AnsiFormatter.*;
+
+SEVERE.out("User authentication failed");
+}}}
+
+The colors used by `AnsiFormatter` for any level can be changed to match you taste. To do this you need to create a properties file. for example:
+{{{
+# myansi.properties
+
+SEVERE=DIM;RED;GREEN
+WARNING=BRIGHT;RED;YELLOW
+}}}
+
+Now use following system property:
+{{{
+-Dansiformatter.default=/path/to/myansi.properties
+}}}
+
+Each entry in this property file is to be given as below:
+
+key will be the level name;<br>
+value is semicolon(`;`) separated values, where each argument is considered as argument to `Ansi` class constructor.<br>
+
+if any agument is null, you still need to specify empty argument. for example:
+{{{
+SEVERE=DIM;;GREEN # foreground is not specified
+}}}
+
+In your properties file, you don't need to specify entries for each level. you can specify entries only for those levels that you want to change;
+
+Your comments are welcomed.
