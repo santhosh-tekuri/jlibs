@@ -26,7 +26,7 @@ i.e,
 
 To simplify code, `pump(...)` method returns output; So the above code could be written in single line as follows:
 {{{
-String content = IOUtil.pump(new FileReader(file), writer, true, true).toString();
+String content = IOUtil.pump(new FileReader(file), new StringWriter(), true, true).toString();
 }}}
 
 if output is not specified, it defaults to `StringWriter`. so the same code can be written as:
