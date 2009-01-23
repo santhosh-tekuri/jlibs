@@ -1,0 +1,43 @@
+#summary OS Information
+
+`jlibs.core.lang.OS`([http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/OS.java source]) is an enum from `JLibs`;<br>
+
+This enum contains values for each type of OS. for example: WINDOWS_NT, WINDOWS_98, LINUX, SOLARIS etc...
+
+*Usage:*
+
+{{{
+import jlibs.core.lang.OS;
+
+OS myos = OS.get();
+System.out.println(myos);
+}}}
+
+On my laptop, it prints `MAC`
+
+you can also check whether your os is windows or unix;
+
+{{{
+OS myos = OS.get();
+System.out.println("isWindows: "+myos.isWindows());
+System.out.println("isUnix: "+myos.isUnix());
+}}}
+
+On my laptop, it prints:
+{{{
+isWindows: false
+isUnix: true
+}}}
+
+When your OS is not recognized, `OS.get()` returns `OS.OTHER`;
+
+There is another usefult method which might be required rarely;
+
+{{{
+String osName = System.getProperty("os.name");
+OS os = OS.get(osName);
+}}}
+
+This might be handy, if your app is distributed and and want to find out the os of other JVM process
+
+your comments are welcomed;
