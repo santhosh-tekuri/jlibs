@@ -19,7 +19,15 @@ package jlibs.core.lang;
  * @author Santhosh Kumar T
  */
 public class ArrayUtil{
-    public static int indexOf(Object array[], Object item){
+    /**
+     * returns first index of <code>item<code> in given <code>array</code>
+     *
+     * @param array     object array, can be null
+     * @param item      item to be searched, can be null
+     * @return          -1 if array is null, or the item is not found
+     *                  otherwize returns first index of item in array
+     */
+    public static <T> int indexOf(T array[], T item){
         if(array==null)
             return -1;
         
@@ -30,7 +38,15 @@ public class ArrayUtil{
         return -1;
     }
 
-    public static boolean contains(Object array[], Object item){
+    /**
+     * tells whether the <code>array</code> contains the given <code>item</code>
+     *
+     * @param array     object array, can be null
+     * @param item      item to be searched, can be null
+     * @return          false if array is null, or item is not found
+     *                  otherwize returns true;
+     */
+    public static <T> boolean contains(T array[], T item){
         return indexOf(array, item)!=-1;
     }
 }
