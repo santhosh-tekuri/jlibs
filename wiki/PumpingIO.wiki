@@ -1,0 +1,70 @@
+#summary Pumping Input/Output
+
+Pumping means reading from given `input` and writing to specified `output`;
+
+`jlibs.core.io.IOUtil` provides various utility method for pumping streams;
+
+let us say you want to read some File as `String`. You can do:
+
+{{{
+import jlibs.core.io.IOUtil;
+
+StringWriter writer = new StringWriter();
+IOUtil.pump(new FileReader(file), writer, true, true);
+String content = writer.toString();
+}}}
+
+let us see arguments for `pump(...)` method:
+
+argument 1 = input <br>
+argument 2 = output<br>
+argument 3 = boolean that specifies whether input should be closed<br>
+argument 4 = boolean that specifies whether output should be closed<br>
+i.e,
+
+`pump(input, output, closeIn, closeOut)`
+
+To simplify code, `pump(...)` method returns output; So the above code could be written in single line as follows:
+{{{
+String content = IOUtil.pump(new FileReader(file), writer, true, true).toString();
+}}}
+
+if output is not specified, it defaults to `StringWriter`. so the same code can be written as:
+{{{
+String content = IOUtil.pump(new FileReader(file), true).toString(); // second arg is closeIn
+}}}
+
+similar versions of pump(...) methods are available for byte-streams also;
+
+Let us see how these methods simplify some code;
+
+to copy file:
+{{{
+IOUtil.pump(new FileInputStream(fromFile), new FileOutputStream(toFile), true, true);
+}}}
+
+to create zip file:
+{{{
+ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));
+for(File file: files){
+    zipOut.putNextEntry(new ZipEntry(file.getName());
+    IOUtil.pump(new FileInputStream(file), zipOut, true, false); // note that last arg is false
+    zipOut.closeEntry();
+}
+zipOut.close();
+}}}
+
+to create file with given string:
+{{{
+String content = ...
+IOUtil.pump(new StringReader(content), new FileWriter(file), true, true);
+}}}
+
+to read a file content into byte array:
+{{{
+byte bytes[] = IOUtil.pump(new FileInputStream(file), true).toByteArray(); // output defaults to ByteArrayOutputStream
+}}}
+
+[http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/IOUtil.java source]
+
+your comments are welcomed;
