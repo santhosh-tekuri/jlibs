@@ -1,6 +1,6 @@
 #summary Comparators
 
-*DefaultComparator*
+*DefaultComparator:*
 
 `jlibs.core.util.DefaultComparator` is default implementation of `java.util.Comparator`;
 
@@ -47,7 +47,7 @@ then it delegates the comparison to `_compare(...)`;
 
 So it is guaranteed that, both arguments of `_compare(...)` are non-null;
 
-*ReverseComparator*
+*ReverseComparator:*
 
 `jlibs.core.util.ReverseComparator` can be used to sort objects in reverse order;
 {{{
@@ -58,7 +58,7 @@ Arrays.sort(arr, new ReverseComparator<String>());
 System.out.println(Arrays.asList(arr)); // prints [jsp, java, c++, c]
 }}}
 
-to sort employees, in descending order of their marks:
+to sort employees, in descending order of their ages:
 {{{
 List<Employee> employees = ...
 Collections.sort(employees, new ReverseComparator<Employee>(new EmployeeAgeComparator()));
@@ -67,7 +67,7 @@ Collections.sort(employees, new ReverseComparator<Employee>(new EmployeeAgeCompa
 i.e `ReverseComparator` has constructor which takes comparator implementation to be used;<br>
 The default constructor uses `DefaultComparator` implicitly;
 
-*ChainedComparator*
+*ChainedComparator:*
 
 Let us say, you want to sort list of employees by their marks. and If there are more than one employee with same marks sort them by their age.
 
