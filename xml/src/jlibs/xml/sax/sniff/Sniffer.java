@@ -41,9 +41,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         this.root = root;
         elementStack = new ElementStack(root);
         element = new Element(documentOrder, elementStack);
-
-        if(debug)
-            root.print();
     }
 
     private StringContent contents = new StringContent();

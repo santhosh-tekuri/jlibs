@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Predicate;
 import jlibs.xml.sax.sniff.model.functions.Function;
+import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 import java.util.*;
 
@@ -37,7 +38,11 @@ public class XPathResults implements Debuggable{
         Map<Integer, String> results = new TreeMap<Integer, String>();
 
         for(Node node: xpath.nodes){
-            if(node instanceof Function){
+            if(node instanceof DerivedResults){
+                DerivedResults dr = (DerivedResults)node;
+                dr.joinResults();
+                results.putAll(dr.results);
+            }else if(node instanceof Function){
                 Function function = (Function)node;
                 function.joinResults();
                 if(function.hasResult())

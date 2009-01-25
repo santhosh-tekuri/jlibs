@@ -15,7 +15,6 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Root;
 import org.jaxen.saxpath.SAXPathException;
 import org.xml.sax.InputSource;
@@ -43,7 +42,7 @@ public class XMLDog implements Debuggable{
 
     private List<XPath> xpaths = new ArrayList<XPath>();
     public XPath add(String xpath, int minHits) throws SAXPathException{
-        XPath compiledXPath = new XPathParser(root).parse(xpath);
+        XPath compiledXPath = new JaxenParser(root).parse(xpath);
         compiledXPath.setMinHits(minHits);
         xpaths.add(compiledXPath);
         
@@ -51,32 +50,33 @@ public class XMLDog implements Debuggable{
     }
 
     public XPathResults sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
+        if(debug)
+            root.print();
+
         Root _root = root;
         List<XPath> _xpaths = this.xpaths;
 
         boolean clone = false;
         synchronized(this){
-            clone = _root.using;
+            clone = _root.isUsing();
             if(!clone)
-                _root.using = true;
+                _root.setUsing(true);
         }
 
         if(clone){
             _root = new Root(root.nsContext);
-            try{
-                _xpaths = new ArrayList<XPath>(xpaths.size());
-                for(XPath xpath: xpaths){
-                    XPath _xpath = new XPathParser(_root).parse(xpath.toString());
-                    _xpath.setMinHits(xpath.minHits);
-                    _xpaths.add(_xpath);
-                }
-            }catch(SAXPathException ex){
-                throw new ImpossibleException(ex);
+            _xpaths = new ArrayList<XPath>(xpaths.size());
+            for(XPath xpath: xpaths){
+                XPath _xpath = xpath.copy(_root);
+                _xpath.setMinHits(xpath.minHits);
+                _xpaths.add(_xpath);
             }
         }
 
         try{
-            new Sniffer(_root).sniff(source);
+            if(root.children().iterator().hasNext())
+                new Sniffer(_root).sniff(source);
+            _root.parsingDone();
             return new XPathResults(_xpaths);
         }finally{
             if(!clone)

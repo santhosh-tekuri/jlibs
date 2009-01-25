@@ -21,8 +21,6 @@ import javax.xml.namespace.NamespaceContext;
  * @author Santhosh Kumar T
  */
 public class Root extends Node{
-    public volatile boolean using;
-    
     public NamespaceContext nsContext;
     
     public Root(NamespaceContext nsContext){
@@ -41,12 +39,28 @@ public class Root extends Node{
         return "Root";
     }
 
+    /*-------------------------------------------------[ Using ]---------------------------------------------------*/
+
+    public volatile boolean using;
+
+    public void setUsing(boolean using){
+        this.using = using;
+        hits.totalHits.parsing = using;
+    }
+
+    public boolean isUsing(){
+        return using;
+    }
+
+    public void parsingDone(){
+        hits.totalHits.parsing = false;
+    }
+
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     @Override
     public void reset(){
         hits.reset();
         super.reset();
-        using = false;
     }
 }

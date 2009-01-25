@@ -4,11 +4,17 @@
               >
         <file>xmlFiles/note.xml</file>
 
+        <xpath>1+2*5 div 2 mod 3</xpath>
+        <xpath>(1+2)*5</xpath>
+        <xpath>normalize-space('  santhosh  kumar   ')</xpath>
+        <xpath>string-length(normalize-space('  santhosh  kumar   '))</xpath>
+        <xpath>string-length('  santhosh  kumar   ')</xpath>
         <xpath>/xs:schema/descendant-or-self::*[1]</xpath>
         <xpath>/xs:schema/descendant-or-self::*[3]</xpath>
         <xpath>/xs:schema/descendant-or-self::*[4]/@namespace</xpath>
         <xpath>/descendant::xs:element[2]</xpath>
         <xpath>//xs:element[2]</xpath>
+        <xpath>//xs:element[position()=2]</xpath>
         <xpath>/xs:schema/@targetNamespace</xpath>
         <xpath>/xs:schema/xs:complexType</xpath>
         <xpath>/xs:schema/xs:element[xs:complexType/@name]/@name</xpath>
@@ -32,6 +38,13 @@
         <xpath>xs:schema/xs:any/@namespace</xpath>
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
         <xpath>name(/*/*/*)</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/simple.xml</file>
+
+        <xpath>concat( /root/a, /root/b )</xpath>
+        <xpath>concat( /root/b, /root/a )</xpath>
     </testcase>
 
     <testcase>
@@ -200,6 +213,10 @@
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>sum(//Price)</xpath>
+
+        <!-- other functions -->
+        <xpath>normalize-space( /root )</xpath>
+        <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>        
     </testcase>
 
     <testcase>
@@ -306,6 +323,7 @@
         <xpath>count(/*/fibonacci)</xpath>        
         <xpath>sum(//fibonacci)</xpath>
         <xpath>sum(//fibonacci/@index)</xpath>
+        <xpath>count(/*/fibonacci) - 1</xpath>
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
@@ -344,6 +362,10 @@
         <file>xmlFiles/text.xml</file>
 
         <xpath>/foo/bar/text()</xpath>
+        <xpath>normalize-space(/foo/bar/text())</xpath>
+        <xpath>normalize-space(/foo/bar)</xpath>
+        <xpath>string-length(/foo/bar/text())</xpath>
+        <xpath>string-length(normalize-space(/foo/bar))</xpath>
         <xpath>/web-app/servlet[1]/servlet-name</xpath>
         <xpath>/web-app/servlet[1]/servlet-name/text()</xpath>
     </testcase>
@@ -398,6 +420,12 @@
 
         <xpath>count(descendant::ACT)</xpath>
         <xpath>count(/PLAY/ACT/SCENE[1])</xpath>
+        <xpath>2+2</xpath>
+
+        <!-- arithmetic expression with count() -->
+        <xpath>10 + count(descendant::ACT)</xpath>
+        <xpath>count(/descendant::*)+1</xpath>
+        <xpath>count(descendant::SPEAKER)+1</xpath>
     </testcase>
 
     <testcase>

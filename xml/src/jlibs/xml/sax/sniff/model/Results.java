@@ -17,6 +17,8 @@ package jlibs.xml.sax.sniff.model;
 
 import jlibs.xml.sax.sniff.Debuggable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -45,5 +47,11 @@ public class Results implements Debuggable{
     public void reset(){
         hits.reset();
         results = null;
+    }
+
+    public List<Results> listeners = new ArrayList<Results>();
+
+    public Iterable<Results> listeners(){
+        return listeners;
     }
 }

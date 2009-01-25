@@ -19,8 +19,9 @@ package jlibs.xml.sax.sniff.model;
  * @author Santhosh Kumar T
  */
 public class HitManager{
-    public static final RuntimeException STOP_PARSING = new RuntimeException();
+    public static final RuntimeException STOP_PARSING = new RuntimeException("STOP_PARSING");
     private int min;
+    public volatile boolean parsing;
 
     public HitManager totalHits; 
 
@@ -48,12 +49,13 @@ public class HitManager{
         pending--;
         if(pending>=0){
             totalHits.pending--;
-            if(totalHits.pending==0)
+            if(totalHits.parsing && totalHits.pending==0)
                 throw STOP_PARSING;
         }
     }
 
     public void reset(){
+        totalHits.parsing = false;
         pending = min;
         totalHits.pending = totalHits.min;
     }

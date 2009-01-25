@@ -15,37 +15,26 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
+import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
+
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Sum extends StringFunction{
+public class Concat extends DerivedResults{
     @Override
-    public String getName(){
-        return "sum";
-    }
-
-    @Override
-    public boolean singleHit(){
-        return false;
-    }
-
-    public String join(String result1, String result2){
-        try{
-            return String.valueOf(Double.parseDouble(result1)+Double.parseDouble(result2));
-        }catch(NumberFormatException ex){
-            return "NaN";
-        }
-    }
-
     public QName resultType(){
-        return XPathConstants.NUMBER;
+        return XPathConstants.STRING;
     }
 
     @Override
-    public String defaultResult(){
-        return "0.0";
+    public void joinResults(){
+        StringBuilder buff = new StringBuilder();
+        for(Results member: members)
+            buff.append(getResult(member));
+        addResult(-1, buff.toString());
     }
 }
