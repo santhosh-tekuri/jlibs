@@ -18,6 +18,9 @@ package jlibs.xml.sax.sniff.model.functions;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -25,6 +28,11 @@ public class StringFunction extends Function{
     @Override
     public String getName(){
         return "string";
+    }
+
+    @Override
+    public QName resultType(){
+        return XPathConstants.STRING;
     }
 
     @Override

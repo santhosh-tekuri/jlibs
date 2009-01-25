@@ -21,7 +21,7 @@ import javax.xml.xpath.XPathConstants;
 /**
  * @author Santhosh Kumar T
  */
-public class Sum extends StringFunction{
+public class Strings extends StringFunction{
     @Override
     public String getName(){
         return "sum";
@@ -32,16 +32,11 @@ public class Sum extends StringFunction{
         return false;
     }
 
-    public String join(String result1, String result2){
-        try{
-            return String.valueOf(Double.parseDouble(result1)+Double.parseDouble(result2));
-        }catch(NumberFormatException ex){
-            return "NaN";
-        }
-    }
+    @Override
+    public void joinResults(){}
 
     public QName resultType(){
-        return XPathConstants.NUMBER;
+        return XPathConstants.STRING;
     }
 
     @Override

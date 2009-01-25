@@ -49,7 +49,7 @@ public class XPathParser implements XPathHandler{
         current = root;
         reader.parse(xpath);
 
-        return predicates.size()>0 ? new XPath(xpath, predicates, true) : new XPath(xpath, Collections.singletonList(current));
+        return predicates.size()>0 ? new XPath(xpath, null, predicates, true) : new XPath(xpath, null, Collections.singletonList(current));
     }
 
     @Override

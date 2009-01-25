@@ -15,9 +15,12 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Predicate;
-import jlibs.xml.sax.sniff.model.functions.Function;
+import jlibs.xml.sax.sniff.model.Root;
+import org.jaxen.expr.XPathExpr;
+import org.jaxen.saxpath.SAXPathException;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
@@ -30,17 +33,20 @@ import java.util.List;
  */
 public class XPath{
     private String xpath;
+    private XPathExpr xpathExpr;
     List<Node> nodes = Collections.emptyList();
     List<Predicate> predicates = new ArrayList<Predicate>();
 
-    public XPath(String xpath, List<Node> nodes){
+    public XPath(String xpath, XPathExpr xpathExpr, List<Node> nodes){
         this.xpath = xpath;
+        this.xpathExpr = xpathExpr;
         this.nodes = nodes;
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    public XPath(String xpath, List<Predicate> predicates, boolean dummy){
+    public XPath(String xpath, XPathExpr xpathExpr, List<Predicate> predicates, boolean dummy){
         this.xpath = xpath;
+        this.xpathExpr = xpathExpr;
         this.predicates = predicates;
     }
 
@@ -53,12 +59,19 @@ public class XPath{
             predicate.hits.setMin(minHits);
     }
 
+    @SuppressWarnings({"LoopStatementThatDoesntLoop"})
     public QName resultType(){
-        for(Node node: nodes){
-            if(node instanceof Function)
-                return ((Function)node).returnType();
-        }
+        for(Node node: nodes)
+            return node.resultType();
         return XPathConstants.NODESET;
+    }
+
+    public XPath copy(Root root){
+        try{
+            return new JaxenParser(root).parse(xpath, xpathExpr);
+        }catch(SAXPathException ex){
+            throw new ImpossibleException(ex);
+        }
     }
 
     @Override

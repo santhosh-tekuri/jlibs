@@ -40,7 +40,8 @@ public abstract class Function extends Node{
         return node.getClass()==getClass();
     }
 
-    public QName returnType(){
+    @Override
+    public QName resultType(){
         return XPathConstants.STRING;
     }
     
@@ -80,9 +81,6 @@ public abstract class Function extends Node{
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
     public boolean hit(Context context, Event event){
-        if(!userGiven)
-            return false;
-        
         if(singleHit()){
             if(consumable(event)){
                 if(context.node!=this){
@@ -127,6 +125,8 @@ public abstract class Function extends Node{
             return new Count();
         else if("string".equals(name))
             return new StringFunction();
+        else if("strings".equals(name))
+            return new Strings();
         else if("sum".equals(name))
             return new Sum();
         else

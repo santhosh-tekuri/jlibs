@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.functions;
+package jlibs.xml.sax.sniff.model;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
@@ -21,31 +21,35 @@ import javax.xml.xpath.XPathConstants;
 /**
  * @author Santhosh Kumar T
  */
-public class Sum extends StringFunction{
-    @Override
-    public String getName(){
-        return "sum";
+public class LiteralNode extends Node{
+    public String literal;
+
+    public LiteralNode(String literal){
+        this.literal = literal;
     }
 
     @Override
-    public boolean singleHit(){
-        return false;
-    }
-
-    public String join(String result1, String result2){
-        try{
-            return String.valueOf(Double.parseDouble(result1)+Double.parseDouble(result2));
-        }catch(NumberFormatException ex){
-            return "NaN";
-        }
-    }
-
     public QName resultType(){
-        return XPathConstants.NUMBER;
+        return XPathConstants.STRING;
     }
 
     @Override
-    public String defaultResult(){
-        return "0.0";
+    public boolean equivalent(Node node){
+        if(node.getClass()==getClass()){
+            LiteralNode that = (LiteralNode)node;
+            return that.literal.equals(this.literal);
+        }else
+            return false;
+    }
+
+    @Override
+    public String toString(){
+        return "'"+literal+"'";
+    }
+
+    @Override
+    public void reset(){
+        super.reset();
+        addResult(-1, literal);
     }
 }
