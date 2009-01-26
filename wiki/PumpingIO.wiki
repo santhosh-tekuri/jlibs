@@ -125,7 +125,7 @@ It reuses the same byte array for both output and input;
 
 ------
 
-*PumpedInputStream & PumpedReader:*
+*PumpedInputStream and PumpedReader:*
 
 You can use `PipedInputStream` and `PipedOutputStream` in above example, so that you can write and read concurrently using fixed byte buffer.
 
