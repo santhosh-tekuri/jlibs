@@ -31,7 +31,6 @@ import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
-import javax.xml.xpath.XPathConstants;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
@@ -230,7 +229,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             
             for(Object parameter: functionExpr.getParameters()){
                 visit(parameter);
-                if(current.resultType()==XPathConstants.NODESET)
+                if(current.resultType()==ResultType.NODESET)
                     current = current.addConstraint(new StringFunction());
                 derivedResults.addMember(current);
             }

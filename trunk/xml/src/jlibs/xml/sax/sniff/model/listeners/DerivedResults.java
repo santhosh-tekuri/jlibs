@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff.model.listeners;
 
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Results;
-import jlibs.xml.sax.sniff.model.functions.Function;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,22 +45,4 @@ public class DerivedResults extends Node{
     public boolean equivalent(Node node){
         return false;
     }
-
-    protected String getResult(Results member){
-        String result = null;
-        if(member instanceof DerivedResults)
-            ((DerivedResults)member).joinResults();
-        else if(member instanceof Function)
-            ((Function)member).joinResults();
-
-        if(member.results!=null && member.results.size()>0)
-            result = member.results.firstEntry().getValue();
-
-        if(result==null && member instanceof Function)
-            result = ((Function)member).defaultResult();
-        
-        return result;
-    }
-
-    public void joinResults(){}
 }

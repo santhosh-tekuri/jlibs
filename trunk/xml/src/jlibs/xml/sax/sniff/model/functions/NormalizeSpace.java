@@ -15,23 +15,24 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
+import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
-
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
 public class NormalizeSpace extends DerivedResults{
     @Override
-    public QName resultType(){
-        return XPathConstants.STRING;
+    public ResultType resultType(){
+        return ResultType.STRING;
     }
 
-    public void joinResults(){
-        String result = getResult(members.get(0));
-        addResult(-1, normalize(result));
+    @Override
+    public void prepareResults(){
+        Results member = members.get(0);
+        member.prepareResults();
+        addResult(-1, normalize(member.asString()));
     }
 
     private static String normalize(String str){

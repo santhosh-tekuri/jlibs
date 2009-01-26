@@ -15,8 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
+import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
@@ -40,8 +39,8 @@ public class Sum extends StringFunction{
         }
     }
 
-    public QName resultType(){
-        return XPathConstants.NUMBER;
+    public ResultType resultType(){
+        return ResultType.NUMBER;
     }
 
     @Override

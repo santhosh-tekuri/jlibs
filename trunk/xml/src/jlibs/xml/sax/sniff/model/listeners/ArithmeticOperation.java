@@ -15,10 +15,9 @@
 
 package jlibs.xml.sax.sniff.model.listeners;
 
+import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
 import org.jaxen.saxpath.Operator;
-
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
@@ -31,15 +30,21 @@ public class ArithmeticOperation extends DerivedResults{
     }
 
     @Override
-    public QName resultType(){
-        return XPathConstants.NUMBER;
+    public ResultType resultType(){
+        return ResultType.NUMBER;
     }
 
-    public void joinResults(){
-        double lhs = Double.parseDouble(getResult(members.get(0)));
-        double rhs = Double.parseDouble(getResult(members.get(1)));
-        double result = 0;
+    @Override
+    public void prepareResults(){
+        Results lhsMember = members.get(0);
+        lhsMember.prepareResults();
+        double lhs = lhsMember.asNumber();
 
+        Results rhsMember = members.get(1);
+        rhsMember.prepareResults();
+        double rhs = rhsMember.asNumber();
+
+        double result = 0;
         switch(operator){
             case Operator.ADD:
                 result = lhs + rhs;

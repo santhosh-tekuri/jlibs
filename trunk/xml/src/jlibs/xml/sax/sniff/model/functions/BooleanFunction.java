@@ -13,13 +13,25 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model;
+package jlibs.xml.sax.sniff.model.functions;
 
-import javax.xml.namespace.QName;
+import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 /**
  * @author Santhosh Kumar T
  */
-public class ReturnsTypes{
-    public static final QName STRINGS = new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS");
+public class BooleanFunction extends DerivedResults{
+    @Override
+    public ResultType resultType(){
+        return ResultType.BOOLEAN;
+    }
+
+    @Override
+    public void prepareResults(){
+        Results member = members.get(0);
+        member.prepareResults();
+        addResult(-1, String.valueOf(member.asBoolean()));
+    }
 }

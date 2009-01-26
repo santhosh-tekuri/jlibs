@@ -19,9 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
-
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
+import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
@@ -41,8 +39,8 @@ public abstract class Function extends Node{
     }
 
     @Override
-    public QName resultType(){
-        return XPathConstants.STRING;
+    public ResultType resultType(){
+        return ResultType.STRING;
     }
     
     @Override
@@ -77,6 +75,13 @@ public abstract class Function extends Node{
     }
 
     public abstract String defaultResult();
+
+    @Override
+    public void prepareResults(){
+        joinResults();
+        if(results==null || results.size()==0)
+            addResult(-1, defaultResult());
+    }
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
 
