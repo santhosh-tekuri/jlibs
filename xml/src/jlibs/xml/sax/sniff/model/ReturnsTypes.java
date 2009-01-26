@@ -13,35 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.functions;
-
-import jlibs.xml.sax.sniff.model.ReturnsTypes;
+package jlibs.xml.sax.sniff.model;
 
 import javax.xml.namespace.QName;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Strings extends StringFunction{
-    @Override
-    public String getName(){
-        return "strings";
-    }
-
-    @Override
-    public boolean singleHit(){
-        return false;
-    }
-
-    @Override
-    public void joinResults(){}
-
-    public QName resultType(){
-        return ReturnsTypes.STRINGS;
-    }
-
-    @Override
-    public String defaultResult(){
-        return "0.0";
-    }
+public class ReturnsTypes{
+    public static final QName STRINGS = new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS");
 }

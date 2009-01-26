@@ -235,7 +235,11 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 derivedResults.addMember(current);
             }
             current = root.addConstraint(derivedResults.attach());
-        }else{
+        }else if(functionExpr.getFunctionName().equals("true"))
+            current = root.addConstraint(new BooleanNode(true));
+        else if(functionExpr.getFunctionName().equals("false"))
+            current = root.addConstraint(new BooleanNode(false));
+        else{
             Function function = Function.newInstance(functionExpr.getFunctionName());
             for(Object parameter: functionExpr.getParameters())
                 visit(parameter);
