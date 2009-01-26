@@ -13,35 +13,43 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.functions;
-
-import jlibs.xml.sax.sniff.model.ReturnsTypes;
+package jlibs.xml.sax.sniff.model;
 
 import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Strings extends StringFunction{
-    @Override
-    public String getName(){
-        return "strings";
+public class BooleanNode extends Node{
+    public boolean bool;
+
+    public BooleanNode(boolean bool){
+        this.bool = bool;
     }
 
     @Override
-    public boolean singleHit(){
-        return false;
-    }
-
-    @Override
-    public void joinResults(){}
-
     public QName resultType(){
-        return ReturnsTypes.STRINGS;
+        return XPathConstants.BOOLEAN;
     }
 
     @Override
-    public String defaultResult(){
-        return "0.0";
+    public boolean equivalent(Node node){
+        if(node.getClass()==getClass()){
+            BooleanNode that = (BooleanNode)node;
+            return that.bool==this.bool;
+        }else
+            return false;
+    }
+
+    @Override
+    public String toString(){
+        return String.valueOf(bool);
+    }
+
+    @Override
+    public void reset(){
+        super.reset();
+        addResult(-1, String.valueOf(bool));
     }
 }

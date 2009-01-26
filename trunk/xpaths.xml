@@ -4,6 +4,8 @@
               >
         <file>xmlFiles/note.xml</file>
 
+        <xpath>true()</xpath>
+        <xpath>false()</xpath>
         <xpath>1+2*5 div 2 mod 3</xpath>
         <xpath>(1+2)*5</xpath>
         <xpath>normalize-space('  santhosh  kumar   ')</xpath>
