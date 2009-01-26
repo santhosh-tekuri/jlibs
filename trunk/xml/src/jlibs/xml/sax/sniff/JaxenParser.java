@@ -216,6 +216,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         if(functionExpr.getFunctionName().equals("normalize-space")
                 || functionExpr.getFunctionName().equals("string-length")
+                || functionExpr.getFunctionName().equals("boolean")
                 || functionExpr.getFunctionName().equals("concat")){
             DerivedResults derivedResults = null;
             if(functionExpr.getFunctionName().equals("normalize-space"))
@@ -224,6 +225,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 derivedResults = new StringLength();
             else if(functionExpr.getFunctionName().equals("concat"))
                 derivedResults = new Concat();
+            else if(functionExpr.getFunctionName().equals("boolean"))
+                derivedResults = new BooleanFunction();
             else
                 throw new ImpossibleException(functionExpr.getFunctionName());
             
