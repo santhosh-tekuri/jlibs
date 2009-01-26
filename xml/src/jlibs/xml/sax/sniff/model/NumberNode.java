@@ -15,9 +15,6 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -29,8 +26,8 @@ public class NumberNode extends Node{
     }
 
     @Override
-    public QName resultType(){
-        return XPathConstants.NUMBER;
+    public ResultType resultType(){
+        return ResultType.NUMBER;
     }
 
     @Override

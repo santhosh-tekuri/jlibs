@@ -15,26 +15,26 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
-
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Concat extends DerivedResults{
     @Override
-    public QName resultType(){
-        return XPathConstants.STRING;
+    public ResultType resultType(){
+        return ResultType.STRING;
     }
 
     @Override
-    public void joinResults(){
+    public void prepareResults(){
         StringBuilder buff = new StringBuilder();
-        for(Results member: members)
-            buff.append(getResult(member));
+        for(Results member: members){
+            member.prepareResults();
+            buff.append(member.asString());
+        }
         addResult(-1, buff.toString());
     }
 }

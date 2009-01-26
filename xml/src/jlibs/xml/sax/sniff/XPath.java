@@ -62,7 +62,7 @@ public class XPath{
     @SuppressWarnings({"LoopStatementThatDoesntLoop"})
     public QName resultType(){
         for(Node node: nodes)
-            return node.resultType();
+            return node.resultType().qname();
         return XPathConstants.NODESET;
     }
 

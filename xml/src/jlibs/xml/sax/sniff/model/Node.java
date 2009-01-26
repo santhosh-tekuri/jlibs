@@ -23,8 +23,6 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,10 +39,6 @@ public abstract class Node extends Results{
     public boolean hasAttibuteChild;
 
     public abstract boolean equivalent(Node node);
-
-    public QName resultType(){
-        return XPathConstants.NODESET;
-    }
 
     /*-------------------------------------------------[ Children ]---------------------------------------------------*/
     

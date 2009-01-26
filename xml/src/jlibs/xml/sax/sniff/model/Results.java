@@ -30,6 +30,10 @@ public class Results implements Debuggable{
 
     public TreeMap<Integer, String> results;
 
+    public ResultType resultType(){
+        return ResultType.NODESET;
+    }
+
     public void addResult(int docOrder, String result){
         if(results==null)
             results = new TreeMap<Integer, String>();
@@ -53,5 +57,19 @@ public class Results implements Debuggable{
 
     public Iterable<Results> listeners(){
         return listeners;
+    }
+
+    public void prepareResults(){}
+
+    public boolean asBoolean(){
+        return resultType().asBoolean(results);
+    }
+
+    public String asString(){
+        return resultType().asString(results);
+    }
+
+    public double asNumber(){
+        return resultType().asNumber(results);
     }
 }

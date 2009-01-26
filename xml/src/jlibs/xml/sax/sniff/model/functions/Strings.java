@@ -15,9 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
-import jlibs.xml.sax.sniff.model.ReturnsTypes;
-
-import javax.xml.namespace.QName;
+import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
@@ -36,8 +34,8 @@ public class Strings extends StringFunction{
     @Override
     public void joinResults(){}
 
-    public QName resultType(){
-        return ReturnsTypes.STRINGS;
+    public ResultType resultType(){
+        return ResultType.STRINGS;
     }
 
     @Override

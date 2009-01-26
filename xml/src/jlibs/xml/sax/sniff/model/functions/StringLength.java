@@ -15,22 +15,23 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
+import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
-
-import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
 
 /**
  * @author Santhosh Kumar T
  */
 public class StringLength extends DerivedResults{
     @Override
-    public QName resultType(){
-        return XPathConstants.NUMBER;
+    public ResultType resultType(){
+        return ResultType.NUMBER;
     }
 
-    public void joinResults(){
-        String result = getResult(members.get(0));
-        addResult(-1, String.valueOf((double)result.length()));
+    @Override
+    public void prepareResults(){
+        Results member = members.get(0);
+        member.prepareResults();
+        addResult(-1, String.valueOf((double)member.asString().length()));
     }
 }
