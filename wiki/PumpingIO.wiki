@@ -2,6 +2,8 @@
 
 Pumping means reading from given `input` and writing to specified `output`;
 
+*IOUtil:*
+
 `jlibs.core.io.IOUtil` provides various utility method for pumping streams;
 
 let us say you want to read some File as `String`. You can do:
@@ -26,7 +28,7 @@ i.e,
 
 To simplify code, `pump(...)` method returns output; So the above code could be written in single line as follows:
 {{{
-String content = IOUtil.pump(new FileReader(file), new StringWriter(), true, true).toString();
+String content = IOUtil.pump(new FileReader(file), writer, true, true).toString();
 }}}
 
 if output is not specified, it defaults to `StringWriter`. so the same code can be written as:
@@ -66,5 +68,132 @@ byte bytes[] = IOUtil.pump(new FileInputStream(file), true).toByteArray(); // ou
 }}}
 
 [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/IOUtil.java source]
+
+--------
+
+*Bytes:*
+
+Let us say we have an object of type `Company`:
+
+{{{
+Company company = ...;
+}}}
+
+Now you would like to clone `company` object. but assume that `Company` doesn't implement `Cloneable` interface but implements `Serializable`.
+
+Now you can do cloning using serialization as follows:
+{{{
+ByteArrayOutputStream bout = new ByteArrayOutputStream();
+ObjectOutputStream objOut = new ObjectOutputStream(bout);
+objOut.writeObject(company);
+objOut.close();
+
+ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray()); // bottle-neck
+ObjectInputStream objIn = new ObjectInputStream(bin);
+Company copyOfCompany = (Company)objIn.readObject();
+objIn.close();
+}}}
+
+In above code see the line commented `bottle-neck`:
+{{{
+ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+}}}
+
+let us say bout contains 1024 bytes i.e, one MB. the statement `bout.toByteArray()` returns a cloned array,<br>
+rather than returning the orignal array; So it needs one more MB of free memory in heap;
+
+To avoid this you can use `jlibs.core.io.Bytes`:
+
+{{{
+import jlibs.core.io.Bytes;
+
+Bytes bytes = new Bytes();
+
+ObjectOutputStream objOut = new ObjectOutputStream(bytes.out());
+objOut.writeObject(obj);
+objOut.close();
+
+ObjectInputStream objIn = new ObjectInputStream(bytes.in());
+Company copyOfCompany = (Company)objIn.readObject();
+objIn.close();
+}}}
+
+`Bytes` can be treated as a buffer of bytes, which can be written/read using `Bytes.out()/Bytes.in()`.
+It reuses the same byte array for both output and input;
+
+[http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/Bytes.java source]
+
+------
+
+*PumpedInputStream & PumpedReader:*
+
+You can use `PipedInputStream` and `PipedOutputStream` in above example, so that you can write and read concurrently using fixed byte buffer.
+
+{{{
+final Company company = new Company();
+PipedInputStream pipedIn = new PipedInputStream();
+final PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
+final IOException ioEx[] = { null };
+new Thread(){
+    @Override
+    public void run(){
+        try{
+            ObjectOutputStream objOut = new ObjectOutputStream(pipedOut);
+            objOut.writeObject(company);
+            objOut.close();
+        }catch(IOException ex){
+            ioEx[0] = ex;
+        }
+    }
+}.start();
+ObjectInputStream objIn = new ObjectInputStream(pipedIn);
+Company copyOfCompany = (Company)objIn.readObject();
+objIn.close();
+if(ioEx[0]!=null)
+    throw ioEx[0];
+}}}
+
+In `JLibs`, you can use `PumpedInputStream`:
+
+{{{
+import jlibs.core.io.PumpedInputStream;
+
+final Company company = new Company();
+PumpedInputStream in = new PumpedInputStream(){
+    @Override
+    protected void pump(PipedOutputStream out) throws Exception{
+        ObjectOutputStream objOut = new ObjectOutputStream(out);
+        objOut.writeObject(company);
+        objOut.close();
+    }
+}.start(); // start() will spawn new thread
+
+ObjectInputStream objIn = new ObjectInputStream(in);
+Company copyOfCompany = (Company)objIn.readObject();
+objIn.close(); // any exceptions occurred in pump(...) are thrown by close()
+}}}
+
+`PumpedInputStream` is an abstract class with following abstract method:
+{{{
+protected abstract void pump(PipedOutputStream out) throws Exception;
+}}}
+
+This method implementation should write data into `out` which is passed as argument and close it;
+
+Any exceptions thrown by pump(...) are wrapped in `IOException` and rethrown by `PumpedInputStream.close()`;
+
+`PumpedInputStream` implements `Runnable` which is supposed to be run in thread. You can use `PumpedInputStream.start()` method to start thread or spawn thread implicitly.<br>
+`start()` method returns self reference;
+{{{
+    public PumpedInputStream start();
+}}}
+
+I like to used `PumpedInputStream` rather than `PipedInputStream/PipedOutputStream/Thread` because:
+ * it doesn't clutter the exising flow of code
+ * exception handling is better;
+
+[http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/PumpedInputStream.java source]<br><br>
+ 
+There is also `jlibs.core.io.PumpedReader` for charater-streams.
 
 your comments are welcomed;
