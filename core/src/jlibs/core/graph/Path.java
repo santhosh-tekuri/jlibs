@@ -22,6 +22,7 @@ public final class Path{
     private Path parentPath;
     private Object elem;
     private int index;
+    public boolean lastElem = false;
 
     public Path(Object elem){
         if(elem==null)
