@@ -45,4 +45,19 @@ public class DerivedResults extends Node{
     public boolean equivalent(Node node){
         return false;
     }
+
+    public String getName(){
+        return getClass().getSimpleName();
+    }
+    
+    @Override
+    public String toString(){
+        StringBuilder buff = new StringBuilder();
+        for(Results member: members){
+            if(buff.length()>0)
+                buff.append(", ");
+            buff.append('(').append(member).append(')');
+        }
+        return getName()+'{'+buff+'}';
+    }
 }

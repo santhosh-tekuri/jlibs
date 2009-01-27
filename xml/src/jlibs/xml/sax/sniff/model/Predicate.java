@@ -67,7 +67,8 @@ public class Predicate extends Results{
         if(userGiven)
             buff1.append("userGiven ");
         for(Node node: nodes){
-            buff1.append(", ");
+            if(buff1.length()>0)
+                buff1.append(", ");
             buff1.append(node);
         }
 

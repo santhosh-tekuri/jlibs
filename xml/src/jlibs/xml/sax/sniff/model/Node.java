@@ -186,6 +186,11 @@ public abstract class Node extends Results{
         if(userGiven)
             addResult(event.order(), event.getResult());
 
+        processPredicates(event);
+        return true;
+    }
+
+    protected void processPredicates(Event event){
         for(Predicate predicate: predicates()){
             predicate.cache().addResult(event.order(), event.getResult());
             checkMembers(predicate);
@@ -205,7 +210,7 @@ public abstract class Node extends Results{
 
         for(Predicate predicate: predicates()){
             if(memberOf.contains(predicate))
-                return true;
+                return;
             if(predicate.hasCache()){
                 Predicate.Cache cache = predicate.cache();
                 Map.Entry<Integer, String> result = cache.getResult(this);
@@ -218,8 +223,6 @@ public abstract class Node extends Results{
                 }
             }
         }
-
-        return true;
     }
     
     private void checkMembers(Predicate predicate){

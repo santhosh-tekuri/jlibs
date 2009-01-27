@@ -435,7 +435,10 @@
     <testcase>
         <file>xmlFiles/sum.xml</file>
 
+        <xpath>number(//one)</xpath>
         <xpath>sum(//one)</xpath>
+        <xpath>number(//two)</xpath>
+        <xpath>number(//two)+5</xpath>
         <xpath>sum(//two)</xpath>
     </testcase>
 

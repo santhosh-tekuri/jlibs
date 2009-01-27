@@ -15,7 +15,6 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
@@ -23,6 +22,7 @@ import jlibs.xml.sax.sniff.model.Predicate;
 import jlibs.xml.sax.sniff.model.functions.*;
 import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
+import jlibs.xml.sax.sniff.model.listeners.LogicalOperation;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
@@ -207,6 +207,21 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return current;
     }
 
+    private DerivedResults createDerivedResults(String name){
+        if(name.equals("normalize-space"))
+            return new NormalizeSpace();
+        else if(name.equals("string-length"))
+            return new StringLength();
+        else if(name.equals("concat"))
+            return new Concat();
+        else if(name.equals("boolean"))
+            return new Booleanize();
+        else if(name.equals("number"))
+            return new NumberFunction();
+        else
+            return null;
+    }
+
     protected Node process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
         String name = functionExpr.getFunctionName();
@@ -214,25 +229,11 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(prefix.length()>0)
             throw new SAXPathException("unsupported function "+prefix+':'+name+"()");
 
-        if(functionExpr.getFunctionName().equals("normalize-space")
-                || functionExpr.getFunctionName().equals("string-length")
-                || functionExpr.getFunctionName().equals("boolean")
-                || functionExpr.getFunctionName().equals("concat")){
-            DerivedResults derivedResults = null;
-            if(functionExpr.getFunctionName().equals("normalize-space"))
-                derivedResults = new NormalizeSpace();
-            else if(functionExpr.getFunctionName().equals("string-length"))
-                derivedResults = new StringLength();
-            else if(functionExpr.getFunctionName().equals("concat"))
-                derivedResults = new Concat();
-            else if(functionExpr.getFunctionName().equals("boolean"))
-                derivedResults = new BooleanFunction();
-            else
-                throw new ImpossibleException(functionExpr.getFunctionName());
-            
+        DerivedResults derivedResults = createDerivedResults(functionExpr.getFunctionName());
+        if(derivedResults!=null){
             for(Object parameter: functionExpr.getParameters()){
                 visit(parameter);
-                if(current.resultType()==ResultType.NODESET)
+                if(!name.equals("boolean") && current.resultType()==ResultType.NODESET)
                     current = current.addConstraint(new StringFunction());
                 derivedResults.addMember(current);
             }
@@ -275,17 +276,48 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             operator = Operator.DIV;
         else if(binaryExpr.getOperator().equals("mod"))
             operator = Operator.MOD;
+
+        DerivedResults derivedResults = null;
+        if(operator!=-1)
+            derivedResults = new ArithmeticOperation(operator);
+        else if(binaryExpr.getOperator().equals("and"))
+            derivedResults = new LogicalOperation(true);
+        else if(binaryExpr.getOperator().equals("or"))
+            derivedResults = new LogicalOperation(false);
         else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());
 
-        ArithmeticOperation arithmeticOperation = new ArithmeticOperation(operator);
+        Node _current = current;
         visit(binaryExpr.getLHS());
-        arithmeticOperation.addMember(current);
+        if(derivedResults.resultType()==ResultType.BOOLEAN)
+            current = toBoolean(current);
+        derivedResults.addMember(current);
+
+        current = _current;
         visit(binaryExpr.getRHS());
-        arithmeticOperation.addMember(current);
-        current = root.addConstraint(arithmeticOperation.attach());
+        if(derivedResults.resultType()==ResultType.BOOLEAN)
+            current = toBoolean(current);
+        derivedResults.addMember(current);
+        current = root.addConstraint(derivedResults.attach());
 
         return current;
+    }
+
+    /*-------------------------------------------------[ DataConvertion ]---------------------------------------------------*/
+
+    public Node toBoolean(Node node){
+        if(node.resultType()==ResultType.BOOLEAN)
+            return node;
+        else if(node.resultType()==ResultType.NODESET){
+            Function function = new BooleanFunction();
+            return node.addConstraint(function);
+        }else{
+            DerivedResults derivedResults = new Booleanize();
+            derivedResults.addMember(node);
+            derivedResults = derivedResults.attach();
+            root.addConstraint(derivedResults);
+            return derivedResults;
+        }
     }
 
     public static void main(String[] args) throws SAXPathException{
