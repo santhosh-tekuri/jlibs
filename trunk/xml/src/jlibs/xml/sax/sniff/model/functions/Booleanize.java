@@ -15,28 +15,23 @@
 
 package jlibs.xml.sax.sniff.model.functions;
 
-import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 /**
  * @author Santhosh Kumar T
  */
-public class BooleanFunction extends Function{
-    public String getName(){
-        return "boolean";
+public class Booleanize extends DerivedResults{
+    @Override
+    public ResultType resultType(){
+        return ResultType.BOOLEAN;
     }
 
     @Override
-    public boolean singleHit(){
-        return true;
-    }
-
-    @Override
-    public String evaluate(Event event, String lastResult){
-        return "true";
-    }
-
-    @Override
-    public String defaultResult(){
-        return "false";
+    public void prepareResults(){
+        Results member = members.get(0);
+        member.prepareResults();
+        addResult(-1, String.valueOf(member.asBoolean()));
     }
 }
