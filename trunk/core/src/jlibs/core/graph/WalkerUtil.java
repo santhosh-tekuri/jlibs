@@ -16,15 +16,16 @@
 package jlibs.core.graph;
 
 import jlibs.core.graph.navigators.FilteredNavigator;
-import jlibs.core.graph.sequences.ArraySequence;
-import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.visitors.StaticVisitor;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.core.io.FileNavigator;
 
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileFilter;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -96,8 +97,21 @@ public class WalkerUtil{
 
             @Override
             public boolean preProcess(E elem, Path path){
-                for(int i=0; i<indent; i++)
-                    System.out.print("   ");
+                Deque<Path> stack = new ArrayDeque<Path>();
+                while(path.getParentPath()!=null){
+                    stack.push(path);
+                    path = path.getParentPath();
+                }
+                while(!stack.isEmpty()){
+                    path = stack.pop();
+                    if(stack.isEmpty()){
+                        System.out.print(path.lastElem ? '`' : '|');
+                        System.out.print("-- ");
+                    }else{
+                        System.out.print(path.lastElem ? ' ' : '|');
+                        System.out.print("   ");
+                    }
+                }
                 System.out.println(visitor!=null ? visitor.visit(elem) : elem.toString());
                 indent++;
                 return true;
@@ -111,26 +125,37 @@ public class WalkerUtil{
     }
 
     public static void main(String[] args){
-        ArraySequence<String> elements = new ArraySequence<String>("undershorts", "socks", "pants", "shoes", "watch", "belt", "shirt", "tie", "jacket");
-        System.out.println(topologicalSort(elements, new Navigator<String>(){
-            Map<String, Sequence<String>> map = new HashMap<String, Sequence<String>>();
-            {
-                map.put("undershorts", new ArraySequence<String>("pants", "shoes"));
-                map.put("socks", new ArraySequence<String>("shoes"));
-                map.put("pants", new ArraySequence<String>("belt", "shoes"));
-                map.put("belt", new ArraySequence<String>("jacket"));
-                map.put("shirt", new ArraySequence<String>("tie"));
-                map.put("tie", new ArraySequence<String>("jacket"));
-            }
-            
+//        ArraySequence<String> elements = new ArraySequence<String>("undershorts", "socks", "pants", "shoes", "watch", "belt", "shirt", "tie", "jacket");
+//        System.out.println(topologicalSort(elements, new Navigator<String>(){
+//            Map<String, Sequence<String>> map = new HashMap<String, Sequence<String>>();
+//            {
+//                map.put("undershorts", new ArraySequence<String>("pants", "shoes"));
+//                map.put("socks", new ArraySequence<String>("shoes"));
+//                map.put("pants", new ArraySequence<String>("belt", "shoes"));
+//                map.put("belt", new ArraySequence<String>("jacket"));
+//                map.put("shirt", new ArraySequence<String>("tie"));
+//                map.put("tie", new ArraySequence<String>("jacket"));
+//            }
+//
+//            @Override
+//            public Sequence<String> children(String elem){
+//                Sequence<String> seq = map.get(elem);
+//                if(seq==null)
+//                    return EmptySequence.getInstance();
+//                else
+//                    return seq;
+//            }
+//        }));
+        print(new PreorderWalker<File>(new File("/Volumes/Softwares/Personal/jlibs/core/src"), new FileNavigator(new FileFilter(){
             @Override
-            public Sequence<String> children(String elem){
-                Sequence<String> seq = map.get(elem);
-                if(seq==null)
-                    return EmptySequence.getInstance();
-                else
-                    return seq;
+            public boolean accept(File file){
+                return !file.isDirectory() || !file.getName().equals(".svn");
             }
-        }));
+        })), new Visitor<File, String>(){
+            @Override
+            public String visit(File elem){
+                return elem.getName();
+            }
+        });
     }
 }

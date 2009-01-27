@@ -15,8 +15,11 @@
 
 package jlibs.core.graph.walkers;
 
-import jlibs.core.graph.sequences.*;
 import jlibs.core.graph.*;
+import jlibs.core.graph.sequences.AbstractSequence;
+import jlibs.core.graph.sequences.DuplicateSequence;
+import jlibs.core.graph.sequences.EmptySequence;
+import jlibs.core.graph.sequences.EnumeratedSequence;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -92,9 +95,11 @@ public class PreorderWalker<E> extends AbstractSequence<E> implements Walker<E>{
         if(stack.isEmpty())
             return null;
         else{
-            E current = stack.peek().seq.current();
+            Sequence<? extends E> peekSeq = stack.peek().seq;
+            E current = peekSeq.current();
+            path = path==null ? new Path(current) : path.append(current, peekSeq.index());
+            path.lastElem = !peekSeq.hasNext();
             stack.push(new Children(navigator.children(current)));
-            path = path==null ? new Path(current) : path.append(current);
             return current;
         }
     }
