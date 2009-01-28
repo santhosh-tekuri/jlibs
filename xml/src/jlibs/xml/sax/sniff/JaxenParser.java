@@ -109,11 +109,14 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(locationPath.isAbsolute() || current==root || current.parent==null)
             current = root.addChild(new DocumentNode());
 
-        for(Step step: (List<Step>)locationPath.getSteps())
+        boolean hasPredicate = false;
+        for(Step step: (List<Step>)locationPath.getSteps()){
             visit(step);
+            hasPredicate = step.getPredicates().size()>0;
+        }
 
         if(lastFilteredNodeSet!=null){
-            if(!current.observers.contains(lastFilteredNodeSet))
+            if(!hasPredicate)
                 lastFilteredNodeSet = new FilteredNodeSet(current, _toBoolean(lastFilteredNodeSet));
         }
         return current;

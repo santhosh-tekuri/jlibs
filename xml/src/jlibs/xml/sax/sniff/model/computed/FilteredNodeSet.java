@@ -21,6 +21,8 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Results;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
@@ -34,36 +36,27 @@ public class FilteredNodeSet extends ComputedResults{
         hits.totalHits = member.hits.totalHits;
     }
 
-    private class Result{
-        int order;
-        String result;
-
-        public Result(Event event){
-            order = event.order();
-            result = event.getResult();
-        }
-    }
-
     private class MemberResults{
-        private Result result;
+        private TreeMap<Integer, String> results = new TreeMap<Integer, String>();
         private boolean accept;
 
         private boolean hit(Results member, Event event){
             if(member==members.get(0))
-                result = new Result(event);
+                results.put(event.order(), event.getResult());
             else if(member==members.get(1))
                 accept = true;
 
-            if(accept && result!=null){
-                addResult(result.order, result.result);
-                result = null;
+            if(accept && results.size()>0){
+                for(Map.Entry<Integer, String> entry: results.entrySet())
+                    addResult(entry.getKey(), entry.getValue());
+                results.clear();
                 return true;
             }
             return false;
         }
 
         private void clear(){
-            result = null;
+            results.clear();
             accept = false;
         }
     }
@@ -129,9 +122,10 @@ public class FilteredNodeSet extends ComputedResults{
     }
 
     public void clearResults(Results member){
-        if(member==members.get(0))
-            memberResults.result = null;
-        else if(member==members.get(1))
-            memberResults.accept = false;
+        memberResults.clear();
+//        if(member==members.get(0))
+//            memberResults.results.clear();
+//        else if(member==members.get(1))
+//            memberResults.accept = false;
     }
 }
