@@ -73,17 +73,6 @@ public class FilteredNodeSet extends ComputedResults{
                     map.put(context.identity(), memberResults=new MemberResults());
             }
         }
-//        MemberResults memberResults = null;
-//        if(members.get(0)==member)
-//            memberResults = map.get(context.identity());
-//        else{
-//            for(MemberResults mr: map.values()){
-//                memberResults = mr;
-//            }
-//        }
-//
-//        if(memberResults==null)
-//            map.put(context.identity(), memberResults=new MemberResults());
 
         if(memberResults.hit(member, event))
             notifyObservers(context, event);
@@ -97,22 +86,9 @@ public class FilteredNodeSet extends ComputedResults{
     
     @Override
     public void endingContext(Context context){
-//        if(members.get(1) instanceof FilteredNodeSet)
-//            return;
-//        else if(members.get(0)==context.node)
         if(contextSensitive)
             map.remove(context.identity());
-        
         clearResults();
-
-//        Node n = (Node)members.get(1);
-//        while(n!=null){
-//            n = n.parent;
-//            if(n==context.node){
-//                clearResults();
-//                break;
-//            }
-//        }
     }
 
     protected void clearResults(){
@@ -123,9 +99,5 @@ public class FilteredNodeSet extends ComputedResults{
 
     public void clearResults(Results member){
         memberResults.clear();
-//        if(member==members.get(0))
-//            memberResults.results.clear();
-//        else if(member==members.get(1))
-//            memberResults.accept = false;
     }
 }
