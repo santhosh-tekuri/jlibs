@@ -39,6 +39,7 @@ public abstract class ComputedResults extends Node{
     }
 
     public void addMember(Results member){
+        root = ((Node)member).root;
         members.add(member);
         member.observers.add(this);
     }
@@ -50,6 +51,10 @@ public abstract class ComputedResults extends Node{
     }
 
     protected void clearResults(){
+        for(Results observer: members()){
+            if(observer instanceof ComputedResults)
+                ((ComputedResults)observer).clearResults();
+        }
         for(ComputedResults observer: observers())
             observer.clearResults(this);
     }
@@ -59,6 +64,8 @@ public abstract class ComputedResults extends Node{
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
+        if(userGiven)
+            buff.append("UserGiven");
         for(Results member: members){
             if(buff.length()>0)
                 buff.append(", ");

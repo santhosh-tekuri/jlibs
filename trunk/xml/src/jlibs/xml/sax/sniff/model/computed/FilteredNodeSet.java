@@ -20,6 +20,8 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Results;
 
+import java.util.LinkedHashMap;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -67,10 +69,17 @@ public class FilteredNodeSet extends ComputedResults{
     }
 
     private MemberResults memberResults = new MemberResults();
-//    private LinkedHashMap<Object, MemberResults> map = new LinkedHashMap<Object, MemberResults>();
+    private LinkedHashMap<Object, MemberResults> map = new LinkedHashMap<Object, MemberResults>();
 
     @Override
     public void memberHit(Results member, Context context, Event event){
+        if(contextSensitive){
+            if(member==members.get(0)){
+                memberResults = map.get(context.identity());
+                if(memberResults==null)
+                    map.put(context.identity(), memberResults=new MemberResults());
+            }
+        }
 //        MemberResults memberResults = null;
 //        if(members.get(0)==member)
 //            memberResults = map.get(context.identity());
@@ -87,12 +96,21 @@ public class FilteredNodeSet extends ComputedResults{
             notifyObservers(context, event);
     }
 
+    private boolean contextSensitive;
+    public void contextSensitive(){
+        contextSensitive = true;
+        members.get(0).cleanupObservers.add(this);
+    }
+    
     @Override
     public void endingContext(Context context){
-        if(members.get(1) instanceof FilteredNodeSet)
-            return;
-        else if(members.get(0)==context.node)
-            clearResults();
+//        if(members.get(1) instanceof FilteredNodeSet)
+//            return;
+//        else if(members.get(0)==context.node)
+        if(contextSensitive)
+            map.remove(context.identity());
+        
+        clearResults();
 
 //        Node n = (Node)members.get(1);
 //        while(n!=null){
@@ -105,7 +123,8 @@ public class FilteredNodeSet extends ComputedResults{
     }
 
     protected void clearResults(){
-        memberResults.clear();
+        if(!contextSensitive)
+            memberResults.clear();
         super.clearResults();
     }
 

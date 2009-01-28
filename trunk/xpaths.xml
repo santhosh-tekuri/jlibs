@@ -185,9 +185,15 @@
         <xpath>/root/pub/book[ pub[ book[ name ]]]</xpath>
         <xpath>/root/pub[ book ]/book[ pub[ book[ name ]]]</xpath>
         <xpath>/root/pub[ book[ pub[ book[ name ]]]]/book[ pub[ book[ name ]]]</xpath>
+        <xpath>//book[price]</xpath>
+        <xpath>/root[ pub/book/author ]/pub/book/price</xpath>
 
         <!-- closure in predicate -->
         <xpath>//pub[.//book//author]</xpath>
+
+        <!-- queries with Or, And & AndOr structures in predicate-->
+        <xpath>//book[price and author]</xpath>
+        <xpath>//book[price or author]</xpath>
 
         <!-- count() used at the top level -->
         <xpath>count(/root/pub/book/price)</xpath>

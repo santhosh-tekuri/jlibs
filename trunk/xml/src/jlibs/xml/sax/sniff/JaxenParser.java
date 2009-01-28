@@ -18,10 +18,8 @@ package jlibs.xml.sax.sniff;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
-import jlibs.xml.sax.sniff.model.computed.AndExpression;
-import jlibs.xml.sax.sniff.model.computed.BooleanizedNodeSet;
-import jlibs.xml.sax.sniff.model.computed.ComputedResults;
-import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
+import jlibs.xml.sax.sniff.model.computed.*;
+import jlibs.xml.sax.sniff.model.computed.Count;
 import jlibs.xml.sax.sniff.model.functions.*;
 import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
@@ -34,8 +32,6 @@ import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 
 /**
@@ -93,12 +89,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         current = root;
         visit(xpathExpr.getRootExpr());
 
-        if(!filteredNodeSets.isEmpty()){
-            FilteredNodeSet filteredNodeSet = filteredNodeSets.poll();
-            if(!current.observers.contains(filteredNodeSet))
-                filteredNodeSet = new FilteredNodeSet(current, _toBoolean(filteredNodeSet));
-            filteredNodeSet.userGiven = true;
-            return new XPath(xpath, xpathExpr, filteredNodeSet);
+        if(lastFilteredNodeSet!=null){
+            lastFilteredNodeSet.userGiven = true;
+            return new XPath(xpath, xpathExpr, lastFilteredNodeSet);
 //        if(!predicates.isEmpty()){
 //            Predicate predicate = predicates.poll();
 //            if(!current.predicates.contains(predicate))
@@ -119,6 +112,10 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         for(Step step: (List<Step>)locationPath.getSteps())
             visit(step);
 
+        if(lastFilteredNodeSet!=null){
+            if(!current.observers.contains(lastFilteredNodeSet))
+                lastFilteredNodeSet = new FilteredNodeSet(current, _toBoolean(lastFilteredNodeSet));
+        }
         return current;
     }
 
@@ -179,7 +176,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         current = current.addConstraint(new QNameNode(uri, localName));
 
         for(Object predicate: nameStep.getPredicates()){
-            filteredNodeSets.clear();
+            lastFilteredNodeSet = null;
 //            predicates.clear();
             visit(predicate);
         }
@@ -188,7 +185,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
 //    private Deque<Predicate> predicates = new ArrayDeque<Predicate>();
-    private Deque<FilteredNodeSet> filteredNodeSets = new ArrayDeque<FilteredNodeSet>();
+    private FilteredNodeSet lastFilteredNodeSet;
+    private int predicateDepth;
     protected Node process(org.jaxen.expr.Predicate p) throws SAXPathException{
         if(p.getExpr() instanceof NumberExpr){
             NumberExpr numberExpr = (NumberExpr)p.getExpr();
@@ -207,10 +205,21 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                     }
                 }
             }
-
+            predicateDepth++;
             Node context = current;
             visit(p.getExpr());
-            filteredNodeSets.offer(new FilteredNodeSet(context, _toBoolean(current)));
+
+            FilteredNodeSet filteredNodeSet = null;
+            if(lastFilteredNodeSet==null)
+                filteredNodeSet = new FilteredNodeSet(context, _toBoolean(current));
+            else
+                filteredNodeSet = new FilteredNodeSet(context, lastFilteredNodeSet);
+            
+            lastFilteredNodeSet = filteredNodeSet;
+//            filteredNodeSets.offer(new FilteredNodeSet(context, _toBoolean(current)));
+            predicateDepth--;
+            if(predicateDepth==0)
+                filteredNodeSet.contextSensitive();
 //            predicates.offer(context.addPredicate(new Predicate(current)));
             current = context;
         }
@@ -240,33 +249,43 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(prefix.length()>0)
             throw new SAXPathException("unsupported function "+prefix+':'+name+"()");
 
-        DerivedResults derivedResults = createDerivedResults(name);
-        if(derivedResults!=null){
-            for(Object parameter: functionExpr.getParameters()){
-                visit(parameter);
-                if(name.equals("boolean") && current.resultType()==ResultType.NODESET)
-                    current = new BooleanizedNodeSet(current);
-                else{
-                    if(!name.equals("boolean") && current.resultType()==ResultType.NODESET)
-                        current = current.addConstraint(new StringFunction());
-                    derivedResults.addMember(current);
+        if(name.equals("count")){
+            current = visit(functionExpr.getParameters().get(0));
+            if(lastFilteredNodeSet!=null)
+                current = new Count(lastFilteredNodeSet);
+            else
+                current = new Count(current);
+        }else{
+            DerivedResults derivedResults = createDerivedResults(name);
+            if(derivedResults!=null){
+                for(Object parameter: functionExpr.getParameters()){
+                    visit(parameter);
+                    if(name.equals("boolean") && current.resultType()==ResultType.NODESET)
+                        current = new BooleanizedNodeSet(current);
+                    else{
+                        if(!name.equals("boolean") && current.resultType()==ResultType.NODESET)
+                            current = current.addConstraint(new StringFunction());
+                        derivedResults.addMember(current);
+                    }
                 }
+                if(!(current instanceof ComputedResults))
+                    current = root.addConstraint(derivedResults.attach());
+            }else if(functionExpr.getFunctionName().equals("true"))
+                current = root.addConstraint(new BooleanNode(true));
+            else if(functionExpr.getFunctionName().equals("false"))
+                current = root.addConstraint(new BooleanNode(false));
+            else{
+                Function function = Function.newInstance(functionExpr.getFunctionName());
+                for(Object parameter: functionExpr.getParameters())
+                    visit(parameter);
+
+    //            if(lastFilteredNodeSet!=null)
+    //                current = lastFilteredNodeSet.addConstraint(function);
+    //            else
+                    current = current.addConstraint(function);
             }
-            if(!(current instanceof ComputedResults))
-                current = root.addConstraint(derivedResults.attach());
-        }else if(functionExpr.getFunctionName().equals("true"))
-            current = root.addConstraint(new BooleanNode(true));
-        else if(functionExpr.getFunctionName().equals("false"))
-            current = root.addConstraint(new BooleanNode(false));
-        else{
-            Function function = Function.newInstance(functionExpr.getFunctionName());
-            for(Object parameter: functionExpr.getParameters())
-                visit(parameter);
-
-            current = current.addConstraint(function);
         }
-
-        filteredNodeSets.clear();
+        lastFilteredNodeSet = null;
 //        predicates.clear();
         return current;
     }
@@ -283,7 +302,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     protected Node process(BinaryExpr binaryExpr) throws SAXPathException{
         if(binaryExpr.getOperator().equals("and")){
-
             Node _current = current;
             visit(binaryExpr.getLHS());
             Node lhs = current;
@@ -293,6 +311,16 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             Node rhs = current;
 
             return current = new AndExpression(lhs, rhs);
+        }else if(binaryExpr.getOperator().equals("or")){
+            Node _current = current;
+            visit(binaryExpr.getLHS());
+            Node lhs = current;
+
+            current = _current;
+            visit(binaryExpr.getRHS());
+            Node rhs = current;
+
+            return current = new OrExpression(lhs, rhs);
         }
 
         int operator = -1;
