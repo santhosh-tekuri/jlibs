@@ -19,6 +19,7 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
+import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,8 +83,19 @@ public class Results implements Debuggable{
         return observers;
     }
 
-    protected void notifyObservers(Context context, Event event){
+    public void notifyObservers(Context context, Event event){
         for(ComputedResults observer: observers())
             observer.memberHit(this, context, event);
+    }
+
+    public List<FilteredNodeSet> cleanupObservers = new ArrayList<FilteredNodeSet>();
+
+    public Iterable<FilteredNodeSet> cleanupObservers(){
+        return cleanupObservers;
+    }
+
+    protected void notifyCleanupObservers(Context context){
+        for(FilteredNodeSet observer: cleanupObservers())
+            observer.endingContext(context);
     }
 }

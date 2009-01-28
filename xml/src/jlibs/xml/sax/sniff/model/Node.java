@@ -33,7 +33,7 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public abstract class Node extends Results{
-    Root root;
+    public Root root;
     public Node parent;
     public Node constraintParent;
 
@@ -148,7 +148,7 @@ public abstract class Node extends Results{
         if(userGiven)
             addResult(event.order(), event.getResult());
 
-        notifyObservers(context, event);
+//        notifyObservers(context, event);
         processPredicates(event);
         return true;
     }
@@ -225,10 +225,8 @@ public abstract class Node extends Results{
     public void endingContext(Context context){
         if(context.depth==0){
             clearPredicateCache();
-            for(ComputedResults observer: observers){
-                if(observer instanceof FilteredNodeSet)
-                    observer.endingContext(context);
-            }
+            for(FilteredNodeSet observer: cleanupObservers())
+                observer.endingContext(context);
         }
         
         for(Node child: context.node.children())
@@ -301,6 +299,11 @@ public abstract class Node extends Results{
                 if(elem.observers.size()>0){
                     str += " ==>";
                     for(ComputedResults observer: elem.observers())
+                        str += observer+" ";
+                }
+                if(elem.cleanupObservers.size()>0){
+                    str += " -->";
+                    for(FilteredNodeSet observer: elem.cleanupObservers())
                         str += observer+" ";
                 }
                 return str;

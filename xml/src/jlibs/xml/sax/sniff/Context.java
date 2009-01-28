@@ -19,11 +19,14 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
 
+import java.util.ArrayList;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Context implements Debuggable{
     public Context parent;
+    public ArrayList<Context> childContexts = new ArrayList<Context>();
     public Node node;
     public int depth;
 //        int parentDepths[];
@@ -36,6 +39,7 @@ public class Context implements Debuggable{
     public Context childContext(Node child){
         Context context = new Context(child);
         context.parent = this;
+        childContexts.add(context);
 
 //            context.parentDepths = new int[parentDepths.length+1];
 //            System.arraycopy(parentDepths, 0, context.parentDepths, 0, parentDepths.length);
@@ -88,8 +92,12 @@ public class Context implements Debuggable{
             for(Node child: node.children()){
                 if(child.matches(event)){
                     if(hit(event, child)){
-                        if(changeContext)
-                            contexts.add(childContext(child));
+                        if(changeContext){
+                            Context childContext = childContext(child);
+                            contexts.add(childContext);
+                            child.notifyObservers(childContext, event);
+                        }else
+                            child.notifyObservers(this, event);
                         matchConstraints(child, event, contexts);
                     }
                 }
@@ -99,7 +107,9 @@ public class Context implements Debuggable{
                     if(changeContext){
                         depth--;
                         contexts.add(this);
-                    }
+                        node.notifyObservers(this, event);
+                    }else
+                        node.notifyObservers(this, event);
                     matchConstraints(node, event, contexts);
                 }
             }else{
@@ -110,7 +120,7 @@ public class Context implements Debuggable{
             }
         }
 
-        //noinspection ConstantConditions
+        //noinspection ConstantConditions,PointlessBooleanExpression
         if(debug && changeContext)
             contexts.printNext(message);
     }
@@ -121,8 +131,12 @@ public class Context implements Debuggable{
         for(Node constraint: child.constraints()){
             if(constraint.matches(event)){
                 if(hit(event, constraint)){
-                    if(changeContext)
-                        contexts.add(childContext(constraint));
+                    if(changeContext){
+                        Context childContext = childContext(constraint);
+                        contexts.add(childContext);
+                        constraint.notifyObservers(childContext, event);
+                    }else
+                        constraint.notifyObservers(this, event);
                     matchConstraints(constraint, event, contexts);
                 }
             }

@@ -9,8 +9,14 @@
 <?odbc-to-xml table="test" ?>
     
     <pub>
+        <book FirstBook="false" id="0">
+            <price>15.00</price>
+            <name>NameA2</name>
+            <price type="discount">20.00</price>
+            <cost_price>15</cost_price>
+        </book>
         <book FirstBook="true" id="1">
-            <price>12.00</price>
+            <price>13.00</price>
             <name>NameA1</name>
             <author>AuthorA1</author>
             <price type="discount">10.00</price>
