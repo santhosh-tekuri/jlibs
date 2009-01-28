@@ -21,6 +21,8 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
+import java.util.TreeMap;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -29,7 +31,6 @@ public class BooleanizedNodeSet extends ComputedResults{
         if(member.resultType()!=ResultType.NODESET)
             throw new IllegalArgumentException("expected nodeset member");
         addMember(member);
-        hits.totalHits = member.hits.totalHits;
     }
 
     @Override
@@ -37,15 +38,30 @@ public class BooleanizedNodeSet extends ComputedResults{
         return ResultType.BOOLEAN;
     }
 
+    private class ResultCache{
+        TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+    }
+
+    @Override
+    protected ResultCache createResultCache(){
+        return new ResultCache();
+    }
+
     @Override
     public void prepareResults(){
-        if(!hasResult())
-            addResult(-1, "false");
+        ResultCache resultCache = getResultCache();
+        if(!hasResult()){
+            if(resultCache!=null && resultCache.results.size()>0)
+                addResult(-1, "true");
+            else
+                addResult(-1, "false");
+        }
     }
 
     public void memberHit(Results member, Context context, Event event){
-        if(!hasResult()){
-            addResult(-1, "true");
+        ResultCache resultCache = getResultCache(member, context);
+        if(resultCache.results.size()==0){
+            resultCache.results.put(-1, "true");
             notifyObservers(context, event);
         }
     }

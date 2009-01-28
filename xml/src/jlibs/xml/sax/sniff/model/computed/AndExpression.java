@@ -20,6 +20,8 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Results;
 
+import java.util.TreeMap;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -27,33 +29,35 @@ public class AndExpression extends ComputedResults{
     public AndExpression(Node member1, Node member2){
         addMember(member1);
         addMember(member2);
-        hits.totalHits = member1.hits.totalHits;
     }
 
-    private Boolean lhsResult, rhsResult;
+    private class ResultCache{
+        TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+        Boolean lhsResult, rhsResult;
+    }
+
+    @Override
+    protected ResultCache createResultCache(){
+        return new ResultCache();
+    }
+    
     @Override
     public void memberHit(Results member, Context context, Event event){
-        if(!hasResult()){
+        ResultCache resultCache = getResultCache(member, context);
+        if(resultCache.results.size()==0){
             if(member==members.get(0))
-                lhsResult = Boolean.TRUE;
+                resultCache.lhsResult = Boolean.TRUE;
             else if(member==members.get(1))
-                rhsResult = Boolean.TRUE;
+                resultCache.rhsResult = Boolean.TRUE;
             
-            if(lhsResult!=null && rhsResult!=null){
-                addResult(-1, "true");
+            if(resultCache.lhsResult!=null && resultCache.rhsResult!=null){
+                resultCache.results.put(-1, "true");
                 notifyObservers(context, event);
             }
         }
     }
 
-    @Override
-    protected void clearResults(){
-        results = null;
-        lhsResult = null;
-        rhsResult = null;
-    }
-
     public void clearResults(Results member){
-        System.out.println("");
+//        System.out.println("");
     }
 }

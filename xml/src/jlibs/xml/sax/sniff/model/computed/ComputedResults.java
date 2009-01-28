@@ -40,6 +40,7 @@ public abstract class ComputedResults extends Node{
 
     public void addMember(Results member){
         root = ((Node)member).root;
+        hits.totalHits = member.hits.totalHits;
         members.add(member);
         member.observers.add(this);
     }
@@ -50,7 +51,38 @@ public abstract class ComputedResults extends Node{
         return getClass().getSimpleName();
     }
 
+    protected abstract Object createResultCache();
+
+    private Object resultCache;
+    @SuppressWarnings({"unchecked"})
+    public <T> T getResultCache(Results member, Context context){
+        if(resultCache!=null)
+            return (T)resultCache;
+
+        ComputedResults node = this;
+        while(node.observers.size()>0){
+            node = node.observers.get(0);
+            if(node instanceof FilteredNodeSet){
+                FilteredNodeSet filteredNodeSet = (FilteredNodeSet)node;
+                if(filteredNodeSet.contextSensitive){
+                    return (T)filteredNodeSet.getResultCache(member, context).getResultCache(this);
+                }
+            }
+        }
+
+        resultCache = createResultCache();
+        return (T)resultCache;
+    }
+    
+    @SuppressWarnings({"unchecked"})
+    public <T> T getResultCache(){
+        return (T)resultCache;
+    }
+
     protected void clearResults(){
+        if(resultCache!=null)
+            resultCache=null;
+        
         for(Results observer: members()){
             if(observer instanceof ComputedResults)
                 ((ComputedResults)observer).clearResults();

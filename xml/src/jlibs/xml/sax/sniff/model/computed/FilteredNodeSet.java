@@ -20,6 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Results;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,7 +34,6 @@ public class FilteredNodeSet extends ComputedResults{
 //            throw new IllegalArgumentException("filter should be of boolean type");
         addMember(member);
         addMember(filter);
-        hits.totalHits = member.hits.totalHits;
     }
 
     private class MemberResults{
@@ -61,24 +61,48 @@ public class FilteredNodeSet extends ComputedResults{
         }
     }
 
-    private MemberResults memberResults = new MemberResults();
-    private LinkedHashMap<Object, MemberResults> map = new LinkedHashMap<Object, MemberResults>();
+    public class ResultCache{
+        MemberResults memberResults = new MemberResults();
+        Map<Results, Object> memberCacheMap = new HashMap<Results, Object>();
+
+        public Object getResultCache(ComputedResults member){
+            Object cache = memberCacheMap.get(member);
+            if(cache==null)
+                memberCacheMap.put(member, cache=member.createResultCache());
+            return cache; 
+        }
+    }
+
+    @Override
+    protected ResultCache createResultCache(){
+        return new ResultCache();
+    }
+
+
+    private ResultCache resultCache = new ResultCache();
+    private LinkedHashMap<Object, ResultCache> map = new LinkedHashMap<Object, ResultCache>();
+
+    @SuppressWarnings({"unchecked"})
+    public ResultCache getResultCache(Results member, Context context){
+        if(contextSensitive){
+            if(member==members.get(0)){
+                resultCache = map.get(context.identity());
+                if(resultCache==null)
+                    map.put(context.identity(), resultCache=new ResultCache());
+            }
+        }
+        return resultCache;
+    }
 
     @Override
     public void memberHit(Results member, Context context, Event event){
-        if(contextSensitive){
-            if(member==members.get(0)){
-                memberResults = map.get(context.identity());
-                if(memberResults==null)
-                    map.put(context.identity(), memberResults=new MemberResults());
-            }
-        }
+        resultCache = getResultCache(member, context);
 
-        if(memberResults.hit(member, event))
+        if(resultCache.memberResults.hit(member, event))
             notifyObservers(context, event);
     }
 
-    private boolean contextSensitive;
+    public boolean contextSensitive;
     public void contextSensitive(){
         contextSensitive = true;
         members.get(0).cleanupObservers.add(this);
@@ -93,11 +117,11 @@ public class FilteredNodeSet extends ComputedResults{
 
     protected void clearResults(){
         if(!contextSensitive)
-            memberResults.clear();
+            resultCache.memberResults.clear();
         super.clearResults();
     }
 
     public void clearResults(Results member){
-        memberResults.clear();
+        resultCache.memberResults.clear();
     }
 }
