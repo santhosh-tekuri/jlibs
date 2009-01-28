@@ -8,6 +8,10 @@
            name="rootname"
         >
 
+    <xs:element name="testElement">
+        <xs:complexType name="testtype">
+        </xs:complexType>
+    </xs:element>
 
     <xs:element name="anyElement">
         <abc:complexType>

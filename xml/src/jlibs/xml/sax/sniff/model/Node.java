@@ -21,9 +21,10 @@ import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.computed.ComputedResults;
+import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 import org.jaxen.saxpath.Axis;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +92,7 @@ public abstract class Node extends Results{
 
     /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
 
-    protected List<Predicate> predicates = new ArrayList<Predicate>();
+    public List<Predicate> predicates = new ArrayList<Predicate>();
 
     public Iterable<Predicate> predicates(){
         return predicates;
@@ -104,12 +105,11 @@ public abstract class Node extends Results{
         }
 
         predicates.add(predicate);
-        predicate.parentNode = this;
         predicate.hits.totalHits = root.hits.totalHits;
-        for(Node member: predicate.nodes)
-            member.memberOf.add(predicate);
-        for(Predicate member: predicate.predicates)
-            member.memberOf.add(predicate);
+        if(predicate.memberNode!=null)
+            predicate.memberNode.memberOf.add(predicate);
+        if(predicate.memberPredicate!=null)
+            predicate.memberPredicate.memberOf.add(predicate);
         return predicate;
     }
 
@@ -139,45 +139,7 @@ public abstract class Node extends Results{
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
     public boolean resultInteresed(){
-        return userGiven || predicates.size()>0 || memberOf.size()>0 || listeners.size()>0;
-    }
-
-    /*-------------------------------------------------[ Locate ]---------------------------------------------------*/
-
-    @SuppressWarnings({"SuspiciousMethodCalls"})
-    public Node locateIn(Root root){
-        if(this.root==root)
-            return this;
-
-        ArrayDeque<Integer> typeStack = new ArrayDeque<Integer>();
-        ArrayDeque<Integer> indexStack = new ArrayDeque<Integer>();
-        Node node = this;
-        while(node!=null){
-            if(node.constraintParent!=null){
-                typeStack.push(2);
-                indexStack.push(node.constraintParent.constraints.indexOf(node));
-                node = node.constraintParent;
-            }else if(node.parent!=null){
-                typeStack.push(1);
-                indexStack.push(node.parent.children.indexOf(node));
-                node = node.parent;
-            }else
-                break;
-        }
-
-        node = root;
-        while(!indexStack.isEmpty()){
-            switch(typeStack.pop()){
-                case 1:
-                    node = node.children.get(indexStack.pop());
-                    break;
-                case 2:
-                    node = node.constraints.get(indexStack.pop());
-                    break;
-            }
-        }
-
-        return node;
+        return userGiven || predicates.size()>0 || memberOf.size()>0 || listeners.size()>0 || observers.size()>0;
     }
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
@@ -186,6 +148,7 @@ public abstract class Node extends Results{
         if(userGiven)
             addResult(event.order(), event.getResult());
 
+        notifyObservers(context, event);
         processPredicates(event);
         return true;
     }
@@ -209,8 +172,6 @@ public abstract class Node extends Results{
         }
 
         for(Predicate predicate: predicates()){
-            if(memberOf.contains(predicate))
-                return;
             if(predicate.hasCache()){
                 Predicate.Cache cache = predicate.cache();
                 Map.Entry<Integer, String> result = cache.getResult(this);
@@ -226,7 +187,8 @@ public abstract class Node extends Results{
     }
     
     private void checkMembers(Predicate predicate){
-        for(Predicate member: predicate.predicates){
+        if(predicate.memberPredicate!=null){
+            Predicate member = predicate.memberPredicate;
             if(member.hasCache()){
                 Predicate.Cache cache = member.cache();
                 Map.Entry<Integer, String> result = cache.getResult(predicate);
@@ -240,19 +202,19 @@ public abstract class Node extends Results{
     }
 
     private void hitMemberOf(Predicate predicate){
-        for(Predicate member: predicate.memberOf){
-            if(member.hasCache()){
-                Predicate.Cache cache = member.cache();
+        for(Predicate memberOf: predicate.memberOf){
+            if(memberOf.hasCache()){
+                Predicate.Cache cache = memberOf.cache();
                 Map.Entry<Integer, String> result = cache.hit(predicate); // NOTE dont move this line
-                if(member.userGiven){
+                if(memberOf.userGiven){
                     Map.Entry<Integer, String> userResult = cache.getResult((Node)null);
                     if(userResult!=null){
-                        member.addResult(userResult.getKey(), userResult.getValue());
+                        memberOf.addResult(userResult.getKey(), userResult.getValue());
                         cache.removeResult((Node)null);
                     }
                 }
                 if(result!=null){
-                    hitMemberOf(member);
+                    hitMemberOf(memberOf);
                 }
             }
         }
@@ -261,8 +223,13 @@ public abstract class Node extends Results{
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
 
     public void endingContext(Context context){
-        if(context.depth==0)
+        if(context.depth==0){
             clearPredicateCache();
+            for(ComputedResults observer: observers){
+                if(observer instanceof FilteredNodeSet)
+                    observer.endingContext(context);
+            }
+        }
         
         for(Node child: context.node.children())
             clearHitCounts(context, child);
@@ -270,7 +237,8 @@ public abstract class Node extends Results{
 
     private void clearPredicateCache(){
         for(Predicate predicate: predicates()){
-            for(Node n: predicate.nodes){
+            if(predicate.memberNode!=null){
+                Node n = predicate.memberNode;
                 while(n!=null){
                     n = n.parent;
                     if(n==this){
@@ -329,6 +297,11 @@ public abstract class Node extends Results{
                     str += " ==>";
                     for(Predicate predicate: elem.memberOf)
                         str += predicate+" ";
+                }
+                if(elem.observers.size()>0){
+                    str += " ==>";
+                    for(ComputedResults observer: elem.observers())
+                        str += observer+" ";
                 }
                 return str;
             }
