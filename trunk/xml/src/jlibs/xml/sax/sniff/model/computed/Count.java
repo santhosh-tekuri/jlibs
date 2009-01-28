@@ -38,7 +38,10 @@ public class Count extends ComputedResults{
 
     @Override
     public void memberHit(Results member, Context context, Event event){
-        count++;
+        if(member instanceof FilteredNodeSet)
+            count = member.hasResult() ? member.results.size() : 0;
+        else
+            count++;
     }
 
     @Override

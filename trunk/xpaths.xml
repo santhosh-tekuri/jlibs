@@ -186,7 +186,6 @@
         <xpath>/root/pub[ book ]/book[ pub[ book[ name ]]]</xpath>
         <xpath>/root/pub[ book[ pub[ book[ name ]]]]/book[ pub[ book[ name ]]]</xpath>
         <xpath>//book[price]</xpath>
-        <xpath>/root[ pub/book/author ]/pub/book/price</xpath>
 
         <!-- closure in predicate -->
         <xpath>//pub[.//book//author]</xpath>
@@ -197,11 +196,13 @@
 
         <!-- count() used at the top level -->
         <xpath>count(/root/pub/book/price)</xpath>
+        <xpath>/root[ pub/book/author ]/pub/book/price</xpath>
         <xpath>count(/root[ pub/book/author ]/pub/book/price)</xpath>
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book/price)</xpath>
         <xpath>count(/root/pub/book[ author ]/price)</xpath>
         <xpath>count(/root/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price</xpath>
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>count(/descendant::node())</xpath>
         <xpath>count(/nonexistingelement)</xpath>
