@@ -21,61 +21,39 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class Predicate extends Results{
-    public Node parentNode;
-    public List<Node> nodes = new ArrayList<Node>();
-    public List<Predicate> predicates = new ArrayList<Predicate>();
+    public Node memberNode;
+    public Predicate memberPredicate;
     public List<Predicate> memberOf = new ArrayList<Predicate>();
 
     @SuppressWarnings({"ManualArrayToCollectionCopy"})
-    public Predicate(Node... nodes){
-        for(Node node: nodes){
-            // commented code needs be moved into xpathparser to support nested predicates
-//            if(node.predicates.size()>0){
-//                for(Predicate predicate: node.predicates){
-//                    predicates.add(predicate);
-//                    predicate.memberOf.add(this);
-//                }
-//            }else{
-                this.nodes.add(node);
-//                node.memberOf.add(this);
-//            }
-        }
+    public Predicate(Node node){
+        memberNode = node;
     }
 
     public Predicate(Predicate predicate){
-        predicates.add(predicate);
+        memberPredicate = predicate;
 //        predicate.memberOf.add(this);
     }
 
     public boolean equivalent(Predicate predicate){
-        return nodes.equals(predicate.nodes) && predicates.equals(predicate.predicates);
+        return this.memberNode==predicate.memberNode && this.memberPredicate==predicate.memberPredicate;
     }
 
-    public Predicate locateIn(Root root){
-        Node node = parentNode.locateIn(root);
-        if(parentNode==node)
-            return this;
-        else{
-            int i = parentNode.predicates.indexOf(this);
-            return node.predicates.get(i);
-        }
-    }
-    
     @Override
     public String toString(){
         StringBuilder buff1 = new StringBuilder();
         if(userGiven)
             buff1.append("userGiven ");
-        for(Node node: nodes){
+        if(memberNode!=null){
             if(buff1.length()>0)
                 buff1.append(", ");
-            buff1.append(node);
+            buff1.append(memberNode);
         }
 
-        for(Predicate predicate: predicates){
+        if(memberPredicate!=null){
             if(buff1.length()>0)
                 buff1.append(", ");
-            buff1.append(predicate);
+            buff1.append(memberPredicate);
         }
 
 //        if(memberOf.size()>0)
@@ -120,8 +98,10 @@ public class Predicate extends Results{
         public TreeMap<Integer, String> resultStack = new TreeMap<Integer, String>();
 
         public Cache(){
-            nodes.addAll(Predicate.this.nodes);
-            predicates.addAll(Predicate.this.predicates);
+            if(memberNode!=null)
+                nodes.add(memberNode);
+            if(memberPredicate!=null)
+                predicates.add(memberPredicate);
 
             for(Predicate p: memberOf)
                 predicateResultMap.put(p, new TreeMap<Integer, String>());
@@ -152,7 +132,7 @@ public class Predicate extends Results{
 
         public Map.Entry<Integer, String> hit(Predicate predicate){
             predicates.remove(predicate);
-            return getResult(predicate);
+            return getResult(memberNode);
         }
 
         public Map.Entry<Integer, String> getResult(Node node){

@@ -15,7 +15,10 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.Debuggable;
+import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,5 +74,16 @@ public class Results implements Debuggable{
 
     public double asNumber(){
         return resultType().asNumber(results);
+    }
+
+    public List<ComputedResults> observers = new ArrayList<ComputedResults>();
+
+    public Iterable<ComputedResults> observers(){
+        return observers;
+    }
+
+    protected void notifyObservers(Context context, Event event){
+        for(ComputedResults observer: observers())
+            observer.memberHit(this, context, event);
     }
 }

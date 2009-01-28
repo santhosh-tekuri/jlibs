@@ -220,7 +220,7 @@
 
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
-        <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>        
+        <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>
     </testcase>
 
     <testcase>

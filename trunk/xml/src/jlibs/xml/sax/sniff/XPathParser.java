@@ -26,7 +26,6 @@ import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 
 /**
@@ -49,7 +48,7 @@ public class XPathParser implements XPathHandler{
         current = root;
         reader.parse(xpath);
 
-        return predicates.size()>0 ? new XPath(xpath, null, predicates, true) : new XPath(xpath, null, Collections.singletonList(current));
+        return predicates.size()>0 ? new XPath(xpath, null, predicates.get(0)) : new XPath(xpath, null, current);
     }
 
     @Override

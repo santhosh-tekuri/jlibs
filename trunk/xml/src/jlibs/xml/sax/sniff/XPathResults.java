@@ -15,9 +15,6 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Predicate;
-
 import java.util.*;
 
 /**
@@ -35,16 +32,9 @@ public class XPathResults implements Debuggable{
     private List<String> collectResult(XPath xpath){
         Map<Integer, String> results = new TreeMap<Integer, String>();
 
-        for(Node node: xpath.nodes){
-            node.prepareResults();
-            if(node.hasResult())
-                    results.putAll(node.results);
-        }
-
-        for(Predicate predicate: xpath.predicates){
-            if(predicate.hasResult())
-                results.putAll(predicate.results);
-        }
+        xpath.results.prepareResults();
+        if(xpath.results.hasResult())
+            results.putAll(xpath.results.results);
 
         return new ArrayList<String>(results.values());
     }

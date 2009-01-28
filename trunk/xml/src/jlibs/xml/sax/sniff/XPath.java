@@ -16,17 +16,12 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.ImpossibleException;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Predicate;
+import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.Root;
 import org.jaxen.expr.XPathExpr;
 import org.jaxen.saxpath.SAXPathException;
 
 import javax.xml.namespace.QName;
-import javax.xml.xpath.XPathConstants;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -34,36 +29,23 @@ import java.util.List;
 public class XPath{
     private String xpath;
     private XPathExpr xpathExpr;
-    List<Node> nodes = Collections.emptyList();
-    List<Predicate> predicates = new ArrayList<Predicate>();
+    Results results;
 
-    public XPath(String xpath, XPathExpr xpathExpr, List<Node> nodes){
+    public XPath(String xpath, XPathExpr xpathExpr, Results results){
         this.xpath = xpath;
         this.xpathExpr = xpathExpr;
-        this.nodes = nodes;
-    }
-
-    @SuppressWarnings({"UnusedDeclaration"})
-    public XPath(String xpath, XPathExpr xpathExpr, List<Predicate> predicates, boolean dummy){
-        this.xpath = xpath;
-        this.xpathExpr = xpathExpr;
-        this.predicates = predicates;
+        this.results = results;
     }
 
     int minHits;
     public void setMinHits(int minHits){
         this.minHits = minHits;
-        for(Node node: nodes)
-            node.hits.setMin(minHits);
-        for(Predicate predicate: predicates)
-            predicate.hits.setMin(minHits);
+        results.hits.setMin(minHits);
     }
 
     @SuppressWarnings({"LoopStatementThatDoesntLoop"})
     public QName resultType(){
-        for(Node node: nodes)
-            return node.resultType().qname();
-        return XPathConstants.NODESET;
+        return results.resultType().qname();
     }
 
     public XPath copy(Root root){
