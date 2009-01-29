@@ -19,7 +19,6 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
-import jlibs.xml.sax.sniff.model.computed.Count;
 import jlibs.xml.sax.sniff.model.functions.*;
 import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
@@ -248,6 +247,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 current = new Count(lastFilteredNodeSet);
             else
                 current = new Count(current);
+        }else if(name.equals("name")){
+            current = visit(functionExpr.getParameters().get(0));
+            if(lastFilteredNodeSet!=null)
+                current = new QualifiedName(lastFilteredNodeSet);
+            else
+                current = new QualifiedName(current);
         }else{
             DerivedResults derivedResults = createDerivedResults(name);
             if(derivedResults!=null){

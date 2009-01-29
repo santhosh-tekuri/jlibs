@@ -120,14 +120,10 @@ public abstract class Function extends Node{
     /*-------------------------------------------------[ Factory ]---------------------------------------------------*/
     
     public static Function newInstance(String name){
-        if("name".equals(name))
-            return new Name();
-        else if("local-name".equals(name))
+        if("local-name".equals(name))
             return new LocalName();
         else if("namespace-uri".equals(name))
             return new NamespaceURI();
-        else if("count".equals(name))
-            return new Count();
         else if("string".equals(name))
             return new StringFunction();
         else if("strings".equals(name))
