@@ -182,8 +182,8 @@ public class XPathPerformanceTest{
         }
         System.out.format("testcases are executed: total=%d failed=%d %n", total, failed);
 
-        System.out.println("      jdk time : "+jdkTime+" nanoseconds");
-        System.out.println("      dog time : "+dogTime+" nanoseconds");
+        System.out.format("       jdk time : %d nanoseconds/%.2f seconds %n", jdkTime, jdkTime*1E-09);
+        System.out.format("       dog time : %d nanoseconds/%.2f seconds %n", dogTime, dogTime*1E-09);
         double faster = (1.0*Math.max(dogTime, jdkTime)/Math.min(dogTime, jdkTime));
         System.out.format("        WINNER : %s (%.2fx faster) %n", dogTime<=jdkTime ? "XMLDog" : "XALAN", faster);
         long diff = Math.abs(dogTime - jdkTime);
