@@ -120,11 +120,6 @@ public abstract class Function extends Node{
     /*-------------------------------------------------[ Factory ]---------------------------------------------------*/
     
     public static Function newInstance(String name){
-        if("strings".equals(name))
-            return new Strings();
-        else if("sum".equals(name))
-            return new Sum();
-        else
-            throw new NotImplementedException("function "+name+"() is not supported");
+        throw new NotImplementedException("function "+name+"() is not supported");
     }
 }
