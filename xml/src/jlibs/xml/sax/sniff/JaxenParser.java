@@ -19,7 +19,10 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
-import jlibs.xml.sax.sniff.model.functions.*;
+import jlibs.xml.sax.sniff.model.functions.Booleanize;
+import jlibs.xml.sax.sniff.model.functions.Function;
+import jlibs.xml.sax.sniff.model.functions.NumberFunction;
+import jlibs.xml.sax.sniff.model.functions.StringFunction;
 import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 import jlibs.xml.sax.sniff.model.listeners.LogicalOperation;
@@ -220,13 +223,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
     private DerivedResults createDerivedResults(String name){
-        if(name.equals("normalize-space"))
-            return new NormalizeSpace();
-        else if(name.equals("string-length"))
-            return new StringLength();
-        else if(name.equals("concat"))
-            return new Concat();
-        else if(name.equals("boolean"))
+        if(name.equals("boolean"))
             return new Booleanize();
         else if(name.equals("number"))
             return new NumberFunction();
@@ -234,6 +231,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return null;
     }
 
+    @SuppressWarnings({"unchecked"})
     protected Node process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
         String name = functionExpr.getFunctionName();
@@ -271,6 +269,27 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }else if(name.equals("sum")){
             current = visit(functionExpr.getParameters().get(0));
             current = new SumNodeSet(current, lastFilteredNodeSet);
+        }else if(name.equals("concat")){
+            Concat concat = new Concat(lastFilteredNodeSet);
+            for(Expr param: (List<Expr>)functionExpr.getParameters()){
+                current = visit(param);
+                concat.addMember(current);
+            }
+            current = concat;
+        }else if(name.equals("normalize-space")){
+            NormalizeSpace normalizeSpace = new NormalizeSpace(lastFilteredNodeSet);
+            for(Expr param: (List<Expr>)functionExpr.getParameters()){
+                current = visit(param);
+                normalizeSpace.addMember(current);
+            }
+            current = normalizeSpace;
+        }else if(name.equals("string-length")){
+            StringLength stringLength = new StringLength(lastFilteredNodeSet);
+            for(Expr param: (List<Expr>)functionExpr.getParameters()){
+                current = visit(param);
+                stringLength.addMember(current);
+            }
+            current = stringLength;
         }else{
             DerivedResults derivedResults = createDerivedResults(name);
             if(derivedResults!=null){
@@ -306,7 +325,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
     protected Node process(LiteralExpr literalExpr) throws SAXPathException{
-        current = root.addConstraint(new LiteralNode(literalExpr.getLiteral()));
+        current = new StringLiteral(root, literalExpr.getLiteral()); 
+        //current = root.addConstraint(new LiteralNode(literalExpr.getLiteral()));
         return current;
     }
 

@@ -21,6 +21,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -73,6 +74,7 @@ public class FilteredNodeSet extends ComputedResults{
         }
     }
 
+    @NotNull
     @Override
     protected ResultCache createResultCache(){
         return new ResultCache();
@@ -112,18 +114,20 @@ public class FilteredNodeSet extends ComputedResults{
     public void endingContext(Context context){
         if(contextSensitive)
             map.remove(context.identity());
-        clearResults();
+        clearResults(context);
     }
 
-    protected void clearResults(){
+    @Override
+    protected void clearResults(Context context){
         if(!contextSensitive)
             resultCache.memberResults.clear();
-        super.clearResults();
+        super.clearResults(context);
     }
 
-    public void clearResults(UserResults member){
+    @Override
+    public void clearResults(UserResults member, Context context){
         resultCache.memberResults.clear();
         for(ComputedResults observer: observers())
-            observer.clearResults(this);
+            observer.clearResults(this, context);
     }
 }

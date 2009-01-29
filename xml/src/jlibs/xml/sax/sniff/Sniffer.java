@@ -142,8 +142,8 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
-        reset();
         try{
+            reset();
             DefaultHandler handler = this;
             if(debug)
                 handler = new SAXDebugHandler(handler);

@@ -23,14 +23,14 @@ import java.util.TreeMap;
  * @author Santhosh Kumar T
  */
 public enum ResultType{
-    NODESET(XPathConstants.NODESET){
+    NODESET(XPathConstants.NODESET, null){
         @Override
         public boolean asBoolean(TreeMap<Integer, String> results){
             return results!=null && results.size()>0;
         }
     },
     
-    STRING(XPathConstants.STRING){
+    STRING(XPathConstants.STRING, ""){
         public String asString(TreeMap<Integer, String> results){
             return results!=null && results.size()>0 ? results.firstEntry().getValue() : "";
         }
@@ -49,7 +49,7 @@ public enum ResultType{
         }
     },
 
-    NUMBER(XPathConstants.NUMBER){
+    NUMBER(XPathConstants.NUMBER, "0.0"){
         public String asString(TreeMap<Integer, String> results){
             return String.valueOf(asNumber(results));
         }
@@ -69,7 +69,7 @@ public enum ResultType{
         }
     },
 
-    BOOLEAN(XPathConstants.BOOLEAN){
+    BOOLEAN(XPathConstants.BOOLEAN, "false"){
         public String asString(TreeMap<Integer, String> results){
             return String.valueOf(asBoolean(results));
         }
@@ -84,15 +84,21 @@ public enum ResultType{
         }
     },
     
-    STRINGS(new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS"));
+    STRINGS(new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS"), null);
 
     private QName qname;
-    private ResultType(QName qname){
+    private String defaultValue;
+    private ResultType(QName qname, String defaultValue){
         this.qname = qname;
+        this.defaultValue = defaultValue;
     }
 
     public QName qname(){
         return qname;
+    }
+
+    public String defaultValue(){
+        return defaultValue;
     }
 
     public boolean asBoolean(TreeMap<Integer, String> results){

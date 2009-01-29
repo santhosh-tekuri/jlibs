@@ -74,7 +74,7 @@ public class XMLDog implements Debuggable{
         }
 
         try{
-            if(root.children().iterator().hasNext())
+//            if(root.children().iterator().hasNext())
                 new Sniffer(_root).sniff(source);
             _root.parsingDone();
             return new XPathResults(_xpaths);

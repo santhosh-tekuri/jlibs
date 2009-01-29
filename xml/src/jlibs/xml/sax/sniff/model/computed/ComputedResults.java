@@ -21,6 +21,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,10 +53,18 @@ public abstract class ComputedResults extends Node{
 
     public abstract void memberHit(UserResults member, Context context, Event event);
 
+    @Override
+    public void notifyObservers(Context context, Event event){
+        super.notifyObservers(context, event);
+        if(userGiven)
+            hits.hit();
+    }
+
     public String getName(){
         return getClass().getSimpleName();
     }
 
+    @NotNull
     protected abstract Results createResultCache();
 
     private Results resultCache;
@@ -84,19 +93,19 @@ public abstract class ComputedResults extends Node{
         return (T)resultCache;
     }
 
-    protected void clearResults(){
+    protected void clearResults(Context context){
         if(resultCache!=null)
             resultCache=null;
         
         for(UserResults observer: members()){
             if(observer instanceof ComputedResults)
-                ((ComputedResults)observer).clearResults();
+                ((ComputedResults)observer).clearResults(context);
         }
         for(ComputedResults observer: observers())
-            observer.clearResults(this);
+            observer.clearResults(this, context);
     }
 
-    public void clearResults(UserResults member){}
+    public void clearResults(UserResults member, Context context){}
 
     @Override
     public void endingContext(Context context){}
