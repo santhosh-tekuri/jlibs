@@ -82,7 +82,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         JaxenHandler handler = new JaxenHandler();
         reader.setXPathHandler(handler);
         reader.parse(xpath);
-        return parse(xpath, handler.getXPathExpr());
+        return parse(xpath, new XPathSimplifier().simplify(handler.getXPathExpr()));
     }
 
     public XPath parse(String xpath, XPathExpr xpathExpr) throws SAXPathException{
@@ -391,11 +391,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }
     }
 
-    public static void main(String[] args) throws SAXPathException{
+//    public static void main(String[] args) throws SAXPathException{
 //        new JaxenParser(null).generateCode();
-//        Root root = new Root(new DefaultNamespaceContext());
-//        JaxenParser parser = new JaxenParser(root);
-//        parser.parse("1+2");
-//        root.print();
-    }
+//    }
 }
