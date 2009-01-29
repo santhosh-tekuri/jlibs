@@ -13,25 +13,31 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.functions;
+package jlibs.xml.sax.sniff.model.computed;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
-import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 /**
  * @author Santhosh Kumar T
  */
-public class StringLength extends DerivedResults{
+public class ToNumber extends StringComputedResult{
+    public ToNumber(FilteredNodeSet filter){
+        super(filter);
+    }
+
     @Override
     public ResultType resultType(){
         return ResultType.NUMBER;
     }
 
     @Override
-    public void prepareResults(){
-        UserResults member = members.get(0);
-        member.prepareResults();
-        addResult(-1, String.valueOf((double)member.asString().length()));
+    protected String transform(String result){
+        double d;
+        try{
+            d = Double.parseDouble(result);
+        }catch(NumberFormatException e){
+            d = Double.NaN;
+        }
+        return String.valueOf(d);
     }
 }
