@@ -366,7 +366,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     /*-------------------------------------------------[ DataConvertion ]---------------------------------------------------*/
 
-    public Results _toBoolean(Node node){
+    public UserResults _toBoolean(Node node){
         return node;
 //        if(node.resultType()==ResultType.BOOLEAN)
 //            return node;

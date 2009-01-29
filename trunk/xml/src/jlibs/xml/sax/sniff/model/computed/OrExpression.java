@@ -20,8 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
-
-import java.util.TreeMap;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 /**
  * @author Santhosh Kumar T
@@ -32,20 +31,16 @@ public class OrExpression extends ComputedResults{
         addMember(rhs, ResultType.NODESET);
     }
 
-    private class ResultCache{
-        TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+    @Override
+    protected Results createResultCache(){
+        return new Results();
     }
 
     @Override
-    protected ResultCache createResultCache(){
-        return new ResultCache();
-    }
-
-    @Override
-    public void memberHit(Results member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
-        if(resultCache.results.size()==0){
-            resultCache.results.put(-1, "true");
+    public void memberHit(UserResults member, Context context, Event event){
+        Results resultCache = getResultCache(member, context);
+        if(!resultCache.hasResult()){
+            resultCache.addResult(-1, "true");
             notifyObservers(context, event);
         }
     }

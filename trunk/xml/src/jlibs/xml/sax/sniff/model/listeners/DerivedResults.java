@@ -16,7 +16,7 @@
 package jlibs.xml.sax.sniff.model.listeners;
 
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,18 +25,18 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class DerivedResults extends Node{
-    public List<Results> members = new ArrayList<Results>();
+    public List<UserResults> members = new ArrayList<UserResults>();
 
-    public Iterable<Results> members(){
+    public Iterable<UserResults> members(){
         return members;
     }
     
-    public void addMember(Results member){
+    public void addMember(UserResults member){
         members.add(member);
     }
 
     public DerivedResults attach(){
-        for(Results member: members)
+        for(UserResults member: members)
             member.listeners.add(this);
         return this;
     }
@@ -53,7 +53,7 @@ public class DerivedResults extends Node{
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(Results member: members){
+        for(UserResults member: members){
             if(buff.length()>0)
                 buff.append(", ");
             buff.append('(').append(member).append(')');

@@ -20,8 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
-
-import java.util.TreeMap;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 /**
  * @author Santhosh Kumar T
@@ -32,8 +31,7 @@ public class AndExpression extends ComputedResults{
         addMember(rhs, ResultType.NODESET);
     }
 
-    private class ResultCache{
-        TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+    private class ResultCache extends Results{
         Boolean lhsResult, rhsResult;
     }
 
@@ -43,22 +41,22 @@ public class AndExpression extends ComputedResults{
     }
     
     @Override
-    public void memberHit(Results member, Context context, Event event){
+    public void memberHit(UserResults member, Context context, Event event){
         ResultCache resultCache = getResultCache(member, context);
-        if(resultCache.results.size()==0){
+        if(!resultCache.hasResult()){
             if(member==members.get(0))
                 resultCache.lhsResult = Boolean.TRUE;
             else if(member==members.get(1))
                 resultCache.rhsResult = Boolean.TRUE;
             
             if(resultCache.lhsResult!=null && resultCache.rhsResult!=null){
-                resultCache.results.put(-1, "true");
+                resultCache.addResult(-1, "true");
                 notifyObservers(context, event);
             }
         }
     }
 
-    public void clearResults(Results member){
+    public void clearResults(UserResults member){
 //        System.out.println("");
     }
 }

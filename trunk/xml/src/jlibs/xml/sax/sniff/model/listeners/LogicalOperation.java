@@ -16,7 +16,7 @@
 package jlibs.xml.sax.sniff.model.listeners;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 /**
  * @author Santhosh Kumar T
@@ -35,7 +35,7 @@ public class LogicalOperation extends DerivedResults{
 
     @Override
     public void prepareResults(){
-        Results lhsMember = members.get(0);
+        UserResults lhsMember = members.get(0);
         lhsMember.prepareResults();
         boolean lhs = lhsMember.asBoolean();
 
@@ -49,7 +49,7 @@ public class LogicalOperation extends DerivedResults{
             return;
         }
 
-        Results rhsMember = members.get(1);
+        UserResults rhsMember = members.get(1);
         rhsMember.prepareResults();
         boolean rhs = rhsMember.asBoolean();
         addResult(-1, String.valueOf(rhs));

@@ -15,37 +15,20 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.Debuggable;
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.computed.ComputedResults;
-import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Results implements Debuggable{
-    public boolean userGiven;
-    public HitManager hits = new HitManager();
-
     public TreeMap<Integer, String> results;
-
-    public ResultType resultType(){
-        return ResultType.NODESET;
-    }
 
     public void addResult(int docOrder, String result){
         if(results==null)
             results = new TreeMap<Integer, String>();
         results.put(docOrder, result);
-        hits.hit();
-
-        if(debug)
-            System.out.format(toString()+"-Hit %2d: %s ---> %s %n", results.size(), this, result);
     }
 
     public boolean hasResult(){
@@ -53,49 +36,6 @@ public class Results implements Debuggable{
     }
 
     public void reset(){
-        hits.reset();
         results = null;
-    }
-
-    public List<Results> listeners = new ArrayList<Results>();
-
-    public Iterable<Results> listeners(){
-        return listeners;
-    }
-
-    public void prepareResults(){}
-
-    public boolean asBoolean(){
-        return resultType().asBoolean(results);
-    }
-
-    public String asString(){
-        return resultType().asString(results);
-    }
-
-    public double asNumber(){
-        return resultType().asNumber(results);
-    }
-
-    public List<ComputedResults> observers = new ArrayList<ComputedResults>();
-
-    public Iterable<ComputedResults> observers(){
-        return observers;
-    }
-
-    public void notifyObservers(Context context, Event event){
-        for(ComputedResults observer: observers())
-            observer.memberHit(this, context, event);
-    }
-
-    public List<FilteredNodeSet> cleanupObservers = new ArrayList<FilteredNodeSet>();
-
-    public Iterable<FilteredNodeSet> cleanupObservers(){
-        return cleanupObservers;
-    }
-
-    protected void notifyCleanupObservers(Context context){
-        for(FilteredNodeSet observer: cleanupObservers())
-            observer.endingContext(context);
     }
 }

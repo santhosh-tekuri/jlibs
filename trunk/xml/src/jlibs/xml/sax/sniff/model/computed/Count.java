@@ -19,14 +19,13 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
-
-import java.util.TreeMap;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Count extends ComputedResults{
-    public Count(Results member){
+    public Count(UserResults member){
         addMember(member, ResultType.NODESET);
     }
 
@@ -35,8 +34,7 @@ public class Count extends ComputedResults{
         return ResultType.NUMBER;
     }
 
-    private class ResultCache{
-        TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+    private class ResultCache extends Results{
         int count;
     }
 
@@ -46,7 +44,7 @@ public class Count extends ComputedResults{
     }
 
     @Override
-    public void memberHit(Results member, Context context, Event event){
+    public void memberHit(UserResults member, Context context, Event event){
         ResultCache resultCache = getResultCache(member, context);
         if(member instanceof FilteredNodeSet)
             resultCache.count = member.hasResult() ? member.results.size() : 0;

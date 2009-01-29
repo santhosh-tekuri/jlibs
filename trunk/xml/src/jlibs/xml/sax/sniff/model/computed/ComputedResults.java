@@ -20,6 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +34,13 @@ public abstract class ComputedResults extends Node{
         return false;
     }
     
-    public List<Results> members = new ArrayList<Results>();
+    public List<UserResults> members = new ArrayList<UserResults>();
 
-    public Iterable<Results> members(){
+    public Iterable<UserResults> members(){
         return members;
     }
 
-    public void addMember(Results member, ResultType expected){
+    public void addMember(UserResults member, ResultType expected){
         if(member.resultType()!=expected)
             throw new IllegalArgumentException(expected.toString());
 
@@ -49,17 +50,17 @@ public abstract class ComputedResults extends Node{
         member.observers.add(this);
     }
 
-    public abstract void memberHit(Results member, Context context, Event event);
+    public abstract void memberHit(UserResults member, Context context, Event event);
 
     public String getName(){
         return getClass().getSimpleName();
     }
 
-    protected abstract Object createResultCache();
+    protected abstract Results createResultCache();
 
-    private Object resultCache;
+    private Results resultCache;
     @SuppressWarnings({"unchecked"})
-    public <T> T getResultCache(Results member, Context context){
+    public <T extends Results> T getResultCache(UserResults member, Context context){
         if(resultCache!=null)
             return (T)resultCache;
 
@@ -79,7 +80,7 @@ public abstract class ComputedResults extends Node{
     }
     
     @SuppressWarnings({"unchecked"})
-    public <T> T getResultCache(){
+    public <T extends Results> T getResultCache(){
         return (T)resultCache;
     }
 
@@ -87,7 +88,7 @@ public abstract class ComputedResults extends Node{
         if(resultCache!=null)
             resultCache=null;
         
-        for(Results observer: members()){
+        for(UserResults observer: members()){
             if(observer instanceof ComputedResults)
                 ((ComputedResults)observer).clearResults();
         }
@@ -95,14 +96,14 @@ public abstract class ComputedResults extends Node{
             observer.clearResults(this);
     }
 
-    public void clearResults(Results member){}
+    public void clearResults(UserResults member){}
 
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
         if(userGiven)
             buff.append("UserGiven");
-        for(Results member: members){
+        for(UserResults member: members){
             if(buff.length()>0)
                 buff.append(", ");
             buff.append('(').append(member).append(')');

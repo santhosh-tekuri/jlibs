@@ -59,7 +59,7 @@ public abstract class Function extends Node{
         addResult(event.order(), evaluate(event, lastResult));
     }
 
-    /*-------------------------------------------------[ Results ]---------------------------------------------------*/
+    /*-------------------------------------------------[ UserResults ]---------------------------------------------------*/
     
     public String join(String result1, String result2){
         throw new NotImplementedException(getClass().getName());
