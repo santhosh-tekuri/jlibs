@@ -110,7 +110,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         if(lastFilteredNodeSet!=null){
             if(!hasPredicate)
-                lastFilteredNodeSet = new FilteredNodeSet(current, _toBoolean(lastFilteredNodeSet));
+                lastFilteredNodeSet = new FilteredNodeSet(current, toBoolean(lastFilteredNodeSet));
         }
         return current;
     }
@@ -205,7 +205,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
             FilteredNodeSet filteredNodeSet = null;
             if(lastFilteredNodeSet==null)
-                filteredNodeSet = new FilteredNodeSet(context, _toBoolean(current));
+                filteredNodeSet = new FilteredNodeSet(context, toBoolean(current));
             else
                 filteredNodeSet = new FilteredNodeSet(context, lastFilteredNodeSet);
             
@@ -362,14 +362,10 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         Node _current = current;
         visit(binaryExpr.getLHS());
-        if(derivedResults.resultType()==ResultType.BOOLEAN)
-            current = toBoolean(current);
         derivedResults.addMember(current);
 
         current = _current;
         visit(binaryExpr.getRHS());
-        if(derivedResults.resultType()==ResultType.BOOLEAN)
-            current = toBoolean(current);
         derivedResults.addMember(current);
         current = root.addConstraint(derivedResults.attach());
 
@@ -378,7 +374,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     /*-------------------------------------------------[ DataConvertion ]---------------------------------------------------*/
 
-    public UserResults _toBoolean(Node node){
+    public UserResults toBoolean(Node node){
         return node;
 //        if(node.resultType()==ResultType.BOOLEAN)
 //            return node;
@@ -386,21 +382,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 //            return new BooleanizedNodeSet(node);
 //        }else
 //            throw new NotImplementedException("toBoolean for "+node.resultType()+" is not implemented");
-    }
-
-    public Node toBoolean(Node node){
-        if(node.resultType()==ResultType.BOOLEAN)
-            return node;
-        else if(node.resultType()==ResultType.NODESET){
-            Function function = new BooleanFunction();
-            return node.addConstraint(function);
-        }else{
-            DerivedResults derivedResults = new Booleanize();
-            derivedResults.addMember(node);
-            derivedResults = derivedResults.attach();
-            root.addConstraint(derivedResults);
-            return derivedResults;
-        }
     }
 
 //    public static void main(String[] args) throws SAXPathException{
