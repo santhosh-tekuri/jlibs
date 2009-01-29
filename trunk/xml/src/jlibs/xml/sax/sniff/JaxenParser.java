@@ -253,6 +253,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 current = new QualifiedName(lastFilteredNodeSet);
             else
                 current = new QualifiedName(current);
+        }else if(name.equals("local-name")){
+            current = visit(functionExpr.getParameters().get(0));
+            if(lastFilteredNodeSet!=null)
+                current = new LocalName(lastFilteredNodeSet);
+            else
+                current = new LocalName(current);
         }else{
             DerivedResults derivedResults = createDerivedResults(name);
             if(derivedResults!=null){
