@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
 import java.util.TreeMap;
@@ -26,9 +27,9 @@ import java.util.TreeMap;
  * @author Santhosh Kumar T
  */
 public class AndExpression extends ComputedResults{
-    public AndExpression(Node member1, Node member2){
-        addMember(member1);
-        addMember(member2);
+    public AndExpression(Node lhs, Node rhs){
+        addMember(lhs, ResultType.NODESET);
+        addMember(rhs, ResultType.NODESET);
     }
 
     private class ResultCache{

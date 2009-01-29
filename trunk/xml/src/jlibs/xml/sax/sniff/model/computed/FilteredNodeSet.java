@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
 import java.util.HashMap;
@@ -30,10 +31,8 @@ import java.util.TreeMap;
  */
 public class FilteredNodeSet extends ComputedResults{
     public FilteredNodeSet(Node member, Results filter){
-//        if(filter.resultType()!=ResultType.BOOLEAN)
-//            throw new IllegalArgumentException("filter should be of boolean type");
-        addMember(member);
-        addMember(filter);
+        addMember(member, ResultType.NODESET);
+        addMember(filter, ResultType.NODESET);
     }
 
     private class MemberResults{
