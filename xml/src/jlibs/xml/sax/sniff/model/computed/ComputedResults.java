@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
 import java.util.ArrayList;
@@ -38,7 +39,10 @@ public abstract class ComputedResults extends Node{
         return members;
     }
 
-    public void addMember(Results member){
+    public void addMember(Results member, ResultType expected){
+        if(member.resultType()!=expected)
+            throw new IllegalArgumentException(expected.toString());
+
         root = ((Node)member).root;
         hits.totalHits = member.hits.totalHits;
         members.add(member);

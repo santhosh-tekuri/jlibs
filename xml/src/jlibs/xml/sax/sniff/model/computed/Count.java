@@ -27,7 +27,7 @@ import java.util.TreeMap;
  */
 public class Count extends ComputedResults{
     public Count(Results member){
-        addMember(member);
+        addMember(member, ResultType.NODESET);
     }
 
     @Override

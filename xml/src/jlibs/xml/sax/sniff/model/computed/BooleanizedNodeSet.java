@@ -28,9 +28,7 @@ import java.util.TreeMap;
  */
 public class BooleanizedNodeSet extends ComputedResults{
     public BooleanizedNodeSet(Node member){
-        if(member.resultType()!=ResultType.NODESET)
-            throw new IllegalArgumentException("expected nodeset member");
-        addMember(member);
+        addMember(member, ResultType.NODESET);
     }
 
     @Override
