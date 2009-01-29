@@ -33,8 +33,9 @@ import java.util.TreeMap;
  */
 public class FilteredNodeSet extends ComputedResults{
     public FilteredNodeSet(Node member, UserResults filter){
-        addMember(member, ResultType.NODESET);
-        addMember(filter, ResultType.NODESET);
+        super(null, false, ResultType.NODESET, ResultType.NODESET);
+        addMember(member);
+        addMember(filter);
     }
 
     private class MemberResults{

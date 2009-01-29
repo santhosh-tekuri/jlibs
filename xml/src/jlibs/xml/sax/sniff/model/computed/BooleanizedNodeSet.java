@@ -21,13 +21,15 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
  */
 public class BooleanizedNodeSet extends ComputedResults{
     public BooleanizedNodeSet(Node member){
-        addMember(member, ResultType.NODESET);
+        super(null, false, ResultType.NODESET);
+        addMember(member);
     }
 
     @Override
@@ -35,6 +37,7 @@ public class BooleanizedNodeSet extends ComputedResults{
         return ResultType.BOOLEAN;
     }
 
+    @NotNull
     @Override
     protected Results createResultCache(){
         return new Results();

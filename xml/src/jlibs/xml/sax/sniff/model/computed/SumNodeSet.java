@@ -34,12 +34,13 @@ public class SumNodeSet extends ComputedResults{
     private boolean hasFilter;
 
     public SumNodeSet(Node member, FilteredNodeSet filteredNodeSet){
+        super(null, false, ResultType.NODESET);
         if(descendants=member.canBeContext()){
             if(filteredNodeSet==null || filteredNodeSet.members.get(1) instanceof FilteredNodeSet)
                 member.cleanupObservers.add(this);
             member = member.addChild(new Descendant(Axis.DESCENDANT));
         }
-        addMember(member, ResultType.NODESET);
+        addMember(member);
 
         if(filteredNodeSet!=null){
             hasFilter = true;

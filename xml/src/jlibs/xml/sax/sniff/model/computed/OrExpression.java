@@ -21,16 +21,19 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
  */
 public class OrExpression extends ComputedResults{
     public OrExpression(Node lhs, Node rhs){
-        addMember(lhs, ResultType.NODESET);
-        addMember(rhs, ResultType.NODESET);
+        super(null, false, ResultType.NODESET, ResultType.NODESET);
+        addMember(lhs);
+        addMember(rhs);
     }
 
+    @NotNull
     @Override
     protected Results createResultCache(){
         return new Results();
