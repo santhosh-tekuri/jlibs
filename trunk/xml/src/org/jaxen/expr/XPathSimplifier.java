@@ -38,6 +38,8 @@ public class XPathSimplifier{
             return simplify((LocationPath)expr);
         else if(expr instanceof DefaultBinaryExpr)
             return simplify((DefaultBinaryExpr)expr);
+        else if(expr instanceof FunctionCallExpr)
+            return simplify((FunctionCallExpr)expr);
         else
             return expr;
     }
@@ -78,6 +80,8 @@ public class XPathSimplifier{
 
         if(expr instanceof DefaultArithExpr)
             return simplify((DefaultArithExpr)expr);
+        else if(expr instanceof DefaultRelationalExpr)
+            return simplify((DefaultRelationalExpr)expr);
         else
             return expr;
     }
@@ -106,6 +110,36 @@ public class XPathSimplifier{
             return expr;
     }
 
+    @SuppressWarnings({"deprecation"})
+    private Expr simplify(DefaultRelationalExpr expr){
+        if(expr.getLHS() instanceof NumberExpr && expr.getRHS() instanceof NumberExpr){
+            double lhs = ((NumberExpr)expr.getLHS()).getNumber().doubleValue();
+            double rhs = ((NumberExpr)expr.getRHS()).getNumber().doubleValue();
+            boolean result;
+
+            if(expr instanceof DefaultGreaterThanExpr)
+                result = lhs>rhs;
+            else if(expr instanceof DefaultGreaterThanEqualExpr)
+                result = lhs>=rhs;
+            else if(expr instanceof DefaultLessThanExpr)
+                result = lhs<rhs;
+            else if(expr instanceof DefaultLessThanEqualExpr)
+                result = lhs<=rhs;
+            else
+                throw new ImpossibleException(expr.getClass().getName());
+
+            return new DefaultFunctionCallExpr("", String.valueOf(result));
+        }else
+            return expr;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private Expr simplify(FunctionCallExpr expr){
+        for(int i=0; i<expr.getParameters().size(); i++)
+            expr.getParameters().set(i, simplify((Expr)expr.getParameters().get(i)));
+        return expr;
+    }
+
     private boolean isFunction(Expr expr, String name){
         if(expr instanceof FunctionCallExpr){
             FunctionCallExpr function = (FunctionCallExpr)expr;
@@ -119,7 +153,7 @@ public class XPathSimplifier{
         XPathReader reader = XPathReaderFactory.createReader();
         JaxenHandler handler = new JaxenHandler();
         reader.setXPathHandler(handler);
-        reader.parse("/a/b[1+6=position()]");
+        reader.parse("/a/b[5<6]");
 
         XPathExpr xpathExpr = handler.getXPathExpr();
         new XPathSimplifier().simplify(xpathExpr);
