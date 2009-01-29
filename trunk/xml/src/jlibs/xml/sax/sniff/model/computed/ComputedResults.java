@@ -33,12 +33,10 @@ public abstract class ComputedResults extends Node{
     protected final ResultType memberTypes[];
     protected final boolean variableMembers;
     
-    protected FilteredNodeSet filter;
-
-    public ComputedResults(FilteredNodeSet filter, boolean variableMembers, ResultType... memberTypes){
-        this.filter = filter;
+    public ComputedResults(boolean variableMembers, ResultType... memberTypes){
         this.variableMembers = variableMembers;
         this.memberTypes = memberTypes;
+        members = new ArrayList<UserResults>(variableMembers ? 5 : memberTypes.length);
     }
 
     @Override
@@ -46,13 +44,13 @@ public abstract class ComputedResults extends Node{
         return false;
     }
     
-    public List<UserResults> members = new ArrayList<UserResults>();
+    public List<UserResults> members;
 
     public Iterable<UserResults> members(){
         return members;
     }
 
-    public void addMember(UserResults member){
+    public void addMember(UserResults member, FilteredNodeSet filter){
         ResultType expected;
         if(memberTypes.length>members.size())
             expected = memberTypes[members.size()];
@@ -61,8 +59,13 @@ public abstract class ComputedResults extends Node{
         else
             throw new IllegalStateException("no more arguments can be added");
 
-        if(member.resultType()==ResultType.NODESET && expected==ResultType.STRING)
-            member = new StringizedNodeSet((Node)member, filter);
+        if(member.resultType()==ResultType.NODESET && expected==ResultType.STRING){
+            StringizedNodeSet stringizedNodeSet = new StringizedNodeSet();
+            stringizedNodeSet.addMember(member, filter);
+            member = stringizedNodeSet;
+        }
+        else if(filter!=null)
+            member = filter;
         
         if(member.resultType()!=expected)
             throw new IllegalArgumentException(expected.toString());

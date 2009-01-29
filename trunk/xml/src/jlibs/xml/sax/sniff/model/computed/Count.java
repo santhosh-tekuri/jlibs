@@ -26,9 +26,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class Count extends ComputedResults{
-    public Count(UserResults member){
-        super(null, false, ResultType.NODESET);
-        addMember(member);
+    public Count(){
+        super(false, ResultType.NODESET);
     }
 
     @Override

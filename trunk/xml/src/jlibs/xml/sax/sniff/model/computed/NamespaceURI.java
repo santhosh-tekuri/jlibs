@@ -28,9 +28,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class NamespaceURI extends ComputedResults{
-    public NamespaceURI(UserResults member){
-        super(null, false, ResultType.NODESET);
-        addMember(member);
+    public NamespaceURI(){
+        super(false, ResultType.NODESET);
     }
 
     @Override

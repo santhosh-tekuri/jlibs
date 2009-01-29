@@ -30,7 +30,7 @@ public class StringLiteral extends ComputedResults{
     String literal;
 
     public StringLiteral(Root root, String literal){
-        super(null, false);
+        super(false);
         this.literal = literal;
         root.observers.add(this);
         this.root = root;

@@ -33,18 +33,23 @@ public class SumNodeSet extends ComputedResults{
     private boolean descendants;
     private boolean hasFilter;
 
-    public SumNodeSet(Node member, FilteredNodeSet filteredNodeSet){
-        super(null, false, ResultType.NODESET);
+    public SumNodeSet(){
+        super(false, ResultType.NODESET);
+    }
+
+    @Override
+    public void addMember(UserResults _member, FilteredNodeSet filter){
+        Node member = (Node)_member;
         if(descendants=member.canBeContext()){
-            if(filteredNodeSet==null || filteredNodeSet.members.get(1) instanceof FilteredNodeSet)
+            if(filter==null || filter.members.get(1) instanceof FilteredNodeSet)
                 member.cleanupObservers.add(this);
             member = member.addChild(new Descendant(Axis.DESCENDANT));
         }
-        addMember(member);
+        super.addMember(member, null);
 
-        if(filteredNodeSet!=null){
+        if(filter!=null){
             hasFilter = true;
-            filteredNodeSet.observers.add(this);
+            filter.observers.add(this);
         }
     }
 

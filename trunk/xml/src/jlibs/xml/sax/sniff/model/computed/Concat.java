@@ -26,9 +26,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class Concat extends ComputedResults{
-    public Concat(FilteredNodeSet filter){
-        super(filter, true, ResultType.STRING);
-        this.filter = filter;
+    public Concat(){
+        super(true, ResultType.STRING);
     }
 
     @Override
