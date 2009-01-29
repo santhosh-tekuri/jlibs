@@ -30,6 +30,17 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public abstract class ComputedResults extends Node{
+    protected final ResultType memberTypes[];
+    protected final boolean variableMembers;
+    
+    protected FilteredNodeSet filter;
+
+    public ComputedResults(FilteredNodeSet filter, boolean variableMembers, ResultType... memberTypes){
+        this.filter = filter;
+        this.variableMembers = variableMembers;
+        this.memberTypes = memberTypes;
+    }
+
     @Override
     public boolean equivalent(Node node){
         return false;
@@ -41,7 +52,18 @@ public abstract class ComputedResults extends Node{
         return members;
     }
 
-    public void addMember(UserResults member, ResultType expected){
+    public void addMember(UserResults member){
+        ResultType expected;
+        if(memberTypes.length>members.size())
+            expected = memberTypes[members.size()];
+        else if(variableMembers)
+            expected = memberTypes[memberTypes.length-1];
+        else
+            throw new IllegalStateException("no more arguments can be added");
+
+        if(member.resultType()==ResultType.NODESET && expected==ResultType.STRING)
+            member = new StringizedNodeSet((Node)member, filter);
+        
         if(member.resultType()!=expected)
             throw new IllegalArgumentException(expected.toString());
 

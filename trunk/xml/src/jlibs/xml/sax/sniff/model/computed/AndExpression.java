@@ -28,8 +28,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public class AndExpression extends ComputedResults{
     public AndExpression(Node lhs, Node rhs){
-        addMember(lhs, ResultType.NODESET);
-        addMember(rhs, ResultType.NODESET);
+        super(null, false, ResultType.NODESET, ResultType.NODESET);
+        addMember(lhs);
+        addMember(rhs);
     }
 
     private class ResultCache extends Results{

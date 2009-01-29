@@ -20,13 +20,15 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Count extends ComputedResults{
     public Count(UserResults member){
-        addMember(member, ResultType.NODESET);
+        super(null, false, ResultType.NODESET);
+        addMember(member);
     }
 
     @Override
@@ -38,6 +40,7 @@ public class Count extends ComputedResults{
         int count;
     }
 
+    @NotNull
     @Override
     protected ResultCache createResultCache(){
         return new ResultCache();

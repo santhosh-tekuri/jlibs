@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff.model.computed;
 
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
@@ -27,21 +26,14 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class Concat extends ComputedResults{
-    private FilteredNodeSet filter;
-
     public Concat(FilteredNodeSet filter){
+        super(filter, true, ResultType.STRING);
         this.filter = filter;
     }
 
     @Override
     public ResultType resultType(){
         return ResultType.STRING;
-    }
-
-    public void addMember(UserResults member){
-        if(member.resultType()==ResultType.NODESET)
-            member = new StringizedNodeSet((Node)member, filter);
-        addMember(member, ResultType.STRING);
     }
 
     private class ResultCache extends Results{
