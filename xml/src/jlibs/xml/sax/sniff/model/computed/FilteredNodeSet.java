@@ -20,6 +20,7 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -30,7 +31,7 @@ import java.util.TreeMap;
  * @author Santhosh Kumar T
  */
 public class FilteredNodeSet extends ComputedResults{
-    public FilteredNodeSet(Node member, Results filter){
+    public FilteredNodeSet(Node member, UserResults filter){
         addMember(member, ResultType.NODESET);
         addMember(filter, ResultType.NODESET);
     }
@@ -39,7 +40,7 @@ public class FilteredNodeSet extends ComputedResults{
         private TreeMap<Integer, String> results = new TreeMap<Integer, String>();
         private boolean accept;
 
-        private boolean hit(Results member, Event event){
+        private boolean hit(UserResults member, Event event){
             if(member==members.get(0))
                 results.put(event.order(), event.getResult());
             else if(member==members.get(1))
@@ -60,9 +61,9 @@ public class FilteredNodeSet extends ComputedResults{
         }
     }
 
-    public class ResultCache{
+    public class ResultCache extends Results{
         MemberResults memberResults = new MemberResults();
-        Map<Results, Object> memberCacheMap = new HashMap<Results, Object>();
+        Map<UserResults, Object> memberCacheMap = new HashMap<UserResults, Object>();
 
         public Object getResultCache(ComputedResults member){
             Object cache = memberCacheMap.get(member);
@@ -82,7 +83,7 @@ public class FilteredNodeSet extends ComputedResults{
     private LinkedHashMap<Object, ResultCache> map = new LinkedHashMap<Object, ResultCache>();
 
     @SuppressWarnings({"unchecked"})
-    public ResultCache getResultCache(Results member, Context context){
+    public ResultCache getResultCache(UserResults member, Context context){
         if(contextSensitive){
             if(member==members.get(0)){
                 resultCache = map.get(context.identity());
@@ -94,7 +95,7 @@ public class FilteredNodeSet extends ComputedResults{
     }
 
     @Override
-    public void memberHit(Results member, Context context, Event event){
+    public void memberHit(UserResults member, Context context, Event event){
         resultCache = getResultCache(member, context);
 
         if(resultCache.memberResults.hit(member, event))
@@ -120,7 +121,7 @@ public class FilteredNodeSet extends ComputedResults{
         super.clearResults();
     }
 
-    public void clearResults(Results member){
+    public void clearResults(UserResults member){
         resultCache.memberResults.clear();
     }
 }

@@ -16,7 +16,7 @@
 package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 /**
@@ -30,7 +30,7 @@ public class StringLength extends DerivedResults{
 
     @Override
     public void prepareResults(){
-        Results member = members.get(0);
+        UserResults member = members.get(0);
         member.prepareResults();
         addResult(-1, String.valueOf((double)member.asString().length()));
     }

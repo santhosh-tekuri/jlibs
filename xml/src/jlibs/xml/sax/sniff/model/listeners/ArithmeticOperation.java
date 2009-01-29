@@ -16,7 +16,7 @@
 package jlibs.xml.sax.sniff.model.listeners;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 import org.jaxen.saxpath.Operator;
 
 /**
@@ -36,11 +36,11 @@ public class ArithmeticOperation extends DerivedResults{
 
     @Override
     public void prepareResults(){
-        Results lhsMember = members.get(0);
+        UserResults lhsMember = members.get(0);
         lhsMember.prepareResults();
         double lhs = lhsMember.asNumber();
 
-        Results rhsMember = members.get(1);
+        UserResults rhsMember = members.get(1);
         rhsMember.prepareResults();
         double rhs = rhsMember.asNumber();
 

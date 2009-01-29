@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * @author Santhosh Kumar T
  */
-public class Predicate extends Results{
+public class Predicate extends UserResults{
     public Node memberNode;
     public Predicate memberPredicate;
     public List<Predicate> memberOf = new ArrayList<Predicate>();

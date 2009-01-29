@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Node extends Results{
+public abstract class Node extends UserResults{
     public Root root;
     public Node parent;
     public Node constraintParent;

@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.ImpossibleException;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.sax.sniff.model.UserResults;
 import org.jaxen.expr.XPathExpr;
 import org.jaxen.saxpath.SAXPathException;
 
@@ -29,12 +29,12 @@ import javax.xml.namespace.QName;
 public class XPath{
     private String xpath;
     private XPathExpr xpathExpr;
-    Results results;
+    UserResults results;
 
-    public XPath(String xpath, XPathExpr xpathExpr, Results results){
+    public XPath(String xpath, XPathExpr xpathExpr, UserResults userResults){
         this.xpath = xpath;
         this.xpathExpr = xpathExpr;
-        this.results = results;
+        this.results = userResults;
     }
 
     int minHits;

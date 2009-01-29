@@ -16,7 +16,7 @@
 package jlibs.xml.sax.sniff.model.functions;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
 
 /**
@@ -31,7 +31,7 @@ public class Concat extends DerivedResults{
     @Override
     public void prepareResults(){
         StringBuilder buff = new StringBuilder();
-        for(Results member: members){
+        for(UserResults member: members){
             member.prepareResults();
             buff.append(member.asString());
         }
