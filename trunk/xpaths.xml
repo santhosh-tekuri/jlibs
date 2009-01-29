@@ -217,6 +217,8 @@
         <xpath>string(/nonexistingelement)</xpath>
         <xpath>string(//book[@testAttr])</xpath>
         <xpath>string(//book[testElem])</xpath>
+        <xpath>string(//book[@testAttr]/price)</xpath>
+        <xpath>string(//book[testElem]/price)</xpath>
 
         <!-- sum() function -->
         <xpath>sum(/root/pub/book/price)</xpath>
@@ -227,6 +229,8 @@
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>sum(//Price)</xpath>
+        <xpath>sum(//book[@testAttr]/price)</xpath>
+        <xpath>sum(//book[testElem]/price)</xpath>
 
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>

@@ -28,11 +28,11 @@ import org.jaxen.saxpath.Axis;
 /**
  * @author Santhosh Kumar T
  */
-public class StringizedNodeSet extends ComputedResults{
+public class SumNodeSet extends ComputedResults{
     private boolean descendants;
     private boolean hasFilter;
 
-    public StringizedNodeSet(Node member, FilteredNodeSet filteredNodeSet){
+    public SumNodeSet(Node member, FilteredNodeSet filteredNodeSet){
         if(descendants=member.canBeContext()){
             if(filteredNodeSet==null || filteredNodeSet.members.get(1) instanceof FilteredNodeSet)
                 member.cleanupObservers.add(this);
@@ -48,23 +48,43 @@ public class StringizedNodeSet extends ComputedResults{
 
     @Override
     public ResultType resultType(){
-        return ResultType.STRING;
+        return ResultType.NUMBER;
     }
 
     private class ResultCache extends Results{
+        double number;
+        double pendingNumber;
         StringBuilder buff = new StringBuilder();
         boolean accept = !hasFilter;
-        boolean contextEnded = false;
 
-        public void prepareResult(){
-            if(!hasResult()){
-                if(accept){
-                    addResult(-1, buff.toString());
-                    buff = null;
-                }else{
-                    buff.setLength(0);
-                    contextEnded = false;
+        public void append(String str){
+            if(buff==null)
+                buff = new StringBuilder();
+            buff.append(str);
+        }
+        
+        public void updatePending(String str){
+            if(str!=null){
+                double d;
+                try{
+                    d = Double.parseDouble(str);
+                }catch(NumberFormatException nfe){
+                    d = Double.NaN;
                 }
+                pendingNumber += d;
+            }
+        }
+
+        public void add(String str){
+            if(str!=null){
+                double d;
+                try{
+                    d = Double.parseDouble(str);
+                }catch(NumberFormatException nfe){
+                    d = Double.NaN;
+                }
+                number += d;
+                accept = !hasFilter;
             }
         }
     }
@@ -80,11 +100,11 @@ public class StringizedNodeSet extends ComputedResults{
         if(!resultCache.hasResult()){
             if(member instanceof FilteredNodeSet){
                 resultCache.accept = true;
-            }else if(!resultCache.contextEnded){
+            }else{
                 String str = null;
                 if(descendants){
                     if(event.type()==Event.TEXT)
-                        resultCache.buff.append(event.getResult());
+                        resultCache.append(event.getResult());
                 }else{
                     switch(event.type()){
                         case Event.TEXT:
@@ -97,7 +117,7 @@ public class StringizedNodeSet extends ComputedResults{
                             break;
                     }
                     if(str!=null)
-                        resultCache.addResult(-1, str);
+                        resultCache.add(str);
                 }
             }
         }
@@ -106,30 +126,40 @@ public class StringizedNodeSet extends ComputedResults{
     @Override
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
-        if(!resultCache.hasResult())
-            resultCache.contextEnded = true;
+        if(!resultCache.hasResult()){
+            resultCache.updatePending(resultCache.buff.toString());
+            resultCache.buff = null;
+        }
+    }
+
+    @Override
+    protected void clearResults(){
+        super.clearResults();    
+    }
+
+    @Override
+    public void clearResults(UserResults member){
+        ResultCache resultCache = getResultCache();
+        if(!resultCache.hasResult()){
+            if(resultCache.accept){
+                resultCache.number += resultCache.pendingNumber;
+                resultCache.accept = !hasFilter;
+            }
+            resultCache.pendingNumber = 0;
+        }
     }
 
     @Override
     public void prepareResults(){
         if(!hasResult()){
             ResultCache resultCache = getResultCache();
-            if(resultCache!=null && resultCache.accept){
-                resultCache.prepareResult();
+            if(resultCache!=null){
+                clearResults(null);
+                addResult(-1, String.valueOf(resultCache.number));
+                resultCache.buff = null;
                 addAllResults(resultCache);
             }else
-                addResult(-1, "");
+                addResult(-1, "0.0");
         }
-    }
-
-    @Override
-    protected void clearResults(){
-        super.clearResults();
-    }
-
-    @Override
-    public void clearResults(UserResults member){
-        ResultCache resultCache = getResultCache();
-        resultCache.prepareResult();
     }
 }
