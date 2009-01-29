@@ -123,5 +123,7 @@ public class FilteredNodeSet extends ComputedResults{
 
     public void clearResults(UserResults member){
         resultCache.memberResults.clear();
+        for(ComputedResults observer: observers())
+            observer.clearResults(this);
     }
 }

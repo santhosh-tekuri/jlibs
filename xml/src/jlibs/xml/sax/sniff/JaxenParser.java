@@ -268,6 +268,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }else if(name.equals("string")){
             current = visit(functionExpr.getParameters().get(0));
             current = new StringizedNodeSet(current, lastFilteredNodeSet);
+        }else if(name.equals("sum")){
+            current = visit(functionExpr.getParameters().get(0));
+            current = new SumNodeSet(current, lastFilteredNodeSet);
         }else{
             DerivedResults derivedResults = createDerivedResults(name);
             if(derivedResults!=null){
