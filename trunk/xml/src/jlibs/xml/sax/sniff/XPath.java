@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jaxen.expr.XPathExpr;
@@ -39,6 +40,8 @@ public class XPath{
 
     int minHits;
     public void setMinHits(int minHits){
+        if(results.resultType()!=ResultType.NODESET)
+            minHits = 1;
         this.minHits = minHits;
         results.hits.setMin(minHits);
     }

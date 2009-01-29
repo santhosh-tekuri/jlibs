@@ -380,6 +380,7 @@
         <file>xmlFiles/text.xml</file>
 
         <xpath>/foo/bar/text()</xpath>
+        <xpath>string(/foo/bar/text())</xpath>
         <xpath>normalize-space(/foo/bar/text())</xpath>
         <xpath>normalize-space(/foo/bar)</xpath>
         <xpath>string-length(/foo/bar/text())</xpath>

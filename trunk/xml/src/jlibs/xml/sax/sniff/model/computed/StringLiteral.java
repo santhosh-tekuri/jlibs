@@ -17,44 +17,51 @@ package jlibs.xml.sax.sniff.model.computed;
 
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
+import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
  */
-public class AndExpression extends ComputedResults{
-    public AndExpression(Node lhs, Node rhs){
-        addMember(lhs, ResultType.NODESET);
-        addMember(rhs, ResultType.NODESET);
+public class StringLiteral extends ComputedResults{
+    String literal;
+
+    public StringLiteral(Root root, String literal){
+        this.literal = literal;
+        root.observers.add(this);
+        this.root = root;
+        hits.totalHits = root.hits.totalHits;
     }
 
-    private class ResultCache extends Results{
-        Boolean lhsResult, rhsResult;
+    @Override
+    public ResultType resultType(){
+        return ResultType.STRING;
     }
 
     @NotNull
     @Override
-    protected ResultCache createResultCache(){
-        return new ResultCache();
+    protected Results createResultCache(){
+        return new Results();
     }
-    
+
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
+        Results resultCache = getResultCache(member, context);
         if(!resultCache.hasResult()){
-            if(member==members.get(0))
-                resultCache.lhsResult = Boolean.TRUE;
-            else if(member==members.get(1))
-                resultCache.rhsResult = Boolean.TRUE;
-            
-            if(resultCache.lhsResult!=null && resultCache.rhsResult!=null){
-                resultCache.addResult(-1, "true");
-                notifyObservers(context, event);
-            }
+            resultCache.addResult(-1, literal);
+//            prepareResults();
+            notifyObservers(context, event);
+        }
+    }
+
+    @Override
+    public void prepareResults(){
+        if(!hasResult()){
+            addAllResults(getResultCache());
+            notifyObservers(null, null);
         }
     }
 }

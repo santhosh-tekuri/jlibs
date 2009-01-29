@@ -24,6 +24,7 @@ import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.jaxen.saxpath.Axis;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
@@ -89,6 +90,7 @@ public class SumNodeSet extends ComputedResults{
         }
     }
 
+    @NotNull
     @Override
     protected Results createResultCache(){
         return new ResultCache();
@@ -133,12 +135,7 @@ public class SumNodeSet extends ComputedResults{
     }
 
     @Override
-    protected void clearResults(){
-        super.clearResults();    
-    }
-
-    @Override
-    public void clearResults(UserResults member){
+    public void clearResults(UserResults member, Context context){
         ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
             if(resultCache.accept){
@@ -154,7 +151,7 @@ public class SumNodeSet extends ComputedResults{
         if(!hasResult()){
             ResultCache resultCache = getResultCache();
             if(resultCache!=null){
-                clearResults(null);
+                clearResults(null, null);
                 addResult(-1, String.valueOf(resultCache.number));
                 resultCache.buff = null;
                 addAllResults(resultCache);

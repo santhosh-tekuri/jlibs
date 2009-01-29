@@ -24,6 +24,7 @@ import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.jaxen.saxpath.Axis;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
@@ -51,24 +52,27 @@ public class StringizedNodeSet extends ComputedResults{
         return ResultType.STRING;
     }
 
-    private class ResultCache extends Results{
+    public class ResultCache extends Results{
         StringBuilder buff = new StringBuilder();
         boolean accept = !hasFilter;
         boolean contextEnded = false;
 
-        public void prepareResult(){
+        public boolean prepareResult(){
             if(!hasResult()){
                 if(accept){
                     addResult(-1, buff.toString());
                     buff = null;
+                    return true;
                 }else{
                     buff.setLength(0);
                     contextEnded = false;
                 }
             }
+            return false;
         }
     }
 
+    @NotNull
     @Override
     protected Results createResultCache(){
         return new ResultCache();
@@ -96,8 +100,10 @@ public class StringizedNodeSet extends ComputedResults{
                             str = ((PI)event).data;
                             break;
                     }
-                    if(str!=null)
+                    if(str!=null){
                         resultCache.addResult(-1, str);
+                        notifyObservers(null, null);
+                    }
                 }
             }
         }
@@ -115,7 +121,8 @@ public class StringizedNodeSet extends ComputedResults{
         if(!hasResult()){
             ResultCache resultCache = getResultCache();
             if(resultCache!=null && resultCache.accept){
-                resultCache.prepareResult();
+                if(resultCache.prepareResult())
+                    notifyObservers(null, null);
                 addAllResults(resultCache);
             }else
                 addResult(-1, "");
@@ -123,13 +130,9 @@ public class StringizedNodeSet extends ComputedResults{
     }
 
     @Override
-    protected void clearResults(){
-        super.clearResults();
-    }
-
-    @Override
-    public void clearResults(UserResults member){
+    public void clearResults(UserResults member, Context context){
         ResultCache resultCache = getResultCache();
-        resultCache.prepareResult();
+        if(resultCache.prepareResult())
+            notifyObservers(context, null);
     }
 }
