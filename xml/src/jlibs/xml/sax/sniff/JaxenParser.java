@@ -258,9 +258,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             current = function;
         }else{
             if(functionExpr.getFunctionName().equals("true"))
-                current = root.addConstraint(new BooleanNode(true));
+                current = new Literal(root, true);
             else if(functionExpr.getFunctionName().equals("false"))
-                current = root.addConstraint(new BooleanNode(false));
+                current = new Literal(root, false);
             else
                 throw new NotImplementedException("function "+name+"() is not supported");
         }
@@ -270,12 +270,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
     protected Node process(LiteralExpr literalExpr) throws SAXPathException{
-        current = new StringLiteral(root, literalExpr.getLiteral()); 
+        current = new Literal(root, literalExpr.getLiteral());
         return current;
     }
 
     protected Node process(NumberExpr numberExpr) throws SAXPathException{
-        current = root.addConstraint(new NumberNode(numberExpr.getNumber().doubleValue()));
+        current = new Literal(root, numberExpr.getNumber().doubleValue());
         return current;
     }
 

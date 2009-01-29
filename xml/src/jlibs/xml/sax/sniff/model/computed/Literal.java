@@ -26,20 +26,36 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Santhosh Kumar T
  */
-public class StringLiteral extends ComputedResults{
+public class Literal extends ComputedResults{
     String literal;
 
-    public StringLiteral(Root root, String literal){
+    public Literal(Root root, String literal){
+        this(root, literal, ResultType.STRING);
+    }
+
+    public Literal(Root root, double literal){
+        this(root, String.valueOf(literal), ResultType.NUMBER);
+    }
+
+    public Literal(Root root, boolean literal){
+        this(root, String.valueOf(literal), ResultType.BOOLEAN);
+    }
+
+    private Literal(Root root, String literal, ResultType resultType){
         super(false);
         this.literal = literal;
+        this.resultType = resultType;
+        
         root.observers.add(this);
         this.root = root;
         hits.totalHits = root.hits.totalHits;
     }
 
+    private ResultType resultType;
+
     @Override
     public ResultType resultType(){
-        return ResultType.STRING;
+        return resultType;
     }
 
     @NotNull
