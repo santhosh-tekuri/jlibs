@@ -15,12 +15,13 @@
             <price type="discount">20.00</price>
             <cost_price>15</cost_price>
         </book>
-        <book FirstBook="true" id="1">
+        <book FirstBook="true" id="1" testAttr="one">
             <price>13.00</price>
             <name>NameA1</name>
             <author>AuthorA1</author>
             <price type="discount">10.00</price>
             <cost_price>15</cost_price>
+            <testElem>test</testElem>
         </book>
         <book id="2">
             <price>14.00</price>

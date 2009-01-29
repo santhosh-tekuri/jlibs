@@ -120,9 +120,7 @@ public abstract class Function extends Node{
     /*-------------------------------------------------[ Factory ]---------------------------------------------------*/
     
     public static Function newInstance(String name){
-        if("string".equals(name))
-            return new StringFunction();
-        else if("strings".equals(name))
+        if("strings".equals(name))
             return new Strings();
         else if("sum".equals(name))
             return new Sum();

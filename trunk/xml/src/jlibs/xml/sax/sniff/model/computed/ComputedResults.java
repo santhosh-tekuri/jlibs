@@ -99,6 +99,9 @@ public abstract class ComputedResults extends Node{
     public void clearResults(UserResults member){}
 
     @Override
+    public void endingContext(Context context){}
+
+    @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
         if(userGiven)

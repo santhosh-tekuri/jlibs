@@ -32,6 +32,11 @@ public class Position extends Node{
     }
 
     @Override
+    public boolean canBeContext(){
+        return getConstraintRoot().canBeContext();
+    }
+
+    @Override
     public boolean equivalent(Node node){
         if(node.getClass()==getClass()){
             Position that = (Position)node;

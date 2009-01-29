@@ -27,6 +27,11 @@ public class Descendant extends AxisNode{
     }
 
     @Override
+    public boolean canBeContext(){
+        return true;
+    }
+
+    @Override
     public boolean matches(Event event){
         switch(event.type()){
             case Event.DOCUMENT:

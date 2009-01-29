@@ -215,6 +215,8 @@
         <xpath>string(/)</xpath>
         <xpath>string(//book/text())</xpath>
         <xpath>string(/nonexistingelement)</xpath>
+        <xpath>string(//book[@testAttr])</xpath>
+        <xpath>string(//book[testElem])</xpath>
 
         <!-- sum() function -->
         <xpath>sum(/root/pub/book/price)</xpath>

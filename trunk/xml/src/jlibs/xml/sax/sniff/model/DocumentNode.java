@@ -27,6 +27,11 @@ public class DocumentNode extends AxisNode{
     }
 
     @Override
+    public boolean canBeContext(){
+        return true;
+    }
+
+    @Override
     public boolean equivalent(Node node){
         return node.getClass()==getClass();
     }
