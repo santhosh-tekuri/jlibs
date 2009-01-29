@@ -92,12 +92,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(lastFilteredNodeSet!=null){
             lastFilteredNodeSet.userGiven = true;
             return new XPath(xpath, xpathExpr, lastFilteredNodeSet);
-//        if(!predicates.isEmpty()){
-//            Predicate predicate = predicates.poll();
-//            if(!current.predicates.contains(predicate))
-//                predicate = current.addPredicate(new Predicate(predicate));
-//            predicate.userGiven = true;
-//            return new XPath(xpath, xpathExpr, predicate);
         }else{
             current.userGiven = true;
             return new XPath(xpath, xpathExpr, current);
@@ -180,14 +174,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         for(Object predicate: nameStep.getPredicates()){
             lastFilteredNodeSet = null;
-//            predicates.clear();
             visit(predicate);
         }
 
         return current;
     }
 
-//    private Deque<Predicate> predicates = new ArrayDeque<Predicate>();
     private FilteredNodeSet lastFilteredNodeSet;
     private int predicateDepth;
     protected Node process(org.jaxen.expr.Predicate p) throws SAXPathException{
@@ -219,11 +211,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 filteredNodeSet = new FilteredNodeSet(context, lastFilteredNodeSet);
             
             lastFilteredNodeSet = filteredNodeSet;
-//            filteredNodeSets.offer(new FilteredNodeSet(context, _toBoolean(current)));
             predicateDepth--;
             if(predicateDepth==0)
                 filteredNodeSet.contextSensitive();
-//            predicates.offer(context.addPredicate(new Predicate(current)));
             current = context;
         }
 
@@ -289,7 +279,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             }
         }
         lastFilteredNodeSet = null;
-//        predicates.clear();
         return current;
     }
 
