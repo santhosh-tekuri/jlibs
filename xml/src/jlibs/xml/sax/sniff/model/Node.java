@@ -27,7 +27,6 @@ import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -90,42 +89,6 @@ public abstract class Node extends UserResults{
         return node;
     }
 
-    /*-------------------------------------------------[ Predicates ]---------------------------------------------------*/
-
-    public List<Predicate> predicates = new ArrayList<Predicate>();
-
-    public Iterable<Predicate> predicates(){
-        return predicates;
-    }
-
-    public Predicate addPredicate(Predicate predicate){
-        for(Predicate p: predicates){
-            if(p.equivalent(predicate))
-                return p;
-        }
-
-        predicates.add(predicate);
-        predicate.hits.totalHits = root.hits.totalHits;
-        if(predicate.memberNode!=null)
-            predicate.memberNode.memberOf.add(predicate);
-        if(predicate.memberPredicate!=null)
-            predicate.memberPredicate.memberOf.add(predicate);
-        return predicate;
-    }
-
-    /*-------------------------------------------------[ Member-Of ]---------------------------------------------------*/
-
-    public List<Predicate> memberOf = new ArrayList<Predicate>();
-
-    public Iterable<Predicate> memberOf(){
-        return memberOf;
-    }
-
-    public Predicate addMemberOf(Predicate predicate){
-        memberOf.add(predicate);
-        return predicate;
-    }
-
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
     
     public boolean consumable(Event event){
@@ -139,7 +102,7 @@ public abstract class Node extends UserResults{
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
     public boolean resultInteresed(){
-        return userGiven || predicates.size()>0 || memberOf.size()>0 || listeners.size()>0 || observers.size()>0;
+        return userGiven || listeners.size()>0 || observers.size()>0;
     }
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
@@ -147,105 +110,19 @@ public abstract class Node extends UserResults{
     public boolean hit(Context context, Event event){
         if(userGiven)
             addResult(event.order(), event.getResult());
-
-//        notifyObservers(context, event);
-        processPredicates(event);
         return true;
     }
-
-    protected void processPredicates(Event event){
-        for(Predicate predicate: predicates()){
-            predicate.cache().addResult(event.order(), event.getResult());
-            checkMembers(predicate);
-        }
-
-        for(Predicate member: memberOf()){
-            Predicate.Cache cache = member.cache();
-            Map.Entry<Integer, String> result = cache.hit(this);
-            if(result!=null){
-                if(member.userGiven){
-                    member.addResult(result.getKey(), result.getValue());
-                    cache.removeResult(this);
-                }
-                hitMemberOf(member);
-            }
-        }
-
-        for(Predicate predicate: predicates()){
-            if(predicate.hasCache()){
-                Predicate.Cache cache = predicate.cache();
-                Map.Entry<Integer, String> result = cache.getResult(this);
-                if(result!=null){
-                    if(predicate.userGiven){
-                        predicate.addResult(result.getKey(), result.getValue());
-                        cache.removeResult(this);
-                    }
-                    hitMemberOf(predicate);
-                }
-            }
-        }
-    }
     
-    private void checkMembers(Predicate predicate){
-        if(predicate.memberPredicate!=null){
-            Predicate member = predicate.memberPredicate;
-            if(member.hasCache()){
-                Predicate.Cache cache = member.cache();
-                Map.Entry<Integer, String> result = cache.getResult(predicate);
-                if(result!=null){
-                    if(predicate.userGiven)
-                        predicate.cache().hit(member);
-                    checkMembers(member);
-                }
-            }
-        }
-    }
-
-    private void hitMemberOf(Predicate predicate){
-        for(Predicate memberOf: predicate.memberOf){
-            if(memberOf.hasCache()){
-                Predicate.Cache cache = memberOf.cache();
-                Map.Entry<Integer, String> result = cache.hit(predicate); // NOTE dont move this line
-                if(memberOf.userGiven){
-                    Map.Entry<Integer, String> userResult = cache.getResult((Node)null);
-                    if(userResult!=null){
-                        memberOf.addResult(userResult.getKey(), userResult.getValue());
-                        cache.removeResult((Node)null);
-                    }
-                }
-                if(result!=null){
-                    hitMemberOf(memberOf);
-                }
-            }
-        }
-    }
-
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
 
     public void endingContext(Context context){
         if(context.depth==0){
-            clearPredicateCache();
             for(FilteredNodeSet observer: cleanupObservers())
                 observer.endingContext(context);
         }
         
         for(Node child: context.node.children())
             clearHitCounts(context, child);
-    }
-
-    private void clearPredicateCache(){
-        for(Predicate predicate: predicates()){
-            if(predicate.memberNode!=null){
-                Node n = predicate.memberNode;
-                while(n!=null){
-                    n = n.parent;
-                    if(n==this){
-                        predicate.clearCache();
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     private void clearHitCounts(Context context, Node node){
@@ -266,8 +143,6 @@ public abstract class Node extends UserResults{
             child.reset();
         for(Node constraint: constraints())
             constraint.reset();
-        for(Predicate predicate: predicates())
-            predicate.reset();
     }
     
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
@@ -286,16 +161,6 @@ public abstract class Node extends UserResults{
                 String str = elem.toString();
                 if(elem.userGiven)
                     str += " --> userGiven";
-                if(elem.predicates.size()>0){
-                    str += " --> ";
-                    for(Predicate predicate: elem.predicates)
-                        str += predicate+" ";
-                }
-                if(elem.memberOf.size()>0){
-                    str += " ==>";
-                    for(Predicate predicate: elem.memberOf)
-                        str += predicate+" ";
-                }
                 if(elem.observers.size()>0){
                     str += " ==>";
                     for(ComputedResults observer: elem.observers())
