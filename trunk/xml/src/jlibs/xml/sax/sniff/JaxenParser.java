@@ -259,6 +259,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 current = new LocalName(lastFilteredNodeSet);
             else
                 current = new LocalName(current);
+        }else if(name.equals("namespace-uri")){
+            current = visit(functionExpr.getParameters().get(0));
+            if(lastFilteredNodeSet!=null)
+                current = new NamespaceURI(lastFilteredNodeSet);
+            else
+                current = new NamespaceURI(current);
         }else{
             DerivedResults derivedResults = createDerivedResults(name);
             if(derivedResults!=null){
