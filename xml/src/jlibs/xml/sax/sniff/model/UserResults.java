@@ -18,7 +18,6 @@ package jlibs.xml.sax.sniff.model;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
-import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,14 +79,14 @@ public class UserResults extends Results{
             observer.memberHit(this, context, event);
     }
 
-    public List<FilteredNodeSet> cleanupObservers = new ArrayList<FilteredNodeSet>();
+    public List<ComputedResults> cleanupObservers = new ArrayList<ComputedResults>();
 
-    public Iterable<FilteredNodeSet> cleanupObservers(){
+    public Iterable<ComputedResults> cleanupObservers(){
         return cleanupObservers;
     }
 
     protected void notifyCleanupObservers(Context context){
-        for(FilteredNodeSet observer: cleanupObservers())
+        for(ComputedResults observer: cleanupObservers())
             observer.endingContext(context);
     }
 }

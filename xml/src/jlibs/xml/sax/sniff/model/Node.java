@@ -22,7 +22,6 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
-import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
@@ -38,6 +37,10 @@ public abstract class Node extends UserResults{
 
     public boolean hasAttibuteChild;
 
+    public boolean canBeContext(){
+        return false;
+    }
+    
     public abstract boolean equivalent(Node node);
 
     /*-------------------------------------------------[ Children ]---------------------------------------------------*/
@@ -89,6 +92,13 @@ public abstract class Node extends UserResults{
         return node;
     }
 
+    public Node getConstraintRoot(){
+        Node node = this;
+        while(node.constraintParent!=null)
+            node = node.constraintParent;
+        return node;
+    }
+
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
     
     public boolean consumable(Event event){
@@ -117,7 +127,7 @@ public abstract class Node extends UserResults{
 
     public void endingContext(Context context){
         if(context.depth==0){
-            for(FilteredNodeSet observer: cleanupObservers())
+            for(ComputedResults observer: cleanupObservers())
                 observer.endingContext(context);
         }
         
@@ -168,7 +178,7 @@ public abstract class Node extends UserResults{
                 }
                 if(elem.cleanupObservers.size()>0){
                     str += " -->";
-                    for(FilteredNodeSet observer: elem.cleanupObservers())
+                    for(ComputedResults observer: elem.cleanupObservers())
                         str += observer+" ";
                 }
                 return str;

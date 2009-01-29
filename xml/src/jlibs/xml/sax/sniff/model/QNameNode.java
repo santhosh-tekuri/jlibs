@@ -17,9 +17,9 @@ package jlibs.xml.sax.sniff.model;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.Util;
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.events.Element;
 import jlibs.xml.sax.sniff.events.Attribute;
+import jlibs.xml.sax.sniff.events.Element;
+import jlibs.xml.sax.sniff.events.Event;
 
 /**
  * @author Santhosh Kumar T
@@ -33,6 +33,11 @@ public class QNameNode extends Node{
         this.name = name;
         if(uri==null && name!=null)
             throw new IllegalArgumentException();
+    }
+
+    @Override
+    public boolean canBeContext(){
+        return getConstraintRoot().canBeContext();
     }
 
     @Override
