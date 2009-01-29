@@ -19,13 +19,8 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
-import jlibs.xml.sax.sniff.model.functions.Booleanize;
-import jlibs.xml.sax.sniff.model.functions.Function;
-import jlibs.xml.sax.sniff.model.functions.NumberFunction;
-import jlibs.xml.sax.sniff.model.functions.StringFunction;
 import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
 import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
-import jlibs.xml.sax.sniff.model.listeners.LogicalOperation;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
@@ -222,15 +217,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return current;
     }
 
-    private DerivedResults createDerivedResults(String name){
-        if(name.equals("boolean"))
-            return new Booleanize();
-        else if(name.equals("number"))
-            return new NumberFunction();
-        else
-            return null;
-    }
-
     @SuppressWarnings({"unchecked"})
     protected Node process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
@@ -290,35 +276,26 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 stringLength.addMember(current);
             }
             current = stringLength;
+        }else if(name.equals("number")){
+            ToNumber number = new ToNumber(lastFilteredNodeSet);
+            for(Expr param: (List<Expr>)functionExpr.getParameters()){
+                current = visit(param);
+                number.addMember(current);
+            }
+            current = number;
+        }else if(name.equals("boolean")){
+            current = visit(functionExpr.getParameters().get(0));
+            if(lastFilteredNodeSet!=null)
+                current = new BooleanizedNodeSet(lastFilteredNodeSet);
+            else
+                current = new BooleanizedNodeSet(current);
         }else{
-            DerivedResults derivedResults = createDerivedResults(name);
-            if(derivedResults!=null){
-                for(Object parameter: functionExpr.getParameters()){
-                    visit(parameter);
-                    if(name.equals("boolean") && current.resultType()==ResultType.NODESET)
-                        current = new BooleanizedNodeSet(current);
-                    else{
-                        if(!name.equals("boolean") && current.resultType()==ResultType.NODESET)
-                            current = current.addConstraint(new StringFunction());
-                        derivedResults.addMember(current);
-                    }
-                }
-                if(!(current instanceof ComputedResults))
-                    current = root.addConstraint(derivedResults.attach());
-            }else if(functionExpr.getFunctionName().equals("true"))
+            if(functionExpr.getFunctionName().equals("true"))
                 current = root.addConstraint(new BooleanNode(true));
             else if(functionExpr.getFunctionName().equals("false"))
                 current = root.addConstraint(new BooleanNode(false));
-            else{
-                Function function = Function.newInstance(functionExpr.getFunctionName());
-                for(Object parameter: functionExpr.getParameters())
-                    visit(parameter);
-
-    //            if(lastFilteredNodeSet!=null)
-    //                current = lastFilteredNodeSet.addConstraint(function);
-    //            else
-                    current = current.addConstraint(function);
-            }
+            else
+                throw new NotImplementedException("function "+name+"() is not supported");
         }
         lastFilteredNodeSet = null;
         return current;
@@ -326,7 +303,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     protected Node process(LiteralExpr literalExpr) throws SAXPathException{
         current = new StringLiteral(root, literalExpr.getLiteral()); 
-        //current = root.addConstraint(new LiteralNode(literalExpr.getLiteral()));
         return current;
     }
 
@@ -373,10 +349,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         DerivedResults derivedResults = null;
         if(operator!=-1)
             derivedResults = new ArithmeticOperation(operator);
-        else if(binaryExpr.getOperator().equals("and"))
-            derivedResults = new LogicalOperation(true);
-        else if(binaryExpr.getOperator().equals("or"))
-            derivedResults = new LogicalOperation(false);
         else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());
 
