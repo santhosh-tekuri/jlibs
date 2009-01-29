@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model;
 
 import jlibs.xml.sax.sniff.Debuggable;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -29,6 +30,13 @@ public class Results implements Debuggable{
         if(results==null)
             results = new TreeMap<Integer, String>();
         results.put(docOrder, result);
+    }
+
+    public void addAllResults(Results r){
+        if(r!=null && r.hasResult()){
+            for(Map.Entry<Integer, String> entry: r.results.entrySet())
+                addResult(entry.getKey(), entry.getValue());
+        }
     }
 
     public boolean hasResult(){
