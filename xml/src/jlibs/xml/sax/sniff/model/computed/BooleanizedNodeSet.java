@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff.model.computed;
 
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
@@ -27,9 +26,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class BooleanizedNodeSet extends ComputedResults{
-    public BooleanizedNodeSet(Node member){
-        super(null, false, ResultType.NODESET);
-        addMember(member);
+    public BooleanizedNodeSet(){
+        super(false, ResultType.NODESET);
     }
 
     @Override

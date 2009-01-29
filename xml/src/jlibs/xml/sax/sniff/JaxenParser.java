@@ -225,70 +225,37 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(prefix.length()>0)
             throw new SAXPathException("unsupported function "+prefix+':'+name+"()");
 
-        if(name.equals("count")){
-            current = visit(functionExpr.getParameters().get(0));
-            if(lastFilteredNodeSet!=null)
-                current = new Count(lastFilteredNodeSet);
-            else
-                current = new Count(current);
-        }else if(name.equals("name")){
-            current = visit(functionExpr.getParameters().get(0));
-            if(lastFilteredNodeSet!=null)
-                current = new QualifiedName(lastFilteredNodeSet);
-            else
-                current = new QualifiedName(current);
-        }else if(name.equals("local-name")){
-            current = visit(functionExpr.getParameters().get(0));
-            if(lastFilteredNodeSet!=null)
-                current = new LocalName(lastFilteredNodeSet);
-            else
-                current = new LocalName(current);
-        }else if(name.equals("namespace-uri")){
-            current = visit(functionExpr.getParameters().get(0));
-            if(lastFilteredNodeSet!=null)
-                current = new NamespaceURI(lastFilteredNodeSet);
-            else
-                current = new NamespaceURI(current);
-        }else if(name.equals("string")){
-            current = visit(functionExpr.getParameters().get(0));
-            current = new StringizedNodeSet(current, lastFilteredNodeSet);
-        }else if(name.equals("sum")){
-            current = visit(functionExpr.getParameters().get(0));
-            current = new SumNodeSet(current, lastFilteredNodeSet);
-        }else if(name.equals("concat")){
-            Concat concat = new Concat(lastFilteredNodeSet);
+        ComputedResults function = null;
+
+        if(name.equals("count"))
+            function = new Count();
+        else if(name.equals("name"))
+            function = new QualifiedName();
+        else if(name.equals("local-name"))
+            function = new LocalName();
+        else if(name.equals("namespace-uri"))
+            function = new NamespaceURI();
+        else if(name.equals("string"))
+            function = new StringizedNodeSet();
+        else if(name.equals("sum"))
+            function = new SumNodeSet();
+        else if(name.equals("concat"))
+            function = new Concat();
+        else if(name.equals("normalize-space"))
+            function = new NormalizeSpace();
+        else if(name.equals("string-length"))
+            function = new StringLength();
+        else if(name.equals("number"))
+            function = new ToNumber();
+        else if(name.equals("boolean"))
+            function = new BooleanizedNodeSet();
+
+        if(function!=null){
             for(Expr param: (List<Expr>)functionExpr.getParameters()){
                 current = visit(param);
-                concat.addMember(current);
+                function.addMember(current, lastFilteredNodeSet);
             }
-            current = concat;
-        }else if(name.equals("normalize-space")){
-            NormalizeSpace normalizeSpace = new NormalizeSpace(lastFilteredNodeSet);
-            for(Expr param: (List<Expr>)functionExpr.getParameters()){
-                current = visit(param);
-                normalizeSpace.addMember(current);
-            }
-            current = normalizeSpace;
-        }else if(name.equals("string-length")){
-            StringLength stringLength = new StringLength(lastFilteredNodeSet);
-            for(Expr param: (List<Expr>)functionExpr.getParameters()){
-                current = visit(param);
-                stringLength.addMember(current);
-            }
-            current = stringLength;
-        }else if(name.equals("number")){
-            ToNumber number = new ToNumber(lastFilteredNodeSet);
-            for(Expr param: (List<Expr>)functionExpr.getParameters()){
-                current = visit(param);
-                number.addMember(current);
-            }
-            current = number;
-        }else if(name.equals("boolean")){
-            current = visit(functionExpr.getParameters().get(0));
-            if(lastFilteredNodeSet!=null)
-                current = new BooleanizedNodeSet(lastFilteredNodeSet);
-            else
-                current = new BooleanizedNodeSet(current);
+            current = function;
         }else{
             if(functionExpr.getFunctionName().equals("true"))
                 current = root.addConstraint(new BooleanNode(true));
@@ -297,6 +264,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             else
                 throw new NotImplementedException("function "+name+"() is not supported");
         }
+        
         lastFilteredNodeSet = null;
         return current;
     }
@@ -312,26 +280,22 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
     protected Node process(BinaryExpr binaryExpr) throws SAXPathException{
-        if(binaryExpr.getOperator().equals("and")){
+        ComputedResults computed = null;
+        if(binaryExpr.getOperator().equals("and"))
+            computed = new AndExpression();
+        else if(binaryExpr.getOperator().equals("or"))
+            computed = new OrExpression();
+
+        if(computed!=null){
             Node _current = current;
             visit(binaryExpr.getLHS());
-            Node lhs = current;
+            computed.addMember(current, lastFilteredNodeSet);
 
             current = _current;
             visit(binaryExpr.getRHS());
-            Node rhs = current;
+            computed.addMember(current, lastFilteredNodeSet);
 
-            return current = new AndExpression(lhs, rhs);
-        }else if(binaryExpr.getOperator().equals("or")){
-            Node _current = current;
-            visit(binaryExpr.getLHS());
-            Node lhs = current;
-
-            current = _current;
-            visit(binaryExpr.getRHS());
-            Node rhs = current;
-
-            return current = new OrExpression(lhs, rhs);
+            return current = computed;
         }
 
         int operator = -1;

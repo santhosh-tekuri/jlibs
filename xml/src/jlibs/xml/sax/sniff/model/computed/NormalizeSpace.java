@@ -19,10 +19,6 @@ package jlibs.xml.sax.sniff.model.computed;
  * @author Santhosh Kumar T
  */
 public class NormalizeSpace extends StringComputedResult{
-    public NormalizeSpace(FilteredNodeSet filter){
-        super(filter);
-    }
-
     @Override
     protected String transform(String result){
         return normalize(result);

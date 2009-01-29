@@ -29,9 +29,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class QualifiedName extends ComputedResults{
-    public QualifiedName(UserResults member){
-        super(null, false, ResultType.NODESET);
-        addMember(member);
+    public QualifiedName(){
+        super(false, ResultType.NODESET);
     }
 
     @Override

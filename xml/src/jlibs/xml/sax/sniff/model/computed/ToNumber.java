@@ -21,10 +21,6 @@ import jlibs.xml.sax.sniff.model.ResultType;
  * @author Santhosh Kumar T
  */
 public class ToNumber extends StringComputedResult{
-    public ToNumber(FilteredNodeSet filter){
-        super(filter);
-    }
-
     @Override
     public ResultType resultType(){
         return ResultType.NUMBER;

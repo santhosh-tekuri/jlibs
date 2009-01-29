@@ -26,8 +26,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public abstract class StringComputedResult extends ComputedResults{
-    public StringComputedResult(FilteredNodeSet filter){
-        super(filter, false, ResultType.STRING);
+    public StringComputedResult(){
+        super(false, ResultType.STRING);
     }
 
     @Override

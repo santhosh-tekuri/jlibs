@@ -29,9 +29,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class LocalName extends ComputedResults{
-    public LocalName(UserResults member){
-        super(null, false, ResultType.NODESET);
-        addMember(member);
+    public LocalName(){
+        super(false, ResultType.NODESET);
     }
 
     @Override
