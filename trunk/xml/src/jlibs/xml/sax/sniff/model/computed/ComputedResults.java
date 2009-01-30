@@ -113,12 +113,12 @@ public abstract class ComputedResults extends Node{
     @NotNull
     protected abstract CachedResults createResultCache();
 
-    private CachedResults resultCache;
+    protected CachedResults resultCache;
 
     @SuppressWarnings({"unchecked"})
     public <T extends CachedResults> T getResultCache(UserResults member, Context context){
-        if(resultCache!=null)
-            return (T)resultCache;
+//        if(resultCache!=null)
+//            return (T)resultCache;
 
         ComputedResults node = this;
         while(node.observers.size()>0){
@@ -126,12 +126,15 @@ public abstract class ComputedResults extends Node{
             if(node instanceof FilteredNodeSet){
                 FilteredNodeSet filteredNodeSet = (FilteredNodeSet)node;
                 if(filteredNodeSet.contextSensitive){
-                    return (T)filteredNodeSet.getResultCache(member, context).getResultCache(this);
+                    resultCache = (T)((FilteredNodeSet.ResultCache)filteredNodeSet.resultCache).getResultCache(this);
+                    return (T)resultCache;
                 }
             }
         }
 
-        resultCache = createResultCache();
+        if(resultCache==null)
+            resultCache = createResultCache();
+        
         return (T)resultCache;
     }
     
@@ -141,8 +144,11 @@ public abstract class ComputedResults extends Node{
     }
 
     protected void clearResults(Context context){
-        if(resultCache!=null)
+        if(resultCache!=null){
+            if(resultCache.prepareResult())
+                notifyObservers(context, null);
             resultCache=null;
+        }
         
         for(UserResults observer: members()){
             if(observer instanceof ComputedResults)

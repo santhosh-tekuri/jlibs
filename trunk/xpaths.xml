@@ -194,6 +194,9 @@
         <xpath>//book[price and author]</xpath>
         <xpath>//book[price or author]</xpath>
         <xpath>//book[price and author or name]</xpath>
+        <xpath>//book[not(price or author)]</xpath>
+        <xpath>//book[not(price and author)]</xpath>
+        <xpath>//book[not(price and author or name)]</xpath>
 
         <!-- count() used at the top level -->
         <xpath>count(/root/pub/book/price)</xpath>

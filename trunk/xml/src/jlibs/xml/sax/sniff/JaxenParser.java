@@ -250,6 +250,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             function = new ToNumber();
         else if(name.equals("boolean"))
             function = new BooleanizedNodeSet();
+        else if(name.equals("not"))
+            function = new Not();
 
         if(function!=null){
             for(Expr param: (List<Expr>)functionExpr.getParameters()){
