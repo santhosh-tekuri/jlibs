@@ -126,7 +126,7 @@ public abstract class ComputedResults extends Node{
             if(node instanceof FilteredNodeSet){
                 FilteredNodeSet filteredNodeSet = (FilteredNodeSet)node;
                 if(filteredNodeSet.contextSensitive){
-                    resultCache = (T)((FilteredNodeSet.ResultCache)filteredNodeSet.resultCache).getResultCache(this);
+                    resultCache = filteredNodeSet.resultCache.getResultCache(this);
                     return (T)resultCache;
                 }
             }

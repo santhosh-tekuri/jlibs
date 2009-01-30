@@ -35,10 +35,21 @@ public class BooleanizedNodeSet extends ComputedResults{
         return ResultType.BOOLEAN;
     }
 
+    private class ResultCache extends CachedResults{
+        @Override
+        public boolean prepareResult(){
+            if(!hasResult()){
+                addResult(-1, "false");
+                return true;
+            }else
+                return false;
+        }
+    }
+    
     @NotNull
     @Override
-    protected CachedResults createResultCache(){
-        return new CachedResults();
+    protected ResultCache createResultCache(){
+        return new ResultCache();
     }
 
     @Override
