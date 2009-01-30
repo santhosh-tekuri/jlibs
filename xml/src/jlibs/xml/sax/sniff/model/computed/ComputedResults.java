@@ -22,6 +22,7 @@ import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
 import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringizedNodeSet;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringsNodeSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -51,22 +52,31 @@ public abstract class ComputedResults extends Node{
         return members;
     }
 
-    private UserResults castTo(UserResults member, FilteredNodeSet filter, ResultType toType){
-        if(member.resultType()==ResultType.NODESET){
-            switch(toType){
-                case STRING:
-                    StringizedNodeSet stringizedNodeSet = new StringizedNodeSet();
-                    stringizedNodeSet.addMember(member, filter);
-                    return stringizedNodeSet;
-                case NUMBER:
-                    ToNumber toNumber = new ToNumber();
-                    toNumber.addMember(castTo(member, filter, ResultType.STRING), null);
-                    return toNumber;
-                case BOOLEAN:
-                    BooleanizedNodeSet bool = new BooleanizedNodeSet();
-                    bool.addMember(member, filter);
-                    return bool;
-            }
+    protected UserResults castTo(UserResults member, FilteredNodeSet filter, ResultType toType){
+        switch(member.resultType()){
+            case NODESET:
+                switch(toType){
+                    case STRING:
+                        StringizedNodeSet stringizedNodeSet = new StringizedNodeSet();
+                        stringizedNodeSet.addMember(member, filter);
+                        return stringizedNodeSet;
+                    case NUMBER:
+                        ToNumber toNumber = new ToNumber();
+                        toNumber.addMember(castTo(member, filter, ResultType.STRING), null);
+                        return toNumber;
+                    case BOOLEAN:
+                        BooleanizedNodeSet bool = new BooleanizedNodeSet();
+                        bool.addMember(member, filter);
+                        return bool;
+                    case STRINGS:
+                        StringsNodeSet strings = new StringsNodeSet();
+                        strings.addMember(member, filter);
+                        return strings;
+                }
+                break;
+            default:
+                if(toType==ResultType.STRINGS)
+                    return member;
         }
         throw new IllegalArgumentException(member.resultType()+" can't be casted to "+toType);
     }
@@ -87,7 +97,10 @@ public abstract class ComputedResults extends Node{
             member = castTo(member, filter, expected);
             filter = null;
         }
-
+        _addMember(member, filter);
+    }
+    
+    protected void _addMember(UserResults member, FilteredNodeSet filter){
         if(filter!=null)
             member = filter;
 
@@ -159,7 +172,7 @@ public abstract class ComputedResults extends Node{
         }
     }
 
-    private boolean usedAsMemberInFilteredSet(){
+    protected boolean usedAsMemberInFilteredSet(){
         ComputedResults node = this;
         while(node.observers.size()>0){
             node = node.observers.get(0);

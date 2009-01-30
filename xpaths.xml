@@ -176,7 +176,11 @@
 
         <!-- nested paths -->
         <xpath>//Price[@symbol]</xpath>
-        
+        <xpath>//temp[text() = '2' or text() = 1]</xpath>
+        <xpath>//Price[text() = '2' or text() = '100']</xpath>
+        <xpath>//Item[(Price = 200) or Price = 2]</xpath>
+        <xpath>/root/pub/book[price[ 10 = . ]]</xpath>
+
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
 
@@ -197,6 +201,9 @@
         <xpath>//book[not(price or author)]</xpath>
         <xpath>//book[not(price and author)]</xpath>
         <xpath>//book[not(price and author or name)]</xpath>
+        <xpath>/root/pub/book[ @id = '1' and @FirstBook = 'true' ]</xpath>
+        <xpath>/root/pub/book[ @id = '2' or @FirstBook = 'true' ]</xpath>
+        <xpath>/root[ @purpose = 'test' ]</xpath>
 
         <!-- count() used at the top level -->
         <xpath>count(/root/pub/book/price)</xpath>
@@ -473,6 +480,7 @@
         <xpath>number(//two)</xpath>
         <xpath>number(//two)+5</xpath>
         <xpath>sum(//two)</xpath>
+        <xpath>sum(//one/text())</xpath>
     </testcase>
 
     <testcase>
