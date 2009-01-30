@@ -475,4 +475,22 @@
         <xpath>sum(//two)</xpath>
     </testcase>
 
+    <testcase>
+        <file>xmlFiles/purchase_order.xml</file>
+
+        <!-- test for invalid root element -->
+        <xpath>/*[ not( self::purchaseOrder )]</xpath>
+
+        <!-- test for invalid attribute of purchaseOrder -->
+        <xpath>/purchaseOrder[ not( @orderDate )]</xpath>
+
+        <!-- test for invalid child of purchaseOrder -->
+        <xpath>/purchaseOrder/*[ not( self::shipTo or self::billTo or self::comment or self::items )]</xpath>
+
+        <!-- test for invalid child of items -->
+        <xpath>/purchaseOrder/items/*[ not( self::item )]</xpath>
+
+        <!-- test for invalid attribute of item -->
+        <xpath>/purchaseOrder/items/item[ not( @partNum )]</xpath>
+    </testcase>
 </xpaths>
