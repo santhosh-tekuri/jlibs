@@ -113,6 +113,7 @@ public abstract class ComputedResults extends Node{
     protected abstract CachedResults createResultCache();
 
     private CachedResults resultCache;
+
     @SuppressWarnings({"unchecked"})
     public <T extends CachedResults> T getResultCache(UserResults member, Context context){
         if(resultCache!=null)
@@ -146,11 +147,28 @@ public abstract class ComputedResults extends Node{
             if(observer instanceof ComputedResults)
                 ((ComputedResults)observer).clearResults(context);
         }
-        for(ComputedResults observer: observers())
+        for(ComputedResults observer: observers()){
             observer.clearResults(this, context);
+        }
     }
 
-    public void clearResults(UserResults member, Context context){}
+    private boolean usedAsMemberInFilteredSet(){
+        ComputedResults node = this;
+        while(node.observers.size()>0){
+            node = node.observers.get(0);
+            if(node instanceof FilteredNodeSet)
+                return true;
+        }
+        return false;
+    }
+
+    public void clearResults(UserResults member, Context context){
+        if(usedAsMemberInFilteredSet()){
+            resultCache = null;
+            for(ComputedResults observer: observers())
+                observer.clearResults(this, context);
+        }
+    }
 
     @Override
     public void endingContext(Context context){}
