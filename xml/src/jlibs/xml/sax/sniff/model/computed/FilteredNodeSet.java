@@ -39,17 +39,19 @@ public class FilteredNodeSet extends ComputedResults{
 
     private class MemberResults{
         private TreeMap<Integer, String> results = new TreeMap<Integer, String>();
-        private boolean accept;
+        private Boolean accept;
 
         private boolean hit(UserResults member, Event event){
             if(member==members.get(0))
                 results.put(event.order(), event.getResult());
             else if(member==members.get(1))
-                accept = true;
+                accept = ResultType.BOOLEAN.asBoolean(((ComputedResults)member).getResultCache().results);
 
-            if(accept && results.size()>0){
-                for(Map.Entry<Integer, String> entry: results.entrySet())
-                    addResult(entry.getKey(), entry.getValue());
+            if(accept!=null && results.size()>0){
+                if(accept){
+                    for(Map.Entry<Integer, String> entry: results.entrySet())
+                        addResult(entry.getKey(), entry.getValue());
+                }
                 results.clear();
                 return true;
             }
@@ -58,7 +60,7 @@ public class FilteredNodeSet extends ComputedResults{
 
         private void clear(){
             results.clear();
-            accept = false;
+            accept = null;
         }
     }
 
@@ -81,7 +83,7 @@ public class FilteredNodeSet extends ComputedResults{
     }
 
 
-    private ResultCache resultCache = new ResultCache();
+    public ResultCache resultCache = new ResultCache();
     private LinkedHashMap<Object, ResultCache> map = new LinkedHashMap<Object, ResultCache>();
 
     @SuppressWarnings({"unchecked"})
