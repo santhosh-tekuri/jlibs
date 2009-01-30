@@ -57,11 +57,6 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
             _member.cleanupObservers.add(this);
     }
 
-    @Override
-    public ResultType resultType(){
-        return ResultType.NUMBER;
-    }
-
     protected abstract class ResultCache extends CachedResults{
         private StringBuilder buff;
         private boolean accept = filter==null;

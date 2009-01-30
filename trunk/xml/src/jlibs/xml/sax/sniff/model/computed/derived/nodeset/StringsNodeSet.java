@@ -19,56 +19,55 @@ import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.TreeMap;
+
 /**
  * @author Santhosh Kumar T
  */
-public class SumNodeSet extends DerivedNodeSetResults{
+public class StringsNodeSet extends DerivedNodeSetResults{
     @Override
     public ResultType resultType(){
-        return ResultType.NUMBER;
+        return ResultType.STRINGS;
     }
 
-    private class SumResultCache extends ResultCache{
-        private double number;
-        private double pendingNumber;
-        
-        private double toDouble(String str){
-            try{
-                return Double.parseDouble(str);
-            }catch(NumberFormatException nfe){
-                return Double.NaN;
-            }
-        }
+    private class StringsResultCache extends ResultCache{
+        private ArrayList<String> list = new ArrayList<String>();
+        private ArrayList<String> pendingList = new ArrayList<String>();
 
         @Override
         public void updatePending(String str){
-            pendingNumber += toDouble(str);
+            pendingList.add(str);
         }
 
         @Override
         public void promotePending(){
-            number += pendingNumber;
+            list.addAll(pendingList);
         }
 
         @Override
         public void resetPending(){
-            pendingNumber = 0;
+            pendingList.clear();
         }
 
         @Override
         public void promote(String str){
-            number += toDouble(str);
+            list.add(str);
         }
 
         @Override
         public void populateResults(){
-            addResult(-1, String.valueOf(number));
+            int i=1;
+            for(String str: list)
+                addResult(i++, str);
+            if(results==null)
+                results = new TreeMap<Integer, String>();            
         }
     }
 
     @NotNull
     @Override
     protected CachedResults createResultCache(){
-        return new SumResultCache();
+        return new StringsResultCache();
     }
 }

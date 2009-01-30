@@ -65,6 +65,8 @@
                             <Price symbol="Y">100</Price>
                             <Price symbol="$">200</Price>
                         </Item>
+                        <temp>5</temp>
+                        <temp>1</temp>
                     </Detail>
                 </Order>
             </Body>

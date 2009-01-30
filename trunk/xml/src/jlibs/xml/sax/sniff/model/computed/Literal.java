@@ -18,7 +18,6 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
@@ -58,26 +57,38 @@ public class Literal extends ComputedResults{
         return resultType;
     }
 
+    private class ResultCache extends CachedResults{
+        @Override
+        public boolean prepareResult(){
+            if(!hasResult()){
+                addResult(-1, literal);
+                return true;
+            }
+            return false;
+        }
+    }
+
     @NotNull
     @Override
-    protected CachedResults createResultCache(){
-        return new CachedResults();
+    protected ResultCache createResultCache(){
+        return new ResultCache();
     }
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        Results resultCache = getResultCache(member, context);
-        if(!resultCache.hasResult()){
-            resultCache.addResult(-1, literal);
-//            prepareResults();
-            notifyObservers(context, event);
+        if(!usedAsMemberInFilteredSet()){
+            ResultCache resultCache = getResultCache(member, context);
+            if(resultCache.prepareResult())
+                notifyObservers(context, event);
         }
     }
 
     @Override
     public void prepareResults(){
         if(!hasResult()){
-            addAllResults(getResultCache());
+            ResultCache resultCache = getResultCache();
+            resultCache.prepareResult();
+            addAllResults(resultCache);
             notifyObservers(null, null);
         }
     }

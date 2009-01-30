@@ -20,7 +20,9 @@ import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
 import jlibs.xml.sax.sniff.model.computed.derived.*;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.RelationalNodeSet;
 import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringizedNodeSet;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringsNodeSet;
 import jlibs.xml.sax.sniff.model.computed.derived.nodeset.SumNodeSet;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
@@ -228,7 +230,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         ComputedResults function = null;
 
-        if(name.equals("count"))
+        if(name.equals("strings"))
+            function = new StringsNodeSet();
+        else if(name.equals("count"))
             function = new Count();
         else if(name.equals("name"))
             function = new QualifiedName();
@@ -288,6 +292,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             computed = new AndExpression();
         else if(binaryExpr.getOperator().equals("or"))
             computed = new OrExpression();
+        else if(binaryExpr.getOperator().equals("="))
+            computed = new RelationalNodeSet();
         else{
             int operator = -1;
             if(binaryExpr.getOperator().equals("+"))
