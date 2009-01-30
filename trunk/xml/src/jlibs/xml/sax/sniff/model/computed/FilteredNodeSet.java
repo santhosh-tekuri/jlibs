@@ -32,7 +32,7 @@ import java.util.TreeMap;
  */
 public class FilteredNodeSet extends ComputedResults{
     public FilteredNodeSet(Node member, UserResults filter){
-        super(false, ResultType.NODESET, ResultType.NODESET);
+        super(false, ResultType.NODESET, ResultType.BOOLEAN);
         addMember(member, null);
         addMember(filter, null);
     }

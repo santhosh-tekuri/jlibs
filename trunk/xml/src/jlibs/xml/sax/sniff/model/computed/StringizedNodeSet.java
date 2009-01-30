@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class StringizedNodeSet extends ComputedResults{
     private boolean descendants;
-    private boolean hasFilter;
+    private FilteredNodeSet filter;
 
     public StringizedNodeSet(){
         super(false, ResultType.NODESET);
@@ -38,18 +38,21 @@ public class StringizedNodeSet extends ComputedResults{
 
     @Override
     public void addMember(UserResults _member, FilteredNodeSet filter){
+        this.filter = filter;
         Node member = (Node)_member;
         if(descendants=member.canBeContext()){
-            if(filter==null || filter.members.get(1) instanceof FilteredNodeSet)
-                member.cleanupObservers.add(this);
+            if(filter!=null && !filter.contextSensitive){
+                UserResults cleanupObserver = filter.members.get(0);
+                cleanupObserver.cleanupObservers.add(this);
+            }
             member = member.addChild(new Descendant(Axis.DESCENDANT));
         }
         super.addMember(member, null);
 
-        if(filter!=null){
-            hasFilter = true;
+        if(filter!=null)
             filter.observers.add(this);
-        }
+        else
+            _member.cleanupObservers.add(this);
     }
 
     @Override
@@ -59,7 +62,7 @@ public class StringizedNodeSet extends ComputedResults{
 
     public class ResultCache extends CachedResults{
         StringBuilder buff = new StringBuilder();
-        boolean accept = !hasFilter;
+        boolean accept = filter==null;
         boolean contextEnded = false;
 
         public boolean prepareResult(){
@@ -136,8 +139,11 @@ public class StringizedNodeSet extends ComputedResults{
 
     @Override
     public void clearResults(UserResults member, Context context){
-        ResultCache resultCache = getResultCache();
-        if(resultCache.prepareResult())
-            notifyObservers(context, null);
+        if(member==filter){
+            ResultCache resultCache = getResultCache();
+            if(resultCache.prepareResult())
+                notifyObservers(context, null);
+        }else
+            super.clearResults(member, context);
     }
 }
