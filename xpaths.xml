@@ -179,7 +179,7 @@
         <xpath>//temp[text() = '2' or text() = 1]</xpath>
         <xpath>//Price[text() = '2' or text() = '100']</xpath>
         <xpath>//Item[(Price = 200) or Price = 2]</xpath>
-        <xpath>/root/pub/book[price[ 10 = . ]]</xpath>
+<!--        <xpath>/root/pub/book[price[ 10 = . ]]</xpath>-->
 
         <!-- other tests -->
         <xpath>/root//self::*</xpath>

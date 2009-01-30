@@ -150,8 +150,10 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     @Override
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
+        if(resultCache==null)
+            resultCache = (ResultCache)getResultCache(this, context);
         if(!resultCache.hasResult()){
-            resultCache._updatePending(resultCache.buff.toString());
+            resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
             resultCache.buff = null;
         }
     }
@@ -160,6 +162,8 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     public void clearResults(UserResults member, Context context){
         if(member==filter){
             ResultCache resultCache = getResultCache();
+            if(resultCache==null)
+                resultCache = (ResultCache)getResultCache(this, context);
             resultCache._promotePending();
         }else
             super.clearResults(member, context);
