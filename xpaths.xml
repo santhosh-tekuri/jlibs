@@ -235,6 +235,21 @@
         <xpath>sum(//book[@testAttr]/price)</xpath>
         <xpath>sum(//book[testElem]/price)</xpath>
 
+        <!-- not() function -->
+        <xpath>/root[not(xxx)]</xpath>
+        <xpath>/root[not(pub)]</xpath>
+        <xpath>/root/pub//book[not(price and author)]</xpath>
+        <xpath>/root/pub//book[not(price and author)]</xpath>
+        <xpath>/root[not(pub) or pub/book]/@purpose</xpath>
+        <xpath>/root[pub/book or not(pub)]/@purpose</xpath>
+        <xpath>/root[not(xxx) and pub/book]/@purpose</xpath>
+        <xpath>/root[not(xxx) or yyy]/@purpose</xpath>
+        <xpath>/root[yyy or not(xxx)]/@purpose</xpath>
+        <xpath>/root[pub/book and not(xxx)]/@purpose</xpath>
+        <xpath>/root[not(xxx) and not(yyy)]/@purpose</xpath>
+        <xpath>/root[not(pub) and yyy or pub/book]/@purpose</xpath>
+        <xpath>/root[not(xxx) and pub or yyy]/@purpose</xpath>
+        
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
         <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>

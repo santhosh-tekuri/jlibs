@@ -45,7 +45,7 @@ public class FilteredNodeSet extends ComputedResults{
             if(member==members.get(0))
                 results.put(event.order(), event.getResult());
             else if(member==members.get(1))
-                accept = ResultType.BOOLEAN.asBoolean(((ComputedResults)member).getResultCache().results);
+                accept = ((ComputedResults)member).getResultCache().asBoolean(ResultType.BOOLEAN);
 
             if(accept!=null && results.size()>0){
                 if(accept){
@@ -53,7 +53,7 @@ public class FilteredNodeSet extends ComputedResults{
                         addResult(entry.getKey(), entry.getValue());
                 }
                 results.clear();
-                return true;
+                return accept;
             }
             return false;
         }
@@ -66,12 +66,12 @@ public class FilteredNodeSet extends ComputedResults{
 
     public class ResultCache extends CachedResults{
         MemberResults memberResults = new MemberResults();
-        Map<UserResults, Object> memberCacheMap = new HashMap<UserResults, Object>();
+        Map<UserResults, CachedResults> memberCacheMap = new HashMap<UserResults, CachedResults>();
 
-        public Object getResultCache(ComputedResults member){
-            Object cache = memberCacheMap.get(member);
+        public CachedResults getResultCache(ComputedResults member){
+            CachedResults cache = memberCacheMap.get(member);
             if(cache==null)
-                memberCacheMap.put(member, cache=member.createResultCache());
+                memberCacheMap.put(member, cache=member.resultCache=member.createResultCache());
             return cache; 
         }
     }
@@ -79,11 +79,12 @@ public class FilteredNodeSet extends ComputedResults{
     @NotNull
     @Override
     protected ResultCache createResultCache(){
-        return new ResultCache();
+        super.resultCache = resultCache = new ResultCache();
+        return resultCache;
     }
 
 
-    public ResultCache resultCache = new ResultCache();
+    public ResultCache resultCache = createResultCache();
     private LinkedHashMap<Object, ResultCache> map = new LinkedHashMap<Object, ResultCache>();
 
     @SuppressWarnings({"unchecked"})
@@ -92,7 +93,7 @@ public class FilteredNodeSet extends ComputedResults{
             if(member==members.get(0)){
                 resultCache = map.get(context.identity());
                 if(resultCache==null)
-                    map.put(context.identity(), resultCache=new ResultCache());
+                    map.put(context.identity(), resultCache=createResultCache());
             }
         }
         return resultCache;
@@ -111,9 +112,24 @@ public class FilteredNodeSet extends ComputedResults{
         contextSensitive = true;
         members.get(0).cleanupObservers.add(this);
     }
-    
+
+    private void prepareResult(ComputedResults node, Context context){
+        CachedResults resultCache = node.getResultCache();
+        if(resultCache==null)
+            resultCache = this.resultCache.getResultCache(node);
+        if(!resultCache.hasResult()){
+            for(UserResults member: node.members){
+                if(member instanceof ComputedResults)
+                    prepareResult((ComputedResults)member, context);
+            }
+        }
+        if(resultCache.prepareResult())
+            node.notifyObservers(context, null);
+    }
+
     @Override
     public void endingContext(Context context){
+        prepareResult(this, context);
         if(contextSensitive)
             map.remove(context.identity());
         clearResults(context);

@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.computed;
 
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
 /**
@@ -23,5 +24,17 @@ import jlibs.xml.sax.sniff.model.Results;
 public class CachedResults extends Results{
     public boolean prepareResult(){
         return false;
+    }
+
+    public boolean asBoolean(ResultType resultType){
+        return resultType.asBoolean(results);
+    }
+
+    public String asString(ResultType resultType){
+        return resultType.asString(results);
+    }
+
+    public double asNumber(ResultType resultType){
+        return resultType.asNumber(results);
     }
 }
