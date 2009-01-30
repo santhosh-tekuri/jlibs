@@ -21,6 +21,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringizedNodeSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

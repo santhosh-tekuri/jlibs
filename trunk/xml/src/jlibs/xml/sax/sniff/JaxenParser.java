@@ -20,6 +20,8 @@ import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
 import jlibs.xml.sax.sniff.model.computed.derived.*;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringizedNodeSet;
+import jlibs.xml.sax.sniff.model.computed.derived.nodeset.SumNodeSet;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
