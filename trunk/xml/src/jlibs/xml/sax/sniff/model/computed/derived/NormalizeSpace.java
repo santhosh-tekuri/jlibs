@@ -13,15 +13,21 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.computed;
+package jlibs.xml.sax.sniff.model.computed.derived;
+
+import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
  */
-public class NormalizeSpace extends StringComputedResult{
+public class NormalizeSpace extends DerivedResults{
+    public NormalizeSpace(){
+        super(ResultType.STRING, false, ResultType.STRING);
+    }
+
     @Override
-    protected String transform(String result){
-        return normalize(result);
+    protected String deriveResult(String[] memberResults){
+        return memberResults[0]!=null ? normalize(memberResults[0]) : "";
     }
 
     public static String normalize(String str){
