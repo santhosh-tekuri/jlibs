@@ -21,6 +21,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -50,6 +51,26 @@ public abstract class ComputedResults extends Node{
         return members;
     }
 
+    private UserResults castTo(UserResults member, FilteredNodeSet filter, ResultType toType){
+        if(member.resultType()==ResultType.NODESET){
+            switch(toType){
+                case STRING:
+                    StringizedNodeSet stringizedNodeSet = new StringizedNodeSet();
+                    stringizedNodeSet.addMember(member, filter);
+                    return stringizedNodeSet;
+                case NUMBER:
+                    ToNumber toNumber = new ToNumber();
+                    toNumber.addMember(castTo(member, filter, ResultType.STRING), null);
+                    return toNumber;
+                case BOOLEAN:
+                    BooleanizedNodeSet bool = new BooleanizedNodeSet();
+                    bool.addMember(member, filter);
+                    return bool;
+            }
+        }
+        throw new IllegalArgumentException(member.resultType()+" can't be casted to "+toType);
+    }
+
     public void addMember(UserResults member, FilteredNodeSet filter){
         ResultType expected;
         if(memberTypes.length>members.size())
@@ -59,16 +80,13 @@ public abstract class ComputedResults extends Node{
         else
             throw new IllegalStateException("no more arguments can be added");
 
-        if(member.resultType()==ResultType.NODESET && expected==ResultType.STRING){
-            StringizedNodeSet stringizedNodeSet = new StringizedNodeSet();
-            stringizedNodeSet.addMember(member, filter);
-            member = stringizedNodeSet;
+        if(member.resultType()!=expected){
+            member = castTo(member, filter, expected);
+            filter = null;
         }
-        else if(filter!=null)
+
+        if(filter!=null)
             member = filter;
-        
-        if(member.resultType()!=expected)
-            throw new IllegalArgumentException(expected.toString());
 
         root = ((Node)member).root;
         hits.totalHits = member.hits.totalHits;

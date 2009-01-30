@@ -13,21 +13,25 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.computed;
+package jlibs.xml.sax.sniff.model.computed.derived;
 
 import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
  */
-public class StringLength extends StringComputedResult{
-    @Override
-    public ResultType resultType(){
-        return ResultType.NUMBER;
+public class Concat extends DerivedResults{
+    public Concat(){
+        super(ResultType.STRING, true, ResultType.STRING);
     }
 
     @Override
-    protected String transform(String result){
-        return String.valueOf((double)result.length());
+    protected String deriveResult(String[] memberResults){
+        StringBuilder buff = new StringBuilder();
+        for(String result: memberResults){
+            if(result!=null)
+                buff.append(result);
+        }
+        return buff.toString();
     }
 }

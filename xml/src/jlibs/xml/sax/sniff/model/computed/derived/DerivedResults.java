@@ -13,26 +13,30 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.computed;
+package jlibs.xml.sax.sniff.model.computed.derived;
 
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.computed.ComputedResults;
+import jlibs.xml.sax.sniff.model.computed.StringizedNodeSet;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Concat extends ComputedResults{
-    public Concat(){
-        super(true, ResultType.STRING);
+public abstract class DerivedResults extends ComputedResults{
+    private final ResultType resultType;
+    public DerivedResults(ResultType resultType, boolean variableMembers, ResultType... memberTypes){
+        super(variableMembers, memberTypes);
+        this.resultType = resultType;
     }
 
     @Override
-    public ResultType resultType(){
-        return ResultType.STRING;
+    public final ResultType resultType(){
+        return resultType;
     }
 
     private class ResultCache extends Results{
@@ -40,16 +44,12 @@ public class Concat extends ComputedResults{
         String memberResults[] = new String[members.size()];
 
         public void prepareResults(){
-            if(!hasResult()){
-                StringBuilder buff = new StringBuilder();
-                for(String result: memberResults){
-                    if(result!=null)
-                        buff.append(result);
-                }
-                addResult(-1, buff.toString());
-            }
+            if(!hasResult())
+                addResult(-1, deriveResult(memberResults));
         }
     }
+
+    protected abstract String deriveResult(String memberResults[]);
 
     @Override
     @NotNull
@@ -58,7 +58,7 @@ public class Concat extends ComputedResults{
     }
 
     @Override
-    public void memberHit(UserResults member, Context context, Event event){
+    public final void memberHit(UserResults member, Context context, Event event){
         ResultCache resultCache = getResultCache(member, context);
         if(!resultCache.hasResult()){
             ComputedResults _member = (ComputedResults)member;
@@ -79,7 +79,7 @@ public class Concat extends ComputedResults{
     }
 
     @Override
-    public void prepareResults(){
+    public final void prepareResults(){
         if(!hasResult()){
             for(Results member: members()){
                 if(member instanceof ComputedResults)
@@ -90,7 +90,7 @@ public class Concat extends ComputedResults{
                 resultCache.prepareResults();
                 addAllResults(resultCache);
             }else
-                addResult(-1, "");
+                addResult(-1, resultType.defaultValue());
         }
     }
 }

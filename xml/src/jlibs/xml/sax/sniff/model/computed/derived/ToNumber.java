@@ -13,27 +13,29 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.computed;
+package jlibs.xml.sax.sniff.model.computed.derived;
 
 import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
  */
-public class ToNumber extends StringComputedResult{
-    @Override
-    public ResultType resultType(){
-        return ResultType.NUMBER;
+public class ToNumber extends DerivedResults{
+    public ToNumber(){
+        super(ResultType.NUMBER, false, ResultType.STRING);
     }
 
     @Override
-    protected String transform(String result){
-        double d;
-        try{
-            d = Double.parseDouble(result);
-        }catch(NumberFormatException e){
-            d = Double.NaN;
-        }
-        return String.valueOf(d);
+    protected String deriveResult(String[] memberResults){
+        if(memberResults[0]!=null){
+            double d;
+            try{
+                d = Double.parseDouble(memberResults[0]);
+            }catch(NumberFormatException e){
+                d = Double.NaN;
+            }
+            return String.valueOf(d);
+        }else
+            return "0.0";
     }
 }
