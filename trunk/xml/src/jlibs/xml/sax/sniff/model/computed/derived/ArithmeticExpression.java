@@ -13,36 +13,26 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.listeners;
+package jlibs.xml.sax.sniff.model.computed.derived;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import org.jaxen.saxpath.Operator;
 
 /**
  * @author Santhosh Kumar T
  */
-public class ArithmeticOperation extends DerivedResults{
+public class ArithmeticExpression extends DerivedResults{
     private int operator;
 
-    public ArithmeticOperation(int operator){
+    public ArithmeticExpression(int operator){
+        super(ResultType.NUMBER, false, ResultType.NUMBER, ResultType.NUMBER);
         this.operator = operator;
     }
 
     @Override
-    public ResultType resultType(){
-        return ResultType.NUMBER;
-    }
-
-    @Override
-    public void prepareResults(){
-        UserResults lhsMember = members.get(0);
-        lhsMember.prepareResults();
-        double lhs = lhsMember.asNumber();
-
-        UserResults rhsMember = members.get(1);
-        rhsMember.prepareResults();
-        double rhs = rhsMember.asNumber();
+    protected String deriveResult(String[] memberResults){
+        double lhs = Double.parseDouble(memberResults[0]);
+        double rhs = Double.parseDouble(memberResults[1]);
 
         double result = 0;
         switch(operator){
@@ -62,6 +52,6 @@ public class ArithmeticOperation extends DerivedResults{
                 result = lhs % rhs;
                 break;
         }
-        addResult(-1, String.valueOf(result));
+        return String.valueOf(result);
     }
 }

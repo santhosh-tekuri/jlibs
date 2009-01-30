@@ -20,8 +20,8 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
-import jlibs.xml.sax.sniff.model.computed.StringizedNodeSet;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -39,13 +39,20 @@ public abstract class DerivedResults extends ComputedResults{
         return resultType;
     }
 
-    private class ResultCache extends Results{
+    private class ResultCache extends CachedResults{
         int pending = members.size();
         String memberResults[] = new String[members.size()];
 
-        public void prepareResults(){
-            if(!hasResult())
+        public boolean prepareResult(){
+            if(!hasResult()){
+                for(int i=0; i<memberResults.length; i++){
+                    if(memberResults[i]==null)
+                        memberResults[i] = getMemberType(i).defaultValue();
+                }
                 addResult(-1, deriveResult(memberResults));
+                return true;
+            }
+            return false;
         }
     }
 
@@ -53,7 +60,7 @@ public abstract class DerivedResults extends ComputedResults{
 
     @Override
     @NotNull
-    protected Results createResultCache(){
+    protected CachedResults createResultCache(){
         return new ResultCache();
     }
 
@@ -61,18 +68,14 @@ public abstract class DerivedResults extends ComputedResults{
     public final void memberHit(UserResults member, Context context, Event event){
         ResultCache resultCache = getResultCache(member, context);
         if(!resultCache.hasResult()){
-            ComputedResults _member = (ComputedResults)member;
-            Results memberResultCache = _member.getResultCache();
-            if(member instanceof StringizedNodeSet){
-                StringizedNodeSet.ResultCache _memberResultCache = _member.getResultCache();
-                _memberResultCache.prepareResult();
-            }
+            CachedResults memberResultCache = ((ComputedResults)member).getResultCache();
+            memberResultCache.prepareResult();
             String result = memberResultCache.results.firstEntry().getValue();
             int memberIndex = members.indexOf(member);
             resultCache.memberResults[memberIndex] = result;
             resultCache.pending--;
             if(resultCache.pending==0){
-                resultCache.prepareResults();
+                resultCache.prepareResult();
                 notifyObservers(context, event);
             }
         }
@@ -81,16 +84,24 @@ public abstract class DerivedResults extends ComputedResults{
     @Override
     public final void prepareResults(){
         if(!hasResult()){
-            for(Results member: members()){
-                if(member instanceof ComputedResults)
-                    ((ComputedResults)member).prepareResults();
-            }
             ResultCache resultCache = getResultCache();
             if(resultCache!=null){
-                resultCache.prepareResults();
+                for(int i=0; i<resultCache.memberResults.length; i++){
+                    if(resultCache.memberResults[i]==null){
+                        Results member = members.get(i);
+                        ((ComputedResults)member).prepareResults();
+                    }
+                }
+                resultCache.prepareResult();
                 addAllResults(resultCache);
-            }else
-                addResult(-1, resultType.defaultValue());
+            }else{
+                for(Results member: members())
+                    ((ComputedResults)member).prepareResults();
+                if(getResultCache()!=null)
+                    prepareResults();
+                else
+                    addResult(-1, resultType.defaultValue());
+            }
         }
     }
 }

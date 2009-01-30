@@ -20,7 +20,6 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.jaxen.saxpath.Axis;
@@ -58,7 +57,7 @@ public class SumNodeSet extends ComputedResults{
         return ResultType.NUMBER;
     }
 
-    private class ResultCache extends Results{
+    private class ResultCache extends CachedResults{
         double number;
         double pendingNumber;
         StringBuilder buff = new StringBuilder();
@@ -98,7 +97,7 @@ public class SumNodeSet extends ComputedResults{
 
     @NotNull
     @Override
-    protected Results createResultCache(){
+    protected CachedResults createResultCache(){
         return new ResultCache();
     }
 

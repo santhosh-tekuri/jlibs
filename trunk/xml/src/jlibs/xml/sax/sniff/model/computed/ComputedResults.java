@@ -19,7 +19,6 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
 import org.jetbrains.annotations.NotNull;
@@ -71,14 +70,17 @@ public abstract class ComputedResults extends Node{
         throw new IllegalArgumentException(member.resultType()+" can't be casted to "+toType);
     }
 
-    public void addMember(UserResults member, FilteredNodeSet filter){
-        ResultType expected;
-        if(memberTypes.length>members.size())
-            expected = memberTypes[members.size()];
+    public ResultType getMemberType(int index){
+        if(memberTypes.length>index)
+            return memberTypes[index];
         else if(variableMembers)
-            expected = memberTypes[memberTypes.length-1];
+            return memberTypes[memberTypes.length-1];
         else
             throw new IllegalStateException("no more arguments can be added");
+    }
+
+    public void addMember(UserResults member, FilteredNodeSet filter){
+        ResultType expected = getMemberType(members.size());
 
         if(member.resultType()!=expected){
             member = castTo(member, filter, expected);
@@ -108,11 +110,11 @@ public abstract class ComputedResults extends Node{
     }
 
     @NotNull
-    protected abstract Results createResultCache();
+    protected abstract CachedResults createResultCache();
 
-    private Results resultCache;
+    private CachedResults resultCache;
     @SuppressWarnings({"unchecked"})
-    public <T extends Results> T getResultCache(UserResults member, Context context){
+    public <T extends CachedResults> T getResultCache(UserResults member, Context context){
         if(resultCache!=null)
             return (T)resultCache;
 
@@ -132,7 +134,7 @@ public abstract class ComputedResults extends Node{
     }
     
     @SuppressWarnings({"unchecked"})
-    public <T extends Results> T getResultCache(){
+    public <T extends CachedResults> T getResultCache(){
         return (T)resultCache;
     }
 

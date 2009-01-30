@@ -18,7 +18,6 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,8 +34,17 @@ public class Count extends ComputedResults{
         return ResultType.NUMBER;
     }
 
-    private class ResultCache extends Results{
+    private class ResultCache extends CachedResults{
         int count;
+
+        @Override
+        public boolean prepareResult(){
+            if(!hasResult()){
+                addResult(-1, String.valueOf((double)count));
+                return true;
+            }else
+                return false;
+        }
     }
 
     @NotNull
@@ -58,9 +66,11 @@ public class Count extends ComputedResults{
     public void prepareResults(){
         ResultCache resultCache = getResultCache();
         if(!hasResult()){
-            if(resultCache!=null)
-                addResult(-1, String.valueOf((double)resultCache.count));
-            else
+            if(resultCache!=null){
+                if(resultCache.prepareResult())
+                    notifyObservers(null, null);
+                addAllResults(resultCache);
+            }else
                 addResult(-1, "0.0");
         }
     }

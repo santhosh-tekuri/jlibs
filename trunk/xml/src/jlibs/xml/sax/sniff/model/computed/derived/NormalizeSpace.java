@@ -27,7 +27,7 @@ public class NormalizeSpace extends DerivedResults{
 
     @Override
     protected String deriveResult(String[] memberResults){
-        return memberResults[0]!=null ? normalize(memberResults[0]) : "";
+        return normalize(memberResults[0]);
     }
 
     public static String normalize(String str){
