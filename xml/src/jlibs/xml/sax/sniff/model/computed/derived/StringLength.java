@@ -27,6 +27,6 @@ public class StringLength extends DerivedResults{
 
     @Override
     protected String deriveResult(String[] memberResults){
-        return memberResults[0]!=null ? String.valueOf((double)memberResults[0].length()) : "0.0";
+        return String.valueOf((double)memberResults[0].length());
     }
 }

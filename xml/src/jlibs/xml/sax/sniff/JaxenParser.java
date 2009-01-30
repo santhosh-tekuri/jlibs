@@ -19,12 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.computed.*;
-import jlibs.xml.sax.sniff.model.computed.derived.Concat;
-import jlibs.xml.sax.sniff.model.computed.derived.NormalizeSpace;
-import jlibs.xml.sax.sniff.model.computed.derived.StringLength;
-import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
-import jlibs.xml.sax.sniff.model.listeners.ArithmeticOperation;
-import jlibs.xml.sax.sniff.model.listeners.DerivedResults;
+import jlibs.xml.sax.sniff.model.computed.derived.*;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
@@ -289,7 +284,21 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             computed = new AndExpression();
         else if(binaryExpr.getOperator().equals("or"))
             computed = new OrExpression();
-
+        else{
+            int operator = -1;
+            if(binaryExpr.getOperator().equals("+"))
+                operator = Operator.ADD;
+            else if(binaryExpr.getOperator().equals("-"))
+                operator = Operator.SUBTRACT;
+            else if(binaryExpr.getOperator().equals("*"))
+                operator = Operator.MULTIPLY;
+            else if(binaryExpr.getOperator().equals("div"))
+                operator = Operator.DIV;
+            else if(binaryExpr.getOperator().equals("mod"))
+                operator = Operator.MOD;
+            if(operator!=-1)
+                computed = new ArithmeticExpression(operator);
+        }
         if(computed!=null){
             Node _current = current;
             visit(binaryExpr.getLHS());
@@ -300,36 +309,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             computed.addMember(current, lastFilteredNodeSet);
 
             return current = computed;
-        }
-
-        int operator = -1;
-        if(binaryExpr.getOperator().equals("+"))
-            operator = Operator.ADD;
-        else if(binaryExpr.getOperator().equals("-"))
-            operator = Operator.SUBTRACT;
-        else if(binaryExpr.getOperator().equals("*"))
-            operator = Operator.MULTIPLY;
-        else if(binaryExpr.getOperator().equals("div"))
-            operator = Operator.DIV;
-        else if(binaryExpr.getOperator().equals("mod"))
-            operator = Operator.MOD;
-
-        DerivedResults derivedResults = null;
-        if(operator!=-1)
-            derivedResults = new ArithmeticOperation(operator);
-        else
+        }else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());
-
-        Node _current = current;
-        visit(binaryExpr.getLHS());
-        derivedResults.addMember(current);
-
-        current = _current;
-        visit(binaryExpr.getRHS());
-        derivedResults.addMember(current);
-        current = root.addConstraint(derivedResults.attach());
-
-        return current;
     }
 
     /*-------------------------------------------------[ DataConvertion ]---------------------------------------------------*/

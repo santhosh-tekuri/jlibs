@@ -27,15 +27,12 @@ public class ToNumber extends DerivedResults{
 
     @Override
     protected String deriveResult(String[] memberResults){
-        if(memberResults[0]!=null){
-            double d;
-            try{
-                d = Double.parseDouble(memberResults[0]);
-            }catch(NumberFormatException e){
-                d = Double.NaN;
-            }
-            return String.valueOf(d);
-        }else
-            return "0.0";
+        double d;
+        try{
+            d = Double.parseDouble(memberResults[0]);
+        }catch(NumberFormatException e){
+            d = Double.NaN;
+        }
+        return String.valueOf(d);
     }
 }

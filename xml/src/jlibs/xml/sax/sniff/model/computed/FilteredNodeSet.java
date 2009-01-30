@@ -19,7 +19,6 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,7 +62,7 @@ public class FilteredNodeSet extends ComputedResults{
         }
     }
 
-    public class ResultCache extends Results{
+    public class ResultCache extends CachedResults{
         MemberResults memberResults = new MemberResults();
         Map<UserResults, Object> memberCacheMap = new HashMap<UserResults, Object>();
 

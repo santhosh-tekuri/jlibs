@@ -32,8 +32,8 @@ public class OrExpression extends ComputedResults{
 
     @NotNull
     @Override
-    protected Results createResultCache(){
-        return new Results();
+    protected CachedResults createResultCache(){
+        return new CachedResults();
     }
 
     @Override

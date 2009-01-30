@@ -20,7 +20,6 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import org.jaxen.saxpath.Axis;
@@ -58,7 +57,7 @@ public class StringizedNodeSet extends ComputedResults{
         return ResultType.STRING;
     }
 
-    public class ResultCache extends Results{
+    public class ResultCache extends CachedResults{
         StringBuilder buff = new StringBuilder();
         boolean accept = !hasFilter;
         boolean contextEnded = false;
@@ -80,7 +79,7 @@ public class StringizedNodeSet extends ComputedResults{
 
     @NotNull
     @Override
-    protected Results createResultCache(){
+    protected CachedResults createResultCache(){
         return new ResultCache();
     }
 
