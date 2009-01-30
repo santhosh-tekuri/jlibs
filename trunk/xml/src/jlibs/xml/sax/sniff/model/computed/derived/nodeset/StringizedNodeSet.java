@@ -60,8 +60,7 @@ public class StringizedNodeSet extends DerivedNodeSetResults{
 
         @Override
         public void populateResults(){
-            if(str!=null)
-                addResult(-1, str);
+            addResult(-1, str!=null ? str : "");
         }
     }
 
