@@ -159,22 +159,6 @@ public abstract class ComputedResults extends Node{
         return (T)resultCache;
     }
 
-    protected void clearResults(Context context){
-        if(resultCache!=null){
-            if(resultCache.prepareResult())
-                notifyObservers(context, null);
-            resultCache=null;
-        }
-        
-        for(UserResults observer: members()){
-            if(observer instanceof ComputedResults)
-                ((ComputedResults)observer).clearResults(context);
-        }
-        for(ComputedResults observer: observers()){
-            observer.clearResults(this, context);
-        }
-    }
-
     protected boolean usedAsMemberInFilteredSet(){
         ComputedResults node = this;
         while(node.observers.size()>0){
@@ -183,14 +167,6 @@ public abstract class ComputedResults extends Node{
                 return true;
         }
         return false;
-    }
-
-    public void clearResults(UserResults member, Context context){
-        if(usedAsMemberInFilteredSet()){
-            resultCache = null;
-            for(ComputedResults observer: observers())
-                observer.clearResults(this, context);
-        }
     }
 
     @Override

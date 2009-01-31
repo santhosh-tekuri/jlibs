@@ -191,15 +191,6 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     }
 
     @Override
-    public void clearResults(UserResults member, Context context){
-        if(member==filter){
-            ResultCache resultCache = getResultCache();
-            resultCache._promotePending();
-        }else
-            super.clearResults(member, context);
-    }
-
-    @Override
     public void prepareResults(){
         if(!hasResult()){
             ResultCache resultCache = getResultCache();
