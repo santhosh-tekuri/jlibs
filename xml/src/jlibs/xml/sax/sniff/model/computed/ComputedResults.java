@@ -19,6 +19,7 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
+import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.computed.derived.ToNumber;
 import jlibs.xml.sax.sniff.model.computed.derived.nodeset.StringizedNodeSet;
@@ -115,8 +116,6 @@ public abstract class ComputedResults extends Node{
     @Override
     public void notifyObservers(Context context, Event event){
         super.notifyObservers(context, event);
-        if(userGiven)
-            hits.hit();
     }
 
     @NotNull
@@ -124,31 +123,39 @@ public abstract class ComputedResults extends Node{
 
     protected CachedResults resultCache;
 
-    @SuppressWarnings({"unchecked"})
-    public <T extends CachedResults> T getResultCache(UserResults member, Context context){
-//        if(resultCache!=null)
-//            return (T)resultCache;
-
-        ComputedResults node = this;
-        while(node.observers.size()>0){
-            node = node.observers.get(0);
-            if(node instanceof FilteredNodeSet){
-                FilteredNodeSet filteredNodeSet = (FilteredNodeSet)node;
-                if(filteredNodeSet.contextSensitive){
-                    resultCache = filteredNodeSet.resultCache.getResultCache(this);
-                    return (T)resultCache;
-                }
-            }
+    public class CachedResults extends Results{
+    
+        @Override
+        public void addResult(int docOrder, String result){
+            super.addResult(docOrder, result);
+            if(debug)
+                debugger.println("CacheHit %d: %s ---> %s", results.size(), ComputedResults.this, result);
+            if(userGiven)
+                ComputedResults.this.addResult(docOrder, result);
         }
 
-        if(resultCache==null)
-            resultCache = createResultCache();
-        
-        return (T)resultCache;
+        public boolean prepareResult(){
+            return false;
+        }
+
+        public boolean asBoolean(ResultType resultType){
+            return resultType.asBoolean(results);
+        }
+
+        public String asString(ResultType resultType){
+            return resultType.asString(results);
+        }
+
+        public double asNumber(ResultType resultType){
+            return resultType.asNumber(results);
+        }
     }
+
     
     @SuppressWarnings({"unchecked"})
     public <T extends CachedResults> T getResultCache(){
+        if(resultCache==null)
+            resultCache = createResultCache();
         return (T)resultCache;
     }
 

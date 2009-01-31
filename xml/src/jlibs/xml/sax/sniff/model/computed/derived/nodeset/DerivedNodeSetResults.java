@@ -22,8 +22,8 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
-import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
+import jlibs.xml.sax.sniff.model.computed.ContextSensitiveFilteredNodeSet;
 import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 import org.jaxen.saxpath.Axis;
 
@@ -38,23 +38,47 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         super(false, ResultType.NODESET);
     }
 
+    private ContextSensitiveFilteredNodeSet getContextSensitiveFilteredNodeSet(ComputedResults node){
+        if(node instanceof ContextSensitiveFilteredNodeSet)
+            return (ContextSensitiveFilteredNodeSet)node;
+        else{
+            for(UserResults member: node.members()){
+                if(member instanceof ComputedResults){
+                    ContextSensitiveFilteredNodeSet filter = getContextSensitiveFilteredNodeSet((ComputedResults)member);
+                    if(filter!=null)
+                        return filter;
+                }
+            }
+        }
+        return null;
+    }
+
+    UserResults descCleanupMember;
+    UserResults filterCleanupMember;
     @Override
     public void addMember(UserResults _member, FilteredNodeSet filter){
         this.filter = filter;
         Node member = (Node)_member;
+        ContextSensitiveFilteredNodeSet cfilter = null;
         if(descendants=member.canBeContext()){
-            if(filter!=null && !filter.contextSensitive){
-                UserResults cleanupObserver = filter.members.get(0);
-                cleanupObserver.cleanupObservers.add(this);
+            if(filter!=null){
+                cfilter = getContextSensitiveFilteredNodeSet(filter);
+                if(cfilter!=null){
+                    UserResults cleanupObserver = cfilter.members.get(0);
+                    cleanupObserver.cleanupObservers.add(this);
+                    filterCleanupMember = cleanupObserver;
+                    cfilter.observers.add(this);
+                }
             }
             member = member.addChild(new Descendant(Axis.DESCENDANT));
         }
         super.addMember(member, null);
 
-        if(filter!=null)
+        if(cfilter==null && filter!=null)
             filter.observers.add(this);
-        else
+        if(filterCleanupMember!=_member)
             _member.cleanupObservers.add(this);
+        descCleanupMember = _member;
     }
 
     protected abstract class ResultCache extends CachedResults{
@@ -120,11 +144,11 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
+        ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
-            if(member instanceof FilteredNodeSet){
-                resultCache.accept = true;
-            }else{
+            if(member instanceof FilteredNodeSet)
+                resultCache.accept = ((ComputedResults) member).getResultCache().hasResult();
+            else{
                 String str = null;
                 if(descendants){
                     if(event.type()==Event.TEXT)
@@ -150,20 +174,26 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     @Override
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
-        if(resultCache==null)
-            resultCache = (ResultCache)getResultCache(this, context);
-        if(!resultCache.hasResult()){
+        if(context.node==filterCleanupMember){
+            if(resultCache.accept){
+                if(resultCache.buff!=null)
+                    resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
+                resultCache._promotePending();
+                resultCache.buff = null;
+            }else
+                resultCache.resetPending();
+        }else if(context.node==descCleanupMember){
+//            if(resultCache.buff!=null)
             resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
-            resultCache.buff = null;
         }
+
+        resultCache.buff = null;
     }
 
     @Override
     public void clearResults(UserResults member, Context context){
         if(member==filter){
             ResultCache resultCache = getResultCache();
-            if(resultCache==null)
-                resultCache = (ResultCache)getResultCache(this, context);
             resultCache._promotePending();
         }else
             super.clearResults(member, context);

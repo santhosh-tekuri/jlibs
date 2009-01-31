@@ -23,7 +23,7 @@ import java.lang.reflect.Field;
 /**
  * @author Santhosh Kumar T
  */
-public class CachedResults extends Results{
+class CachedResults1 extends Results{
 
     private Object enclosingInstance;
     private Object getEnclosingInstance(){

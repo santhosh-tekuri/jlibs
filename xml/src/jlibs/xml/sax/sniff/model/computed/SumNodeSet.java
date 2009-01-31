@@ -41,7 +41,7 @@ public class SumNodeSet extends ComputedResults{
         this.filter = filter;
         Node member = (Node)_member;
         if(descendants=member.canBeContext()){
-            if(filter!=null && !filter.contextSensitive){
+            if(filter!=null && !(filter instanceof ContextSensitiveFilteredNodeSet)){
                 UserResults cleanupObserver = filter.members.get(0);
                 cleanupObserver.cleanupObservers.add(this);
             }
@@ -106,7 +106,7 @@ public class SumNodeSet extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
+        ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
             if(member instanceof FilteredNodeSet){
                 resultCache.accept = true;

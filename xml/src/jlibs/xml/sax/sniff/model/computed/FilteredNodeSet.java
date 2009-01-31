@@ -22,8 +22,6 @@ import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -37,123 +35,52 @@ public class FilteredNodeSet extends ComputedResults{
         addMember(filter, null);
     }
 
-    private class MemberResults{
-        private TreeMap<Integer, String> results = new TreeMap<Integer, String>();
+    private class ResultCache extends CachedResults{
+        private TreeMap<Integer, String> pendingResults = new TreeMap<Integer, String>();
         private Boolean accept;
 
         private boolean hit(UserResults member, Event event){
             if(member==members.get(0))
-                results.put(event.order(), event.getResult());
+                pendingResults.put(event.order(), event.getResult());
             else if(member==members.get(1))
                 accept = ((ComputedResults)member).getResultCache().asBoolean(ResultType.BOOLEAN);
 
-            if(accept!=null && results.size()>0){
+            return prepareResult();
+        }
+
+        @Override
+        public boolean prepareResult(){
+            if(accept!=null && pendingResults.size()>0){
                 if(accept){
-                    for(Map.Entry<Integer, String> entry: results.entrySet())
+                    for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
                         addResult(entry.getKey(), entry.getValue());
+                    pendingResults.clear();
+                }else{
+                    if(pendingResults==null)
+                        pendingResults = new TreeMap<Integer, String>();
                 }
-                results.clear();
-                return accept;
-            }
-            return false;
-        }
-
-        private void clear(){
-            results.clear();
-            accept = null;
-        }
-    }
-
-    public class ResultCache extends CachedResults{
-        MemberResults memberResults = new MemberResults();
-        Map<UserResults, CachedResults> memberCacheMap = new HashMap<UserResults, CachedResults>();
-
-        public CachedResults getResultCache(ComputedResults member){
-            CachedResults cache = memberCacheMap.get(member);
-            if(cache==null)
-                memberCacheMap.put(member, cache=member.resultCache=member.createResultCache());
-            return cache; 
+                return true;
+            }else
+                return false;
         }
     }
 
     @NotNull
     @Override
     protected ResultCache createResultCache(){
-        super.resultCache = resultCache = new ResultCache();
-        return resultCache;
+        return new ResultCache();
     }
 
-
-    public ResultCache resultCache = createResultCache();
-    private LinkedHashMap<Object, ResultCache> map = new LinkedHashMap<Object, ResultCache>();
-
+    @Override
     @SuppressWarnings({"unchecked"})
-    public ResultCache getResultCache(UserResults member, Context context){
-        if(contextSensitive){
-            if(member==members.get(0)){
-                resultCache = map.get(context.identity());
-                if(resultCache==null)
-                    map.put(context.identity(), resultCache=createResultCache());
-            }
-        }
-        return resultCache;
+    public ResultCache getResultCache(){
+        return super.getResultCache();
     }
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        resultCache = getResultCache(member, context);
-
-        if(resultCache.memberResults.hit(member, event))
+        if(getResultCache().hit(member, event))
             notifyObservers(context, event);
-    }
-
-    public boolean contextSensitive;
-    public void contextSensitive(){
-        contextSensitive = true;
-        members.get(0).cleanupObservers.add(this);
-    }
-
-    private void prepareResult(ComputedResults node, Context context){
-        CachedResults resultCache = node.getResultCache();
-        if(resultCache==null)
-            resultCache = this.resultCache.getResultCache(node);
-        if(!resultCache.hasResult()){
-            for(UserResults member: node.members){
-                if(member instanceof ComputedResults)
-                    prepareResult((ComputedResults)member, context);
-            }
-        }
-        if(resultCache.prepareResult())
-            node.notifyObservers(context, null);
-    }
-
-    @Override
-    public void endingContext(Context context){
-        if(debug){
-            debugger.println("prepareResult("+this+')');
-            debugger.indent++;
-        }
-        prepareResult(this, context);
-        if(debug)
-            debugger.indent--;
-        
-        if(contextSensitive)
-            map.remove(context.identity());
-        clearResults(context);
-    }
-
-    @Override
-    protected void clearResults(Context context){
-        if(!contextSensitive)
-            resultCache.memberResults.clear();
-        super.clearResults(context);
-    }
-
-    @Override
-    public void clearResults(UserResults member, Context context){
-        resultCache.memberResults.clear();
-        for(ComputedResults observer: observers())
-            observer.clearResults(this, context);
     }
 
     /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
@@ -161,5 +88,14 @@ public class FilteredNodeSet extends ComputedResults{
     @Override
     public String getName(){
         return "filter";
+    }
+
+    @Override
+    public void prepareResults(){
+        if(!hasResult()){
+            getResultCache().prepareResult();
+            addAllResults(getResultCache());
+        }
+        super.prepareResults();
     }
 }

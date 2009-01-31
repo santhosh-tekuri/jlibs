@@ -16,7 +16,6 @@
 package jlibs.xml.sax.sniff.model.computed.derived.nodeset;
 
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import org.jetbrains.annotations.NotNull;
 
 /**

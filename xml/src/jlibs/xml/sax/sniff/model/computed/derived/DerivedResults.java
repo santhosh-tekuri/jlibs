@@ -20,7 +20,6 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 import jlibs.xml.sax.sniff.model.UserResults;
-import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,8 +45,14 @@ public abstract class DerivedResults extends ComputedResults{
         public boolean prepareResult(){
             if(!hasResult()){
                 for(int i=0; i<memberResults.length; i++){
-                    if(memberResults[i]==null)
-                        memberResults[i] = getMemberType(i).defaultValue();
+                    if(memberResults[i]==null){
+                        ComputedResults member = (ComputedResults)members.get(i);
+                        CachedResults memberResultCache = member.getResultCache();
+                        if(memberResultCache==null)
+                            memberResultCache = member.getResultCache();
+                        memberResultCache.prepareResult();
+                        memberResults[i] = memberResultCache.results.firstEntry().getValue();                        
+                    }
                 }
                 addResult(-1, deriveResult(memberResults));
                 return true;
@@ -66,7 +71,7 @@ public abstract class DerivedResults extends ComputedResults{
 
     @Override
     public final void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
+        ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
             CachedResults memberResultCache = ((ComputedResults)member).getResultCache();
             memberResultCache.prepareResult();
@@ -78,7 +83,8 @@ public abstract class DerivedResults extends ComputedResults{
                 resultCache.prepareResult();
                 notifyObservers(context, event);
             }
-        }
+        }else
+            System.out.println("");
     }
 
     @Override

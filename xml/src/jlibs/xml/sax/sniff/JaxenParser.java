@@ -111,7 +111,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         if(lastFilteredNodeSet!=null){
             if(!hasPredicate)
-                lastFilteredNodeSet = new FilteredNodeSet(current, toBoolean(lastFilteredNodeSet));
+                lastFilteredNodeSet = new FilteredNodeSet(current, lastFilteredNodeSet);
         }
         return current;
     }
@@ -204,16 +204,17 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             Node context = current;
             visit(p.getExpr());
 
-            FilteredNodeSet filteredNodeSet = null;
-            if(lastFilteredNodeSet==null)
-                filteredNodeSet = new FilteredNodeSet(context, toBoolean(current));
+
+            Node filter = lastFilteredNodeSet==null ? current : lastFilteredNodeSet;
+            FilteredNodeSet filteredNodeSet;
+            if(predicateDepth==1)
+                filteredNodeSet = new ContextSensitiveFilteredNodeSet(context, filter);
             else
-                filteredNodeSet = new FilteredNodeSet(context, lastFilteredNodeSet);
-            
+                filteredNodeSet = new FilteredNodeSet(context, filter);
+
             lastFilteredNodeSet = filteredNodeSet;
+
             predicateDepth--;
-            if(predicateDepth==0)
-                filteredNodeSet.contextSensitive();
             current = context;
         }
 
@@ -321,18 +322,6 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return current = computed;
         }else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());
-    }
-
-    /*-------------------------------------------------[ DataConvertion ]---------------------------------------------------*/
-
-    public UserResults toBoolean(Node node){
-        return node;
-//        if(node.resultType()==ResultType.BOOLEAN)
-//            return node;
-//        else if(node.resultType()==ResultType.NODESET){
-//            return new BooleanizedNodeSet(node);
-//        }else
-//            throw new NotImplementedException("toBoolean for "+node.resultType()+" is not implemented");
     }
 
 //    public static void main(String[] args) throws SAXPathException{
