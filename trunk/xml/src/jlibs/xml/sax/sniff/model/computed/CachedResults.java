@@ -18,6 +18,8 @@ package jlibs.xml.sax.sniff.model.computed;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
 
+import java.lang.reflect.Field;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -26,8 +28,11 @@ public class CachedResults extends Results{
     private Object enclosingInstance;
     private Object getEnclosingInstance(){
         try{
-            if(enclosingInstance==null)
-            enclosingInstance = getClass().getDeclaredField("this$0").get(this);
+            if(enclosingInstance==null){
+                Field field = getClass().getDeclaredField("this$0");
+                field.setAccessible(true);
+                enclosingInstance = field.get(this);
+            }
         }catch(Exception ex){
             ex.printStackTrace();
         }
