@@ -77,7 +77,7 @@ public class Literal extends ComputedResults{
     @Override
     public void memberHit(UserResults member, Context context, Event event){
         if(!usedAsMemberInFilteredSet()){
-            ResultCache resultCache = getResultCache(member, context);
+            ResultCache resultCache = getResultCache();
             if(resultCache.prepareResult())
                 notifyObservers(context, event);
         }

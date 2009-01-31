@@ -64,9 +64,12 @@ public class BooleanizedNodeSet extends ComputedResults{
     }
 
     public void memberHit(UserResults member, Context context, Event event){
-        Results resultCache = getResultCache(member, context);
+        Results resultCache = getResultCache();
         if(!resultCache.hasResult()){
-            resultCache.addResult(-1, "true");
+            boolean bool = true;
+            if(member instanceof ComputedResults)
+                bool = ((ComputedResults)member).getResultCache().hasResult();
+            resultCache.addResult(-1, String.valueOf(bool));
             notifyObservers(context, event);
         }
     }

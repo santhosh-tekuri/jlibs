@@ -46,7 +46,7 @@ public class QualifiedName extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        Results resultCache = getResultCache(member, context);
+        Results resultCache = getResultCache();
         if(!resultCache.hasResult()){
             String qname = null;
             switch(event.type()){

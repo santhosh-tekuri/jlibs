@@ -21,6 +21,8 @@ import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -35,11 +37,14 @@ public class Count extends ComputedResults{
     }
 
     private class ResultCache extends CachedResults{
+        HashMap<Integer, Integer> countsMap = new HashMap<Integer, Integer>();
         int count;
 
         @Override
         public boolean prepareResult(){
             if(!hasResult()){
+                for(int c: countsMap.values())
+                    count+=c;
                 addResult(-1, String.valueOf((double)count));
                 return true;
             }else
@@ -55,10 +60,12 @@ public class Count extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
-        if(member instanceof FilteredNodeSet)
-            resultCache.count = member.hasResult() ? member.results.size() : 0;
-        else
+        ResultCache resultCache = getResultCache();
+        if(member instanceof FilteredNodeSet){
+            FilteredNodeSet filter = (FilteredNodeSet)member;
+            CachedResults cache = filter.getResultCache();
+            resultCache.countsMap.put(System.identityHashCode(cache), cache.hasResult() ? cache.results.size() : 0);
+        }else
             resultCache.count++;
     }
 

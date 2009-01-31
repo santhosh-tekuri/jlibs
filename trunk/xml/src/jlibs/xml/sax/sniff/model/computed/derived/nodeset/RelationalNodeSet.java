@@ -19,7 +19,6 @@ import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
-import jlibs.xml.sax.sniff.model.computed.CachedResults;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 import org.jetbrains.annotations.NotNull;
@@ -113,7 +112,7 @@ public class RelationalNodeSet extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        ResultCache resultCache = getResultCache(member, context);
+        ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
             CachedResults memberResultCache = ((ComputedResults)member).getResultCache();
             if(member==members.get(0)){

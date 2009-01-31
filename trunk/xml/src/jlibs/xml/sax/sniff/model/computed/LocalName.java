@@ -46,7 +46,7 @@ public class LocalName extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        Results resultCache = getResultCache(member, context);
+        Results resultCache = getResultCache();
         if(!resultCache.hasResult()){
             String name = null;
             switch(event.type()){
