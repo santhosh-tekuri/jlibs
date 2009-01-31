@@ -70,4 +70,12 @@ public class StringsNodeSet extends DerivedNodeSetResults{
     protected CachedResults createResultCache(){
         return new StringsResultCache();
     }
+
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "strings";
+    }
 }

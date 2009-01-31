@@ -35,4 +35,11 @@ public class ToNumber extends DerivedResults{
         }
         return String.valueOf(d);
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "number";
+    }
 }

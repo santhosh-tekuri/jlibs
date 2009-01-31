@@ -29,4 +29,11 @@ public class AndExpression extends DerivedResults{
     protected String deriveResult(String[] memberResults){
         return String.valueOf(Boolean.valueOf(memberResults[0]) && Boolean.valueOf(memberResults[1]));
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "and";
+    }
 }

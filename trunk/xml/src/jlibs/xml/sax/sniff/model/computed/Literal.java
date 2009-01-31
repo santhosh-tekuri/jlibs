@@ -92,4 +92,11 @@ public class Literal extends ComputedResults{
             notifyObservers(null, null);
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String toString(){
+        return resultType()==ResultType.STRING ? "'"+literal+"'" : literal;
+    }
 }

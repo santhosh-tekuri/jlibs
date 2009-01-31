@@ -29,4 +29,11 @@ public class StringLength extends DerivedResults{
     protected String deriveResult(String[] memberResults){
         return String.valueOf((double)memberResults[0].length());
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "string-length";
+    }
 }

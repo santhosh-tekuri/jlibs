@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.computed.derived;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.ResultType;
 import org.jaxen.saxpath.Operator;
 
@@ -53,5 +54,25 @@ public class ArithmeticExpression extends DerivedResults{
                 break;
         }
         return String.valueOf(result);
+    }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        switch(operator){
+            case Operator.ADD:
+                return "+";
+            case Operator.SUBTRACT:
+                return "-";
+            case Operator.MULTIPLY:
+                return "*";
+            case Operator.DIV:
+                return "/";
+            case Operator.MOD:
+                return "%";
+            default:
+                throw new ImpossibleException(String.valueOf(operator));
+        }
     }
 }

@@ -148,4 +148,11 @@ public class FilteredNodeSet extends ComputedResults{
         for(ComputedResults observer: observers())
             observer.clearResults(this, context);
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "filter";
+    }
 }

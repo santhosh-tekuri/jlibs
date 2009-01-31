@@ -57,4 +57,12 @@ public class NormalizeSpace extends DerivedResults{
 
     private static boolean isXMLSpace(char c) {
         return c==' ' || c=='\n' || c=='\r' || c=='\t';
-    }}
+    }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "normalize-space";
+    }
+}

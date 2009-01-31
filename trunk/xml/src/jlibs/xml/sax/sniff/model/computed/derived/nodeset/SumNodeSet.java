@@ -71,4 +71,11 @@ public class SumNodeSet extends DerivedNodeSetResults{
     protected CachedResults createResultCache(){
         return new SumResultCache();
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "sum";
+    }
 }
