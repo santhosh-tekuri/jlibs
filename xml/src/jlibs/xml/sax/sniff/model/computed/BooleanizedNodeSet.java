@@ -70,4 +70,11 @@ public class BooleanizedNodeSet extends ComputedResults{
             notifyObservers(context, event);
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "boolean";
+    }
 }

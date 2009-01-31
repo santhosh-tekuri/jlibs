@@ -75,4 +75,11 @@ public class NamespaceURI extends ComputedResults{
                 addResult(-1, "");
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "namespace-uri";
+    }
 }

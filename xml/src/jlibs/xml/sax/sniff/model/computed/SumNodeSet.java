@@ -170,4 +170,11 @@ public class SumNodeSet extends ComputedResults{
                 addResult(-1, "0.0");
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "sum";
+    }
 }

@@ -69,4 +69,11 @@ public class StringizedNodeSet extends DerivedNodeSetResults{
     protected CachedResults createResultCache(){
         return new StringResultCache();
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "string";
+    }
 }

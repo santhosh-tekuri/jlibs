@@ -76,4 +76,11 @@ public class LocalName extends ComputedResults{
                 addResult(-1, "");
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "local-name";
+    }
 }

@@ -146,4 +146,11 @@ public class StringizedNodeSet extends ComputedResults{
         }else
             super.clearResults(member, context);
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "string";
+    }
 }

@@ -127,4 +127,11 @@ public class RelationalNodeSet extends ComputedResults{
                 notifyObservers(context, event);
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "=";
+    }
 }

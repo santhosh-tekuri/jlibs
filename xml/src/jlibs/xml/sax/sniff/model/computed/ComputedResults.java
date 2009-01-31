@@ -119,10 +119,6 @@ public abstract class ComputedResults extends Node{
             hits.hit();
     }
 
-    public String getName(){
-        return getClass().getSimpleName();
-    }
-
     @NotNull
     protected abstract CachedResults createResultCache();
 
@@ -193,6 +189,13 @@ public abstract class ComputedResults extends Node{
     @Override
     public void endingContext(Context context){}
 
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+    
+    public String getName(){
+        String name = getClass().getSimpleName();
+        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+    }
+
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
@@ -201,8 +204,8 @@ public abstract class ComputedResults extends Node{
         for(UserResults member: members){
             if(buff.length()>0)
                 buff.append(", ");
-            buff.append('(').append(member).append(')');
+            buff.append(member);
         }
-        return getName()+'{'+buff+'}';
+        return getName()+'('+buff+')';
     }
 }

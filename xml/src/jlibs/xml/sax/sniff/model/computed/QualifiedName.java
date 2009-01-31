@@ -76,4 +76,11 @@ public class QualifiedName extends ComputedResults{
                 addResult(-1, "");
         }
     }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        return "qname";
+    }
 }
