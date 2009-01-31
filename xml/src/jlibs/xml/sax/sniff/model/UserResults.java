@@ -39,7 +39,7 @@ public class UserResults extends Results{
         hits.hit();
 
         if(debug)
-            System.out.format(toString()+"-Hit %2d: %s ---> %s %n", results.size(), this, result);
+            System.out.format("Hit %2d: %s ---> %s %n", results.size(), this, result);
     }
 
     @Override
