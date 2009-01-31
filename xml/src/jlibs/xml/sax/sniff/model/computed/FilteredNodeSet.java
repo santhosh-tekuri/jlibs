@@ -129,7 +129,14 @@ public class FilteredNodeSet extends ComputedResults{
 
     @Override
     public void endingContext(Context context){
+        if(debug){
+            debugger.println("prepareResult("+this+')');
+            debugger.indent++;
+        }
         prepareResult(this, context);
+        if(debug)
+            debugger.indent--;
+        
         if(contextSensitive)
             map.remove(context.identity());
         clearResults(context);

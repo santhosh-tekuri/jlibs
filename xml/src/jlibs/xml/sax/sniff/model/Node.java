@@ -126,10 +126,8 @@ public abstract class Node extends UserResults{
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
 
     public void endingContext(Context context){
-        if(context.depth==0){
-            for(ComputedResults observer: cleanupObservers())
-                observer.endingContext(context);
-        }
+        if(context.depth==0)
+            notifyCleanupObservers(context);
         
         for(Node child: context.node.children())
             clearHitCounts(context, child);

@@ -39,7 +39,7 @@ public class UserResults extends Results{
         hits.hit();
 
         if(debug)
-            System.out.format("Hit %2d: %s ---> %s %n", results.size(), this, result);
+            debugger.println("Hit %d: %s ---> %s", results.size(), this, result);
     }
 
     @Override
@@ -75,8 +75,17 @@ public class UserResults extends Results{
     }
 
     public void notifyObservers(Context context, Event event){
+        if(observers.size()==0)
+            return;
+
+        if(debug){
+            debugger.println("notifyObservers("+this+")");
+            debugger.indent++;
+        }
         for(ComputedResults observer: observers())
             observer.memberHit(this, context, event);
+        if(debug)
+            debugger.indent--;
     }
 
     public List<ComputedResults> cleanupObservers = new ArrayList<ComputedResults>();
@@ -86,7 +95,16 @@ public class UserResults extends Results{
     }
 
     protected void notifyCleanupObservers(Context context){
+        if(cleanupObservers.size()==0)
+            return;
+        
+        if(debug){
+            debugger.println("notifyCleanupObservers("+this+")");
+            debugger.indent++;
+        }
         for(ComputedResults observer: cleanupObservers())
             observer.endingContext(context);
+        if(debug)
+            debugger.indent--;
     }
 }

@@ -22,12 +22,24 @@ import jlibs.xml.sax.sniff.model.Results;
  * @author Santhosh Kumar T
  */
 public class CachedResults extends Results{
+
+    private Object enclosingInstance;
+    private Object getEnclosingInstance(){
+        try{
+            if(enclosingInstance==null)
+            enclosingInstance = getClass().getDeclaredField("this$0").get(this);
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return enclosingInstance;
+    }
+
     @Override
     public void addResult(int docOrder, String result){
         super.addResult(docOrder, result);
 
         if(debug)
-            System.out.format("CacheHit %2d: %s ---> %s %n", results.size(), this, result);
+            debugger.println("CacheHit %d: %s ---> %s", results.size(), getEnclosingInstance(), result);
     }
 
     public boolean prepareResult(){
