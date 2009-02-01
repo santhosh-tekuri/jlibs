@@ -238,6 +238,7 @@
         <xpath>sum(/root/pub/book[ author ]/price)</xpath>
         <xpath>sum(/root/pub[ book/author ]/book[ author ]/price)</xpath>
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ author ]/price)</xpath>
+        <xpath>/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price</xpath>
         <xpath>sum(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>sum(//Price)</xpath>
         <xpath>sum(//book[@testAttr]/price)</xpath>

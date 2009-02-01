@@ -39,14 +39,14 @@ public class RelationalNodeSet extends ComputedResults{
     }
 
     @Override
-    public void addMember(UserResults _member, FilteredNodeSet filter){
+    public UserResults addMember(UserResults _member, FilteredNodeSet filter){
         if(members.size()==2)
             throw new IllegalStateException("no more arguments can be added");
         
         UserResults member = castTo(_member, filter, ResultType.STRINGS);
         if(member!=_member)
             filter = null;
-        _addMember(member, filter);
+        return _addMember(member, filter);
     }
 
     private class ResultCache extends CachedResults{

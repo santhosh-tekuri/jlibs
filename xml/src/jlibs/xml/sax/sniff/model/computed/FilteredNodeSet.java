@@ -35,15 +35,20 @@ public class FilteredNodeSet extends ComputedResults{
         addMember(filter, null);
     }
 
-    private class ResultCache extends CachedResults{
+    protected class ResultCache extends CachedResults{
         private TreeMap<Integer, String> pendingResults = new TreeMap<Integer, String>();
         private Boolean accept;
 
         private boolean hit(UserResults member, Event event){
-            if(member==members.get(0))
+            if(member==members.get(0)){
                 pendingResults.put(event.order(), event.getResult());
-            else if(member==members.get(1))
+                if(debug)
+                    debugger.println("PendingResults %d: %s ---> %s", event.order(), FilteredNodeSet.this, event.getResult());
+            }else if(member==members.get(1)){
                 accept = ((ComputedResults)member).getResultCache().asBoolean(ResultType.BOOLEAN);
+                if(debug)
+                    debugger.println("accept : %s ---> %s", FilteredNodeSet.this, accept);
+            }
 
             return prepareResult();
         }
@@ -54,11 +59,19 @@ public class FilteredNodeSet extends ComputedResults{
                 if(accept){
                     for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
                         addResult(entry.getKey(), entry.getValue());
-                    pendingResults.clear();
                 }else{
-                    if(pendingResults==null)
-                        pendingResults = new TreeMap<Integer, String>();
+                    if(results==null)
+                        results = new TreeMap<Integer, String>();
                 }
+                pendingResults.clear();
+                return true;
+            }else
+                return false;
+        }
+
+        public boolean forcePrepareResult(){
+            if(pendingResults.size()==0 && accept==null){
+                results = new TreeMap<Integer, String>();
                 return true;
             }else
                 return false;

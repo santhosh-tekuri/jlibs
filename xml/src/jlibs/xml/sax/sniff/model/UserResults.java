@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
+import jlibs.xml.sax.sniff.model.computed.FilteredNodeSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,36 @@ public class UserResults extends Results{
 
     public Iterable<ComputedResults> observers(){
         return observers;
+    }
+
+    public boolean hasFilterObserver;
+    public void addObserver(ComputedResults observer){
+        observers.add(observer);
+        if(observer instanceof FilteredNodeSet){
+            setHasFilterObserver(this);
+        }else if(!hasFilterObserver)
+            hasFilterObserver = observer.hasFilterObserver;
+    }
+
+    public void setHasFilterObserver(UserResults node){
+        node.hasFilterObserver = true;
+        if(node instanceof ComputedResults){
+            ComputedResults computedNode = (ComputedResults)node;
+            for(UserResults member: computedNode.members())
+                setHasFilterObserver(member);
+        }
+    }
+
+    public boolean hasFilterObserver(){
+        if(this instanceof FilteredNodeSet)
+            return true;
+        for(ComputedResults observer: observers){
+            if(observer instanceof FilteredNodeSet)
+                return true;
+            else if(observer.hasFilterObserver())
+                return true;
+        }
+        return false;
     }
 
     public void notifyObservers(Context context, Event event){

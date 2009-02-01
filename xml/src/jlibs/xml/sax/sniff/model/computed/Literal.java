@@ -45,7 +45,7 @@ public class Literal extends ComputedResults{
         this.literal = literal;
         this.resultType = resultType;
         
-        root.observers.add(this);
+        root.addObserver(this);
         this.root = root;
         hits.totalHits = root.hits.totalHits;
     }
