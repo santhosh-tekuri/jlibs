@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
  * @author Santhosh Kumar T
  */
 public class StringizedNodeSet extends DerivedNodeSetResults{
-
     @Override
     public ResultType resultType(){
         return ResultType.STRING;
@@ -34,8 +33,12 @@ public class StringizedNodeSet extends DerivedNodeSetResults{
 
         @Override
         public void updatePending(String str){
-            if(pendingStr==null)
+            if(pendingStr==null){
+                if(debug)
+                    debugger.print("updatePending['%s']: %s", str, StringizedNodeSet.this);
+             
                 pendingStr = str;
+            }
         }
 
         @Override
@@ -45,6 +48,8 @@ public class StringizedNodeSet extends DerivedNodeSetResults{
 
         @Override
         public void resetPending(){
+            if(debug)
+                debugger.println("resetPending['$s' --> null]: %s", pendingStr, StringizedNodeSet.this);
             pendingStr = null;
         }
 

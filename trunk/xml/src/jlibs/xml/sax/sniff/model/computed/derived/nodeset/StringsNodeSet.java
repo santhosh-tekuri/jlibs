@@ -36,21 +36,29 @@ public class StringsNodeSet extends DerivedNodeSetResults{
 
         @Override
         public void updatePending(String str){
+            if(debug)
+                debugger.print("updatePending['%s']: %s", str, StringsNodeSet.this);
             pendingList.add(str);
         }
 
         @Override
         public void promotePending(){
+            if(debug)
+                debugger.print("promotePending[%s]: %s", pendingList, StringsNodeSet.this);
             list.addAll(pendingList);
         }
 
         @Override
         public void resetPending(){
+            if(debug)
+                debugger.print("resetPending[%s -> []]: %s", pendingList, StringsNodeSet.this);
             pendingList.clear();
         }
 
         @Override
         public void promote(String str){
+            if(debug)
+                debugger.print("promote['%s']: %s", str, StringsNodeSet.this);
             list.add(str);
         }
 
