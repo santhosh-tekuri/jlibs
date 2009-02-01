@@ -85,12 +85,14 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
 
     protected abstract class ResultCache extends CachedResults{
         private StringBuilder buff;
-        private Boolean accept1 = filter==null ? Boolean.TRUE : null;
+        private Boolean accept = filter==null ? Boolean.TRUE : null;
 
         private void append(String str){
             if(buff==null)
                 buff = new StringBuilder();
             buff.append(str);
+            if(debug)
+                debugger.println("buff.append(%s) : %s", str, DerivedNodeSetResults.this);
         }
 
         public abstract void updatePending(String str);
@@ -103,13 +105,13 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         public abstract void resetPending();
         private void _promotePending(){
             if(!hasResult()){
-                if(accept1==null)
+                if(accept==null)
                     return;
-                if(accept1){
+                if(accept){
                     if(buff!=null)
                         _updatePending(buff.toString());
                     promotePending();
-                    accept1 = filter==null ? Boolean.TRUE : null;
+                    accept = filter==null ? Boolean.TRUE : null;
                 }
                 buff = null;
                 resetPending();
@@ -120,7 +122,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         private void _promote(String str){
             if(str!=null){
                 promote(str);
-                accept1 = filter==null ? Boolean.TRUE : null;
+                accept = filter==null ? Boolean.TRUE : null;
             }
         }
 
@@ -132,7 +134,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
             preparing = true;
             try{
                 if(!hasResult()){
-                    if(accept1!=null && accept1 && buff!=null)
+                    if(accept!=null && accept && buff!=null)
                         _updatePending(buff.toString());
                     _promotePending();
                     populateResults();
@@ -150,9 +152,11 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     public void memberHit(UserResults member, Context context, Event event){
         ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
-            if(member instanceof FilteredNodeSet)
-                resultCache.accept1 = ((ComputedResults) member).getResultCache().hasResult();
-            else{
+            if(member instanceof FilteredNodeSet){
+                resultCache.accept = ((ComputedResults) member).getResultCache().hasResult();
+                if(debug)
+                    debugger.println("accept: %s ---> %s", this, resultCache.accept);
+            }else{
                 String str = null;
                 if(descendants){
                     if(event.type()==Event.TEXT)
@@ -179,18 +183,29 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
         if(context.node==filterCleanupMember){
-            if(resultCache.accept1==null)
+            if(debug){
+                debugger.println("endingFilterContext(%s)", this);
+                debugger.indent++;
+            }
+            if(resultCache.accept==null)
                 return;
-            if(resultCache.accept1){
+            if(resultCache.accept){
                 if(resultCache.buff!=null)
                     resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
                 resultCache._promotePending();
                 resultCache.buff = null;
             }else
                 resultCache.resetPending();
+            if(debug)
+                debugger.indent--;
         }else if(context.node==descCleanupMember){
-//            if(resultCache.buff!=null)
+            if(debug){
+                debugger.println("endingDescContext(%s)", this);
+                debugger.indent++;
+            }
             resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
+            if(debug)
+                debugger.indent--;
         }
 
         resultCache.buff = null;

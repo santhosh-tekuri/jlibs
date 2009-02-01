@@ -79,6 +79,8 @@ public abstract class DerivedResults extends ComputedResults{
             int memberIndex = members.indexOf(member);
             resultCache.memberResults[memberIndex] = result;
             resultCache.pending--;
+            if(debug)
+                debugger.println("Member[%d] Pending=%d: %s ---> %s", memberIndex, resultCache.pending, this, result);
             if(resultCache.pending==0){
                 resultCache.prepareResult();
                 notifyObservers(context, event);
