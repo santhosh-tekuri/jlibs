@@ -41,22 +41,44 @@ public class SumNodeSet extends DerivedNodeSetResults{
 
         @Override
         public void updatePending(String str){
+            if(debug)
+                debugger.print("updatePending[%f + '%s'", pendingNumber, str);
+
             pendingNumber += toDouble(str);
+
+            if(debug)
+                debugger.println(" = %f] : %s", pendingNumber, SumNodeSet.this);
         }
 
         @Override
         public void promotePending(){
+            if(debug)
+                debugger.print("promotePending[%f + %f", number, pendingNumber);
+
             number += pendingNumber;
+
+            if(debug)
+                debugger.println(" = %f] : %s", number, SumNodeSet.this);
         }
 
         @Override
         public void resetPending(){
+            if(debug)
+                debugger.println("resetPending[%f --> 0]: %s", pendingNumber, SumNodeSet.this);
+
             pendingNumber = 0;
         }
 
         @Override
         public void promote(String str){
+            if(debug)
+                debugger.print("promote[%f + '%s'", number, str);
+
+
             number += toDouble(str);
+
+            if(debug)
+                debugger.println(" = %f] : %s", number, SumNodeSet.this);
         }
 
         @Override

@@ -20,9 +20,22 @@ package jlibs.xml.sax.sniff;
  */
 public class Debugger{
     public int indent;
+    private boolean indentationPrinted;
+    private void printIndentation(boolean printed){
+        if(!indentationPrinted){
+            for(int i=0; i<indent; i++)
+                System.out.print("  |");
+            indentationPrinted = printed;
+        }
+    }
+
     public void println(String format, Object... args){
-        for(int i=0; i<indent; i++)
-            System.out.print("  |");
+        printIndentation(false);
         System.out.format(format+"%n", args);
+    }
+    
+    public void print(String format, Object... args){
+        printIndentation(true);
+        System.out.format(format, args);
     }
 }
