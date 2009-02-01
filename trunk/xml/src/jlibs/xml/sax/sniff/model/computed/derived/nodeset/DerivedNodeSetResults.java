@@ -56,7 +56,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     UserResults descCleanupMember;
     UserResults filterCleanupMember;
     @Override
-    public void addMember(UserResults _member, FilteredNodeSet filter){
+    public UserResults addMember(UserResults _member, FilteredNodeSet filter){
         this.filter = filter;
         Node member = (Node)_member;
         ContextSensitiveFilteredNodeSet cfilter = null;
@@ -67,7 +67,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
                     UserResults cleanupObserver = cfilter.members.get(0);
                     cleanupObserver.cleanupObservers.add(this);
                     filterCleanupMember = cleanupObserver;
-                    cfilter.observers.add(this);
+                    cfilter.addObserver(this);
                 }
             }
             member = member.addChild(new Descendant(Axis.DESCENDANT));
@@ -75,15 +75,17 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         super.addMember(member, null);
 
         if(cfilter==null && filter!=null)
-            filter.observers.add(this);
+            filter.addObserver(this);
         if(filterCleanupMember!=_member)
             _member.cleanupObservers.add(this);
         descCleanupMember = _member;
+
+        return member;
     }
 
     protected abstract class ResultCache extends CachedResults{
         private StringBuilder buff;
-        private boolean accept = filter==null;
+        private Boolean accept1 = filter==null ? Boolean.TRUE : null;
 
         private void append(String str){
             if(buff==null)
@@ -101,11 +103,13 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         public abstract void resetPending();
         private void _promotePending(){
             if(!hasResult()){
-                if(accept){
+                if(accept1==null)
+                    return;
+                if(accept1){
                     if(buff!=null)
                         _updatePending(buff.toString());
                     promotePending();
-                    accept = filter==null;
+                    accept1 = filter==null ? Boolean.TRUE : null;
                 }
                 buff = null;
                 resetPending();
@@ -116,7 +120,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         private void _promote(String str){
             if(str!=null){
                 promote(str);
-                accept = filter==null;
+                accept1 = filter==null ? Boolean.TRUE : null;
             }
         }
 
@@ -128,7 +132,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
             preparing = true;
             try{
                 if(!hasResult()){
-                    if(accept && buff!=null)
+                    if(accept1!=null && accept1 && buff!=null)
                         _updatePending(buff.toString());
                     _promotePending();
                     populateResults();
@@ -147,7 +151,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
         ResultCache resultCache = getResultCache();
         if(!resultCache.hasResult()){
             if(member instanceof FilteredNodeSet)
-                resultCache.accept = ((ComputedResults) member).getResultCache().hasResult();
+                resultCache.accept1 = ((ComputedResults) member).getResultCache().hasResult();
             else{
                 String str = null;
                 if(descendants){
@@ -175,7 +179,9 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
         if(context.node==filterCleanupMember){
-            if(resultCache.accept){
+            if(resultCache.accept1==null)
+                return;
+            if(resultCache.accept1){
                 if(resultCache.buff!=null)
                     resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
                 resultCache._promotePending();

@@ -35,7 +35,7 @@ import java.util.List;
 public abstract class ComputedResults extends Node{
     protected final ResultType memberTypes[];
     protected final boolean variableMembers;
-    
+
     public ComputedResults(boolean variableMembers, ResultType... memberTypes){
         this.variableMembers = variableMembers;
         this.memberTypes = memberTypes;
@@ -91,24 +91,32 @@ public abstract class ComputedResults extends Node{
             throw new IllegalStateException("no more arguments can be added");
     }
 
-    public void addMember(UserResults member, FilteredNodeSet filter){
+    public UserResults addMember(UserResults member, FilteredNodeSet filter){
         ResultType expected = getMemberType(members.size());
 
         if(member.resultType()!=expected){
             member = castTo(member, filter, expected);
             filter = null;
         }
-        _addMember(member, filter);
+        return _addMember(member, filter);
     }
     
-    protected void _addMember(UserResults member, FilteredNodeSet filter){
+    protected ContextSensitiveFilteredNodeSet contextSensitiveFilterMember;
+    protected UserResults _addMember(UserResults member, FilteredNodeSet filter){
         if(filter!=null)
             member = filter;
 
         root = ((Node)member).root;
         hits.totalHits = member.hits.totalHits;
         members.add(member);
-        member.observers.add(this);
+        member.addObserver(this);
+
+        if(member instanceof ContextSensitiveFilteredNodeSet)
+            contextSensitiveFilterMember = (ContextSensitiveFilteredNodeSet)member;
+        else if(contextSensitiveFilterMember==null && member instanceof ComputedResults)
+            contextSensitiveFilterMember = ((ComputedResults)member).contextSensitiveFilterMember;
+
+        return member;
     }
 
     public abstract void memberHit(UserResults member, Context context, Event event);

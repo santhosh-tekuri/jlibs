@@ -15,13 +15,17 @@
 
 package jlibs.xml.sax.sniff.model.computed;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
@@ -31,6 +35,47 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
         super(member, filter);
         member.cleanupObservers.add(this);
     }
+
+    private Set<ComputedResults> dependantMembers;
+
+    @Override
+    protected UserResults _addMember(UserResults member, FilteredNodeSet filter){
+        member = super._addMember(member, filter);
+        if(dependantMembers==null)
+            dependantMembers = new LinkedHashSet<ComputedResults>();
+        populateDependants(member);
+        return member;
+    }
+
+    private void populateDependants(UserResults node){
+        if(node instanceof ComputedResults){
+            ComputedResults computedNode = (ComputedResults)node;
+
+            boolean add = true;
+            for(UserResults member: computedNode.members()){
+                if(member instanceof ContextSensitiveFilteredNodeSet)
+                    add = false;
+            }
+            if(add){
+                dependantMembers.add(computedNode);
+                for(UserResults member: computedNode.members())
+                    populateDependants(member);
+            }
+        }
+    }
+
+    private Set<ComputedResults> getDependentObservers(ComputedResults node, Set<ComputedResults> set){
+        if(set==null)
+            set = new LinkedHashSet<ComputedResults>();
+        for(ComputedResults observer: node.observers()){
+            if(observer.hasFilterObserver()){
+                set.add(observer);
+                getDependentObservers(observer, set);
+            }
+        }
+        return set;
+    }
+
 
     private LinkedHashMap<Object, Map<ComputedResults, CachedResults>> contextMap = new LinkedHashMap<Object, Map<ComputedResults, CachedResults>>();
 
@@ -44,51 +89,45 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
     }
 
     public void addContext(Context context){
+        if(contextSensitiveFilterMember!=null && !contextSensitiveFilterMember.observers.get(0).resultCache.hasResult())
+            return;
+
         if(debug)
             debugger.println("addingContext("+ContextSensitiveFilteredNodeSet.this+')');
 
         Map<ComputedResults, CachedResults> map = new LinkedHashMap<ComputedResults, CachedResults>();
         contextMap.put(context.identity(), map);
 
+        if(debug){
+            debugger.println("createdNewContextResults("+this+')');
+            debugger.indent++;
+        }
+
         resultCache = createResultCache();
         map.put(ContextSensitiveFilteredNodeSet.this, resultCache);
-        createResultCachesForMembers(ContextSensitiveFilteredNodeSet.this, map);
-//        if(hasUserGivenFilterObserver(ContextSensitiveFilteredNodeSet.this))
-            createResultCachesForObservers(ContextSensitiveFilteredNodeSet.this, map);
-    }
+        if(debug)
+            debugger.println(toString());
 
-    private void createResultCachesForMembers(ComputedResults node, Map<ComputedResults, CachedResults> map){
-        for(UserResults member: node.members()){
-            if(member instanceof ComputedResults){
-                ComputedResults computedMember = (ComputedResults)member;
-                computedMember.resultCache = computedMember.createResultCache();
-                map.put(computedMember, computedMember.resultCache);
-                createResultCachesForMembers(computedMember, map);
-            }
+        for(ComputedResults dependantMember: dependantMembers){
+            dependantMember.resultCache = dependantMember.createResultCache();
+            map.put(dependantMember, dependantMember.resultCache);
+            if(debug)
+                debugger.println(dependantMember.toString());
         }
-    }
+        if(debug)
+            debugger.println("");
+        for(ComputedResults dependantObserver: getDependentObservers(this, null)){
+            dependantObserver.resultCache = dependantObserver.createResultCache();
+            map.put(dependantObserver, dependantObserver.resultCache);
+            if(debug)
+                debugger.println(dependantObserver.toString());
+        }
 
-    private boolean hasFilterObserver(ComputedResults node){
-        if(node instanceof FilteredNodeSet)
-            return true;
+        if(debug)
+            debugger.indent--;
 
-        for(ComputedResults observer: node.observers()){
-            if(observer instanceof FilteredNodeSet)
-                return true;
-            if(hasFilterObserver(observer))
-                return true;
-        }
-        return false;
-    }
-    
-    private void createResultCachesForObservers(ComputedResults node, Map<ComputedResults, CachedResults> map){
-        for(ComputedResults observer: node.observers()){
-            if(hasFilterObserver(observer)){
-                observer.resultCache = observer.createResultCache();
-                map.put(observer, observer.resultCache);
-                createResultCachesForObservers(observer, map);
-            }
-        }
+        if(contextSensitiveFilterMember!=null && contextSensitiveFilterMember.getResultCache().hasResult())
+            contextSensitiveFilterMember.notifyObservers(context, null);
     }
 
     /*-------------------------------------------------[ RemoveContext ]---------------------------------------------------*/
@@ -106,7 +145,17 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
             debugger.println("prepareResult("+this+')');
             debugger.indent++;
         }
+        hasContextSensitiveMember = false;
+        if(contextSensitiveFilterMember!=null && contextSensitiveFilterMember.getResultCache().hasResult())
+            contextSensitiveFilterMember.observers.get(0).notifyObservers(context, null);
         prepareResult(ContextSensitiveFilteredNodeSet.this, context);
+        if(debug)
+            debugger.indent--;
+
+        if(debug){
+            debugger.println("prepareObserverResult("+this+')');
+            debugger.indent++;
+        }
         prepareObserverResults(ContextSensitiveFilteredNodeSet.this, context);
         if(debug)
             debugger.indent--;
@@ -117,8 +166,27 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
         contextMap.remove(context.identity());
         Map<ComputedResults, CachedResults> map = contextMap.get(context.parentContext().identity());
         if(map!=null){
-            for(Map.Entry<ComputedResults, CachedResults> entry: map.entrySet())
+            for(Map.Entry<ComputedResults, CachedResults> entry: map.entrySet()){
+                if(debug)
+                    debugger.println("restoredEarlierContextResults("+entry.getKey()+')');
                 entry.getKey().resultCache = entry.getValue();
+            }
+        }else if(resultCache.results!=null && !resultCache.asBoolean(ResultType.BOOLEAN)){
+            if(debug)
+                debugger.println("clearedContextResults("+this+')');
+            resultCache = createResultCache();
+            for(ComputedResults dependantMember: dependantMembers){
+                dependantMember.resultCache = dependantMember.createResultCache();
+                if(debug)
+                    debugger.println("clearedContextResults("+dependantMember+')');
+            }
+            if(debug)
+                debugger.println("");
+            for(ComputedResults dependantObserver: getDependentObservers(this, null)){
+                dependantObserver.resultCache = dependantObserver.createResultCache();
+                if(debug)
+                    debugger.println("clearedContextResults("+dependantObserver+')');
+            }
         }
     }
 
@@ -126,20 +194,77 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
         CachedResults resultCache = node.getResultCache();
         if(!resultCache.hasResult()){
             for(UserResults member: node.members){
-                if(member instanceof ComputedResults)
+                if(member instanceof ComputedResults){
+                    if(member instanceof FilteredNodeSet){
+                        FilteredNodeSet filter = (FilteredNodeSet)member;
+                        if(filter.getResultCache().forcePrepareResult())
+                            filter.notifyObservers(context, null);
+                        return;
+                    }
                     prepareResult((ComputedResults)member, context);
+                }
             }
         }
-        if(resultCache.prepareResult())
+        boolean canPrepareResult = canPrepareResult(node);
+        if(canPrepareResult && resultCache.prepareResult())
             node.notifyObservers(context, null);
+    }
+
+    boolean hasContextSensitiveMember;
+    boolean hasFilteredNodeSet;
+    private void _prepareResult(ComputedResults node, Context context){
+        CachedResults resultCache = node.getResultCache();
+        if(!resultCache.hasResult()){
+            for(UserResults member: node.members){
+                if(member instanceof ContextSensitiveFilteredNodeSet){
+                    if(!hasFilteredNodeSet){
+                        hasContextSensitiveMember = true;
+                        ContextSensitiveFilteredNodeSet contextSensitiveFilter = (ContextSensitiveFilteredNodeSet)member;
+                        if(contextSensitiveFilter.getResultCache().hasResult())
+                            contextSensitiveFilter.notifyObservers(context, null);
+                    }
+                }else if(member instanceof ComputedResults){
+                    if(member instanceof FilteredNodeSet)
+                        hasFilteredNodeSet = true;
+                    prepareResult((ComputedResults)member, context);
+                }
+            }
+        }
+        boolean b = node.contextSensitiveFilterMember!=null && node instanceof FilteredNodeSet;
+        if(hasContextSensitiveMember && node instanceof FilteredNodeSet){
+            if(!b)
+                throw new ImpossibleException();
+            hasContextSensitiveMember = false;
+            FilteredNodeSet filter = (FilteredNodeSet)node;
+            if(filter.getResultCache().forcePrepareResult())
+                filter.notifyObservers(context, null);
+        }else{
+            boolean canPrepareResult = canPrepareResult(node);
+            if(canPrepareResult && resultCache.prepareResult())
+                node.notifyObservers(context, null);
+        }
+    }
+
+    private boolean canPrepareResult(ComputedResults node){
+        for(UserResults member: node.members()){
+            if(member instanceof ComputedResults){
+                ComputedResults computedMember = (ComputedResults)member;
+                if(computedMember.resultCache.results==null)
+                    return false;
+            }
+        }
+        return true;
     }
 
     private void prepareObserverResults(ComputedResults node, Context context){
         for(ComputedResults observer: node.observers()){
+            boolean canPrepareResult = canPrepareResult(observer);
+//            if(!canPrepareResult)
+//                return;
             if(observer instanceof FilteredNodeSet){
-                if(observer.getResultCache().prepareResult())
+                if(canPrepareResult && observer.getResultCache().prepareResult())
                     observer.notifyObservers(context, null);
-            }else
+            }else if(observer.hasFilterObserver() && canPrepareResult && observer.resultCache.results!=null)
                 observer.memberHit(node, context, null);
             prepareObserverResults(observer, context);
         }

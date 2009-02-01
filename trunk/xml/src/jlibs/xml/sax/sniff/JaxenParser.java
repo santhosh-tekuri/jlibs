@@ -173,7 +173,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         current = current.addConstraint(new QNameNode(uri, localName));
 
         for(Object predicate: nameStep.getPredicates()){
-            lastFilteredNodeSet = null;
+//            lastFilteredNodeSet = null;
             visit(predicate);
         }
 
