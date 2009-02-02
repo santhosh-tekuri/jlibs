@@ -45,7 +45,6 @@ public class Literal extends ComputedResults{
         this.literal = literal;
         this.resultType = resultType;
         
-        root.addObserver(this);
         this.root = root;
         hits.totalHits = root.hits.totalHits;
     }
@@ -76,11 +75,11 @@ public class Literal extends ComputedResults{
 
     @Override
     public void memberHit(UserResults member, Context context, Event event){
-        if(!usedAsMemberInFilteredSet()){
+//        if(!usedAsMemberInFilteredSet()){
             ResultCache resultCache = getResultCache();
             if(resultCache.prepareResult())
                 notifyObservers(context, event);
-        }
+//        }
     }
 
     @Override

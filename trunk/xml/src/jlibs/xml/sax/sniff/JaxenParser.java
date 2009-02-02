@@ -32,6 +32,7 @@ import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -88,6 +89,14 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     public XPath parse(String xpath, XPathExpr xpathExpr) throws SAXPathException{
         current = root;
         visit(xpathExpr.getRootExpr());
+
+        for(Literal literal: literals){
+            FilteredNodeSet filter = literal.getEnclosingFilteredSet();
+            if(filter!=null)
+                filter.members.get(0).addObserver(literal);
+            else
+                root.addObserver(literal);
+        }
 
         if(lastFilteredNodeSet!=null){
             lastFilteredNodeSet.userGiven = true;
@@ -221,6 +230,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return current;
     }
 
+    private List<Literal> literals = new ArrayList<Literal>();
+    
     @SuppressWarnings({"unchecked"})
     protected Node process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
@@ -269,11 +280,13 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             }
             current = function;
         }else{
-            if(functionExpr.getFunctionName().equals("true"))
+            if(functionExpr.getFunctionName().equals("true")){
                 current = new Literal(root, true);
-            else if(functionExpr.getFunctionName().equals("false"))
+                literals.add((Literal)current);
+            }else if(functionExpr.getFunctionName().equals("false")){
                 current = new Literal(root, false);
-            else
+                literals.add((Literal)current);
+            }else
                 throw new NotImplementedException("function "+name+"() is not supported");
         }
         
@@ -283,11 +296,13 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     protected Node process(LiteralExpr literalExpr) throws SAXPathException{
         current = new Literal(root, literalExpr.getLiteral());
+        literals.add((Literal)current);
         return current;
     }
 
     protected Node process(NumberExpr numberExpr) throws SAXPathException{
         current = new Literal(root, numberExpr.getNumber().doubleValue());
+        literals.add((Literal)current);
         return current;
     }
 
@@ -323,6 +338,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             visit(binaryExpr.getRHS());
             computed.addMember(current, lastFilteredNodeSet);
 
+            lastFilteredNodeSet = null;
             return current = computed;
         }else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());

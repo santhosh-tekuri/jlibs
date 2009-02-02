@@ -159,7 +159,6 @@ public abstract class ComputedResults extends Node{
         }
     }
 
-    
     @SuppressWarnings({"unchecked"})
     public <T extends CachedResults> T getResultCache(){
         if(resultCache==null)
@@ -167,14 +166,14 @@ public abstract class ComputedResults extends Node{
         return (T)resultCache;
     }
 
-    protected boolean usedAsMemberInFilteredSet(){
+    public FilteredNodeSet getEnclosingFilteredSet(){
         ComputedResults node = this;
         while(node.observers.size()>0){
             node = node.observers.get(0);
             if(node instanceof FilteredNodeSet)
-                return true;
+                return (FilteredNodeSet)node;
         }
-        return false;
+        return null;
     }
 
     @Override
