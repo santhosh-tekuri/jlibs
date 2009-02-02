@@ -44,24 +44,51 @@ public class FilteredNodeSet extends ComputedResults{
                 pendingResults.put(event.order(), event.getResult());
                 if(debug)
                     debugger.println("PendingResults %d: %s ---> %s", event.order(), FilteredNodeSet.this, event.getResult());
-            }else if(member==members.get(1)){
+                return prepareResult();
+            }else if(member==members.get(1) && accept==null){
                 accept = ((ComputedResults)member).getResultCache().asBoolean(ResultType.BOOLEAN);
                 if(debug)
                     debugger.println("accept : %s ---> %s", FilteredNodeSet.this, accept);
+                return prepareResult();
             }
 
-            return prepareResult();
+            return false;
+        }
+
+        private void promotePending(){
+            for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
+                addResult(entry.getKey(), entry.getValue());
+            pendingResults.clear();
         }
 
         @Override
         public boolean prepareResult(){
             if(accept!=null && pendingResults.size()>0){
                 if(accept){
-                    for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
-                        addResult(entry.getKey(), entry.getValue());
+                    if(contextSensitiveFilterMember==null){
+                        promotePending();
+                        return true;
+                    }else if(contextSensitiveFilterMember.resultCache.results!=null){
+                        if(contextSensitiveFilterMember.resultCache.hasResult()){
+                            promotePending();
+                            return true;
+                        }else{
+                            accept = false;
+                            if(results==null)
+                                results = new TreeMap<Integer, String>();
+                            return false;
+                        }
+                    }
+//                    if(contextSensitiveFilterMember==null || contextSensitiveFilterMember.resultCache.results!=null){
+//                        for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
+//                            addResult(entry.getKey(), entry.getValue());
+//                        pendingResults.clear();
+//                    }else
+//                        return false;
                 }else{
                     if(results==null)
                         results = new TreeMap<Integer, String>();
+                    pendingResults.clear();
                 }
                 pendingResults.clear();
                 return true;
