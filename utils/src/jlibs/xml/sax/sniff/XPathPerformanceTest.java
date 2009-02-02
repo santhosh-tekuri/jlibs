@@ -85,10 +85,10 @@ public class XPathPerformanceTest{
                 result.add(obj.toString());
             else
                 throw new NotImplementedException(obj.getClass().getName());
-            
             results.add(result);
             test++;
         }
+        testCase.jdkResult.clear();
         return results;
     }
 
@@ -130,20 +130,44 @@ public class XPathPerformanceTest{
         });
     }
 
-    public void run(String configFile) throws Exception{
-        readTestCases(configFile);
+    private void printResults(List<String> results){
+        boolean first = true;
+        for(String result: results){
+            if(first)
+               first = false;
+            else
+                System.out.print(", ");
+            System.out.print(result);
+        }
+        System.out.println();
+    }
 
-        long time = System.nanoTime();
-        for(TestCase testCase: testCases)
-            testCase.dogResult = testCase.usingXMLDog();
-        long dogTime = System.nanoTime() - time;
-        System.out.println("XMLDog finished evaluation");
-        
+    private long usingJDK() throws Exception{
+        long time;
+        System.out.print("XALAN:  ");
         time = System.nanoTime();
         for(TestCase testCase: testCases)
             testCase.jdkResult = testCase.usingJDK();
         long jdkTime = System.nanoTime() - time;
-        System.out.println("Xalan finished");
+        System.out.println("Done\n");
+        return jdkTime;
+    }
+
+    private long usingXMLDog() throws Exception{
+        System.out.print("XMLDog: ");
+        long time = System.nanoTime();
+        for(TestCase testCase: testCases)
+            testCase.dogResult = testCase.usingXMLDog();
+        long dogTime = System.nanoTime() - time;
+        System.out.println("Done");
+        return dogTime;
+    }
+
+    public void run(String configFile) throws Exception{
+        readTestCases(configFile);
+
+        long dogTime = usingXMLDog();
+        long jdkTime = usingJDK();
 
         int total= 0;
         int failed = 0;
@@ -170,9 +194,11 @@ public class XPathPerformanceTest{
                     failed++;
 
                 stream.println("         xpath : "+testCase.xpaths.get(i));
-                stream.println("    jdk result : "+jdkResult);
+                stream.print("    jdk result : ");
+                printResults(jdkResult);
                 stream.println("  jdk hitcount : "+jdkResult.size());
-                stream.println("    dog result : "+dogResult);
+                stream.print("    dog result : ");
+                printResults(dogResult);
                 stream.println("  dog hitcount : "+dogResult.size());
                 stream.flush();
 
@@ -225,6 +251,9 @@ class TestCase{
             xpathObj.setNamespaceContext(nsContext);
             results.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
         }
+
+        doc = null;
+        System.out.print('.');
         return results;
     }
 
@@ -243,6 +272,7 @@ class TestCase{
         List<List<String>> results = new ArrayList<List<String>>(xpaths.size());
         for(jlibs.xml.sax.sniff.XPath xpathObj: xpathObjs)
             results.add(dogResults.getResult(xpathObj));
+        System.out.print('.');
         return results;
     }
 }
