@@ -173,6 +173,12 @@
         <xpath>//*/temp[4]/.</xpath>
         <xpath>//temp[4]/.</xpath>
         <xpath>//book/*[ 2 ]</xpath>
+        <xpath>/root/pub[position() = 1]</xpath>
+        <xpath>//book/*[ 2 = position() ]</xpath>
+        <xpath>//book/price[ position() = 2 ]</xpath>
+        <xpath>//book/price[ 2 = position() ]</xpath>
+        <xpath>//env:Envelope/Body[2]/Order//Item[2]/Price[@symbol="$"]</xpath>
+        <xpath>//env:Envelope/Body[2]/Order//*/Item[2]/Price[@symbol="$"]</xpath>
 
         <!-- nested paths -->
         <xpath>//Price[@symbol]</xpath>
@@ -244,6 +250,9 @@
         <xpath>sum(//book[@testAttr]/price)</xpath>
         <xpath>sum(//book[testElem]/price)</xpath>
 
+        <!-- count() function -->
+        <xpath>/root[count(xxx) = 0]</xpath>
+        
         <!-- not() function -->
         <xpath>/root[not(xxx)]</xpath>
         <xpath>/root[not(pub)]</xpath>
@@ -277,6 +286,7 @@
     <testcase>
         <file>xmlFiles/underscore.xml</file>
 
+        <xpath>/root[@a = 1]</xpath>
         <xpath>/root/@a</xpath>
         <xpath>/root/@_a</xpath>
         <xpath>/root/b</xpath>
@@ -442,12 +452,21 @@
         <xpath>//*</xpath>
         <xpath>//article</xpath>
         <xpath>/*/*[@code]</xpath>
+
+        <xpath>/moreovernews/article[@code='13563275']</xpath>
+        <xpath>/*/article[@code='13563275']</xpath>
+        <xpath>//article[@code='13563275']</xpath>
+        <xpath>/child::node()/child::*[@code='13563275']</xpath>
+        <xpath>/*/*[@code='13563275']</xpath>
     </testcase>
 
     <testcase>
         <file>xmlFiles/id.xml</file>
 
         <xpath>/foo</xpath>
+        <xpath>/foo[@id='foobar']</xpath>
+        <xpath>/foo[@id="foobar"]</xpath>
+        <xpath>/foo[concat('foo', 'bar')=@id]</xpath>
     </testcase>
 
     <testcase>
@@ -488,6 +507,9 @@
     <testcase>
         <file>xmlFiles/purchase_order.xml</file>
 
+        <!-- attribute validation of purchaseOrder -->
+        <xpath>/purchaseOrder[ not( count( @* ) = 1 )]</xpath>
+
         <!-- test for invalid root element -->
         <xpath>/*[ not( self::purchaseOrder )]</xpath>
 
@@ -502,5 +524,59 @@
 
         <!-- test for invalid attribute of item -->
         <xpath>/purchaseOrder/items/item[ not( @partNum )]</xpath>
+
+        <!-- test for invalid child sequence of purchaseOrder -->
+        <xpath>/purchaseOrder/*[ 1 ][ not( self::shipTo )]</xpath>
+        <xpath>/purchaseOrder/*[ 2 ][ not( self::billTo )]</xpath>
+        <xpath>/purchaseOrder[ comment ]/*[ 3 ][ not( self::comment )]</xpath>
+
+        <!-- test for invalid child sequence of shipTo -->
+        <xpath>/purchaseOrder/shipTo/*[ 1 ][ not( self::name )]</xpath>
+        <xpath>/purchaseOrder/shipTo/*[ 2 ][ not( self::street )]</xpath>
+        <xpath>/purchaseOrder/shipTo/*[ 3 ][ not( self::city )]</xpath>
+        <xpath>/purchaseOrder/shipTo/*[ 4 ][ not( self::state )]</xpath>
+        <xpath>/purchaseOrder/shipTo/*[ 5 ][ not( self::zip )]</xpath>
+
+        <!-- test for invalid child of shipTo -->
+        <xpath>/purchaseOrder/shipTo/*[ not( self::name or self::street or self::city or self::state or self::zip )]</xpath>
+
+        <!-- test for invalid child of item -->
+        <xpath>/purchaseOrder/items/item/*[ not( self::productName or self::quantity or self::USPrice or self::comment or self::shipDate)]</xpath>
+
+        <!-- test for invalid child sequence of item -->
+        <xpath>/purchaseOrder/items/item/*[ 1 ][ not( self::productName )]</xpath>
+        <xpath>/purchaseOrder/items/item/*[ 2 ][ not( self::quantity )]</xpath>
+        <xpath>/purchaseOrder/items/item/*[ 3 ][ not( self::USPrice )]</xpath>
+        <xpath>/purchaseOrder/items/item[ comment ]/*[ 5 ][ not( self::shipDate )]</xpath>
+        <xpath>/purchaseOrder/items/item[ not( comment )]/*[ 4 ][ not( self::shipDate )]</xpath>
+
+        <!-- test for invalid child sequence of billTo -->
+        <xpath>/purchaseOrder/billTo/*[ 1 ][ not( self::name )]</xpath>
+        <xpath>/purchaseOrder/billTo/*[ 2 ][ not( self::street )]</xpath>
+        <xpath>/purchaseOrder/billTo/*[ 3 ][ not( self::city )]</xpath>
+        <xpath>/purchaseOrder/billTo/*[ 4 ][ not( self::state )]</xpath>
+        <xpath>/purchaseOrder/billTo/*[ 5 ][ not( self::zip )]</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/roof.xml</file>
+
+        <xpath>//roofing-material[type="shingles" and manufacturer="Nash"]</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/nitf.xml</file>
+
+        <xpath>/nitf/head/docdata/doc-id[@regsrc='AP' and @id-string='D76UIMO80']</xpath>
+        <xpath>/nitf/head/meta[@name='ap-cycle']</xpath>
+        <xpath>/nitf/head/meta[@content='AP']</xpath>
+        <xpath>/nitf/head/meta[@name and @content]</xpath>
+        <xpath>/nitf/head/meta[@name='ap-cycle' and @content='AP']</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/message.xml</file>
+
+        <xpath>/message/body/data/items/item[name/text()='parentinfo']/value</xpath>
     </testcase>
 </xpaths>
