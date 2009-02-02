@@ -206,5 +206,10 @@ public class Context implements Debuggable{
         public int hashCode(){
             return System.identityHashCode(context)+depth;
         }
+
+        @Override
+        public String toString(){
+            return context+"["+depth+']';
+        }
     }
 }
