@@ -42,4 +42,9 @@ public class Attribute extends Event{
         value = attrs.getValue(index);
         setResultWrapper(value);
     }
+
+    @Override
+    public String toString(){
+        return String.format("@%s", qname);
+    }
 }
