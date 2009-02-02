@@ -411,6 +411,10 @@
         <xpath>/voo:a/b/c</xpath>
         <xpath>/voo:a/bar:f</xpath>
         <xpath>/foo:a/alias:x/alias:y</xpath>
+
+        <xpath>/*[namespace-uri()='fooNamespace' and local-name()='a']</xpath>
+        <xpath>/*[local-name()='a' and namespace-uri()='fooNamespace']/*[local-name()='x' and namespace-uri()='fooNamespace']</xpath>
+        <xpath>/*[local-name()='a' and namespace-uri()='fooNamespace']/*[local-name()='x' and namespace-uri()='fooNamespace']/*[local-name()='y' and namespace-uri()='fooNamespace']</xpath>
     </testcase>
 
     <testcase>

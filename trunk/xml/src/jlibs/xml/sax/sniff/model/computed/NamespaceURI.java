@@ -37,10 +37,21 @@ public class NamespaceURI extends ComputedResults{
         return ResultType.STRING;
     }
 
+    private class ResultCache extends CachedResults{
+        @Override
+        public boolean prepareResult(){
+            if(!hasResult()){
+                addResult(-1, "");
+                return true;
+            }else
+                return false;
+        }
+    }
+
     @NotNull
     @Override
     protected CachedResults createResultCache(){
-        return new CachedResults();
+        return new ResultCache();
     }
 
     @Override
@@ -48,20 +59,26 @@ public class NamespaceURI extends ComputedResults{
         Results resultCache = getResultCache();
         if(!resultCache.hasResult()){
             String uri = null;
-            switch(event.type()){
-                case Event.ELEMENT:
-                    uri = ((Element)event).uri;
-                    break;
-                case Event.ATTRIBUTE:
-                    uri = ((Attribute)event).uri;
-                    break;
-                case Event.PI:
-                    uri = "";
-                    break;
+            if(event==null)
+                uri = "";
+            else{
+                switch(event.type()){
+                    case Event.ELEMENT:
+                        uri = ((Element)event).uri;
+                        break;
+                    case Event.ATTRIBUTE:
+                        uri = ((Attribute)event).uri;
+                        break;
+                    case Event.PI:
+                        uri = "";
+                        break;
+                }
             }
 
-            if(uri!=null)
+            if(uri!=null){
                 resultCache.addResult(-1, uri);
+                notifyObservers(context, event);
+            }
         }
     }
 

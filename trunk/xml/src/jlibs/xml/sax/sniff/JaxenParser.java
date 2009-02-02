@@ -263,6 +263,10 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 current = visit(param);
                 function.addMember(current, lastFilteredNodeSet);
             }
+            if(function instanceof LocalName || function instanceof NamespaceURI){
+                if(function.members.size()==0)
+                    function.addMember(current, null);
+            }
             current = function;
         }else{
             if(functionExpr.getFunctionName().equals("true"))

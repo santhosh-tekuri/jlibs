@@ -38,10 +38,21 @@ public class LocalName extends ComputedResults{
         return ResultType.STRING;
     }
 
+    private class ResultCache extends CachedResults{
+        @Override
+        public boolean prepareResult(){
+            if(!hasResult()){
+                addResult(-1, "");
+                return true;
+            }else
+                return false;
+        }
+    }
+
     @NotNull
     @Override
     protected CachedResults createResultCache(){
-        return new CachedResults();
+        return new ResultCache();
     }
 
     @Override
@@ -49,20 +60,26 @@ public class LocalName extends ComputedResults{
         Results resultCache = getResultCache();
         if(!resultCache.hasResult()){
             String name = null;
-            switch(event.type()){
-                case Event.ELEMENT:
-                    name = ((Element)event).name;
-                    break;
-                case Event.ATTRIBUTE:
-                    name = ((Attribute)event).name;
-                    break;
-                case Event.PI:
-                    name = ((PI)event).target;
-                    break;
+            if(event==null)
+                name = "";
+            else{
+                switch(event.type()){
+                    case Event.ELEMENT:
+                        name = ((Element)event).name;
+                        break;
+                    case Event.ATTRIBUTE:
+                        name = ((Attribute)event).name;
+                        break;
+                    case Event.PI:
+                        name = ((PI)event).target;
+                        break;
+                }
             }
 
-            if(name!=null)
+            if(name!=null){
                 resultCache.addResult(-1, name);
+                notifyObservers(context, event);
+            }
         }
     }
 
