@@ -85,8 +85,7 @@ public abstract class DerivedResults extends ComputedResults{
                 resultCache.prepareResult();
                 notifyObservers(context, event);
             }
-        }else
-            System.out.println("");
+        }
     }
 
     @Override
