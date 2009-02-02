@@ -73,6 +73,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         document.setData();
         contextManager.match(document);
+
+        if(debug)
+            System.out.println("-----------------------------------------------------------------");
     }
 
 
