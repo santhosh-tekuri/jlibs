@@ -22,10 +22,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.UserResults;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -77,7 +74,7 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
     }
 
 
-    private LinkedHashMap<Object, Map<ComputedResults, CachedResults>> contextMap = new LinkedHashMap<Object, Map<ComputedResults, CachedResults>>();
+    private Deque<Map<ComputedResults, CachedResults>> contextStack = new ArrayDeque<Map<ComputedResults, CachedResults>>();
 
     /*-------------------------------------------------[ AddContext ]---------------------------------------------------*/
 
@@ -93,13 +90,13 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
             return;
 
         if(debug)
-            debugger.println("addingContext("+ContextSensitiveFilteredNodeSet.this+')');
+            debugger.println("addingContext(%s)", ContextSensitiveFilteredNodeSet.this);
 
         Map<ComputedResults, CachedResults> map = new LinkedHashMap<ComputedResults, CachedResults>();
-        contextMap.put(context.identity(), map);
+        contextStack.push(map);
 
         if(debug){
-            debugger.println("createdNewContextResults("+this+')');
+            debugger.println("createdNewContextResults(%s)", this);
             debugger.indent++;
         }
 
@@ -139,10 +136,10 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
 
     public void removeContext(Context context){
         if(debug)
-            debugger.println("removingContext("+ContextSensitiveFilteredNodeSet.this+')');
+            debugger.println("removingContext(%s)", ContextSensitiveFilteredNodeSet.this);
 
         if(debug){
-            debugger.println("prepareResult("+this+')');
+            debugger.println("prepareResult(%s)", this);
             debugger.indent++;
         }
         hasContextSensitiveMember = false;
@@ -153,7 +150,7 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
             debugger.indent--;
 
         if(debug){
-            debugger.println("prepareObserverResult("+this+')');
+            debugger.println("prepareObserverResult(%s)",this);
             debugger.indent++;
         }
         prepareObserverResults(ContextSensitiveFilteredNodeSet.this, context);
@@ -163,29 +160,31 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
         if(resultCache.hasResult() && userGiven)
             addAllResults(resultCache);
 
-        contextMap.remove(context.identity());
-        Map<ComputedResults, CachedResults> map = contextMap.get(context.parentContext().identity());
+        if(!contextStack.isEmpty())
+            contextStack.pop();
+
+        Map<ComputedResults, CachedResults> map = contextStack.peek();
         if(map!=null){
             for(Map.Entry<ComputedResults, CachedResults> entry: map.entrySet()){
                 if(debug)
-                    debugger.println("restoredEarlierContextResults("+entry.getKey()+')');
+                    debugger.println("restoredEarlierContextResults(%s)", entry.getKey());
                 entry.getKey().resultCache = entry.getValue();
             }
         }else if(resultCache.results!=null && !resultCache.asBoolean(ResultType.BOOLEAN)){
             if(debug)
-                debugger.println("clearedContextResults("+this+')');
+                debugger.println("clearedContextResults(%s)", this);
             resultCache = createResultCache();
             for(ComputedResults dependantMember: dependantMembers){
                 dependantMember.resultCache = dependantMember.createResultCache();
                 if(debug)
-                    debugger.println("clearedContextResults("+dependantMember+')');
+                    debugger.println("clearedContextResults(%s)", dependantMember);
             }
             if(debug)
                 debugger.println("");
             for(ComputedResults dependantObserver: getDependentObservers(this, null)){
                 dependantObserver.resultCache = dependantObserver.createResultCache();
                 if(debug)
-                    debugger.println("clearedContextResults("+dependantObserver+')');
+                    debugger.println("clearedContextResults(%s)", dependantObserver);
             }
         }
     }
