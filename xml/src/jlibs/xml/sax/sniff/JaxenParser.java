@@ -98,13 +98,10 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 root.addObserver(literal);
         }
 
-        if(lastFilteredNodeSet!=null){
-            lastFilteredNodeSet.userGiven = true;
+        if(lastFilteredNodeSet!=null)
             return new XPath(xpath, xpathExpr, lastFilteredNodeSet);
-        }else{
-            current.userGiven = true;
+        else
             return new XPath(xpath, xpathExpr, current);
-        }
     }
 
     @SuppressWarnings({"unchecked"})

@@ -28,14 +28,13 @@ import javax.xml.namespace.QName;
  * @author Santhosh Kumar T
  */
 public class XPath{
-    private String xpath;
     private XPathExpr xpathExpr;
     UserResults results;
 
     public XPath(String xpath, XPathExpr xpathExpr, UserResults userResults){
-        this.xpath = xpath;
         this.xpathExpr = xpathExpr;
         this.results = userResults;
+        results.userGiven(xpath);
     }
 
     int minHits;
@@ -53,7 +52,7 @@ public class XPath{
 
     public XPath copy(Root root){
         try{
-            return new JaxenParser(root).parse(xpath, xpathExpr);
+            return new JaxenParser(root).parse(results.xpath, xpathExpr);
         }catch(SAXPathException ex){
             throw new ImpossibleException(ex);
         }
@@ -61,6 +60,6 @@ public class XPath{
 
     @Override
     public String toString(){
-        return xpath;
+        return results.xpath;
     }
 }

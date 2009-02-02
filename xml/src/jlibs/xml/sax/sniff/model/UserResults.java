@@ -28,6 +28,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class UserResults extends Results{
+    public String xpath;
     public boolean userGiven;
     public HitManager hits = new HitManager();
 
@@ -44,6 +45,11 @@ public class UserResults extends Results{
             debugger.println("Hit %d: %s ---> %s", results.size(), this, result);
     }
 
+    public void userGiven(String xpath){
+        userGiven = true;
+        this.xpath = xpath;
+    }
+    
     @Override
     public void reset(){
         super.reset();
