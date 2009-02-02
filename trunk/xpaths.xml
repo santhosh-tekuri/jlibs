@@ -416,6 +416,7 @@
         <xpath>/*[local-name()='a' and namespace-uri()='fooNamespace']/*[local-name()='x' and namespace-uri()='fooNamespace']</xpath>
         <xpath>/*[local-name()='a' and namespace-uri()='fooNamespace']/*[local-name()='x' and namespace-uri()='fooNamespace']/*[local-name()='y' and namespace-uri()='fooNamespace']</xpath>
         <xpath>/foo:a/*[local-name()='x' and namespace-uri()='fooNamespace' and *[local-name()='y' and namespace-uri()='fooNamespace']]</xpath>
+        <xpath>/*[local-name()='a' and namespace-uri()='fooNamespace']/*[local-name()='x' and namespace-uri()='fooNamespace' and ./*[local-name()='y' and namespace-uri()='fooNamespace']]</xpath>
     </testcase>
 
     <testcase>
@@ -463,6 +464,8 @@
         <xpath>//article[@code='13563275']</xpath>
         <xpath>/child::node()/child::*[@code='13563275']</xpath>
         <xpath>/*/*[@code='13563275']</xpath>
+        <xpath>//*[@code='13563275']</xpath>
+        <xpath>//*[local-name()='article']</xpath>
     </testcase>
 
     <testcase>
