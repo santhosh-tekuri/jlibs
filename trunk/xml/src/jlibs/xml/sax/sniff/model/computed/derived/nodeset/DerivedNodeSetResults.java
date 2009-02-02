@@ -78,6 +78,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
             filter.addObserver(this);
         if(filterCleanupMember!=_member)
             _member.cleanupObservers.add(this);
+        
         descCleanupMember = _member;
 
         return member;
@@ -92,7 +93,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
                 buff = new StringBuilder();
             buff.append(str);
             if(debug)
-                debugger.println("buff.append(%s) : %s", str, DerivedNodeSetResults.this);
+                debugger.println("buff.append('%s') : %s", str, DerivedNodeSetResults.this);
         }
 
         public abstract void updatePending(String str);
@@ -182,6 +183,8 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
     @Override
     public void endingContext(Context context){
         ResultCache resultCache = getResultCache();
+        if(resultCache.hasResult())
+            return;
         if(context.node==filterCleanupMember){
             if(debug){
                 debugger.println("endingFilterContext(%s)", this);
@@ -190,8 +193,10 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
             if(resultCache.accept==null)
                 return;
             if(resultCache.accept){
-                if(resultCache.buff!=null)
+                if(resultCache.buff!=null){
                     resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
+                    resultCache.buff = null;
+                }
                 resultCache._promotePending();
                 resultCache.buff = null;
             }else
@@ -204,6 +209,8 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
                 debugger.indent++;
             }
             resultCache._updatePending(resultCache.buff!=null ? resultCache.buff.toString() : "");
+            resultCache.buff = null;
+
             if(debug)
                 debugger.indent--;
         }
