@@ -518,6 +518,9 @@
         <!-- attribute validation of purchaseOrder -->
         <xpath>/purchaseOrder[ not( count( @* ) = 1 )]</xpath>
 
+        <!-- attribute validation of item -->
+        <xpath>/purchaseOrder/items/item[ not( count( @* ) = 1 )]</xpath>
+
         <!-- test for invalid root element -->
         <xpath>/*[ not( self::purchaseOrder )]</xpath>
 
@@ -557,6 +560,7 @@
         <xpath>/purchaseOrder/items/item/*[ 3 ][ not( self::USPrice )]</xpath>
         <xpath>/purchaseOrder/items/item[ comment ]/*[ 5 ][ not( self::shipDate )]</xpath>
         <xpath>/purchaseOrder/items/item[ not( comment )]/*[ 4 ][ not( self::shipDate )]</xpath>
+        <xpath>/purchaseOrder/items/item[ comment ]/*[ 4 ][ not( self::comment )]</xpath>
 
         <!-- test for invalid child sequence of billTo -->
         <xpath>/purchaseOrder/billTo/*[ 1 ][ not( self::name )]</xpath>
@@ -564,6 +568,9 @@
         <xpath>/purchaseOrder/billTo/*[ 3 ][ not( self::city )]</xpath>
         <xpath>/purchaseOrder/billTo/*[ 4 ][ not( self::state )]</xpath>
         <xpath>/purchaseOrder/billTo/*[ 5 ][ not( self::zip )]</xpath>
+
+        <!-- test for invalid child of billTo -->
+        <xpath>/purchaseOrder/billTo/*[ not( self::name or self::street or self::city or self::state or self::zip )]</xpath>
     </testcase>
 
     <testcase>
