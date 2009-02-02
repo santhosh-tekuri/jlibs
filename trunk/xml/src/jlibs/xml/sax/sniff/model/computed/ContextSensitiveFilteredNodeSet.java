@@ -196,6 +196,8 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
                 if(member instanceof ComputedResults){
                     if(member instanceof FilteredNodeSet){
                         FilteredNodeSet filter = (FilteredNodeSet)member;
+                        if(filter.contextSensitiveFilterMember==null)
+                            prepareResult((ComputedResults)member, context);
                         if(filter.getResultCache().forcePrepareResult())
                             filter.notifyObservers(context, null);
                         return;

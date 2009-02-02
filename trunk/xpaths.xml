@@ -570,6 +570,7 @@
         <file>xmlFiles/roof.xml</file>
 
         <xpath>//roofing-material[type="shingles" and manufacturer="Nash"]</xpath>
+        <xpath>//roofing-material[manufacturer[. = "Nash"] and type[. = "shingles"]]</xpath>
     </testcase>
 
     <testcase>
