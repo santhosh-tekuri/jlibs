@@ -48,4 +48,9 @@ public class Element extends Event{
         this.qname = qname;
         setResultWrapper(elemStack);
     }
+
+    @Override
+    public String toString(){
+        return String.format("<%s>", qname);
+    }
 }

@@ -36,4 +36,9 @@ public class Text extends Event{
     public void setData(){
         setResultWrapper(contents);
     }
+
+    @Override
+    public String toString(){
+        return contents.toString();
+    }
 }
