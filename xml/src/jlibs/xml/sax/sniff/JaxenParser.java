@@ -32,6 +32,7 @@ import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -188,6 +189,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     private FilteredNodeSet lastFilteredNodeSet;
     private int predicateDepth;
+    private ArrayDeque<Node> contextStack = new ArrayDeque<Node>();
     protected Node process(org.jaxen.expr.Predicate p) throws SAXPathException{
         if(p.getExpr() instanceof NumberExpr){
             NumberExpr numberExpr = (NumberExpr)p.getExpr();
@@ -208,7 +210,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             }
             predicateDepth++;
             Node context = current;
+            contextStack.push(current);
             visit(p.getExpr());
+            contextStack.pop();
 
 
             Node filter = lastFilteredNodeSet==null ? current : lastFilteredNodeSet;
@@ -239,6 +243,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
         ComputedResults function = null;
 
+        Node context = contextStack.peek();
         if(name.equals("strings"))
             function = new StringsNodeSet();
         else if(name.equals("count"))
@@ -304,6 +309,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
 
     protected Node process(BinaryExpr binaryExpr) throws SAXPathException{
+        Node context = contextStack.peek();
+        
         ComputedResults computed = null;
         if(binaryExpr.getOperator().equals("and"))
             computed = new AndExpression();
@@ -330,7 +337,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             Node _current = current;
             visit(binaryExpr.getLHS());
             computed.addMember(current, lastFilteredNodeSet);
-
+            lastFilteredNodeSet = null;
+            
             current = _current;
             visit(binaryExpr.getRHS());
             computed.addMember(current, lastFilteredNodeSet);
