@@ -30,7 +30,12 @@ import java.util.*;
  */
 public class TestSuite{
     public List<TestCase> testCases = new ArrayList<TestCase>();
+    public int total;
 
+    public TestSuite() throws Exception{
+        this("xpaths.xml");
+    }
+    
     public TestSuite(String configFile) throws Exception{
         readTestCases(configFile);
     }
@@ -39,8 +44,11 @@ public class TestSuite{
         long time;
         System.out.print("XALAN:  ");
         time = System.nanoTime();
-        for(TestCase testCase: testCases)
+        for(TestCase testCase: testCases){
             testCase.jdkResult = testCase.usingJDK();
+            System.out.print('.');
+            testCase.jdkResult = null;
+        }
         long jdkTime = System.nanoTime() - time;
         System.out.println("Done");
         return jdkTime;
@@ -49,8 +57,11 @@ public class TestSuite{
     public long usingXMLDog() throws Exception{
         System.out.print("XMLDog: ");
         long time = System.nanoTime();
-        for(TestCase testCase: testCases)
+        for(TestCase testCase: testCases){
             testCase.dogResult = testCase.usingXMLDog();
+            System.out.print('.');            
+            testCase.dogResult = null;
+        }
         long dogTime = System.nanoTime() - time;
         System.out.println("Done");
         return dogTime;
@@ -138,8 +149,8 @@ public class TestSuite{
                         }
                         testCase.resultTypes.add(XPathConstants.NODESET);
                     }
-                }
-
+                }else if(localName.equals("testcase"))
+                    total += testCase.xpaths.size();
             }
         });
     }

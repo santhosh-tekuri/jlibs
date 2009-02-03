@@ -18,28 +18,38 @@ package jlibs.xml.sax.sniff;
 /**
  * @author Santhosh Kumar T
  */
-public class XPathPerformanceTest{
+public class XPathConformanceTest{
     private TestSuite testSuite;
 
-    public XPathPerformanceTest(TestSuite testSuite){
+    public XPathConformanceTest(TestSuite testSuite){
         this.testSuite = testSuite;
     }
 
     public void run() throws Exception{
-        long dogTime = testSuite.usingXMLDog();
-        long jdkTime = testSuite.usingJDK();
-        System.out.format("Total %d xpaths are executed%n", testSuite.total);
+        int failed = 0;
+        for(TestCase testCase: testSuite.testCases){
+            testCase.usingJDK();
+            testCase.usingXMLDog();
 
-        System.out.format("       jdk time : %d nanoseconds/%.2f seconds %n", jdkTime, jdkTime*1E-09);
-        System.out.format("       dog time : %d nanoseconds/%.2f seconds %n", dogTime, dogTime*1E-09);
-        double faster = (1.0*Math.max(dogTime, jdkTime)/Math.min(dogTime, jdkTime));
-        System.out.format("        WINNER : %s (%.2fx faster) %n", dogTime<=jdkTime ? "XMLDog" : "XALAN", faster);
-        long diff = Math.abs(dogTime - jdkTime);
-        System.out.format("    Difference : %d nanoseconds/%.2f seconds %n", diff, diff*1E-09);
+            for(int i=0; i<testCase.xpaths.size(); i++){
+                boolean passed = testCase.passed(i);
+                if(!passed)
+                    failed++;
+
+                System.out.println(passed ? "SUCCESSFULL:" : "FAILED:");
+                testCase.printResults(i);
+            }
+        }
+
+        System.out.format("testcases are executed: total=%d failed=%d %n", testSuite.total, failed);
+        if(failed>0){
+            for(int i=0; i<10; i++)
+                System.out.println("FAILED FAILED FAILED FAILED FAILED");
+        }
     }
 
     public static void main(String[] args) throws Exception{
         TestSuite testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathPerformanceTest(testSuite).run();
+        new XPathConformanceTest(testSuite).run();
     }
 }
