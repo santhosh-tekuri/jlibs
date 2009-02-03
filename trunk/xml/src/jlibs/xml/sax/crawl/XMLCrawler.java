@@ -76,6 +76,8 @@ public class XMLCrawler extends NamespaceSupportReader{
                             linkFile = link.suggestFile(sourceFile, location);
                             if(linkFile!=null)
                                 pending.put(new InputSource(linkURL.toString()), linkFile);
+                            else if(listener!=null)
+                                listener.skipped(linkURL);
                         }
 
                         AttributesImpl newAtts = new AttributesImpl(atts);
@@ -105,6 +107,11 @@ public class XMLCrawler extends NamespaceSupportReader{
     }
 
     /*-------------------------------------------------[ Crawling ]---------------------------------------------------*/
+
+    private CrawlerListener listener;
+    public void setListener(CrawlerListener listener){
+        this.listener = listener;
+    }
 
     private File sourceFile;
     private URL sourceURL;
@@ -136,6 +143,8 @@ public class XMLCrawler extends NamespaceSupportReader{
                 .transform(source, new StreamResult(file));
 
         crawled.put(sourceURL, sourceFile);
+        if(listener!=null)
+            listener.saved(sourceURL, sourceFile);
 
         Map<InputSource, File> map = new LinkedHashMap<InputSource, File>(pending);
         for(Map.Entry<InputSource, File> entry: map.entrySet()){
