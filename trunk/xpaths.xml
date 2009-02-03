@@ -8,8 +8,8 @@
         <xpath>false()</xpath>
         <xpath>boolean(/xs:schema/@targetNamespace)</xpath>
         <xpath>boolean(/xs:schema/@targetNamespace1)</xpath>
-        <xpath>1+2*5 div 2 mod 3</xpath>
-        <xpath>(1+2)*5</xpath>
+        <xpath type="number">1+2*5 div 2 mod 3</xpath>
+        <xpath type="number">(1+2)*5</xpath>
         <xpath>normalize-space('  santhosh  kumar   ')</xpath>
         <xpath>string-length(normalize-space('  santhosh  kumar   '))</xpath>
         <xpath>string-length('  santhosh  kumar   ')</xpath>
@@ -151,7 +151,7 @@
         <xpath>/descendant::node()/text()</xpath>
         <xpath>/descendant-or-self::node()/text()</xpath>
         <xpath>/root/descendant-or-self::*/descendant-or-self::*</xpath>
-        <xpath>count(/root/descendant-or-self::node())</xpath>        
+        <xpath>count(/root/descendant-or-self::node())</xpath>
 
         <!-- namespace prefix -->
         <xpath>/root/XMLFragment2/env:Envelope</xpath>
@@ -377,7 +377,7 @@
 
         <xpath>/*/fibonacci[2]</xpath>
         <xpath>/*/fibonacci</xpath>
-        <xpath>count(/*/fibonacci)</xpath>        
+        <xpath>count(/*/fibonacci)</xpath>
         <xpath>sum(//fibonacci)</xpath>
         <xpath>sum(//fibonacci/@index)</xpath>
         <xpath>count(/*/fibonacci) - 1</xpath>
@@ -495,10 +495,9 @@
 
         <xpath>count(descendant::ACT)</xpath>
         <xpath>count(/PLAY/ACT/SCENE[1])</xpath>
-        <xpath>2+2</xpath>
+        <xpath type="number">2+2</xpath>
 
-        <!-- arithmetic expression with count() -->
-        <xpath>10 + count(descendant::ACT)</xpath>
+        <xpath type="number">10 + count(descendant::ACT)</xpath>
         <xpath>count(/descendant::*)+1</xpath>
         <xpath>count(descendant::SPEAKER)+1</xpath>
     </testcase>

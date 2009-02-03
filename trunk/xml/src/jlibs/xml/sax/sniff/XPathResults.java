@@ -30,13 +30,15 @@ public class XPathResults implements Debuggable{
     }
 
     private List<String> collectResult(XPath xpath){
-        Map<Integer, String> results = new TreeMap<Integer, String>();
+        List<String> results;
 
         xpath.results.prepareResults();
         if(xpath.results.hasResult())
-            results.putAll(xpath.results.results);
+            results = new ArrayList<String>(xpath.results.results.values());
+        else
+            results = Collections.emptyList();
 
-        return new ArrayList<String>(results.values());
+        return results;
     }
 
     public List<String> getResult(XPath xpath){

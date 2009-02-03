@@ -28,14 +28,12 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -93,7 +91,29 @@ public class XPathPerformanceTest{
     }
 
     private List<TestCase> testCases = new ArrayList<TestCase>();
+    private static HashMap<QName, List<String>> types = new HashMap<QName, List<String>>();
+    static{
+        List<String> list = new ArrayList<String>();
+        list.add("name(");
+        list.add("string(");
+        list.add("normalize-space(");
+        list.add("concat(");
+        list.add("translate(");
+        types.put(XPathConstants.STRING, list);
 
+        list = new ArrayList<String>();
+        list.add("number(");
+        list.add("sum(");
+        list.add("count(");
+        list.add("string-length(");
+        types.put(XPathConstants.NUMBER, list);
+
+        list = new ArrayList<String>();
+        list.add("boolean(");
+        list.add("true(");
+        list.add("false(");
+        types.put(XPathConstants.BOOLEAN, list);
+    }
     public void readTestCases(String configFile) throws Exception{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
             TestCase testCase;
@@ -110,6 +130,18 @@ public class XPathPerformanceTest{
                     }
                     if(nsSupport.getURI("")!=null)
                         testCase.nsContext.declarePrefix("", nsSupport.getURI(""));
+                }if(localName.equals("xpath")){
+                    String type = attributes.getValue("type");
+                    if(type!=null){
+                        if(type.equals("nodeset"))
+                            testCase.resultTypes.add(XPathConstants.NODESET);
+                        else if(type.equals("string"))
+                            testCase.resultTypes.add(XPathConstants.STRING);
+                        else if(type.equals("number"))
+                            testCase.resultTypes.add(XPathConstants.NUMBER);
+                        else if(type.equals("boolean"))
+                            testCase.resultTypes.add(XPathConstants.BOOLEAN);
+                    }
                 }
                 contents.reset();
             }
@@ -123,8 +155,22 @@ public class XPathPerformanceTest{
             public void endElement(String uri, String localName, String qName) throws SAXException{
                 if(localName.equals("file"))
                     testCase.file = contents.toString().trim();
-                else if(localName.equals("xpath"))
-                    testCase.xpaths.add(contents.toString().trim());
+                else if(localName.equals("xpath")){
+                    String xpath = contents.toString().trim();
+                    testCase.xpaths.add(xpath);
+
+                    if(testCase.resultTypes.size()!=testCase.xpaths.size()){
+                        for(Map.Entry<QName, List<String>> entry: types.entrySet()){
+                            for(String str: entry.getValue()){
+                                if(xpath.startsWith(str)){
+                                    testCase.resultTypes.add(entry.getKey());
+                                    return;
+                                }
+                            }
+                        }
+                        testCase.resultTypes.add(XPathConstants.NODESET);
+                    }
+                }
 
             }
         });
@@ -149,7 +195,7 @@ public class XPathPerformanceTest{
         for(TestCase testCase: testCases)
             testCase.jdkResult = testCase.usingJDK();
         long jdkTime = System.nanoTime() - time;
-        System.out.println("Done\n");
+        System.out.println("Done");
         return jdkTime;
     }
 
@@ -168,6 +214,7 @@ public class XPathPerformanceTest{
 
         long dogTime = usingXMLDog();
         long jdkTime = usingJDK();
+        System.out.println();
 
         int total= 0;
         int failed = 0;
