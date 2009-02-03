@@ -61,6 +61,10 @@ public abstract class DerivedResults extends ComputedResults{
         }
     }
 
+    protected String guessResult(String memberResults[], int curMember, String curResult){
+        return null;
+    }
+    
     protected abstract String deriveResult(String memberResults[]);
 
     @Override
@@ -84,6 +88,12 @@ public abstract class DerivedResults extends ComputedResults{
             if(resultCache.pending==0){
                 resultCache.prepareResult();
                 notifyObservers(context, event);
+            }else{
+                result = guessResult(resultCache.memberResults, memberIndex, result);
+                if(result!=null){
+                    resultCache.addResult(-1, result);
+                    notifyObservers(context, event);
+                }
             }
         }
     }

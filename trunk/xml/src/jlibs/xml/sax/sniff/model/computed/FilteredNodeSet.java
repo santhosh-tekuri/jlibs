@@ -69,29 +69,22 @@ public class FilteredNodeSet extends ComputedResults{
                         promotePending();
                         return true;
                     }else if(contextSensitiveFilterMember.resultCache.results!=null){
-                        if(contextSensitiveFilterMember.resultCache.hasResult()){
+                        if(contextSensitiveFilterMember.resultCache.hasResult())
                             promotePending();
-                            return true;
-                        }else{
+                        else{
                             accept = false;
                             if(results==null)
                                 results = new TreeMap<Integer, String>();
-                            return false;
                         }
-                    }
-//                    if(contextSensitiveFilterMember==null || contextSensitiveFilterMember.resultCache.results!=null){
-//                        for(Map.Entry<Integer, String> entry: pendingResults.entrySet())
-//                            addResult(entry.getKey(), entry.getValue());
-//                        pendingResults.clear();
-//                    }else
-//                        return false;
+                        return true;
+                    }else
+                        return false;
                 }else{
                     if(results==null)
                         results = new TreeMap<Integer, String>();
                     pendingResults.clear();
+                    return true;
                 }
-                pendingResults.clear();
-                return true;
             }else
                 return false;
         }

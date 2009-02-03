@@ -30,6 +30,14 @@ public class OrExpression extends DerivedResults{
         return String.valueOf(Boolean.valueOf(memberResults[0]) || Boolean.valueOf(memberResults[1]));
     }
 
+    @Override
+    protected String guessResult(String memberResults[], int curMember, String curResult){
+        if(Boolean.valueOf(curResult))
+            return "true";
+        else
+            return null;
+    }
+
     /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
 
     @Override
