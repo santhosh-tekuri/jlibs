@@ -123,8 +123,11 @@ public class ContextSensitiveFilteredNodeSet extends FilteredNodeSet{
         if(debug)
             debugger.indent--;
 
-        if(contextSensitiveFilterMember!=null && contextSensitiveFilterMember.getResultCache().hasResult())
+        if(contextSensitiveFilterMember!=null && contextSensitiveFilterMember.getResultCache().hasResult()){
             contextSensitiveFilterMember.notifyObservers(context, null);
+            contextSensitiveFilterMember.observers.get(0).notifyObservers(context, null);
+        }
+
     }
 
     /*-------------------------------------------------[ RemoveContext ]---------------------------------------------------*/

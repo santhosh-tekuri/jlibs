@@ -188,6 +188,7 @@
         <xpath>/root/pub/book[price[ 10 = . ]]</xpath>
         <xpath>/root/pub/book[price[ . = 10]]</xpath>
         <xpath>/root/pub[book/name and book/author]//book</xpath>
+        <xpath>/root/pub[ book/name and book/author ]/book[ pub or name ]</xpath>
 
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
