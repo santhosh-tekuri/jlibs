@@ -15,8 +15,8 @@
 
 package jlibs.xml.xsl.crawl;
 
-import jlibs.xml.sax.crawl.AttributeLink;
 import jlibs.xml.Namespaces;
+import jlibs.xml.sax.crawl.AttributeLink;
 
 /**
  * @author Santhosh Kumar T
@@ -24,7 +24,7 @@ import jlibs.xml.Namespaces;
 public class XSLInclude extends AttributeLink{
     public XSLInclude(){
         super("href", "xsl");
-        pushElement(Namespaces.URI_XSL, "stylesheetschema");
+        pushElement(Namespaces.URI_XSL, "stylesheet");
         pushElement(Namespaces.URI_XSL, "include");
     }
 }
