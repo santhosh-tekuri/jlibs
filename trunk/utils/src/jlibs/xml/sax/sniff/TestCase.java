@@ -45,21 +45,20 @@ public class TestCase{
         doc = DOMUtil.newDocumentBuilder(true, false).parse(new InputSource(file));
     }
 
-    List<Object> jdkResult;
+    List<Object> jdkResult = new ArrayList<Object>(xpaths.size());
     public List<Object> usingJDK() throws Exception{
         if(doc==null)
             createDocument();
 
-        List<Object> results = new ArrayList<Object>(xpaths.size());
+        jdkResult = new ArrayList<Object>(xpaths.size());
         for(int i=0; i<xpaths.size(); i++){
             javax.xml.xpath.XPath xpathObj = XPathFactory.newInstance().newXPath();
             xpathObj.setNamespaceContext(nsContext);
-            results.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
+            jdkResult.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
         }
 
         doc = null;
-        System.out.print('.');
-        return results;
+        return jdkResult;
     }
 
     List<List<String>> dogResult;
@@ -74,11 +73,10 @@ public class TestCase{
 
         XPathResults dogResults = dog.sniff(source);
 
-        List<List<String>> results = new ArrayList<List<String>>(xpaths.size());
+        dogResult = new ArrayList<List<String>>(xpaths.size());
         for(jlibs.xml.sax.sniff.XPath xpathObj: xpathObjs)
-            results.add(dogResults.getResult(xpathObj));
-        System.out.print('.');
-        return results;
+            dogResult.add(dogResults.getResult(xpathObj));
+        return dogResult;
     }
 
     List<List<String>> translatedJDKResult = new ArrayList<List<String>>();
