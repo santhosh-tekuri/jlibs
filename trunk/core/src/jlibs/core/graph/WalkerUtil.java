@@ -93,9 +93,7 @@ public class WalkerUtil{
 
     public static <E> void print(Walker<E> walker, final Visitor<E, String> visitor){
         walk(walker, new Processor<E>(){
-            @Override
-            public boolean preProcess(E elem, Path path){
-                printPending(false);
+            private StringBuilder getIndentation(Path path){
                 Deque<Path> stack = new ArrayDeque<Path>();
                 while(path.getParentPath()!=null){
                     stack.push(path);
@@ -112,13 +110,19 @@ public class WalkerUtil{
                         indentString.append("   ");
                     }
                 }
+                return indentString;
+            }
+
+            @Override
+            public boolean preProcess(E elem, Path path){
+                printPending(path);
                 String str = visitor!=null ? visitor.visit(elem) : elem.toString();
-                System.out.print(indentString);
+                System.out.print(getIndentation(path));
 
                 int newLine = str.indexOf('\n');
                 if(newLine!=-1){
                     pending = str.substring(newLine+1);
-                    indentStr = indentString.toString();
+                    pendingPath = path;
                     str = str.substring(0, newLine);
                 }
 
@@ -128,14 +132,12 @@ public class WalkerUtil{
             }
 
             String pending;
-            String indentStr;
-            private void printPending(boolean last){
+            Path pendingPath;
+            private void printPending(Path path){
                 if(pending!=null){
-                    if(indentStr.length()>0)
-                        indentStr = indentStr.substring(0, indentStr.length()-4)+"    ";
-                    if(!last)
-                        indentStr += "|";
-                    
+                    StringBuilder indentStr = getIndentation(path.getParentPath()==null ? pendingPath : path);
+                    indentStr.replace(indentStr.length()-4, indentStr.length(), path.getParentPath()==null ? "   " : "|");
+
                     int from = 0;
                     int index = 0;
                     while((index=pending.indexOf('\n', from))!=-1){
@@ -155,7 +157,7 @@ public class WalkerUtil{
             @Override
             public void postProcess(E elem, Path path){
                 if(path.getParentPath()==null)
-                    printPending(true);
+                    printPending(path);
             }
         });
     }
