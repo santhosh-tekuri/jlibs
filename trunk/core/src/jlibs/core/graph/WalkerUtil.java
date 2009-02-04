@@ -93,33 +93,69 @@ public class WalkerUtil{
 
     public static <E> void print(Walker<E> walker, final Visitor<E, String> visitor){
         walk(walker, new Processor<E>(){
-            int indent = 0;
-
             @Override
             public boolean preProcess(E elem, Path path){
+                printPending(false);
                 Deque<Path> stack = new ArrayDeque<Path>();
                 while(path.getParentPath()!=null){
                     stack.push(path);
                     path = path.getParentPath();
                 }
+                StringBuilder indentString = new StringBuilder();
                 while(!stack.isEmpty()){
                     path = stack.pop();
                     if(stack.isEmpty()){
-                        System.out.print(path.lastElem ? '`' : '|');
-                        System.out.print("-- ");
+                        indentString.append(path.lastElem ? '`' : '|');
+                        indentString.append("-- ");
                     }else{
-                        System.out.print(path.lastElem ? ' ' : '|');
-                        System.out.print("   ");
+                        indentString.append(path.lastElem ? ' ' : '|');
+                        indentString.append("   ");
                     }
                 }
-                System.out.println(visitor!=null ? visitor.visit(elem) : elem.toString());
-                indent++;
+                String str = visitor!=null ? visitor.visit(elem) : elem.toString();
+                System.out.print(indentString);
+
+                int newLine = str.indexOf('\n');
+                if(newLine!=-1){
+                    pending = str.substring(newLine+1);
+                    indentStr = indentString.toString();
+                    str = str.substring(0, newLine);
+                }
+
+                System.out.println(str);
+
                 return true;
             }
 
+            String pending;
+            String indentStr;
+            private void printPending(boolean last){
+                if(pending!=null){
+                    if(indentStr.length()>0)
+                        indentStr = indentStr.substring(0, indentStr.length()-4)+"    ";
+                    if(!last)
+                        indentStr += "|";
+                    
+                    int from = 0;
+                    int index = 0;
+                    while((index=pending.indexOf('\n', from))!=-1){
+                        System.out.print(indentStr);
+                        System.out.println(pending.substring(from, index));
+                        from = index+1;
+                    }
+
+                    if(from<pending.length()){
+                        System.out.print(indentStr);
+                        System.out.println(pending.substring(from));
+                    }
+                    pending = null;
+                }
+            }
+            
             @Override
             public void postProcess(E elem, Path path){
-                indent--;
+                if(path.getParentPath()==null)
+                    printPending(true);
             }
         });
     }
