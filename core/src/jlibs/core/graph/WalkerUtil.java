@@ -136,7 +136,11 @@ public class WalkerUtil{
             private void printPending(Path path){
                 if(pending!=null){
                     StringBuilder indentStr = getIndentation(path.getParentPath()==null ? pendingPath : path);
-                    indentStr.replace(indentStr.length()-4, indentStr.length(), path.getParentPath()==null ? "   " : "|");
+                    if(indentStr.length()>0){
+                        indentStr.replace(indentStr.length()-4, indentStr.length(), path.getParentPath()==null ? "   " : "|");
+                        if(path.getParentPath()==pendingPath.getParentPath())
+                            indentStr.append("   ");
+                    }
 
                     int from = 0;
                     int index = 0;

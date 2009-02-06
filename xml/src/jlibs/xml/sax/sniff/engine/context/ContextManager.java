@@ -13,8 +13,9 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.context;
 
+import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Root;
@@ -29,6 +30,7 @@ public class ContextManager implements Debuggable{
     public void reset(Root root){
         Context rootContext = new Context(root);
         root.notifyObservers(rootContext, null);
+        root.contextStarted(null);
         contexts.reset(rootContext);
 
         if(debug)
@@ -53,8 +55,13 @@ public class ContextManager implements Debuggable{
     }
 
     public void elementEnded(){
-        for(Context context: contexts)
+        for(int i=contexts.current.size()-1; i>=0; i--){
+            Context context = contexts.current.get(i);
             contexts.addUnique(context.endElement());
+        }
+
+//        for(Context context: contexts)
+//            contexts.addUnique(context.endElement());
         contexts.update();
     }
 }

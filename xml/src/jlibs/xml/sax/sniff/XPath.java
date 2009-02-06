@@ -19,6 +19,7 @@ import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.parser.JaxenParser;
 import org.jaxen.expr.XPathExpr;
 import org.jaxen.saxpath.SAXPathException;
 
@@ -29,7 +30,7 @@ import javax.xml.namespace.QName;
  */
 public class XPath{
     private XPathExpr xpathExpr;
-    UserResults results;
+    public UserResults results;
 
     public XPath(String xpath, XPathExpr xpathExpr, UserResults userResults){
         this.xpathExpr = xpathExpr;

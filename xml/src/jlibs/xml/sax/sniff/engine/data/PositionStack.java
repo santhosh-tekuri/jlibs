@@ -13,13 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.data;
 
 import jlibs.xml.ClarkName;
 
-import java.util.Map;
 import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T

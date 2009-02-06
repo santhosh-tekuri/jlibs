@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.computed.derived.nodeset;
 
-import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.model.Node;
@@ -227,7 +227,7 @@ public abstract class DerivedNodeSetResults extends ComputedResults{
                     notifyObservers(null, null);
                 addAllResults(resultCache);
             }else
-                addResult(-1, resultType().defaultValue());
+                addResult(-1, resultType().defaultValue().toString());
         }
     }
 }

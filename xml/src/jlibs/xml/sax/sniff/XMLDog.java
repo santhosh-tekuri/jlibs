@@ -15,7 +15,9 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.xml.sax.sniff.engine.Sniffer;
 import jlibs.xml.sax.sniff.model.Root;
+import jlibs.xml.sax.sniff.parser.JaxenParser;
 import org.jaxen.saxpath.SAXPathException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;

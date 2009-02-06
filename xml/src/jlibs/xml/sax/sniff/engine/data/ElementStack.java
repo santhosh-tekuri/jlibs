@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.data;
 
 import jlibs.xml.ClarkName;
 import jlibs.xml.DefaultNamespaceContext;

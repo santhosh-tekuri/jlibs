@@ -30,6 +30,11 @@ public class Root extends Node{
     }
 
     @Override
+    public boolean canBeContext(){
+        return true;
+    }
+
+    @Override
     public boolean equivalent(Node node){
         return node.getClass()==getClass();
     }

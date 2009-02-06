@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 
 import java.util.HashMap;

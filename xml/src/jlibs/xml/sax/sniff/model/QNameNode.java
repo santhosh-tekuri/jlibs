@@ -78,16 +78,16 @@ public class QNameNode extends Node{
     @Override
     public String toString(){
         if(uri==null && name==null)
-            return "*";
+            return "*_"+depth;
         else if(uri!=null && name!=null){
             String prefix = root.nsContext.getPrefix(uri);
             if(prefix.length()>0)
-                return String.format("%s:%s", prefix, name);
+                return String.format("%s:%s_%d", prefix, name, depth);
             else
-                return name;
+                return name+'_'+depth;
         }else if(this.uri!=null){
             String prefix = root.nsContext.getPrefix(uri);
-            return String.format("%s:*", prefix);
+            return String.format("%s:*_%d", prefix, depth);
         }else
             throw new ImpossibleException();
     }
