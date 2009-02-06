@@ -13,40 +13,35 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.data;
 
-import java.util.Iterator;
-import java.util.List;
+import java.io.CharArrayWriter;
 
 /**
  * @author Santhosh Kumar T
  */
-public class ResettableIterator<E> implements Iterator<E>{
-    private List<E> list;
-    private int cursor;
+public class StringContent{
+    private CharArrayWriter writer = new CharArrayWriter();
 
-    public ResettableIterator(List<E> list){
-        this.list = list;
+    public void write(char ch[], int start, int length){
+        writer.write(ch, start, length);
     }
+
+    public void reset(){
+        writer.reset();
+        cahcedString = null;
+    }
+
+    public boolean isEmpty(){
+        return writer.size()==0;
+    }
+
+    private String cahcedString;
     
     @Override
-    public boolean hasNext(){
-        return cursor!=list.size();
-    }
-
-    @Override
-    public E next(){
-        return list.get(cursor++);
-    }
-
-    @Override
-    public void remove(){
-        throw new UnsupportedOperationException();
-    }
-
-    public ResettableIterator<E> reset(List<E> list){
-        this.list = list;
-        cursor = 0;
-        return this;
+    public String toString(){
+        if(cahcedString==null)
+            return cahcedString = writer.size()>0 ? writer.toString() : null;
+        return cahcedString;
     }
 }

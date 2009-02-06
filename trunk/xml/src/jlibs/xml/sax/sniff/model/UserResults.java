@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 import jlibs.xml.sax.sniff.model.computed.ContextSensitiveFilteredNodeSet;
@@ -28,6 +28,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class UserResults extends Results{
+    public int depth;
     public String xpath;
     public boolean userGiven;
     public HitManager hits = new HitManager();

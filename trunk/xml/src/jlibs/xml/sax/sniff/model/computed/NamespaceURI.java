@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.computed;
 
-import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Element;
 import jlibs.xml.sax.sniff.events.Event;

@@ -13,11 +13,15 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine;
 
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.sniff.Debuggable;
+import jlibs.xml.sax.sniff.engine.context.ContextManager;
+import jlibs.xml.sax.sniff.engine.data.ElementStack;
+import jlibs.xml.sax.sniff.engine.data.StringContent;
 import jlibs.xml.sax.sniff.events.*;
 import jlibs.xml.sax.sniff.model.HitManager;
 import jlibs.xml.sax.sniff.model.Root;
@@ -130,6 +134,11 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
+    }
+
+    @Override
+    public void endDocument() throws SAXException{
+        root.contextEnded();
     }
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/

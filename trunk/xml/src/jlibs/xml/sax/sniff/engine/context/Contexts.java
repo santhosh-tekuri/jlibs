@@ -13,7 +13,10 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.context;
+
+import jlibs.core.util.ResettableIterator;
+import jlibs.xml.sax.sniff.Debuggable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,7 +26,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 class Contexts implements Iterable<Context>, Debuggable{
-    private List<Context> current = new ArrayList<Context>();
+    public List<Context> current = new ArrayList<Context>();
     private List<Context> next = new ArrayList<Context>();
 
     public void reset(Context rootContext){

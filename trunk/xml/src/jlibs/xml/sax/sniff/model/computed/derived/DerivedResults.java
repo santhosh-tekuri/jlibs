@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.computed.derived;
 
-import jlibs.xml.sax.sniff.Context;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Results;
@@ -117,7 +117,7 @@ public abstract class DerivedResults extends ComputedResults{
                 if(getResultCache()!=null)
                     prepareResults();
                 else
-                    addResult(-1, resultType.defaultValue());
+                    addResult(-1, resultType.defaultValue().toString());
             }
         }
     }

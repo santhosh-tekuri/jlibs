@@ -19,13 +19,14 @@ import jlibs.core.lang.ImpossibleException;
 
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
+import java.util.Collections;
 import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
  */
 public enum ResultType{
-    NODESET(XPathConstants.NODESET, null){
+    NODESET(XPathConstants.NODESET, Collections.emptyMap()){
         @Override
         public boolean asBoolean(TreeMap<Integer, String> results){
             return results!=null && results.size()>0;
@@ -52,12 +53,12 @@ public enum ResultType{
         }
 
         @Override
-        public Object convert(String result){
+        public Object convert(Object result){
             return result;
         }
     },
 
-    NUMBER(XPathConstants.NUMBER, "0.0"){
+    NUMBER(XPathConstants.NUMBER, 0.0){
         public String asString(TreeMap<Integer, String> results){
             return String.valueOf(asNumber(results));
         }
@@ -77,12 +78,12 @@ public enum ResultType{
         }
 
         @Override
-        public Object convert(String result){
+        public Object convert(Object result){
             return asNumber(result);
         }
     },
 
-    BOOLEAN(XPathConstants.BOOLEAN, "false"){
+    BOOLEAN(XPathConstants.BOOLEAN, false){
         public String asString(TreeMap<Integer, String> results){
             return String.valueOf(asBoolean(results));
         }
@@ -97,16 +98,16 @@ public enum ResultType{
         }
 
         @Override
-        public Object convert(String result){
+        public Object convert(Object result){
             return asBoolean(result);
         }
     },
     
-    STRINGS(new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS"), null);
+    STRINGS(new QName("http://www.w3.org/1999/XSL/Transform", "STRINGS"), Collections.emptyList());
 
     private QName qname;
-    private String defaultValue;
-    private ResultType(QName qname, String defaultValue){
+    private Object defaultValue;
+    private ResultType(QName qname, Object defaultValue){
         this.qname = qname;
         this.defaultValue = defaultValue;
     }
@@ -115,7 +116,7 @@ public enum ResultType{
         return qname;
     }
 
-    public String defaultValue(){
+    public Object defaultValue(){
         return defaultValue;
     }
 
@@ -131,7 +132,7 @@ public enum ResultType{
         throw new UnsupportedOperationException(toString()+" can't be converted to Number");
     }
 
-    public Object convert(String result){
+    public Object convert(Object result){
         throw new UnsupportedOperationException("can't be converted to "+this);
     }
 

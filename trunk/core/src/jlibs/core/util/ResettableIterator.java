@@ -13,32 +13,40 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.events;
+package jlibs.core.util;
 
-import jlibs.xml.sax.sniff.engine.data.StringContent;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Text extends Event{
-    private StringContent contents;
+public class ResettableIterator<E> implements Iterator<E>{
+    private List<E> list;
+    private int cursor;
 
-    public Text(DocumentOrder documentOrder, StringContent contents){
-        super(documentOrder);
-        this.contents = contents;
+    public ResettableIterator(List<E> list){
+        this.list = list;
+    }
+    
+    @Override
+    public boolean hasNext(){
+        return cursor!=list.size();
     }
 
     @Override
-    public int type(){
-        return TEXT;
-    }
-
-    public void setData(){
-        setResultWrapper(contents);
+    public E next(){
+        return list.get(cursor++);
     }
 
     @Override
-    public String toString(){
-        return contents.toString();
+    public void remove(){
+        throw new UnsupportedOperationException();
+    }
+
+    public ResettableIterator<E> reset(List<E> list){
+        this.list = list;
+        cursor = 0;
+        return this;
     }
 }

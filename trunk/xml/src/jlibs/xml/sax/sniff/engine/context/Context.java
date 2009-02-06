@@ -13,8 +13,9 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.engine.context;
 
+import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Position;
@@ -96,8 +97,12 @@ public class Context implements Debuggable{
                             Context childContext = childContext(child);
                             contexts.add(childContext);
                             child.notifyObservers(childContext, event);
-                        }else
+                            child.contextStarted(event);
+                        }else{
                             child.notifyObservers(this, event);
+                            child.notifyContext(event);
+                        }
+
                         matchConstraints(child, event, contexts);
                     }
                 }
@@ -107,9 +112,12 @@ public class Context implements Debuggable{
                     if(changeContext){
                         depth--;
                         contexts.add(this);
+                        node.contextStarted(event);
                         node.notifyObservers(this, event);
-                    }else
+                    }else{
                         node.notifyObservers(this, event);
+                        node.notifyContext(event);
+                    }
                     matchConstraints(node, event, contexts);
                 }
             }else{
@@ -135,8 +143,11 @@ public class Context implements Debuggable{
                         Context childContext = childContext(constraint);
                         contexts.add(childContext);
                         constraint.notifyObservers(childContext, event);
-                    }else
+                        constraint.contextStarted(event);
+                    }else{
                         constraint.notifyObservers(this, event);
+                        constraint.notifyContext(event);
+                    }
                     matchConstraints(constraint, event, contexts);
                 }
             }
@@ -145,12 +156,14 @@ public class Context implements Debuggable{
 
     public Context endElement(){
         if(depth==0){
+            node.contextEnded();
             node.endingContext(this);
             return parentContext();
         }else{
             if(depth>0)
                 depth--;
             else{
+                node.contextEnded();
                 node.endingContext(this);
                 depth++;
             }
@@ -179,11 +192,11 @@ public class Context implements Debuggable{
     }
 
     /*-------------------------------------------------[ Identity ]---------------------------------------------------*/
-    
+
     public Object identity(){
         return new ContextIdentity(this);
     }
-    
+
     static final class ContextIdentity{
         Context context;
         int depth;

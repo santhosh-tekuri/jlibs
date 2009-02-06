@@ -19,12 +19,15 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
-import jlibs.xml.sax.sniff.Context;
+import jlibs.core.util.ReverseComparator;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -58,6 +61,7 @@ public abstract class Node extends UserResults{
                 return (N)child;
         }
 
+        axisNode.depth = depth+1;
         children.add(axisNode);
         axisNode.parent = this;
         axisNode.root = root;
@@ -83,6 +87,8 @@ public abstract class Node extends UserResults{
             if(constraint.equivalent(node))
                 return (N)constraint;
         }
+
+        node.depth = depth;
         constraints.add(node);
         node.constraintParent = this;
         node.parent = this.parent;
@@ -166,7 +172,7 @@ public abstract class Node extends UserResults{
         WalkerUtil.print(walker, new Visitor<Node, String>(){
             @Override
             public String visit(Node elem){
-                String str = elem.toString();
+                String str = elem.toString() + "_"+elem.depth;
                 if(elem.userGiven)
                     str += " --> userGiven";
                 if(elem.observers.size()>0){
@@ -179,8 +185,113 @@ public abstract class Node extends UserResults{
                     for(ComputedResults observer: elem.cleanupObservers())
                         str += observer+" ";
                 }
+                if(elem.eventListeners.size()>0){
+                    for(EventListener listener: elem.eventListeners)
+                        str += "\n   ### "+listener+" ";
+                }
+                if(elem.contextListeners.size()>0){
+                    for(ContextListener listener: elem.contextListeners)
+                        str += "\n   @@@ "+listener+" ";
+                }
                 return str;
             }
         });
     }
+
+    /*-------------------------------------------------[ Observers ]---------------------------------------------------*/
+
+    private List<EventListener> eventListeners = new ArrayList<EventListener>();
+
+    public void addEventListener(EventListener listener){
+        eventListeners.add(listener);
+    }
+    
+    public void removeEventListener(EventListener listener){
+        eventListeners.remove(listener);
+    }
+
+    public void notify(Event event){
+        if(eventListeners.size()>0){
+            if(debug){
+                debugger.println("notifyListeners("+this+")");
+                debugger.indent++;
+            }
+            for(EventListener listener: eventListeners)
+                listener.onEvent(this, event);
+            if(debug)
+                debugger.indent--;
+        }
+    }
+
+    /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/
+
+    protected List<ContextListener> contextListeners = new ArrayList<ContextListener>();
+    protected List<ContextListener> _contextListeners = new ArrayList<ContextListener>();
+
+    private Comparator<ContextListener> endComparator = new Comparator<ContextListener>(){
+        @Override
+        public int compare(ContextListener listener1, ContextListener listener2){
+            return listener1.priority() - listener2.priority();
+        }
+    };
+
+    public void addContextListener(ContextListener listener){
+        contextListeners.add(listener);
+        _contextListeners.add(0, listener);
+
+        if(listener instanceof UserResults)
+            ((UserResults)listener).depth = this.depth;
+    }
+
+    public void removeContextListener(ContextListener listener){
+        contextListeners.remove(listener);
+    }
+
+    private boolean sorted;
+    public void contextStarted(Event event){
+        if(contextListeners.size()>0){
+            if(debug){
+                debugger.println("contextStarted(%s)",this);
+                debugger.indent++;
+            }
+
+            if(!sorted){
+                Collections.sort(contextListeners, new ReverseComparator<ContextListener>(endComparator));
+                sorted = true;
+            }
+
+            for(ContextListener listener: contextListeners)
+                listener.contextStarted(event);
+            if(debug)
+                debugger.indent--;
+        }
+        notify(event);
+    }
+
+    private boolean _sorted;
+    public void contextEnded(){
+        if(contextListeners.size()==0)
+            return;
+
+        if(debug){
+            debugger.println("contextEnded(%s)",this);
+            debugger.indent++;
+        }
+        if(!_sorted){
+            Collections.sort(_contextListeners, endComparator);
+            _sorted = true;
+        }
+        
+        for(ContextListener listener: _contextListeners)
+            listener.contextEnded();
+        if(debug)
+            debugger.indent--;
+    }
+
+    public void notifyContext(Event event){
+        notify(event);
+//        contextStarted(event);
+//        contextEnded();
+    }
 }
+

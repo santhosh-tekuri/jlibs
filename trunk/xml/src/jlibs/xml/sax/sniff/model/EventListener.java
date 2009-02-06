@@ -13,35 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model;
 
-import java.io.CharArrayWriter;
+import jlibs.xml.sax.sniff.events.Event;
 
 /**
  * @author Santhosh Kumar T
  */
-public class StringContent{
-    private CharArrayWriter writer = new CharArrayWriter();
-
-    public void write(char ch[], int start, int length){
-        writer.write(ch, start, length);
-    }
-
-    public void reset(){
-        writer.reset();
-        cahcedString = null;
-    }
-
-    public boolean isEmpty(){
-        return writer.size()==0;
-    }
-
-    private String cahcedString;
-    
-    @Override
-    public String toString(){
-        if(cahcedString==null)
-            return cahcedString = writer.size()>0 ? writer.toString() : null;
-        return cahcedString;
-    }
+public interface EventListener{
+    public void onEvent(Node node, Event event);
 }

@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.events;
 
-import jlibs.xml.sax.sniff.ElementStack;
+import jlibs.xml.sax.sniff.engine.data.ElementStack;
 
 /**
  * @author Santhosh Kumar T
