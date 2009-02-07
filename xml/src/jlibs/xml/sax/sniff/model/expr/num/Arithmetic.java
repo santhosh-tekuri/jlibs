@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr.num;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import org.jaxen.saxpath.Operator;
 
@@ -28,7 +28,7 @@ public class Arithmetic extends Expression{
     private int operator;
 
     public Arithmetic(Node contextNode, int operator){
-        super(contextNode, ResultType.NUMBER, ResultType.NUMBER, ResultType.NUMBER);
+        super(contextNode, Datatype.NUMBER, Datatype.NUMBER, Datatype.NUMBER);
         this.operator = operator;
     }
 

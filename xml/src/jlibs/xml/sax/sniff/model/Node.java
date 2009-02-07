@@ -40,8 +40,8 @@ public abstract class Node extends Notifier{
     public boolean hasAttibuteChild;
 
     @Override
-    public ResultType resultType(){
-        return ResultType.NODESET;
+    public Datatype resultType(){
+        return Datatype.NODESET;
     }
     
     public boolean canBeContext(){
@@ -261,8 +261,6 @@ public abstract class Node extends Notifier{
 
     public void notifyContext(Event event){
         notify(event);
-//        contextStarted(event);
-//        contextEnded();
     }
 }
 

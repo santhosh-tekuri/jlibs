@@ -24,7 +24,7 @@ public abstract class Notifier implements Debuggable{
     public HitManager hits = new HitManager();
     public int depth;
 
-    public abstract ResultType resultType();
+    public abstract Datatype resultType();
     public abstract void addNotificationListener(NotificationListener listener);
     public abstract void notify(Object result);
 }

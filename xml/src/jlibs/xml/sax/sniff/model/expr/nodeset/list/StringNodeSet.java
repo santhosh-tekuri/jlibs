@@ -15,9 +15,9 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -25,7 +25,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  */
 public class StringNodeSet extends NodeList{
     public StringNodeSet(Node contextNode, Notifier member, Expression predicate){
-        super(ResultType.STRING, contextNode, member, predicate);
+        super(Datatype.STRING, contextNode, member, predicate);
     }
 
     class MyEvaluation extends StringsEvaluation{

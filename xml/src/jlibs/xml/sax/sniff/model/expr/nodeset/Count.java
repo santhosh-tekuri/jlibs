@@ -16,9 +16,9 @@
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -26,7 +26,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  */
 public class Count extends ValidatedExpression{
     public Count(Node contextNode, Notifier member, Expression predicate){
-        super(ResultType.NUMBER, contextNode, member, predicate);
+        super(Datatype.NUMBER, contextNode, member, predicate);
     }
 
     class MyEvaluation extends DelayedEvaluation{

@@ -32,7 +32,7 @@ import java.util.List;
  */
 public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
     protected int evalDepth;
-    protected Expression(Node contextNode, ResultType returnType, ResultType... memberTypes){
+    protected Expression(Node contextNode, Datatype returnType, Datatype... memberTypes){
         this.contextNode = contextNode;
         this.returnType = returnType;
         this.memberTypes = memberTypes;
@@ -42,26 +42,26 @@ public abstract class Expression extends Notifier implements ContextListener, No
         contextNode.addContextListener(this);
     }
 
-    private ResultType returnType;
+    private Datatype returnType;
 
     @Override
-    public ResultType resultType(){
+    public Datatype resultType(){
         return returnType;
     }
 
     protected List<Notifier> members = new ArrayList<Notifier>();
-    protected final ResultType memberTypes[];
+    protected final Datatype memberTypes[];
 
-    public ResultType memberType(int index){
+    public Datatype memberType(int index){
         return memberTypes[index];
     }
     
-    public ResultType memberType(){
+    public Datatype memberType(){
         return memberTypes[members.size()];
     }
 
-    private Notifier castTo(Notifier member, ResultType expected){
-        if(member.resultType()==expected || expected==ResultType.STRINGS)
+    private Notifier castTo(Notifier member, Datatype expected){
+        if(member.resultType()==expected || expected==Datatype.STRINGS)
             return member;
 
         TypeCast typeCast = new TypeCast(contextNode, memberType());
@@ -73,8 +73,8 @@ public abstract class Expression extends Notifier implements ContextListener, No
         addMember(member, memberTypes[members.size()]);
     }
 
-    protected void addMember(Notifier member, ResultType resultType){
-        member = castTo(member, resultType);
+    protected void addMember(Notifier member, Datatype datatype){
+        member = castTo(member, datatype);
         _addMember(member);
     }
 

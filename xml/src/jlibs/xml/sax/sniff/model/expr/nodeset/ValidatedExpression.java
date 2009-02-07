@@ -15,18 +15,18 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
 public abstract class ValidatedExpression extends Expression{
-    public ValidatedExpression(ResultType returnType, Node contextNode, Notifier member, Expression predicate){
-        super(contextNode, returnType, member.resultType(), ResultType.BOOLEAN);
-        if(member.resultType()!=ResultType.NODESET && member.resultType()!=returnType)
+    public ValidatedExpression(Datatype returnType, Node contextNode, Notifier member, Expression predicate){
+        super(contextNode, returnType, member.resultType(), Datatype.BOOLEAN);
+        if(member.resultType()!=Datatype.NODESET && member.resultType()!=returnType)
             throw new IllegalArgumentException();
         addMember(member);
         if(predicate!=null)

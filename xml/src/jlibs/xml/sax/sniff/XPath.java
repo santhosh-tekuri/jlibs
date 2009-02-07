@@ -16,9 +16,9 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.NotificationListener;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.parser.JaxenParser;
@@ -47,7 +47,7 @@ public class XPath implements NotificationListener{
 
     int minHits;
     public void setMinHits(int minHits){
-        if(expr.resultType()!=ResultType.NODESET)
+        if(expr.resultType()!=Datatype.NODESET)
             minHits = 1;
         this.minHits = minHits;
         expr.hits.setMin(minHits);

@@ -16,9 +16,9 @@
 package jlibs.xml.sax.sniff.model.expr.string;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -26,16 +26,16 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  */
 public class Concat extends Expression{
     public Concat(Node contextNode){
-        super(contextNode, ResultType.STRING, ResultType.STRING, ResultType.STRING);
+        super(contextNode, Datatype.STRING, Datatype.STRING, Datatype.STRING);
     }
 
-    public ResultType memberType(int index){
-        return ResultType.STRING;
+    public Datatype memberType(int index){
+        return Datatype.STRING;
     }
 
     @Override
     public void addMember(Notifier member){
-        addMember(member, ResultType.STRING);
+        addMember(member, Datatype.STRING);
     }
 
     class MyEvaluation extends Evaluation{

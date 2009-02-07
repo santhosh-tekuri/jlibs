@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr.bool;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -26,7 +26,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 public class AndOr extends Expression{
     private Boolean or;
     public AndOr(Node contextNode, boolean or){
-        super(contextNode, ResultType.BOOLEAN, ResultType.BOOLEAN, ResultType.BOOLEAN);
+        super(contextNode, Datatype.BOOLEAN, Datatype.BOOLEAN, Datatype.BOOLEAN);
         this.or = or;
     }
 

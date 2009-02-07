@@ -95,7 +95,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(current instanceof Expression)
             expr = (Expression)current;
         else
-            expr = location.create(root, ResultType.NODESET);
+            expr = location.create(root, Datatype.NODESET);
         
         return new XPath(xpath, jaxenExpr, expr);
     }
@@ -198,7 +198,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             contextStack.push((Node)current);
             visit(p.getExpr());
 
-            applyLocation(ResultType.BOOLEAN);
+            applyLocation(Datatype.BOOLEAN);
             locationStack.peek().setPredicate((Expression)current);
             current = contextStack.pop();
         }
@@ -208,7 +208,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     /*-------------------------------------------------[ Functions ]---------------------------------------------------*/
 
-    private void applyLocation(ResultType expected){
+    private void applyLocation(Datatype expected){
         if(!(current instanceof Expression)){
             if(current.resultType()!=expected)
                 current = location.create(contextStack.peek(), expected);
@@ -253,9 +253,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }
 
         if(name.equals("number"))
-            function = new TypeCast(contextStack.peek(), ResultType.NUMBER);
+            function = new TypeCast(contextStack.peek(), Datatype.NUMBER);
         else if(name.equals("boolean"))
-            function = new TypeCast(contextStack.peek(), ResultType.BOOLEAN);
+            function = new TypeCast(contextStack.peek(), Datatype.BOOLEAN);
         else if(name.equals("string-length"))
             function = new StringLength(contextStack.peek());
         else if(name.equals("concat"))
