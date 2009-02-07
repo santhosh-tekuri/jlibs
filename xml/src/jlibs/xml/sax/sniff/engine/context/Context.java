@@ -15,10 +15,11 @@
 
 package jlibs.xml.sax.sniff.engine.context;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Position;
+import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,8 @@ public class Context implements Debuggable{
 //        int parentDepths[];
 
     public Context(Node root){
+        if(node instanceof Expression)
+            throw new ImpossibleException();
         node = root;
 //            parentDepths = new int[0];
     }
@@ -62,20 +65,6 @@ public class Context implements Debuggable{
     }
 
 
-    @SuppressWarnings({"SimplifiableIfStatement"})
-    private boolean hit(Event event, Node node){
-        if(node instanceof Position){
-            Position position = (Position)node;
-            if(!position.hit(this))
-                return false;
-        }
-
-        if(node.resultInteresed())
-            return node.hit(this, event);
-        else
-            return true;
-    }
-
     public void match(Event event, Contexts contexts){
         boolean changeContext = event.hasChildren();
 
@@ -91,29 +80,25 @@ public class Context implements Debuggable{
             }
         }else{
             for(Node child: node.children()){
-                if(child.matches(event)){
-                    if(hit(event, child)){
-                        if(changeContext){
-                            Context childContext = childContext(child);
-                            contexts.add(childContext);
-                            child.contextStarted(event);
-                        }else
-                            child.notifyContext(event);
+                if(child.matches(this, event)){
+                    if(changeContext){
+                        Context childContext = childContext(child);
+                        contexts.add(childContext);
+                        child.contextStarted(event);
+                    }else
+                        child.notifyContext(event);
 
-                        matchConstraints(child, event, contexts);
-                    }
+                    matchConstraints(child, event, contexts);
                 }
             }
             if(node.consumable(event)){
-                if(hit(event, node)){
-                    if(changeContext){
-                        depth--;
-                        contexts.add(this);
-                        node.contextStarted(event);
-                    }else
-                        node.notifyContext(event);
-                    matchConstraints(node, event, contexts);
-                }
+                if(changeContext){
+                    depth--;
+                    contexts.add(this);
+                    node.contextStarted(event);
+                }else
+                    node.notifyContext(event);
+                matchConstraints(node, event, contexts);
             }else{
                 if(changeContext && contexts.markSize()==0){
                     depth++;
@@ -131,17 +116,14 @@ public class Context implements Debuggable{
         boolean changeContext = event.hasChildren();
 
         for(Node constraint: child.constraints()){
-            if(constraint.matches(event)){
-                if(hit(event, constraint)){
-                    if(changeContext){
-                        Context childContext = childContext(constraint);
-                        contexts.add(childContext);
-                        constraint.contextStarted(event);
-                    }else{
-                        constraint.notifyContext(event);
-                    }
-                    matchConstraints(constraint, event, contexts);
-                }
+            if(constraint.matches(this, event)){
+                if(changeContext){
+                    Context childContext = childContext(constraint);
+                    contexts.add(childContext);
+                    constraint.contextStarted(event);
+                }else
+                    constraint.notifyContext(event);
+                matchConstraints(constraint, event, contexts);
             }
         }
     }

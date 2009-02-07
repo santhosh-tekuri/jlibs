@@ -110,7 +110,7 @@ public abstract class Node extends UserResults{
         return false;
     }
 
-    public boolean matches(Event event){
+    public boolean matches(Context context, Event event){
         return false;
     }
     
@@ -118,14 +118,6 @@ public abstract class Node extends UserResults{
 
     public boolean resultInteresed(){
         return userGiven || listeners.size()>0;
-    }
-
-    /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
-
-    public boolean hit(Context context, Event event){
-        if(userGiven)
-            addResult(event.order(), event.getResult());
-        return true;
     }
     
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
@@ -267,7 +259,7 @@ public abstract class Node extends UserResults{
             Collections.sort(_contextListeners, endComparator);
             _sorted = true;
         }
-        
+
         for(ContextListener listener: _contextListeners)
             listener.contextEnded();
         if(debug)
