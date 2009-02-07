@@ -15,8 +15,8 @@
 
 package jlibs.xml.sax.sniff.model.expr.bool;
 
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class Relational extends Expression{
     public Relational(Node contextNode){
-        super(contextNode, ResultType.BOOLEAN, ResultType.STRINGS, ResultType.STRINGS);
+        super(contextNode, Datatype.BOOLEAN, Datatype.STRINGS, Datatype.STRINGS);
     }
 
     class MyEvaluation extends Evaluation{
@@ -37,13 +37,13 @@ public class Relational extends Expression{
         @Override
         public void finish(){
             if(lhsResults!=null && rhsResults!=null){
-                ResultType lhsType = members.get(0).resultType();
-                if(lhsType==ResultType.STRINGS)
-                    lhsType = ResultType.STRING;
+                Datatype lhsType = members.get(0).resultType();
+                if(lhsType==Datatype.STRINGS)
+                    lhsType = Datatype.STRING;
 
-                ResultType rhsType = members.get(1).resultType();
-                if(rhsType==ResultType.STRINGS)
-                    rhsType = ResultType.STRING;
+                Datatype rhsType = members.get(1).resultType();
+                if(rhsType==Datatype.STRINGS)
+                    rhsType = Datatype.STRING;
 
                 for(Object lhs: lhsResults){
                     for(Object rhs: rhsResults){
@@ -59,16 +59,16 @@ public class Relational extends Expression{
 
         private boolean evaluateObjectObject( Object lhs, Object rhs){
           if(lhs instanceof Boolean || rhs instanceof Boolean){
-              boolean b1 = ResultType.asBoolean(lhs);
-              boolean b2 = ResultType.asBoolean(rhs);
+              boolean b1 = Datatype.asBoolean(lhs);
+              boolean b2 = Datatype.asBoolean(rhs);
               return evaluateObjects(b1, b2);
           }else if(lhs instanceof Double || rhs instanceof Double){
-              double d1 = ResultType.asNumber(lhs);
-              double d2 = ResultType.asNumber(rhs);
+              double d1 = Datatype.asNumber(lhs);
+              double d2 = Datatype.asNumber(rhs);
               return evaluateObjects(d1, d2);
           }else{
-              String s1 = ResultType.asString(lhs);
-              String s2 = ResultType.asString(rhs);
+              String s1 = Datatype.asString(lhs);
+              String s2 = Datatype.asString(rhs);
               return evaluateObjects(s1, s2);
           }
         }

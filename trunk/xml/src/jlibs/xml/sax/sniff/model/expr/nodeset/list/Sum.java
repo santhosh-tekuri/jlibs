@@ -15,9 +15,9 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -25,7 +25,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  */
 public class Sum extends NodeList{
     public Sum(Node contextNode, Notifier member, Expression predicate){
-        super(ResultType.NUMBER, contextNode, member, predicate);
+        super(Datatype.NUMBER, contextNode, member, predicate);
     }
 
     class MyEvaluation extends StringsEvaluation{
@@ -38,7 +38,7 @@ public class Sum extends NodeList{
 
         @Override
         protected void consume(String str){
-            d += ResultType.asNumber(str);
+            d += Datatype.asNumber(str);
         }
 
         @Override

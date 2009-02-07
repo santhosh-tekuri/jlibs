@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr.string;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -25,7 +25,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  */
 public class StringLength extends Expression{
     public StringLength(Node contextNode){
-        super(contextNode, ResultType.NUMBER, ResultType.STRING);
+        super(contextNode, Datatype.NUMBER, Datatype.STRING);
     }
 
     class MyEvaluation extends Evaluation{

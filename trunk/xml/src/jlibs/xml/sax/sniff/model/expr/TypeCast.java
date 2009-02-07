@@ -16,24 +16,24 @@
 package jlibs.xml.sax.sniff.model.expr;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
  */
 public class TypeCast extends Expression{
-    public TypeCast(Node contextNode, ResultType returnType){
-        super(contextNode, assertType(returnType), ResultType.STRING);
+    public TypeCast(Node contextNode, Datatype returnType){
+        super(contextNode, assertType(returnType), Datatype.STRING);
     }
 
-    private static ResultType assertType(ResultType resultType){
-        switch(resultType){
+    private static Datatype assertType(Datatype datatype){
+        switch(datatype){
             case STRING:
             case BOOLEAN:
             case NUMBER:
-                return resultType;
+                return datatype;
             default:
                 throw new IllegalArgumentException();
         }

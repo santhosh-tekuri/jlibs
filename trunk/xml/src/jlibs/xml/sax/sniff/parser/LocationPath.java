@@ -15,9 +15,9 @@
 
 package jlibs.xml.sax.sniff.parser;
 
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Count;
@@ -70,17 +70,17 @@ public class LocationPath{
             return new Count(contextNode, member, predicate);
         else if("sum".equals(name))
             return new Sum(contextNode, member, predicate);
-        else if(ResultType.NODESET.toString().equals(name))
+        else if(Datatype.NODESET.toString().equals(name))
             return new NodeSet(contextNode, member, predicate);
-        else if("string".equals(name) || ResultType.STRING.toString().equals(name))
+        else if("string".equals(name) || Datatype.STRING.toString().equals(name))
             return new StringNodeSet(contextNode, member, predicate);
-        else if(ResultType.STRINGS.toString().equals(name))
+        else if(Datatype.STRINGS.toString().equals(name))
             return new Strings(contextNode, member, predicate);
-        else if("boolean".equals(name) || ResultType.BOOLEAN.toString().equals(name))
+        else if("boolean".equals(name) || Datatype.BOOLEAN.toString().equals(name))
             return new Predicate(contextNode, member, predicate);
-        else if("number".equals(name) || ResultType.NUMBER.toString().equals(name)){
-            TypeCast number = new TypeCast(contextNode, ResultType.NUMBER);
-            number.addMember(create(contextNode, ResultType.STRING));
+        else if("number".equals(name) || Datatype.NUMBER.toString().equals(name)){
+            TypeCast number = new TypeCast(contextNode, Datatype.NUMBER);
+            number.addMember(create(contextNode, Datatype.STRING));
             return number;
         }
         return null;
@@ -106,7 +106,7 @@ public class LocationPath{
         return createFunction(name, contextNode, result, null);
     }
 
-    public Expression create(Node contextNode, ResultType expected){
+    public Expression create(Node contextNode, Datatype expected){
         return createFunction(contextNode, expected.toString());
     }
 }
