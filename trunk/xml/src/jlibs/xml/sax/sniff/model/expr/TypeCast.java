@@ -17,8 +17,8 @@ package jlibs.xml.sax.sniff.model.expr;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 
 /**
  * @author Santhosh Kumar T
@@ -40,7 +40,7 @@ public class TypeCast extends Expression{
     }
     
     @Override
-    public void addMember(UserResults member){
+    public void addMember(Notifier member){
         assertType(member.resultType());
         _addMember(member);
     }

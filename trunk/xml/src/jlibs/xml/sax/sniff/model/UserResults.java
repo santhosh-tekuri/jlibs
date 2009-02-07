@@ -21,12 +21,8 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public class UserResults extends Results{
-    public int depth;
-    public String xpath;
-    public boolean userGiven;
-    public HitManager hits = new HitManager();
-
+public abstract class UserResults extends Results{
+    @Override
     public ResultType resultType(){
         return ResultType.NODESET;
     }
@@ -40,11 +36,6 @@ public class UserResults extends Results{
             debugger.println("Hit %d: %s ---> %s", results.size(), this, result);
     }
 
-    public void userGiven(String xpath){
-        userGiven = true;
-        this.xpath = xpath;
-    }
-    
     @Override
     public void reset(){
         super.reset();

@@ -50,7 +50,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         this.root = root;
     }
 
-    public Node visit(Object elem)  throws SAXPathException{
+    public Notifier visit(Object elem)  throws SAXPathException{
         if(elem instanceof org.jaxen.expr.LocationPath)
             return process((org.jaxen.expr.LocationPath)elem);
         else if(elem instanceof Step)
@@ -69,11 +69,11 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
            throw new NotImplementedException(elem.getClass().getName());
     }
 
-    protected Node getDefault(Object elem){
+    protected Notifier getDefault(Object elem){
         throw new NotImplementedException(elem.getClass().getName());
     }
 
-    private Node current;
+    private Notifier current;
     private ArrayDeque<Node> contextStack = new ArrayDeque<Node>();
     private ArrayDeque<LocationPath> locationStack = new ArrayDeque<LocationPath>();
     private LocationPath location;
@@ -95,7 +95,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(current instanceof Expression)
             expr = (Expression)current;
         else
-            expr = (Expression)location.create(root, ResultType.NODESET);
+            expr = location.create(root, ResultType.NODESET);
         
         return new XPath(xpath, jaxenExpr, expr);
     }
@@ -103,8 +103,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     /*-------------------------------------------------[ LocationPath ]---------------------------------------------------*/
     
     @SuppressWarnings({"unchecked"})
-    protected Node process(org.jaxen.expr.LocationPath locationPath)  throws SAXPathException{
-        if(locationPath.isAbsolute() || current==root || current.parent==null)
+    protected Notifier process(org.jaxen.expr.LocationPath locationPath)  throws SAXPathException{
+        if(current==root || (locationPath.isAbsolute() && !(current instanceof DocumentNode)))
             current = root.addChild(new DocumentNode());
 
         locationStack.push(location=new LocationPath());
@@ -117,19 +117,19 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     /*-------------------------------------------------[ Step ]---------------------------------------------------*/
     
-    protected Node process(int axis) throws SAXPathException{
+    protected Notifier process(int axis) throws SAXPathException{
         if(axis!=Axis.SELF){
             AxisNode axisNode = AxisNode.newInstance(axis);
             boolean self = axis==Axis.DESCENDANT_OR_SELF || axis==Axis.ANCESTOR_OR_SELF;
             if(self)
-                current = current.addConstraint(axisNode);
+                current = ((Node)current).addConstraint(axisNode);
             else
-                current = current.addChild(axisNode);
+                current = ((Node)current).addChild(axisNode);
         }
         return current;
     }
 
-    protected Node process(Step step) throws SAXPathException{
+    protected Notifier process(Step step) throws SAXPathException{
         current = process(step.getAxis());
 
         Node constraint = null;
@@ -164,9 +164,9 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }
 
         if(constraint!=null)
-            current = current.addConstraint(constraint);
+            current = ((Node)current).addConstraint(constraint);
 
-        locationStack.peek().addStep(current);
+        locationStack.peek().addStep((Node)current);
         for(Object predicate: step.getPredicates())
             visit(predicate);
 
@@ -175,11 +175,11 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     /*-------------------------------------------------[ Predicate ]---------------------------------------------------*/
 
-    protected Node process(Predicate p) throws SAXPathException{
+    protected Notifier process(Predicate p) throws SAXPathException{
         if(p.getExpr() instanceof NumberExpr){
             NumberExpr numberExpr = (NumberExpr)p.getExpr();
-            current = current.addConstraint(new Position(numberExpr.getNumber().intValue()));
-            locationStack.peek().setStep(current);
+            current = ((Node)current).addConstraint(new Position(numberExpr.getNumber().intValue()));
+            locationStack.peek().setStep((Node)current);
         }else{
             if(p.getExpr() instanceof EqualityExpr){
                 EqualityExpr equalityExpr = (EqualityExpr)p.getExpr();
@@ -188,14 +188,14 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                     if(function.getPrefix().equals("") && function.getFunctionName().equals("position")){
                         if(equalityExpr.getRHS() instanceof NumberExpr){
                             NumberExpr numberExpr = (NumberExpr)equalityExpr.getRHS();
-                            current = current.addConstraint(new Position(numberExpr.getNumber().intValue()));
-                            locationStack.peek().setStep(current);
+                            current = ((Node)current).addConstraint(new Position(numberExpr.getNumber().intValue()));
+                            locationStack.peek().setStep((Node)current);
                             return current;
                         }
                     }
                 }
             }
-            contextStack.push(current);
+            contextStack.push((Node)current);
             visit(p.getExpr());
 
             applyLocation(ResultType.BOOLEAN);
@@ -211,12 +211,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     private void applyLocation(ResultType expected){
         if(!(current instanceof Expression)){
             if(current.resultType()!=expected)
-                current = (Node)location.create(contextStack.peek(), expected);
+                current = location.create(contextStack.peek(), expected);
         }
     }
 
     private void addMember(Expression function, Expr member) throws SAXPathException{
-        Node _current = current;
+        Notifier _current = current;
         current = visit(member);
         applyLocation(function.memberType());
         function.addMember(current);
@@ -224,7 +224,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     }
     
     @SuppressWarnings({"unchecked"})
-    protected Node process(FunctionCallExpr functionExpr) throws SAXPathException{
+    protected Notifier process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
         String name = functionExpr.getFunctionName();
 
@@ -242,14 +242,14 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(functionExpr.getParameters().size()>0){
             visit(functionExpr.getParameters().get(0));
             if(!(current instanceof Expression) && location!=null){
-                UserResults f = location.createFunction(context, name);
+                Notifier f = location.createFunction(context, name);
                 if(f!=null)
-                    return current = (Node)f;
+                    return current = f;
             }
         }else{
-            UserResults f = new LocationPath().createFunction(context, name);
+            Notifier f = new LocationPath().createFunction(context, name);
             if(f!=null)
-                return current = (Node)f;
+                return current = f;
         }
 
         if(name.equals("number"))
@@ -280,15 +280,15 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return current = function;
     }
 
-    protected Node process(LiteralExpr literalExpr) throws SAXPathException{
+    protected Notifier process(LiteralExpr literalExpr) throws SAXPathException{
         return current = new Literal(contextStack.peek(), literalExpr.getLiteral());
     }
 
-    protected Node process(NumberExpr numberExpr) throws SAXPathException{
+    protected Notifier process(NumberExpr numberExpr) throws SAXPathException{
         return current = new Literal(contextStack.peek(), numberExpr.getNumber().doubleValue());
     }
 
-    protected Node process(BinaryExpr binaryExpr) throws SAXPathException{
+    protected Notifier process(BinaryExpr binaryExpr) throws SAXPathException{
         Expression expr = null;
         if(binaryExpr.getOperator().equals("and"))
             expr = new AndOr(contextStack.peek(), false);
