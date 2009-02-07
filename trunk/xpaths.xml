@@ -49,6 +49,18 @@
 
         <xpath>concat( /root/a, /root/b )</xpath>
         <xpath>concat( /root/b, /root/a )</xpath>
+
+        <!-- test the translate() function -->
+        <xpath>translate( '', '', '' )</xpath>
+        <xpath>translate( 'abcd', '', '' )</xpath>
+        <xpath>translate( 'abcd', 'abcd', 'abcd' )</xpath>
+        <xpath>translate( 'abcd', 'dcba', 'dcba' )</xpath>
+        <xpath>translate( 'abcd', 'abcd', 'dcba' )</xpath>
+        <xpath>translate( 'abcd', 'abcd', 'ab' )</xpath>
+        <xpath>translate( 'abcd', 'cdab', 'cd' )</xpath>
+        <xpath>translate( 'abcd', 'acbd', 'xy' )</xpath>
+        <xpath>translate( 'abcd', 'abcdb', 'abcdb' )</xpath>
+        <xpath>translate( 'abcd', 'abcd', 'abcdb' )</xpath>
     </testcase>
 
     <testcase>
@@ -277,6 +289,13 @@
         <xpath>/root[not(xxx) and not(yyy)]/@purpose</xpath>
         <xpath>/root[not(pub) and yyy or pub/book]/@purpose</xpath>
         <xpath>/root[not(xxx) and pub or yyy]/@purpose</xpath>
+        <xpath>/root[count(pub) > 0]/pub</xpath>
+        <xpath>/root/pub[count(.) > 0]/book</xpath>
+        <xpath>/root/pub[count(book[price > 10]) > 0]</xpath>
+        <xpath>/root/pub[count(book/price[ . > 10 ]) > 0]</xpath>
+        <xpath>/root/pub[count(book) > 0]</xpath>
+        <xpath>/root[count(pub[book]/book) > 0]/pub</xpath>
+        <xpath>/root[count(pub/book[price]/price) > 3]</xpath>
         
         <!-- output buffering -->
         <xpath>/root/pub[year = 2002]/book/name</xpath>
@@ -294,11 +313,23 @@
         <xpath>/root[.//pub[year=1999]]</xpath>
         <xpath>/root[.//pub[year>1999]]</xpath>
         <xpath>/root[.//*[year=1999]]</xpath>
-        <xpath>/root[.//*[year>1999]]</xpath>
         <xpath>//pub[year=1999]/book[.//author]/name</xpath>
         <xpath>/pub[year>=1999]//book[.//author]/name</xpath>
         <xpath>//pub[year=2002]/book[.//author]/name</xpath>
         <xpath>/pub[year>=2002]//book[.//author]/name</xpath>
+
+        <!-- namespace functions -->
+        <xpath>/root/XMLFragment2/env:Envelope[local-name() = 'Envelope']</xpath>
+        <xpath>/root/*/env:Envelope[local-name() = 'Envelope']</xpath>
+        <xpath>/root/*/*[local-name()="Envelope" and namespace-uri()='http://mysoap']</xpath>
+
+        <!-- boolean result -->
+        <xpath type="boolean">/root[pub]/pub[book]/book/price > 10</xpath>
+        <xpath>/root[count( pub/book[author]/price ) > 3]</xpath>
+
+        <!-- sum() function -->
+        <xpath>/root[sum(pub[book]/book/price) > 10]/pub</xpath>
+        <xpath>/root[sum(pub[book]/book[price]/price) > 10]</xpath>
 
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
@@ -323,6 +354,9 @@
         <xpath>/root/@_a</xpath>
         <xpath>/root/b</xpath>
         <xpath>/root/_b</xpath>
+        <xpath>/root[@_a >= 2]</xpath>
+        <xpath>/root[number(b) &lt; 2]</xpath>
+        <xpath>/root[number(_b) > 1]</xpath>
     </testcase>
 
     <testcase xmlns:topic="http://www.oreilly.com/topics">
@@ -619,6 +653,7 @@
         <xpath>/nitf/head/meta[@content='AP']</xpath>
         <xpath>/nitf/head/meta[@name and @content]</xpath>
         <xpath>/nitf/head/meta[@name='ap-cycle' and @content='AP']</xpath>
+        <xpath>/nitf/head/meta[@name != 'ap-cycle']</xpath>        
     </testcase>
 
     <testcase>
