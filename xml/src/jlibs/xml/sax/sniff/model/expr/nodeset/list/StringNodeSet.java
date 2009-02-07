@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
@@ -46,6 +47,12 @@ public class StringNodeSet extends NodeList{
         @Override
         protected Object getCachedResult(){
             return str;
+        }
+
+        @Override
+        public void contextStarted(Context context){
+            if(map.size()==0)
+                super.contextStarted(context);
         }
     }
     

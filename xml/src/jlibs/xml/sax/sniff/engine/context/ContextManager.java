@@ -29,7 +29,7 @@ public class ContextManager implements Debuggable{
 
     public void reset(Root root){
         Context rootContext = new Context(root);
-        root.contextStarted(null);
+        root.contextStarted(rootContext, null);
         contexts.reset(rootContext);
 
         if(debug)
@@ -58,9 +58,11 @@ public class ContextManager implements Debuggable{
             Context context = contexts.current.get(i);
             contexts.addUnique(context.endElement());
         }
-
-//        for(Context context: contexts)
-//            contexts.addUnique(context.endElement());
         contexts.update();
+    }
+
+    public void documentEnded(){
+        while(contexts.current.size()>0)
+            elementEnded();
     }
 }

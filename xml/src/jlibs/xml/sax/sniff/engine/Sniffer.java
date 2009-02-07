@@ -138,7 +138,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void endDocument() throws SAXException{
-        root.contextEnded();
+        contextManager.documentEnded();
     }
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/

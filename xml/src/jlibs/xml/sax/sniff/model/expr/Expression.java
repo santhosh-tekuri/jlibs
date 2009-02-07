@@ -19,6 +19,7 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
 
@@ -114,8 +115,8 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
 
     @Override
-    public void notify(Object result){
-        listener.onNotification(this, result);
+    public void notify(Context context, Object result){
+        listener.onNotification(this, context, result);
     }
 
     protected abstract class Evaluation{
@@ -132,7 +133,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
             
             finished = true;
             if(result!=null)
-                Expression.this.notify(result);
+                Expression.this.notify(context, result);
         }
 
         public abstract void finish();
@@ -142,8 +143,10 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     protected abstract Evaluation createEvaluation();
 
+    protected Context context;
+
     @Override
-    public void onNotification(Notifier source, Object result){
+    public void onNotification(Notifier source, Context context, Object result){
         if(debug){
             debugger.println("onNotification: %s", this);
             debugger.indent++;
@@ -155,6 +158,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
                 debugger.println("Evaluation:");
                 debugger.indent++;
             }
+            this.context = context;
             evaluation.consume(source, result);
             if(debug){
                 if(!evaluation.finished)
@@ -173,14 +177,14 @@ public abstract class Expression extends Notifier implements ContextListener, No
     protected ArrayDeque<Evaluation> evaluationStack = new ArrayDeque<Evaluation>();
     
     @Override
-    public void contextStarted(Event event){
+    public void contextStarted(Context context, Event event){
         if(debug)
             debugger.println("newEvaluation: %s", this);
         evaluationStack.push(createEvaluation());
     }
 
     @Override
-    public void contextEnded(){
+    public void contextEnded(Context context){
         Evaluation eval = evaluationStack.pop();
         if(!eval.finished)
             eval.finish();

@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.model.ContextListener;
@@ -26,6 +27,9 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 import org.jaxen.saxpath.Axis;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -35,7 +39,7 @@ public abstract class NodeList extends ValidatedExpression{
     }
 
     private boolean textOnly;
-
+ 
     @Override
     public void addMember(Notifier member){
         if(member instanceof Node){
@@ -43,13 +47,17 @@ public abstract class NodeList extends ValidatedExpression{
             if(node.canBeContext()){
                 node.addContextListener(new ContextListener(){
                     @Override
-                    public void contextStarted(Event event){}
-
-                    @Override
-                    public void contextEnded(){
+                    public void contextStarted(Context context, Event event){
                         StringsEvaluation evaluation = (StringsEvaluation)evaluationStack.peek();
                         if(!evaluation.finished && !evaluation.resultPrepared)
-                            evaluation.contextEnded();
+                            evaluation.contextStarted(context);
+                    }
+
+                    @Override
+                    public void contextEnded(Context context){
+                        StringsEvaluation evaluation = (StringsEvaluation)evaluationStack.peek();
+                        if(!evaluation.finished && !evaluation.resultPrepared)
+                            evaluation.contextEnded(context);
                     }
 
                     @Override
@@ -67,20 +75,30 @@ public abstract class NodeList extends ValidatedExpression{
     }
 
     protected abstract class StringsEvaluation extends DelayedEvaluation{
-        private StringBuilder buff = new StringBuilder();
-
+        protected Map<Object, StringBuilder> map = new HashMap<Object, StringBuilder>();
+        
         @Override
         public void finish(){
-            if(buff.length()>0)
-                consume(buff.toString());
+            for(StringBuilder buff: map.values()){
+                if(buff.length()>0)
+                    consume(buff.toString());
+            }
+            map = null;
             super.finish();
         }
 
         private void consume(Event event){
             String str = null;
             if(textOnly){
-                if(event.type()==Event.TEXT)
-                    buff.append(event.getResult());
+                if(event.type()==Event.TEXT){
+                    StringBuilder buff = map.get(context.identity());
+                    if(buff==null)
+                        buff = map.get(context.parent.identity());
+                    if(buff!=null)
+                        buff.append(event.getResult());
+                    else
+                        System.out.println("");
+                }
             }else{
                 switch(event.type()){
                     case Event.TEXT:
@@ -97,6 +115,7 @@ public abstract class NodeList extends ValidatedExpression{
         }
 
         protected abstract void consume(Object result);
+        protected abstract void consume(String str);
 
         @Override
         @SuppressWarnings({"unchecked"})
@@ -107,11 +126,16 @@ public abstract class NodeList extends ValidatedExpression{
                 consume(result);
         }
 
-        protected abstract void consume(String str);
-
-        public void contextEnded(){
-            consume(buff.toString());
-            buff.setLength(0);
+        public void contextStarted(Context context){
+            map.put(context.identity(), new StringBuilder());
+        }
+        
+        public void contextEnded(Context context){
+            StringBuilder buff = map.remove(context.identity());
+            if(buff!=null)
+                consume(buff.toString());
+            else
+                System.out.println("");
         }
     }
 }

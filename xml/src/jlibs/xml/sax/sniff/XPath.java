@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.NotificationListener;
 import jlibs.xml.sax.sniff.model.Notifier;
@@ -75,7 +76,7 @@ public class XPath implements NotificationListener{
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void onNotification(Notifier source, Object result){
+    public void onNotification(Notifier source, Context context, Object result){
         if(result instanceof TreeMap){
             TreeMap<Integer, String> nodeSet = (TreeMap<Integer, String>)result;
             this.result = new ArrayList<String>(nodeSet.values());

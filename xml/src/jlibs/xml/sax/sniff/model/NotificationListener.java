@@ -15,9 +15,11 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
+
 /**
  * @author Santhosh Kumar T
  */
 public interface NotificationListener{
-    public void onNotification(Notifier source, Object result); 
+    public void onNotification(Notifier source, Context context, Object result); 
 }

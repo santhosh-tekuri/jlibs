@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff.model;
 
 import jlibs.xml.sax.sniff.Debuggable;
+import jlibs.xml.sax.sniff.engine.context.Context;
 
 /**
  * @author Santhosh Kumar T
@@ -26,5 +27,5 @@ public abstract class Notifier implements Debuggable{
 
     public abstract Datatype resultType();
     public abstract void addNotificationListener(NotificationListener listener);
-    public abstract void notify(Object result);
+    public abstract void notify(Context context, Object result);
 }

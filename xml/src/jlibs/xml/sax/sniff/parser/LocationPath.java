@@ -74,7 +74,7 @@ public class LocationPath{
             return new NodeSet(contextNode, member, predicate);
         else if("string".equals(name) || Datatype.STRING.toString().equals(name))
             return new StringNodeSet(contextNode, member, predicate);
-        else if(Datatype.STRINGS.toString().equals(name))
+        else if("strings".equals(name) || Datatype.STRINGS.toString().equals(name))
             return new Strings(contextNode, member, predicate);
         else if("boolean".equals(name) || Datatype.BOOLEAN.toString().equals(name))
             return new Predicate(contextNode, member, predicate);
