@@ -32,13 +32,18 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Node extends UserResults{
+public abstract class Node extends Notifier{
     public Root root;
     public Node parent;
     public Node constraintParent;
 
     public boolean hasAttibuteChild;
 
+    @Override
+    public ResultType resultType(){
+        return ResultType.NODESET;
+    }
+    
     public boolean canBeContext(){
         return false;
     }
@@ -134,7 +139,7 @@ public abstract class Node extends UserResults{
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     public void reset(){
-        super.reset();
+        hits.reset();
         for(Node child: children())
             child.reset();
         for(Node constraint: constraints())
@@ -189,29 +194,6 @@ public abstract class Node extends UserResults{
         }
     }
     
-//    private List<EventListener> eventListeners = new ArrayList<EventListener>();
-//
-//    public void addEventListener(EventListener listener){
-//        eventListeners.add(listener);
-//    }
-//
-//    public void removeEventListener(EventListener listener){
-//        eventListeners.remove(listener);
-//    }
-//
-//    public void notify(Event event){
-//        if(eventListeners.size()>0){
-//            if(debug){
-//                debugger.println("notifyListeners("+this+")");
-//                debugger.indent++;
-//            }
-//            for(EventListener listener: eventListeners)
-//                listener.onEvent(this, event);
-//            if(debug)
-//                debugger.indent--;
-//        }
-//    }
-
     /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/
 
     protected List<ContextListener> contextListeners = new ArrayList<ContextListener>();
@@ -228,8 +210,8 @@ public abstract class Node extends UserResults{
         contextListeners.add(listener);
         _contextListeners.add(0, listener);
 
-        if(listener instanceof UserResults)
-            ((UserResults)listener).depth = this.depth;
+        if(listener instanceof Notifier)
+            ((Notifier)listener).depth = this.depth;
     }
 
     public void removeContextListener(ContextListener listener){
