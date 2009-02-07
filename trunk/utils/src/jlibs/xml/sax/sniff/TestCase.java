@@ -37,7 +37,7 @@ public class TestCase{
     String file;
     List<String> xpaths = new ArrayList<String>();
     List<QName> resultTypes = new ArrayList<QName>();
-    List<Boolean> hasAttributes = new ArrayList<Boolean>();
+    List<Integer> hasAttributes = new ArrayList<Integer>();
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     Document doc;
 
@@ -61,8 +61,8 @@ public class TestCase{
         return jdkResult;
     }
 
-    List<List<String>> dogResult;
-    public List<List<String>> usingXMLDog() throws Exception{
+    List<Object> dogResult;
+    public List<Object> usingXMLDog() throws Exception{
         InputSource source = new InputSource(file);
         XMLDog dog = new XMLDog(nsContext);
         jlibs.xml.sax.sniff.XPath xpathObjs[] = new jlibs.xml.sax.sniff.XPath[xpaths.size()];
@@ -73,16 +73,14 @@ public class TestCase{
 
         XPathResults dogResults = dog.sniff(source);
 
-        dogResult = new ArrayList<List<String>>(xpaths.size());
+        dogResult = new ArrayList<Object>(xpaths.size());
         for(jlibs.xml.sax.sniff.XPath xpathObj: xpathObjs)
             dogResult.add(dogResults.getResult(xpathObj));
         return dogResult;
     }
 
-    List<List<String>> translatedJDKResult = new ArrayList<List<String>>();
-    public void translateJDKResults(int test){
+    public void translateJDKResult(int test){
         Object obj = jdkResult.get(test);
-        hasAttributes.add(false);
         List<String> result = new ArrayList<String>();
 
         if(obj instanceof NodeList){
@@ -91,7 +89,7 @@ public class TestCase{
                 Node node = nodeSet.item(i);
                 if(node instanceof Attr){
                     result.add(node.getNodeValue());
-                    hasAttributes.set(test, true);
+                    hasAttributes.add(test);
                 }else if(node instanceof Element){
                     StringBuilder buff = new StringBuilder();
                     while(!(node instanceof Document)){
@@ -122,33 +120,41 @@ public class TestCase{
             result.add(obj.toString());
         else
             throw new NotImplementedException(obj.getClass().getName());
-        translatedJDKResult.add(result);
-        jdkResult.set(test, null);
+        jdkResult.set(test, result);
     }
 
-    public List<String> jdkResults(int i){
-        if(i>=translatedJDKResult.size())
-            translateJDKResults(i);
-        return translatedJDKResult.get(i);
+    public Object jdkResults(int i){
+        if(jdkResult.get(i) instanceof NodeList)
+            translateJDKResult(i);
+        return jdkResult.get(i);
     }
 
-    public List<String> dogResults(int i){
+    public Object dogResults(int i){
         return dogResult.get(i);
     }
 
+    @SuppressWarnings({"unchecked"})
     public boolean passed(int i){
-        List<String> jdkResults = jdkResults(i);
-        List<String> dogResults = dogResults(i);
+        Object jdkResults = jdkResults(i);
+        Object dogResults = dogResults(i);
 
-        if(hasAttributes.get(i)){
-            Collections.sort(jdkResults);
-            Collections.sort(dogResults);
+        if(hasAttributes.contains(i)){
+            Collections.sort((List<String>)jdkResults);
+            Collections.sort((List<String>)dogResults);
         }
 
         return jdkResults.equals(dogResults);
     }
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
+
+    @SuppressWarnings({"unchecked"})
+    public static void printResults(Object result){
+        if(result instanceof List)
+            printResults((List<String>)result);
+        else
+            System.out.println(result);
+    }
 
     public static void printResults(List<String> results){
         boolean first = true;
@@ -165,13 +171,11 @@ public class TestCase{
     public void printResults(int i){
         System.out.println("         xpath : "+xpaths.get(i));
         System.out.print("    jdk result : ");
-        printResults(translatedJDKResult.get(i));
-        System.out.println("  jdk hitcount : "+translatedJDKResult.get(i).size());
-        translatedJDKResult.set(i, null);
+        printResults(jdkResults(i));
+        jdkResult.set(i, null);
 
         System.out.print("    dog result : ");
-        printResults(dogResult.get(i));
-        System.out.println("  dog hitcount : "+dogResult.get(i).size());
+        printResults(dogResults(i));
         dogResult.set(i, null);
         
         System.out.println("-------------------------------------------------");
