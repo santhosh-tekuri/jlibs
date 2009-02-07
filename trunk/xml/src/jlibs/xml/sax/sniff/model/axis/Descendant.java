@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.axis;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.AxisNode;
 
@@ -32,7 +33,7 @@ public class Descendant extends AxisNode{
     }
 
     @Override
-    public boolean matches(Event event){
+    public boolean matches(Context context, Event event){
         switch(event.type()){
             case Event.DOCUMENT:
             case Event.ELEMENT:
@@ -47,6 +48,6 @@ public class Descendant extends AxisNode{
 
     @Override
     public boolean consumable(Event event){
-        return matches(event);
+        return matches(null, event);
     }
 }

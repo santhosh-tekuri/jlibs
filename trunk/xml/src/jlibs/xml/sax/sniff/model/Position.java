@@ -46,8 +46,18 @@ public class Position extends Node{
     }
 
     @Override
-    public boolean matches(Event event){
-        return true;
+    public boolean matches(Context context, Event event){
+        if(parent!=context.node)
+            context = context.parent;
+
+        Integer pos = map.get(context.identity());
+        if(pos==null)
+            pos = 1;
+        else
+            pos++;
+        map.put(context.identity(), pos);
+
+        return this.pos == pos;
     }
 
     @Override
@@ -58,19 +68,6 @@ public class Position extends Node{
     /*-------------------------------------------------[ Tracking ]---------------------------------------------------*/
 
     private Map<Object, Integer> map = new HashMap<Object, Integer>();
-
-    public boolean hit(Context context){
-        if(parent!=context.node)
-            context = context.parent;
-
-        Integer pos = map.get(context.identity());
-        if(pos==null)
-            pos = 1;
-        else
-            pos++;
-        map.put(context.identity(), pos);
-        return this.pos == pos;
-    }
 
     public void clearHitCount(Context context){
         map.remove(context.identity());
