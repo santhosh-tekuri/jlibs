@@ -96,12 +96,9 @@ public class Context implements Debuggable{
                         if(changeContext){
                             Context childContext = childContext(child);
                             contexts.add(childContext);
-                            child.notifyObservers(childContext, event);
                             child.contextStarted(event);
-                        }else{
-                            child.notifyObservers(this, event);
+                        }else
                             child.notifyContext(event);
-                        }
 
                         matchConstraints(child, event, contexts);
                     }
@@ -113,11 +110,8 @@ public class Context implements Debuggable{
                         depth--;
                         contexts.add(this);
                         node.contextStarted(event);
-                        node.notifyObservers(this, event);
-                    }else{
-                        node.notifyObservers(this, event);
+                    }else
                         node.notifyContext(event);
-                    }
                     matchConstraints(node, event, contexts);
                 }
             }else{
@@ -142,10 +136,8 @@ public class Context implements Debuggable{
                     if(changeContext){
                         Context childContext = childContext(constraint);
                         contexts.add(childContext);
-                        constraint.notifyObservers(childContext, event);
                         constraint.contextStarted(event);
                     }else{
-                        constraint.notifyObservers(this, event);
                         constraint.notifyContext(event);
                     }
                     matchConstraints(constraint, event, contexts);

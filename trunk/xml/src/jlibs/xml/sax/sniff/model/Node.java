@@ -22,7 +22,6 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.core.util.ReverseComparator;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.computed.ComputedResults;
 import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
@@ -118,7 +117,7 @@ public abstract class Node extends UserResults{
     /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
 
     public boolean resultInteresed(){
-        return userGiven || listeners.size()>0 || observers.size()>0;
+        return userGiven || listeners.size()>0;
     }
 
     /*-------------------------------------------------[ Hit ]---------------------------------------------------*/
@@ -132,9 +131,6 @@ public abstract class Node extends UserResults{
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
 
     public void endingContext(Context context){
-        if(context.depth==0)
-            notifyCleanupObservers(context);
-        
         for(Node child: context.node.children())
             clearHitCounts(context, child);
     }
@@ -175,16 +171,6 @@ public abstract class Node extends UserResults{
                 String str = elem.toString() + "_"+elem.depth;
                 if(elem.userGiven)
                     str += " --> userGiven";
-                if(elem.observers.size()>0){
-                    str += " ==>";
-                    for(ComputedResults observer: elem.observers())
-                        str += observer+" ";
-                }
-                if(elem.cleanupObservers.size()>0){
-                    str += " -->";
-                    for(ComputedResults observer: elem.cleanupObservers())
-                        str += observer+" ";
-                }
                 if(elem.eventListeners.size()>0){
                     for(EventListener listener: elem.eventListeners)
                         str += "\n   ### "+listener+" ";
