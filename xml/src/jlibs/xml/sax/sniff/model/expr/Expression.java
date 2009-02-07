@@ -20,17 +20,17 @@ import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.ContextListener;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.*;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Expression extends Node implements ContextListener, jlibs.xml.sax.sniff.model.EventListener, ResultListener{
+public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
     protected int evalDepth;
     protected Expression(Node contextNode, ResultType returnType, ResultType... memberTypes){
         this.contextNode = contextNode;
@@ -43,16 +43,13 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
     }
 
     private ResultType returnType;
+
     @Override
     public ResultType resultType(){
         return returnType;
     }
 
-    public boolean equivalent(Node node){
-        return false;
-    }
-
-    protected List<UserResults> members = new ArrayList<UserResults>();
+    protected List<Notifier> members = new ArrayList<Notifier>();
     protected final ResultType memberTypes[];
 
     public ResultType memberType(int index){
@@ -63,7 +60,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
         return memberTypes[members.size()];
     }
 
-    private UserResults castTo(UserResults member, ResultType expected){
+    private Notifier castTo(Notifier member, ResultType expected){
         if(member.resultType()==expected || expected==ResultType.STRINGS)
             return member;
 
@@ -72,16 +69,16 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
         return member;
     }
 
-    public void addMember(UserResults member){
+    public void addMember(Notifier member){
         addMember(member, memberTypes[members.size()]);
     }
 
-    protected void addMember(UserResults member, ResultType resultType){
+    protected void addMember(Notifier member, ResultType resultType){
         member = castTo(member, resultType);
         _addMember(member);
     }
 
-    protected final void _addMember(UserResults member){
+    protected final void _addMember(Notifier member){
         if(member.depth<depth)
             throw new IllegalArgumentException();
         
@@ -91,7 +88,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
             expr.listener = this;
             evalDepth = Math.max(evalDepth, expr.evalDepth+1);
         }else
-            ((Node)member).addEventListener(this);
+            member.addNotificationListener(this);
     }
 
     protected void printResult(String title, Object result){
@@ -107,7 +104,20 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
         return resultType().defaultValue();
     }
 
-    public ResultListener listener;
+    protected NotificationListener listener;
+
+    @Override
+    public void addNotificationListener(NotificationListener listener){
+        if(this.listener!=null)
+            throw new UnsupportedOperationException("only one notificationListener is supported");
+        this.listener = listener;
+    }
+
+    @Override
+    public void notify(Object result){
+        listener.onNotification(this, result);
+    }
+
     protected abstract class Evaluation{
         public boolean finished;
 
@@ -122,7 +132,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
             
             finished = true;
             if(result!=null)
-                listener.finishedEvaluation(Expression.this, result);
+                Expression.this.notify(result);
         }
 
         public abstract void finish();
@@ -133,9 +143,9 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
     protected abstract Evaluation createEvaluation();
 
     @Override
-    public void onEvent(Node node, Event event){
+    public void onNotification(Notifier source, Object result){
         if(debug){
-            debugger.println("onEvent: %s", this);
+            debugger.println("onNotification: %s", this);
             debugger.indent++;
         }
 
@@ -145,32 +155,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
                 debugger.println("Evaluation:");
                 debugger.indent++;
             }
-            evaluation.consume(node, event);
-            if(debug){
-                if(!evaluation.finished)
-                    evaluation.print();
-                debugger.indent--;
-            }
-        }
-
-        if(debug)
-            debugger.indent--;
-    }
-
-    @Override
-    public void finishedEvaluation(Expression member, Object result){
-        if(debug){
-            debugger.println("onMemberFinish: %s", this);
-            debugger.indent++;
-        }
-
-        Evaluation evaluation = evaluationStack.peek();
-        if(!evaluation.finished){
-            if(debug){
-                debugger.println("Evaluation:");
-                debugger.indent++;
-            }
-            evaluation.consume(member, result);
+            evaluation.consume(source, result);
             if(debug){
                 if(!evaluation.finished)
                     evaluation.print();
@@ -208,32 +193,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
         return evalDepth;
     }
 
-    @Override
-    public void userGiven(String xpath){
-        super.userGiven(xpath);
-        listener = new ResultListener(){
-            @Override
-            @SuppressWarnings({"unchecked"})
-            public void finishedEvaluation(Expression expr, Object result){
-                if(result instanceof TreeMap){
-                    TreeMap<Integer, String> nodeSet = (TreeMap<Integer, String>)result;
-                    for(Map.Entry<Integer, String> nodeItem: nodeSet.entrySet())
-                        addResult(nodeItem.getKey(), nodeItem.getValue());
-                }else
-                    addResult(-1, result.toString());
-            }
-        };
-    }
-
-    public void destroy(){
-        contextNode.removeContextListener(this);
-        for(Object member: members){
-            if(member instanceof Expression)
-                ((Expression)member).listener = null;
-            else if(member instanceof Node)
-                ((Node)member).removeEventListener(this);
-        }
-    }
+    public String xpath;
 
     /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
 
@@ -247,7 +207,7 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
     @Override
     public final String toString(){
         StringBuilder buff = new StringBuilder();
-        if(userGiven)
+        if(xpath!=null)
             buff.append("UserGiven");
         for(Object member: members){
             if(buff.length()>0)
@@ -260,19 +220,19 @@ public abstract class Expression extends Node implements ContextListener, jlibs.
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
 
     public void print(){
-        Navigator<UserResults> navigator = new Navigator<UserResults>(){
+        Navigator<Notifier> navigator = new Navigator<Notifier>(){
             @Override
-            public Sequence<? extends UserResults> children(UserResults elem){
+            public Sequence<? extends Notifier> children(Notifier elem){
                 if(elem instanceof Expression)
-                    return new IterableSequence<UserResults>(((Expression)elem).members);
+                    return new IterableSequence<Notifier>(((Expression)elem).members);
                 else
                     return EmptySequence.getInstance();
             }
         };
-        Walker<UserResults> walker = new PreorderWalker<UserResults>(this, navigator);
-        WalkerUtil.print(walker, new Visitor<UserResults, String>(){
+        Walker<Notifier> walker = new PreorderWalker<Notifier>(this, navigator);
+        WalkerUtil.print(walker, new Visitor<Notifier, String>(){
             @Override
-            public String visit(UserResults elem){
+            public String visit(Notifier elem){
                 if(elem instanceof Expression){
                     Expression expr = (Expression)elem;
                     return String.format("%s_%d_%d @@@ %s_%d", expr.getName(), expr.depth, expr.evalDepth, expr.contextNode.toString(), expr.contextNode.depth);

@@ -13,25 +13,18 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff;
+package jlibs.xml.sax.sniff.model;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jlibs.xml.sax.sniff.Debuggable;
 
 /**
  * @author Santhosh Kumar T
  */
-public class XPathResults implements Debuggable{
-    private Map<String, List<String>> map;
+public abstract class Notifier implements Debuggable{
+    public HitManager hits = new HitManager();
+    public int depth;
 
-    public XPathResults(List<XPath> xpaths){
-        map = new HashMap<String, List<String>>(xpaths.size());
-        for(XPath xpath: xpaths)
-            map.put(xpath.toString(), xpath.result);
-    }
-
-    public List<String> getResult(XPath xpath){
-        return map.get(xpath.toString());
-    }
+    public abstract ResultType resultType();
+    public abstract void addNotificationListener(NotificationListener listener);
+    public abstract void notify(Object result);
 }

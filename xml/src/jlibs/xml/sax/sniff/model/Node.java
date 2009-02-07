@@ -114,12 +114,6 @@ public abstract class Node extends UserResults{
         return false;
     }
     
-    /*-------------------------------------------------[ Requires ]---------------------------------------------------*/
-
-    public boolean resultInteresed(){
-        return userGiven || listeners.size()>0;
-    }
-    
     /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
 
     public void endingContext(Context context){
@@ -161,10 +155,8 @@ public abstract class Node extends UserResults{
             @Override
             public String visit(Node elem){
                 String str = elem.toString() + "_"+elem.depth;
-                if(elem.userGiven)
-                    str += " --> userGiven";
-                if(elem.eventListeners.size()>0){
-                    for(EventListener listener: elem.eventListeners)
+                if(elem.listeners.size()>0){
+                    for(NotificationListener listener: elem.listeners)
                         str += "\n   ### "+listener+" ";
                 }
                 if(elem.contextListeners.size()>0){
@@ -178,28 +170,47 @@ public abstract class Node extends UserResults{
 
     /*-------------------------------------------------[ Observers ]---------------------------------------------------*/
 
-    private List<EventListener> eventListeners = new ArrayList<EventListener>();
+    private List<NotificationListener> listeners = new ArrayList<NotificationListener>();
 
-    public void addEventListener(EventListener listener){
-        eventListeners.add(listener);
+    public void addNotificationListener(NotificationListener listener){
+        listeners.add(listener);
     }
     
-    public void removeEventListener(EventListener listener){
-        eventListeners.remove(listener);
-    }
-
-    public void notify(Event event){
-        if(eventListeners.size()>0){
+    public void notify(Object event){
+        if(listeners.size()>0){
             if(debug){
                 debugger.println("notifyListeners("+this+")");
                 debugger.indent++;
             }
-            for(EventListener listener: eventListeners)
-                listener.onEvent(this, event);
+            for(NotificationListener listener: listeners)
+                listener.onNotification(this, event);
             if(debug)
                 debugger.indent--;
         }
     }
+    
+//    private List<EventListener> eventListeners = new ArrayList<EventListener>();
+//
+//    public void addEventListener(EventListener listener){
+//        eventListeners.add(listener);
+//    }
+//
+//    public void removeEventListener(EventListener listener){
+//        eventListeners.remove(listener);
+//    }
+//
+//    public void notify(Event event){
+//        if(eventListeners.size()>0){
+//            if(debug){
+//                debugger.println("notifyListeners("+this+")");
+//                debugger.indent++;
+//            }
+//            for(EventListener listener: eventListeners)
+//                listener.onEvent(this, event);
+//            if(debug)
+//                debugger.indent--;
+//        }
+//    }
 
     /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/
 

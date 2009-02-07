@@ -17,8 +17,8 @@ package jlibs.xml.sax.sniff.model.expr.nodeset;
 
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.TreeMap;
@@ -27,7 +27,7 @@ import java.util.TreeMap;
  * @author Santhosh Kumar T
  */
 public class NodeSet extends ValidatedExpression{
-    public NodeSet(Node contextNode, UserResults member, Expression predicate){
+    public NodeSet(Node contextNode, Notifier member, Expression predicate){
         super(ResultType.NODESET, contextNode, member, predicate);
     }
 

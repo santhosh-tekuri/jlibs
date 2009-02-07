@@ -17,8 +17,8 @@ package jlibs.xml.sax.sniff.model.expr.nodeset.event;
 
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 
@@ -26,7 +26,7 @@ import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
  * @author Santhosh Kumar T
  */
 public abstract class EventData extends ValidatedExpression{
-    public EventData(Node contextNode, UserResults member, Expression predicate){
+    public EventData(Node contextNode, Notifier member, Expression predicate){
         super(ResultType.STRING, contextNode, member, predicate);
     }
 

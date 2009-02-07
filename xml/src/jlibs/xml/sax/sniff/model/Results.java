@@ -15,15 +15,13 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.Debuggable;
-
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Results implements Debuggable{
+public abstract class Results extends Notifier{
     public TreeMap<Integer, String> results;
 
     public void addResult(int docOrder, String result){

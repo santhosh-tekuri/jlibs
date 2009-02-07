@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.parser;
 
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Count;
@@ -59,7 +59,7 @@ public class LocationPath{
         }
     }
 
-    private UserResults createFunction(String name, Node contextNode, UserResults member, Expression predicate){
+    private Expression createFunction(String name, Node contextNode, Notifier member, Expression predicate){
         if("local-name".equals(name))
             return new LocalName(contextNode, member, predicate);
         else if("namespace-uri".equals(name))
@@ -86,16 +86,16 @@ public class LocationPath{
         return null;
     }
 
-    public UserResults createFunction(Node contextNode, String name){
+    public Expression createFunction(Node contextNode, String name){
         if(steps.size()==0)
             return createFunction(name, contextNode, contextNode, null);
         
         ArrayDeque<StepNode> steps = this.steps.clone();
-        UserResults result = null;
+        Notifier result = null;
         while(!steps.isEmpty()){
             StepNode step = steps.pop();
             if(step.predicate!=null){
-                UserResults member = result==null ? step.node : result;
+                Notifier member = result==null ? step.node : result;
                 result = createFunction(name, step.node, member, step.predicate);
             }else{
                 if(result==null)
@@ -106,7 +106,7 @@ public class LocationPath{
         return createFunction(name, contextNode, result, null);
     }
 
-    public UserResults create(Node contextNode, ResultType expected){
+    public Expression create(Node contextNode, ResultType expected){
         return createFunction(contextNode, expected.toString());
     }
 }

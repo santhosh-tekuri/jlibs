@@ -16,15 +16,15 @@
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
 public class StringNodeSet extends NodeList{
-    public StringNodeSet(Node contextNode, UserResults member, Expression predicate){
+    public StringNodeSet(Node contextNode, Notifier member, Expression predicate){
         super(ResultType.STRING, contextNode, member, predicate);
     }
 

@@ -19,8 +19,8 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.model.ContextListener;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
@@ -30,14 +30,14 @@ import org.jaxen.saxpath.Axis;
  * @author Santhosh Kumar T
  */
 public abstract class NodeList extends ValidatedExpression{
-    public NodeList(ResultType returnType, Node contextNode, UserResults member, Expression predicate){
+    public NodeList(ResultType returnType, Node contextNode, Notifier member, Expression predicate){
         super(returnType, contextNode, member, predicate);
     }
 
     private boolean textOnly;
 
     @Override
-    public void addMember(UserResults member){
+    public void addMember(Notifier member){
         if(member instanceof Node){
             Node node = (Node)member;
             if(node.canBeContext()){

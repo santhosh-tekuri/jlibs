@@ -15,11 +15,9 @@
 
 package jlibs.xml.sax.sniff.engine.context;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.ArrayList;
 
@@ -34,8 +32,6 @@ public class Context implements Debuggable{
 //        int parentDepths[];
 
     public Context(Node root){
-        if(node instanceof Expression)
-            throw new ImpossibleException();
         node = root;
 //            parentDepths = new int[0];
     }

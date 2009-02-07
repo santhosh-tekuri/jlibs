@@ -17,15 +17,15 @@ package jlibs.xml.sax.sniff.model.expr.nodeset;
 
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Count extends ValidatedExpression{
-    public Count(Node contextNode, UserResults member, Expression predicate){
+    public Count(Node contextNode, Notifier member, Expression predicate){
         super(ResultType.NUMBER, contextNode, member, predicate);
     }
 

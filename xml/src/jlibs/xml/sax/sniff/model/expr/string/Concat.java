@@ -17,8 +17,8 @@ package jlibs.xml.sax.sniff.model.expr.string;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -34,7 +34,7 @@ public class Concat extends Expression{
     }
 
     @Override
-    public void addMember(UserResults member){
+    public void addMember(Notifier member){
         addMember(member, ResultType.STRING);
     }
 
@@ -50,7 +50,7 @@ public class Concat extends Expression{
         @Override
         protected void consume(Object member, Object result){
             int i = 0;
-            for(UserResults _member: members){
+            for(Notifier _member: members){
                 if(_member==member){
                     results[i] = (String)result;
                     pending--;

@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.ResultType;
-import jlibs.xml.sax.sniff.model.UserResults;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Strings extends NodeList{
-    public Strings(Node contextNode, UserResults member, Expression predicate){
+    public Strings(Node contextNode, Notifier member, Expression predicate){
         super(ResultType.STRINGS, contextNode, member, predicate);
     }
 

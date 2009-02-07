@@ -19,14 +19,14 @@ import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Element;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
 public class NamespaceURI extends EventData{
-    public NamespaceURI(Node contextNode, UserResults member, Expression predicate){
+    public NamespaceURI(Node contextNode, Notifier member, Expression predicate){
         super(contextNode, member, predicate);
     }
 
