@@ -47,7 +47,7 @@ public class Position extends Node{
 
     @Override
     public boolean matches(Event event){
-        return event.type()==Event.ELEMENT;
+        return true;
     }
 
     @Override
