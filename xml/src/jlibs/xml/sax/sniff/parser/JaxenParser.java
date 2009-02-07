@@ -86,15 +86,18 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return parse(xpath, new XPathSimplifier().simplify(handler.getXPathExpr()));
     }
 
-    public XPath parse(String xpath, XPathExpr xpathExpr) throws SAXPathException{
+    public XPath parse(String xpath, XPathExpr jaxenExpr) throws SAXPathException{
         current = root;
         contextStack.add(root);
-        visit(xpathExpr.getRootExpr());
+        visit(jaxenExpr.getRootExpr());
 
-        UserResults results = current;
-        if(!(results instanceof Expression))
-            results = location.create(root, ResultType.NODESET);
-        return new XPath(xpath, xpathExpr, results);
+        Expression expr;
+        if(current instanceof Expression)
+            expr = (Expression)current;
+        else
+            expr = (Expression)location.create(root, ResultType.NODESET);
+        
+        return new XPath(xpath, jaxenExpr, expr);
     }
 
     /*-------------------------------------------------[ LocationPath ]---------------------------------------------------*/

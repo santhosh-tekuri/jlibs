@@ -32,9 +32,9 @@ public class XPathResults implements Debuggable{
     private List<String> collectResult(XPath xpath){
         List<String> results;
 
-        xpath.results.prepareResults();
-        if(xpath.results.hasResult())
-            results = new ArrayList<String>(xpath.results.results.values());
+        xpath.expr.prepareResults();
+        if(xpath.expr.hasResult())
+            results = new ArrayList<String>(xpath.expr.results.values());
         else
             results = Collections.emptyList();
 
