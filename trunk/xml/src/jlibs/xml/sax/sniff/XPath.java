@@ -18,7 +18,7 @@ package jlibs.xml.sax.sniff;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.Root;
-import jlibs.xml.sax.sniff.model.UserResults;
+import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.parser.JaxenParser;
 import org.jaxen.expr.XPathExpr;
 import org.jaxen.saxpath.SAXPathException;
@@ -29,31 +29,31 @@ import javax.xml.namespace.QName;
  * @author Santhosh Kumar T
  */
 public class XPath{
-    private XPathExpr xpathExpr;
-    public UserResults results;
+    private XPathExpr jaxenExpr;
+    public Expression expr;
 
-    public XPath(String xpath, XPathExpr xpathExpr, UserResults userResults){
-        this.xpathExpr = xpathExpr;
-        this.results = userResults;
-        results.userGiven(xpath);
+    public XPath(String xpath, XPathExpr jaxenExpr, Expression expr){
+        this.jaxenExpr = jaxenExpr;
+        this.expr = expr;
+        this.expr.userGiven(xpath);
     }
 
     int minHits;
     public void setMinHits(int minHits){
-        if(results.resultType()!=ResultType.NODESET)
+        if(expr.resultType()!=ResultType.NODESET)
             minHits = 1;
         this.minHits = minHits;
-        results.hits.setMin(minHits);
+        expr.hits.setMin(minHits);
     }
 
     @SuppressWarnings({"LoopStatementThatDoesntLoop"})
     public QName resultType(){
-        return results.resultType().qname();
+        return expr.resultType().qname();
     }
 
     public XPath copy(Root root){
         try{
-            return new JaxenParser(root).parse(results.xpath, xpathExpr);
+            return new JaxenParser(root).parse(expr.xpath, jaxenExpr);
         }catch(SAXPathException ex){
             throw new ImpossibleException(ex);
         }
@@ -61,6 +61,6 @@ public class XPath{
 
     @Override
     public String toString(){
-        return results.xpath;
+        return expr.xpath;
     }
 }
