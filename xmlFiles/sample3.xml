@@ -10,13 +10,11 @@
 
     <pub>
         <book id="2">x
-            <pub>
-                <book>
-                    <name>NameZ</name>
-                    <author>AuthorZ</author>
-                </book>
-                <year>1999</year>
-            </pub>
+            <book>y
+                <name>NameZ</name>
+                <author>AuthorZ</author>
+            </book>
+            <year>1999</year>
         </book>
         <year>2002</year>
     </pub>

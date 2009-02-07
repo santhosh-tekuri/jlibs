@@ -27,6 +27,7 @@ import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
 import jlibs.xml.sax.sniff.model.expr.string.Concat;
 import jlibs.xml.sax.sniff.model.expr.string.NormalizeSpace;
 import jlibs.xml.sax.sniff.model.expr.string.StringLength;
+import jlibs.xml.sax.sniff.model.expr.string.Translate;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
@@ -262,6 +263,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             function = new Not(contextStack.peek());
         else if(name.equals("normalize-space"))
             function = new NormalizeSpace(contextStack.peek());
+        else if(name.equals("translate"))
+            function = new Translate(contextStack.peek());
 
         if(function==null)
             throw new NotImplementedException("Function "+name+" is not implemented yet");

@@ -96,8 +96,6 @@ public abstract class NodeList extends ValidatedExpression{
                         buff = map.get(context.parent.identity());
                     if(buff!=null)
                         buff.append(event.getResult());
-                    else
-                        System.out.println("");
                 }
             }else{
                 switch(event.type()){
@@ -134,8 +132,6 @@ public abstract class NodeList extends ValidatedExpression{
             StringBuilder buff = map.remove(context.identity());
             if(buff!=null)
                 consume(buff.toString());
-            else
-                System.out.println("");
         }
     }
 }
