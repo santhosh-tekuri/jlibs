@@ -44,8 +44,10 @@ class Contexts implements Iterable<Context>, Debuggable{
     public boolean hasAttributeChild;
     public boolean nextHasAttributeChild;
     public void add(Context context){
-        nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
-        next.add(context);
+        if(context!=null){
+            nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
+            next.add(context);
+        }
     }
 
     public void addUnique(Context context){

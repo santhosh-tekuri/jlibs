@@ -177,18 +177,20 @@ public abstract class Node extends Notifier{
 
     private List<NotificationListener> listeners = new ArrayList<NotificationListener>();
 
+    @Override
     public void addNotificationListener(NotificationListener listener){
         listeners.add(listener);
     }
     
-    public void notify(Object event){
+    @Override
+    public void notify(Context context, Object event){
         if(listeners.size()>0){
             if(debug){
                 debugger.println("notifyListeners("+this+")");
                 debugger.indent++;
             }
             for(NotificationListener listener: listeners)
-                listener.onNotification(this, event);
+                listener.onNotification(this, context, event);
             if(debug)
                 debugger.indent--;
         }
@@ -219,7 +221,7 @@ public abstract class Node extends Notifier{
     }
 
     private boolean sorted;
-    public void contextStarted(Event event){
+    public void contextStarted(Context context, Event event){
         if(contextListeners.size()>0){
             if(debug){
                 debugger.println("contextStarted(%s)",this);
@@ -232,15 +234,15 @@ public abstract class Node extends Notifier{
             }
 
             for(ContextListener listener: contextListeners)
-                listener.contextStarted(event);
+                listener.contextStarted(context, event);
             if(debug)
                 debugger.indent--;
         }
-        notify(event);
+        notify(context, event);
     }
 
     private boolean _sorted;
-    public void contextEnded(){
+    public void contextEnded(Context context){
         if(contextListeners.size()==0)
             return;
 
@@ -254,13 +256,9 @@ public abstract class Node extends Notifier{
         }
 
         for(ContextListener listener: _contextListeners)
-            listener.contextEnded();
+            listener.contextEnded(context);
         if(debug)
             debugger.indent--;
-    }
-
-    public void notifyContext(Event event){
-        notify(event);
     }
 }
 

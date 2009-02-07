@@ -80,9 +80,9 @@ public class Context implements Debuggable{
                     if(changeContext){
                         Context childContext = childContext(child);
                         contexts.add(childContext);
-                        child.contextStarted(event);
+                        child.contextStarted(childContext, event);
                     }else
-                        child.notifyContext(event);
+                        child.notify(this, event);
 
                     matchConstraints(child, event, contexts);
                 }
@@ -91,9 +91,9 @@ public class Context implements Debuggable{
                 if(changeContext){
                     depth--;
                     contexts.add(this);
-                    node.contextStarted(event);
+                    node.contextStarted(this, event);
                 }else
-                    node.notifyContext(event);
+                    node.notify(this, event);
                 matchConstraints(node, event, contexts);
             }else{
                 if(changeContext && contexts.markSize()==0){
@@ -116,9 +116,9 @@ public class Context implements Debuggable{
                 if(changeContext){
                     Context childContext = childContext(constraint);
                     contexts.add(childContext);
-                    constraint.contextStarted(event);
+                    constraint.contextStarted(childContext, event);
                 }else
-                    constraint.notifyContext(event);
+                    constraint.notify(this, event);
                 matchConstraints(constraint, event, contexts);
             }
         }
@@ -126,14 +126,14 @@ public class Context implements Debuggable{
 
     public Context endElement(){
         if(depth==0){
-            node.contextEnded();
+            node.contextEnded(this);
             node.endingContext(this);
             return parentContext();
         }else{
             if(depth>0)
                 depth--;
             else{
-                node.contextEnded();
+                node.contextEnded(this);
                 node.endingContext(this);
                 depth++;
             }
@@ -163,11 +163,11 @@ public class Context implements Debuggable{
 
     /*-------------------------------------------------[ Identity ]---------------------------------------------------*/
 
-    public Object identity(){
+    public ContextIdentity identity(){
         return new ContextIdentity(this);
     }
 
-    static final class ContextIdentity{
+    public static final class ContextIdentity{
         Context context;
         int depth;
 
