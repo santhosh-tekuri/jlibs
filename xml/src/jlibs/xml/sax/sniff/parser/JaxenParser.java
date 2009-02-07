@@ -22,9 +22,7 @@ import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.Literal;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
-import jlibs.xml.sax.sniff.model.expr.bool.AndOr;
-import jlibs.xml.sax.sniff.model.expr.bool.Not;
-import jlibs.xml.sax.sniff.model.expr.bool.Relational;
+import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
 import jlibs.xml.sax.sniff.model.expr.string.Concat;
 import jlibs.xml.sax.sniff.model.expr.string.NormalizeSpace;
@@ -295,7 +293,17 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         else if(binaryExpr.getOperator().equals("or"))
             expr = new AndOr(contextStack.peek(), true);
         else if(binaryExpr.getOperator().equals("="))
-            expr = new Relational(contextStack.peek());
+            expr = new Equals(contextStack.peek());
+        else if(binaryExpr.getOperator().equals("!="))
+            expr = new NotEquals(contextStack.peek());
+        else if(binaryExpr.getOperator().equals("<"))
+            expr = new LessThan(contextStack.peek());
+        else if(binaryExpr.getOperator().equals("<="))
+            expr = new LessThanEqual(contextStack.peek());
+        else if(binaryExpr.getOperator().equals(">"))
+            expr = new GreaterThan(contextStack.peek());
+        else if(binaryExpr.getOperator().equals(">="))
+            expr = new GreaterThanEqual(contextStack.peek());
         else{
             int operator = -1;
             if(binaryExpr.getOperator().equals("+"))

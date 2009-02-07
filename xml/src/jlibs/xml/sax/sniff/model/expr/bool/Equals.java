@@ -15,28 +15,22 @@
 
 package jlibs.xml.sax.sniff.model.expr.bool;
 
-import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Relational extends Comparison{
-    public Relational(Node contextNode, String name){
-        super(contextNode, name);
+public class Equals extends Comparison{
+    public Equals(Node contextNode){
+        super(contextNode, "=");
     }
 
     @Override
-    protected final boolean evaluateObjects(Object lhs, Object rhs){
-        Double lhsNum = Datatype.asNumber(lhs);
-        Double rhsNum = Datatype.asNumber(rhs);
-
-        //noinspection SimplifiableIfStatement
-        if(Double.isNaN(lhsNum) || Double.isNaN(rhsNum))
-            return false;
-        else
-            return evaluateDoubles(lhsNum, rhsNum);
+    protected boolean evaluateObjects(Object lhs, Object rhs){
+        if(lhs instanceof Double){
+            if(Double.isNaN((Double)lhs) || Double.isNaN((Double)rhs))
+                return false;
+        }
+        return lhs.equals(rhs);
     }
-
-    protected abstract boolean evaluateDoubles(Double lhs, Double rhs);
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!-- This comment belongs to Document Node -->
+
+<?xml-stylesheet href="XSL\Sample.html.xsl" type="text/xsl"?>
+
+<root doc-id="Sample.xml" purpose="test" xml:lang="en-us">
+
+    <!-- This is first comment of root node -->
+<?odbc-to-xml table="test" ?>
+
+    <pub>
+        <book id="2">x
+            <pub>
+                <book>
+                    <name>NameZ</name>
+                    <author>AuthorZ</author>
+                </book>
+                <year>1999</year>
+            </pub>
+        </book>
+        <year>2002</year>
+    </pub>
+</root>
