@@ -27,8 +27,6 @@ import org.jaxen.saxpath.SAXPathException;
 
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -73,16 +71,15 @@ public class XPath implements NotificationListener{
 
     /*-------------------------------------------------[ NotificationListener ]---------------------------------------------------*/
 
-    protected List<String> result = new ArrayList<String>();
+    protected Object result;
 
     @Override
     @SuppressWarnings({"unchecked"})
     public void onNotification(Notifier source, Object result){
         if(result instanceof TreeMap){
             TreeMap<Integer, String> nodeSet = (TreeMap<Integer, String>)result;
-            for(Map.Entry<Integer, String> nodeItem: nodeSet.entrySet())
-                this.result.add(nodeItem.getValue());
+            this.result = new ArrayList<String>(nodeSet.values());
         }else
-            this.result.add(result.toString());
+            this.result = result;
     }
 }

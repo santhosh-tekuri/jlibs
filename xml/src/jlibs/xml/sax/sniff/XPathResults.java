@@ -23,15 +23,15 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class XPathResults implements Debuggable{
-    private Map<String, List<String>> map;
+    private Map<String, Object> map;
 
     public XPathResults(List<XPath> xpaths){
-        map = new HashMap<String, List<String>>(xpaths.size());
+        map = new HashMap<String, Object>(xpaths.size());
         for(XPath xpath: xpaths)
             map.put(xpath.toString(), xpath.result);
     }
 
-    public List<String> getResult(XPath xpath){
+    public Object getResult(XPath xpath){
         return map.get(xpath.toString());
     }
 }

@@ -16,8 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.ResultType;
 
 /**
  * @author Santhosh Kumar T
@@ -30,13 +30,13 @@ public class Literal extends Expression{
         this.literal = literal;
     }
 
-    private static ResultType findReturnType(Object literal){
+    private static Datatype findReturnType(Object literal){
         if(literal instanceof String)
-            return ResultType.STRING;
+            return Datatype.STRING;
         else if(literal instanceof Number)
-            return ResultType.NUMBER;
+            return Datatype.NUMBER;
         else if(literal instanceof Boolean)
-            return ResultType.BOOLEAN;
+            return Datatype.BOOLEAN;
         else
             throw new ImpossibleException(literal.getClass().getName());
     }
