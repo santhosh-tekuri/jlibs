@@ -149,14 +149,16 @@ public class TestCase{
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
 
     @SuppressWarnings({"unchecked"})
-    public static void printResults(Object result){
+    public static int printResults(Object result){
         if(result instanceof List)
-            printResults((List<String>)result);
-        else
+            return printResults((List<String>)result);
+        else{
             System.out.println(result);
+            return -1;
+        }
     }
 
-    public static void printResults(List<String> results){
+    public static int printResults(List<String> results){
         boolean first = true;
         for(String result: results){
             if(first)
@@ -166,16 +168,21 @@ public class TestCase{
             System.out.print(result);
         }
         System.out.println();
+        return results.size();
     }
 
     public void printResults(int i){
         System.out.println("         xpath : "+xpaths.get(i));
         System.out.print("    jdk result : ");
-        printResults(jdkResults(i));
+        int count = printResults(jdkResults(i));
+        if(count!=-1)
+            System.out.println(" jdk hit-count : "+count);
         jdkResult.set(i, null);
 
         System.out.print("    dog result : ");
-        printResults(dogResults(i));
+        count = printResults(dogResults(i));
+        if(count!=-1)
+            System.out.println(" dog hit-count : "+count);
         dogResult.set(i, null);
         
         System.out.println("-------------------------------------------------");

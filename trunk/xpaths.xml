@@ -190,6 +190,9 @@
         <xpath>/root/pub/book[price[ . = 10]]</xpath>
         <xpath>/root/pub[book/name and book/author]//book</xpath>
         <xpath>/root/pub[ book/name and book/author ]/book[ pub or name ]</xpath>
+        <xpath>/root/pub/book[ price &lt; 100 and name = 'NameA1' ]</xpath>
+        <xpath>/root/pub/book[ 100 > price and name = 'NameA1' ]</xpath>
+        <xpath>/root/pub/book/price[ . > 8 ]</xpath>
 
         <!-- other tests -->
         <xpath>/root//self::*</xpath>
@@ -200,6 +203,9 @@
         <xpath>/root/pub[ book ]/book[ pub[ book[ name ]]]</xpath>
         <xpath>/root/pub[ book[ pub[ book[ name ]]]]/book[ pub[ book[ name ]]]</xpath>
         <xpath>//book[price]</xpath>
+        <xpath>/root/pub/book[ price &lt; 100 and pub[ year = 1999 and book[ author = 'AuthorZ' and name ]]]</xpath>
+        <xpath>//pub/book[price[@type = "discount"] = 12]</xpath>
+        <xpath>//Item[Price[@symbol="$"]=200]</xpath>
 
         <!-- closure in predicate -->
         <xpath>//pub[.//book//author]</xpath>
@@ -272,6 +278,28 @@
         <xpath>/root[not(pub) and yyy or pub/book]/@purpose</xpath>
         <xpath>/root[not(xxx) and pub or yyy]/@purpose</xpath>
         
+        <!-- output buffering -->
+        <xpath>/root/pub[year = 2002]/book/name</xpath>
+        <xpath>/root/pub[year != 2002]/book[author]/name</xpath>
+        <xpath>/root/pub[year=2002]/book[price&lt;11]/author</xpath>
+
+        <!-- output buffering with closure -->
+        <xpath>//pub[year=2002]/book/name</xpath>
+        <xpath>//pub[year!=2002]/book[author]/name</xpath>
+        <xpath>/root//pub[year=2002]/book[price&lt;11]/author</xpath>
+        <xpath>//pub[year > 1998]/book[author]/author</xpath>
+        <xpath>//pub[year > 1998]/book[author]/name</xpath>
+
+        <!-- closure in predicate -->
+        <xpath>/root[.//pub[year=1999]]</xpath>
+        <xpath>/root[.//pub[year>1999]]</xpath>
+        <xpath>/root[.//*[year=1999]]</xpath>
+        <xpath>/root[.//*[year>1999]]</xpath>
+        <xpath>//pub[year=1999]/book[.//author]/name</xpath>
+        <xpath>/pub[year>=1999]//book[.//author]/name</xpath>
+        <xpath>//pub[year=2002]/book[.//author]/name</xpath>
+        <xpath>/pub[year>=2002]//book[.//author]/name</xpath>
+
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
         <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>
