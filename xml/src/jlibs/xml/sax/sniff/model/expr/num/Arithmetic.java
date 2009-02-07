@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.num;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.ResultType;
 import jlibs.xml.sax.sniff.model.expr.Expression;
@@ -76,5 +77,25 @@ public class Arithmetic extends Expression{
     @Override
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
+
+    @Override
+    public String getName(){
+        switch(operator){
+            case Operator.ADD:
+                return "+";
+            case Operator.SUBTRACT:
+                return "-";
+            case Operator.MULTIPLY:
+                return "*";
+            case Operator.DIV:
+                return "/";
+            case Operator.MOD:
+                return "%";
+            default:
+                throw new ImpossibleException(String.valueOf(operator));
+        }
     }
 }

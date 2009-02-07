@@ -29,7 +29,6 @@ public class ContextManager implements Debuggable{
 
     public void reset(Root root){
         Context rootContext = new Context(root);
-        root.notifyObservers(rootContext, null);
         root.contextStarted(null);
         contexts.reset(rootContext);
 
