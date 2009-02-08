@@ -15,11 +15,8 @@
 
 package jlibs.xml.sax.sniff.model.expr.string;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.expr.Expression;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,43 +24,14 @@ import java.util.Map;
 /**
  * @author Santhosh Kumar T
  */
-public class Translate extends Expression{
+public class Translate extends Function{
     public Translate(Node contextNode){
         super(contextNode, Datatype.STRING, Datatype.STRING, Datatype.STRING, Datatype.STRING);
     }
 
-    class MyEvaluation extends Evaluation{
-        private int pending = 3;
-        private String results[] = new String[3];
-
-        @Override
-        public void finish(){
-            throw new ImpossibleException();
-        }
-
-        @Override
-        protected void consume(Object member, Object result){
-            int i = 0;
-            for(Notifier _member: members){
-                if(_member==member){
-                    results[i] = (String)result;
-                    pending--;
-                    if(pending==0){
-                        setResult(translate(results[0], results[1], results[2]));
-                        return;
-                    }
-                }
-                i++;
-            }
-        }
-
-        @Override
-        protected void print(){}
-    }
- 
     @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
+    protected Object evaluate(Object[] args){
+        return translate((String)args[0], (String)args[1], (String)args[2]);
     }
 
     /*-------------------------------------------------[ Algorithm ]---------------------------------------------------*/

@@ -15,16 +15,14 @@
 
 package jlibs.xml.sax.sniff.model.expr.string;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Concat extends Expression{
+public class Concat extends Function{
     public Concat(Node contextNode){
         super(contextNode, Datatype.STRING, Datatype.STRING, Datatype.STRING);
     }
@@ -38,40 +36,11 @@ public class Concat extends Expression{
         addMember(member, Datatype.STRING);
     }
 
-    class MyEvaluation extends Evaluation{
-        private int pending = members.size();
-        private String results[] = new String[pending];
-        
-        @Override
-        public void finish(){
-            throw new ImpossibleException();
-        }
-
-        @Override
-        protected void consume(Object member, Object result){
-            int i = 0;
-            for(Notifier _member: members){
-                if(_member==member){
-                    results[i] = (String)result;
-                    pending--;
-                    if(pending==0){
-                        StringBuilder buff = new StringBuilder();
-                        for(String str: results)
-                            buff.append(str);
-                        setResult(buff.toString());
-                        return;
-                    }
-                }
-                i++;
-            }
-        }
-
-        @Override
-        protected void print(){}
-    }
-
     @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
+    protected Object evaluate(Object[] args){
+        StringBuilder buff = new StringBuilder();
+        for(Object arg: args)
+            buff.append(arg);
+        return buff.toString();
     }
 }

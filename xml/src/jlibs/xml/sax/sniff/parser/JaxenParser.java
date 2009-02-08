@@ -24,10 +24,7 @@ import jlibs.xml.sax.sniff.model.expr.Literal;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
-import jlibs.xml.sax.sniff.model.expr.string.Concat;
-import jlibs.xml.sax.sniff.model.expr.string.NormalizeSpace;
-import jlibs.xml.sax.sniff.model.expr.string.StringLength;
-import jlibs.xml.sax.sniff.model.expr.string.Translate;
+import jlibs.xml.sax.sniff.model.expr.string.*;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
 import org.jaxen.saxpath.Axis;
@@ -265,6 +262,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             function = new NormalizeSpace(contextStack.peek());
         else if(name.equals("translate"))
             function = new Translate(contextStack.peek());
+        else if(name.equals("contains"))
+            function = new Contains(contextStack.peek());
+        else if(name.equals("starts-with"))
+            function = new StartsWith(contextStack.peek());
+        else if(name.equals("substring"))
+            function = new Substring(contextStack.peek());
 
         if(function==null)
             throw new NotImplementedException("Function "+name+" is not implemented yet");
