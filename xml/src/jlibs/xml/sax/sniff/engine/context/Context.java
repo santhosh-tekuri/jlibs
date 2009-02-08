@@ -19,7 +19,6 @@ import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
@@ -28,7 +27,6 @@ import java.util.LinkedHashMap;
 public class Context implements Debuggable{
     public int order;
     public Context parent, constraintParent;
-    public ArrayList<Context> childContexts = new ArrayList<Context>();
     public Node node;
     public int depth;
 //        int parentDepths[];
@@ -41,7 +39,6 @@ public class Context implements Debuggable{
     public Context childContext(Node child){
         Context context = new Context(child);
         context.parent = this;
-        childContexts.add(context);
 
 //            context.parentDepths = new int[parentDepths.length+1];
 //            System.arraycopy(parentDepths, 0, context.parentDepths, 0, parentDepths.length);

@@ -30,7 +30,6 @@ public class StringNodeSet extends NodeList{
     }
 
     class MyEvaluation extends StringsEvaluation{
-        Context.ContextIdentity contextIdentity;
         private int order;
         private String str;
 
@@ -42,7 +41,6 @@ public class StringNodeSet extends NodeList{
                     return;
             }
             order = _order;
-            contextIdentity = context.identity();
             this.str = (String)result;
         }
 

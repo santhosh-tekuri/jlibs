@@ -73,6 +73,8 @@ public class TestSuite{
     static{
         List<String> list = new ArrayList<String>();
         list.add("name(");
+        list.add("local-name(");
+        list.add("namespace-uri(");
         list.add("string(");
         list.add("normalize-space(");
         list.add("concat(");
