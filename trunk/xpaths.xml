@@ -379,6 +379,8 @@
         <xpath>normalize-space( /root )</xpath>
         <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>
         <xpath>string( //pub[year >= 1999]//author )</xpath>
+        <xpath>//book[ contains( author, 'Z' )]</xpath>
+        <xpath>//book[ starts-with( substring( author, 7 ), 'A' )]</xpath>
     </testcase>
 
     <testcase>

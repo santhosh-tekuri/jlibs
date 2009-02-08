@@ -15,38 +15,20 @@
 
 package jlibs.xml.sax.sniff.model.expr.string;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T
  */
-public class NormalizeSpace extends Expression{
+public class NormalizeSpace extends Function{
     public NormalizeSpace(Node contextNode){
         super(contextNode, Datatype.STRING, Datatype.STRING);
     }
 
-    class MyEvaluation extends Evaluation{
-        @Override
-        public void finish(){
-            throw new ImpossibleException();
-        }
-
-        @Override
-        protected void consume(Object member, Object result){
-            setResult(normalize((String)result));
-        }
-
-        @Override
-        protected void print(){
-        }
-    }
-
     @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
+    protected Object evaluate(Object[] args){
+        return normalize((String)args[0]);
     }
 
     public static String normalize(String str){

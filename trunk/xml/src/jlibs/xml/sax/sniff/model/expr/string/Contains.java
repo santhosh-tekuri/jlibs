@@ -21,13 +21,13 @@ import jlibs.xml.sax.sniff.model.Node;
 /**
  * @author Santhosh Kumar T
  */
-public class StringLength extends Function{
-    public StringLength(Node contextNode){
-        super(contextNode, Datatype.NUMBER, Datatype.STRING);
+public class Contains extends Function{
+    public Contains(Node contextNode){
+        super(contextNode, Datatype.BOOLEAN, Datatype.STRING, Datatype.STRING);
     }
 
     @Override
     protected Object evaluate(Object[] args){
-        return (double)((String)args[0]).length();
+        return ((String)args[0]).contains((String)args[1]);
     }
 }
