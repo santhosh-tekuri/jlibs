@@ -172,6 +172,7 @@ public class TestCase{
     }
 
     public void printResults(int i){
+        System.out.println("          file : "+file);
         System.out.println("         xpath : "+xpaths.get(i));
         System.out.print("    jdk result : ");
         int count = printResults(jdkResults(i));

@@ -130,11 +130,16 @@ public class TestSuite{
                 contents.write(ch, start, length);
             }
 
+            private ArrayList<String> files = new ArrayList<String>();
+
             @Override
             public void endElement(String uri, String localName, String qName) throws SAXException{
-                if(localName.equals("file"))
-                    testCase.file = contents.toString().trim();
-                else if(localName.equals("xpath")){
+                if(localName.equals("file")){
+                    if(testCase.file==null)
+                        testCase.file = contents.toString().trim();
+                    else
+                        files.add(contents.toString().trim());
+                }else if(localName.equals("xpath")){
                     String xpath = contents.toString().trim();
                     testCase.xpaths.add(xpath);
 
@@ -149,8 +154,19 @@ public class TestSuite{
                         }
                         testCase.resultTypes.add(XPathConstants.NODESET);
                     }
-                }else if(localName.equals("testcase"))
+                }else if(localName.equals("testcase")){
                     total += testCase.xpaths.size();
+                    for(String file: files){
+                        TestCase t = new TestCase();
+                        t.file = file;
+                        t.nsContext = testCase.nsContext;
+                        t.xpaths = testCase.xpaths;
+                        t.resultTypes = testCase.resultTypes;
+                        testCases.add(t);
+                        total += t.xpaths.size();
+                    }
+                    files.clear();
+                }
             }
         });
     }

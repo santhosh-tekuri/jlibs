@@ -48,16 +48,24 @@ public abstract class NodeList extends ValidatedExpression{
                 node.addContextListener(new ContextListener(){
                     @Override
                     public void contextStarted(Context context, Event event){
-                        StringsEvaluation evaluation = (StringsEvaluation)evaluationStack.peek();
-                        if(!evaluation.finished && !evaluation.resultPrepared)
-                            evaluation.contextStarted(context);
+                        for(Evaluation eval: evaluationStack){
+                            StringsEvaluation evaluation = (StringsEvaluation)eval;
+                            if(!evaluation.finished && !evaluation.resultPrepared){
+                                if(canEvaluate(context.node, evaluation, context, event)){
+                                    evaluation.contextStarted(context);
+                                }
+                            }
+                        }
                     }
 
                     @Override
                     public void contextEnded(Context context){
-                        StringsEvaluation evaluation = (StringsEvaluation)evaluationStack.peek();
-                        if(!evaluation.finished && !evaluation.resultPrepared)
-                            evaluation.contextEnded(context);
+                        for(Evaluation eval: evaluationStack){
+                            StringsEvaluation evaluation = (StringsEvaluation)eval;
+                            if(!evaluation.finished && !evaluation.resultPrepared){
+                                evaluation.contextEnded(context);
+                            }
+                        }
                     }
 
                     @Override
@@ -133,5 +141,10 @@ public abstract class NodeList extends ValidatedExpression{
             if(buff!=null)
                 consume(buff.toString());
         }
+    }
+
+    @Override
+    public void onNotification(Notifier source, Context context, Object result){
+        onNotification1(source, context, result);
     }
 }
