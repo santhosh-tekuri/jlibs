@@ -50,14 +50,13 @@ public class Position extends Node{
         if(parent!=context.node)
             context = context.parent;
 
-        Integer pos = map.get(context.identity());
+        Integer pos = map.get(context);
         if(pos==null)
-            pos = 1;
+            map.put(context.identity(), pos=1);
         else
-            pos++;
-        map.put(context.identity(), pos);
+            map.put(context, ++pos);
 
-        return this.pos == pos;
+        return this.pos==pos;
     }
 
     @Override
@@ -70,14 +69,12 @@ public class Position extends Node{
     private Map<Object, Integer> map = new HashMap<Object, Integer>();
 
     public void clearHitCount(Context context){
-        map.remove(context.identity());
+        map.remove(context);
     }
 
     public int getHitCount(Context context){
-        Integer pos = map.get(context.identity());
-        if(pos==null)
-            pos = 0;
-        return pos;
+        Integer pos = map.get(context);
+        return pos==null ? 0 : pos;
     }
 
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/

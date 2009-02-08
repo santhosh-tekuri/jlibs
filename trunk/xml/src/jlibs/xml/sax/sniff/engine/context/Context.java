@@ -147,8 +147,11 @@ public class Context implements Debuggable{
     }
 
     @Override
-    public int hashCode(){
-        return depth + node.hashCode();
+    public boolean equals(Object obj){
+        if(obj instanceof ContextIdentity)
+            return obj.equals(this);
+        else
+            return super.equals(obj);
     }
 
     @Override
@@ -185,13 +188,16 @@ public class Context implements Debuggable{
             if(obj instanceof ContextIdentity){
                 ContextIdentity that = (ContextIdentity)obj;
                 return this.context==that.context && this.depth==that.depth;
+            }else if(obj instanceof Context){
+                Context that = (Context)obj;
+                return this.context==that && this.depth==that.depth;
             }else
                 return false;
         }
 
         @Override
         public int hashCode(){
-            return System.identityHashCode(context)+depth;
+            return context.hashCode();
         }
 
         @Override
