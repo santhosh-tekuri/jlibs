@@ -20,12 +20,14 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Context implements Debuggable{
-    public Context parent;
+    public int order;
+    public Context parent, constraintParent;
     public ArrayList<Context> childContexts = new ArrayList<Context>();
     public Node node;
     public int depth;
@@ -79,12 +81,13 @@ public class Context implements Debuggable{
                 if(child.matches(this, event)){
                     if(changeContext){
                         Context childContext = childContext(child);
+                        childContext.order = event.order();
                         contexts.add(childContext);
                         child.contextStarted(childContext, event);
                     }else
                         child.notify(this, event);
 
-                    matchConstraints(child, event, contexts);
+                    matchConstraints(child, event, contexts, null);
                 }
             }
             if(node.consumable(event)){
@@ -92,9 +95,10 @@ public class Context implements Debuggable{
                     depth--;
                     contexts.add(this);
                     node.contextStarted(this, event);
+                    order = event.order();
                 }else
                     node.notify(this, event);
-                matchConstraints(node, event, contexts);
+                matchConstraints(node, event, contexts, null);
             }else{
                 if(changeContext && contexts.markSize()==0){
                     depth++;
@@ -108,18 +112,21 @@ public class Context implements Debuggable{
             contexts.printNext(message);
     }
 
-    private void matchConstraints(Node child, Event event, Contexts contexts){
+    private void matchConstraints(Node child, Event event, Contexts contexts, Context constraintParent){
         boolean changeContext = event.hasChildren();
 
         for(Node constraint: child.constraints()){
             if(constraint.matches(this, event)){
+                Context childContext = null;
                 if(changeContext){
-                    Context childContext = childContext(constraint);
+                    childContext = childContext(constraint);
+                    childContext.constraintParent = constraintParent;
                     contexts.add(childContext);
+                    childContext.order = event.order();
                     constraint.contextStarted(childContext, event);
                 }else
                     constraint.notify(this, event);
-                matchConstraints(constraint, event, contexts);
+                matchConstraints(constraint, event, contexts, childContext);
             }
         }
     }
@@ -148,17 +155,8 @@ public class Context implements Debuggable{
     }
 
     @Override
-    public boolean equals(Object obj){
-        if(obj instanceof Context){
-            Context that = (Context)obj;
-            return this.depth==that.depth && this.node==that.node;
-        }else
-            return false;
-    }
-
-    @Override
     public String toString(){
-        return "["+depth+"] "+node;
+        return "["+depth+"] "+node+"@"+System.identityHashCode(this)+"@";
     }
 
     /*-------------------------------------------------[ Identity ]---------------------------------------------------*/
@@ -170,10 +168,19 @@ public class Context implements Debuggable{
     public static final class ContextIdentity{
         Context context;
         int depth;
+        int depths[];
+        LinkedHashMap<Context, Integer> map = new LinkedHashMap<Context, Integer>();
+        public int order;
 
         ContextIdentity(Context context){
             this.context = context;
             depth = context.depth;
+            order = context.order;
+
+            while(context!=null){
+                map.put(context, context.depth);
+                context = context.parent;
+            }
         }
 
         @Override
@@ -193,6 +200,44 @@ public class Context implements Debuggable{
         @Override
         public String toString(){
             return context+"["+depth+']';
+        }
+
+        public boolean isChild(Context c){
+            if(c.node.depth<this.context.node.depth)
+                return false;
+            
+            if(this.context==c)
+                return Math.abs(this.depth)<Math.abs(c.depth);
+
+            while(c.node.depth>this.context.node.depth)
+                c = c.parent;
+
+            if(c.node==this.context.node)
+                return this.context==c;
+            
+            Node node = c.node;
+            while(node!=null){
+                if(node==this.context.node)
+                    return this.context==c;
+                node = node.constraintParent;
+                c = c.constraintParent;
+            }
+
+            return false;
+        }
+
+        public int getDepthTo(Context c){
+            int depth = 0;
+            while(c!=null){
+                if(this.context==c){
+                    depth += Math.abs(c.depth)-Math.abs(this.depth);
+                    return depth;
+                }else{
+                    depth += Math.abs(c.depth);
+                    c = c.parent;
+                }
+            }
+            return -1;
         }
     }
 }

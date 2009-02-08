@@ -120,9 +120,10 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
 
     protected abstract class Evaluation{
+        public Context.ContextIdentity contextIdentity;
         public boolean finished;
 
-        protected final void setResult(Object result){
+        protected void setResult(Object result){
             if(result==null)
                 result = defaultValue();
 
@@ -130,7 +131,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
                 debugger.println("evaluationFinished: %s", Expression.this);
                 printResult("result", result);
             }
-            
+
             finished = true;
             if(result!=null)
                 Expression.this.notify(context, result);
@@ -180,7 +181,9 @@ public abstract class Expression extends Notifier implements ContextListener, No
     public void contextStarted(Context context, Event event){
         if(debug)
             debugger.println("newEvaluation: %s", this);
-        evaluationStack.push(createEvaluation());
+        Expression.Evaluation evaluation = createEvaluation();
+        evaluation.contextIdentity = context.identity();
+        evaluationStack.push(evaluation);
     }
 
     @Override

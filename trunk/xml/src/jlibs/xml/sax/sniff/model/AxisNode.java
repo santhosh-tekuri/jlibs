@@ -15,10 +15,10 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import org.jaxen.saxpath.Axis;
-import jlibs.xml.sax.sniff.model.axis.Child;
 import jlibs.xml.sax.sniff.model.axis.Attribute;
+import jlibs.xml.sax.sniff.model.axis.Child;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
@@ -37,7 +37,7 @@ public abstract class AxisNode extends Node{
 
     @Override
     public String toString(){
-        return Axis.lookup(type)+"::";
+        return Axis.lookup(type)+"::_"+depth;
     }
 
     public static AxisNode newInstance(int type){

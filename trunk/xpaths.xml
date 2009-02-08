@@ -84,7 +84,10 @@
               xmlns:dns2="http://default2"
               xmlns:dns3="http://default3">
         <file>xmlFiles/sample.xml</file>
-        
+        <file>xmlFiles/sample1.xml</file>
+        <file>xmlFiles/sample2.xml</file>
+        <file>xmlFiles/sample3.xml</file>
+
         <!-- simple queries -->
         <xpath>/root</xpath>
         <xpath>/root/pub</xpath>
@@ -156,6 +159,11 @@
         <xpath>/root/pub/book/attribute::id</xpath>
         <xpath>//book/attribute::*</xpath>
         <xpath>//book/pub/descendant-or-self::*</xpath>
+        <xpath>//book[name = 'NameZ']/self::*</xpath>
+        <xpath>//book[name = 'NameZ']/child::*</xpath>
+        <xpath>//book[self::*//name = 'NameZ']/child::*</xpath>
+        <xpath>//book[self::*/@id = '1']</xpath>
+        <xpath>//book[self::*/author = 'AuthorA1' or self::*/price > 12]</xpath>
 
         <!-- other tests -->
 		<xpath>/root//*</xpath>
@@ -221,6 +229,18 @@
 
         <!-- closure in predicate -->
         <xpath>//pub[.//book//author]</xpath>
+        <xpath>/root/pub//*[year]</xpath>
+        <xpath>/root/pub//*[.//year]</xpath>
+        <xpath>/root/pub/*[.//year]</xpath>
+        <xpath>/root/pub//*[descendant-or-self::year]</xpath>
+        <xpath>/root[.//pub[year=1999]]</xpath>
+        <xpath>/root[.//pub[year>1999]]</xpath>
+        <xpath>/root[.//*[year=1999]]</xpath>
+        <xpath>/root[.//*[year>1999]]</xpath>
+        <xpath>//pub[year=1999]/book[.//author]/name</xpath>
+        <xpath>/pub[year>=1999]//book[.//author]/name</xpath>
+        <xpath>//pub[year=2002]/book[.//author]/name</xpath>
+        <xpath>/pub[year>=2002]//book[.//author]/name</xpath>
 
         <!-- queries with Or, And & AndOr structures in predicate-->
         <xpath>//book[price and author]</xpath>
@@ -308,15 +328,6 @@
         <xpath>/root//pub[year=2002]/book[price&lt;11]/author</xpath>
         <xpath>//pub[year > 1998]/book[author]/author</xpath>
         <xpath>//pub[year > 1998]/book[author]/name</xpath>
-
-        <!-- closure in predicate -->
-        <xpath>/root[.//pub[year=1999]]</xpath>
-        <xpath>/root[.//pub[year>1999]]</xpath>
-        <xpath>/root[.//*[year=1999]]</xpath>
-        <xpath>//pub[year=1999]/book[.//author]/name</xpath>
-        <xpath>/pub[year>=1999]//book[.//author]/name</xpath>
-        <xpath>//pub[year=2002]/book[.//author]/name</xpath>
-        <xpath>/pub[year>=2002]//book[.//author]/name</xpath>
 
         <!-- namespace functions -->
         <xpath>/root/XMLFragment2/env:Envelope[local-name() = 'Envelope']</xpath>

@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
@@ -29,8 +30,15 @@ public class Predicate extends ValidatedExpression{
         super(Datatype.BOOLEAN, contextNode, member, predicate);
     }
 
+    int evaluationIndex;
     private class MyEvaluation extends DelayedEvaluation{
         private boolean memberHit;
+
+        @Override
+        protected void setResult(Object result){
+            evaluationIndex = id;
+            super.setResult(result);
+        }
 
         @Override
         protected Object getCachedResult(){
@@ -55,5 +63,10 @@ public class Predicate extends ValidatedExpression{
     @Override
     protected Expression.Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    @Override
+    public void onNotification(Notifier source, Context context, Object result){
+        onNotification1(source, context, result);
     }
 }
