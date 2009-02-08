@@ -107,7 +107,10 @@ public abstract class ValidatedExpression extends Expression{
     
     public void onNotification2(Notifier source, Context context, Object result){
         if(!(source instanceof Predicate) || source==members.get(0)){
-            super.onNotification(source, context, result);
+            if(result instanceof Event && source!=contextNode)
+                onNotification1(source, context, result);
+            else
+                super.onNotification(source, context, result);
             return;
         }
 

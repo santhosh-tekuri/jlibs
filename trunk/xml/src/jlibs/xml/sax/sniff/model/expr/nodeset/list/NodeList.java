@@ -141,6 +141,12 @@ public abstract class NodeList extends ValidatedExpression{
             if(buff!=null)
                 consume(buff.toString());
         }
+
+        @Override
+        protected void print(){
+            debugger.println("map: %s", map);
+            super.print();
+        }
     }
 
     @Override

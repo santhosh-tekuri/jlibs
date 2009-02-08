@@ -164,6 +164,11 @@
         <xpath>//book[self::*//name = 'NameZ']/child::*</xpath>
         <xpath>//book[self::*/@id = '1']</xpath>
         <xpath>//book[self::*/author = 'AuthorA1' or self::*/price > 12]</xpath>
+        <xpath>//book[@id=2]/descendant::*</xpath>
+        
+        <!-- self axis with name -->
+        <xpath>//*[self::book/price > 12]</xpath>
+        <xpath>//book[self::book/price > 12]</xpath>
 
         <!-- other tests -->
 		<xpath>/root//*</xpath>
@@ -185,6 +190,7 @@
         <xpath>//chapter</xpath>
         <xpath>//para</xpath>
         <xpath>//*//temp[1]/.</xpath>
+        <xpath>//env:Envelope/Body/Order//Item/Price[@symbol="$"]</xpath>
 
         <!-- position -->
         <xpath>/root/pub/book[ 1 ]</xpath>
@@ -294,6 +300,14 @@
 
         <!-- count() function -->
         <xpath>/root[count(xxx) = 0]</xpath>
+        <xpath>/root//pub[count(book) > 0]</xpath>
+        <xpath>/root//pub[count(book) > 2]</xpath>
+        <xpath>/root//pub[count(book[ price > 10]) > 1]</xpath>
+        <xpath>/root//pub[count(book[ price > 12]) > 1]</xpath>
+        <xpath>//pub[count(book[count(*) > 4]) > 1]</xpath>
+        <xpath>//pub[count(book[count(price) > 0]) > 0]</xpath>
+        <xpath>//pub[count(book[count(name) > 0]) > 0]</xpath>
+        <xpath>//pub[count(book[count(price) > 100 ]) = 0]</xpath>
         
         <!-- not() function -->
         <xpath>/root[not(xxx)]</xpath>
@@ -316,7 +330,16 @@
         <xpath>/root/pub[count(book) > 0]</xpath>
         <xpath>/root[count(pub[book]/book) > 0]/pub</xpath>
         <xpath>/root[count(pub/book[price]/price) > 3]</xpath>
-        
+        <xpath>/root[not(count(xxx) != 0)]/@purpose</xpath>
+        <xpath>//pub[count(book[ not(count(price) > 0)] ) > 0]</xpath>
+
+        <!-- multiple closures with elimination of duplicates from output -->
+        <xpath>//pub[year=2002]//book//name</xpath>        
+        <xpath>//pub[year=2002]//book[author]//name</xpath>
+        <xpath>/root//pub[year=2002]//book[price&lt;11]/author</xpath>
+        <xpath>//pub[year > 1998]//book[author]//name/text()</xpath>
+        <xpath>//pub[year &lt;= 2004]//book[author]//name/text()</xpath>
+
         <!-- output buffering -->
         <xpath>/root/pub[year = 2002]/book/name</xpath>
         <xpath>/root/pub[year != 2002]/book[author]/name</xpath>
@@ -329,10 +352,20 @@
         <xpath>//pub[year > 1998]/book[author]/author</xpath>
         <xpath>//pub[year > 1998]/book[author]/name</xpath>
 
+        <!-- multiple closures and multiple closure in predicate -->
+        <xpath>//pub[.//book//author]</xpath>
+        <xpath>//pub[year=1999]//book[.//author]//name</xpath>
+        <xpath>//pub[year>=1999]//book[.//author]//name</xpath>
+        <xpath>//pub[year=2002]//book[.//author]//name</xpath>
+        <xpath>//pub[year>=2002]//book[.//author]//name</xpath>
+        
         <!-- namespace functions -->
         <xpath>/root/XMLFragment2/env:Envelope[local-name() = 'Envelope']</xpath>
         <xpath>/root/*/env:Envelope[local-name() = 'Envelope']</xpath>
         <xpath>/root/*/*[local-name()="Envelope" and namespace-uri()='http://mysoap']</xpath>
+        <xpath>/root//env:Envelope[local-name() = 'Envelope']</xpath>
+        <xpath>//*[namespace-uri()="http://mysoap"]</xpath>
+        <xpath>//*[local-name()="Envelope" and namespace-uri()='http://mysoap']</xpath>
 
         <!-- boolean result -->
         <xpath type="boolean">/root[pub]/pub[book]/book/price > 10</xpath>
@@ -345,6 +378,7 @@
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
         <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>
+        <xpath>string( //pub[year >= 1999]//author )</xpath>
     </testcase>
 
     <testcase>

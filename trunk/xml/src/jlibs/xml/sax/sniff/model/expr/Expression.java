@@ -119,6 +119,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         listener.onNotification(this, context, result);
     }
 
+    public Context.ContextIdentity contextIdentityOfLastEvaluation;
     protected abstract class Evaluation{
         public Context.ContextIdentity contextIdentity;
         public boolean finished;
@@ -133,8 +134,10 @@ public abstract class Expression extends Notifier implements ContextListener, No
             }
 
             finished = true;
-            if(result!=null)
+            if(result!=null){
+                contextIdentityOfLastEvaluation = contextIdentity;
                 Expression.this.notify(context, result);
+            }
         }
 
         public abstract void finish();
@@ -170,6 +173,22 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
         if(debug)
             debugger.indent--;
+    }
+
+    protected void evalutate(Evaluation evaluation, Notifier source, Context context, Object result){
+        if(!evaluation.finished){
+            if(debug){
+                debugger.println("Evaluation:");
+                debugger.indent++;
+            }
+            this.context = context;
+            evaluation.consume(source, result);
+            if(debug){
+                if(!evaluation.finished)
+                    evaluation.print();
+                debugger.indent--;
+            }
+        }
     }
 
 /*-------------------------------------------------[ Context ]---------------------------------------------------*/
