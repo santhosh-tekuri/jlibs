@@ -122,21 +122,8 @@ public abstract class ValidatedExpression extends Expression{
         int evaluationIndex = ((Predicate)source).evaluationIndex;
         for(Evaluation eval: evaluationStack){
             DelayedEvaluation evaluation = (DelayedEvaluation)eval;
-            if(evaluation.id==evaluationIndex){
-                if(!evaluation.finished){
-                    if(debug){
-                        debugger.println("Evaluation:");
-                        debugger.indent++;
-                    }
-                    this.context = context;
-                    evaluation.consume(source, result);
-                    if(debug){
-                        if(!evaluation.finished)
-                            evaluation.print();
-                        debugger.indent--;
-                    }
-                }
-            }
+            if(evaluation.id==evaluationIndex)
+                evalutate(eval, source, context, result);
         }
 
         if(debug)
@@ -165,21 +152,8 @@ public abstract class ValidatedExpression extends Expression{
         }
 
         for(Evaluation eval: evaluationStack){
-            if(canEvaluate((Node)source, eval, context, (Event)result)){
-                if(!eval.finished){
-                    if(debug){
-                        debugger.println("Evaluation:");
-                        debugger.indent++;
-                    }
-                    this.context = context;
-                    ((DelayedEvaluation)eval).consume(source, result);
-                    if(debug){
-                        if(!eval.finished)
-                            ((DelayedEvaluation)eval).print();
-                        debugger.indent--;
-                    }
-                }
-            }
+            if(canEvaluate((Node)source, eval, context, (Event)result))
+                evalutate(eval, source, context, result);
         }
 
         if(debug)
