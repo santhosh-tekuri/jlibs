@@ -30,12 +30,20 @@ public class StringNodeSet extends NodeList{
     }
 
     class MyEvaluation extends StringsEvaluation{
+        Context.ContextIdentity contextIdentity;
+        private int order;
         private String str;
 
         @Override
         protected void consume(Object result){
-            str = (String)result;
-            resultPrepared();
+            int _order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
+            if(str!=null){
+                if(_order>order)
+                    return;
+            }
+            order = _order;
+            contextIdentity = context.identity();
+            this.str = (String)result;
         }
 
         @Override
@@ -59,5 +67,10 @@ public class StringNodeSet extends NodeList{
     @Override
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    @Override
+    public void onNotification(Notifier source, Context context, Object result){
+        super.onNotification(source, context, result);
     }
 }
