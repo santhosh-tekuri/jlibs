@@ -219,6 +219,31 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         current = _current;
     }
     
+    private Expression createFunction(String name){
+        if(name.equals("number"))
+            return new TypeCast(contextStack.peek(), Datatype.NUMBER);
+        else if(name.equals("boolean"))
+            return new TypeCast(contextStack.peek(), Datatype.BOOLEAN);
+        else if(name.equals("string-length"))
+            return new StringLength(contextStack.peek());
+        else if(name.equals("concat"))
+            return new Concat(contextStack.peek());
+        else if(name.equals("not"))
+            return new Not(contextStack.peek());
+        else if(name.equals("normalize-space"))
+            return new NormalizeSpace(contextStack.peek());
+        else if(name.equals("translate"))
+            return new Translate(contextStack.peek());
+        else if(name.equals("contains"))
+            return new Contains(contextStack.peek());
+        else if(name.equals("starts-with"))
+            return new StartsWith(contextStack.peek());
+        else if(name.equals("substring"))
+            return new Substring(contextStack.peek());
+        else
+            throw new NotImplementedException("Function "+name+" is not implemented yet");
+    }
+
     @SuppressWarnings({"unchecked"})
     protected Notifier process(FunctionCallExpr functionExpr) throws SAXPathException{
         String prefix = functionExpr.getPrefix();
@@ -248,30 +273,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                 return current = f;
         }
 
-        if(name.equals("number"))
-            function = new TypeCast(contextStack.peek(), Datatype.NUMBER);
-        else if(name.equals("boolean"))
-            function = new TypeCast(contextStack.peek(), Datatype.BOOLEAN);
-        else if(name.equals("string-length"))
-            function = new StringLength(contextStack.peek());
-        else if(name.equals("concat"))
-            function = new Concat(contextStack.peek());
-        else if(name.equals("not"))
-            function = new Not(contextStack.peek());
-        else if(name.equals("normalize-space"))
-            function = new NormalizeSpace(contextStack.peek());
-        else if(name.equals("translate"))
-            function = new Translate(contextStack.peek());
-        else if(name.equals("contains"))
-            function = new Contains(contextStack.peek());
-        else if(name.equals("starts-with"))
-            function = new StartsWith(contextStack.peek());
-        else if(name.equals("substring"))
-            function = new Substring(contextStack.peek());
-
-        if(function==null)
-            throw new NotImplementedException("Function "+name+" is not implemented yet");
-        
+        function = createFunction(name);
         int i = 0;
         for(Expr param: (List<Expr>)functionExpr.getParameters()){
             if(i!=0)
