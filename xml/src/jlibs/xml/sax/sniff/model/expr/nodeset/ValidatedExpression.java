@@ -130,6 +130,7 @@ public abstract class ValidatedExpression extends Expression{
             debugger.indent--;
     }
 
+    @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
     protected boolean canEvaluate(Node source, Evaluation evaluation, Context context, Event event){
         int diff = source.depth-contextNode.depth;
         if(diff==0)
@@ -137,7 +138,7 @@ public abstract class ValidatedExpression extends Expression{
         else if(event.hasChildren())
             return evaluation.contextIdentity.isChild(context);
         else
-            return evaluation.contextIdentity.equals(context.identity()) || evaluation.contextIdentity.isChild(context); 
+            return evaluation.contextIdentity.equals(context) || evaluation.contextIdentity.isChild(context); 
     }
 
     public void onNotification1(Notifier source, Context context, Object result){
