@@ -60,22 +60,6 @@ public abstract class Comparison extends Expression{
             setResult(false);
         }
 
-        private boolean evaluateObjectObject( Object lhs, Object rhs){
-          if(lhs instanceof Boolean || rhs instanceof Boolean){
-              boolean b1 = Datatype.asBoolean(lhs);
-              boolean b2 = Datatype.asBoolean(rhs);
-              return evaluateObjects(b1, b2);
-          }else if(lhs instanceof Double || rhs instanceof Double){
-              double d1 = Datatype.asNumber(lhs);
-              double d2 = Datatype.asNumber(rhs);
-              return evaluateObjects(d1, d2);
-          }else{
-              String s1 = Datatype.asString(lhs);
-              String s2 = Datatype.asString(rhs);
-              return evaluateObjects(s1, s2);
-          }
-        }
-
         @Override
         protected void consume(Object member, Object result){
             if(member==members.get(0))
@@ -95,7 +79,7 @@ public abstract class Comparison extends Expression{
         protected void print(){}
     }
 
-    protected abstract boolean evaluateObjects(Object lhs, Object rhs);
+    protected abstract boolean evaluateObjectObject(Object lhs, Object rhs);
     
     @Override
     protected Evaluation createEvaluation(){

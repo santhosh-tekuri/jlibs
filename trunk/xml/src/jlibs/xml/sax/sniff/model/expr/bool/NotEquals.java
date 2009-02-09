@@ -20,7 +20,7 @@ import jlibs.xml.sax.sniff.model.Node;
 /**
  * @author Santhosh Kumar T
  */
-public class NotEquals extends Comparison{
+public class NotEquals extends Equality{
     public NotEquals(Node contextNode){
         super(contextNode, "!=");
     }

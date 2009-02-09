@@ -47,6 +47,11 @@
     <testcase>
         <file>xmlFiles/simple.xml</file>
 
+        <xpath>string(/)</xpath>
+        <xpath>string(/root)</xpath>
+        <xpath>string(/root/a)</xpath>
+        <xpath>string(/root/c)</xpath>
+
         <xpath>concat( /root/a, /root/b )</xpath>
         <xpath>concat( /root/b, /root/a )</xpath>
 
@@ -401,6 +406,28 @@
         <xpath>/numbers/set</xpath>
         <xpath>/numbers/set[1]</xpath>
         <xpath>/numbers/set[2]</xpath>
+
+        <xpath type="boolean">/numbers/set/nr = '-3'</xpath>
+        <xpath type="boolean">/numbers/set/nr = -3</xpath>
+        <xpath type="boolean">/numbers/set/nr = 24</xpath>
+        <xpath type="boolean">/numbers/set/nr/@value = '9999'</xpath>
+        <xpath type="boolean">/numbers/set/nr/@value = 9999.0</xpath>
+        <xpath type="boolean">/numbers/set/nr/@value = 66</xpath>
+
+        <xpath type="boolean">(8 * 2 + 1) = 17</xpath>
+        <xpath type="boolean">(1 + 8 * 2) = 17</xpath>
+        <xpath type="boolean">(7 - 3 + 1) = 5</xpath>
+        <xpath type="boolean">(8 - 4 + 5 - 6) = 3</xpath>
+        <xpath type="number">3 - 2 - 1</xpath>
+        <xpath type="number">8 div 4 div 2</xpath>
+        <xpath type="number">3 mod 7 mod 5</xpath>
+        <xpath type="boolean">1 = 2 = 2</xpath>
+        <xpath type="boolean">2 != 3 != 1</xpath>
+        <xpath type="boolean">3 &gt; 2 &gt; 1</xpath>
+        <xpath type="boolean">3 &gt;= 2 &gt;= 2</xpath>
+        <xpath type="boolean">1 &lt; 2 &lt; 3</xpath>
+        <xpath type="boolean">2 &lt;= 2 &lt;= 3</xpath>
+
     </testcase>
 
     <testcase>
@@ -464,6 +491,9 @@
         <xpath>/web-app/servlet[2]/servlet-name</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/text()</xpath>
         <xpath>/web-app/servlet[2][servlet-name]/*</xpath>
+
+        <xpath type="boolean">/web-app/servlet/servlet-name = 'file'</xpath>
+        <xpath type="boolean">/web-app/servlet/servlet-name = 'snoop'</xpath>
 
         <!-- test Axes -->
         <xpath>/*/servlet</xpath>
