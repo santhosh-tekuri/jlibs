@@ -19,6 +19,7 @@ package jlibs.xml.sax.sniff.events;
  * @author Santhosh Kumar T
  */
 public abstract class Event{
+    public static final int START = -1;
     public static final int DOCUMENT = 0;
     public static final int ELEMENT = 1;
     public static final int TEXT = 2;

@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.engine.context;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.Start;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
 
@@ -27,9 +28,9 @@ import org.xml.sax.Attributes;
 public class ContextManager implements Debuggable{
     private Contexts contexts = new Contexts();
 
-    public void reset(Root root){
+    public void reset(Root root, Start event){
         Context rootContext = new Context(root);
-        root.contextStarted(rootContext, null);
+        root.contextStarted(rootContext, event);
         contexts.reset(rootContext);
 
         if(debug)

@@ -53,6 +53,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     // events
     private DocumentOrder documentOrder = new DocumentOrder();
+    private Start start = new Start(documentOrder);
     private Document document = new Document(documentOrder);
     private Element element;
     private Attribute attribute = new Attribute(documentOrder);
@@ -149,7 +150,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
         documentOrder.reset();
         contents.reset();
-        contextManager.reset(root);
+        contextManager.reset(root, start);
         elementStack.reset();
     }
 

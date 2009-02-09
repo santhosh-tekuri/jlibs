@@ -18,18 +18,27 @@ package jlibs.xml.sax.sniff.events;
 /**
  * @author Santhosh Kumar T
  */
-public class DocumentOrder{
-    private int order = -1;
-
-    public int get(){
-        return order;
+public class Start extends Event{
+    public Start(DocumentOrder documentOrder){
+        super(documentOrder);
     }
 
-    public void increment(){
-        order++;
+    @Override
+    public int type(){
+        return START;
     }
 
-    public void reset(){
-        order = -1;
+    @Override
+    public boolean hasChildren(){
+        return true;
+    }
+
+    public void setData(){
+        setResultWrapper(this);
+    }
+
+    @Override
+    public String toString(){
+        return "";
     }
 }
