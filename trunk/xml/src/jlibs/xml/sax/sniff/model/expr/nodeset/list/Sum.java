@@ -34,11 +34,15 @@ public class Sum extends NodeList{
         @Override
         protected void consume(Object result){
             d += (Double)result;
+            if(Double.isNaN(d))
+                resultPrepared();
         }
 
         @Override
         protected void consume(String str){
             d += Datatype.asNumber(str);
+            if(Double.isNaN(d))
+                resultPrepared();
         }
 
         @Override
