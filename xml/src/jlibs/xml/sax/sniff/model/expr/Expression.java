@@ -37,6 +37,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         this.contextNode = contextNode;
         this.returnType = returnType;
         this.memberTypes = memberTypes;
+        members = new ArrayList<Notifier>(memberTypes.length);
         
         depth = contextNode.depth;
         hits.totalHits = contextNode.hits.totalHits;
@@ -50,7 +51,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         return returnType;
     }
 
-    protected List<Notifier> members = new ArrayList<Notifier>();
+    protected List<Notifier> members;
     protected final Datatype memberTypes[];
 
     public Datatype memberType(int index){
