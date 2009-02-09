@@ -21,22 +21,27 @@ import jlibs.xml.sax.sniff.model.Node;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Relational extends Comparison{
-    public Relational(Node contextNode, String name){
+public abstract class Equality extends Comparison{
+    public Equality(Node contextNode, String name){
         super(contextNode, name);
     }
 
     @Override
-    protected final boolean evaluateObjectObject(Object lhs, Object rhs){
-        Double lhsNum = Datatype.asNumber(lhs);
-        Double rhsNum = Datatype.asNumber(rhs);
-
-        //noinspection SimplifiableIfStatement
-        if(Double.isNaN(lhsNum) || Double.isNaN(rhsNum))
-            return false;
-        else
-            return evaluateDoubles(lhsNum, rhsNum);
+    protected boolean evaluateObjectObject( Object lhs, Object rhs){
+        if(lhs instanceof Boolean || rhs instanceof Boolean){
+            boolean b1 = Datatype.asBoolean(lhs);
+            boolean b2 = Datatype.asBoolean(rhs);
+            return evaluateObjects(b1, b2);
+        }else if(lhs instanceof Double || rhs instanceof Double){
+            double d1 = Datatype.asNumber(lhs);
+            double d2 = Datatype.asNumber(rhs);
+            return evaluateObjects(d1, d2);
+        }else{
+            String s1 = Datatype.asString(lhs);
+            String s2 = Datatype.asString(rhs);
+            return evaluateObjects(s1, s2);
+        }
     }
 
-    protected abstract boolean evaluateDoubles(Double lhs, Double rhs);
+    protected abstract boolean evaluateObjects(Object lhs, Object rhs);
 }

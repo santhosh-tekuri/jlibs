@@ -20,7 +20,7 @@ import jlibs.xml.sax.sniff.model.Node;
 /**
  * @author Santhosh Kumar T
  */
-public class Equals extends Comparison{
+public class Equals extends Equality{
     public Equals(Node contextNode){
         super(contextNode, "=");
     }
