@@ -36,6 +36,8 @@ public class XPathSimplifier{
     private Expr simplify(Expr expr){
         if(expr instanceof LocationPath)
             return simplify((LocationPath)expr);
+        else if(expr instanceof DefaultUnaryExpr)
+            return simplify((DefaultUnaryExpr)expr);
         else if(expr instanceof DefaultBinaryExpr)
             return simplify((DefaultBinaryExpr)expr);
         else if(expr instanceof FunctionCallExpr)
@@ -73,7 +75,16 @@ public class XPathSimplifier{
 
         return isFunction(predicate.getExpr(), "true") ? null : predicate;
     }
-    
+
+    private Expr simplify(DefaultUnaryExpr expr){
+        if(expr.getExpr() instanceof NumberExpr){
+            double d = ((NumberExpr)expr.getExpr()).getNumber().doubleValue();
+            d*=-1;
+            return new DefaultNumberExpr(d);
+        }else
+            return expr;
+    }
+
     private Expr simplify(DefaultBinaryExpr expr){
         expr.setLHS(simplify(expr.getLHS()));
         expr.setRHS(simplify(expr.getRHS()));
