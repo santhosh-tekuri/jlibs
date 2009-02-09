@@ -13,13 +13,12 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.expr.string;
+package jlibs.xml.sax.sniff.model.expr;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
-import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
  * @author Santhosh Kumar T

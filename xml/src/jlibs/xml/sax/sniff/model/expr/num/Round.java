@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.model.expr.string;
+package jlibs.xml.sax.sniff.model.expr.num;
 
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
@@ -22,13 +22,20 @@ import jlibs.xml.sax.sniff.model.expr.Function;
 /**
  * @author Santhosh Kumar T
  */
-public class StartsWith extends Function{
-    public StartsWith(Node contextNode){
-        super(contextNode, Datatype.BOOLEAN, Datatype.STRING, Datatype.STRING);
+public class Round extends Function{
+    protected Round(Node contextNode){
+        super(contextNode, Datatype.NUMBER, Datatype.NUMBER);
     }
 
     @Override
     protected Object evaluate(Object[] args){
-        return ((String)args[0]).startsWith((String)args[1]);
+        return evaluate((Double)args[0]);
+    }
+
+    public static double evaluate(double d){
+        if(Double.isNaN(d) || Double.isInfinite(d))
+            return d;
+
+        return (double)Math.round(d);
     }
 }

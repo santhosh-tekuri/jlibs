@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model.expr.string;
 
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.expr.Function;
 
 import java.util.HashMap;
 import java.util.Map;

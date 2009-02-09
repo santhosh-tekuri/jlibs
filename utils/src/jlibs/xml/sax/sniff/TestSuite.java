@@ -76,6 +76,9 @@ public class TestSuite{
         list.add("local-name(");
         list.add("namespace-uri(");
         list.add("string(");
+        list.add("substring(");
+        list.add("substring-after(");
+        list.add("substring-before(");
         list.add("normalize-space(");
         list.add("concat(");
         list.add("translate(");
@@ -92,6 +95,9 @@ public class TestSuite{
         list.add("boolean(");
         list.add("true(");
         list.add("false(");
+        list.add("not(");
+        list.add("contains(");
+        list.add("starts-with(");
         types.put(XPathConstants.BOOLEAN, list);
     }
 

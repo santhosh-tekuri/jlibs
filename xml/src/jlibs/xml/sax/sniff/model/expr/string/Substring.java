@@ -17,6 +17,8 @@ package jlibs.xml.sax.sniff.model.expr.string;
 
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.expr.Function;
+import jlibs.xml.sax.sniff.model.expr.num.Round;
 
 /**
  * @author Santhosh Kumar T
@@ -29,31 +31,65 @@ public class Substring extends Function{
     @Override
     protected Object evaluate(Object[] args){
         String str = (String)args[0];
-
-        int start = round((Double)args[1])-1; // subtract 1 as Java strings are zero based
-
-        int len = args.length==3 ? round((Double)args[2]) : str.length();
-        if(len<0)
+        if(str==null)
             return "";
-        else if(len>str.length())
-            len = str.length();
 
-        if(start<0)
+        int stringLength = (int)StringLength.evaluate(str);
+        if(stringLength==0)
+            return "";
+
+        Double d1 = (Double)args[1];
+        if(d1.isNaN())
+            return "";
+
+        int start = (int)Round.evaluate(d1) - 1; // subtract 1 as Java strings are zero based
+
+        int substringLength = stringLength;
+        if(args.length==3){
+            Double d2 = (Double)args[2];
+            if(!d2.isNaN())
+                substringLength = (int)Round.evaluate(d2);
+            else
+                substringLength = 0;
+        }
+
+        if (substringLength<0)
+            return "";
+
+        int end = start + substringLength;
+        if(args.length==2)
+            end = stringLength;
+
+        if(start<0) // negative start is treated as 0
             start = 0;
-        else if(start>len)
+        else if(start>stringLength)
             return "";
 
-        int end = start + len;
-        if(end>str.length())
-            end = str.length();
+        if(end>stringLength)
+            end = stringLength;
+        else if(end<start)
+            return "";
 
-        return str.substring(start, end);
+        if(stringLength==str.length()) // // easy case; no surrogate pairs
+            return str.substring(start, end);
+        else
+            return unicodeSubstring(str, start, end);
     }
 
-    private int round(Double d){
-        if(d.isNaN() || !d.isInfinite())
-            return d.intValue();
-        else
-            return (int)Math.round(d);
+    private static String unicodeSubstring(String s, int start, int end){
+        StringBuffer result = new StringBuffer(s.length());
+        for(int jChar=0, uChar=0; uChar<end; jChar++, uChar++){
+            char c = s.charAt(jChar);
+            if(uChar>=start)
+                result.append(c);
+            if(c>=0xD800){ // get the low surrogate
+                // ???? we could check here that this is indeed a low surroagte
+                // we could also catch StringIndexOutOfBoundsException
+                jChar++;
+                if(uChar>=start)
+                    result.append(s.charAt(jChar));
+            }
+        }
+        return result.toString();
     }
 }
