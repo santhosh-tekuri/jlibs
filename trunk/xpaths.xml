@@ -61,6 +61,15 @@
         <xpath>translate( 'abcd', 'acbd', 'xy' )</xpath>
         <xpath>translate( 'abcd', 'abcdb', 'abcdb' )</xpath>
         <xpath>translate( 'abcd', 'abcd', 'abcdb' )</xpath>
+
+        <xpath>substring('12345', 1.5, 2.6)</xpath>
+        <xpath>substring('12345', 0, 3)</xpath>
+        <xpath>substring('12345', 0 div 0, 3)</xpath>
+        <xpath>substring('12345', 1, 0 div 0)</xpath>
+        <xpath>substring('12345', -42, 1 div 0)</xpath>
+        <xpath>substring('12345', -1 div 0, 1 div 0)</xpath>
+        <xpath>substring('12345', 3)</xpath>
+        <xpath>substring('12345',1,15)</xpath>
     </testcase>
 
     <testcase>
