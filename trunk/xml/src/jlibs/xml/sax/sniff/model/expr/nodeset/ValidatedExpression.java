@@ -122,8 +122,10 @@ public abstract class ValidatedExpression extends Expression{
         int evaluationIndex = ((Predicate)source).evaluationIndex;
         for(Evaluation eval: evaluationStack){
             DelayedEvaluation evaluation = (DelayedEvaluation)eval;
-            if(evaluation.id==evaluationIndex)
+            if(evaluation.id==evaluationIndex){
                 evalutate(eval, source, context, result);
+                break;
+            }
         }
 
         if(debug)
@@ -132,6 +134,9 @@ public abstract class ValidatedExpression extends Expression{
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
     protected boolean canEvaluate(Node source, Evaluation evaluation, Context context, Event event){
+        if(evaluationStack.size()==1)
+            return true;
+        
         int diff = source.depth-contextNode.depth;
         if(diff==0)
             return true;
