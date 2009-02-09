@@ -75,6 +75,12 @@
         <xpath>substring('12345', -1 div 0, 1 div 0)</xpath>
         <xpath>substring('12345', 3)</xpath>
         <xpath>substring('12345',1,15)</xpath>
+
+        <xpath>normalize-space('    abc    ')</xpath>
+        <xpath>normalize-space(' a  b  c  ')</xpath>
+        <xpath>normalize-space(' a &#x0d; b &#x0a;  c  ')</xpath>
+        <xpath>normalize-space(' ')</xpath>
+        <xpath>normalize-space('')</xpath>
     </testcase>
 
     <testcase>
@@ -428,6 +434,13 @@
         <xpath type="boolean">1 &lt; 2 &lt; 3</xpath>
         <xpath type="boolean">2 &lt;= 2 &lt;= 3</xpath>
 
+        <xpath>/numbers/set[1]/*[-3 = .]</xpath>
+        <xpath type="boolean">54 &lt; /numbers/set[1]/*</xpath>
+        <xpath type="boolean">55 &lt;= /numbers/set[1]/*</xpath>
+        <xpath type="boolean">69 &lt; /numbers/set[1]/*</xpath>
+        <xpath type="boolean">-2 &gt; /numbers/set[1]/*</xpath>
+        <xpath type="boolean">-3 &gt;= /numbers/set[1]/*</xpath>
+        <xpath type="boolean">-4 &gt;= /numbers/set[1]/*</xpath>
     </testcase>
 
     <testcase>
