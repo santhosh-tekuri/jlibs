@@ -40,11 +40,6 @@ public class NodeSet extends ValidatedExpression{
             return nodeSet;
         }
 
-        @Override
-        protected void predicateAccepted(){
-            super.predicateAccepted();
-        }
-
         @SuppressWarnings({"unchecked"})
         protected void consumeMemberResult(Object result){
             if(result instanceof Event){
