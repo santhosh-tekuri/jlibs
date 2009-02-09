@@ -96,12 +96,11 @@ public abstract class NodeList extends ValidatedExpression{
         }
 
         private void consume(Event event){
-            String str = null;
             if(textOnly){
                 if(event.type()==Event.TEXT){
-                    StringBuilder buff = map.get(context.identity());
+                    StringBuilder buff = map.get(context);
                     if(buff==null)
-                        buff = map.get(context.parent.identity());
+                        buff = map.get(context.parent);
                     if(buff!=null)
                         buff.append(event.getResult());
                 }
@@ -110,13 +109,12 @@ public abstract class NodeList extends ValidatedExpression{
                     case Event.TEXT:
                     case Event.COMMENT:
                     case Event.ATTRIBUTE:
-                        str = event.getResult();
+                        consume(event.getResult());
                         break;
                     case Event.PI:
-                        str = ((PI)event).data;
+                        consume(((PI)event).data);
                         break;
                 }
-                consume(str);
             }
         }
 
@@ -137,7 +135,7 @@ public abstract class NodeList extends ValidatedExpression{
         }
         
         public void contextEnded(Context context){
-            StringBuilder buff = map.remove(context.identity());
+            StringBuilder buff = map.remove(context);
             if(buff!=null)
                 consume(buff.toString());
         }
