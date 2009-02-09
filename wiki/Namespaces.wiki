@@ -77,6 +77,8 @@ String prefix = nsSupport.declare("http://java.sun.com");
 System.out.println(prefix); // prints "tns"    
 }}}
 
+-------------------
+
 *DefaultNamespaceContext*
 
 JAXP provides interface `org.xml.sax.helpers.NamespaceContext` interface, but doesn't provide any concrete implementation for this.<br>
@@ -98,6 +100,8 @@ MyNamespaceSupport nsSupport = .....
 ......
 DefaultNamespaceContext nsContext = new DefaultNamespaceContext(nsSupport);
 }}}
+
+-------------------
 
 *ClarkName*
 
