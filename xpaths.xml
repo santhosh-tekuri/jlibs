@@ -525,10 +525,14 @@
         <xpath>name(/*)</xpath>
         <xpath>name(/*/child::*)</xpath>
         <xpath>name(/node())</xpath>
-        <xpath>name(/*)</xpath>
+        <xpath>name(/)</xpath>
+        <xpath>name(/.)</xpath>
+        <xpath>name(/self::node())</xpath>
         <xpath>name(/child::*)</xpath>
         <xpath>name(/child::node())</xpath>
         <xpath>name(./*)</xpath>
+        <xpath>name(.)</xpath>
+        <xpath>name()</xpath>
         <xpath>name(/nonexistingelement)</xpath>
 
         <!-- count() function -->
@@ -624,6 +628,7 @@
         <xpath>//*</xpath>
         <xpath>//article</xpath>
         <xpath>/*/*[@code]</xpath>
+        <xpath>/child::node()</xpath>
 
         <xpath>/moreovernews/article[@code='13563275']</xpath>
         <xpath>/*/article[@code='13563275']</xpath>
