@@ -22,6 +22,8 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
+import java.util.ArrayDeque;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -52,11 +54,6 @@ public abstract class ValidatedExpression extends Expression{
 
     protected abstract class DelayedEvaluation extends Evaluation{
         private Boolean predicateHit = members.size()==2 ? null : Boolean.TRUE;
-        int id;
-
-        protected DelayedEvaluation(){
-            id = evaluationStack.size();
-        }
 
         protected abstract Object getCachedResult();
 
@@ -106,7 +103,7 @@ public abstract class ValidatedExpression extends Expression{
     private boolean delegateOnNotification;
     
     public void onNotification2(Notifier source, Context context, Object result){
-        if(!(source instanceof Predicate) || source==members.get(0)){
+        if(source==members.get(0)){
             if(result instanceof Event && source!=contextNode)
                 onNotification1(source, context, result);
             else
@@ -119,8 +116,9 @@ public abstract class ValidatedExpression extends Expression{
             debugger.indent++;
         }
 
-        int evaluationIndex = ((Predicate)source).evaluationIndex;
-        for(Evaluation eval: evaluationStack){
+        int evaluationIndex = ((Expression)source).evaluationIndex;
+        ArrayDeque<Evaluation> stack = evaluationStack.isEmpty() ? pendingEvaluationStack : evaluationStack;
+        for(Evaluation eval: stack){
             DelayedEvaluation evaluation = (DelayedEvaluation)eval;
             if(evaluation.id==evaluationIndex){
                 evalutate(eval, source, context, result);

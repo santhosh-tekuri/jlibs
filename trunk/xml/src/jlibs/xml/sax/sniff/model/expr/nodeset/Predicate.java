@@ -30,15 +30,8 @@ public class Predicate extends ValidatedExpression{
         super(Datatype.BOOLEAN, contextNode, member, predicate);
     }
 
-    int evaluationIndex;
     private class MyEvaluation extends DelayedEvaluation{
         private boolean memberHit;
-
-        @Override
-        protected void setResult(Object result){
-            evaluationIndex = id;
-            super.setResult(result);
-        }
 
         @Override
         protected Object getCachedResult(){
