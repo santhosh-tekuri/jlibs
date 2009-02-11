@@ -506,6 +506,7 @@
         <xpath>/web-app/servlet[2]/servlet-name</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/text()</xpath>
         <xpath>/web-app/servlet[2][servlet-name]/*</xpath>
+        <xpath>/web-app/servlet[init-param][1]</xpath>
 
         <xpath type="boolean">/web-app/servlet/servlet-name = 'file'</xpath>
         <xpath type="boolean">/web-app/servlet/servlet-name = 'snoop'</xpath>

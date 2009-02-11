@@ -60,20 +60,28 @@ public class Position extends ValidatedExpression{
         }
 
         @Override
-        protected void consumeMemberResult(Object result){
-            if(result instanceof Event){
-                while(contextNode.parent!=context.node)
-                    context = context.parent;
+        protected void predicateAccepted(){
+            evaluate();
+        }
 
-                if(map.get(context)==null)
-                    throw new ImpossibleException();
-                
-                int pos = map.get(context);
-                map.put(context, ++pos);
-                setResult((double)pos);
-            }else if(result instanceof Double){
+        private void evaluate(){
+            while(contextNode.parent!=context.node)
+                context = context.parent;
+
+            if(map.get(context)==null)
                 throw new ImpossibleException();
-            }
+
+            int pos = map.get(context);
+            map.put(context, ++pos);
+            setResult((double)pos);
+        }
+
+        @Override
+        protected void consumeMemberResult(Object result){
+            if(result instanceof Event && members.size()==1) // has no predicate
+                evaluate();
+            else if(result instanceof Double)
+                throw new ImpossibleException();
         }
     }
 
