@@ -690,6 +690,7 @@
         <xpath>number(//two)+5</xpath>
         <xpath>sum(//two)</xpath>
         <xpath>sum(//one/text())</xpath>
+        <xpath type="number">-sum(//one/text())</xpath>
     </testcase>
 
     <testcase>

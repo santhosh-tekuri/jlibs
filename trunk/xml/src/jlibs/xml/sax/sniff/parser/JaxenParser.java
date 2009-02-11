@@ -59,6 +59,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return process((FunctionCallExpr)elem);
         else if(elem instanceof LiteralExpr)
             return process((LiteralExpr)elem);
+        else if(elem instanceof UnaryExpr)
+            return process((UnaryExpr)elem);
         else if(elem instanceof BinaryExpr)
             return process((BinaryExpr)elem);
         else
@@ -274,6 +276,13 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
 
     protected Notifier process(NumberExpr numberExpr) throws SAXPathException{
         return current = new Literal(contextStack.peek(), numberExpr.getNumber().doubleValue());
+    }
+
+    protected Notifier process(UnaryExpr unaryExpr) throws SAXPathException{
+        Expression expr = new Arithmetic(contextStack.peek(), Operator.MULTIPLY);
+        expr.addMember(new Literal(contextStack.peek(), (double)-1));
+        addMember(expr, unaryExpr.getExpr());
+        return current = expr;
     }
 
     protected Notifier process(BinaryExpr binaryExpr) throws SAXPathException{
