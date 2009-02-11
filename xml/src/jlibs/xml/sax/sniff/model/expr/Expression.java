@@ -80,13 +80,16 @@ public abstract class Expression extends Notifier implements ContextListener, No
         _addMember(member);
     }
 
+    private boolean finishOnContextEnd = true;
     protected final void _addMember(Notifier member){
         if(member.depth<depth)
-            throw new IllegalArgumentException();
-        
+            finishOnContextEnd = false;
+
         members.add(member);
         if(member instanceof Expression){
-            Expression expr = (Expression) member;
+            Expression expr = (Expression)member;
+            if(!expr.finishOnContextEnd)
+                finishOnContextEnd = false;
             expr.listener = this;
             evalDepth = Math.max(evalDepth, expr.evalDepth+1);
         }else
@@ -121,11 +124,20 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
 
     public Context.ContextIdentity contextIdentityOfLastEvaluation;
+    private int evaluationCount;
+    public int evaluationIndex;
     protected abstract class Evaluation{
+        public int id;
         public Context.ContextIdentity contextIdentity;
+        public boolean contextFinished;
         public boolean finished;
 
+        protected Evaluation(){
+            id = evaluationCount++;
+        }
+
         protected void setResult(Object result){
+            evaluationIndex = id;
             if(result==null)
                 result = defaultValue();
 
@@ -158,17 +170,26 @@ public abstract class Expression extends Notifier implements ContextListener, No
         }
 
         Evaluation evaluation = evaluationStack.peek();
-        if(!evaluation.finished){
-            if(debug){
-                debugger.println("Evaluation:");
-                debugger.indent++;
+        if(evaluation!=null){
+            if(!evaluation.finished){
+                if(debug){
+                    debugger.println("Evaluation:");
+                    debugger.indent++;
+                }
+                this.context = context;
+                evaluation.consume(source, result);
+                if(debug){
+                    if(!evaluation.finished)
+                        evaluation.print();
+                    debugger.indent--;
+                }
             }
-            this.context = context;
-            evaluation.consume(source, result);
-            if(debug){
-                if(!evaluation.finished)
-                    evaluation.print();
-                debugger.indent--;
+        }else{
+            for(Evaluation eval: pendingEvaluationStack){
+                if(!eval.finished){
+                    this.context = context;
+                    eval.consume(source, result);
+                }
             }
         }
 
@@ -196,7 +217,8 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     protected final Node contextNode;
     protected ArrayDeque<Evaluation> evaluationStack = new ArrayDeque<Evaluation>();
-    
+    protected ArrayDeque<Evaluation> pendingEvaluationStack = new ArrayDeque<Evaluation>();
+
     @Override
     public void contextStarted(Context context, Event event){
         if(debug)
@@ -209,10 +231,16 @@ public abstract class Expression extends Notifier implements ContextListener, No
     @Override
     public void contextEnded(Context context){
         Evaluation eval = evaluationStack.pop();
-        if(!eval.finished)
-            eval.finish();
-        if(debug)
-            debugger.println("finishedEvaluation: %s", this);
+        if(!eval.finished){
+            if(xpath!=null || finishOnContextEnd){
+                eval.finish();
+                if(debug)
+                    debugger.println("finishedEvaluation: %s", this);
+            }else{
+                eval.contextFinished = true;
+                pendingEvaluationStack.push(eval);
+            }
+        }
     }
 
     @Override

@@ -553,6 +553,8 @@
         <xpath>sum(//fibonacci/@index)</xpath>
         <xpath>count(/*/fibonacci) - 1</xpath>
         <xpath>/*/fibonacci[position() &lt; 10]</xpath>
+        <xpath>/*/fibonacci[ count(/*/fibonacci) ]</xpath>
+        <xpath>/*/fibonacci[ count(/*/fibonacci) - 1 ]</xpath>
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
