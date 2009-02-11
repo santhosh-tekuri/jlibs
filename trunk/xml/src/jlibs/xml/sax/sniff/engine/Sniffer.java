@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.engine;
 
+import jlibs.xml.Namespaces;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
@@ -105,7 +106,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println();
         
-        elementStack.push(uri, localName);
+        elementStack.push(uri, localName, attrs.getValue(Namespaces.URI_XML, "lang"));
 
         matchText();
 

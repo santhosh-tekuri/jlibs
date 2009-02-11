@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
  */
 public class ElementStack{
     PositionStack positionStack = new PositionStack();
+    LangStack langStack = new LangStack();
     private ArrayDeque<String> stack = new ArrayDeque<String>();
     private Root root;
 
@@ -38,9 +39,10 @@ public class ElementStack{
         stack.clear();
     }
     
-    public void push(String uri, String name){
+    public void push(String uri, String name, String lang){
         int pos = positionStack.push(uri, name);
         stack.addLast(qname(uri, name)+'['+pos+']');
+        langStack.push(lang);
     }
 
     public void pop(){
@@ -48,6 +50,10 @@ public class ElementStack{
         stack.removeLast();
     }
 
+    public String getLanguage(){
+        return langStack.getLanguage();
+    }
+    
     private String qname(String uri, String name){
         String prefix;
         if(root.nsContext instanceof DefaultNamespaceContext)

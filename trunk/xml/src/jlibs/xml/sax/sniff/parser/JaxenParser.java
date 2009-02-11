@@ -218,6 +218,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return new StartsWith(contextStack.peek());
         else if(name.equals("substring"))
             return new Substring(contextStack.peek());
+        else if(name.equals("lang"))
+            return new LanguageMatch(contextStack.peek());
         else
             throw new NotImplementedException("Function "+name+" is not implemented yet");
     }
@@ -252,6 +254,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         }
 
         function = createFunction(name);
+        if(name.equals("lang"))
+            function.addMember(new LocationPath(context).createFunction("lang"));
         int i = 0;
         for(Expr param: (List<Expr>)functionExpr.getParameters()){
             if(i!=0)
