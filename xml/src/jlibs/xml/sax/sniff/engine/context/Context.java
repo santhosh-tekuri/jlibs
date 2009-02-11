@@ -82,7 +82,7 @@ public class Context implements Debuggable{
                         contexts.add(childContext);
                         child.contextStarted(childContext, event);
                     }else
-                        child.notify(this, event);
+                        child.notifyContext(this, event);
 
                     matchConstraints(child, event, contexts, null);
                 }
@@ -94,7 +94,7 @@ public class Context implements Debuggable{
                     node.contextStarted(this, event);
                     order = event.order();
                 }else
-                    node.notify(this, event);
+                    node.notifyContext(this, event);
                 matchConstraints(node, event, contexts, null);
             }else{
                 if(changeContext && contexts.markSize()==0){
@@ -122,7 +122,7 @@ public class Context implements Debuggable{
                     childContext.order = event.order();
                     constraint.contextStarted(childContext, event);
                 }else
-                    constraint.notify(this, event);
+                    constraint.notifyContext(this, event);
                 matchConstraints(constraint, event, contexts, childContext);
             }
         }

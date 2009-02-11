@@ -91,7 +91,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(current instanceof Expression)
             expr = (Expression)current;
         else
-            expr = location.create(root, Datatype.NODESET);
+            expr = location.create(Datatype.NODESET);
         
         return new XPath(xpath, jaxenExpr, expr);
     }
@@ -103,7 +103,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(current==root || (locationPath.isAbsolute() && !(current instanceof DocumentNode)))
             current = root.addChild(new DocumentNode());
 
-        locationStack.push(location=new LocationPath());
+        locationStack.push(location=new LocationPath((Node)current));
         for(Step step: (List<Step>)locationPath.getSteps())
             visit(step);
         location = locationStack.pop();
@@ -172,34 +172,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     /*-------------------------------------------------[ Predicate ]---------------------------------------------------*/
 
     protected Notifier process(Predicate p) throws SAXPathException{
-        if(p.getExpr() instanceof NumberExpr){
-            NumberExpr numberExpr = (NumberExpr)p.getExpr();
-            current = ((Node)current).addConstraint(new Position(numberExpr.getNumber().intValue()));
-            locationStack.peek().setStep((Node)current);
-        }else{
-            if(p.getExpr() instanceof EqualityExpr){
-                EqualityExpr equalityExpr = (EqualityExpr)p.getExpr();
-                if(equalityExpr.getLHS() instanceof FunctionCallExpr){
-                    FunctionCallExpr function = (FunctionCallExpr)equalityExpr.getLHS();
-                    if(function.getPrefix().equals("") && function.getFunctionName().equals("position")){
-                        if(equalityExpr.getRHS() instanceof NumberExpr){
-                            NumberExpr numberExpr = (NumberExpr)equalityExpr.getRHS();
-                            current = ((Node)current).addConstraint(new Position(numberExpr.getNumber().intValue()));
-                            locationStack.peek().setStep((Node)current);
-                            return current;
-                        }
-                    }
-                }
-            }
-            contextStack.push((Node)current);
-            visit(p.getExpr());
+        contextStack.push((Node)current);
+        visit(p.getExpr());
 
-            applyLocation(Datatype.BOOLEAN);
-            locationStack.peek().setPredicate((Expression)current);
-            current = contextStack.pop();
-        }
-
-        return current;
+        applyLocation(Datatype.BOOLEAN);
+        locationStack.peek().setPredicate((Expression)current);
+        return current = contextStack.pop();
     }
 
     /*-------------------------------------------------[ Functions ]---------------------------------------------------*/
@@ -207,7 +185,7 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     private void applyLocation(Datatype expected){
         if(!(current instanceof Expression)){
             if(current.resultType()!=expected)
-                current = location.create(contextStack.peek(), expected);
+                current = location.create(expected);
         }
     }
 
@@ -263,12 +241,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(functionExpr.getParameters().size()>0){
             visit(functionExpr.getParameters().get(0));
             if(!(current instanceof Expression) && location!=null){
-                Notifier f = location.createFunction(context, name);
+                Notifier f = location.createFunction(name);
                 if(f!=null)
                     return current = f;
             }
         }else{
-            Notifier f = new LocationPath().createFunction(context, name);
+            Notifier f = new LocationPath(context).createFunction(name);
             if(f!=null)
                 return current = f;
         }

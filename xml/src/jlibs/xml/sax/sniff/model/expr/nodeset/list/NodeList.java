@@ -38,8 +38,8 @@ public abstract class NodeList extends ValidatedExpression{
         super(returnType, contextNode, member, predicate);
     }
 
-    private boolean textOnly;
- 
+    private Node parentNode;
+
     @Override
     public void addMember(Notifier member){
         if(member instanceof Node){
@@ -73,9 +73,8 @@ public abstract class NodeList extends ValidatedExpression{
                         return evalDepth;
                     }
                 });
+                parentNode = node;
                 node = node.addChild(new Descendant(Axis.DESCENDANT));
-                textOnly = true;
-
             }
             member = node;
         }
@@ -96,11 +95,12 @@ public abstract class NodeList extends ValidatedExpression{
         }
 
         private void consume(Event event){
-            if(textOnly){
+            if(parentNode!=null){
                 if(event.type()==Event.TEXT){
+                    while(parentNode!=context.node)
+                        context = context.parent;
+
                     StringBuilder buff = map.get(context);
-                    if(buff==null)
-                        buff = map.get(context.parent);
                     if(buff!=null)
                         buff.append(event.getResult());
                 }

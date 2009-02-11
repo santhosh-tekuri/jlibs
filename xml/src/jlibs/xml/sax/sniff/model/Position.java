@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 
@@ -29,6 +30,7 @@ public class Position extends Node{
 
     public Position(int pos){
         this.pos = pos;
+        throw new ImpossibleException();
     }
 
     @Override

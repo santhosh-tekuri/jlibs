@@ -61,18 +61,6 @@ public class XPathSimplifier{
 
     private Predicate simplify(Predicate predicate){
         predicate.setExpr(simplify(predicate.getExpr()));
-
-        if(predicate.getExpr() instanceof EqualityExpr){
-            EqualityExpr equalityExpr = (EqualityExpr)predicate.getExpr();
-            if(isFunction(equalityExpr.getLHS(), "position")){
-                if(equalityExpr.getRHS() instanceof NumberExpr)
-                    predicate.setExpr(equalityExpr.getRHS());
-            }else if(isFunction(equalityExpr.getRHS(), "position")){
-                if(equalityExpr.getLHS() instanceof NumberExpr)
-                    predicate.setExpr(equalityExpr.getLHS());
-            }
-        }
-
         return isFunction(predicate.getExpr(), "true") ? null : predicate;
     }
 
