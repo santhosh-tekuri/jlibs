@@ -226,6 +226,8 @@
         <xpath>//book/price[ 2 = position() ]</xpath>
         <xpath>//env:Envelope/Body[2]/Order//Item[2]/Price[@symbol="$"]</xpath>
         <xpath>//env:Envelope/Body[2]/Order//*/Item[2]/Price[@symbol="$"]</xpath>
+        <xpath>//book/price[ position() &lt;= 2 ]</xpath>
+        <xpath>//book/price[ 2 &lt;= position() ]</xpath>
 
         <!-- nested paths -->
         <xpath>//Price[@symbol]</xpath>
@@ -549,6 +551,7 @@
         <xpath>sum(//fibonacci)</xpath>
         <xpath>sum(//fibonacci/@index)</xpath>
         <xpath>count(/*/fibonacci) - 1</xpath>
+        <xpath>/*/fibonacci[position() &lt; 10]</xpath>
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
@@ -741,6 +744,9 @@
 
         <!-- test for invalid child of billTo -->
         <xpath>/purchaseOrder/billTo/*[ not( self::name or self::street or self::city or self::state or self::zip )]</xpath>
+
+        <!-- test for invalid child sequence of purchaseOrder -->
+        <xpath>/purchaseOrder/*[ position() >= 3 ][ not( self::comment or self::items )]</xpath>
     </testcase>
 
     <testcase>

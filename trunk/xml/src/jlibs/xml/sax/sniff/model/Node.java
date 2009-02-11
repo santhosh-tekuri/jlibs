@@ -260,5 +260,11 @@ public abstract class Node extends Notifier{
         if(debug)
             debugger.indent--;
     }
+
+    public void notifyContext(Context context, Event event){
+        Context childContext = context.childContext(this);
+        contextStarted(childContext, event);
+        contextEnded(childContext);
+    }
 }
 

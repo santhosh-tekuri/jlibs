@@ -20,8 +20,10 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
+import jlibs.xml.sax.sniff.model.expr.bool.Equals;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Count;
 import jlibs.xml.sax.sniff.model.expr.nodeset.NodeSet;
+import jlibs.xml.sax.sniff.model.expr.nodeset.Position;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Predicate;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.LocalName;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.NamespaceURI;
@@ -36,7 +38,12 @@ import java.util.ArrayDeque;
  * @author Santhosh Kumar T
  */
 public class LocationPath{
+    private Node contextNode;
     public ArrayDeque<StepNode> steps = new ArrayDeque<StepNode>();
+
+    public LocationPath(Node contextNode){
+        this.contextNode = contextNode;
+    }
 
     public void addStep(Node node){
         steps.push(new StepNode(node));
@@ -47,7 +54,18 @@ public class LocationPath{
     }
 
     public void setPredicate(Expression predicate){
-        steps.peek().predicate = predicate;
+        LocationPath.StepNode step = steps.peek();
+        if(predicate.resultType()==Datatype.NUMBER){
+            Expression position = createFunction("position", step.node, step.node, step.predicate);
+            step.predicate = null;
+            Expression equals = new Equals(step.node);
+            equals.addMember(position);
+            equals.addMember(predicate);
+            predicate = equals;
+        }
+        if(step.predicate!=null)
+            predicate = new Predicate(step.node, predicate, step.predicate);
+        step.predicate = predicate;
     }
 
     public class StepNode{
@@ -60,7 +78,9 @@ public class LocationPath{
     }
 
     private Expression createFunction(String name, Node contextNode, Notifier member, Expression predicate){
-        if("local-name".equals(name))
+        if("position".equals(name))
+            return new Position(contextNode, member, predicate);
+        else if("local-name".equals(name))
             return new LocalName(contextNode, member, predicate);
         else if("namespace-uri".equals(name))
             return new NamespaceURI(contextNode, member, predicate);
@@ -80,13 +100,13 @@ public class LocationPath{
             return new Predicate(contextNode, member, predicate);
         else if("number".equals(name) || Datatype.NUMBER.toString().equals(name)){
             TypeCast number = new TypeCast(contextNode, Datatype.NUMBER);
-            number.addMember(create(contextNode, Datatype.STRING));
+            number.addMember(create(Datatype.STRING));
             return number;
         }
         return null;
     }
 
-    public Expression createFunction(Node contextNode, String name){
+    public Expression createFunction(String name){
         if(steps.size()==0)
             return createFunction(name, contextNode, contextNode, null);
         
@@ -106,7 +126,7 @@ public class LocationPath{
         return createFunction(name, contextNode, result, null);
     }
 
-    public Expression create(Node contextNode, Datatype expected){
-        return createFunction(contextNode, expected.toString());
+    public Expression create(Datatype expected){
+        return createFunction(expected.toString());
     }
 }
