@@ -66,6 +66,8 @@ public abstract class Comparison extends Expression{
                 lhsResults = toList(result);
             if(member==members.get(1))
                 rhsResults = toList(result);
+            if(lhsResults!=null && rhsResults!=null)
+                finish();
         }
 
         private List toList(Object result){
