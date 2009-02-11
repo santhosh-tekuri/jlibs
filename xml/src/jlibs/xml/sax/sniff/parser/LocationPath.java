@@ -25,6 +25,7 @@ import jlibs.xml.sax.sniff.model.expr.nodeset.Count;
 import jlibs.xml.sax.sniff.model.expr.nodeset.NodeSet;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Position;
 import jlibs.xml.sax.sniff.model.expr.nodeset.Predicate;
+import jlibs.xml.sax.sniff.model.expr.nodeset.event.Language;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.LocalName;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.NamespaceURI;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.QualifiedName;
@@ -78,7 +79,9 @@ public class LocationPath{
     }
 
     private Expression createFunction(String name, Node contextNode, Notifier member, Expression predicate){
-        if("position".equals(name))
+        if("lang".equals(name))
+            return new Language(contextNode, member, predicate);
+        else if("position".equals(name))
             return new Position(contextNode, member, predicate);
         else if("local-name".equals(name))
             return new LocalName(contextNode, member, predicate);

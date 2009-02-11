@@ -397,6 +397,10 @@
         <xpath>/root[sum(pub[book]/book/price) > 10]/pub</xpath>
         <xpath>/root[sum(pub[book]/book[price]/price) > 10]</xpath>
 
+        <!-- lang() function -->
+        <xpath>/root/*/*[ lang( 'EN' )]</xpath>
+        <xpath>/root/*/*[ lang( 'EN-us' )]/*</xpath>
+
         <!-- other functions -->
         <xpath>normalize-space( /root )</xpath>
         <xpath>concat( 'First Author: ', /root/pub/book[2]/author[1], ' Second Author: ', /root/pub/book[2]/author[2] )</xpath>
@@ -774,5 +778,18 @@
         <file>xmlFiles/message.xml</file>
 
         <xpath>/message/body/data/items/item[name/text()='parentinfo']/value</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/lang.xml</file>
+
+        <xpath>/e1/e2[lang('hr')]</xpath>
+        <xpath>/e1/e2/e3[lang('en')]</xpath>
+        <xpath>/e1/e2/e3[lang('en-US')]</xpath>
+        <xpath>/e1/e2/e3[lang('en-GB')]</xpath>
+        <xpath>/e1/e2/e3[lang('hu')]</xpath>
+        <xpath>/e1/e2/e3[lang('hu-HU')]</xpath>
+        <xpath>/e1/e2/e3[lang('es')]</xpath>
+        <xpath>/e1/e2/e3[lang('es-BR')]</xpath>
     </testcase>
 </xpaths>

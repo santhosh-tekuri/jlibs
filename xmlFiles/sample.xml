@@ -73,7 +73,7 @@
         </env:Envelope>
 
 
-        <set_dns xmlns="http://default1">
+        <set_dns xmlns="http://default1" xml:lang="jp-us">
             <chapter>
                 <para>1 - default namespace1</para>
                 <para>2 - default namespace1</para>
