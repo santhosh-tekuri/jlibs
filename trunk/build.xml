@@ -69,13 +69,20 @@
 
     </target>
     <target name="findRevision" description="Sets property 'revision.number' to the head svn revision">
-        <exec executable="svn" outputproperty="svninfo.out">
-            <arg line="info"/>
+        <!-- find out revision number of HEAD, need svn.exe installed on local machine -->
+        <exec executable="svn" outputproperty="svnlog.out">
+            <arg line="log -r HEAD -q"/>
         </exec>
+
+        <echo>${svnlog.out}</echo>
+
+        <!-- need ant-contrib.jar for this in lib dir of ant install -->
         <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
-        <propertyregex property="revision" input="${svninfo.out}" select="\1">
-            <regexp pattern="Revision: ([0-9]*)"/>
+        <propertyregex property="revision" input="${svnlog.out}" select="\1">
+            <regexp pattern="r([0-9]*)"/>
         </propertyregex>
+
+        <echo>Revision found: ${revision}</echo>
     </target>
 
 </project>
