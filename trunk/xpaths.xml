@@ -545,6 +545,16 @@
         <!-- count() function -->
         <xpath>count(/*/servlet)</xpath>
         <xpath>count(//servlet)</xpath>
+
+        <!--
+        <xpath>upper-case( /web-app/servlet[1]/servlet-class )</xpath>
+        <xpath>lower-case( /web-app/servlet[1]/servlet-class )</xpath>
+        <xpath>upper-case( /web-app/servlet[1]/servlet-class, 'fr' )</xpath>
+        <xpath>upper-case( /web-app/servlet[1]/servlet-class, 'fr-CA' )</xpath>
+        <xpath>upper-case( /web-app/servlet[1]/servlet-class, 'es-ES-Traditional_WIN' )</xpath>
+        <xpath>ends-with( /web-app/servlet[1]/servlet-class, 'Servlet' )</xpath>
+        <xpath>ends-with( /web-app/servlet[1]/servlet-class, 'S' )</xpath>
+        -->
     </testcase>
 
     <testcase>
@@ -802,7 +812,11 @@
         <xpath>/Template/Application2/namespace::*</xpath>
         <xpath>/namespace::*</xpath>
         <xpath>namespace::*</xpath>
-        <!--<xpath>//namespace::*</xpath>-->
+
+        <!--
+        <xpath>//namespace::*</xpath>
+        <xpath>//namespace::xplt</xpath>
+        -->
 
         <xpath>local-name(/Template/Application1/namespace::*)</xpath>
         <xpath>namespace-uri(/Template/Application1/namespace::*)</xpath>

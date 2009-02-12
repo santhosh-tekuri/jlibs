@@ -218,6 +218,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return new Contains(contextStack.peek());
         else if(name.equals("starts-with"))
             return new StartsWith(contextStack.peek());
+        else if(name.equals("ends-with"))
+            return new EndsWith(contextStack.peek());
+        else if(name.equals("upper-case"))
+            return new UpperCase(contextStack.peek());
+        else if(name.equals("lower-case"))
+            return new LowerCase(contextStack.peek());
         else if(name.equals("substring"))
             return new Substring(contextStack.peek());
         else if(name.equals("lang"))
