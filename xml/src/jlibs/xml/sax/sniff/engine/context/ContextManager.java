@@ -15,12 +15,16 @@
 
 package jlibs.xml.sax.sniff.engine.context;
 
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.Namespace;
 import jlibs.xml.sax.sniff.events.Start;
 import jlibs.xml.sax.sniff.model.Root;
 import org.xml.sax.Attributes;
+
+import java.util.Enumeration;
 
 /**
  * @author Santhosh Kumar T
@@ -42,6 +46,19 @@ public class ContextManager implements Debuggable{
             context.match(event, contexts);
         if(event.hasChildren())
             contexts.update();
+    }
+
+    public void matchNamespaces(Namespace namespace, MyNamespaceSupport nsSupport){
+        if(contexts.hasNamespaceChild){
+            Enumeration<String> prefixes = nsSupport.getPrefixes();
+            while(prefixes.hasMoreElements()){
+                String prefix = prefixes.nextElement();
+                String ns = nsSupport.getURI(prefix);
+                namespace.setData(prefix, ns);
+                for(Context context: contexts)
+                    context.match(namespace, contexts);
+            }
+        }
     }
 
     public void matchAttributes(Attribute attr, Attributes attrs){

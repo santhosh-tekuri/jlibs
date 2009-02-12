@@ -37,6 +37,7 @@ public class NamespaceURI extends EventData{
                 return ((Element)event).uri;
             case Event.ATTRIBUTE:
                 return ((Attribute)event).uri;
+            case Event.NAMESPACE:
             case Event.PI:
                 return "";
         }

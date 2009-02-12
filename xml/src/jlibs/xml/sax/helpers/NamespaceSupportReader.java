@@ -15,18 +15,15 @@
 
 package jlibs.xml.sax.helpers;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.InputSource;
-import org.xml.sax.helpers.XMLFilterImpl;
-import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.IOException;
-
+import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
+import org.xml.sax.*;
+import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLFilterImpl;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 
 /**
  * @author Santhosh Kumar T
@@ -76,7 +73,7 @@ public class NamespaceSupportReader extends XMLFilterImpl{
         super.endElement(uri, localName, qName);
     }
 
-    public void setDefaultHandler(DefaultHandler handler){
+    public void setDefaultHandler(DefaultHandler handler) throws SAXNotSupportedException, SAXNotRecognizedException{
         if(handler instanceof SAXHandler)
             ((SAXHandler)handler).nsSupport = nsSupport;
         
@@ -84,6 +81,8 @@ public class NamespaceSupportReader extends XMLFilterImpl{
         setEntityResolver(handler);
         setErrorHandler(handler);
         setDTDHandler(handler);
+        if(handler instanceof LexicalHandler)
+            setProperty(SAXProperties.LEXICAL_HANDLER, handler);
     }
 
     /*-------------------------------------------------[ Parsing ]---------------------------------------------------*/

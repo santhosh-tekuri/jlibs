@@ -26,6 +26,7 @@ public abstract class Event{
     public static final int ATTRIBUTE = 3;
     public static final int COMMENT = 4;
     public static final int PI = 5;
+    public static final int NAMESPACE = 6;
 
     protected Event(DocumentOrder documentOrder){
         this.documentOrder = documentOrder;

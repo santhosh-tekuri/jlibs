@@ -793,4 +793,19 @@
         <xpath>/e1/e2/e3[lang('es')]</xpath>
         <xpath>/e1/e2/e3[lang('es-BR')]</xpath>
     </testcase>
+
+    <testcase>
+        <file>xmlFiles/testNamespaces.xml</file>
+
+        <xpath>/Template/Application1/namespace::xplt</xpath>
+        <xpath>/Template/Application1/namespace::*</xpath>
+        <xpath>/Template/Application2/namespace::*</xpath>
+        <xpath>/namespace::*</xpath>
+        <xpath>namespace::*</xpath>
+        <!--<xpath>//namespace::*</xpath>-->
+
+        <xpath>local-name(/Template/Application1/namespace::*)</xpath>
+        <xpath>namespace-uri(/Template/Application1/namespace::*)</xpath>
+        <xpath>name(/Template/Application1/namespace::*)</xpath>
+    </testcase>
 </xpaths>

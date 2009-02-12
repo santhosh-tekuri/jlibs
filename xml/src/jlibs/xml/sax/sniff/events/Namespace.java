@@ -13,23 +13,35 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.helpers;
-
-import org.xml.sax.SAXException;
-import org.xml.sax.ext.DefaultHandler2;
-
-import java.io.CharArrayWriter;
+package jlibs.xml.sax.sniff.events;
 
 /**
  * @author Santhosh Kumar T
  */
-public class SAXHandler extends DefaultHandler2{
-    protected MyNamespaceSupport nsSupport;
-
-    protected CharArrayWriter contents = new CharArrayWriter();
+public class Namespace extends Event{
+    public Namespace(DocumentOrder documentOrder){
+        super(documentOrder);
+    }
 
     @Override
-    public void characters(char[] ch, int start, int length) throws SAXException{
-        contents.write(ch, start, length);
+    public int type(){
+        return NAMESPACE;
+    }
+
+    public String prefix;
+    public String uri;
+
+    public void setData(String prefix, String uri){
+        this.prefix = prefix;
+        this.uri = uri;
+        setResultWrapper(uri);
+    }
+
+    @Override
+    public String toString(){
+        if(prefix.length()==0)
+            return String.format("xmlns='%s'", uri);
+        else
+            return String.format("xmlns:%s='%s'", prefix, uri);
     }
 }
