@@ -29,36 +29,20 @@ public class Context implements Debuggable{
     public Context parent, constraintParent;
     public Node node;
     public int depth;
-//        int parentDepths[];
 
     public Context(Node root){
         node = root;
-//            parentDepths = new int[0];
     }
 
     public Context childContext(Node child){
         Context context = new Context(child);
         context.parent = this;
-
-//            context.parentDepths = new int[parentDepths.length+1];
-//            System.arraycopy(parentDepths, 0, context.parentDepths, 0, parentDepths.length);
-//            context.parentDepths[context.parentDepths.length-1] = depth;
-
         return context;
     }
 
     public Context parentContext(){
         return parent;
-
-//            Context parent = new Context();
-//            parent.node = node.parent;
-//            parent.depth = parentDepths[parentDepths.length-1];
-//
-//            parent.parentDepths = new int[parentDepths.length-1];
-//            System.arraycopy(parentDepths, 0, parent.parentDepths, 0, parent.parentDepths.length);
-//            return parent;
     }
-
 
     public void match(Event event, Contexts contexts){
         boolean changeContext = event.hasChildren();
