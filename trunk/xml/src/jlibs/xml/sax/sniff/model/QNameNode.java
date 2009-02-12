@@ -21,6 +21,7 @@ import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Attribute;
 import jlibs.xml.sax.sniff.events.Element;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.events.Namespace;
 
 /**
  * @author Santhosh Kumar T
@@ -71,6 +72,9 @@ public class QNameNode extends Node{
             case Event.ATTRIBUTE:
                 Attribute attr = (Attribute)event;
                 return matchesQName(attr.uri, attr.name);
+            case Event.NAMESPACE:
+                Namespace namespace = (Namespace)event;
+                return this.name==null || this.name.equals(namespace.prefix);
             default:
                 return false;
         }

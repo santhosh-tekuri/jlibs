@@ -43,9 +43,12 @@ class Contexts implements Iterable<Context>, Debuggable{
 
     public boolean hasAttributeChild;
     public boolean nextHasAttributeChild;
+    public boolean hasNamespaceChild;
+    public boolean nextHasNamespaceChild;
     public void add(Context context){
         if(context!=null){
             nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
+            nextHasNamespaceChild |= context.node.hasNamespaceChild && context.depth<=0;
             next.add(context);
         }
     }
@@ -62,7 +65,8 @@ class Contexts implements Iterable<Context>, Debuggable{
         next.clear();
 
         hasAttributeChild = nextHasAttributeChild;
-        nextHasAttributeChild = false;
+        hasNamespaceChild = nextHasNamespaceChild;
+        nextHasAttributeChild = nextHasNamespaceChild = false;
 
         if(debug)
             printCurrent("newContext");

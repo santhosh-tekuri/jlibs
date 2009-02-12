@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model;
 import jlibs.xml.sax.sniff.model.axis.Attribute;
 import jlibs.xml.sax.sniff.model.axis.Child;
 import jlibs.xml.sax.sniff.model.axis.Descendant;
+import jlibs.xml.sax.sniff.model.axis.Namespace;
 import org.jaxen.saxpath.Axis;
 
 /**
@@ -49,6 +50,8 @@ public abstract class AxisNode extends Node{
             case Axis.DESCENDANT:
             case Axis.DESCENDANT_OR_SELF:
                 return new Descendant(type);
+            case Axis.NAMESPACE:
+                return new Namespace();
             default:
                 throw new UnsupportedOperationException("unsupported axis: "+Axis.lookup(type));
         }

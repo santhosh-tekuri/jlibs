@@ -38,6 +38,7 @@ public abstract class Node extends Notifier{
     public Node constraintParent;
 
     public boolean hasAttibuteChild;
+    public boolean hasNamespaceChild;
 
     @Override
     public Datatype resultType(){
@@ -73,6 +74,8 @@ public abstract class Node extends Notifier{
 
         if(axisNode.type==Axis.ATTRIBUTE)
             hasAttibuteChild = true;
+        else if(axisNode.type==Axis.NAMESPACE)
+            hasNamespaceChild = true;
 
         return axisNode;
     }

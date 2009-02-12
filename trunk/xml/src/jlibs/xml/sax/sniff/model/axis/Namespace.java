@@ -13,23 +13,23 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.helpers;
+package jlibs.xml.sax.sniff.model.axis;
 
-import org.xml.sax.SAXException;
-import org.xml.sax.ext.DefaultHandler2;
-
-import java.io.CharArrayWriter;
+import jlibs.xml.sax.sniff.engine.context.Context;
+import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.AxisNode;
+import org.jaxen.saxpath.Axis;
 
 /**
  * @author Santhosh Kumar T
  */
-public class SAXHandler extends DefaultHandler2{
-    protected MyNamespaceSupport nsSupport;
-
-    protected CharArrayWriter contents = new CharArrayWriter();
+public class Namespace extends AxisNode{
+    public Namespace(){
+        super(Axis.NAMESPACE);
+    }
 
     @Override
-    public void characters(char[] ch, int start, int length) throws SAXException{
-        contents.write(ch, start, length);
+    public boolean matches(Context context, Event event){
+        return event.type()==Event.NAMESPACE;
     }
 }

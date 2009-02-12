@@ -19,6 +19,7 @@ import jlibs.xml.Namespaces;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.helpers.NamespaceSupportReader;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.engine.context.ContextManager;
 import jlibs.xml.sax.sniff.engine.data.ElementStack;
@@ -48,6 +49,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         element = new Element(documentOrder, elementStack);
     }
 
+    private NamespaceSupportReader nsSupportReader = new NamespaceSupportReader(null);
     private StringContent contents = new StringContent();
     private ContextManager contextManager = new ContextManager();
     private ElementStack elementStack;
@@ -58,6 +60,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     private Document document = new Document(documentOrder);
     private Element element;
     private Attribute attribute = new Attribute(documentOrder);
+    private Namespace namespace = new Namespace(documentOrder);
     private Text text = new Text(documentOrder, contents);
     private Comment comment = new Comment(documentOrder);
     private PI pi = new PI(documentOrder);
@@ -74,6 +77,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     
     @Override
     public void startDocument() throws SAXException{
+        nsSupportReader.startDocument();
         if(debug)
             System.out.println("-----------------------------------------------------------------");
 
@@ -102,7 +106,14 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     }
 
     @Override
+    public void startPrefixMapping(String prefix, String uri) throws SAXException{
+        nsSupportReader.startPrefixMapping(prefix, uri);
+    }
+
+    @Override
     public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException{
+        nsSupportReader.startElement(uri, localName, qName, attrs);
+        
         if(debug)
             System.out.println();
         
@@ -113,6 +124,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         element.setData(uri, localName, qName);
         contextManager.match(element);
 
+        contextManager.matchNamespaces(namespace, nsSupportReader.getNamespaceSupport());
         contextManager.matchAttributes(attribute, attrs);
 
         if(debug)
@@ -126,6 +138,8 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
+        nsSupportReader.endElement(uri, localName, qName);
+        
         if(debug)
             System.out.println();
         
