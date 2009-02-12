@@ -27,7 +27,7 @@
         <antcall target="archive"/>
     </target>
 
-    <target name="archive" depends="findRevision">
+    <target name="archive" depends="svnRevision">
         <copy todir="installer">
             <fileset dir=".">
                 <include name="readme.txt"/>
@@ -64,25 +64,19 @@
             </then>
         </if>
 
-        <zip destfile="jlibs_${revision}.zip" basedir="installer" excludes="3rdparty/**"/>
-        <zip destfile="3rdparty_${revision}.zip" basedir="installer/3rdparty"/>
+        <zip destfile="jlibs_r${revision}.zip" basedir="installer" excludes="3rdparty/**"/>
+        <zip destfile="3rdparty_r${revision}.zip" basedir="installer/3rdparty"/>
 
     </target>
-    <target name="findRevision" description="Sets property 'revision.number' to the head svn revision">
-        <!-- find out revision number of HEAD, need svn.exe installed on local machine -->
+    
+    <target name="svnRevision">
         <exec executable="svn" outputproperty="svnlog.out">
             <arg line="log -r HEAD -q"/>
         </exec>
-
-        <echo>${svnlog.out}</echo>
-
-        <!-- need ant-contrib.jar for this in lib dir of ant install -->
         <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
         <propertyregex property="revision" input="${svnlog.out}" select="\1">
             <regexp pattern="r([0-9]*)"/>
         </propertyregex>
-
-        <echo>Revision found: ${revision}</echo>
     </target>
 
 </project>
