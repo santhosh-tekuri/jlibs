@@ -24,6 +24,9 @@ import jlibs.xml.sax.sniff.model.expr.Literal;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
+import jlibs.xml.sax.sniff.model.expr.num.Ceiling;
+import jlibs.xml.sax.sniff.model.expr.num.Floor;
+import jlibs.xml.sax.sniff.model.expr.num.Round;
 import jlibs.xml.sax.sniff.model.expr.string.*;
 import org.jaxen.JaxenHandler;
 import org.jaxen.expr.*;
@@ -228,6 +231,12 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return new Substring(contextStack.peek());
         else if(name.equals("lang"))
             return new LanguageMatch(contextStack.peek());
+        else if(name.equals("round"))
+            return new Round(contextStack.peek());
+        else if(name.equals("floor"))
+            return new Floor(contextStack.peek());
+        else if(name.equals("ceiling"))
+            return new Ceiling(contextStack.peek());
         else
             throw new NotImplementedException("Function "+name+" is not implemented yet");
     }

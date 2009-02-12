@@ -22,8 +22,8 @@ import jlibs.xml.sax.sniff.model.expr.Function;
 /**
  * @author Santhosh Kumar T
  */
-public class Round extends Function{
-    public Round(Node contextNode){
+public class Ceiling extends Function{
+    public Ceiling(Node contextNode){
         super(contextNode, Datatype.NUMBER, Datatype.NUMBER);
     }
 
@@ -33,9 +33,6 @@ public class Round extends Function{
     }
 
     public static double evaluate(double d){
-        if(Double.isNaN(d) || Double.isInfinite(d))
-            return d;
-
-        return (double)Math.round(d);
+        return Math.ceil(d);
     }
 }
