@@ -24,7 +24,10 @@
         <ant dir="xml" inheritAll="false"/>
         <ant dir="swing" inheritAll="false"/>
         <ant dir="utils" inheritAll="false"/>
+        <antcall target="archive"/>
+    </target>
 
+    <target name="archive" depends="findRevision">
         <copy todir="installer">
             <fileset dir=".">
                 <include name="readme.txt"/>
@@ -48,7 +51,7 @@
                 <exclude name="wiki/**"/>
             </fileset>
         </zip>
-        
+
         <if>
             <not>
                 <os family="windows"/>
@@ -60,11 +63,19 @@
                 </exec>
             </then>
         </if>
-        
-        <tstamp>
-            <format property="time" pattern="yyyy-MM-dd-HHmm"/>
-        </tstamp>
-        <zip destfile="jlibs_${time}.zip" basedir="installer" excludes="3rdparty/**"/>
-        <zip destfile="3rdparty_${time}.zip" basedir="installer/3rdparty"/>
+
+        <zip destfile="jlibs_${revision}.zip" basedir="installer" excludes="3rdparty/**"/>
+        <zip destfile="3rdparty_${revision}.zip" basedir="installer/3rdparty"/>
+
     </target>
+    <target name="findRevision" description="Sets property 'revision.number' to the head svn revision">
+        <exec executable="svn" outputproperty="svninfo.out">
+            <arg line="info"/>
+        </exec>
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+        <propertyregex property="revision" input="${svninfo.out}" select="\1">
+            <regexp pattern="Revision: ([0-9]*)"/>
+        </propertyregex>
+    </target>
+
 </project>
