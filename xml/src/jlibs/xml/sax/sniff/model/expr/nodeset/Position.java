@@ -56,7 +56,7 @@ public class Position extends ValidatedExpression{
     class MyEvaluation extends DelayedEvaluation{
         @Override
         protected Object getCachedResult(){
-            throw new ImpossibleException();
+            return null;
         }
 
         @Override

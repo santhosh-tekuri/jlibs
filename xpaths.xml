@@ -511,6 +511,9 @@
         <xpath>/web-app/servlet[2]/servlet-name/text()</xpath>
         <xpath>/web-app/servlet[2][servlet-name]/*</xpath>
         <xpath>/web-app/servlet[init-param][1]</xpath>
+        <xpath>/web-app/*[servlet-name][2]</xpath>
+        <xpath>/web-app/*[last()]</xpath>
+        <xpath>/web-app/*[servlet-name][last()]</xpath>
 
         <xpath type="boolean">/web-app/servlet/servlet-name = 'file'</xpath>
         <xpath type="boolean">/web-app/servlet/servlet-name = 'snoop'</xpath>
@@ -827,5 +830,6 @@
         <file>xmlFiles/test.xml</file>
 
         <xpath>/root//elem[//xyz/name]</xpath>
+        <xpath>/root//elem[.//xyz/name]</xpath>
     </testcase>
 </xpaths>

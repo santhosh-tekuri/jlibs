@@ -21,10 +21,7 @@ import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.bool.Equals;
-import jlibs.xml.sax.sniff.model.expr.nodeset.Count;
-import jlibs.xml.sax.sniff.model.expr.nodeset.NodeSet;
-import jlibs.xml.sax.sniff.model.expr.nodeset.Position;
-import jlibs.xml.sax.sniff.model.expr.nodeset.Predicate;
+import jlibs.xml.sax.sniff.model.expr.nodeset.*;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.Language;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.LocalName;
 import jlibs.xml.sax.sniff.model.expr.nodeset.event.NamespaceURI;
@@ -83,6 +80,8 @@ public class LocationPath{
             return new Language(contextNode, member, predicate);
         else if("position".equals(name))
             return new Position(contextNode, member, predicate);
+        else if("last".equals(name))
+            return new Last(contextNode, member, predicate);
         else if("local-name".equals(name))
             return new LocalName(contextNode, member, predicate);
         else if("namespace-uri".equals(name))
@@ -127,6 +126,17 @@ public class LocationPath{
         }
 
         return createFunction(name, contextNode, result, null);
+    }
+
+    public Expression createFunctionWithLastPredicate(String name){
+        if(steps.size()==0)
+            return createFunction(name, contextNode, contextNode, null);
+
+        StepNode step = steps.peek();
+        Expression result = createFunction(name, step.node, step.node, step.predicate);
+        if(result!=null)
+            step.predicate = null;
+        return result;
     }
 
     public Expression create(Datatype expected){

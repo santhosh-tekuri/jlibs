@@ -265,7 +265,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
                     return current = f;
             }
         }else{
-            Notifier f = new LocationPath(context).createFunction(name);
+            LocationPath loc = locationStack.isEmpty() ? new LocationPath(context) : locationStack.peek();
+            Notifier f = loc.createFunctionWithLastPredicate(name);
             if(f!=null)
                 return current = f;
         }
