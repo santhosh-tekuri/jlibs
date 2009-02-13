@@ -115,14 +115,12 @@ public class Context implements Debuggable{
     public Context endElement(){
         if(depth==0){
             node.contextEnded(this);
-            node.endingContext(this);
             return parentContext();
         }else{
             if(depth>0)
                 depth--;
             else{
                 node.contextEnded(this);
-                node.endingContext(this);
                 depth++;
             }
 

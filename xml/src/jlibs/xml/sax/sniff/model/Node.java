@@ -122,23 +122,6 @@ public abstract class Node extends Notifier{
         return false;
     }
     
-    /*-------------------------------------------------[ On Context End ]---------------------------------------------------*/
-
-    public void endingContext(Context context){
-        for(Node child: context.node.children())
-            clearHitCounts(context, child);
-    }
-
-    private void clearHitCounts(Context context, Node node){
-        for(Node constraint: node.constraints()){
-            if(constraint instanceof Position){
-                Position position = (Position)constraint;
-                position.clearHitCount(context);
-            }
-            clearHitCounts(context, constraint);
-        }
-    }
-
     /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
 
     public void reset(){
