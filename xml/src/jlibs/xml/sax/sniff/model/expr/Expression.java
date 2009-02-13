@@ -80,10 +80,8 @@ public abstract class Expression extends Notifier implements ContextListener, No
         _addMember(member);
     }
 
-    private boolean finishOnContextEnd = true;
     protected final void _addMember(Notifier member){
         if(member.depth<depth){
-            finishOnContextEnd = false;
             evaluationEndNode = ((Expression)member).evaluationEndNode;
             evaluationEndNode.addContextListener(this);
         }
@@ -91,8 +89,6 @@ public abstract class Expression extends Notifier implements ContextListener, No
         members.add(member);
         if(member instanceof Expression){
             Expression expr = (Expression)member;
-            if(!expr.finishOnContextEnd)
-                finishOnContextEnd = false;
             expr.listener = this;
             evalDepth = Math.max(evalDepth, expr.evalDepth+1);
         }else
