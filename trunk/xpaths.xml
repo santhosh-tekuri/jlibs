@@ -822,4 +822,10 @@
         <xpath>namespace-uri(/Template/Application1/namespace::*)</xpath>
         <xpath>name(/Template/Application1/namespace::*)</xpath>
     </testcase>
+
+    <testcase>
+        <file>xmlFiles/test.xml</file>
+
+        <xpath>/root//elem[//xyz/name]</xpath>
+    </testcase>
 </xpaths>
