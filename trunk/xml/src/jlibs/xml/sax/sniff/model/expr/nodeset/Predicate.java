@@ -46,9 +46,17 @@ public class Predicate extends ValidatedExpression{
 
         @Override
         protected void consumeMemberResult(Object result){
-            if(result instanceof Event || result==Boolean.TRUE){
-                memberHit = true;
-                resultPrepared();
+            if(members.get(0) instanceof Predicate || members.get(0) instanceof Node){
+                if(result instanceof Event || result==Boolean.TRUE){
+                    memberHit = true;
+                    resultPrepared();
+                }
+            }else{
+                memberHit = (Boolean)result;
+                if(memberHit)
+                    resultPrepared();
+                else
+                    setResult(false);
             }
         }
     }

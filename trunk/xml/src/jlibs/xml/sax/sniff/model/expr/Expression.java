@@ -34,7 +34,7 @@ import java.util.List;
 public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
     protected int evalDepth;
     protected Expression(Node contextNode, Datatype returnType, Datatype... memberTypes){
-        this.contextNode = contextNode;
+        this.contextNode = evaluationStartNode = evaluationEndNode = contextNode;
         this.returnType = returnType;
         this.memberTypes = memberTypes;
         members = new ArrayList<Notifier>(memberTypes.length);
@@ -82,8 +82,11 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     private boolean finishOnContextEnd = true;
     protected final void _addMember(Notifier member){
-        if(member.depth<depth)
+        if(member.depth<depth){
             finishOnContextEnd = false;
+            evaluationEndNode = ((Expression)member).evaluationEndNode;
+            evaluationEndNode.addContextListener(this);
+        }
 
         members.add(member);
         if(member instanceof Expression){
@@ -129,7 +132,6 @@ public abstract class Expression extends Notifier implements ContextListener, No
     protected abstract class Evaluation{
         public int id;
         public Context.ContextIdentity contextIdentity;
-        public boolean contextFinished;
         public boolean finished;
 
         protected Evaluation(){
@@ -162,6 +164,22 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     protected Context context;
 
+    private void consumeOnNotification(Evaluation evaluation, Notifier source, Context context, Object result){
+        if(!evaluation.finished){
+            if(debug){
+                debugger.println("Evaluation:");
+                debugger.indent++;
+            }
+            this.context = context;
+            evaluation.consume(source, result);
+            if(debug){
+                if(!evaluation.finished)
+                    evaluation.print();
+                debugger.indent--;
+            }
+        }
+    }
+    
     @Override
     public void onNotification(Notifier source, Context context, Object result){
         if(debug){
@@ -169,29 +187,15 @@ public abstract class Expression extends Notifier implements ContextListener, No
             debugger.indent++;
         }
 
-        Evaluation evaluation = evaluationStack.peek();
-        if(evaluation!=null){
-            if(!evaluation.finished){
-                if(debug){
-                    debugger.println("Evaluation:");
-                    debugger.indent++;
-                }
-                this.context = context;
-                evaluation.consume(source, result);
-                if(debug){
-                    if(!evaluation.finished)
-                        evaluation.print();
-                    debugger.indent--;
-                }
-            }
-        }else{
-            for(Evaluation eval: pendingEvaluationStack){
-                if(!eval.finished){
-                    this.context = context;
-                    eval.consume(source, result);
-                }
-            }
-        }
+        if(source instanceof Expression){
+            Expression exprSource = (Expression)source;
+            if(evaluationStartNode!=evaluationEndNode && evaluationEndNode==exprSource.evaluationEndNode){
+                for(Evaluation evaluation: evaluationStack)
+                    consumeOnNotification(evaluation, source, context, result);
+            }else
+                consumeOnNotification(evaluationStack.peek(), source, context, result);
+        }else
+            consumeOnNotification(evaluationStack.peek(), source, context, result);
 
         if(debug)
             debugger.indent--;
@@ -216,11 +220,14 @@ public abstract class Expression extends Notifier implements ContextListener, No
 /*-------------------------------------------------[ Context ]---------------------------------------------------*/
 
     protected final Node contextNode;
+    public Node evaluationStartNode, evaluationEndNode;
     protected ArrayDeque<Evaluation> evaluationStack = new ArrayDeque<Evaluation>();
-    protected ArrayDeque<Evaluation> pendingEvaluationStack = new ArrayDeque<Evaluation>();
 
     @Override
     public void contextStarted(Context context, Event event){
+        if(context.node!=evaluationStartNode)
+            return;
+
         if(debug)
             debugger.println("newEvaluation: %s", this);
         Expression.Evaluation evaluation = createEvaluation();
@@ -230,15 +237,24 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     @Override
     public void contextEnded(Context context){
-        Evaluation eval = evaluationStack.pop();
-        if(!eval.finished){
-            if(xpath!=null || finishOnContextEnd){
+        if(context.node!=evaluationEndNode)
+            return;
+        
+        if(evaluationStartNode==evaluationEndNode){
+            Evaluation eval = evaluationStack.pop();
+            if(!eval.finished){
                 eval.finish();
                 if(debug)
                     debugger.println("finishedEvaluation: %s", this);
-            }else{
-                eval.contextFinished = true;
-                pendingEvaluationStack.push(eval);
+            }
+        }else{
+            while(!evaluationStack.isEmpty()){
+                Evaluation eval = evaluationStack.pop();
+                if(!eval.finished){
+                    eval.finish();
+                    if(debug)
+                        debugger.println("finishedEvaluation: %s", this);
+                }
             }
         }
     }

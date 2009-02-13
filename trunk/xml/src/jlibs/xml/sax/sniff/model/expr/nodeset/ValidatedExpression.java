@@ -111,13 +111,19 @@ public abstract class ValidatedExpression extends Expression{
             return;
         }
 
+        Expression exprSource = (Expression) source;
+        if(evaluationStartNode!=evaluationEndNode && exprSource.evaluationStartNode==exprSource.evaluationEndNode && exprSource.evaluationEndNode==evaluationEndNode){
+            super.onNotification(source, context, result);
+            return;
+        }
+
         if(debug){
             debugger.println("onNotification: %s", this);
             debugger.indent++;
         }
 
-        int evaluationIndex = ((Expression)source).evaluationIndex;
-        ArrayDeque<Evaluation> stack = evaluationStack.isEmpty() ? pendingEvaluationStack : evaluationStack;
+        int evaluationIndex = exprSource.evaluationIndex;
+        ArrayDeque<Evaluation> stack = evaluationStack;
         for(Evaluation eval: stack){
             DelayedEvaluation evaluation = (DelayedEvaluation)eval;
             if(evaluation.id==evaluationIndex){
