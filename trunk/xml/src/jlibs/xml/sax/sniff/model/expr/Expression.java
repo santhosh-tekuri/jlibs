@@ -68,7 +68,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
         TypeCast typeCast = new TypeCast(contextNode, memberType());
         typeCast.addMember(member);
-        return member;
+        return typeCast;
     }
 
     public void addMember(Notifier member){
@@ -89,7 +89,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         members.add(member);
         if(member instanceof Expression){
             Expression expr = (Expression)member;
-            expr.listener = this;
+            expr.addNotificationListener(this);
             evalDepth = Math.max(evalDepth, expr.evalDepth+1);
         }else
             member.addNotificationListener(this);
@@ -108,18 +108,17 @@ public abstract class Expression extends Notifier implements ContextListener, No
         return resultType().defaultValue();
     }
 
-    protected NotificationListener listener;
+    protected List<NotificationListener> listeners = new ArrayList<NotificationListener>(3);
 
     @Override
     public void addNotificationListener(NotificationListener listener){
-        if(this.listener!=null)
-            throw new UnsupportedOperationException("only one notificationListener is supported");
-        this.listener = listener;
+        listeners.add(listener);
     }
 
     @Override
     public void notify(Context context, Object result){
-        listener.onNotification(this, context, result);
+        for(NotificationListener listener: listeners)
+            listener.onNotification(this, context, result);
     }
 
     public Context.ContextIdentity contextIdentityOfLastEvaluation;
@@ -185,11 +184,23 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
         if(source instanceof Expression){
             Expression exprSource = (Expression)source;
-            if(evaluationStartNode!=evaluationEndNode && evaluationEndNode==exprSource.evaluationEndNode){
+            if(evaluationStartNode.depth>exprSource.evaluationStartNode.depth){
                 for(Evaluation evaluation: evaluationStack)
                     consumeOnNotification(evaluation, source, context, result);
-            }else
-                consumeOnNotification(evaluationStack.peek(), source, context, result);
+            }else{
+                if(exprSource.evaluationStartNode!=evaluationStartNode)
+                    consumeOnNotification(evaluationStack.peek(), source, context, result);
+                else{
+                    Evaluation e = null;
+                    for(Evaluation eval: evaluationStack){
+                        if(eval.id==exprSource.evaluationIndex){
+                            e = eval;
+                            break;
+                        }
+                    }
+                    consumeOnNotification(e, source, context, result);
+                }
+            }
         }else
             consumeOnNotification(evaluationStack.peek(), source, context, result);
 
@@ -239,6 +250,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         if(evaluationStartNode==evaluationEndNode){
             Evaluation eval = evaluationStack.pop();
             if(!eval.finished){
+                this.context = context; 
                 eval.finish();
                 if(debug)
                     debugger.println("finishedEvaluation: %s", this);

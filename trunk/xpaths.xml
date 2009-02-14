@@ -514,6 +514,8 @@
         <xpath>/web-app/*[servlet-name][2]</xpath>
         <xpath>/web-app/*[last()]</xpath>
         <xpath>/web-app/*[servlet-name][last()]</xpath>
+        <xpath>/web-app/*[position()>2 and position()&lt;5]</xpath>
+        <xpath>/web-app/*[servlet-name][position()>1 and position()&lt;3]</xpath>
 
         <xpath type="boolean">/web-app/servlet/servlet-name = 'file'</xpath>
         <xpath type="boolean">/web-app/servlet/servlet-name = 'snoop'</xpath>
@@ -572,6 +574,10 @@
         <xpath>/*/fibonacci[position() &lt; 10]</xpath>
         <xpath>/*/fibonacci[ count(/*/fibonacci) ]</xpath>
         <xpath>/*/fibonacci[ count(/*/fibonacci) - 1 ]</xpath>
+        <xpath>/*/fibonacci[last()]</xpath>
+        <xpath>/*/fibonacci[position() &lt; last()]</xpath>
+        <xpath>/*/fibonacci[position()>5 and position() &lt; last()]</xpath>
+        <xpath>/*/fibonacci[@index>5][position()>5 and position() &lt; last()]</xpath>
     </testcase>
 
     <testcase xmlns:dummy="dummyNamespace"
