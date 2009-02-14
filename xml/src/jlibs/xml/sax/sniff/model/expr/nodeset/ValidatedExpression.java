@@ -46,7 +46,7 @@ public abstract class ValidatedExpression extends Expression{
 
     @Override
     protected Object defaultValue(){
-        if(listener instanceof ValidatedExpression)
+        if(listeners.get(0) instanceof ValidatedExpression)
             return null;
         else
             return super.defaultValue();
@@ -112,7 +112,8 @@ public abstract class ValidatedExpression extends Expression{
         }
 
         Expression exprSource = (Expression) source;
-        if(evaluationStartNode!=evaluationEndNode && exprSource.evaluationStartNode==exprSource.evaluationEndNode && exprSource.evaluationEndNode==evaluationEndNode){
+//        if(evaluationStartNode!=evaluationEndNode && exprSource.evaluationStartNode==exprSource.evaluationEndNode && exprSource.evaluationEndNode==evaluationEndNode){
+        if(evaluationStartNode.depth>exprSource.evaluationStartNode.depth){
             super.onNotification(source, context, result);
             return;
         }

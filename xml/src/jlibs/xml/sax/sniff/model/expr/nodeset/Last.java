@@ -15,10 +15,6 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
-import jlibs.xml.sax.sniff.engine.context.Context;
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.ContextListener;
-import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
@@ -26,72 +22,8 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 /**
  * @author Santhosh Kumar T
  */
-public class Last extends ValidatedExpression{
+public class Last extends Count{
     public Last(Node contextNode, Notifier member, Expression predicate){
-        super(Datatype.BOOLEAN, contextNode, member, predicate);
-        contextNode.parent.addContextListener(new ContextListener(){
-            @Override
-            public void contextStarted(Context context, Event event){}
-
-            @Override
-            public void contextEnded(Context context){
-                boolean last = true;
-                while(!evaluationStack.isEmpty()){
-                    MyEvaluation eval = (MyEvaluation)evaluationStack.pop();
-                    if(!eval.finished){
-                        finishEvaluation(eval, last);
-                        last = false;
-                    }
-                }
-            }
-
-            @Override
-            public int priority(){
-                return evalDepth-1;
-            }
-        });
-        evaluationEndNode = contextNode.parent;
-        evaluationEndNode.addContextListener(this);
+        super(contextNode, member, predicate);
     }
-
-    class MyEvaluation extends DelayedEvaluation{
-        boolean last;
-
-        @Override
-        protected Object getCachedResult(){
-            return last;
-        }
-
-        @Override
-        protected void consumeMemberResult(Object result){}
-    }
-
-    @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
-    }
-
-    @Override
-    public void contextStarted(Context context, Event event){
-        if(members.size()==1) // has no predicate
-            finishEvaluation(false);
-        super.contextStarted(context, event);
-    }
-
-    private void finishEvaluation(boolean last){
-        if(!evaluationStack.isEmpty())
-            finishEvaluation((MyEvaluation)evaluationStack.pop(), last);
-    }
-
-    private void finishEvaluation(MyEvaluation eval, boolean last){
-        if(!eval.finished){
-            eval.last = last;
-            eval.finish();
-            if(debug)
-                debugger.println("finishedEvaluation: %s", this);
-        }
-    }
-
-    @Override
-    public void contextEnded(Context context){}
 }

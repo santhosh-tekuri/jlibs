@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.model.expr.bool;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -26,6 +27,11 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 public class Not extends Expression{
     public Not(Node contextNode){
         super(contextNode, Datatype.BOOLEAN, Datatype.BOOLEAN);
+    }
+
+    @Override
+    public void addMember(Notifier member){
+        super.addMember(member);
     }
 
     class MyEvaluation extends Evaluation{

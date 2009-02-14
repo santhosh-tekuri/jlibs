@@ -54,7 +54,7 @@ public class LocationPath{
     public void setPredicate(Expression predicate){
         LocationPath.StepNode step = steps.peek();
         if(predicate.resultType()==Datatype.NUMBER){
-            Expression position = createFunction("position", step.node, step.node, step.predicate);
+            Expression position = createFunction("position", step.node, step.node, step.reusedPredicate);
             step.predicate = null;
             Expression equals = new Equals(step.node);
             equals.addMember(position);
@@ -63,12 +63,13 @@ public class LocationPath{
         }
         if(step.predicate!=null)
             predicate = new Predicate(step.node, predicate, step.predicate);
-        step.predicate = predicate;
+        step.predicate = step.reusedPredicate = predicate;
     }
 
     public class StepNode{
         public Node node;
         public Expression predicate;
+        public Expression reusedPredicate;
 
         public StepNode(Node node){
             this.node = node;
@@ -80,9 +81,10 @@ public class LocationPath{
             return new Language(contextNode, member, predicate);
         else if("position".equals(name))
             return new Position(contextNode, member, predicate);
-        else if("last".equals(name))
-            return new Last(contextNode, member, predicate);
-        else if("local-name".equals(name))
+        else if("last".equals(name)){
+            Count count = new Count(contextNode, member, predicate);
+            return new Last(contextNode.parent, count, null);
+        }else if("local-name".equals(name))
             return new LocalName(contextNode, member, predicate);
         else if("namespace-uri".equals(name))
             return new NamespaceURI(contextNode, member, predicate);
@@ -133,7 +135,7 @@ public class LocationPath{
             return createFunction(name, contextNode, contextNode, null);
 
         StepNode step = steps.peek();
-        Expression result = createFunction(name, step.node, step.node, step.predicate);
+        Expression result = createFunction(name, step.node, step.node, step.reusedPredicate);
         if(result!=null)
             step.predicate = null;
         return result;
