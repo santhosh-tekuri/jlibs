@@ -19,15 +19,14 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
-import jlibs.core.util.ReverseComparator;
 import jlibs.xml.sax.sniff.engine.context.Context;
+import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
+import jlibs.xml.sax.sniff.engine.context.ContextStartListener;
+import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -150,9 +149,13 @@ public abstract class Node extends Notifier{
                     for(NotificationListener listener: elem.listeners)
                         str += "\n   ### "+listener+" ";
                 }
-                if(elem.contextListeners.size()>0){
-                    for(ContextListener listener: elem.contextListeners)
-                        str += "\n   @@@ "+listener+" ";
+                if(elem.contextStartListeners.size()>0){
+                    for(ContextStartListener listener: elem.contextStartListeners)
+                        str += "\n   {{{ "+listener+" ";
+                }
+                if(elem.contextEndListeners.size()>0){
+                    for(ContextEndListener listener: elem.contextEndListeners)
+                        str += "\n   }}} "+listener+" ";
                 }
                 return str;
             }
@@ -182,69 +185,102 @@ public abstract class Node extends Notifier{
         }
     }
     
-    /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/
+    /*-------------------------------------------------[ ContextStartListeners ]---------------------------------------------------*/
 
-    protected List<ContextListener> contextListeners = new ArrayList<ContextListener>();
-    protected List<ContextListener> _contextListeners = new ArrayList<ContextListener>();
-
-    private Comparator<ContextListener> endComparator = new Comparator<ContextListener>(){
+    private List<ContextStartListener> contextStartListeners = new ArrayList<ContextStartListener>();
+    private static Comparator<ContextStartListener> startComparator = new Comparator<ContextStartListener>(){
         @Override
-        public int compare(ContextListener listener1, ContextListener listener2){
-            return listener1.priority() - listener2.priority();
+        public int compare(ContextStartListener listener1, ContextStartListener listener2){
+            return listener2.priority() - listener1.priority();
         }
     };
 
-    public void addContextListener(ContextListener listener){
-        contextListeners.add(listener);
-        _contextListeners.add(0, listener);
+    private boolean startListenersSorted;
+
+    public void addContextStartListener(ContextStartListener listener){
+        contextStartListeners.add(listener);
+        startListenersSorted = false;
 
         if(listener instanceof Notifier)
             ((Notifier)listener).depth = this.depth;
     }
 
-    public void removeContextListener(ContextListener listener){
-        contextListeners.remove(listener);
+    public void removeContextStartListener(ContextStartListener listener){
+        contextStartListeners.remove(listener);
     }
 
-    private boolean sorted;
     public void contextStarted(Context context, Event event){
-        if(contextListeners.size()>0){
+        if(contextStartListeners.size()>0){
             if(debug){
                 debugger.println("contextStarted(%s)",this);
                 debugger.indent++;
             }
 
-            if(!sorted){
-                Collections.sort(contextListeners, new ReverseComparator<ContextListener>(endComparator));
-                sorted = true;
+            if(!startListenersSorted){
+                Collections.sort(contextStartListeners, startComparator);
+                startListenersSorted = true;
             }
 
-            for(ContextListener listener: contextListeners)
+            for(ContextStartListener listener: contextStartListeners)
                 listener.contextStarted(context, event);
+
             if(debug)
                 debugger.indent--;
         }
         notify(context, event);
     }
 
-    private boolean _sorted;
+    /*-------------------------------------------------[ ContextEndListeners ]---------------------------------------------------*/
+    
+    private List<ContextEndListener> contextEndListeners = new ArrayList<ContextEndListener>();
+    private static Comparator<ContextEndListener> endComparator = new Comparator<ContextEndListener>(){
+        @Override
+        public int compare(ContextEndListener listener1, ContextEndListener listener2){
+            return listener1.priority() - listener2.priority();
+        }
+    };
+
+    private boolean endListenersSorted;
+    public void addContextEndListener(ContextEndListener listener){
+        contextEndListeners.add(0, listener);
+        endListenersSorted = false;
+    }
+
+    public void removeContextEndListener(ContextEndListener listener){
+        contextEndListeners.remove(listener);
+    }
+
     public void contextEnded(Context context){
-        if(contextListeners.size()==0)
+        if(contextStartListeners.size()==0)
             return;
 
         if(debug){
             debugger.println("contextEnded(%s)",this);
             debugger.indent++;
         }
-        if(!_sorted){
-            Collections.sort(_contextListeners, endComparator);
-            _sorted = true;
+
+        if(!endListenersSorted){
+            Collections.sort(contextEndListeners, endComparator);
+            endListenersSorted = true;
         }
 
-        for(ContextListener listener: _contextListeners)
+        for(ContextEndListener listener: contextEndListeners)
             listener.contextEnded(context);
+
         if(debug)
             debugger.indent--;
+    }
+
+    /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/
+
+    public void addContextListener(ContextListener listener){
+        addContextStartListener(listener);
+        addContextEndListener(listener);
+    }
+
+    public void removeContextListener(ContextListener listener){
+        removeContextStartListener(listener);
+        removeContextEndListener(listener);
     }
 
     public void notifyContext(Context context, Event event){
