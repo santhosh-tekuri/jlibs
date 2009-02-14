@@ -35,7 +35,7 @@ import java.util.List;
 public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
     protected int evalDepth;
     protected Expression(Node contextNode, Datatype returnType, Datatype... memberTypes){
-        this.contextNode = evaluationStartNode = evaluationEndNode = contextNode;
+        evaluationStartNode = evaluationEndNode = contextNode;
         this.returnType = returnType;
         this.memberTypes = memberTypes;
         members = new ArrayList<Notifier>(memberTypes.length);
@@ -67,7 +67,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         if(member.resultType()==expected || expected==Datatype.STRINGS)
             return member;
 
-        TypeCast typeCast = new TypeCast(contextNode, memberType());
+        TypeCast typeCast = new TypeCast(evaluationStartNode, memberType());
         typeCast.addMember(member);
         return typeCast;
     }
@@ -227,7 +227,6 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
 /*-------------------------------------------------[ Context ]---------------------------------------------------*/
 
-    protected final Node contextNode;
     public Node evaluationStartNode, evaluationEndNode;
     protected ArrayDeque<Evaluation> evaluationStack = new ArrayDeque<Evaluation>();
 
@@ -315,7 +314,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
             public String visit(Notifier elem){
                 if(elem instanceof Expression){
                     Expression expr = (Expression)elem;
-                    return String.format("%s_%d_%d @@@ %s_%d", expr.getName(), expr.depth, expr.evalDepth, expr.contextNode.toString(), expr.contextNode.depth);
+                    return String.format("%s_%d_%d {%s_%d, %s_%d}", expr.getName(), expr.depth, expr.evalDepth, expr.evaluationStartNode.toString(), expr.evaluationStartNode.depth, expr.evaluationEndNode.toString(), expr.evaluationEndNode.depth);
                 }else{
                     Node node = (Node)elem;
                     return String.format("%s_%d", node, node.depth);

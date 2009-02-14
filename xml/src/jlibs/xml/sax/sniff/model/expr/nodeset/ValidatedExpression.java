@@ -101,7 +101,7 @@ public abstract class ValidatedExpression extends Expression{
     private boolean delegateOnNotification;
     
     public void onNotification2(Notifier source, Context context, Object result){
-        if(source==members.get(0) && result instanceof Event && source!=contextNode)
+        if(source==members.get(0) && result instanceof Event && source!=evaluationStartNode)
             onNotification1(source, context, result);
         else
             super.onNotification(source, context, result);
@@ -112,7 +112,7 @@ public abstract class ValidatedExpression extends Expression{
         if(evaluationStack.size()==1)
             return true;
         
-        int diff = source.depth-contextNode.depth;
+        int diff = source.depth-evaluationStartNode.depth;
         if(diff==0)
             return true;
         else if(event.hasChildren())
