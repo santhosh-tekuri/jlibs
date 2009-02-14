@@ -58,12 +58,12 @@ public class XMLDog implements Debuggable{
         Root _root = root;
         List<XPath> _xpaths = this.xpaths;
 
-        boolean clone = false;
-        synchronized(this){
-            clone = _root.isUsing();
-            if(!clone)
-                _root.setUsing(true);
-        }
+        boolean clone = true;
+//        synchronized(this){
+//            clone = _root.isUsing();
+//            if(!clone)
+//                _root.setUsing(true);
+//        }
 
         if(clone){
             _root = new Root(root.nsContext);
@@ -76,8 +76,7 @@ public class XMLDog implements Debuggable{
         }
 
         try{
-//            if(root.children().iterator().hasNext())
-                new Sniffer(_root).sniff(source);
+            new Sniffer(_root).sniff(source);
             _root.parsingDone();
             return new XPathResults(_xpaths);
         }finally{
