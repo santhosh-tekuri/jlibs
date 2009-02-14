@@ -22,7 +22,7 @@ import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.helpers.NamespaceSupportReader;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.engine.context.ContextManager;
-import jlibs.xml.sax.sniff.engine.data.ElementStack;
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
 import jlibs.xml.sax.sniff.engine.data.StringContent;
 import jlibs.xml.sax.sniff.events.*;
 import jlibs.xml.sax.sniff.model.HitManager;
@@ -45,14 +45,14 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     public Sniffer(Root root){
         this.root = root;
-        elementStack = new ElementStack(root);
-        element = new Element(documentOrder, elementStack);
+        locationStack = new LocationStack(root.nsContext);
+        element = new Element(documentOrder, locationStack);
     }
 
     private NamespaceSupportReader nsSupportReader = new NamespaceSupportReader(null);
     private StringContent contents = new StringContent();
     private ContextManager contextManager = new ContextManager();
-    private ElementStack elementStack;
+    private LocationStack locationStack;
 
     // events
     private DocumentOrder documentOrder = new DocumentOrder();
@@ -117,7 +117,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println();
         
-        elementStack.push(uri, localName, attrs.getValue(Namespaces.URI_XML, "lang"));
+        locationStack.pushElement(uri, localName, attrs.getValue(Namespaces.URI_XML, "lang"));
 
         matchText();
 
@@ -143,7 +143,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         if(debug)
             System.out.println();
         
-        elementStack.pop();
+        locationStack.popElement();
 
         matchText();
         contextManager.elementEnded();
@@ -166,7 +166,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         documentOrder.reset();
         contents.reset();
         contextManager.reset(root, start);
-        elementStack.reset();
+        locationStack.reset();
     }
 
     public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
