@@ -20,6 +20,7 @@ import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.engine.context.Context;
+import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
 

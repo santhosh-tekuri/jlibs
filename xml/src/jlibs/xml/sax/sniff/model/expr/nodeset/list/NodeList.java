@@ -18,7 +18,7 @@ package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.events.PI;
-import jlibs.xml.sax.sniff.model.ContextListener;
+import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
