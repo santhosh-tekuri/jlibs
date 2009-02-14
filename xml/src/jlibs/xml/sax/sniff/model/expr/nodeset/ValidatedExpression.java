@@ -22,8 +22,6 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
-import java.util.ArrayDeque;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -103,38 +101,10 @@ public abstract class ValidatedExpression extends Expression{
     private boolean delegateOnNotification;
     
     public void onNotification2(Notifier source, Context context, Object result){
-        if(source==members.get(0)){
-            if(result instanceof Event && source!=contextNode)
-                onNotification1(source, context, result);
-            else
-                super.onNotification(source, context, result);
-            return;
-        }
-
-        Expression exprSource = (Expression) source;
-//        if(evaluationStartNode!=evaluationEndNode && exprSource.evaluationStartNode==exprSource.evaluationEndNode && exprSource.evaluationEndNode==evaluationEndNode){
-        if(evaluationStartNode.depth>exprSource.evaluationStartNode.depth){
+        if(source==members.get(0) && result instanceof Event && source!=contextNode)
+            onNotification1(source, context, result);
+        else
             super.onNotification(source, context, result);
-            return;
-        }
-
-        if(debug){
-            debugger.println("onNotification: %s", this);
-            debugger.indent++;
-        }
-
-        int evaluationIndex = exprSource.evaluationIndex;
-        ArrayDeque<Evaluation> stack = evaluationStack;
-        for(Evaluation eval: stack){
-            DelayedEvaluation evaluation = (DelayedEvaluation)eval;
-            if(evaluation.id==evaluationIndex){
-                evalutate(eval, source, context, result);
-                break;
-            }
-        }
-
-        if(debug)
-            debugger.indent--;
     }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
