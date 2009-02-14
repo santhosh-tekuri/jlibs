@@ -536,6 +536,7 @@
         <!-- name() function -->
         <xpath>name(/*)</xpath>
         <xpath>name(/*/child::*)</xpath>
+        <xpath>name(node())</xpath>
         <xpath>name(/node())</xpath>
         <xpath>name(/)</xpath>
         <xpath>name(/.)</xpath>
@@ -696,6 +697,8 @@
         <xpath type="number">2+2</xpath>
 
         <xpath type="number">10 + count(descendant::ACT)</xpath>
+        <xpath type="number">10 + count(descendant::ACT) * 5</xpath>
+        <xpath type="number">(10 + count(descendant::ACT)) * 5</xpath>
         <xpath>count(/descendant::*)+1</xpath>
         <xpath>count(descendant::SPEAKER)+1</xpath>
     </testcase>
@@ -837,5 +840,17 @@
 
         <xpath>/root//elem[//xyz/name]</xpath>
         <xpath>/root//elem[.//xyz/name]</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/jaxen3.xml</file>
+
+        <xpath>/Configuration/hostname/attrlist/hostname[. = 'CE-A']</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/pi2.xml</file>
+
+        <xpath>//processing-instruction()</xpath>
     </testcase>
 </xpaths>
