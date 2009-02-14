@@ -200,9 +200,6 @@ public abstract class Node extends Notifier{
     public void addContextStartListener(ContextStartListener listener){
         contextStartListeners.add(listener);
         startListenersSorted = false;
-
-        if(listener instanceof Notifier)
-            ((Notifier)listener).depth = this.depth;
     }
 
     public void removeContextStartListener(ContextStartListener listener){

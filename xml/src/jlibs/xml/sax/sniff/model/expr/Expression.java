@@ -22,7 +22,10 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.*;
+import jlibs.xml.sax.sniff.model.Datatype;
+import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.NotificationListener;
+import jlibs.xml.sax.sniff.model.Notifier;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -35,14 +38,13 @@ import java.util.List;
 public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
     protected int evalDepth;
     protected Expression(Node contextNode, Datatype returnType, Datatype... memberTypes){
-        evaluationStartNode = evaluationEndNode = contextNode;
+        setEvaluationStartNode(contextNode);
+        setEvaluationEndNode(contextNode);
         this.returnType = returnType;
         this.memberTypes = memberTypes;
         members = new ArrayList<Notifier>(memberTypes.length);
         
-        depth = contextNode.depth;
         hits.totalHits = contextNode.hits.totalHits;
-        contextNode.addContextListener(this);
     }
 
     private Datatype returnType;
@@ -82,14 +84,12 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
 
     protected final void _addMember(Notifier member){
-        if(member.depth<depth){
-            evaluationEndNode = ((Expression)member).evaluationEndNode;
-            evaluationEndNode.addContextListener(this);
-        }
-
         members.add(member);
         if(member instanceof Expression){
             Expression expr = (Expression)member;
+            if(expr.evaluationEndNode.depth<evaluationEndNode.depth)
+                setEvaluationEndNode(((Expression)member).evaluationEndNode);
+
             expr.addNotificationListener(this);
             evalDepth = Math.max(evalDepth, expr.evalDepth+1);
         }else
@@ -228,13 +228,34 @@ public abstract class Expression extends Notifier implements ContextListener, No
 /*-------------------------------------------------[ Context ]---------------------------------------------------*/
 
     public Node evaluationStartNode, evaluationEndNode;
+
+    public void setEvaluationStartNode(Node node){
+        if(evaluationStartNode==node)
+            return;
+        
+        if(evaluationStartNode!=null)
+            evaluationStartNode.removeContextStartListener(this);
+
+        evaluationStartNode = node;
+        depth = evaluationStartNode.depth;
+        evaluationStartNode.addContextStartListener(this);
+    }
+
+    public void setEvaluationEndNode(Node node){
+        if(evaluationEndNode==node)
+            return;
+        
+        if(evaluationEndNode!=null)
+            evaluationEndNode.removeContextEndListener(this);
+
+        evaluationEndNode = node;
+        evaluationEndNode.addContextEndListener(this);
+    }
+
     protected ArrayDeque<Evaluation> evaluationStack = new ArrayDeque<Evaluation>();
 
     @Override
     public void contextStarted(Context context, Event event){
-        if(context.node!=evaluationStartNode)
-            return;
-
         if(debug)
             debugger.println("newEvaluation: %s", this);
         Expression.Evaluation evaluation = createEvaluation();
@@ -244,9 +265,6 @@ public abstract class Expression extends Notifier implements ContextListener, No
 
     @Override
     public void contextEnded(Context context){
-        if(context.node!=evaluationEndNode)
-            return;
-        
         if(evaluationStartNode==evaluationEndNode){
             Evaluation eval = evaluationStack.pop();
             if(!eval.finished){
