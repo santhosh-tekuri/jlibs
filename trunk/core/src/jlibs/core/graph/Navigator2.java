@@ -21,29 +21,10 @@ import java.util.regex.Pattern;
  * @author Santhosh Kumar T
  */
 public abstract class Navigator2<E> extends Ladder<E> implements Navigator<E>{
-    public String getRelativePath(E fromElem, E toElem, final Convertor<E, String> convertor, String separator, boolean predicates){
-        if(predicates){
-            Convertor<E, String> predicateConvertor = new Convertor<E, String>(){
-                @Override
-                public String convert(E source){
-                    String name = convertor.convert(parent(source));
-                    Sequence<? extends E> children = children(source);
-                    int predicate = 1;
-                    while(children.hasNext()){
-                        E child = children.next();
-                        if(child==source)
-                            break;
-                        if(name.equals(convertor.convert(child)))
-                            predicate++;
-                    }
-                    if(predicate>1)
-                        name += '['+predicate+']';
-                    return name;
-                }
-            };
-            return super.getRelativePath(fromElem, toElem, predicateConvertor, separator);
-        }else
-            return super.getRelativePath(fromElem, toElem, convertor, separator);
+    public String getRelativePath(E fromElem, E toElem, Convertor<E, String> convertor, String separator, boolean predicates){
+        if(predicates)
+            convertor = new PredicateConvertor<E>(this, convertor);
+        return super.getRelativePath(fromElem, toElem, convertor, separator);
     }
 
     public E resolve(E node, String path, Convertor<E, String> convertor, String separator){
