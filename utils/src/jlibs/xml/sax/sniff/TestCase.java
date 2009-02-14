@@ -15,9 +15,13 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.core.graph.Convertor;
+import jlibs.core.graph.PredicateConvertor;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.DefaultNamespaceContext;
+import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.dom.DOMUtil;
+import jlibs.xml.dom.DOMXPathNameConvertor;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -79,6 +83,9 @@ public class TestCase{
         return dogResult;
     }
 
+    DOMNavigator navigator = new DOMNavigator();
+    Convertor<Node, String> convertor = new PredicateConvertor<Node>(navigator, new DOMXPathNameConvertor(nsContext));
+    
     public void translateJDKResult(int test){
         Object obj = jdkResult.get(test);
         List<String> result = new ArrayList<String>();
@@ -90,17 +97,9 @@ public class TestCase{
                 if(node instanceof Attr){
                     result.add(node.getNodeValue());
                     hasAttributes.add(test);
-                }else if(node instanceof Element){
-                    StringBuilder buff = new StringBuilder();
-                    while(!(node instanceof Document)){
-                        String prefix = nsContext.getPrefix(node.getNamespaceURI());
-                        buff.insert(0, "["+DOMUtil.getPosition((Element)node)+"]");
-                        buff.insert(0, prefix.length()==0 ? node.getLocalName() : prefix+':'+node.getLocalName());
-                        buff.insert(0, '/');
-                        node = node.getParentNode();
-                    }
-                    result.add(buff.toString());
-                }else if(node instanceof Text)
+                }else if(node instanceof Element)
+                    result.add(new DOMNavigator().getPath(node, convertor, "/"));
+                else if(node instanceof Text)
                     result.add(node.getNodeValue());
                 else if(node instanceof Comment)
                     result.add(node.getNodeValue());
