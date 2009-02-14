@@ -15,17 +15,17 @@
 
 package jlibs.xml.sax.sniff.events;
 
-import jlibs.xml.sax.sniff.engine.data.ElementStack;
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Element extends Event{
-    private ElementStack elemStack;
+    private LocationStack locationStack;
 
-    public Element(DocumentOrder documentOrder, ElementStack elemStack){
+    public Element(DocumentOrder documentOrder, LocationStack locationStack){
         super(documentOrder);
-        this.elemStack = elemStack;
+        this.locationStack = locationStack;
     }
 
     @Override
@@ -46,11 +46,11 @@ public class Element extends Event{
         this.uri = uri;
         this.name = name;
         this.qname = qname;
-        setResultWrapper(elemStack);
+        setResultWrapper(locationStack);
     }
 
     public String getLanguage(){
-        return elemStack.getLanguage();
+        return locationStack.language();
     }
 
     @Override
