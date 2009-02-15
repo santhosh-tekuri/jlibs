@@ -1,151 +1,125 @@
 #summary Using SAX to Sniff XML
 
-==UPDATED 1==
-
- * numbered predicates (`/elem1/elem[2]`) was working only for child axis. now it works perfectly for descendant, descendant-or-self axis also
- * node() test is supported
- * simple predicate filtering added (`elem1/elem2[@name]`), but not thoroughly tested. nested predicate filtering is not yet supported;
- * 196 xpaths are added to testsuite to verify various scenarios;
- * tested XMLDog with big xml files (about 25 MB and 75 MB).
-   you can find xpath-big.xml testsuite in jlibs installation. It has instructions to run, because those big xml files are not bundled with jlibs.<br>
-   you need to download it from the url specified in those instructions
- * many bug fixes
- * code cleanup
-
-==UPDATED==
-
-The earlier implementaion has failed in few scenarios which involves descendant and descendand-or-self axis;
-
- * Now I designed new and enhanced algorithm after burning night oil for 2 days.
- * Now XMLDog uses [http://sourceforge.net/projects/saxpath/ SAXPath] for parsing XML.
- * The API has changed.
- * Supports Multi-threading
- * *Outperforms Xalan*
- * `XMLDog` results are now checked for compliance with `Xalan` Results
-
-Please read the below document for API changes, new features and performace improvements
---------
 [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/sniff/XMLDog.java XMLDog] is a dog that is trained to sniff xml documents.
 
 We give set of xpaths to `XMLDog` and ask to sniff some xml document. It uses SAX and with one pass over the document it evaluates all the given xpaths.
 
-Let use see an example:
-
+Whether it is Xalan/XMLDog, first we need to define `javax.xml.namespace.NamespaceContext`. This interface defines the binding for prefixes to uri.
 {{{
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.sniff.XMLDog;
-import jlibs.xml.sax.sniff.XPath;
-import jlibs.xml.sax.sniff.XPathResults;
-import org.xml.sax.InputSource;
 
-// namespace context used to resolve prefixes in xpath
 DefaultNamespaceContext nsContext = new DefaultNamespaceContext(); // an implementation of javax.xml.namespace.NamespaceContext
 nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
+}}}
+
+Now create an instance of `XMLDOG`, and add the xpaths that need to be evaluated. Note that `XMLDog` can evaluate multiple xpaths in single SAX parse of given xml document.
+{{{
+import jlibs.xml.sax.sniff.XMLDog;
+import jlibs.xml.sax.sniff.XPath;
 
 XMLDog dog = new XMLDog(nsContext);
 
-//add xpath. this returns compiled xpath
-XPath xpath = dog.add("/xs:schema/xs:*/@name");
+XPath xpath1 = dog.add("/xs:schema/@targetNamespace");
+XPath xpath2 = dog.add("/xs:schema/xs:complexType/@name");
+XPath xpath3 = dog.add("/xs:schema/xs:*/@name");
+}}}
+When you add xpath to `XMLDog`, it returns `XPath` object. This object is the compiled xpath.
 
-//start sniffing
-XPathResults results = dog.sniff(new InputSource("sample.xml"));
-
-// to see results
-System.out.println("XPath: "+xpath);
-System.out.println("\nResults:");
-List<String> result = results.getResult(xpath);
-for(int i=0; i<result.size(); i++)
-    System.out.format("      %02d: %s %n",i+1, result.get(i));
+you can get the original xpath from `XPath` using `toString()`:
+{{{
+System.out.println(xpath1); // prints "/xs:schema/@targetNamespace"
 }}}
 
-Running this on [http://code.google.com/p/jlibs/source/browse/trunk/sample.xml sample.xml], will print following to console:
+you can ask `XPath` about its result type;
 {{{
+import javax.xml.namespace.QName;
+
+QName resultType = xpath1.resultType();
+System.out.println(resultType); // prints "{http://www.w3.org/1999/XSL/Transform}NODESET"
+}}}
+The `QName` returned will be one of constants in `javax.xml.xpath.XPathConstants`.
+
+To evaluate given xpaths on some xml document:
+{{{
+import jlibs.xml.sax.sniff.XPathResults;
+
+XPathResults results = dog.sniff(new InputSource("note.xml"));
+}}}
+
+`XPathResults` object will contain the results of all xpath evaluations.
+
+to get result of particular xpath:
+{{{
+object result = results.getResult(xpath1);
+}}}
+The return type of `getResult(XPath)` will be `java.lang.Object`;
+
+Depending on the `XPath.resultType()`, this result can be safely cased to a particular type.
+
+Below is the actual result Type for each resultType returned by `XPath`:
+
+|| `XPath.resultType()` || result can be cast to ||
+|| `XPathConstants.STRING` || `java.lang.String` ||
+|| `XPathConstants.BOOLEAN` || `java.lang.Boolean` ||
+|| `XPathConstants.NUMBER` || `java.lang.Double` ||
+|| `XPathConstants.NODESET` || `java.util.TreeSet<NodeItem>` ||
+
+For `XPathConstants.NODESET` the `TreeSet` contains `NodeItem`s which are sorted by its document order.
+
+`NodeItem` represens an xml node in xml document; `NodeType` has following properties.
+
+`NodeItem.type`:
+    returns type of xml node. will be one of following constants in `NodeItem`:
+        COMMENT, PI, DOCUMENT_NODE, ELEMENT, ATTRIBUTE, NAMESPACE, TEXT;
+`NodeItem.location`:
+    returns unique xpath to the xml node. ex: /xs:schema[1]/xs:complexType[1]/@name<br>
+    this can be used to create DOM, in case you need it.
+
+`NodeItem.value`, `NodeItem.localName`, `NodeItem.namespaceURI`, `NodeItem.name`:
+    return value/localName/namespaceURI/name of the xml node it represens.
+
+`NodeItem.toString()` simply returns its `location`.
+
+`XPathResults` has handy print method to print results to given `java.io.PrintStream`:
+{{{
+results.print(System.out);
+}}}
+will print:
+{{{
+XPath: /xs:schema/@targetNamespace
+      1: /xs:schema[1]/@targetNamespace
+
+XPath: /xs:schema/xs:complexType/@name
+      1: /xs:schema[1]/xs:complexType[1]/@name
+
 XPath: /xs:schema/xs:*/@name
-results:
-    01: anyElement
-    02: elementWithRefElement
-    03: note
-    04: personinfo
-    05: simpleElement
+      1: /xs:schema[1]/xs:element[1]/@name
+      2: /xs:schema[1]/xs:element[2]/@name
+      3: /xs:schema[1]/xs:element[3]/@name
+      4: /xs:schema[1]/xs:element[4]/@name
+      5: /xs:schema[1]/xs:complexType[1]/@name
 }}}
 
-*[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/sniff/XPath.java XPath]:*
+*MultiThreading*
 
-When you add xpath to `XMLDog`, it returns `XPath` object. This object is the compiled xpath.<br>
-you can get the original xpath used using `XPath.toString()`
-
-*Multiple XPath Evaluation:*
-
-XMLDog is smart enough to evaluate multiple xpaths in single SAX parse over given xml document;
-
-{{{
-XPath xpaths[] = {
-    dog.add("/xs:schema/@targetNamespace"),
-    dog.add("/xs:schema/xs:complexType/@name"),
-    dog.add("anyElement"),
-};
-
-XPathResults results = dog.sniff(new InputSource("test.xml"));
-
-for(XPath xpath: xpaths){
-    System.out.println("XPath: "+xpath);
-    List<String> result = results.getResult(xpath);
-    for(int i=0; i<result.size(); i++)
-        System.out.format("      %02d: %s %n",i+1, result.get(i));
-}
-}}}
-prints:
-{{{
-XPath : /xs:schema/@targetNamespace
-    01: http://www.w3schools.com
-
-XPath : /xs:schema/xs:complexType/@name
-    01: personinfo
-
-XPath : /xs:schema/xs:*/@name
-    01: anyElement
-    02: elementWithRefElement
-    03: note
-    04: personinfo
-    05: simpleElement
-}}}
-
-*Partial SAX Parsing:*
-
-{{{
-XPath xpath = dog.add("/xsd:schema/@targetNamespace", 1);
-dog.sniff(new InputSource("test.xml"));
-}}}
-
-Here the second argument to `dog.add(...)` is `1`. This means we want only one hit for this xpath;
-
-in this case, `XMLDog` doesn't parse `sample.xml` completely. it parses upto `startElement` of root and skips SAX parsing of rest of document.
-
-`XMLDog` might also give more number of results for an xpath than we asked for.
-suppose we have:
-{{{
-XPath xpath1 = dog.add("/xsd:schema/xsd:element/@name", 1);
-XPath xpath2 = dog.add("//xsd:any/@targetnamespace");
-}}}
-
-here second xpath, requires complete document parse. During this, if it findds more than one match for first xpath, it returns those results also;
+`XMLDog` supports multi-hreading. You can add multiple xpaths once, <br>
+and sniff multiple documents with same `XMLDog` instance parallely;<br>
 
 *XPath Support:*
 
-`XMLDog` doesn't support complete xpath spec (af of now).
+`XMLDog` doesn't support complete xpath spec (as of now).
 
 Axises supported are:
+ * self axis
  * child axis
  * attribute axis
+ * namespace axis
  * descendant axis
  * descendant-or-self axis
 
-it supports predicates with position. for example,
-    `/xs:schema/xs:complexType[2]/@name`
-
-`text()` is also supported. for example:
-    `/elem1/elem2/text()`
+Except `id()`, rest of the functions are supported.
+it supports predicates and all operators.
 
 `XMLDog` will tell you clearly, if given xpath is not supprted; for example:
 {{{
@@ -156,16 +130,11 @@ throws following exception:
 java.lang.UnsupportedOperationException: unsupported axis: parent
 }}}
 
-on any supported axis, it supports filtering by qname, node(), and text(); for example following are supported:
-{{{
-elem1/*/elem3
-elem1/ns:*/elem3
-elem1/node()
-elem1/text()
-//text()
-}}}
-
 This will be very useful. for example you can first try using `XMLDog` and if it throws `UnsupportedOperationException`, then you can fallback to use `DOM`
+
+The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.sniff.XPathConformanceTest`
+
+You can look [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml here], to see the type of xpaths it has been tested.
 
 *Result:*
 
@@ -189,50 +158,29 @@ and sniff multiple documents with same `XMLDog` instance parallely;<br>
 *Performance:*
 
 You can find `xmldog.sh/xmldog.bat` in jlibs installation, which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
-This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml xpaths.xml] from jlibs installation. and
-uses [http://code.google.com/p/jlibs/source/browse/trunk/sample.xml sample.xml] is the input xml document;
+This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml xpaths.xml] from jlibs installation.
 
 Here is sample output of this performance test;
 {{{
-SUCCESSFULL:
-         xpath : /xs:schema/@targetNamespace
-    jdk result : [http://www.w3schools.com]
-  jdk hitcount : 1
-    dog result : [http://www.w3schools.com]
-  dog hitcount : 1
--------------------------------------------------
-SUCCESSFULL:
-         xpath : /xs:schema/xs:complexType/@name
-    jdk result : [personinfo]
-  jdk hitcount : 1
-    dog result : [personinfo]
-  dog hitcount : 1
-
-.........
-.........
-.........
-
--------------------------------------------------
-testcases are executed: total=196 failed=0
-      jdk time : 1304891000 nanoseconds
-      dog time : 743167000 nanoseconds
-        WINNER : XMLDog (1.76x faster)
-    Difference : 561724000 nanoseconds/0.56 seconds
-    
---------------------------------------------------------------
+XMLDog: ...............................Done
+XALAN:  ...............................Done
+Total 1317 xpaths are executed
+       jdk time : 2959142000 nanoseconds/2.96 seconds
+       dog time : 2700920000 nanoseconds/2.70 seconds
+        WINNER : XMLDog (1.10x faster)
+    Difference : 258222000 nanoseconds/0.26 seconds 
 }}}
 
-The result clealy says that `XMLDog` won over `Xalan`.<br>
-`XMLDog` is 1.76x faster than `Xalan`;
+It shows that XMLDog is faster than XALAN.
 
 The source code of testcase is [http://code.google.com/p/jlibs/source/browse/trunk/utils/src/jlibs/xml/sax/sniff/XPathPerformanceTest.java here]
 
 *Future:*
+ * variable resolution
+ * custom functions
+ * listening for xpath results. With this you can get results of an xpath as soon as its evaluation is finished. You don't need to wait until all xpaths are evaluated.
+ * ability to specify min number of items required in NODESET 
 
- * The algorithm designed for `XMLDog` has lot of scopes for optimizing both memory and time
- * The algorithm is flexible enough to add more xpath support like filtering etc...
- * Support for other output formats like boolean, nodeset etc
- * listen for xpath results without waiting for all xpaths get evaluated
- * and many more....
+I am looking forward to know, who are interested in `XMLDog`, and why/where you are using. This will give me some boost-up to add more features. Because it takes most of my free time.
 
 Your comments are welcomed;
