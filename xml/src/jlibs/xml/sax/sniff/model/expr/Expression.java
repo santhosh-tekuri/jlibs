@@ -192,14 +192,13 @@ public abstract class Expression extends Notifier implements ContextListener, No
                 if(exprSource.evaluationStartNode!=evaluationStartNode)
                     consumeOnNotification(evaluationStack.peek(), source, context, result);
                 else{
-                    Evaluation e = null;
                     for(Evaluation eval: evaluationStack){
                         if(eval.id==exprSource.evaluationIndex){
-                            e = eval;
+                            consumeOnNotification(eval, source, context, result);
                             break;
                         }
                     }
-                    consumeOnNotification(e, source, context, result);
+
                 }
             }
         }else
