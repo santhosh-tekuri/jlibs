@@ -31,13 +31,28 @@ public class PI extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.processingInstruction(target);
     }
 
     @Override
     protected String value(){
         return data;
+    }
+
+    @Override
+    public String localName(){
+        return target;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return "";
+    }
+
+    @Override
+    public String qualifiedName(){
+        return target;
     }
 
     public String target;

@@ -17,10 +17,11 @@ package jlibs.xml.sax.sniff;
 
 import jlibs.core.lang.Util;
 import jlibs.xml.DefaultNamespaceContext;
-import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.dom.DOMUtil;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -86,30 +87,17 @@ public class TestCase{
     
     public void translateJDKResult(int test){
         Object obj = jdkResult.get(test);
-        TreeSet<NodeItem> result = new TreeSet<NodeItem>();
+        List<NodeItem> result = new ArrayList<NodeItem>();
 
         NodeList nodeSet = (NodeList)obj;
         for(int i=0; i<nodeSet.getLength(); i++){
             Node node = nodeSet.item(i);
-            String location = new DOMNavigator().getXPath(node, resultNSContext);
-            String value = null;
-
-            if(node instanceof Attr){
-                value = node.getNodeValue();
-                if(Namespaces.URI_XMLNS.equals(node.getNamespaceURI()))
-                    hasNamespaces.add(test);
-                else
-                    hasAttributes.add(test);
-            }else if(node instanceof Text)
-                value = node.getNodeValue();
-            else if(node instanceof Comment)
-                value = node.getNodeValue();
-            else if(node instanceof ProcessingInstruction){
-                ProcessingInstruction pi = (ProcessingInstruction)node;
-                value = pi.getData();
-            }
-            
-            result.add(new NodeItem(i, node.getNodeType(), location, value));
+            NodeItem item = new NodeItem(node, resultNSContext);
+            result.add(item);
+            if(item.type==NodeItem.ATTRIBUTE)
+                hasAttributes.add(test);
+            else if(item.type==NodeItem.NAMESPACE)
+                hasNamespaces.add(test);
         }
         jdkResult.set(test, result);
     }

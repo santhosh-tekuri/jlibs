@@ -31,12 +31,27 @@ public class Document extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return "/";
     }
 
     @Override
     protected String value(){
+        return null;
+    }
+
+    @Override
+    public String localName(){
+        return null;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return null;
+    }
+
+    @Override
+    public String qualifiedName(){
         return null;
     }
 

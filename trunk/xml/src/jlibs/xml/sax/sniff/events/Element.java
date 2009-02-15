@@ -31,13 +31,28 @@ public class Element extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.element();
     }
 
     @Override
     protected String value(){
         return null;
+    }
+
+    @Override
+    public String localName(){
+        return name;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return uri;
+    }
+
+    @Override
+    public String qualifiedName(){
+        return qname;
     }
 
     @Override

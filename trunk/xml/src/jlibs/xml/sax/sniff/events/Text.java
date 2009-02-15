@@ -35,13 +35,28 @@ public class Text extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.text();
     }
 
     @Override
     protected String value(){
         return contents.toString();
+    }
+
+    @Override
+    public String localName(){
+        return null;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return null;
+    }
+
+    @Override
+    public String qualifiedName(){
+        return null;
     }
 
     public void setData(){

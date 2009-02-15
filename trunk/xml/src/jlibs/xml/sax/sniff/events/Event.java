@@ -42,8 +42,12 @@ public abstract class Event implements NodeTypes{
         return false;
     }
 
-    protected abstract String location();
+    public abstract String location();
     protected abstract String value();
+
+    public abstract String localName();
+    public abstract String namespaceURI();
+    public abstract String qualifiedName();
 
     public String getValue(){
         if(value==null)
@@ -55,7 +59,7 @@ public abstract class Event implements NodeTypes{
     private String value;
     public NodeItem getResult(){
         if(result==null)
-            result = new NodeItem(order(), type(), location(), getValue());
+            result = new NodeItem(this);
         return result;
     }
 

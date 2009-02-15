@@ -32,13 +32,28 @@ public class Attribute extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.attribute(uri, name);
     }
 
     @Override
     protected String value(){
         return value;
+    }
+
+    @Override
+    public String localName(){
+        return name;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return uri;
+    }
+
+    @Override
+    public String qualifiedName(){
+        return qname;
     }
 
     public String uri;

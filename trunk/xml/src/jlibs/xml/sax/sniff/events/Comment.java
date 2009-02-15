@@ -31,13 +31,28 @@ public class Comment extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.comment();
     }
 
     @Override
     protected String value(){
         return new String(ch, start, length);
+    }
+
+    @Override
+    public String localName(){
+        return null;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return null;
+    }
+
+    @Override
+    public String qualifiedName(){
+        return null;
     }
 
     public char[] ch;

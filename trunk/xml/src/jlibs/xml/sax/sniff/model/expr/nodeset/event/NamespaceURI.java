@@ -15,8 +15,6 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.event;
 
-import jlibs.xml.sax.sniff.events.Attribute;
-import jlibs.xml.sax.sniff.events.Element;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
@@ -32,15 +30,6 @@ public class NamespaceURI extends EventData{
 
     @Override
     protected String getData(Event event){
-        switch(event.type()){
-            case Event.ELEMENT:
-                return ((Element)event).uri;
-            case Event.ATTRIBUTE:
-                return ((Attribute)event).uri;
-            case Event.NAMESPACE:
-            case Event.PI:
-                return "";
-        }
-        return null;
+        return event.namespaceURI();
     }
 }
