@@ -16,7 +16,9 @@
 package jlibs.xml.sax.sniff;
 
 import javax.xml.namespace.NamespaceContext;
-import java.util.HashMap;
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +31,7 @@ public class XPathResults implements Debuggable{
 
     public XPathResults(NamespaceContext nsContext, List<XPath> xpaths){
         this.nsContext = nsContext;
-        map = new HashMap<String, Object>(xpaths.size());
+        map = new LinkedHashMap<String, Object>(xpaths.size());
         for(XPath xpath: xpaths)
             map.put(xpath.toString(), xpath.result);
     }
@@ -40,5 +42,18 @@ public class XPathResults implements Debuggable{
 
     public Object getResult(XPath xpath){
         return map.get(xpath.toString());
+    }
+
+    public void print(PrintStream out){
+        for(Map.Entry<String, Object> entry: map.entrySet()){
+            out.printf("XPath: %s%n", entry.getKey());
+            if(entry.getValue() instanceof Collection){
+                int i = 0;
+                for(Object item: (Collection)entry.getValue())
+                    out.printf("      %d: %s%n", ++i, item);
+            }else
+                out.printf("      %s\n", entry.getValue());
+            out.println();
+        }
     }
 }
