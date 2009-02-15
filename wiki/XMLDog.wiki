@@ -136,20 +136,6 @@ The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.snif
 
 You can look [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml here], to see the type of xpaths it has been tested.
 
-*Result:*
-
-The result returned will always be `List<String>`.<br>
-If your xpath hits element, then it returns string `true`;
-
- The `sniff(InputSource)` method returns [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/sniff/XPathResults.java XPathResults]
- this results object contains results for all xpaths added. To get result of particular xpath:
-{{{
-    XPathResults results = xmldog.sniff(new InputSource(...));
-    List<String> result = xmldog.getResult(xpath1);
-}}}
-
-In future this will support standard output formats that are supported by standard xpath parsers;
-
 *MultiThreading*
 
 `XMLDog` supports multi-hreading. You can add multiple xpaths once, <br>
