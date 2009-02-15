@@ -17,7 +17,9 @@ package jlibs.xml.dom;
 
 import jlibs.core.graph.Convertor;
 import jlibs.core.lang.StringUtil;
+import jlibs.xml.Namespaces;
 import org.w3c.dom.Node;
+import org.w3c.dom.ProcessingInstruction;
 
 import javax.xml.namespace.NamespaceContext;
 
@@ -43,6 +45,9 @@ public class DOMXPathNameConvertor implements Convertor<Node, String>{
                 return "text()";
             case Node.COMMENT_NODE:
                 return "comment()";
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                ProcessingInstruction pi = (ProcessingInstruction)source;
+                return "processing-instruction('"+pi.getTarget() +"')";
             case Node.ELEMENT_NODE:
                 if(nsContext!=null){
                     String prefix = nsContext.getPrefix(source.getNamespaceURI());
@@ -51,6 +56,9 @@ public class DOMXPathNameConvertor implements Convertor<Node, String>{
                 }else
                     return source.getNodeName();
             case Node.ATTRIBUTE_NODE:
+                if(Namespaces.URI_XMLNS.equals(source.getNamespaceURI()))
+                    return "namespace::"+source.getLocalName();
+                
                 if(nsContext!=null){
                     String prefix = nsContext.getPrefix(source.getNamespaceURI());
                     String name = source.getLocalName();
