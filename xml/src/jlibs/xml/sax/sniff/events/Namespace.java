@@ -31,13 +31,28 @@ public class Namespace extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         return locationStack.namespace(prefix);
     }
 
     @Override
     protected String value(){
         return uri;
+    }
+
+    @Override
+    public String localName(){
+        return prefix;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return "";
+    }
+
+    @Override
+    public String qualifiedName(){
+        return prefix;
     }
 
     public String prefix;

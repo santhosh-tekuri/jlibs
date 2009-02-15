@@ -15,7 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.event;
 
-import jlibs.xml.sax.sniff.events.*;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
@@ -30,16 +30,6 @@ public class LocalName extends EventData{
 
     @Override
     protected String getData(Event event){
-        switch(event.type()){
-            case Event.ELEMENT:
-                return ((Element)event).name;
-            case Event.ATTRIBUTE:
-                return ((Attribute)event).name;
-            case Event.NAMESPACE:
-                return ((Namespace)event).prefix;
-            case Event.PI:
-                return ((PI)event).target;
-        }
-        return null;
+        return event.localName();
     }
 }

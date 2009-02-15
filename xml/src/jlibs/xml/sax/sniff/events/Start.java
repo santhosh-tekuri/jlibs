@@ -32,13 +32,28 @@ public class Start extends Event{
     }
 
     @Override
-    protected String location(){
+    public String location(){
         throw new ImpossibleException();
     }
 
     @Override
     protected String value(){
         throw new ImpossibleException();
+    }
+
+    @Override
+    public String localName(){
+        return null;
+    }
+
+    @Override
+    public String namespaceURI(){
+        return null;
+    }
+
+    @Override
+    public String qualifiedName(){
+        return null;
     }
 
     @Override
