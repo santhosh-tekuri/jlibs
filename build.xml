@@ -73,10 +73,12 @@
         <exec executable="svn" outputproperty="svnlog.out">
             <arg line="log -r HEAD -q"/>
         </exec>
+        <echo>${svnlog.out}</echo>
         <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
         <propertyregex property="revision" input="${svnlog.out}" select="\1">
             <regexp pattern="r([0-9]*)"/>
         </propertyregex>
+        <echo>${revision}</echo>
     </target>
 
 </project>
