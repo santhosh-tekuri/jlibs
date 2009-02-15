@@ -27,6 +27,7 @@ public class NamedNodeMapSequence extends AbstractSequence<Node>{
 
     public NamedNodeMapSequence(NamedNodeMap nodeMap){
         this.nodeMap = nodeMap;
+        _reset();
     }
 
 
@@ -36,6 +37,18 @@ public class NamedNodeMapSequence extends AbstractSequence<Node>{
     @Override
     protected Node findNext(){
         return nodeMap.item(++i);
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+
+    @Override
+    public void reset(){
+        super.reset();
+        _reset();
+    }
+
+    private void _reset(){
+        i = -1;
     }
 
     @Override
