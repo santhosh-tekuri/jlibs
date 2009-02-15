@@ -19,8 +19,8 @@ package jlibs.core.graph;
  * @author Santhosh Kumar T
  */
 public class PredicateConvertor<E> implements Convertor<E, String>{
-    private Navigator2<E> navigator;
-    private Convertor<E, String> delegate;
+    protected Navigator2<E> navigator;
+    protected Convertor<E, String> delegate;
 
     public PredicateConvertor(Navigator2<E> navigator, Convertor<E, String> delegate){
         this.navigator = navigator;
