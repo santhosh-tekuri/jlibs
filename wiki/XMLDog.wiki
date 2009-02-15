@@ -136,11 +136,6 @@ The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.snif
 
 You can look [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml here], to see the type of xpaths it has been tested.
 
-*MultiThreading*
-
-`XMLDog` supports multi-hreading. You can add multiple xpaths once, <br>
-and sniff multiple documents with same `XMLDog` instance parallely;<br>
-
 *Performance:*
 
 You can find `xmldog.sh/xmldog.bat` in jlibs installation, which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
