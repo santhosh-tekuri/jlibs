@@ -16,11 +16,15 @@
 package jlibs.xml.dom;
 
 import jlibs.core.graph.Navigator2;
+import jlibs.core.graph.PredicateConvertor;
 import jlibs.core.graph.Sequence;
 import jlibs.core.graph.sequences.ConcatSequence;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import javax.xml.namespace.NamespaceContext;
 
 /**
  * @author Santhosh Kumar T
@@ -42,5 +46,27 @@ public class DOMNavigator extends Navigator2<Node>{
             seq = new ConcatSequence<Node>(new NamedNodeMapSequence(elem.getAttributes()), seq);
         }
         return seq;
+    }
+
+    private class XPathConvertor extends PredicateConvertor<Node>{
+        public XPathConvertor(NamespaceContext nsContext){
+            super(DOMNavigator.this, new DOMXPathNameConvertor(nsContext));
+        }
+
+        @Override
+        public String convert(Node source){
+            switch(source.getNodeType()){
+                case Node.ATTRIBUTE_NODE:
+                    return delegate.convert(source);
+            }
+            return super.convert(source);
+        }
+    }
+
+    public String getXPath(Node node, NamespaceContext nsContext){
+        if(node instanceof Document)
+            return "/";
+        else
+            return getPath(node, new XPathConvertor(nsContext), "/");
     }
 }
