@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff;
 
+import javax.xml.namespace.NamespaceContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +24,18 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class XPathResults implements Debuggable{
+    private NamespaceContext nsContext;
     private Map<String, Object> map;
 
-    public XPathResults(List<XPath> xpaths){
+    public XPathResults(NamespaceContext nsContext, List<XPath> xpaths){
+        this.nsContext = nsContext;
         map = new HashMap<String, Object>(xpaths.size());
         for(XPath xpath: xpaths)
             map.put(xpath.toString(), xpath.result);
+    }
+
+    public NamespaceContext getNamespaceContext(){
+        return nsContext;
     }
 
     public Object getResult(XPath xpath){

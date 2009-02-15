@@ -15,17 +15,29 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Namespace extends Event{
-    public Namespace(DocumentOrder documentOrder){
-        super(documentOrder);
+    public Namespace(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
     public int type(){
         return NAMESPACE;
+    }
+
+    @Override
+    protected String location(){
+        return locationStack.namespace(prefix);
+    }
+
+    @Override
+    protected String value(){
+        return uri;
     }
 
     public String prefix;
@@ -34,7 +46,7 @@ public class Namespace extends Event{
     public void setData(String prefix, String uri){
         this.prefix = prefix;
         this.uri = uri;
-        setResultWrapper(uri);
+        hit();
     }
 
     @Override

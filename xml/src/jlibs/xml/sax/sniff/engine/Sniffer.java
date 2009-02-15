@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.engine;
 
+import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
 import jlibs.xml.sax.SAXDebugHandler;
 import jlibs.xml.sax.SAXProperties;
@@ -45,28 +46,38 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     public Sniffer(Root root){
         this.root = root;
+
         locationStack = new LocationStack(root.nsContext);
+        start = new Start(documentOrder, locationStack);
+        document = new Document(documentOrder, locationStack);
         element = new Element(documentOrder, locationStack);
+        attribute = new Attribute(documentOrder, locationStack);
+        namespace = new Namespace(documentOrder, locationStack);
+        text = new Text(documentOrder, locationStack, contents);
+        comment = new Comment(documentOrder, locationStack);
+        pi = new PI(documentOrder, locationStack);
     }
 
     private NamespaceSupportReader nsSupportReader = new NamespaceSupportReader(null);
     private StringContent contents = new StringContent();
     private ContextManager contextManager = new ContextManager();
-    private LocationStack locationStack;
 
     // events
     private DocumentOrder documentOrder = new DocumentOrder();
-    private Start start = new Start(documentOrder);
-    private Document document = new Document(documentOrder);
+    private LocationStack locationStack;
+
+    private Start start;
+    private Document document;
     private Element element;
-    private Attribute attribute = new Attribute(documentOrder);
-    private Namespace namespace = new Namespace(documentOrder);
-    private Text text = new Text(documentOrder, contents);
-    private Comment comment = new Comment(documentOrder);
-    private PI pi = new PI(documentOrder);
+    private Attribute attribute;
+    private Namespace namespace;
+    private Text text;
+    private Comment comment;
+    private PI pi;
 
     private void matchText(){
         if(!contents.isEmpty()){
+            locationStack.addText();
             text.setData();
             contextManager.match(text);
             contents.reset();
@@ -93,6 +104,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     public void processingInstruction(String target, String data) throws SAXException{
         matchText();
 
+        locationStack.addPI(target);
         pi.setData(target, data);
         contextManager.match(pi);
     }
@@ -101,6 +113,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
     public void comment(char[] ch, int start, int length) throws SAXException{
         matchText();
         
+        locationStack.addComment();
         comment.setData(ch, start, length);
         contextManager.match(comment);
     }
@@ -116,10 +129,9 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         
         if(debug)
             System.out.println();
-        
-        locationStack.pushElement(uri, localName, attrs.getValue(Namespaces.URI_XML, "lang"));
 
         matchText();
+        locationStack.pushElement(uri, localName, attrs.getValue(Namespaces.URI_XML, "lang"));
 
         element.setData(uri, localName, qName);
         contextManager.match(element);
@@ -142,10 +154,10 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         
         if(debug)
             System.out.println();
-        
-        locationStack.popElement();
 
         matchText();
+        locationStack.popElement();
+
         contextManager.elementEnded();
 
         if(debug)
@@ -169,7 +181,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         locationStack.reset();
     }
 
-    public void sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
+    public DefaultNamespaceContext sniff(InputSource source) throws ParserConfigurationException, SAXException, IOException{
         try{
             reset();
             DefaultHandler handler = this;
@@ -184,5 +196,6 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
             if(debug)
                 System.out.println("COMPLETE DOCUMENT IS NOT PARSED !!!");
         }
+        return locationStack.getNsContext();
     }
 }

@@ -15,21 +15,21 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.NodeItem;
+import jlibs.xml.sax.sniff.NodeTypes;
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Event{
-    public static final int START = -1;
-    public static final int DOCUMENT = 0;
-    public static final int ELEMENT = 1;
-    public static final int TEXT = 2;
-    public static final int ATTRIBUTE = 3;
-    public static final int COMMENT = 4;
-    public static final int PI = 5;
-    public static final int NAMESPACE = 6;
+public abstract class Event implements NodeTypes{
+    public static final int START = -2;
 
-    protected Event(DocumentOrder documentOrder){
+    protected LocationStack locationStack;
+    
+    protected Event(DocumentOrder documentOrder, LocationStack locationStack){
         this.documentOrder = documentOrder;
+        this.locationStack = locationStack;
     }
 
     public int order(){
@@ -42,14 +42,27 @@ public abstract class Event{
         return false;
     }
 
-    private Object resultWrapper;
-    public String getResult(){
-        return resultWrapper.toString();
+    protected abstract String location();
+    protected abstract String value();
+
+    public String getValue(){
+        if(value==null)
+            value = value();
+        return value;
+    }
+
+    private NodeItem result;
+    private String value;
+    public NodeItem getResult(){
+        if(result==null)
+            result = new NodeItem(order(), type(), location(), getValue());
+        return result;
     }
 
     private final DocumentOrder documentOrder;
-    public void setResultWrapper(Object resultWrapper){
-        this.resultWrapper = resultWrapper;
+    protected void hit(){
+        result = null;
+        value = null;
         documentOrder.increment();
     }
 }

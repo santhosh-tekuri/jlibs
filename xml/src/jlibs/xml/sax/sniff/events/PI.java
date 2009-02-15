@@ -15,17 +15,29 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
 public class PI extends Event{
-    public PI(DocumentOrder documentOrder){
-        super(documentOrder);
+    public PI(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
     public int type(){
         return PI;
+    }
+
+    @Override
+    protected String location(){
+        return locationStack.processingInstruction(target);
+    }
+
+    @Override
+    protected String value(){
+        return data;
     }
 
     public String target;
@@ -34,7 +46,7 @@ public class PI extends Event{
     public void setData(String target, String data){
         this.target = target;
         this.data = data;
-        setResultWrapper(this);
+        hit();
     }
 
     @Override

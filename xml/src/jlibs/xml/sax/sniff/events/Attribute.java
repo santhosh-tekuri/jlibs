@@ -15,19 +15,30 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
 import org.xml.sax.Attributes;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Attribute extends Event{
-    public Attribute(DocumentOrder documentOrder){
-        super(documentOrder);
+    public Attribute(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
     public int type(){
         return ATTRIBUTE;
+    }
+
+    @Override
+    protected String location(){
+        return locationStack.attribute(uri, name);
+    }
+
+    @Override
+    protected String value(){
+        return value;
     }
 
     public String uri;
@@ -40,7 +51,7 @@ public class Attribute extends Event{
         name = attrs.getLocalName(index);
         qname = attrs.getQName(index);
         value = attrs.getValue(index);
-        setResultWrapper(value);
+        hit();
     }
 
     @Override

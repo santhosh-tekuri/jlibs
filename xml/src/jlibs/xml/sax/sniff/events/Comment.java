@@ -15,17 +15,29 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Comment extends Event{
-    public Comment(DocumentOrder documentOrder){
-        super(documentOrder);
+    public Comment(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
     public int type(){
         return COMMENT;
+    }
+
+    @Override
+    protected String location(){
+        return locationStack.comment();
+    }
+
+    @Override
+    protected String value(){
+        return new String(ch, start, length);
     }
 
     public char[] ch;
@@ -36,7 +48,7 @@ public class Comment extends Event{
         this.ch = ch;
         this.start = start;
         this.length = length;
-        setResultWrapper(this);
+        hit();
     }
 
     @Override

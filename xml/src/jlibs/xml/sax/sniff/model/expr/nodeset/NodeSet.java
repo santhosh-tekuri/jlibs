@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
+import jlibs.xml.sax.sniff.NodeItem;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
@@ -22,7 +23,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
-import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * @author Santhosh Kumar T
@@ -33,20 +34,20 @@ public class NodeSet extends ValidatedExpression{
     }
 
     class MyEvaluation extends DelayedEvaluation{
-        private TreeMap<Integer, String> nodeSet = new TreeMap<Integer, String>();
+        private TreeSet<NodeItem> nodeSet = new TreeSet<NodeItem>();
 
         @Override
         protected Object getCachedResult(){
             return nodeSet;
         }
 
-        @SuppressWarnings({"unchecked"})
+        @SuppressWarnings("unchecked")
         protected void consumeMemberResult(Object result){
             if(result instanceof Event){
                 Event event = (Event)result;
-                nodeSet.put(event.order(),  event.getResult());
-            }else if(result instanceof TreeMap)
-                nodeSet.putAll((TreeMap)result);
+                nodeSet.add(event.getResult());
+            }else if(result instanceof TreeSet)
+                nodeSet.addAll((TreeSet<NodeItem>)result);
         }
     }
 

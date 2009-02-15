@@ -15,12 +15,15 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Start extends Event{
-    public Start(DocumentOrder documentOrder){
-        super(documentOrder);
+    public Start(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
@@ -29,12 +32,22 @@ public class Start extends Event{
     }
 
     @Override
+    protected String location(){
+        throw new ImpossibleException();
+    }
+
+    @Override
+    protected String value(){
+        throw new ImpossibleException();
+    }
+
+    @Override
     public boolean hasChildren(){
         return true;
     }
 
     public void setData(){
-        setResultWrapper(this);
+        hit();
     }
 
     @Override

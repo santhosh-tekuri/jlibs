@@ -28,7 +28,7 @@ public class Sum extends NodeList{
         super(Datatype.NUMBER, contextNode, member, predicate);
     }
 
-    class MyEvaluation extends StringsEvaluation{
+    class MyEvaluation extends NodeListEvaluation{
         private double d;
 
         @Override

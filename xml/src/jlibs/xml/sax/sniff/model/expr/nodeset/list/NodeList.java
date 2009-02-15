@@ -16,9 +16,8 @@
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
-import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.events.PI;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
+import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
@@ -49,7 +48,7 @@ public abstract class NodeList extends ValidatedExpression{
                     @Override
                     public void contextStarted(Context context, Event event){
                         for(Evaluation eval: evaluationStack){
-                            StringsEvaluation evaluation = (StringsEvaluation)eval;
+                            NodeListEvaluation evaluation = (NodeListEvaluation)eval;
                             if(!evaluation.finished && !evaluation.resultPrepared){
                                 if(canEvaluate(context.node, evaluation, context, event)){
                                     evaluation.contextStarted(context);
@@ -61,7 +60,7 @@ public abstract class NodeList extends ValidatedExpression{
                     @Override
                     public void contextEnded(Context context){
                         for(Evaluation eval: evaluationStack){
-                            StringsEvaluation evaluation = (StringsEvaluation)eval;
+                            NodeListEvaluation evaluation = (NodeListEvaluation)eval;
                             if(!evaluation.finished && !evaluation.resultPrepared){
                                 evaluation.contextEnded(context);
                             }
@@ -81,7 +80,7 @@ public abstract class NodeList extends ValidatedExpression{
         super.addMember(member);
     }
 
-    protected abstract class StringsEvaluation extends DelayedEvaluation{
+    protected abstract class NodeListEvaluation extends DelayedEvaluation{
         protected Map<Object, StringBuilder> map = new HashMap<Object, StringBuilder>();
         
         @Override
@@ -102,17 +101,15 @@ public abstract class NodeList extends ValidatedExpression{
 
                     StringBuilder buff = map.get(context);
                     if(buff!=null)
-                        buff.append(event.getResult());
+                        buff.append(event.getValue());
                 }
             }else{
                 switch(event.type()){
                     case Event.TEXT:
                     case Event.COMMENT:
                     case Event.ATTRIBUTE:
-                        consume(event.getResult());
-                        break;
                     case Event.PI:
-                        consume(((PI)event).data);
+                        consume(event.getValue());
                         break;
                 }
             }

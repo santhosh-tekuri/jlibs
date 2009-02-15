@@ -13,43 +13,31 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.sniff.events;
-
-import jlibs.xml.sax.sniff.engine.data.LocationStack;
-import jlibs.xml.sax.sniff.engine.data.StringContent;
+package jlibs.xml.sax.sniff;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Text extends Event{
-    private StringContent contents;
+public class NodeItem implements NodeTypes, Comparable<NodeItem>{
+    private int order;
+    public int type;
+    public String location;
+    public String value;
 
-    public Text(DocumentOrder documentOrder, LocationStack locationStack, StringContent contents){
-        super(documentOrder, locationStack);
-        this.contents = contents;
+    public NodeItem(int order, int type, String location, String value){
+        this.order = order;
+        this.type = type;
+        this.location = location;
+        this.value = value;
     }
 
     @Override
-    public int type(){
-        return TEXT;
-    }
-
-    @Override
-    protected String location(){
-        return locationStack.text();
-    }
-
-    @Override
-    protected String value(){
-        return contents.toString();
-    }
-
-    public void setData(){
-        hit();
+    public int compareTo(NodeItem that){
+        return this.order - that.order;
     }
 
     @Override
     public String toString(){
-        return contents.toString();
+        return value!=null ? location+'='+value : location;
     }
 }

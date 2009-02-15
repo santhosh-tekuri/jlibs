@@ -21,16 +21,23 @@ import jlibs.xml.sax.sniff.engine.data.LocationStack;
  * @author Santhosh Kumar T
  */
 public class Element extends Event{
-    private LocationStack locationStack;
-
     public Element(DocumentOrder documentOrder, LocationStack locationStack){
-        super(documentOrder);
-        this.locationStack = locationStack;
+        super(documentOrder, locationStack);
     }
 
     @Override
     public int type(){
         return ELEMENT;
+    }
+
+    @Override
+    protected String location(){
+        return locationStack.element();
+    }
+
+    @Override
+    protected String value(){
+        return null;
     }
 
     @Override
@@ -46,7 +53,7 @@ public class Element extends Event{
         this.uri = uri;
         this.name = name;
         this.qname = qname;
-        setResultWrapper(locationStack);
+        hit();
     }
 
     public String getLanguage(){

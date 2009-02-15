@@ -29,7 +29,7 @@ public class StringNodeSet extends NodeList{
         super(Datatype.STRING, contextNode, member, predicate);
     }
 
-    class MyEvaluation extends StringsEvaluation{
+    class MyEvaluation extends NodeListEvaluation{
         private int order;
         private String str;
 
