@@ -44,15 +44,25 @@ public class XPathResults implements Debuggable{
         return map.get(xpath.toString());
     }
 
+    /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
+    
+    private void print(PrintStream out, String xpath, Object result){
+        out.printf("XPath: %s%n", xpath);
+        if(result instanceof Collection){
+            int i = 0;
+            for(Object item: (Collection)result)
+                out.printf("      %d: %s%n", ++i, item);
+        }else
+            out.printf("      %s\n", result);
+    }
+
+    public void printResult(PrintStream out, XPath xpath){
+        print(out, xpath.toString(), map.get(xpath.toString()));
+    }
+
     public void print(PrintStream out){
         for(Map.Entry<String, Object> entry: map.entrySet()){
-            out.printf("XPath: %s%n", entry.getKey());
-            if(entry.getValue() instanceof Collection){
-                int i = 0;
-                for(Object item: (Collection)entry.getValue())
-                    out.printf("      %d: %s%n", ++i, item);
-            }else
-                out.printf("      %s\n", entry.getValue());
+            print(out, entry.getKey(), entry.getValue());
             out.println();
         }
     }
