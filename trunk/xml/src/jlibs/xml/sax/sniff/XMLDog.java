@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff;
 
+import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.sniff.engine.Sniffer;
 import jlibs.xml.sax.sniff.model.Root;
 import jlibs.xml.sax.sniff.parser.JaxenParser;
@@ -76,9 +77,9 @@ public class XMLDog implements Debuggable{
         }
 
         try{
-            new Sniffer(_root).sniff(source);
+            DefaultNamespaceContext nsContext = new Sniffer(_root).sniff(source);
             _root.parsingDone();
-            return new XPathResults(_xpaths);
+            return new XPathResults(nsContext, _xpaths);
         }finally{
             if(!clone)
                 _root.reset();

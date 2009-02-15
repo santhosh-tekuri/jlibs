@@ -31,7 +31,7 @@ public class Strings extends NodeList{
         super(Datatype.STRINGS, contextNode, member, predicate);
     }
 
-    class MyEvaluation extends StringsEvaluation{
+    class MyEvaluation extends NodeListEvaluation{
         private List<String> strings = new ArrayList<String>();
 
         @Override

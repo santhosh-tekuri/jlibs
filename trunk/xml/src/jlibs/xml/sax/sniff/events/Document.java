@@ -15,12 +15,14 @@
 
 package jlibs.xml.sax.sniff.events;
 
+import jlibs.xml.sax.sniff.engine.data.LocationStack;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Document extends Event{
-    public Document(DocumentOrder documentOrder){
-        super(documentOrder);
+    public Document(DocumentOrder documentOrder, LocationStack locationStack){
+        super(documentOrder, locationStack);
     }
 
     @Override
@@ -29,12 +31,22 @@ public class Document extends Event{
     }
 
     @Override
+    protected String location(){
+        return "/";
+    }
+
+    @Override
+    protected String value(){
+        return null;
+    }
+
+    @Override
     public boolean hasChildren(){
         return true;
     }
 
     public void setData(){
-        setResultWrapper(this);
+        hit();
     }
     
     @Override

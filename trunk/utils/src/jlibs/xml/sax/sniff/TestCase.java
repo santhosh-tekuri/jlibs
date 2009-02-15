@@ -15,13 +15,11 @@
 
 package jlibs.xml.sax.sniff;
 
-import jlibs.core.graph.Convertor;
-import jlibs.core.graph.PredicateConvertor;
-import jlibs.core.lang.NotImplementedException;
+import jlibs.core.lang.Util;
 import jlibs.xml.DefaultNamespaceContext;
+import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.dom.DOMUtil;
-import jlibs.xml.dom.DOMXPathNameConvertor;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -30,9 +28,7 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -42,7 +38,9 @@ public class TestCase{
     List<String> xpaths = new ArrayList<String>();
     List<QName> resultTypes = new ArrayList<QName>();
     List<Integer> hasAttributes = new ArrayList<Integer>();
+    List<Integer> hasNamespaces = new ArrayList<Integer>();
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
+    DefaultNamespaceContext resultNSContext = new DefaultNamespaceContext();
     Document doc;
 
     public void createDocument() throws ParserConfigurationException, IOException, SAXException{
@@ -76,6 +74,7 @@ public class TestCase{
         }
 
         XPathResults dogResults = dog.sniff(source);
+        resultNSContext = (DefaultNamespaceContext)dogResults.getNamespaceContext();
 
         dogResult = new ArrayList<Object>(xpaths.size());
         for(jlibs.xml.sax.sniff.XPath xpathObj: xpathObjs)
@@ -84,41 +83,34 @@ public class TestCase{
     }
 
     DOMNavigator navigator = new DOMNavigator();
-    Convertor<Node, String> convertor = new PredicateConvertor<Node>(navigator, new DOMXPathNameConvertor(nsContext));
     
     public void translateJDKResult(int test){
         Object obj = jdkResult.get(test);
-        List<String> result = new ArrayList<String>();
+        TreeSet<NodeItem> result = new TreeSet<NodeItem>();
 
-        if(obj instanceof NodeList){
-            NodeList nodeSet = (NodeList)obj;
-            for(int i=0; i<nodeSet.getLength(); i++){
-                Node node = nodeSet.item(i);
-                if(node instanceof Attr){
-                    result.add(node.getNodeValue());
-                    hasAttributes.add(test);
-                }else if(node instanceof Element)
-                    result.add(new DOMNavigator().getPath(node, convertor, "/"));
-                else if(node instanceof Text)
-                    result.add(node.getNodeValue());
-                else if(node instanceof Comment)
-                    result.add(node.getNodeValue());
-                else if(node instanceof ProcessingInstruction){
-                    ProcessingInstruction pi = (ProcessingInstruction)node;
-                    result.add(String.format("<?%s %s?>", pi.getTarget(), pi.getData()));
-                }else if(node instanceof Document)
-                    result.add("/");
+        NodeList nodeSet = (NodeList)obj;
+        for(int i=0; i<nodeSet.getLength(); i++){
+            Node node = nodeSet.item(i);
+            String location = new DOMNavigator().getXPath(node, resultNSContext);
+            String value = null;
+
+            if(node instanceof Attr){
+                value = node.getNodeValue();
+                if(Namespaces.URI_XMLNS.equals(node.getNamespaceURI()))
+                    hasNamespaces.add(test);
                 else
-                    throw new NotImplementedException(node.getClass().getName());
+                    hasAttributes.add(test);
+            }else if(node instanceof Text)
+                value = node.getNodeValue();
+            else if(node instanceof Comment)
+                value = node.getNodeValue();
+            else if(node instanceof ProcessingInstruction){
+                ProcessingInstruction pi = (ProcessingInstruction)node;
+                value = pi.getData();
             }
-        }else if(obj instanceof String)
-            result.add((String)obj);
-        else if(obj instanceof Double)
-            result.add(obj.toString());
-        else if(obj instanceof Boolean)
-            result.add(obj.toString());
-        else
-            throw new NotImplementedException(obj.getClass().getName());
+            
+            result.add(new NodeItem(i, node.getNodeType(), location, value));
+        }
         jdkResult.set(test, result);
     }
 
@@ -132,39 +124,92 @@ public class TestCase{
         return dogResult.get(i);
     }
 
+    Comparator<NodeItem> attrComparator = new Comparator<NodeItem>(){
+        @Override
+        public int compare(NodeItem item1, NodeItem item2){
+            return item1.location.compareTo(item2.location);
+        }
+    };
+    
+    Comparator<NodeItem> nsComparator = new Comparator<NodeItem>(){
+        @Override
+        public int compare(NodeItem item1, NodeItem item2){
+            String location1 = item1.location.substring(item1.location.lastIndexOf('/'));
+            String location2 = item2.location.substring(item2.location.lastIndexOf('/'));
+            return location1.compareTo(location2);
+        }
+    };
+
     @SuppressWarnings({"unchecked"})
     public boolean passed(int i){
         Object jdkResults = jdkResults(i);
         Object dogResults = dogResults(i);
 
+        if(jdkResults instanceof TreeSet)
+            jdkResults = new ArrayList((TreeSet)jdkResults);
+        if(dogResults instanceof TreeSet)
+            dogResults = new ArrayList((TreeSet)dogResults);
+        
         if(hasAttributes.contains(i)){
-            Collections.sort((List<String>)jdkResults);
-            Collections.sort((List<String>)dogResults);
+            Collections.sort((List<NodeItem>)jdkResults, attrComparator);
+            Collections.sort((List<NodeItem>)dogResults, attrComparator);
+        }else if(hasNamespaces.contains(i)){
+            Collections.sort((List<NodeItem>)jdkResults, nsComparator);
+            Collections.sort((List<NodeItem>)dogResults, nsComparator);
         }
 
-        return jdkResults.equals(dogResults);
+        if(jdkResults instanceof List)
+            return equals((List<NodeItem>)jdkResults, (List<NodeItem>)dogResults);
+        else
+            return jdkResults.equals(dogResults);
+    }
+
+    private boolean equals(List<NodeItem> jdkList, List<NodeItem> dogList){
+        if(jdkList.size()!=dogList.size())
+            return false;
+
+        Iterator<NodeItem> jdkIter = jdkList.iterator();
+        Iterator<NodeItem> dogIter = dogList.iterator();
+        while(jdkIter.hasNext()){
+            NodeItem jdkItem = jdkIter.next();
+            NodeItem dogItem = dogIter.next();
+
+            if(!Util.equals(jdkItem.value, dogItem.value))
+                return false;
+
+            String jdkLocation = jdkItem.location;
+            String dogLocation = dogItem.location;
+            if(dogItem.type==NodeItem.NAMESPACE){
+                jdkLocation = jdkLocation.substring(jdkLocation.lastIndexOf('/'));
+                dogLocation = dogLocation.substring(dogLocation.lastIndexOf('/'));
+            }
+            if(!jdkLocation.equals(dogLocation))
+                return false;
+        }
+        
+        return true;
     }
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
 
     @SuppressWarnings({"unchecked"})
     public static int printResults(Object result){
-        if(result instanceof List)
-            return printResults((List<String>)result);
+        if(result instanceof Collection)
+            return printResults((Collection)result);
         else{
             System.out.println(result);
             return -1;
         }
     }
 
-    public static int printResults(List<String> results){
+    public static int printResults(Collection results){
         boolean first = true;
-        for(String result: results){
+        for(Object item: results){
             if(first)
                first = false;
             else
                 System.out.print(", ");
-            System.out.print(result);
+            System.out.print(item);
         }
         System.out.println();
         return results.size();

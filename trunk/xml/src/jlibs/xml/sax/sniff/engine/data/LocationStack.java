@@ -33,9 +33,14 @@ public class LocationStack{
         this.givenNSContext = givenNSContext;
     }
 
+    public DefaultNamespaceContext getNsContext(){
+        return nsContext;
+    }
+
     public void reset(){
         nsContext = new DefaultNamespaceContext();
         stack.clear();
+        stack.push(new Info());
     }
     
     private String getPrefix(String uri){
@@ -61,16 +66,8 @@ public class LocationStack{
         Info info = new Info();
         info.elem = qname(uri, name);
 
-        if(!stack.isEmpty()){
-            Info peekInfo = stack.getLast();
-            Integer position = peekInfo.positionMap.get(info.elem);
-            if(position==null)
-                position = 1;
-            else
-                position++;
-            peekInfo.positionMap.put(info.elem, position);
-            info.elemntPos = position;
-        }
+        if(!stack.isEmpty())
+            info.elemntPos = stack.getLast().updateElementPosition(info.elem);
 
         if(lang==null)
             lang = language();
@@ -79,16 +76,55 @@ public class LocationStack{
         stack.addLast(info);
     }
 
+    public void addText(){
+        stack.getLast().textCount++;
+    }
+    
+    public void addPI(String target){
+        stack.getLast().updatePIPosition(target);
+    }
+
+    public void addComment(){
+        stack.getLast().commentCount++;
+    }
+
     public void popElement(){
         stack.removeLast();
     }
     
     private static class Info{
-        String elem;
-        String lang;
+        private String elem;
+        private String lang;
 
-        Map<String, Integer> positionMap = new HashMap<String, Integer>();
-        int elemntPos = 1;
+        private int elemntPos = 1;
+
+        private static int updatePosition(Map<String, Integer> map, String key){
+            Integer position = map.get(key);
+            if(position==null)
+                position = 1;
+            else
+                position++;
+            map.put(key, position);
+
+            return position;
+        }
+
+        private Map<String, Integer> elemMap;
+        public int updateElementPosition(String qname){
+            if(elemMap==null)
+                elemMap = new HashMap<String, Integer>();
+            return updatePosition(elemMap, qname);
+        }
+
+        private Map<String, Integer> piMap = new HashMap<String, Integer>();
+        public int updatePIPosition(String target){
+            if(piMap==null)
+                piMap = new HashMap<String, Integer>();
+            return updatePosition(piMap, target);
+        }
+
+        private int textCount;
+        private int commentCount;
     }
 
     /*-------------------------------------------------[ Queries ]---------------------------------------------------*/
@@ -96,10 +132,32 @@ public class LocationStack{
     public String element(){
         StringBuilder buff = new StringBuilder();
         for(Info info: stack){
-            buff.append('/');
-            buff.append(info.elem).append('[').append(info.elemntPos).append(']');
+            if(info.elem!=null){
+                buff.append('/');
+                buff.append(info.elem).append('[').append(info.elemntPos).append(']');
+            }
         }
         return buff.toString();
+    }
+
+    public String attribute(String uri, String name){
+        return String.format("%s/@%s", element(), qname(uri, name));
+    }
+
+    public String namespace(String prefix){
+        return String.format("%s/namespace::%s", element(), prefix);
+    }
+
+    public String text(){
+        return String.format("%s/text()[%d]", element(), stack.peekLast().textCount);
+    }
+
+    public String processingInstruction(String target){
+        return String.format("%s/processing-instruction('%s')[%d]", element(), target, stack.peekLast().piMap.get(target));
+    }
+
+    public String comment(){
+        return String.format("%s/comment()[%d]", element(), stack.peekLast().commentCount);
     }
 
     public String language(){
