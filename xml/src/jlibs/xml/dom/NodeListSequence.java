@@ -27,6 +27,7 @@ public class NodeListSequence extends AbstractSequence<Node>{
 
     public NodeListSequence(NodeList nodeList){
         this.nodeList = nodeList;
+        _reset();
     }
 
 
@@ -36,6 +37,18 @@ public class NodeListSequence extends AbstractSequence<Node>{
     @Override
     protected Node findNext(){
         return nodeList.item(++i);
+    }
+
+    /*-------------------------------------------------[ Reuse ]---------------------------------------------------*/
+
+    @Override
+    public void reset(){
+        super.reset();
+        _reset();
+    }
+
+    private void _reset(){
+        i = -1;
     }
 
     @Override
