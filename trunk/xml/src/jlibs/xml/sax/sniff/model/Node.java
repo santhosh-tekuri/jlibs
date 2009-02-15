@@ -21,12 +21,15 @@ import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
-import jlibs.xml.sax.sniff.engine.context.ContextStartListener;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
+import jlibs.xml.sax.sniff.engine.context.ContextStartListener;
 import jlibs.xml.sax.sniff.events.Event;
 import org.jaxen.saxpath.Axis;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -145,15 +148,15 @@ public abstract class Node extends Notifier{
             @Override
             public String visit(Node elem){
                 String str = elem.toString() + "_"+elem.depth;
-                if(elem.listeners.size()>0){
+                if(elem.listeners!=null){
                     for(NotificationListener listener: elem.listeners)
                         str += "\n   ### "+listener+" ";
                 }
-                if(elem.contextStartListeners.size()>0){
+                if(elem.contextStartListeners!=null){
                     for(ContextStartListener listener: elem.contextStartListeners)
                         str += "\n   {{{ "+listener+" ";
                 }
-                if(elem.contextEndListeners.size()>0){
+                if(elem.contextEndListeners!=null){
                     for(ContextEndListener listener: elem.contextEndListeners)
                         str += "\n   }}} "+listener+" ";
                 }
@@ -164,16 +167,18 @@ public abstract class Node extends Notifier{
 
     /*-------------------------------------------------[ Observers ]---------------------------------------------------*/
 
-    private List<NotificationListener> listeners = new ArrayList<NotificationListener>();
+    private List<NotificationListener> listeners;
 
     @Override
     public void addNotificationListener(NotificationListener listener){
+        if(listeners==null)
+            listeners = new ArrayList<NotificationListener>();
         listeners.add(listener);
     }
     
     @Override
     public void notify(Context context, Object event){
-        if(listeners.size()>0){
+        if(listeners!=null){
             if(debug){
                 debugger.println("notifyListeners("+this+")");
                 debugger.indent++;
@@ -187,7 +192,7 @@ public abstract class Node extends Notifier{
     
     /*-------------------------------------------------[ ContextStartListeners ]---------------------------------------------------*/
 
-    private List<ContextStartListener> contextStartListeners = new ArrayList<ContextStartListener>();
+    private List<ContextStartListener> contextStartListeners;
     private static Comparator<ContextStartListener> startComparator = new Comparator<ContextStartListener>(){
         @Override
         public int compare(ContextStartListener listener1, ContextStartListener listener2){
@@ -198,16 +203,22 @@ public abstract class Node extends Notifier{
     private boolean startListenersSorted;
 
     public void addContextStartListener(ContextStartListener listener){
+        if(contextStartListeners==null)
+            contextStartListeners = new ArrayList<ContextStartListener>();
+        
         contextStartListeners.add(listener);
-        startListenersSorted = false;
+        startListenersSorted = contextStartListeners.size()<2;
     }
 
     public void removeContextStartListener(ContextStartListener listener){
         contextStartListeners.remove(listener);
+        
+        if(contextStartListeners.size()==0)
+            contextStartListeners = null;
     }
 
     public void contextStarted(Context context, Event event){
-        if(contextStartListeners.size()>0){
+        if(contextStartListeners!=null){
             if(debug){
                 debugger.println("contextStarted(%s)",this);
                 debugger.indent++;
@@ -229,7 +240,7 @@ public abstract class Node extends Notifier{
 
     /*-------------------------------------------------[ ContextEndListeners ]---------------------------------------------------*/
     
-    private List<ContextEndListener> contextEndListeners = new ArrayList<ContextEndListener>();
+    private List<ContextEndListener> contextEndListeners;
     private static Comparator<ContextEndListener> endComparator = new Comparator<ContextEndListener>(){
         @Override
         public int compare(ContextEndListener listener1, ContextEndListener listener2){
@@ -239,33 +250,38 @@ public abstract class Node extends Notifier{
 
     private boolean endListenersSorted;
     public void addContextEndListener(ContextEndListener listener){
+        if(contextEndListeners==null)
+            contextEndListeners = new ArrayList<ContextEndListener>();
+        
         contextEndListeners.add(0, listener);
-        endListenersSorted = false;
+        endListenersSorted = contextEndListeners.size()<2;
     }
 
     public void removeContextEndListener(ContextEndListener listener){
         contextEndListeners.remove(listener);
+
+        if(contextEndListeners.size()==0)
+            contextEndListeners = null;
     }
 
     public void contextEnded(Context context){
-        if(contextStartListeners.size()==0)
-            return;
+        if(contextEndListeners!=null){
+            if(debug){
+                debugger.println("contextEnded(%s)",this);
+                debugger.indent++;
+            }
 
-        if(debug){
-            debugger.println("contextEnded(%s)",this);
-            debugger.indent++;
+            if(!endListenersSorted){
+                Collections.sort(contextEndListeners, endComparator);
+                endListenersSorted = true;
+            }
+
+            for(ContextEndListener listener: contextEndListeners)
+                listener.contextEnded(context);
+
+            if(debug)
+                debugger.indent--;
         }
-
-        if(!endListenersSorted){
-            Collections.sort(contextEndListeners, endComparator);
-            endListenersSorted = true;
-        }
-
-        for(ContextEndListener listener: contextEndListeners)
-            listener.contextEnded(context);
-
-        if(debug)
-            debugger.indent--;
     }
 
     /*-------------------------------------------------[ ContextListeners ]---------------------------------------------------*/

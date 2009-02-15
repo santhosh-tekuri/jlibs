@@ -19,10 +19,10 @@ package jlibs.xml.sax.sniff;
  * @author Santhosh Kumar T
  */
 public class NodeItem implements NodeTypes, Comparable<NodeItem>{
-    private int order;
-    public int type;
-    public String location;
-    public String value;
+    private final int order;
+    public final int type;
+    public final String location;
+    public final String value;
 
     public NodeItem(int order, int type, String location, String value){
         this.order = order;
