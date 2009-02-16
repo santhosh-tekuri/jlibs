@@ -19,6 +19,7 @@ import jlibs.core.util.Enumerator;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.namespace.QName;
 import java.util.Iterator;
 
 /**
@@ -59,5 +60,9 @@ public class DefaultNamespaceContext implements NamespaceContext{
 
     public String declarePrefix(String uri){
         return nsSupport.declarePrefix(uri);
+    }
+
+    public QName toQName(String qname){
+        return nsSupport.toQName(qname);
     }
 }
