@@ -849,8 +849,13 @@
     </testcase>
 
     <testcase>
+        <variable name="var1">world</variable>
+        <variable name="var2">10</variable>
+
         <file>xmlFiles/pi2.xml</file>
 
         <xpath>//processing-instruction()</xpath>
+        <xpath>concat('hello', $var1)</xpath>
+        <xpath type="number">20 + $var2</xpath>
     </testcase>
 </xpaths>

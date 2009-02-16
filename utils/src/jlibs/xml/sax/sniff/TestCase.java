@@ -19,6 +19,7 @@ import jlibs.core.lang.Util;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.dom.DOMUtil;
+import jlibs.xml.xpath.DefaultXPathVariableResolver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -42,6 +43,8 @@ public class TestCase{
     List<Integer> hasNamespaces = new ArrayList<Integer>();
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     DefaultNamespaceContext resultNSContext = new DefaultNamespaceContext();
+    DefaultXPathVariableResolver variableResolver = new DefaultXPathVariableResolver();
+
     Document doc;
 
     public void createDocument() throws ParserConfigurationException, IOException, SAXException{
@@ -56,6 +59,7 @@ public class TestCase{
         jdkResult = new ArrayList<Object>(xpaths.size());
         for(int i=0; i<xpaths.size(); i++){
             javax.xml.xpath.XPath xpathObj = XPathFactory.newInstance().newXPath();
+            xpathObj.setXPathVariableResolver(variableResolver);
             xpathObj.setNamespaceContext(nsContext);
             jdkResult.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
         }
@@ -67,7 +71,7 @@ public class TestCase{
     List<Object> dogResult;
     public List<Object> usingXMLDog() throws Exception{
         InputSource source = new InputSource(file);
-        XMLDog dog = new XMLDog(nsContext);
+        XMLDog dog = new XMLDog(nsContext, variableResolver);
         jlibs.xml.sax.sniff.XPath xpathObjs[] = new jlibs.xml.sax.sniff.XPath[xpaths.size()];
         for(int i=0; i<xpaths.size(); i++){
             xpathObjs[i] = dog.add(xpaths.get(i));

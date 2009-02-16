@@ -22,6 +22,7 @@ import jlibs.xml.sax.sniff.model.*;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.Literal;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
+import jlibs.xml.sax.sniff.model.expr.VariableReference;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
 import jlibs.xml.sax.sniff.model.expr.num.Ceiling;
@@ -36,6 +37,7 @@ import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathReader;
 import org.jaxen.saxpath.helpers.XPathReaderFactory;
 
+import javax.xml.namespace.QName;
 import java.util.ArrayDeque;
 import java.util.List;
 
@@ -66,6 +68,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             return process((UnaryExpr)elem);
         else if(elem instanceof BinaryExpr)
             return process((BinaryExpr)elem);
+        else if(elem instanceof VariableReferenceExpr)
+            return process((VariableReferenceExpr)elem);
         else
            throw new NotImplementedException(elem.getClass().getName());
     }
@@ -299,6 +303,18 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         expr.addMember(new Literal(contextStack.peek(), (double)-1));
         addMember(expr, unaryExpr.getExpr());
         return current = expr;
+    }
+
+    protected Notifier process(VariableReferenceExpr varRefExpr) throws SAXPathException{
+        if(root.variableResolver==null)
+            throw new SAXPathException("Variable Resolver is not set");
+
+        String uri = root.nsContext.getNamespaceURI(varRefExpr.getPrefix());
+        if(uri==null)
+            throw new SAXPathException("undeclared prefix: "+varRefExpr.getPrefix());
+
+        QName qname = new QName(uri, varRefExpr.getVariableName());
+        return current = new VariableReference(contextStack.peek(), qname);
     }
 
     protected Notifier process(BinaryExpr binaryExpr) throws SAXPathException{

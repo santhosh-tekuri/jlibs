@@ -15,47 +15,35 @@
 
 package jlibs.xml.sax.sniff.model.expr;
 
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Notifier;
+
+import javax.xml.namespace.QName;
 
 /**
  * @author Santhosh Kumar T
  */
-public class TypeCast extends Expression{
-    public TypeCast(Node contextNode, Datatype returnType){
-        super(contextNode, assertType(returnType), Datatype.STRING);
-    }
+public class VariableReference extends Expression{
+    private QName variableName;
 
-    private static Datatype assertType(Datatype datatype){
-        switch(datatype){
-            case STRING:
-            case BOOLEAN:
-            case NUMBER:
-            case PRIMITIVE:
-                return datatype;
-            default:
-                throw new IllegalArgumentException();
-        }
-    }
-    
-    @Override
-    public void addMember(Notifier member){
-        assertType(member.resultType());
-        _addMember(member);
+    public VariableReference(Node contextNode, QName variableName){
+        super(contextNode, Datatype.PRIMITIVE);
+        this.variableName = variableName;
     }
 
     class MyEvaluation extends Evaluation{
-        @Override
-        public void finish(){
-            throw new ImpossibleException();
+        MyEvaluation(){
+            Object value = evaluationStartNode.root.variableResolver.resolveVariable(variableName);
+            if(value==null)
+                throw new RuntimeException("Variable '"+variableName+"' is resolved to null");
+            setResult(value);
         }
 
         @Override
-        protected void consume(Object member, Object result){
-            setResult(resultType().convert(result));
-        }
+        public void finish(){}
+
+        @Override
+        protected void consume(Object member, Object result){}
 
         @Override
         protected void print(){}
@@ -64,5 +52,10 @@ public class TypeCast extends Expression{
     @Override
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    @Override
+    public String getName(){
+        return '$'+variableName.toString();
     }
 }

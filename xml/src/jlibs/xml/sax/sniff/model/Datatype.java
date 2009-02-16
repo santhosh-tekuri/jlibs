@@ -29,7 +29,8 @@ public enum Datatype{
     STRING(XPathConstants.STRING, ""),
     NUMBER(XPathConstants.NUMBER, 0.0d),
     BOOLEAN(XPathConstants.BOOLEAN, false),
-    STRINGS(new QName("http://jlibs.org", "STRINGS"), Collections.emptyList());
+    STRINGS(new QName("http://jlibs.org", "strings"), Collections.emptyList()),
+    PRIMITIVE(new QName("http://jlibs.org", "primitive"), null);
 
     private QName qname;
     private Object defaultValue;
