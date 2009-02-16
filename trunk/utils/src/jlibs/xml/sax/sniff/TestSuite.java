@@ -105,6 +105,7 @@ public class TestSuite{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
             TestCase testCase;
             CharArrayWriter contents = new CharArrayWriter();
+            QName variableName;
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
@@ -117,7 +118,7 @@ public class TestSuite{
                     }
                     if(nsSupport.getURI("")!=null)
                         testCase.nsContext.declarePrefix("", nsSupport.getURI(""));
-                }if(localName.equals("xpath")){
+                }else if(localName.equals("xpath")){
                     String type = attributes.getValue("type");
                     if(type!=null){
                         if(type.equals("nodeset"))
@@ -129,7 +130,8 @@ public class TestSuite{
                         else if(type.equals("boolean"))
                             testCase.resultTypes.add(XPathConstants.BOOLEAN);
                     }
-                }
+                }else if(localName.equals("variable"))
+                    variableName = testCase.nsContext.toQName(attributes.getValue("name"));
                 contents.reset();
             }
 
@@ -174,7 +176,9 @@ public class TestSuite{
                         total += t.xpaths.size();
                     }
                     files.clear();
-                }
+                }else if(localName.equals("variable"))
+                    testCase.variableResolver.defineVariable(variableName, contents.toString());
+                contents.reset();
             }
         });
     }

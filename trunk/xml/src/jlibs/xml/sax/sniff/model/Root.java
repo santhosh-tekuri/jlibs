@@ -16,16 +16,19 @@
 package jlibs.xml.sax.sniff.model;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.xpath.XPathVariableResolver;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Root extends Node{
     public NamespaceContext nsContext;
-    
-    public Root(NamespaceContext nsContext){
+    public XPathVariableResolver variableResolver;
+
+    public Root(NamespaceContext nsContext, XPathVariableResolver variableResolver){
         root = this;
         this.nsContext = nsContext;
+        this.variableResolver = variableResolver;
         hits.totalHits = new HitManager();
     }
 
