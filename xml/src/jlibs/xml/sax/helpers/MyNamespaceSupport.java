@@ -19,6 +19,7 @@ import jlibs.core.lang.Util;
 import jlibs.xml.Namespaces;
 import org.xml.sax.helpers.NamespaceSupport;
 
+import javax.xml.namespace.QName;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
@@ -140,6 +141,19 @@ public class MyNamespaceSupport extends NamespaceSupport{
     @SuppressWarnings({"unchecked"})
     public Enumeration<String> getPrefixes(){
         return super.getPrefixes();
+    }
+
+    public QName toQName(String qname){
+        String prefix = "";
+        String localName = qname;
+
+        int colon = qname.indexOf(':');
+        if(colon!=-1){
+            prefix = qname.substring(0, colon);
+            localName = qname.substring(colon+1);
+        }
+
+        return new QName(getURI(prefix), localName, prefix);
     }
 
     public static void main(String[] args){
