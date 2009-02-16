@@ -73,7 +73,8 @@ For `XPathConstants.NODESET` the `TreeSet` contains `NodeItem`s which are sorted
     returns type of xml node. will be one of following constants in `NodeItem`:
         COMMENT, PI, DOCUMENT_NODE, ELEMENT, ATTRIBUTE, NAMESPACE, TEXT;
 `NodeItem.location`:
-    returns unique xpath to the xml node. ex: /xs:schema[1]/xs:complexType[1]/@name<br>
+    returns unique xpath to the xml node. ex: `/xs:schema[1]/xs:complexType[1]/@name`<br>
+    the prefixes in this xpath can be resolved using `results.getNamespaceContext()`
     this can be used to create DOM, in case you need it.
 
 `NodeItem.value`, `NodeItem.localName`, `NodeItem.namespaceURI`, `NodeItem.name`:
@@ -101,7 +102,7 @@ XPath: /xs:schema/xs:*/@name
       5: /xs:schema[1]/xs:complexType[1]/@name
 }}}
 
-*MultiThreading*
+*MultiThreading:*
 
 `XMLDog` supports multi-hreading. You can add multiple xpaths once, <br>
 and sniff multiple documents with same `XMLDog` instance parallely;<br>
