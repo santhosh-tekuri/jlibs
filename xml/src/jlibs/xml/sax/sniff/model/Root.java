@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathVariableResolver;
+import javax.xml.xpath.XPathFunctionResolver;
 
 /**
  * @author Santhosh Kumar T
@@ -24,11 +25,14 @@ import javax.xml.xpath.XPathVariableResolver;
 public class Root extends Node{
     public NamespaceContext nsContext;
     public XPathVariableResolver variableResolver;
+    public XPathFunctionResolver functionResolver;
 
-    public Root(NamespaceContext nsContext, XPathVariableResolver variableResolver){
+    public Root(NamespaceContext nsContext, XPathVariableResolver variableResolver, XPathFunctionResolver functionResolver){
         root = this;
         this.nsContext = nsContext;
         this.variableResolver = variableResolver;
+        this.functionResolver = functionResolver;
+        
         hits.totalHits = new HitManager();
     }
 

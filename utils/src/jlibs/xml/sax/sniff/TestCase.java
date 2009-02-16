@@ -29,6 +29,7 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFunctionResolver;
 import java.io.IOException;
 import java.util.*;
 
@@ -44,6 +45,7 @@ public class TestCase{
     DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     DefaultNamespaceContext resultNSContext = new DefaultNamespaceContext();
     DefaultXPathVariableResolver variableResolver = new DefaultXPathVariableResolver();
+    XPathFunctionResolver functionResolver;
 
     Document doc;
 
@@ -71,7 +73,7 @@ public class TestCase{
     List<Object> dogResult;
     public List<Object> usingXMLDog() throws Exception{
         InputSource source = new InputSource(file);
-        XMLDog dog = new XMLDog(nsContext, variableResolver);
+        XMLDog dog = new XMLDog(nsContext, variableResolver, functionResolver);
         jlibs.xml.sax.sniff.XPath xpathObjs[] = new jlibs.xml.sax.sniff.XPath[xpaths.size()];
         for(int i=0; i<xpaths.size(); i++){
             xpathObjs[i] = dog.add(xpaths.get(i));
