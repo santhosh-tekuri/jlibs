@@ -62,20 +62,31 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
     
     public Datatype memberType(){
-        return memberTypes[members.size()];
+        return memberType(members.size());
     }
 
     private Notifier castTo(Notifier member, Datatype expected){
         if(member.resultType()==expected || expected==Datatype.STRINGS)
             return member;
 
+        if(expected==Datatype.PRIMITIVE){
+            switch(member.resultType()){
+                case STRING:
+                case BOOLEAN:
+                case NUMBER:
+                    return member;
+                default:
+                    expected = Datatype.STRING;
+            }
+        }
+        
         TypeCast typeCast = new TypeCast(evaluationStartNode, memberType());
         typeCast.addMember(member);
         return typeCast;
     }
 
     public void addMember(Notifier member){
-        addMember(member, memberTypes[members.size()]);
+        addMember(member, memberType());
     }
 
     protected void addMember(Notifier member, Datatype datatype){

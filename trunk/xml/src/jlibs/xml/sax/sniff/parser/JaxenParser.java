@@ -19,10 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.XPath;
 import jlibs.xml.sax.sniff.model.*;
-import jlibs.xml.sax.sniff.model.expr.Expression;
-import jlibs.xml.sax.sniff.model.expr.Literal;
-import jlibs.xml.sax.sniff.model.expr.TypeCast;
-import jlibs.xml.sax.sniff.model.expr.VariableReference;
+import jlibs.xml.sax.sniff.model.expr.*;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
 import jlibs.xml.sax.sniff.model.expr.num.Ceiling;
@@ -206,43 +203,47 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         current = _current;
     }
     
-    private Expression createFunction(String name){
-        if(name.equals("number"))
-            return new TypeCast(contextStack.peek(), Datatype.NUMBER);
-        else if(name.equals("boolean"))
-            return new TypeCast(contextStack.peek(), Datatype.BOOLEAN);
-        else if(name.equals("string-length"))
-            return new StringLength(contextStack.peek());
-        else if(name.equals("concat"))
-            return new Concat(contextStack.peek());
-        else if(name.equals("not"))
-            return new Not(contextStack.peek());
-        else if(name.equals("normalize-space"))
-            return new NormalizeSpace(contextStack.peek());
-        else if(name.equals("translate"))
-            return new Translate(contextStack.peek());
-        else if(name.equals("contains"))
-            return new Contains(contextStack.peek());
-        else if(name.equals("starts-with"))
-            return new StartsWith(contextStack.peek());
-        else if(name.equals("ends-with"))
-            return new EndsWith(contextStack.peek());
-        else if(name.equals("upper-case"))
-            return new UpperCase(contextStack.peek());
-        else if(name.equals("lower-case"))
-            return new LowerCase(contextStack.peek());
-        else if(name.equals("substring"))
-            return new Substring(contextStack.peek());
-        else if(name.equals("lang"))
-            return new LanguageMatch(contextStack.peek());
-        else if(name.equals("round"))
-            return new Round(contextStack.peek());
-        else if(name.equals("floor"))
-            return new Floor(contextStack.peek());
-        else if(name.equals("ceiling"))
-            return new Ceiling(contextStack.peek());
-        else
-            throw new NotImplementedException("Function "+name+" is not implemented yet");
+    private Expression createFunction(String uri, String name) throws SAXPathException{
+        if(uri.length()==0){
+            if(name.equals("number"))
+                return new TypeCast(contextStack.peek(), Datatype.NUMBER);
+            else if(name.equals("boolean"))
+                return new TypeCast(contextStack.peek(), Datatype.BOOLEAN);
+            else if(name.equals("string-length"))
+                return new StringLength(contextStack.peek());
+            else if(name.equals("concat"))
+                return new Concat(contextStack.peek());
+            else if(name.equals("not"))
+                return new Not(contextStack.peek());
+            else if(name.equals("normalize-space"))
+                return new NormalizeSpace(contextStack.peek());
+            else if(name.equals("translate"))
+                return new Translate(contextStack.peek());
+            else if(name.equals("contains"))
+                return new Contains(contextStack.peek());
+            else if(name.equals("starts-with"))
+                return new StartsWith(contextStack.peek());
+            else if(name.equals("ends-with"))
+                return new EndsWith(contextStack.peek());
+            else if(name.equals("upper-case"))
+                return new UpperCase(contextStack.peek());
+            else if(name.equals("lower-case"))
+                return new LowerCase(contextStack.peek());
+            else if(name.equals("substring"))
+                return new Substring(contextStack.peek());
+            else if(name.equals("lang"))
+                return new LanguageMatch(contextStack.peek());
+            else if(name.equals("round"))
+                return new Round(contextStack.peek());
+            else if(name.equals("floor"))
+                return new Floor(contextStack.peek());
+            else if(name.equals("ceiling"))
+                return new Ceiling(contextStack.peek());
+        }
+
+        if(root.functionResolver==null)
+            throw new SAXPathException("Function Resolver is not set");
+        return new UserFunction(contextStack.peek(), new QName(uri, name));
     }
 
     @SuppressWarnings({"unchecked"})
@@ -250,34 +251,40 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         String prefix = functionExpr.getPrefix();
         String name = functionExpr.getFunctionName();
 
-        if(prefix.length()>0)
-            throw new SAXPathException("unsupported function "+prefix+':'+name+"()");
+        String uri = root.nsContext.getNamespaceURI(prefix);
+        if(uri==null)
+            throw new SAXPathException("undeclared prefix: "+prefix);
 
-        if(functionExpr.getFunctionName().equals("true"))
-            return current = new Literal(contextStack.peek(), true);
-        else if(functionExpr.getFunctionName().equals("false"))
-            return current = new Literal(contextStack.peek(), false);
+        if(uri.length()==0){
+            if(functionExpr.getFunctionName().equals("true"))
+                return current = new Literal(contextStack.peek(), true);
+            else if(functionExpr.getFunctionName().equals("false"))
+                return current = new Literal(contextStack.peek(), false);
+        }
 
         Expression function = null;
 
         Node context = contextStack.peek();
-        if(functionExpr.getParameters().size()>0){
-            visit(functionExpr.getParameters().get(0));
-            if(!(current instanceof Expression) && location!=null){
-                Notifier f = location.createFunction(name);
+        if(uri.length()==0){
+            if(functionExpr.getParameters().size()>0){
+                visit(functionExpr.getParameters().get(0));
+                if(!(current instanceof Expression) && location!=null){
+                    Notifier f = location.createFunction(name);
+                    if(f!=null)
+                        return current = f;
+                }
+            }else{
+                LocationPath loc = locationStack.isEmpty() ? new LocationPath(context) : locationStack.peek();
+                Notifier f = loc.createFunctionWithLastPredicate(name);
                 if(f!=null)
                     return current = f;
             }
-        }else{
-            LocationPath loc = locationStack.isEmpty() ? new LocationPath(context) : locationStack.peek();
-            Notifier f = loc.createFunctionWithLastPredicate(name);
-            if(f!=null)
-                return current = f;
         }
 
-        function = createFunction(name);
-        if(name.equals("lang"))
+        function = createFunction(uri, name);
+        if(uri.length()==0 && name.equals("lang"))
             function.addMember(new LocationPath(context).createFunction("lang"));
+        
         int i = 0;
         for(Expr param: (List<Expr>)functionExpr.getParameters()){
             if(i!=0)

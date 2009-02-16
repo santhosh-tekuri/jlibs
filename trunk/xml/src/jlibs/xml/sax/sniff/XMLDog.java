@@ -26,6 +26,7 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathVariableResolver;
+import javax.xml.xpath.XPathFunctionResolver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +37,8 @@ import java.util.List;
 public class XMLDog implements Debuggable{
     private Root root;
 
-    public XMLDog(NamespaceContext nsContext, XPathVariableResolver variableResolver){
-        root = new Root(nsContext, variableResolver);
+    public XMLDog(NamespaceContext nsContext, XPathVariableResolver variableResolver, XPathFunctionResolver functionResolver){
+        root = new Root(nsContext, variableResolver, functionResolver);
     }
 
     public XPath add(String xpath) throws SAXPathException{
@@ -68,7 +69,7 @@ public class XMLDog implements Debuggable{
 //        }
 
         if(clone){
-            _root = new Root(root.nsContext, root.variableResolver);
+            _root = new Root(root.nsContext, root.variableResolver, root.functionResolver);
             _xpaths = new ArrayList<XPath>(xpaths.size());
             for(XPath xpath: xpaths){
                 XPath _xpath = xpath.copy(_root);
