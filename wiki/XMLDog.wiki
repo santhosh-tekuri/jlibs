@@ -1,4 +1,5 @@
 #summary Using SAX to Sniff XML
+#labels SAX,XPath
 
 [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/sniff/XMLDog.java XMLDog] is a dog that is trained to sniff xml documents.
 
