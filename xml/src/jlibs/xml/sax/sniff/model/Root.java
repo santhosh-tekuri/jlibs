@@ -26,14 +26,13 @@ public class Root extends Node{
     public NamespaceContext nsContext;
     public XPathVariableResolver variableResolver;
     public XPathFunctionResolver functionResolver;
+    public HitManager totalHits = new HitManager();
 
     public Root(NamespaceContext nsContext, XPathVariableResolver variableResolver, XPathFunctionResolver functionResolver){
         root = this;
         this.nsContext = nsContext;
         this.variableResolver = variableResolver;
         this.functionResolver = functionResolver;
-        
-        hits.totalHits = new HitManager();
     }
 
     @Override
@@ -57,7 +56,7 @@ public class Root extends Node{
 
     public void setUsing(boolean using){
         this.using = using;
-        hits.totalHits.parsing = using;
+        totalHits.parsing = using;
     }
 
     public boolean isUsing(){
@@ -65,14 +64,6 @@ public class Root extends Node{
     }
 
     public void parsingDone(){
-        hits.totalHits.parsing = false;
-    }
-
-    /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
-
-    @Override
-    public void reset(){
-        hits.reset();
-        super.reset();
+        totalHits.parsing = false;
     }
 }

@@ -62,13 +62,16 @@ public class XMLDog implements Debuggable{
         List<XPath> _xpaths = this.xpaths;
 
         boolean clone = true;
-//        synchronized(this){
-//            clone = _root.isUsing();
-//            if(!clone)
-//                _root.setUsing(true);
-//        }
+        synchronized(this){
+            clone = _root.isUsing();
+            if(!clone)
+                _root.setUsing(true);
+        }
 
         if(clone){
+            if(debug)
+                debugger.println("cloning xpaths...");
+            
             _root = new Root(root.nsContext, root.variableResolver, root.functionResolver);
             _xpaths = new ArrayList<XPath>(xpaths.size());
             for(XPath xpath: xpaths){
@@ -83,8 +86,14 @@ public class XMLDog implements Debuggable{
             _root.parsingDone();
             return new XPathResults(nsContext, _xpaths);
         }finally{
-            if(!clone)
-                _root.reset();
+            if(!clone){
+                if(debug)
+                    debugger.println("resetting xpaths...");
+
+                for(XPath xpath: _xpaths)
+                    xpath.expr.reset();
+                root.setUsing(false);
+            }
         }
     }
 }

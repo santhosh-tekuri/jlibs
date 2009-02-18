@@ -857,5 +857,6 @@
         <xpath>//processing-instruction()</xpath>
         <xpath>concat('hello', $var1)</xpath>
         <xpath type="number">20 + $var2</xpath>
+        <xpath type="number">20 div 0</xpath>
     </testcase>
 </xpaths>

@@ -22,10 +22,7 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.Datatype;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.NotificationListener;
-import jlibs.xml.sax.sniff.model.Notifier;
+import jlibs.xml.sax.sniff.model.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -36,6 +33,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
+    public HitManager hits = new HitManager();
+    
     protected int evalDepth;
     protected Expression(Node contextNode, Datatype returnType, Datatype... memberTypes){
         setEvaluationStartNode(contextNode);
@@ -44,7 +43,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         this.memberTypes = memberTypes;
         members = new ArrayList<Notifier>(memberTypes.length);
         
-        hits.totalHits = contextNode.hits.totalHits;
+        hits.totalHits = contextNode.root.totalHits;
     }
 
     private Datatype returnType;
@@ -322,6 +321,17 @@ public abstract class Expression extends Notifier implements ContextListener, No
             buff.append(member);
         }
         return getName()+'_'+depth+'('+buff+')';
+    }
+
+    public void reset(){
+        hits.reset();
+        evaluationStack.clear();
+        context = null;
+        contextIdentityOfLastEvaluation = null;
+        for(Notifier member: members){
+            if(member instanceof Expression)
+                ((Expression)member).reset();
+        }
     }
 
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/
