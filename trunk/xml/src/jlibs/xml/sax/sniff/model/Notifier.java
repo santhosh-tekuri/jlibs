@@ -22,7 +22,6 @@ import jlibs.xml.sax.sniff.engine.context.Context;
  * @author Santhosh Kumar T
  */
 public abstract class Notifier implements Debuggable{
-    public HitManager hits = new HitManager();
     public int depth;
 
     public abstract Datatype resultType();

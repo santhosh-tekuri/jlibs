@@ -72,7 +72,6 @@ public abstract class Node extends Notifier{
         children.add(axisNode);
         axisNode.parent = this;
         axisNode.root = root;
-        axisNode.hits.totalHits = root.hits.totalHits;
 
         if(axisNode.type==Axis.ATTRIBUTE)
             hasAttibuteChild = true;
@@ -102,8 +101,6 @@ public abstract class Node extends Notifier{
         node.constraintParent = this;
         node.parent = this.parent;
         node.root = root;
-        node.hits.totalHits = root.hits.totalHits;
-        node.reset();
         return node;
     }
 
@@ -122,16 +119,6 @@ public abstract class Node extends Notifier{
 
     public boolean matches(Context context, Event event){
         return false;
-    }
-    
-    /*-------------------------------------------------[ Reset ]---------------------------------------------------*/
-
-    public void reset(){
-        hits.reset();
-        for(Node child: children())
-            child.reset();
-        for(Node constraint: constraints())
-            constraint.reset();
     }
     
     /*-------------------------------------------------[ Debug ]---------------------------------------------------*/

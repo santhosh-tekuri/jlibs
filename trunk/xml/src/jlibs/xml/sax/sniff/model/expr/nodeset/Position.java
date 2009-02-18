@@ -89,4 +89,10 @@ public class Position extends ValidatedExpression{
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
     }
+
+    @Override
+    public void reset(){
+        map.clear();
+        super.reset();
+    }
 }
