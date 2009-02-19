@@ -26,6 +26,8 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
  * @author Santhosh Kumar T
  */
 public abstract class ValidatedExpression extends Expression{
+    public boolean storeDocumentOrder;
+    
     public ValidatedExpression(Datatype returnType, Node contextNode, Notifier member, Expression predicate){
         super(contextNode, returnType, member.resultType(), Datatype.BOOLEAN);
         if(member.resultType()!=Datatype.NODESET && member.resultType()!=returnType)

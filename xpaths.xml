@@ -408,6 +408,8 @@
         <xpath>local-name( //pub[year >= 1999]//book/* )</xpath>
         <xpath>//book[ contains( author, 'Z' )]</xpath>
         <xpath>//book[ starts-with( substring( author, 7 ), 'A' )]</xpath>
+
+        <xpath>/root | /root/pub</xpath>
     </testcase>
 
     <testcase>
@@ -648,6 +650,8 @@
         <xpath>//child::president</xpath>
         <xpath>//child::name</xpath>
         <xpath>/descendant::node()</xpath>
+
+        <xpath>//child::president | //child::name</xpath>
     </testcase>
 
     <testcase>
@@ -777,6 +781,12 @@
 
         <!-- test for invalid child sequence of purchaseOrder -->
         <xpath>/purchaseOrder/*[ position() >= 3 ][ not( self::comment or self::items )]</xpath>
+
+        <xpath>//shipTo | //billTo</xpath>
+        <xpath>//shipTo | //billTo | //item</xpath>
+        <xpath>count(//shipTo | //billTo | //item)</xpath>
+        <xpath>//shipTo | //billTo | //item | //items/*</xpath>
+        <xpath>count(//shipTo | //billTo | //item | //items/*)</xpath>
     </testcase>
 
     <testcase>

@@ -21,6 +21,8 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
+import java.util.Collections;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -52,7 +54,10 @@ public class StringNodeSet extends NodeList{
 
         @Override
         protected Object getCachedResult(){
-            return str;
+            if(storeDocumentOrder)
+                return Collections.singletonMap(order, str);
+            else
+                return str;
         }
 
         @Override

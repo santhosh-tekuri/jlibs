@@ -35,12 +35,11 @@ import java.util.ArrayDeque;
 /**
  * @author Santhosh Kumar T
  */
-public class LocationPath{
-    private Node contextNode;
+public class LocationPath extends Path{
     public ArrayDeque<StepNode> steps = new ArrayDeque<StepNode>();
 
     public LocationPath(Node contextNode){
-        this.contextNode = contextNode;
+        super(contextNode);
     }
 
     public void addStep(Node node){
