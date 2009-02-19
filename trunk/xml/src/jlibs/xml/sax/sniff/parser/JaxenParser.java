@@ -96,8 +96,13 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         Expression expr;
         if(current instanceof Expression)
             expr = (Expression)current;
-        else
-            expr = location.create(Datatype.NODESET);
+        else{
+            UnionPath union = unionStack.peek();
+            if(union==null)
+                expr = location.create(Datatype.NODESET);
+            else
+                expr = union.create(Datatype.NODESET);
+        }
         
         return new XPath(xpath, jaxenExpr, expr);
     }
@@ -268,10 +273,16 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         if(uri.length()==0){
             if(functionExpr.getParameters().size()>0){
                 visit(functionExpr.getParameters().get(0));
-                if(!(current instanceof Expression) && location!=null){
-                    Notifier f = location.createFunction(name);
-                    if(f!=null)
-                        return current = f;
+                if(!(current instanceof Expression)){
+                    if(unionStack.peek()!=null){
+                        Notifier f = unionStack.peek().createFunction(name);
+                        if(f!=null)
+                            return current = f;
+                    }else if(location!=null){
+                        Notifier f = location.createFunction(name);
+                        if(f!=null)
+                            return current = f;
+                    }
                 }
             }else{
                 LocationPath loc = locationStack.isEmpty() ? new LocationPath(context) : locationStack.peek();
@@ -324,6 +335,8 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
         return current = new VariableReference(contextStack.peek(), qname);
     }
 
+    private ArrayDeque<UnionPath> unionStack = new ArrayDeque<UnionPath>();
+    
     protected Notifier process(BinaryExpr binaryExpr) throws SAXPathException{
         Expression expr = null;
         if(binaryExpr.getOperator().equals("and"))
@@ -361,6 +374,25 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             addMember(expr, binaryExpr.getLHS());
             addMember(expr, binaryExpr.getRHS());
             return current = expr;
+        }else if(binaryExpr.getOperator().equals("|")){
+            Notifier _current = current;
+            UnionPath union = new UnionPath(contextStack.peek());
+
+            int size = unionStack.size();
+            visit(binaryExpr.getLHS());
+            if(unionStack.size()==size)
+                union.setLHS(location);
+            else
+                union.setLHS(unionStack.peek());
+
+            visit(binaryExpr.getRHS());
+            if(unionStack.size()==size)
+                union.setRHS(location);
+            else
+                union.setRHS(unionStack.peek());
+            
+            unionStack.push(union);
+            return _current;
         }else
             throw new SAXPathException("unsupported operator: "+binaryExpr.getOperator());
     }

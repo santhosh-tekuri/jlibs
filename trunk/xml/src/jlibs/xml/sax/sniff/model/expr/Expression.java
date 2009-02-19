@@ -46,7 +46,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         hits.totalHits = contextNode.root.totalHits;
     }
 
-    private Datatype returnType;
+    private final Datatype returnType;
 
     @Override
     public Datatype resultType(){

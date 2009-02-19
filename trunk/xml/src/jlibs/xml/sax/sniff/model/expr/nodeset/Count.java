@@ -21,6 +21,9 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
+import java.util.TreeMap;
+import java.util.Map;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -30,19 +33,34 @@ public class Count extends ValidatedExpression{
     }
 
     class MyEvaluation extends DelayedEvaluation{
+        private TreeMap<Integer, Double> map;
         private double count;
-        
-        @Override
-        protected Object getCachedResult(){
-            return count;
+
+        MyEvaluation(){
+            if(storeDocumentOrder)
+                map = new TreeMap<Integer, Double>();
         }
 
         @Override
+        protected Object getCachedResult(){
+            if(storeDocumentOrder)
+                return map;
+            else
+                return count;
+        }
+
+        @Override
+        @SuppressWarnings({"unchecked"})
         protected void consumeMemberResult(Object result){
             if(result instanceof Event){
-                count++;
+                if(storeDocumentOrder)
+                    map.put(((Event)result).order(), 1d);
+                else
+                    count++;
             }else if(result instanceof Double)
                 count += (Double)result;
+            else if(result instanceof TreeMap)
+                map.putAll((Map<Integer,Double>)result);
         }
     }
 

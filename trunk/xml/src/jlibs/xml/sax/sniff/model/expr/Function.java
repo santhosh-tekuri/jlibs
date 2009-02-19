@@ -47,6 +47,12 @@ public abstract class Function extends Expression{
                     if(pending==0){
                         setResult(evaluate(results));
                         return;
+                    }else{
+                        Object r = evaluatePending(results);
+                        if(r!=null){
+                            setResult(r);
+                            return;
+                        }
                     }
                 }
                 i++;
@@ -58,6 +64,9 @@ public abstract class Function extends Expression{
     }
 
     protected abstract Object evaluate(Object args[]);
+    protected Object evaluatePending(Object args[]){
+        return null;
+    }
 
     @Override
     protected Evaluation createEvaluation(){

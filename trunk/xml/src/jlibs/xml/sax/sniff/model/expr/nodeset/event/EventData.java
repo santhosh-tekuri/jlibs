@@ -22,6 +22,8 @@ import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 
+import java.util.Collections;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -38,7 +40,10 @@ public abstract class EventData extends ValidatedExpression{
 
         @Override
         protected Object getCachedResult(){
-            return data;
+            if(storeDocumentOrder)
+                return Collections.singletonMap(order, data);
+            else
+                return data;
         }
 
         @Override
