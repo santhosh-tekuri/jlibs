@@ -516,6 +516,7 @@
         <xpath>/web-app/*[servlet-name][2]</xpath>
         <xpath>/web-app/*[last()]</xpath>
         <xpath>/web-app/*[servlet-name][last()]</xpath>
+        <xpath>/web-app/*[servlet-name][last()-1]</xpath>
         <xpath>/web-app/*[position()>2 and position()&lt;5]</xpath>
         <xpath>/web-app/*[servlet-name][position()>1 and position()&lt;3]</xpath>
 
