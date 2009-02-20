@@ -111,6 +111,29 @@ public abstract class Node extends Notifier{
         return node;
     }
 
+    public Node getConstraintAxis(){
+        if(this instanceof AxisNode)
+            return this;
+
+        Node node = this;
+        while(node.constraintParent!=null){
+            node = node.constraintParent;
+            if(node instanceof AxisNode)
+                return node;
+        }
+        return node;
+    }
+
+    public boolean isConstraintAncestor(Node ancestor){
+        Node node = this;
+        while(node.constraintParent!=null){
+            node = node.constraintParent;
+            if(node==ancestor)
+                return true;
+        }
+        return false;
+    }
+
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
     
     public boolean consumable(Event event){

@@ -18,8 +18,11 @@ package jlibs.xml.sax.sniff.engine.context;
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.DocumentNode;
+import jlibs.xml.sax.sniff.model.Root;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -72,6 +75,7 @@ public class Context implements Debuggable{
                 }
             }
             if(node.consumable(event)){
+                matchConstraints(node, event, contexts, null);
                 if(changeContext){
                     depth--;
                     contexts.add(this);
@@ -79,7 +83,6 @@ public class Context implements Debuggable{
                     order = event.order();
                 }else
                     node.notifyContext(this, event);
-                matchConstraints(node, event, contexts, null);
             }else{
                 if(changeContext && contexts.markSize()==0){
                     depth++;
@@ -147,20 +150,35 @@ public class Context implements Debuggable{
         return new ContextIdentity(this);
     }
 
+    public ContextIdentity parentIdentity(){
+        if(depth==0)
+            return parent.identity();
+        else if(depth<0)
+            return new ContextIdentity(this, depth+1);
+        else
+            return new ContextIdentity(this, depth-1);
+    }
+
     public static final class ContextIdentity{
         Context context;
         int depth;
-        int depths[];
-        LinkedHashMap<Context, Integer> map = new LinkedHashMap<Context, Integer>();
+        List<Integer> depths = new ArrayList<Integer>();
+//        LinkedHashMap<Context, Integer> map = new LinkedHashMap<Context, Integer>();
         public int order;
 
         ContextIdentity(Context context){
+            this(context, context.depth);
+        }
+
+        ContextIdentity(Context context, int depth){
             this.context = context;
-            depth = context.depth;
+            this.depth = depth;
             order = context.order;
 
+            int diff = context.depth=depth;
             while(context!=null){
-                map.put(context, context.depth);
+                depths.add(context.depth-diff);
+//                map.put(context, context.depth);
                 context = context.parent;
             }
         }
@@ -223,6 +241,25 @@ public class Context implements Debuggable{
                 }
             }
             return -1;
+        }
+
+        public boolean isParent(Context c){
+            if(c.node instanceof Root || c.node instanceof DocumentNode)
+                return true;
+            
+            int i = 0;
+            Context c1 = this.context;
+
+            while(c1!=null){
+                c1 = c1.parent;
+                i++;
+
+                if(c1.node.depth<c.node.depth)
+                    return false;
+                if(c1==c && depths.get(i)==c.depth)
+                    return true;
+            }
+            return false;
         }
     }
 }
