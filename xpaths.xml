@@ -870,4 +870,11 @@
         <xpath type="number">20 + $var2</xpath>
         <xpath type="number">20 div 0</xpath>
     </testcase>
+
+    <testcase>
+        <file>xmlFiles/library.xml</file>
+
+        <xpath>//book[author = editor]/price</xpath>
+        <xpath>//book/price</xpath>
+    </testcase>
 </xpaths>

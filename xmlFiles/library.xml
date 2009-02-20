@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<library>
+    <book title="book1">
+        <author>scott</author>
+        <editor>scott</editor>
+        <price>10</price>
+    </book>
+    <book title="book2">
+        <author>scott2</author>
+        <price>20</price>
+        <editor>scott2</editor>
+    </book>
+    <book title="book3">
+        <price>30</price>
+        <author>scott3</author>
+        <editor>scott3</editor>
+    </book>
+    <book title="book4">
+        <author>scott</author>
+        <editor>scottX</editor>
+        <price>40</price>
+    </book>
+    <book title="book5">
+        <author>scott2</author>
+        <price>50</price>
+        <editor>scottY</editor>
+    </book>
+    <book title="book6">
+        <price>60</price>
+        <author>scott3</author>
+        <editor>scottZ</editor>
+    </book>
+    <book title="book7">
+        <price>70</price>
+        <book title="book8">
+            <author>tiger1</author>
+            <editor>tiger1</editor>
+            <price>80</price>
+        </book>
+        <book title="book9">
+            <author>tiger2</author>
+            <price>90</price>
+            <editor>tiger2</editor>
+        </book>
+        <book title="book10">
+            <price>100</price>
+            <author>tiger3</author>
+            <editor>tiger3</editor>
+        </book>
+        <author>tiger1</author>
+        <book title="book11">
+            <author>tiger4</author>
+            <editor>tigerX</editor>
+            <price>110</price>
+        </book>
+        <book title="book12">
+            <author>tiger5</author>
+            <price>120</price>
+            <editor>tigerY</editor>
+        </book>
+        <book title="book13">
+            <price>130</price>
+            <author>tiger3</author>
+            <editor>tigerZ</editor>
+        </book>
+        <editor>tiger1</editor>
+    </book>
+</library>
