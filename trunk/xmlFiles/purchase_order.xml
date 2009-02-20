@@ -2,7 +2,7 @@
 <purchaseOrder orderDate="1999-10-20">
    <shipTo country="US">
       <name>Alice Smith</name>
-      <streetX>123 Maple Street</streetX>
+      <streetX id="one">123 Maple Street</streetX>
       <city>Mill Valley</city>
       <state>CA</state>
       <zip>90952</zip>

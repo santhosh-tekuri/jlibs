@@ -96,14 +96,21 @@ public abstract class Expression extends Notifier implements ContextListener, No
     protected final void _addMember(Notifier member){
         members.add(member);
         if(member instanceof Expression){
-            Expression expr = (Expression)member;
-            if(expr.evaluationEndNode.depth<evaluationEndNode.depth)
+            Expression memberExpr = (Expression)member;
+            if(memberExpr.evaluationEndNode.depth<evaluationEndNode.depth)
                 setEvaluationEndNode(((Expression)member).evaluationEndNode);
 
-            expr.addNotificationListener(this);
-            evalDepth = Math.max(evalDepth, expr.evalDepth+1);
-        }else
+            memberExpr.addNotificationListener(this);
+            evalDepth = Math.max(evalDepth, memberExpr.evalDepth+1);
+        }else{
+            Node memberNode = (Node)member;
+            if(memberNode!=evaluationStartNode && memberNode.depth==evaluationStartNode.depth && !memberNode.isConstraintAncestor(evaluationStartNode)){
+                memberNode = memberNode.parent;
+                if(memberNode.depth<evaluationEndNode.depth)
+                    setEvaluationEndNode(memberNode);
+            }
             member.addNotificationListener(this);
+        }
     }
 
     protected void printResult(String title, Object result){
@@ -273,6 +280,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
     }
 
     @Override
+    @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
     public void contextEnded(Context context){
         if(evaluationStartNode==evaluationEndNode){
             Evaluation eval = evaluationStack.pop();
@@ -284,7 +292,13 @@ public abstract class Expression extends Notifier implements ContextListener, No
             }
         }else{
             while(!evaluationStack.isEmpty()){
-                Evaluation eval = evaluationStack.pop();
+                Evaluation eval = evaluationStack.peek();
+                if(!eval.contextIdentity.equals(context)){
+                    if(!eval.contextIdentity.isParent(context))
+                        return;
+                }
+
+                evaluationStack.pop();
                 if(!eval.finished){
                     eval.finish();
                     if(debug)

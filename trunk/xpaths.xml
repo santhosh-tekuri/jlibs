@@ -788,6 +788,24 @@
         <xpath>count(//shipTo | //billTo | //item)</xpath>
         <xpath>//shipTo | //billTo | //item | //items/*</xpath>
         <xpath>count(//shipTo | //billTo | //item | //items/*)</xpath>
+
+        <xpath>/purchaseOrder/shipTo/streetX/following-sibling::*</xpath>
+        <xpath>/purchaseOrder/shipTo/streetX/following-sibling::node()</xpath>
+        <xpath>/purchaseOrder/shipTo/streetX[@id='one']/following-sibling::*</xpath>
+        <xpath>/purchaseOrder/shipTo/streetX[@id='two']/following-sibling::*</xpath>
+        <xpath>//shipTo/streetX[@id='one']/following-sibling::*</xpath>
+        <xpath>//shipTo/streetX[@id='two']/following-sibling::*</xpath>
+        <xpath>//streetX/following-sibling::*</xpath>
+        <xpath>//streetX[@id='one']/following-sibling::*</xpath>
+        <xpath>//streetX[@id='two']/following-sibling::*</xpath>
+        <xpath>/descendant::billTo/following-sibling::*</xpath>
+        <xpath>/descendant::billTo/following-sibling::node()</xpath>
+        <xpath>/descendant::item/following-sibling::*</xpath>
+        <xpath>/descendant::item/following-sibling::node()</xpath>
+        <xpath>/descendant-or-self::billTo/following-sibling::*</xpath>
+        <xpath>/descendant-or-self::billTo/following-sibling::node()</xpath>
+        <xpath>/descendant-or-self::item/following-sibling::*</xpath>
+        <xpath>/descendant-or-self::item/following-sibling::node()</xpath>
     </testcase>
 
     <testcase>
@@ -876,5 +894,15 @@
 
         <xpath>//book[author = editor]/price</xpath>
         <xpath>//book/price</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/axis.xml</file>
+
+        <xpath>/root/a/a.3/following-sibling::*</xpath>
+        <xpath>/root/a/a.3/following-sibling::*[1]</xpath>
+        <xpath>name(/root/a/a.3/following-sibling::*[1])</xpath>
+        <xpath>/root/a/a.3/following-sibling::*[2]</xpath>
+        <xpath>name(/root/a/a.3/following-sibling::*[2])</xpath>
     </testcase>
 </xpaths>

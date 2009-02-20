@@ -19,6 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.XPath;
 import jlibs.xml.sax.sniff.model.*;
+import jlibs.xml.sax.sniff.model.axis.FollowingSibling;
 import jlibs.xml.sax.sniff.model.expr.*;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
 import jlibs.xml.sax.sniff.model.expr.num.Arithmetic;
@@ -125,6 +126,17 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
     /*-------------------------------------------------[ Step ]---------------------------------------------------*/
     
     protected Notifier process(int axis) throws SAXPathException{
+        Node currentNode = (Node)current;
+
+        if(axis==Axis.FOLLOWING_SIBLING){
+            FollowingSibling fbNode = new FollowingSibling(currentNode);
+            current = currentNode.getConstraintAxis().addConstraint(fbNode);
+            if(fbNode==current) // new node
+                fbNode.attachListeners();
+            
+            return current;
+        }
+
         if(axis!=Axis.SELF){
             AxisNode axisNode = AxisNode.newInstance(axis);
             boolean self = axis==Axis.DESCENDANT_OR_SELF || axis==Axis.ANCESTOR_OR_SELF;
