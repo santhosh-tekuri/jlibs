@@ -15,6 +15,10 @@
 
 package jlibs.core.lang;
 
+import jlibs.core.graph.Filter;
+import jlibs.core.util.regex.TemplateMatcher;
+
+import java.util.Collections;
 import java.util.StringTokenizer;
 
 /**
@@ -55,5 +59,23 @@ public class StringUtil{
                 tokens[i] = tokens[i].trim();
         }
         return tokens;
+    }
+
+    public static String suggest(Filter<String> filter, String pattern, boolean tryEmptyVar){
+        TemplateMatcher matcher = new TemplateMatcher("${", "}");
+
+        if(tryEmptyVar){
+            String value = matcher.replace(pattern, Collections.singletonMap("var", ""));
+            if(filter.select(value))
+                return value;
+        }
+
+        int i = tryEmptyVar ? 2 :1;
+        while(true){
+            String value = matcher.replace(pattern, Collections.singletonMap("var", String.valueOf(i)));
+            if(filter.select(value))
+                return value;
+            i++;
+        }
     }
 }

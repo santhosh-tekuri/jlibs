@@ -15,12 +15,10 @@
 
 package jlibs.core.io;
 
-import jlibs.core.graph.Path;
-import jlibs.core.graph.Processor;
-import jlibs.core.graph.Walker;
-import jlibs.core.graph.WalkerUtil;
+import jlibs.core.graph.*;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -49,34 +47,32 @@ public class FileUtil{
         }
     }
 
+    public static File findFreeFile(final File dir, String pattern, boolean tryEmptyVar){
+        String name = StringUtil.suggest(new Filter<String>(){
+            @Override
+            public boolean select(String name){
+                return !new File(dir, name).exists();
+            }
+        }, pattern, tryEmptyVar);
+        
+        return new File(dir, name);
+    }
+
     public static File findFreeFile(File file){
         if(!file.exists())
             return file;
 
         String fileName = file.getName();
         int dot = fileName.lastIndexOf('.');
-        if(dot==-1){
-            int i = 0;
-            File dir = file.getParentFile();
-            while(true){
-                i++;
-                file = new File(dir, fileName+i);
-                if(!file.exists())
-                    return file;
-            }
-        }else{
+        String pattern;
+        if(dot==-1)
+            pattern = fileName+"${var}";
+        else{
             String name = fileName.substring(0, dot);
             String ext = fileName.substring(dot+1);
-
-            int i = 0;
-            File dir = file.getParentFile();
-            while(true){
-                i++;
-                file = new File(dir, name+i+'.'+ext);
-                if(!file.exists())
-                    return file;
-            }
+            pattern = name+"${var}."+ext;
         }
+        return findFreeFile(file.getParentFile(), pattern, true);
     }
 
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
