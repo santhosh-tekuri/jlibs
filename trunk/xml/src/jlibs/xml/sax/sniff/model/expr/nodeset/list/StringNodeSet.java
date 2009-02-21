@@ -32,12 +32,12 @@ public class StringNodeSet extends NodeList{
     }
 
     class MyEvaluation extends NodeListEvaluation{
-        private int order;
+        private long order;
         private String str;
 
         @Override
         protected void consume(Object result){
-            int _order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
+            long _order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
             if(str!=null){
                 if(_order>order)
                     return;

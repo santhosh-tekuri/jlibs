@@ -32,7 +32,7 @@ public abstract class Event implements NodeTypes{
         this.locationStack = locationStack;
     }
 
-    public int order(){
+    public long order(){
         return documentOrder.get();
     }
     

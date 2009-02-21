@@ -40,7 +40,7 @@ public class Position extends ValidatedExpression{
             }
 
             @Override
-            public void contextEnded(Context context, int order){
+            public void contextEnded(Context context, long order){
                 map.remove(context);
             }
 

@@ -19,9 +19,9 @@ package jlibs.xml.sax.sniff.events;
  * @author Santhosh Kumar T
  */
 public class DocumentOrder{
-    private static int order = -1;
+    private static long order = -1;
 
-    public int get(){
+    public long get(){
         return order;
     }
 

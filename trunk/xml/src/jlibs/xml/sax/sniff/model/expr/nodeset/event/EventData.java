@@ -35,7 +35,7 @@ public abstract class EventData extends ValidatedExpression{
     protected abstract String getData(Event event);
 
     class MyEvaluation extends DelayedEvaluation{
-        private int order;
+        private long order;
         private String data;
 
         @Override
@@ -54,7 +54,7 @@ public abstract class EventData extends ValidatedExpression{
                 data = getData(event);
                 resultPrepared();
             }else{
-                int _order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
+                long _order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
                 if(data!=null){
                     if(_order>order)
                         return;
