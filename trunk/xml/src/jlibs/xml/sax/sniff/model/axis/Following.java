@@ -21,78 +21,81 @@ import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
 import org.jaxen.saxpath.Axis;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
-public class FollowingSibling extends AxisNode implements Resettable, NotificationListener{
+public class Following extends AxisNode implements Resettable, NotificationListener{
     private Node owner;
-    private boolean dontMatch;
 
-    public FollowingSibling(Node owner){
-        super(Axis.FOLLOWING_SIBLING);
+    public Following(Node owner){
+        super(Axis.FOLLOWING);
         this.owner = owner;
-        AxisNode axisNode = owner.getConstraintAxis();
-        switch(axisNode.type){
-            case Axis.INVALID_AXIS:
-            case Axis.ATTRIBUTE:
-            case Axis.NAMESPACE:
-                dontMatch = true;
-        }
     }
-    
+
     @Override
     public boolean canBeContext(){
         return true;
     }
 
     public void attachListeners(){
-        if(dontMatch)
-            return;
-        
         owner.addNotificationListener(this);
-        ContextEndListener contextEndListener = new ContextEndListener(){
+        owner.addContextEndListener(new ContextEndListener(){
             @Override
-            @SuppressWarnings({"SuspiciousMethodCalls"})
             public void contextEnded(Context context, int order){
-                contexts.remove(context);
+                Context.ContextIdentity pid = context.parentIdentity(false);
+                Match match = matches.get(pid);
+                if(match!=null){
+                    match.end = order;
+                    minMatchedOrder = Math.min(minMatchedOrder, order);
+                }
             }
 
             @Override
             public int priority(){
                 return Integer.MIN_VALUE;
             }
-
-            @Override
-            public String toString(){
-                return FollowingSibling.this.toString();
-            }
-        };
-        if(owner instanceof Descendant)
-            owner.addContextEndListener(contextEndListener);
-        owner.parent.addContextEndListener(contextEndListener);
+        });
     }
 
     @Override
     public boolean equivalent(Node node){
-        return super.equivalent(node) && this.owner==((FollowingSibling)node).owner;
+        return super.equivalent(node) && this.owner==((Following)node).owner;
     }
 
-    private Map<Context.ContextIdentity, Integer> contexts = new HashMap<Context.ContextIdentity, Integer>();
+    public Map<Context.ContextIdentity, Match> matches = new LinkedHashMap<Context.ContextIdentity, Match>();
+    private class Match{
+        int start;
+        int end = -1; // -1 means unknown
+
+        private Match(Event event){
+            start = event.order();
+        }
+    }
+    private int minMatchedOrder = Integer.MAX_VALUE;
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
         Context.ContextIdentity pi = context.parentIdentity(true);
-        if(!contexts.containsKey(pi))
-            contexts.put(pi, ((Event)result).order());
+        if(!matches.containsKey(pi))
+            matches.put(pi, new Match((Event)result));
+    }
+
+    public boolean matchesWith(Context.ContextIdentity identity, Event event){
+        for(Map.Entry<Context.ContextIdentity, Match> entry: matches.entrySet()){
+            Match match = entry.getValue();
+            if(match.start>identity.order)
+                return match.end!=-1 && event.order()>match.end;
+        }
+        return false;
     }
 
     @Override
-    @SuppressWarnings({"SuspiciousMethodCalls"})
+    @SuppressWarnings({"SuspiciousMethodCalls", "EqualsBetweenInconvertibleTypes", "RedundantIfStatement"})
     public boolean matches(Context context, Event event){
-        if(dontMatch)
+        if(matches.size()==0)
             return false;
 
         switch(event.type()){
@@ -100,8 +103,7 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
             case Event.TEXT:
             case Event.COMMENT:
             case Event.PI:
-                Integer order = contexts.get(context);
-                return order!=null && event.order()>order;
+                return event.order()>minMatchedOrder;
             default:
                 return false;
         }
@@ -109,7 +111,27 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
 
     @Override
     public void reset(){
-        contexts.clear();
+        matches.clear();
+        minMatchedOrder = Integer.MAX_VALUE;
+    }
+
+    @Override
+    public boolean canConsume(){
+        return true;
+    }
+
+    @Override
+    public boolean consumable(Event event){
+        switch(event.type()){
+            case Event.DOCUMENT:
+            case Event.ELEMENT:
+            case Event.TEXT:
+            case Event.COMMENT:
+            case Event.PI:
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override

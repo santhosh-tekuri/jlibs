@@ -158,7 +158,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
         matchText();
         locationStack.popElement();
 
-        contextManager.elementEnded();
+        contextManager.elementEnded(documentOrder.get());
 
         if(debug)
             System.out.println("-----------------------------------------------------------------");
@@ -166,7 +166,7 @@ public class Sniffer extends DefaultHandler2 implements Debuggable{
 
     @Override
     public void endDocument() throws SAXException{
-        contextManager.documentEnded();
+        contextManager.documentEnded(documentOrder.get());
     }
 
     /*-------------------------------------------------[ Sniffing ]---------------------------------------------------*/

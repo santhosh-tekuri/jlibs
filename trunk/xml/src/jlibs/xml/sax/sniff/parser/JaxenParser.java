@@ -19,6 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.sniff.XPath;
 import jlibs.xml.sax.sniff.model.*;
+import jlibs.xml.sax.sniff.model.axis.Following;
 import jlibs.xml.sax.sniff.model.axis.FollowingSibling;
 import jlibs.xml.sax.sniff.model.expr.*;
 import jlibs.xml.sax.sniff.model.expr.bool.*;
@@ -133,6 +134,23 @@ public class JaxenParser/* extends jlibs.core.graph.visitors.ReflectionVisitor<O
             current = currentNode.getConstraintAxis().addConstraint(fbNode);
             if(fbNode==current) // new node
                 fbNode.attachListeners();
+            
+            return current;
+        }else if(axis==Axis.FOLLOWING){
+            Following fNode = new Following(currentNode);
+            AxisNode axisNode = currentNode.getConstraintAxis();
+            current = axisNode.addConstraint(fNode);
+            if(fNode==current){ // new node
+                fNode.attachListeners();
+                while(true){
+                    Node constraintRoot = axisNode.parent.getConstraintRoot();
+                    if(constraintRoot instanceof AxisNode){
+                        axisNode = (AxisNode)constraintRoot;
+                        axisNode.descendantFollowings.add(fNode);
+                    }else
+                        break;
+                }
+            }
             
             return current;
         }

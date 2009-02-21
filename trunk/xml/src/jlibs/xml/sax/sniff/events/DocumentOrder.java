@@ -19,7 +19,7 @@ package jlibs.xml.sax.sniff.events;
  * @author Santhosh Kumar T
  */
 public class DocumentOrder{
-    private int order = -1;
+    private static int order = -1;
 
     public int get(){
         return order;
@@ -31,5 +31,10 @@ public class DocumentOrder{
 
     public void reset(){
         order = -1;
+    }
+
+    @Override
+    public String toString(){
+        return String.valueOf(order);
     }
 }

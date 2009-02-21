@@ -47,6 +47,11 @@ public class Descendant extends AxisNode{
     }
 
     @Override
+    public boolean canConsume(){
+        return true;
+    }
+
+    @Override
     public boolean consumable(Event event){
         return matches(null, event);
     }

@@ -58,7 +58,7 @@ public abstract class NodeList extends ValidatedExpression{
                     }
 
                     @Override
-                    public void contextEnded(Context context){
+                    public void contextEnded(Context context, int order){
                         for(Evaluation eval: evaluationStack){
                             NodeListEvaluation evaluation = (NodeListEvaluation)eval;
                             if(!evaluation.finished && !evaluation.resultPrepared){

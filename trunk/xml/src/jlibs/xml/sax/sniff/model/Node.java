@@ -19,7 +19,6 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
-import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
@@ -129,7 +128,7 @@ public abstract class Node extends Notifier{
         if(node instanceof AxisNode)
             return (AxisNode)node;
         else
-            throw new ImpossibleException();
+            return null;
     }
 
     public boolean isConstraintAncestor(Node ancestor){
@@ -143,6 +142,10 @@ public abstract class Node extends Notifier{
     }
 
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
+    
+    public boolean canConsume(){
+        return false;
+    }
     
     public boolean consumable(Event event){
         return false;
@@ -282,7 +285,7 @@ public abstract class Node extends Notifier{
             contextEndListeners = null;
     }
 
-    public void contextEnded(Context context){
+    public void contextEnded(Context context, int order){
         if(contextEndListeners!=null){
             if(debug){
                 debugger.println("contextEnded(%s)",this);
@@ -295,7 +298,7 @@ public abstract class Node extends Notifier{
             }
 
             for(ContextEndListener listener: contextEndListeners)
-                listener.contextEnded(context);
+                listener.contextEnded(context, order);
 
             if(debug)
                 debugger.indent--;
@@ -317,7 +320,7 @@ public abstract class Node extends Notifier{
     public void notifyContext(Context context, Event event){
         Context childContext = context.childContext(this);
         contextStarted(childContext, event);
-        contextEnded(childContext);
+        contextEnded(childContext, event.order());
     }
 }
 

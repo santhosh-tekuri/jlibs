@@ -15,11 +15,11 @@
 
 package jlibs.xml.sax.sniff.model;
 
-import jlibs.xml.sax.sniff.model.axis.Attribute;
-import jlibs.xml.sax.sniff.model.axis.Child;
-import jlibs.xml.sax.sniff.model.axis.Descendant;
-import jlibs.xml.sax.sniff.model.axis.Namespace;
+import jlibs.xml.sax.sniff.model.axis.*;
 import org.jaxen.saxpath.Axis;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -56,4 +56,6 @@ public abstract class AxisNode extends Node{
                 throw new UnsupportedOperationException("unsupported axis: "+Axis.lookup(type));
         }
     }
+
+    public List<Following> descendantFollowings = new ArrayList<Following>();
 }
