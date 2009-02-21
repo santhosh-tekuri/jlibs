@@ -63,7 +63,11 @@ public class NodeItem implements NodeTypes, Comparable<NodeItem>{
 
     @Override
     public int compareTo(NodeItem that){
-        return (int)(this.order - that.order);
+        long diff = this.order - that.order;
+        if(diff==0)
+            return 0;
+        else
+            return diff>0 ? 1: -1;
     }
 
     @Override
