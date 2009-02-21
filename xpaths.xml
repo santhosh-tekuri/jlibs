@@ -410,6 +410,11 @@
         <xpath>//book[ starts-with( substring( author, 7 ), 'A' )]</xpath>
 
         <xpath>/root | /root/pub</xpath>
+        <xpath>/comment()/following-sibling::node()</xpath>
+        <xpath>/following-sibling::node()</xpath>
+        <xpath>//following-sibling::node()</xpath>
+        <xpath>/descendant::node()/following-sibling::node()</xpath>
+        <xpath>/descendant-or-self::node()/following-sibling::node()</xpath>
     </testcase>
 
     <testcase>
@@ -904,5 +909,11 @@
         <xpath>name(/root/a/a.3/following-sibling::*[1])</xpath>
         <xpath>/root/a/a.3/following-sibling::*[2]</xpath>
         <xpath>name(/root/a/a.3/following-sibling::*[2])</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/t.xml</file>
+
+        <xpath>//following-sibling::node()</xpath>
     </testcase>
 </xpaths>
