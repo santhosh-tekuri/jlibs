@@ -210,18 +210,18 @@ public class TestCase{
     }
 
     public void printResults(int i){
-        System.out.println("          file : "+file);
-        System.out.println("         xpath : "+xpaths.get(i));
-        System.out.print("    jdk result : ");
+        System.out.println("            file : "+file);
+        System.out.println("           xpath : "+xpaths.get(i));
+        System.out.print("    Xalan result : ");
         int count = printResults(jdkResults(i));
         if(count!=-1)
-            System.out.println(" jdk hit-count : "+count);
+            System.out.println(" Xalan hit-count : "+count);
         jdkResult.set(i, null);
 
-        System.out.print("    dog result : ");
+        System.out.print("   XMLDog result : ");
         count = printResults(dogResults(i));
         if(count!=-1)
-            System.out.println(" dog hit-count : "+count);
+            System.out.println("XMLDog hit-count : "+count);
         dogResult.set(i, null);
         
         System.out.println("-------------------------------------------------");
