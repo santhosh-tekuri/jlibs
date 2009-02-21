@@ -19,6 +19,7 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.sequences.ConcatSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
@@ -111,17 +112,21 @@ public abstract class Node extends Notifier{
         return node;
     }
 
-    public Node getConstraintAxis(){
+    public AxisNode getConstraintAxis(){
         if(this instanceof AxisNode)
-            return this;
+            return (AxisNode)this;
 
         Node node = this;
         while(node.constraintParent!=null){
             node = node.constraintParent;
             if(node instanceof AxisNode)
-                return node;
+                return (AxisNode)node;
         }
-        return node;
+
+        if(node instanceof AxisNode)
+            return (AxisNode)node;
+        else
+            throw new ImpossibleException();
     }
 
     public boolean isConstraintAncestor(Node ancestor){

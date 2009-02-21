@@ -32,15 +32,26 @@ import java.util.Map;
  */
 public class FollowingSibling extends AxisNode implements NotificationListener{
     private Node owner;
+    private boolean dontMatch;
 
     public FollowingSibling(Node owner){
         super(Axis.FOLLOWING_SIBLING);
         this.owner = owner;
+        AxisNode axisNode = owner.getConstraintAxis();
+        switch(axisNode.type){
+            case Axis.INVALID_AXIS:
+            case Axis.ATTRIBUTE:
+            case Axis.NAMESPACE:
+                dontMatch = true;
+        }
     }
     
     public void attachListeners(){
+        if(dontMatch)
+            return;
+        
         owner.addNotificationListener(this);
-        owner.parent.addContextEndListener(new ContextEndListener(){
+        ContextEndListener contextEndListener = new ContextEndListener(){
             @Override
             @SuppressWarnings({"SuspiciousMethodCalls"})
             public void contextEnded(Context context){
@@ -56,7 +67,10 @@ public class FollowingSibling extends AxisNode implements NotificationListener{
             public String toString(){
                 return FollowingSibling.this.toString();
             }
-        });
+        };
+        if(owner instanceof Descendant)
+            owner.addContextEndListener(contextEndListener);
+        owner.parent.addContextEndListener(contextEndListener);
     }
 
     @Override
@@ -76,6 +90,9 @@ public class FollowingSibling extends AxisNode implements NotificationListener{
     @Override
     @SuppressWarnings({"SuspiciousMethodCalls"})
     public boolean matches(Context context, Event event){
+        if(dontMatch)
+            return false;
+
         switch(event.type()){
             case Event.ELEMENT:
             case Event.TEXT:
