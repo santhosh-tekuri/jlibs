@@ -18,10 +18,7 @@ package jlibs.xml.sax.sniff.model.axis;
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.AxisNode;
-import jlibs.xml.sax.sniff.model.NotificationListener;
-import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.Notifier;
+import jlibs.xml.sax.sniff.model.*;
 import org.jaxen.saxpath.Axis;
 
 import java.util.HashMap;
@@ -30,7 +27,7 @@ import java.util.Map;
 /**
  * @author Santhosh Kumar T
  */
-public class FollowingSibling extends AxisNode implements NotificationListener{
+public class FollowingSibling extends AxisNode implements Resettable, NotificationListener{
     private Node owner;
     private boolean dontMatch;
 
@@ -103,6 +100,11 @@ public class FollowingSibling extends AxisNode implements NotificationListener{
             default:
                 return false;
         }
+    }
+
+    @Override
+    public void reset(){
+        contexts.clear();
     }
 
     @Override

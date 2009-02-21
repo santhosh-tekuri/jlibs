@@ -102,6 +102,9 @@ public abstract class Node extends Notifier{
         node.constraintParent = this;
         node.parent = this.parent;
         node.root = root;
+
+        if(node instanceof Resettable)
+            root.resettables.add((Resettable)node);
         return node;
     }
 

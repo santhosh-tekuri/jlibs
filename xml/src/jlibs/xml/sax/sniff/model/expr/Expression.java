@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Expression extends Notifier implements ContextListener, NotificationListener{
+public abstract class Expression extends Notifier implements Resettable, ContextListener, NotificationListener{
     public HitManager hits = new HitManager();
     
     protected int evalDepth;
@@ -337,6 +337,7 @@ public abstract class Expression extends Notifier implements ContextListener, No
         return getName()+'_'+depth+'('+buff+')';
     }
 
+    @Override
     public void reset(){
         hits.reset();
         evaluationStack.clear();

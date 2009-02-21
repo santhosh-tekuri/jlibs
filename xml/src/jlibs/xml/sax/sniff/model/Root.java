@@ -18,6 +18,8 @@ package jlibs.xml.sax.sniff.model;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathVariableResolver;
 import javax.xml.xpath.XPathFunctionResolver;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
@@ -52,11 +54,16 @@ public class Root extends Node{
 
     /*-------------------------------------------------[ Using ]---------------------------------------------------*/
 
+    public List<Resettable> resettables = new ArrayList<Resettable>();
     public volatile boolean using;
 
     public void setUsing(boolean using){
         this.using = using;
         totalHits.parsing = using;
+        if(!using){
+            for(Resettable resettable: resettables)
+                resettable.reset();
+        }
     }
 
     public boolean isUsing(){
