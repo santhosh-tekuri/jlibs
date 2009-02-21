@@ -175,7 +175,7 @@ public class Context implements Debuggable{
             this.depth = depth;
             order = context.order;
 
-            int diff = context.depth=depth;
+            int diff = context.depth-depth;
             while(context!=null){
                 depths.add(context.depth-diff);
 //                map.put(context, context.depth);
