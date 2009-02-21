@@ -29,7 +29,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Context implements Debuggable{
-    public int order;
+    public long order;
     public Context parent, constraintParent;
     public Node node;
     public int depth;
@@ -133,7 +133,7 @@ public class Context implements Debuggable{
         }
     }
 
-    public Context endElement(int order){
+    public Context endElement(long order){
         if(depth==0){
             node.contextEnded(this, order);
             return parentContext();
@@ -191,7 +191,7 @@ public class Context implements Debuggable{
         int depth;
         List<Integer> depths = new ArrayList<Integer>();
 //        LinkedHashMap<Context, Integer> map = new LinkedHashMap<Context, Integer>();
-        public int order;
+        public long order;
 
         ContextIdentity(Context context){
             this(context, context.depth);

@@ -283,7 +283,7 @@ public abstract class Expression extends Notifier implements Resettable, Context
 
     @Override
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
-    public void contextEnded(Context context, int order){
+    public void contextEnded(Context context, long order){
         if(evaluationStartNode==evaluationEndNode){
             Evaluation eval = evaluationStack.pop();
             if(!eval.finished){

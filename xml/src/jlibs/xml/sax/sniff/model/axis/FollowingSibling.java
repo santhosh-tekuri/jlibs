@@ -56,7 +56,7 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
         ContextEndListener contextEndListener = new ContextEndListener(){
             @Override
             @SuppressWarnings({"SuspiciousMethodCalls"})
-            public void contextEnded(Context context, int order){
+            public void contextEnded(Context context, long order){
                 contexts.remove(context);
             }
 
@@ -80,7 +80,7 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
         return super.equivalent(node) && this.owner==((FollowingSibling)node).owner;
     }
 
-    private Map<Context.ContextIdentity, Integer> contexts = new HashMap<Context.ContextIdentity, Integer>();
+    private Map<Context.ContextIdentity, Long> contexts = new HashMap<Context.ContextIdentity, Long>();
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
@@ -100,7 +100,7 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
             case Event.TEXT:
             case Event.COMMENT:
             case Event.PI:
-                Integer order = contexts.get(context);
+                Long order = contexts.get(context);
                 return order!=null && event.order()>order;
             default:
                 return false;

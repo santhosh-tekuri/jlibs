@@ -44,7 +44,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
         owner.addNotificationListener(this);
         owner.addContextEndListener(new ContextEndListener(){
             @Override
-            public void contextEnded(Context context, int order){
+            public void contextEnded(Context context, long order){
                 Context.ContextIdentity pid = context.parentIdentity(false);
                 Match match = matches.get(pid);
                 if(match!=null){
@@ -67,14 +67,14 @@ public class Following extends AxisNode implements Resettable, NotificationListe
 
     public Map<Context.ContextIdentity, Match> matches = new LinkedHashMap<Context.ContextIdentity, Match>();
     private class Match{
-        int start;
-        int end = -1; // -1 means unknown
+        long start;
+        long end = -1; // -1 means unknown
 
         private Match(Event event){
             start = event.order();
         }
     }
-    private int minMatchedOrder = Integer.MAX_VALUE;
+    private long minMatchedOrder = Long.MAX_VALUE;
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
@@ -112,7 +112,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
     @Override
     public void reset(){
         matches.clear();
-        minMatchedOrder = Integer.MAX_VALUE;
+        minMatchedOrder = Long.MAX_VALUE;
     }
 
     @Override

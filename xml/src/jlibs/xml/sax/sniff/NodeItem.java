@@ -27,7 +27,7 @@ import javax.xml.namespace.NamespaceContext;
  * @author Santhosh Kumar T
  */
 public class NodeItem implements NodeTypes, Comparable<NodeItem>{
-    private final int order;
+    private final long order;
     public final int type;
     public final String location;
     public final String value;
@@ -63,7 +63,7 @@ public class NodeItem implements NodeTypes, Comparable<NodeItem>{
 
     @Override
     public int compareTo(NodeItem that){
-        return this.order - that.order;
+        return (int)(this.order - that.order);
     }
 
     @Override

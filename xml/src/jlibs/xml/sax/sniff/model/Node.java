@@ -285,7 +285,7 @@ public abstract class Node extends Notifier{
             contextEndListeners = null;
     }
 
-    public void contextEnded(Context context, int order){
+    public void contextEnded(Context context, long order){
         if(contextEndListeners!=null){
             if(debug){
                 debugger.println("contextEnded(%s)",this);

@@ -71,7 +71,7 @@ public class ContextManager implements Debuggable{
         }
     }
 
-    public void elementEnded(int order){
+    public void elementEnded(long order){
         for(int i=contexts.current.size()-1; i>=0; i--){
             Context context = contexts.current.get(i);
             if(debug)
@@ -81,7 +81,7 @@ public class ContextManager implements Debuggable{
         contexts.update();
     }
 
-    public void documentEnded(int order){
+    public void documentEnded(long order){
         while(contexts.current.size()>0)
             elementEnded(order);
     }

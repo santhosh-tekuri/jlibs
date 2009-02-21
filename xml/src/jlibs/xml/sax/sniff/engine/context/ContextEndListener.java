@@ -19,6 +19,6 @@ package jlibs.xml.sax.sniff.engine.context;
  * @author Santhosh Kumar T
  */
 public interface ContextEndListener{
-    public void contextEnded(Context context, int order);
+    public void contextEnded(Context context, long order);
     public int priority();
 }

@@ -31,12 +31,12 @@ public class Sum extends NodeList{
     }
 
     class MyEvaluation extends NodeListEvaluation{
-        private TreeMap<Integer, Double> map;
+        private TreeMap<Long, Double> map;
         private double d;
 
         MyEvaluation(){
             if(storeDocumentOrder)
-                map = new TreeMap<Integer, Double>();
+                map = new TreeMap<Long, Double>();
         }
 
         @Override
@@ -47,7 +47,7 @@ public class Sum extends NodeList{
                 if(Double.isNaN(d))
                     resultPrepared();
             }else{
-                TreeMap<Integer, Double> resultMap = (TreeMap<Integer, Double>)result;
+                TreeMap<Long, Double> resultMap = (TreeMap<Long, Double>)result;
                 if(resultMap.size()==1 && Double.isNaN(resultMap.firstEntry().getValue())){
                     map = resultMap;
                     resultPrepared();
@@ -60,7 +60,7 @@ public class Sum extends NodeList{
         protected void consume(String str){
             Double number = Datatype.asNumber(str);
             if(storeDocumentOrder){
-                int order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
+                long order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
                 if(number.isNaN())
                     map.clear();
                 map.put(order, number);
