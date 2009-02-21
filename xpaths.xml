@@ -560,6 +560,11 @@
         <xpath>count(/*/servlet)</xpath>
         <xpath>count(//servlet)</xpath>
 
+        <xpath>/web-app/servlet/servlet-name/following::*</xpath>
+        <xpath>/web-app/servlet/servlet-name/following::node()</xpath>
+        <xpath>/web-app/servlet[2]/servlet-name/following::*</xpath>
+        <xpath>/web-app/servlet[2]/servlet-name/following::node()</xpath>
+
         <!--
         <xpath>upper-case( /web-app/servlet[1]/servlet-class )</xpath>
         <xpath>lower-case( /web-app/servlet[1]/servlet-class )</xpath>
@@ -811,6 +816,12 @@
         <xpath>/descendant-or-self::billTo/following-sibling::node()</xpath>
         <xpath>/descendant-or-self::item/following-sibling::*</xpath>
         <xpath>/descendant-or-self::item/following-sibling::node()</xpath>
+
+        <xpath>//shipTo/following::*</xpath>
+        <xpath>//shipTo/following::node()</xpath>
+
+        <xpath>//billTo/@country/following-sibling::node()</xpath>
+        <xpath>//billTo/@country/following::node()</xpath>
     </testcase>
 
     <testcase>
@@ -880,6 +891,14 @@
         <file>xmlFiles/jaxen3.xml</file>
 
         <xpath>/Configuration/hostname/attrlist/hostname[. = 'CE-A']</xpath>
+    </testcase>
+
+    <testcase>
+        <file>xmlFiles/jaxen24.xml</file>
+
+        <xpath>//following::*</xpath>
+        <xpath>//following::x</xpath>
+        <xpath>//following::p</xpath>
     </testcase>
 
     <testcase>

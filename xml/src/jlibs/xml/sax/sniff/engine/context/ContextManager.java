@@ -71,18 +71,18 @@ public class ContextManager implements Debuggable{
         }
     }
 
-    public void elementEnded(){
+    public void elementEnded(int order){
         for(int i=contexts.current.size()-1; i>=0; i--){
             Context context = contexts.current.get(i);
             if(debug)
                 debugger.println(context.toString()+" ->");
-            contexts.addUnique(context.endElement());
+            contexts.addUnique(context.endElement(order));
         }
         contexts.update();
     }
 
-    public void documentEnded(){
+    public void documentEnded(int order){
         while(contexts.current.size()>0)
-            elementEnded();
+            elementEnded(order);
     }
 }

@@ -23,6 +23,7 @@ import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
+import jlibs.xml.sax.sniff.model.axis.Following;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -108,7 +109,8 @@ public abstract class Expression extends Notifier implements Resettable, Context
                 memberNode = memberNode.parent;
                 if(memberNode.depth<evaluationEndNode.depth)
                     setEvaluationEndNode(memberNode);
-            }
+            }else if(memberNode instanceof Following || memberNode.getConstraintAxis() instanceof Following)
+                setEvaluationEndNode(evaluationEndNode.root.addChild(new DocumentNode()));
             member.addNotificationListener(this);
         }
     }
@@ -281,7 +283,7 @@ public abstract class Expression extends Notifier implements Resettable, Context
 
     @Override
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
-    public void contextEnded(Context context){
+    public void contextEnded(Context context, int order){
         if(evaluationStartNode==evaluationEndNode){
             Evaluation eval = evaluationStack.pop();
             if(!eval.finished){

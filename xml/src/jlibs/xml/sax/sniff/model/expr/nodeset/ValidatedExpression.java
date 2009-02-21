@@ -17,9 +17,11 @@ package jlibs.xml.sax.sniff.model.expr.nodeset;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.AxisNode;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
+import jlibs.xml.sax.sniff.model.axis.Following;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
 /**
@@ -113,11 +115,23 @@ public abstract class ValidatedExpression extends Expression{
     protected boolean canEvaluate(Node source, Evaluation evaluation, Context context, Event event){
         if(evaluationStack.size()==1)
             return true;
-        
+
         int diff = source.depth-evaluationStartNode.depth;
         if(diff==0)
             return true;
-        else if(event.hasChildren())
+
+        Following following = null;
+        if(source instanceof Following)
+            following = (Following)source;
+        else{
+            AxisNode axisNode = source.getConstraintAxis();
+            if(axisNode instanceof Following)
+                following = (Following)axisNode;
+        }
+        if(following!=null)
+            return following.matchesWith(evaluation.contextIdentity, event);
+
+        if(event.hasChildren())
             return evaluation.contextIdentity.isChild(context);
         else
             return evaluation.contextIdentity.equals(context) || evaluation.contextIdentity.isChild(context); 

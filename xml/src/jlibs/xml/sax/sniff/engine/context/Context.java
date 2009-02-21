@@ -17,8 +17,9 @@ package jlibs.xml.sax.sniff.engine.context;
 
 import jlibs.xml.sax.sniff.Debuggable;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.Node;
+import jlibs.xml.sax.sniff.model.AxisNode;
 import jlibs.xml.sax.sniff.model.DocumentNode;
+import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Root;
 
 import java.util.ArrayList;
@@ -99,6 +100,23 @@ public class Context implements Debuggable{
     private void matchConstraints(Node child, Event event, Contexts contexts, Context constraintParent){
         boolean changeContext = event.hasChildren();
 
+        if(child instanceof AxisNode){
+            for(Node constraint: ((AxisNode)child).descendantFollowings){
+                if(constraint.matches(this, event)){
+                    Context childContext = null;
+                    if(changeContext){
+                        childContext = childContext(constraint);
+                        childContext.constraintParent = constraintParent;
+                        contexts.add(childContext);
+                        childContext.order = event.order();
+                        constraint.contextStarted(childContext, event);
+                    }else
+                        constraint.notifyContext(this, event);
+                    matchConstraints(constraint, event, contexts, childContext);
+                }
+            }
+        }
+
         for(Node constraint: child.constraints()){
             if(constraint.matches(this, event)){
                 Context childContext = null;
@@ -115,15 +133,15 @@ public class Context implements Debuggable{
         }
     }
 
-    public Context endElement(){
+    public Context endElement(int order){
         if(depth==0){
-            node.contextEnded(this);
+            node.contextEnded(this, order);
             return parentContext();
         }else{
             if(depth>0)
                 depth--;
             else{
-                node.contextEnded(this);
+                node.contextEnded(this, order);
                 depth++;
             }
 
@@ -150,10 +168,19 @@ public class Context implements Debuggable{
         return new ContextIdentity(this);
     }
 
-    public ContextIdentity parentIdentity(){
-        if(depth==0)
-            return parent.identity();
-        else if(depth<0)
+    public ContextIdentity parentIdentity(boolean justCreated){
+        if(depth==0){
+            if(justCreated)
+                return parent.identity();
+            else{
+                if(parent.depth<0)
+                    return new ContextIdentity(parent, parent.depth+1);
+                else if(parent.depth>0)
+                    return new ContextIdentity(parent, parent.depth-1);
+                else
+                    return new ContextIdentity(parent, parent.depth);
+            }
+        }else if(depth<0)
             return new ContextIdentity(this, depth+1);
         else
             return new ContextIdentity(this, depth-1);
@@ -181,6 +208,15 @@ public class Context implements Debuggable{
 //                map.put(context, context.depth);
                 context = context.parent;
             }
+        }
+
+        public ContextIdentity parentIdentity(){
+            if(depth==0)
+                return new ContextIdentity(context.parent, depths.get(1));
+            else if(depth<0)
+                return new ContextIdentity(context, depth+1);
+            else
+                return new ContextIdentity(context, depth-1);
         }
 
         @Override
@@ -223,6 +259,8 @@ public class Context implements Debuggable{
                 if(node==this.context.node)
                     return this.context==c;
                 node = node.constraintParent;
+                if(c==null)
+                    return false;
                 c = c.constraintParent;
             }
 
@@ -257,6 +295,25 @@ public class Context implements Debuggable{
                 if(c1.node.depth<c.node.depth)
                     return false;
                 if(c1==c && depths.get(i)==c.depth)
+                    return true;
+            }
+            return false;
+        }
+
+        public boolean isParent(ContextIdentity cid){
+            if(cid.context.node instanceof Root || cid.context.node instanceof DocumentNode)
+                return true;
+
+            int i = 0;
+            Context c1 = this.context;
+
+            while(c1!=null){
+                c1 = c1.parent;
+                i++;
+
+                if(c1.node.depth<cid.context.node.depth)
+                    return false;
+                if(c1==cid.context && depths.get(i)==cid.depth)
                     return true;
             }
             return false;
