@@ -74,7 +74,8 @@ public class ContextManager implements Debuggable{
     public void elementEnded(){
         for(int i=contexts.current.size()-1; i>=0; i--){
             Context context = contexts.current.get(i);
-//            contexts.add(context.endElement());
+            if(debug)
+                debugger.println(context.toString()+" ->");
             contexts.addUnique(context.endElement());
         }
         contexts.update();

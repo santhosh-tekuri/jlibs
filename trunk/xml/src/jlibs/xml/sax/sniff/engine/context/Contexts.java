@@ -54,6 +54,9 @@ class Contexts implements Iterable<Context>, Debuggable{
     }
 
     public void addUnique(Context context){
+        if(debug)
+            debugger.println("     "+context);
+        
         if(!next.contains(context))
             add(context);
     }
