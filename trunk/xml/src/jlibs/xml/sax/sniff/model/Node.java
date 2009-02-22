@@ -24,6 +24,7 @@ import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.engine.context.ContextStartListener;
 import jlibs.xml.sax.sniff.events.Event;
+import jlibs.xml.sax.sniff.model.axis.Following;
 import org.jaxen.saxpath.Axis;
 
 import java.util.ArrayList;
@@ -141,6 +142,17 @@ public abstract class Node extends Notifier{
         return false;
     }
 
+    public Following getFollowing(){
+        if(this instanceof Following)
+            return (Following)this;
+        else{
+            AxisNode axisNode = getConstraintAxis();
+            if(axisNode instanceof Following)
+                return (Following)axisNode;
+        }
+        return null;
+    }
+    
     /*-------------------------------------------------[ Matches ]---------------------------------------------------*/
     
     public boolean canConsume(){
