@@ -17,7 +17,6 @@ package jlibs.xml.sax.sniff.model.expr.nodeset;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
-import jlibs.xml.sax.sniff.model.AxisNode;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
@@ -54,6 +53,7 @@ public abstract class ValidatedExpression extends Expression{
             return super.defaultValue();
     }
 
+    protected boolean discardDuplicateEventNotification = true;
     protected abstract class DelayedEvaluation extends Evaluation{
         private Boolean predicateHit = members.size()==2 ? null : Boolean.TRUE;
 
@@ -77,11 +77,21 @@ public abstract class ValidatedExpression extends Expression{
         protected abstract void consumeMemberResult(Object result);
         protected void predicateAccepted(){}
 
+        long lastConsumedOrder = -1;
+        
         @Override
+        @SuppressWarnings({"ConstantConditions"})
         protected void consume(Object member, Object result){
             if(member==members.get(0)){
-                if(!resultPrepared)
+                if(!resultPrepared){
+                    if(discardDuplicateEventNotification && result instanceof Event){
+                        Event event = (Event)result;
+                        if(lastConsumedOrder==event.order())
+                            return;
+                        lastConsumedOrder = event.order();
+                    }
                     consumeMemberResult(result);
+                }
             }
             if(predicateHit==null && member==members.get(1)){
                 predicateHit = (Boolean)result;
@@ -120,14 +130,7 @@ public abstract class ValidatedExpression extends Expression{
         if(diff==0)
             return true;
 
-        Following following = null;
-        if(source instanceof Following)
-            following = (Following)source;
-        else{
-            AxisNode axisNode = source.getConstraintAxis();
-            if(axisNode instanceof Following)
-                following = (Following)axisNode;
-        }
+        Following following = source.getFollowing();
         if(following!=null)
             return following.matchesWith(evaluation.contextIdentity, event);
 

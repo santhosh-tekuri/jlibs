@@ -26,7 +26,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 import org.jaxen.saxpath.Axis;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -81,8 +81,8 @@ public abstract class NodeList extends ValidatedExpression{
     }
 
     protected abstract class NodeListEvaluation extends DelayedEvaluation{
-        protected Map<Object, StringBuilder> map = new HashMap<Object, StringBuilder>();
-        
+        protected Map<Object, StringBuilder> map = new LinkedHashMap<Object, StringBuilder>();
+
         @Override
         public void finish(){
             for(StringBuilder buff: map.values()){
@@ -96,11 +96,7 @@ public abstract class NodeList extends ValidatedExpression{
         private void consume(Event event){
             if(parentNode!=null){
                 if(event.type()==Event.TEXT){
-                    while(parentNode!=context.node)
-                        context = context.parent;
-
-                    StringBuilder buff = map.get(context);
-                    if(buff!=null)
+                    for(StringBuilder buff: map.values())
                         buff.append(event.getValue());
                 }
             }else{
@@ -127,7 +123,11 @@ public abstract class NodeList extends ValidatedExpression{
                 consume(result);
         }
 
+        long lastConsumedOrder = -1;
         public void contextStarted(Context context){
+            if(lastConsumedOrder==context.order)
+                return;
+            lastConsumedOrder = context.order;
             map.put(context.identity(), new StringBuilder());
         }
         
