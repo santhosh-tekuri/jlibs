@@ -18,13 +18,13 @@ package jlibs.xml.sax.sniff.model.expr.num;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.expr.Expression;
+import jlibs.xml.sax.sniff.model.expr.Function;
 import org.jaxen.saxpath.Operator;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Arithmetic extends Expression{
+public class Arithmetic extends Function{
     private int operator;
 
     public Arithmetic(Node contextNode, int operator){
@@ -32,51 +32,23 @@ public class Arithmetic extends Expression{
         this.operator = operator;
     }
 
-    class MyEvaluation extends Evaluation{
-        Double lhs;
-        Double rhs;
-        
-        @Override
-        public void finish(){
-            double result = 0;
-            switch(operator){
-                case Operator.ADD:
-                    result = lhs + rhs;
-                    break;
-                case Operator.SUBTRACT:
-                    result = lhs - rhs;
-                    break;
-                case Operator.MULTIPLY:
-                    result = lhs * rhs;
-                    break;
-                case Operator.DIV:
-                    result = lhs / rhs;
-                    break;
-                case Operator.MOD:
-                    result = lhs % rhs;
-                    break;
-            }
-            setResult(result);
-        }
-
-        @Override
-        protected void consume(Object member, Object result){
-            if(member==members.get(0))
-                lhs = (Double)result;
-            if(member==members.get(1))
-                rhs = (Double)result;
-            if(lhs!=null && rhs!=null)
-                finish();
-        }
-
-        @Override
-        protected void print(){
-        }
-    }
-
     @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
+    protected Object evaluate(Object[] args){
+        double lhs = (Double)args[0];
+        double rhs = (Double)args[1];
+        switch(operator){
+            case Operator.ADD:
+                return lhs + rhs;
+            case Operator.SUBTRACT:
+                return lhs - rhs;
+            case Operator.MULTIPLY:
+                return lhs * rhs;
+            case Operator.DIV:
+                return lhs / rhs;
+            case Operator.MOD:
+                return lhs % rhs;
+        }
+        throw new ImpossibleException();
     }
 
     /*-------------------------------------------------[ ToString ]---------------------------------------------------*/
