@@ -46,10 +46,20 @@ class Contexts implements Iterable<Context>, Debuggable{
     public boolean hasNamespaceChild;
     public boolean nextHasNamespaceChild;
     public void add(Context context){
+        add(-1, context);
+    }
+
+    // todo[Perfomance]:
+    //      for reverse adding in next, it is better to add as usual and in update() method add them
+    //      in reverse
+    public void add(int index, Context context){
         if(context!=null){
             nextHasAttributeChild |= context.node.hasAttibuteChild && context.depth<=0;
             nextHasNamespaceChild |= context.node.hasNamespaceChild && context.depth<=0;
-            next.add(context);
+            if(index==-1)
+                next.add(context);
+            else
+                next.add(0, context);
         }
     }
 
@@ -58,7 +68,7 @@ class Contexts implements Iterable<Context>, Debuggable{
             debugger.println("     "+context);
         
         if(!next.contains(context))
-            add(context);
+            add(0, context);
     }
 
     public void update(){

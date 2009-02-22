@@ -163,19 +163,14 @@ public class Context implements Debuggable{
         return new ContextIdentity(this);
     }
 
+    // todo[Performance]:
+    //      change the unused argument justCreated to lightVersion. If
+    //      lightVersion is true, then during ContextIdentity creation
+    //      don't need to populate ContextIdentity.depths
     public ContextIdentity parentIdentity(boolean justCreated){
-        if(depth==0){
-            if(justCreated)
-                return parent.identity();
-            else{
-                if(parent.depth<0)
-                    return new ContextIdentity(parent, parent.depth+1);
-                else if(parent.depth>0)
-                    return new ContextIdentity(parent, parent.depth-1);
-                else
-                    return new ContextIdentity(parent, parent.depth);
-            }
-        }else if(depth<0)
+        if(depth==0)
+            return parent.identity();
+        else if(depth<0)
             return new ContextIdentity(this, depth+1);
         else
             return new ContextIdentity(this, depth-1);
