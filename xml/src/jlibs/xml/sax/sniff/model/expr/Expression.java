@@ -152,6 +152,7 @@ public abstract class Expression extends Notifier implements Resettable, Context
 
         protected Evaluation(){
             id = evaluationCount++;
+            contextIdentity = context.identity();
         }
 
         protected void setResult(Object result){
@@ -277,8 +278,8 @@ public abstract class Expression extends Notifier implements Resettable, Context
     public void contextStarted(Context context, Event event){
         if(debug)
             debugger.println("newEvaluation: %s", this);
+        this.context = context;
         Expression.Evaluation evaluation = createEvaluation();
-        evaluation.contextIdentity = context.identity();
         evaluationStack.push(evaluation);
     }
 
