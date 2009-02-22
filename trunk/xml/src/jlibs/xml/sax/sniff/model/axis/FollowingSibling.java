@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model.axis;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
+import jlibs.xml.sax.sniff.engine.context.ContextIdentity;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
 import org.jaxen.saxpath.Axis;
@@ -80,11 +81,11 @@ public class FollowingSibling extends AxisNode implements Resettable, Notificati
         return super.equivalent(node) && this.owner==((FollowingSibling)node).owner;
     }
 
-    private Map<Context.ContextIdentity, Long> contexts = new HashMap<Context.ContextIdentity, Long>();
+    private Map<ContextIdentity, Long> contexts = new HashMap<ContextIdentity, Long>();
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
-        Context.ContextIdentity pi = context.parentIdentity(true);
+        ContextIdentity pi = context.parentIdentity(true);
         if(!contexts.containsKey(pi))
             contexts.put(pi, ((Event)result).order());
     }

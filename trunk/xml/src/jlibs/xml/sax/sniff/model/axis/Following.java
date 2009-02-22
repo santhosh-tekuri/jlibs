@@ -17,6 +17,7 @@ package jlibs.xml.sax.sniff.model.axis;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.engine.context.ContextEndListener;
+import jlibs.xml.sax.sniff.engine.context.ContextIdentity;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
 import org.jaxen.saxpath.Axis;
@@ -45,7 +46,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
         owner.addContextEndListener(new ContextEndListener(){
             @Override
             public void contextEnded(Context context, long order){
-                Context.ContextIdentity pid = context.parentIdentity(false);
+                ContextIdentity pid = context.parentIdentity(false);
                 Match match = matches.get(pid);
                 if(match!=null){
                     match.end = order;
@@ -65,7 +66,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
         return super.equivalent(node) && this.owner==((Following)node).owner;
     }
 
-    public Map<Context.ContextIdentity, Match> matches = new LinkedHashMap<Context.ContextIdentity, Match>();
+    public Map<ContextIdentity, Match> matches = new LinkedHashMap<ContextIdentity, Match>();
     private class Match{
         long start;
         long end = -1; // -1 means unknown
@@ -78,13 +79,13 @@ public class Following extends AxisNode implements Resettable, NotificationListe
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
-        Context.ContextIdentity pi = context.parentIdentity(true);
+        ContextIdentity pi = context.parentIdentity(true);
         if(!matches.containsKey(pi))
             matches.put(pi, new Match((Event)result));
     }
 
-    public boolean matchesWith(Context.ContextIdentity identity, Event event){
-        for(Map.Entry<Context.ContextIdentity, Match> entry: matches.entrySet()){
+    public boolean matchesWith(ContextIdentity identity, Event event){
+        for(Map.Entry<ContextIdentity, Match> entry: matches.entrySet()){
             Match match = entry.getValue();
             if(match.start>identity.order)
                 return match.end!=-1 && event.order()>match.end;
