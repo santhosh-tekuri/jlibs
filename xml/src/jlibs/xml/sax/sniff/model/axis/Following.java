@@ -51,12 +51,21 @@ public class Following extends AxisNode implements Resettable, NotificationListe
                 if(match!=null){
                     match.end = order;
                     minMatchedOrder = Math.min(minMatchedOrder, order);
+                    if(debug){
+                        debugger.println("Matches: %s, Start=%s)", pid, order);
+                        debugger.println("minMatchedOrder=%d", minMatchedOrder);
+                    }
                 }
             }
 
             @Override
             public int priority(){
                 return Integer.MIN_VALUE;
+            }
+
+            @Override
+            public String toString(){
+                return Following.this.toString();
             }
         });
     }
@@ -74,14 +83,22 @@ public class Following extends AxisNode implements Resettable, NotificationListe
         private Match(Event event){
             start = event.order();
         }
+
+        @Override
+        public String toString(){
+            return String.format("Match[%d, %d]", start, end);
+        }
     }
     private long minMatchedOrder = Long.MAX_VALUE;
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
         ContextIdentity pi = context.parentIdentity(true);
-        if(!matches.containsKey(pi))
+        if(!matches.containsKey(pi)){
             matches.put(pi, new Match((Event)result));
+            if(debug)
+                debugger.println("Matches: %s, Start=%s)", pi, ((Event)result).order());
+        }
     }
 
     public boolean matchesWith(ContextIdentity identity, Event event){
