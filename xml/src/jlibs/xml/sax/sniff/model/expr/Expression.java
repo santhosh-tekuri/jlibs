@@ -20,6 +20,7 @@ import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.sniff.engine.context.Context;
+import jlibs.xml.sax.sniff.engine.context.ContextIdentity;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.*;
@@ -141,12 +142,12 @@ public abstract class Expression extends Notifier implements Resettable, Context
             listener.onNotification(this, context, result);
     }
 
-    public Context.ContextIdentity contextIdentityOfLastEvaluation;
+    public ContextIdentity contextIdentityOfLastEvaluation;
     private int evaluationCount;
     public int evaluationIndex;
     protected abstract class Evaluation{
         public int id;
-        public Context.ContextIdentity contextIdentity;
+        public ContextIdentity contextIdentity;
         public boolean finished;
 
         protected Evaluation(){
