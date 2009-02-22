@@ -29,7 +29,7 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class Following extends AxisNode implements Resettable, NotificationListener{
-    private Node owner;
+    public Node owner;
 
     public Following(Node owner){
         super(Axis.FOLLOWING);
@@ -46,7 +46,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
         owner.addContextEndListener(new ContextEndListener(){
             @Override
             public void contextEnded(Context context, long order){
-                ContextIdentity pid = context.parentIdentity(false);
+                ContextIdentity pid = context.identity();
                 Match match = matches.get(pid);
                 if(match!=null){
                     match.end = order;
@@ -93,7 +93,7 @@ public class Following extends AxisNode implements Resettable, NotificationListe
 
     @Override
     public void onNotification(Notifier source, Context context, Object result){
-        ContextIdentity pi = context.parentIdentity(true);
+        ContextIdentity pi = context.identity();
         if(!matches.containsKey(pi)){
             matches.put(pi, new Match((Event)result));
             if(debug)
