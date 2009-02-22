@@ -17,7 +17,7 @@ package jlibs.xml.sax.sniff.model.expr.bool;
 
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
-import jlibs.xml.sax.sniff.model.expr.Expression;
+import jlibs.xml.sax.sniff.model.expr.Function;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Comparison extends Expression{
+public abstract class Comparison extends Function{
     private String name;
 
     public Comparison(Node contextNode, String name){
@@ -33,61 +33,38 @@ public abstract class Comparison extends Expression{
         this.name = name;
     }
 
-    class MyEvaluation extends Evaluation{
-        public List lhsResults;
-        public List rhsResults;
+    private List toList(Object result){
+        if(result instanceof List)
+            return (List)result;
+        else
+            return Collections.singletonList(result);
+    }
 
-        @Override
-        public void finish(){
-            if(lhsResults!=null && rhsResults!=null){
-                Datatype lhsType = members.get(0).resultType();
-                if(lhsType==Datatype.STRINGS)
-                    lhsType = Datatype.STRING;
+    @Override
+    protected final Object evaluate(Object[] args){
+        if(args[0]!=null && args[1]!=null){
+            List lhsResults = toList(args[0]);
+            List rhsResults = toList(args[1]);
+            Datatype lhsType = members.get(0).resultType();
+            if(lhsType==Datatype.STRINGS)
+                lhsType = Datatype.STRING;
 
-                Datatype rhsType = members.get(1).resultType();
-                if(rhsType==Datatype.STRINGS)
-                    rhsType = Datatype.STRING;
+            Datatype rhsType = members.get(1).resultType();
+            if(rhsType==Datatype.STRINGS)
+                rhsType = Datatype.STRING;
 
-                for(Object lhs: lhsResults){
-                    for(Object rhs: rhsResults){
-                        if(evaluateObjectObject(lhs, rhs)){
-                            setResult(true);
-                            return;
-                        }
-                    }
+            for(Object lhs: lhsResults){
+                for(Object rhs: rhsResults){
+                    if(evaluateObjectObject(lhs, rhs))
+                        return true;
                 }
             }
-            setResult(false);
         }
-
-        @Override
-        protected void consume(Object member, Object result){
-            if(member==members.get(0))
-                lhsResults = toList(result);
-            if(member==members.get(1))
-                rhsResults = toList(result);
-            if(lhsResults!=null && rhsResults!=null)
-                finish();
-        }
-
-        private List toList(Object result){
-            if(result instanceof List)
-                return (List)result;
-            else
-                return Collections.singletonList(result);
-        }
-
-        @Override
-        protected void print(){}
+        return false;
     }
 
     protected abstract boolean evaluateObjectObject(Object lhs, Object rhs);
     
-    @Override
-    protected Evaluation createEvaluation(){
-        return new MyEvaluation();
-    }
-
     @Override
     public String getName(){
         return name;
