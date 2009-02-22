@@ -65,6 +65,9 @@ public class Position extends ValidatedExpression{
         }
 
         private void evaluate(){
+            if(map.isEmpty())
+                return;
+            
             while(evaluationStartNode.parent!=context.node)
                 context = context.parent;
 
