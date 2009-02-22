@@ -564,6 +564,7 @@
         <xpath>/web-app/servlet/servlet-name/following::node()</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/following::*</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/following::node()</xpath>
+        <xpath>/web-app/servlet//description/following::*</xpath>
 
         <!--
         <xpath>upper-case( /web-app/servlet[1]/servlet-class )</xpath>
