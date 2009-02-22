@@ -75,8 +75,8 @@ public class Context implements Debuggable{
                 if(changeContext){
                     depth--;
                     contexts.add(this);
-                    node.contextStarted(this, event);
                     order = event.order();
+                    node.contextStarted(this, event);
                 }else
                     node.notifyContext(this, event);
             }else{
