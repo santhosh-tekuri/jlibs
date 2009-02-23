@@ -71,9 +71,4 @@ public class StringNodeSet extends NodeList{
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
     }
-
-    @Override
-    public void onNotification(Notifier source, Context context, Object result){
-        super.onNotification(source, context, result);
-    }
 }
