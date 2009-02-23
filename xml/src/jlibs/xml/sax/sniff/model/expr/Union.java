@@ -15,17 +15,16 @@
 
 package jlibs.xml.sax.sniff.model.expr;
 
+import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.sniff.NodeItem;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
-import jlibs.xml.sax.sniff.NodeItem;
-import jlibs.core.lang.ImpossibleException;
 
-import java.util.TreeSet;
-import java.util.TreeMap;
 import java.util.Map;
-import java.util.Collections;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * @author Santhosh Kumar T
@@ -93,24 +92,26 @@ public class Union extends Function{
     protected Object evaluate(Object[] args){
         switch(resultType()){
             case STRING:
-                Map.Entry<Integer, String> result = null;
+                Map.Entry<Long, String> result = null;
                 for(Object arg: args){
-                    TreeMap<Integer, String> map = (TreeMap<Integer, String>)arg;
-                    Map.Entry<Integer, String> entry = map.firstEntry();
+                    TreeMap<Long, String> map = (TreeMap<Long, String>)arg;
+                    Map.Entry<Long, String> entry = map.firstEntry();
                     if(result!=null){
                         if(result.getKey()<entry.getKey())
                             continue;
                     }
                     result = entry;
                 }
-                if(storeDocumentOrder)
-                    return Collections.singletonMap(result.getKey(), result.getValue());
-                else
+                if(storeDocumentOrder){
+                    TreeMap<Long, String> map = new TreeMap<Long, String>();
+                    map.put(result.getKey(), result.getValue());
+                    return map;
+                }else
                     return result.getValue();
             case NUMBER:{
-                TreeMap<Integer, Double> results = new TreeMap<Integer, Double>();
+                TreeMap<Long, Double> results = new TreeMap<Long, Double>();
                 for(Object arg: args){
-                    TreeMap<Integer, Double> map = (TreeMap<Integer, Double>)arg;
+                    TreeMap<Long, Double> map = (TreeMap<Long, Double>)arg;
                     results.putAll(map);
                 }
 

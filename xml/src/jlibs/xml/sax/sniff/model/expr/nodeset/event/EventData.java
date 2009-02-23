@@ -22,7 +22,7 @@ import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 
-import java.util.Collections;
+import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
@@ -40,9 +40,11 @@ public abstract class EventData extends ValidatedExpression{
 
         @Override
         protected Object getCachedResult(){
-            if(storeDocumentOrder)
-                return Collections.singletonMap(order, data);
-            else
+            if(storeDocumentOrder){
+                TreeMap<Long, String> map = new TreeMap<Long, String>();
+                map.put(order, data);
+                return map;
+            }else
                 return data;
         }
 
