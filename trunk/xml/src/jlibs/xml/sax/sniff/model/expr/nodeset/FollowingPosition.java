@@ -94,6 +94,7 @@ public class FollowingPosition extends ValidatedExpression{
     @Override
     public void reset(){
         map.clear();
+        lastConsumedOrder = -1;
         super.reset();
     }
 }
