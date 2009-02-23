@@ -7,7 +7,7 @@ import org.w3c.dom.Node;
  */
 public interface NodeTypes{
     public static final int ANY = -1;
-    public static final int NAMESPACE = 0;
+    public static final int NAMESPACE = 13;
     public static final int DOCUMENT = Node.DOCUMENT_NODE;
     public static final int ELEMENT = Node.ELEMENT_NODE;
     public static final int TEXT = Node.TEXT_NODE;
