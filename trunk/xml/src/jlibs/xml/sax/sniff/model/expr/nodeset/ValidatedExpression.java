@@ -77,7 +77,7 @@ public abstract class ValidatedExpression extends Expression{
         protected abstract void consumeMemberResult(Object result);
         protected void predicateAccepted(){}
 
-        long lastConsumedOrder = -1;
+        private long lastConsumedOrder = -1;
         
         @Override
         @SuppressWarnings({"ConstantConditions"})
