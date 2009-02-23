@@ -51,7 +51,9 @@ public abstract class NodeList extends ValidatedExpression{
                             NodeListEvaluation evaluation = (NodeListEvaluation)eval;
                             if(!evaluation.finished && !evaluation.resultPrepared){
                                 if(canEvaluate(context.node, evaluation, context, event)){
-                                    evaluation.contextStarted(context);
+                                    boolean started = evaluation.contextStarted(context);
+                                    if(started && !event.hasChildren())
+                                        evaluation.forceConsume(event);
                                 }
                             }
                         }
@@ -93,22 +95,25 @@ public abstract class NodeList extends ValidatedExpression{
             super.finish();
         }
 
+        public void forceConsume(Event event){
+            switch(event.type()){
+                case Event.TEXT:
+                case Event.COMMENT:
+                case Event.ATTRIBUTE:
+                case Event.PI:
+                    consume(event.getValue());
+                    break;
+            }
+        }
+
         private void consume(Event event){
             if(parentNode!=null){
                 if(event.type()==Event.TEXT){
                     for(StringBuilder buff: map.values())
                         buff.append(event.getValue());
                 }
-            }else{
-                switch(event.type()){
-                    case Event.TEXT:
-                    case Event.COMMENT:
-                    case Event.ATTRIBUTE:
-                    case Event.PI:
-                        consume(event.getValue());
-                        break;
-                }
-            }
+            }else
+                forceConsume(event);
         }
 
         protected abstract void consume(Object result);
@@ -124,11 +129,12 @@ public abstract class NodeList extends ValidatedExpression{
         }
 
         long lastConsumedOrder = -1;
-        public void contextStarted(Context context){
+        public boolean contextStarted(Context context){
             if(lastConsumedOrder==context.order)
-                return;
+                return false;
             lastConsumedOrder = context.order;
             map.put(context.identity(), new StringBuilder());
+            return true;
         }
         
         public void contextEnded(Context context){
