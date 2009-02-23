@@ -21,7 +21,7 @@ import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 
-import java.util.Collections;
+import java.util.TreeMap;
 
 /**
  * @author Santhosh Kumar T
@@ -54,16 +54,21 @@ public class StringNodeSet extends NodeList{
 
         @Override
         protected Object getCachedResult(){
-            if(storeDocumentOrder)
-                return Collections.singletonMap(order, str);
-            else
+            if(storeDocumentOrder){
+                TreeMap<Long, String> map = new TreeMap<Long, String>();
+                map.put(order, str);
+                return map;
+            }else
                 return str;
         }
 
         @Override
-        public void contextStarted(Context context){
+        @SuppressWarnings({"SimplifiableIfStatement"})
+        public boolean contextStarted(Context context){
             if(map.size()==0)
-                super.contextStarted(context);
+                return super.contextStarted(context);
+            else
+                return false;
         }
     }
     
