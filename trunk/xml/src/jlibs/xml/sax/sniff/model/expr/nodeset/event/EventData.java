@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset.event;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
@@ -70,5 +71,10 @@ public abstract class EventData extends ValidatedExpression{
     @Override
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    @Override
+    public void onNotification(Notifier source, Context context, Object result){
+        onNotification2(source, context, result);
     }
 }
