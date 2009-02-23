@@ -106,12 +106,14 @@ public abstract class Expression extends Notifier implements Resettable, Context
             evalDepth = Math.max(evalDepth, memberExpr.evalDepth+1);
         }else{
             Node memberNode = (Node)member;
-            if(memberNode!=evaluationStartNode && memberNode.depth==evaluationStartNode.depth && !memberNode.isConstraintAncestor(evaluationStartNode)){
-                memberNode = memberNode.parent;
-                if(memberNode.depth<evaluationEndNode.depth)
-                    setEvaluationEndNode(memberNode);
-            }else if(memberNode instanceof Following || memberNode.getConstraintAxis() instanceof Following)
-                setEvaluationEndNode(evaluationEndNode.root.addChild(new DocumentNode()));
+            if(memberNode!=evaluationStartNode){
+                if(memberNode.depth==evaluationStartNode.depth && !memberNode.isConstraintAncestor(evaluationStartNode)){
+                    memberNode = memberNode.parent;
+                    if(memberNode.depth<evaluationEndNode.depth)
+                        setEvaluationEndNode(memberNode);
+                }else if(memberNode instanceof Following || memberNode.getConstraintAxis() instanceof Following)
+                    setEvaluationEndNode(evaluationEndNode.root.addChild(new DocumentNode()));
+            }
             member.addNotificationListener(this);
         }
     }
