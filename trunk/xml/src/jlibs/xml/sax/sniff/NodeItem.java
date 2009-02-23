@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff;
 import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.sax.sniff.events.Event;
+import org.jaxen.dom.NamespaceNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
@@ -51,6 +52,8 @@ public class NodeItem implements NodeTypes, Comparable<NodeItem>{
         order = -1;
         if(node instanceof Attr && Namespaces.URI_XMLNS.equals(node.getNamespaceURI()))
             type = NAMESPACE;
+        else if(node.getNodeType()==NamespaceNode.NAMESPACE_NODE)
+            type = NAMESPACE;
         else
             type = node.getNodeType();
         location = new DOMNavigator().getXPath(node, nsContext);
@@ -59,6 +62,19 @@ public class NodeItem implements NodeTypes, Comparable<NodeItem>{
         localName = node.getLocalName();
         namespaceURI = node.getNamespaceURI();
         name = node.getNodeName();
+    }
+
+    // used only for testing purposes
+    public NodeItem(Node node, String prefix, String uri, NamespaceContext nsContext){
+        order = -1;
+        type = NAMESPACE;
+
+        location = new DOMNavigator().getXPath(node, nsContext)+"/namespace::"+prefix;
+        value = uri;
+
+        localName = prefix;
+        namespaceURI = Namespaces.URI_XMLNS;
+        name = "xmlns:"+prefix;
     }
 
     @Override
