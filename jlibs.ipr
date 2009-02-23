@@ -355,6 +355,22 @@
         <root url="file:///Users/santhosh/Java/Jaxen/src/jaxen-1.1.1/src/java/main" />
       </SOURCES>
     </library>
+    <library name="Saxon">
+      <CLASSES>
+        <root url="jar:///Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j/saxon9-dom.jar!/" />
+        <root url="jar:///Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j/saxon9.jar!/" />
+        <root url="jar:///Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j/saxon9-xpath.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="xalan">
+      <CLASSES>
+        <root url="jar:///Users/santhosh/Java/Xalan/bin/xalan-j_2_7_1/xalan.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
 </project>
 

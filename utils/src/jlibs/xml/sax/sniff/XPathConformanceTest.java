@@ -28,7 +28,7 @@ public class XPathConformanceTest{
     public void run() throws Exception{
         int failed = 0;
         for(TestCase testCase: testSuite.testCases){
-            testCase.usingJDK();
+            testCase.usingDOM();
             testCase.usingXMLDog();
 
             for(int i=0; i<testCase.xpaths.size(); i++){

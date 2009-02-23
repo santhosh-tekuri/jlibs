@@ -21,13 +21,12 @@ import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathFunctionResolver;
 import java.io.IOException;
@@ -37,6 +36,9 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class TestCase{
+    static XPathEngine domEngine = new JDKEngine();
+//    static XPathEngine domEngine = new JaxenEngine();
+
     String file;
     List<String> xpaths = new ArrayList<String>();
     List<QName> resultTypes = new ArrayList<QName>();
@@ -50,24 +52,25 @@ public class TestCase{
     Document doc;
 
     public void createDocument() throws ParserConfigurationException, IOException, SAXException{
-        doc = DOMUtil.newDocumentBuilder(true, false).parse(new InputSource(file));
+        doc = DOMUtil.newDocumentBuilder(true, false, true, false).parse(new InputSource(file));
     }
 
     List<Object> jdkResult = new ArrayList<Object>(xpaths.size());
-    public List<Object> usingJDK() throws Exception{
+    public List<Object> usingDOM() throws Exception{
         if(doc==null)
             createDocument();
-
-        jdkResult = new ArrayList<Object>(xpaths.size());
+        jdkResult = domEngine.evaluate(this, doc);
+        doc = null;
+        return jdkResult;
+    }
+    
+    public void usingJDK() throws Exception{
         for(int i=0; i<xpaths.size(); i++){
             javax.xml.xpath.XPath xpathObj = XPathFactory.newInstance().newXPath();
             xpathObj.setXPathVariableResolver(variableResolver);
             xpathObj.setNamespaceContext(nsContext);
             jdkResult.add(xpathObj.evaluate(xpaths.get(i), doc, resultTypes.get(i)));
         }
-
-        doc = null;
-        return jdkResult;
     }
 
     List<Object> dogResult;
@@ -91,26 +94,28 @@ public class TestCase{
 
     DOMNavigator navigator = new DOMNavigator();
     
-    public void translateJDKResult(int test){
+    public void translateDOMResult(int test){
         Object obj = jdkResult.get(test);
-        List<NodeItem> result = new ArrayList<NodeItem>();
-
-        NodeList nodeSet = (NodeList)obj;
-        for(int i=0; i<nodeSet.getLength(); i++){
-            Node node = nodeSet.item(i);
-            NodeItem item = new NodeItem(node, resultNSContext);
-            result.add(item);
-            if(item.type==NodeItem.ATTRIBUTE)
-                hasAttributes.add(test);
-            else if(item.type==NodeItem.NAMESPACE)
-                hasNamespaces.add(test);
-        }
+        List<NodeItem> result = domEngine.translate(obj, resultNSContext);
         jdkResult.set(test, result);
+
+        for(NodeItem item: result){
+            if(item.type==NodeItem.ATTRIBUTE){
+                hasAttributes.add(test);
+                break;
+            }else if(item.type==NodeItem.NAMESPACE){
+                hasNamespaces.add(test);
+                break;
+            }
+        }
     }
 
+    private List<Integer> translated = new ArrayList<Integer>();
     public Object jdkResults(int i){
-        if(jdkResult.get(i) instanceof NodeList)
-            translateJDKResult(i);
+        if(!translated.contains(i) && resultTypes.get(i).equals(XPathConstants.NODESET)){
+            translateDOMResult(i);
+            translated.add(i);
+        }
         return jdkResult.get(i);
     }
 
@@ -140,9 +145,9 @@ public class TestCase{
         Object dogResults = dogResults(i);
 
         if(jdkResults instanceof TreeSet)
-            jdkResults = new ArrayList((TreeSet)jdkResults);
+            jdkResult.set(i, jdkResults = new ArrayList((TreeSet)jdkResults));
         if(dogResults instanceof TreeSet)
-            dogResults = new ArrayList((TreeSet)dogResults);
+            dogResult.set(i, dogResults = new ArrayList((TreeSet)dogResults));
         
         if(hasAttributes.contains(i)){
             Collections.sort((List<NodeItem>)jdkResults, attrComparator);

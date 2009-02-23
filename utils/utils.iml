@@ -9,6 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="swing" exported="" />
     <orderEntry type="module" module-name="xml" exported="" />
+    <orderEntry type="library" name="Saxon" level="project" />
+    <orderEntry type="library" name="xalan" level="project" />
   </component>
 </module>
 
