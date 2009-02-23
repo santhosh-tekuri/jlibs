@@ -294,6 +294,8 @@
         <xpath>count(/root[ pub/book/author ]/pub[ book/author ]/book[ price ]/price)</xpath>
         <xpath>count(/descendant::node())</xpath>
         <xpath>count(/nonexistingelement)</xpath>
+        <xpath>count(//book/descendant::*)</xpath>
+        <xpath>string(//book/descendant::*)</xpath>
 
         <!-- string() function -->
         <xpath>string(//book)</xpath>
@@ -415,6 +417,7 @@
         <xpath>//following-sibling::node()</xpath>
         <xpath>/descendant::node()/following-sibling::node()</xpath>
         <xpath>/descendant-or-self::node()/following-sibling::node()</xpath>
+        <xpath>/descendant::*/descendant::*[2]</xpath>
     </testcase>
 
     <testcase>
@@ -564,7 +567,19 @@
         <xpath>/web-app/servlet/servlet-name/following::node()</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/following::*</xpath>
         <xpath>/web-app/servlet[2]/servlet-name/following::node()</xpath>
+        <xpath>/web-app/servlet[2]/init-param/param-name/following::node()</xpath>
         <xpath>/web-app/servlet//description/following::*</xpath>
+        <xpath>/web-app/servlet//description/following::*[1]</xpath>
+        <xpath>/web-app/servlet//description/following::*[1][name()='servlet-mapping']</xpath>
+        <xpath>/web-app/servlet//description/following::*[name()='servlet-mapping']</xpath>
+        <xpath>/web-app/servlet//description/following::*[2][name()='servlet-name']</xpath>
+        <xpath>/web-app/servlet//description/following::*[name()='servlet-name']</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[1]</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[2]</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[3]</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[4]</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[5]</xpath>
+        <xpath>/web-app/servlet//servlet-name/following::*[position()+1=3]</xpath>
 
         <!--
         <xpath>upper-case( /web-app/servlet[1]/servlet-class )</xpath>

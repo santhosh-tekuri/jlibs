@@ -18,6 +18,7 @@ package jlibs.xml.sax.sniff.parser;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
 import jlibs.xml.sax.sniff.model.Notifier;
+import jlibs.xml.sax.sniff.model.axis.Following;
 import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.TypeCast;
 import jlibs.xml.sax.sniff.model.expr.bool.Equals;
@@ -78,9 +79,15 @@ public class LocationPath extends Path{
     private Expression createFunction(String name, Node contextNode, Notifier member, Expression predicate){
         if("lang".equals(name))
             return new Language(contextNode, member, predicate);
-        else if("position".equals(name))
-            return new Position(contextNode, member, predicate);
-        else if("last".equals(name)){
+        else if("position".equals(name)){
+            Following following = null;
+            if(member instanceof Node)
+                following = ((Node)member).getFollowing();
+            if(following==null)
+                return new Position(contextNode, member, predicate);
+            else
+                return new FollowingPosition(contextNode, member, predicate);
+        }else if("last".equals(name)){
             Count count = new Count(contextNode, member, predicate);
             return new Last(contextNode.parent, count, null);
         }else if("local-name".equals(name))
