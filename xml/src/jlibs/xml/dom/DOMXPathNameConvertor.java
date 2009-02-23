@@ -18,6 +18,7 @@ package jlibs.xml.dom;
 import jlibs.core.graph.Convertor;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.Namespaces;
+import jlibs.xml.sax.sniff.NodeTypes;
 import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 
@@ -65,6 +66,8 @@ public class DOMXPathNameConvertor implements Convertor<Node, String>{
                     return '@'+ (StringUtil.isEmpty(prefix) ? name : prefix+':'+name);
                 }else
                     return '@'+source.getNodeName();
+            case NodeTypes.NAMESPACE:
+                return "namespace::"+source.getLocalName();
             default:
                 return null;
         }
