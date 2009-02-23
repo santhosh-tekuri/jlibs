@@ -45,7 +45,7 @@ public class TestSuite{
         System.out.print("XALAN:  ");
         time = System.nanoTime();
         for(TestCase testCase: testCases){
-            testCase.jdkResult = testCase.usingJDK();
+            testCase.jdkResult = testCase.usingDOM();
             System.out.print('.');
             testCase.jdkResult = null;
         }
@@ -101,6 +101,16 @@ public class TestSuite{
         types.put(XPathConstants.BOOLEAN, list);
     }
 
+    private QName getResultType(String xpath){
+        for(Map.Entry<QName, List<String>> entry: types.entrySet()){
+            for(String str: entry.getValue()){
+                if(xpath.startsWith(str))
+                    return entry.getKey();
+            }
+        }
+        return XPathConstants.NODESET;
+    }
+
     public void readTestCases(String configFile) throws Exception{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
             TestCase testCase;
@@ -152,17 +162,15 @@ public class TestSuite{
                 }else if(localName.equals("xpath")){
                     String xpath = contents.toString().trim();
                     testCase.xpaths.add(xpath);
+                    if(testCase.resultTypes.size()!=testCase.xpaths.size())
+                        testCase.resultTypes.add(getResultType(xpath));
 
-                    if(testCase.resultTypes.size()!=testCase.xpaths.size()){
-                        for(Map.Entry<QName, List<String>> entry: types.entrySet()){
-                            for(String str: entry.getValue()){
-                                if(xpath.startsWith(str)){
-                                    testCase.resultTypes.add(entry.getKey());
-                                    return;
-                                }
-                            }
+                    QName resultType = testCase.resultTypes.get(testCase.resultTypes.size()-1);
+                    if(resultType.equals(XPathConstants.NODESET)){
+                        if(xpath.indexOf("namespace::")==-1){
+                            testCase.xpaths.add("name("+xpath+")");
+                            testCase.resultTypes.add(XPathConstants.STRING);
                         }
-                        testCase.resultTypes.add(XPathConstants.NODESET);
                     }
                 }else if(localName.equals("testcase")){
                     total += testCase.xpaths.size();

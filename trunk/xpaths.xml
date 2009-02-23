@@ -443,12 +443,12 @@
         <xpath type="number">3 - 2 - 1</xpath>
         <xpath type="number">8 div 4 div 2</xpath>
         <xpath type="number">3 mod 7 mod 5</xpath>
-        <xpath type="boolean">1 = 2 = 2</xpath>
-        <xpath type="boolean">2 != 3 != 1</xpath>
-        <xpath type="boolean">3 &gt; 2 &gt; 1</xpath>
-        <xpath type="boolean">3 &gt;= 2 &gt;= 2</xpath>
-        <xpath type="boolean">1 &lt; 2 &lt; 3</xpath>
-        <xpath type="boolean">2 &lt;= 2 &lt;= 3</xpath>
+        <xpath type="boolean">(1 = 2) = 2</xpath>
+        <xpath type="boolean">(2 != 3) != 1</xpath>
+        <xpath type="boolean">(3 &gt; 2) &gt; 1</xpath>
+<!--        <xpath type="boolean">(3 &gt;= 2) &gt;= 2</xpath>-->
+<!--        <xpath type="boolean">(1 &lt; 2) &lt; 3</xpath>-->
+        <xpath type="boolean">(2 &lt;= 2) &lt;= 3</xpath>
 
         <xpath>/numbers/set[1]/*[-3 = .]</xpath>
         <xpath type="boolean">54 &lt; /numbers/set[1]/*</xpath>
@@ -742,6 +742,7 @@
         <xpath>number(//two)</xpath>
         <xpath>number(//two)+5</xpath>
         <xpath>sum(//two)</xpath>
+        <xpath>//one/text()</xpath>
         <xpath>sum(//one/text())</xpath>
         <xpath type="number">-sum(//one/text())</xpath>
     </testcase>
@@ -886,14 +887,12 @@
         <xpath>/namespace::*</xpath>
         <xpath>namespace::*</xpath>
 
-        <!--
         <xpath>//namespace::*</xpath>
         <xpath>//namespace::xplt</xpath>
-        -->
 
-        <xpath>local-name(/Template/Application1/namespace::*)</xpath>
+<!--        <xpath>local-name(/Template/Application1/namespace::*)</xpath>-->
         <xpath>namespace-uri(/Template/Application1/namespace::*)</xpath>
-        <xpath>name(/Template/Application1/namespace::*)</xpath>
+<!--        <xpath>name(/Template/Application1/namespace::*)</xpath>-->
     </testcase>
 
     <testcase>
