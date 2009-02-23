@@ -19,6 +19,7 @@ import jlibs.core.graph.Navigator2;
 import jlibs.core.graph.PredicateConvertor;
 import jlibs.core.graph.Sequence;
 import jlibs.core.graph.sequences.ConcatSequence;
+import jlibs.xml.sax.sniff.NodeTypes;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -57,6 +58,7 @@ public class DOMNavigator extends Navigator2<Node>{
         public String convert(Node source){
             switch(source.getNodeType()){
                 case Node.ATTRIBUTE_NODE:
+                case NodeTypes.NAMESPACE:
                     return delegate.convert(source);
             }
             return super.convert(source);
