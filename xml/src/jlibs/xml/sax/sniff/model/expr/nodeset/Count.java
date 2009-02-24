@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.sniff.model.expr.nodeset;
 
+import jlibs.xml.sax.sniff.engine.context.Context;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
 import jlibs.xml.sax.sniff.model.Node;
@@ -33,39 +34,33 @@ public class Count extends ValidatedExpression{
     }
 
     class MyEvaluation extends DelayedEvaluation{
-        private TreeMap<Long, Double> map;
-        private double count;
-
-        MyEvaluation(){
-            if(storeDocumentOrder)
-                map = new TreeMap<Long, Double>();
-        }
+        private TreeMap<Long, Double> map = new TreeMap<Long, Double>();
 
         @Override
         protected Object getCachedResult(){
-            if(storeDocumentOrder)
+            if(storeDocumentOrder || listeners.get(0) instanceof Count)
                 return map;
             else
-                return count;
+                return (double)map.size();
         }
 
         @Override
         @SuppressWarnings({"unchecked"})
         protected void consumeMemberResult(Object result){
-            if(result instanceof Event){
-                if(storeDocumentOrder)
-                    map.put(((Event)result).order(), 1d);
-                else
-                    count++;
-            }else if(result instanceof Double)
-                count += (Double)result;
+            if(result instanceof Event)
+                map.put(((Event)result).order(), 1d);
             else if(result instanceof TreeMap)
-                map.putAll((Map<Long,Double>)result);
+                map.putAll((Map<Long, Double>)result);
         }
     }
 
     @Override
     protected Evaluation createEvaluation(){
         return new MyEvaluation();
+    }
+
+    @Override
+    public void onNotification(Notifier source, Context context, Object result){
+        onNotification2(source, context, result);
     }
 }
