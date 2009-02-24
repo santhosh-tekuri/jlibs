@@ -95,6 +95,17 @@ public abstract class Expression extends Notifier implements Resettable, Context
         _addMember(member);
     }
 
+    protected void adjustEvaluationEndContext(Node memberNode){
+        if(memberNode!=evaluationStartNode){
+            if(memberNode.depth==evaluationStartNode.depth && !memberNode.isConstraintAncestor(evaluationStartNode)){
+                memberNode = memberNode.parent;
+                if(memberNode.depth<evaluationEndNode.depth)
+                    setEvaluationEndNode(memberNode);
+            }else if(memberNode instanceof Following || memberNode.getConstraintAxis() instanceof Following)
+                setEvaluationEndNode(evaluationEndNode.root.addChild(new DocumentNode()));
+        }
+    }
+
     protected final void _addMember(Notifier member){
         members.add(member);
         if(member instanceof Expression){
@@ -105,15 +116,7 @@ public abstract class Expression extends Notifier implements Resettable, Context
             memberExpr.addNotificationListener(this);
             evalDepth = Math.max(evalDepth, memberExpr.evalDepth+1);
         }else{
-            Node memberNode = (Node)member;
-            if(memberNode!=evaluationStartNode){
-                if(memberNode.depth==evaluationStartNode.depth && !memberNode.isConstraintAncestor(evaluationStartNode)){
-                    memberNode = memberNode.parent;
-                    if(memberNode.depth<evaluationEndNode.depth)
-                        setEvaluationEndNode(memberNode);
-                }else if(memberNode instanceof Following || memberNode.getConstraintAxis() instanceof Following)
-                    setEvaluationEndNode(evaluationEndNode.root.addChild(new DocumentNode()));
-            }
+            adjustEvaluationEndContext((Node)member);
             member.addNotificationListener(this);
         }
     }
