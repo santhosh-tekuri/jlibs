@@ -57,7 +57,10 @@ public class StringNodeSet extends NodeList{
         protected Object getCachedResult(){
             if(storeDocumentOrder){
                 TreeMap<Long, String> map = new TreeMap<Long, String>();
-                map.put(order, str);
+                if(str!=null)
+                    map.put(order, str);
+                else
+                    map.put(Long.MAX_VALUE, "");
                 return map;
             }else
                 return str;

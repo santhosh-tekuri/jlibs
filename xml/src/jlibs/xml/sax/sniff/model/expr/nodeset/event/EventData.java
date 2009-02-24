@@ -43,7 +43,10 @@ public abstract class EventData extends ValidatedExpression{
         protected Object getCachedResult(){
             if(storeDocumentOrder){
                 TreeMap<Long, String> map = new TreeMap<Long, String>();
-                map.put(order, data);
+                if(data!=null)
+                    map.put(order, data);
+                else
+                    map.put(Long.MAX_VALUE, "");
                 return map;
             }else
                 return data;
