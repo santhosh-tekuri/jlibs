@@ -170,7 +170,20 @@ public class TestSuite{
                         if(xpath.indexOf("namespace::")==-1){
                             testCase.xpaths.add("name("+xpath+")");
                             testCase.resultTypes.add(XPathConstants.STRING);
+                            testCase.xpaths.add("local-name("+xpath+")");
+                            testCase.resultTypes.add(XPathConstants.STRING);
+                            testCase.xpaths.add("namespace-uri("+xpath+")");
+                            testCase.resultTypes.add(XPathConstants.STRING);
+                            testCase.xpaths.add("string("+xpath+")");
+                            testCase.resultTypes.add(XPathConstants.STRING);
+
+//                            testCase.xpaths.add(xpath+"[1]");
+//                            testCase.resultTypes.add(XPathConstants.NODESET);
                         }
+                        testCase.xpaths.add("count("+xpath+")");
+                        testCase.resultTypes.add(XPathConstants.NUMBER);
+                        testCase.xpaths.add("boolean("+xpath+")");
+                        testCase.resultTypes.add(XPathConstants.BOOLEAN);
                     }
                 }else if(localName.equals("testcase")){
                     total += testCase.xpaths.size();
