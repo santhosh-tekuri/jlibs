@@ -16,6 +16,7 @@
 package jlibs.xml.sax.sniff.model.expr.nodeset.list;
 
 import jlibs.xml.sax.sniff.engine.context.Context;
+import jlibs.xml.sax.sniff.engine.context.ContextIdentity;
 import jlibs.xml.sax.sniff.engine.context.ContextListener;
 import jlibs.xml.sax.sniff.events.Event;
 import jlibs.xml.sax.sniff.model.Datatype;
@@ -26,6 +27,7 @@ import jlibs.xml.sax.sniff.model.expr.Expression;
 import jlibs.xml.sax.sniff.model.expr.nodeset.ValidatedExpression;
 import org.jaxen.saxpath.Axis;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -83,13 +85,13 @@ public abstract class NodeList extends ValidatedExpression{
     }
 
     protected abstract class NodeListEvaluation extends DelayedEvaluation{
-        protected Map<Object, StringBuilder> map = new LinkedHashMap<Object, StringBuilder>();
+        protected Map<ContextIdentity, StringBuilder> map = new LinkedHashMap<ContextIdentity, StringBuilder>();
 
         @Override
         public void finish(){
-            for(StringBuilder buff: map.values()){
-                if(buff.length()>0)
-                    consume(buff.toString());
+            for(Map.Entry<ContextIdentity, StringBuilder> entry: map.entrySet()){
+                if(entry.getValue().length()>0)
+                    consume(entry.getValue().toString(), entry.getKey().order);
             }
             map = null;
             super.finish();
@@ -101,7 +103,7 @@ public abstract class NodeList extends ValidatedExpression{
                 case Event.COMMENT:
                 case Event.ATTRIBUTE:
                 case Event.PI:
-                    consume(event.getValue());
+                    consume(event.getValue(), event.order());
                     break;
             }
         }
@@ -117,7 +119,7 @@ public abstract class NodeList extends ValidatedExpression{
         }
 
         protected abstract void consume(Object result);
-        protected abstract void consume(String str);
+        protected abstract void consume(String str, long order);
 
         @Override
         @SuppressWarnings({"unchecked"})
@@ -137,10 +139,17 @@ public abstract class NodeList extends ValidatedExpression{
             return true;
         }
         
+        @SuppressWarnings({"EqualsBetweenInconvertibleTypes"})
         public void contextEnded(Context context){
-            StringBuilder buff = map.remove(context);
-            if(buff!=null)
-                consume(buff.toString());
+            Iterator<Map.Entry<ContextIdentity,StringBuilder>> iter = map.entrySet().iterator();
+            while(iter.hasNext()){
+                Map.Entry<ContextIdentity, StringBuilder> entry = iter.next();
+                if(context.equals(entry.getKey())){
+                    iter.remove();
+                    consume(entry.getValue().toString(), entry.getKey().order);
+                    return;
+                }
+            }
         }
 
         @Override

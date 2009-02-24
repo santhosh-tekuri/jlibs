@@ -41,7 +41,7 @@ public class Strings extends NodeList{
         }
 
         @Override
-        protected void consume(String str){
+        protected void consume(String str, long order){
             strings.add(str);
         }
 

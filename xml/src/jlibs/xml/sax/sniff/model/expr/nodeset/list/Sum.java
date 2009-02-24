@@ -57,10 +57,9 @@ public class Sum extends NodeList{
         }
 
         @Override
-        protected void consume(String str){
+        protected void consume(String str, long order){
             Double number = Datatype.asNumber(str);
             if(storeDocumentOrder){
-                long order = ((Expression)members.get(0)).contextIdentityOfLastEvaluation.order;
                 if(number.isNaN())
                     map.clear();
                 map.put(order, number);
