@@ -46,6 +46,7 @@ public abstract class NodeList extends ValidatedExpression{
         if(member instanceof Node){
             Node node = (Node)member;
             if(node.canBeContext()){
+                adjustEvaluationEndContext(node);
                 node.addContextListener(new ContextListener(){
                     @Override
                     public void contextStarted(Context context, Event event){
