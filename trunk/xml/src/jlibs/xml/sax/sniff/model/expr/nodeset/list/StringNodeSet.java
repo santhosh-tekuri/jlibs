@@ -47,8 +47,9 @@ public class StringNodeSet extends NodeList{
         }
 
         @Override
-        protected void consume(String str){
+        protected void consume(String str, long order){
             this.str = str;
+            this.order = order;
             resultPrepared();
         }
 
