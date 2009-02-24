@@ -19,6 +19,7 @@ package jlibs.xml.sax.sniff;
  * @author Santhosh Kumar T
  */
 public class XPathConformanceTest{
+    private boolean printAllResults = false;
     private TestSuite testSuite;
 
     public XPathConformanceTest(TestSuite testSuite){
@@ -35,7 +36,8 @@ public class XPathConformanceTest{
                 boolean passed = testCase.passed(i);
                 if(!passed)
                     failed++;
-
+                if(passed && !printAllResults)
+                    continue;
                 System.out.println(passed ? "SUCCESSFULL:" : "FAILED:");
                 testCase.printResults(i);
             }
