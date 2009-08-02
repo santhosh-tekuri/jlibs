@@ -92,7 +92,6 @@ public class Finalizer extends ReferenceQueue implements Runnable{
     private static class MessagePrinter implements Runnable{
         private String message;
 
-        @SuppressWarnings({"unchecked"})
         private MessagePrinter(String message){
             this.message = message;
         }
