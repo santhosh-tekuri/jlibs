@@ -16,15 +16,17 @@
 package jlibs.core.net;
 
 import jlibs.core.io.FileUtil;
-import jlibs.core.lang.StringUtil;
-import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.ArrayUtil;
+import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.StringUtil;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 /**
@@ -71,14 +73,14 @@ public class URLUtil{
      *
      * @param uri       The string to be parsed into a URI
      * @param encoding  if null, <code>UTF-8</code> will be used
-     * 
+     *
      * @throws URISyntaxException               in case of invalid uri
      * @throws UnsupportedEncodingException     if named character encoding is not supported
      */
     public static Map<String, String> getQueryParams(String uri, String encoding) throws URISyntaxException, UnsupportedEncodingException{
         if(encoding==null)
             encoding = "UTF-8";
-        
+
         String query = new URI(uri).getRawQuery();
         String params[] = Pattern.compile("&", Pattern.LITERAL).split(query);
         Map<String, String> map = new HashMap<String, String>(params.length);
@@ -96,7 +98,7 @@ public class URLUtil{
     public static String suggestFile(URI uri, String... extensions){
         if(extensions==null || extensions.length==0)
             throw new IllegalArgumentException("atleast one extension must be specified");
-        
+
         String path = uri.getPath();
         String tokens[] = StringUtil.getTokens(path, "/", true);
         String file = tokens[tokens.length-1];
@@ -113,6 +115,44 @@ public class URLUtil{
             return file;
         else
             return file.substring(0, dot+1)+extensions[0];
+    }
+
+    public static String suggestPrefix(Properties suggested, String uri){
+        String prefix = suggested.getProperty(uri);
+        if(prefix!=null)
+            return prefix;
+        else{
+            try{
+                URI _uri = new URI(uri);
+
+                // suggest prefix from path
+                String path = _uri.getPath();
+                StringTokenizer stok = new StringTokenizer(path, "/");
+                while(stok.hasMoreTokens())
+                    prefix = stok.nextToken();
+
+                if(prefix!=null)
+                    return prefix;
+                else{
+                    // suggest prefix from host
+                    String host = _uri.getHost();
+                    if(host!=null){
+                        stok = new StringTokenizer(host, ".");
+                        String curPrefix = null;
+                        while(stok.hasMoreTokens()){
+                            prefix = curPrefix;
+                            curPrefix = stok.nextToken();
+                        }
+                    }
+
+                    if(prefix!=null)
+                        return prefix;
+                }
+            }catch(URISyntaxException ignore){
+                // xml spec doesn't guarantee that namespace uri should be valid uri
+            }
+        }
+        return "ns";
     }
 
     public static void main(String[] args) throws Exception{
