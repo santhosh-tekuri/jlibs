@@ -31,7 +31,7 @@ public class ResettableIterator<E> implements Iterator<E>{
     
     @Override
     public boolean hasNext(){
-        return cursor!=list.size();
+        return cursor<list.size();
     }
 
     @Override
@@ -41,9 +41,14 @@ public class ResettableIterator<E> implements Iterator<E>{
 
     @Override
     public void remove(){
-        throw new UnsupportedOperationException();
+        list.remove(cursor-1);
     }
 
+    public ResettableIterator<E> reset(){
+        cursor = 0;
+        return this;
+    }
+    
     public ResettableIterator<E> reset(List<E> list){
         this.list = list;
         cursor = 0;
