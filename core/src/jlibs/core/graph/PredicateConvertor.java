@@ -38,7 +38,7 @@ public class PredicateConvertor<E> implements Convertor<E, String>{
         int predicate = 1;
         while(children.hasNext()){
             E child = children.next();
-            if(child==source)
+            if(child.equals(source))
                 break;
             if(name.equals(delegate.convert(child)))
                 predicate++;
