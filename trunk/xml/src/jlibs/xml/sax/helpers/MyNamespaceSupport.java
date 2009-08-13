@@ -16,15 +16,13 @@
 package jlibs.xml.sax.helpers;
 
 import jlibs.core.lang.Util;
+import jlibs.core.net.URLUtil;
 import jlibs.xml.Namespaces;
 import org.xml.sax.helpers.NamespaceSupport;
 
 import javax.xml.namespace.QName;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Enumeration;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 /**
  * @author Santhosh Kumar T
@@ -83,53 +81,23 @@ public class MyNamespaceSupport extends NamespaceSupport{
     public String declarePrefix(String uri){
         String prefix = findPrefix(uri);
         if(prefix==null){
-            prefix = suggestPrefix(uri);
+            prefix = URLUtil.suggestPrefix(suggested, uri);
+            if(getURI(prefix)!=null){
+                int i = 1;
+                String _prefix;
+                while(true){
+                    _prefix = prefix + i;
+                    if(getURI(_prefix)==null){
+                        prefix = _prefix;
+                        break;
+                    }
+                    i++;
+                }
+            }
             declarePrefix(prefix, uri);
         }
         return prefix;
     }
-
-    private String suggestPrefix(String uri){
-        String prefix = suggested.getProperty(uri);
-        if(prefix!=null)
-            return prefix;
-        
-        try{
-            URI _uri = new URI(uri);
-
-            String path = _uri.getPath();
-            StringTokenizer stok = new StringTokenizer(path, "/");
-            while(stok.hasMoreTokens())
-                prefix = stok.nextToken();
-            if(prefix!=null){
-                if(getURI(prefix)==null)
-                    return prefix;
-            }else{
-                String host = _uri.getHost();
-                if(host!=null){
-                    stok = new StringTokenizer(host, ".");
-                    String curPrefix = null;
-                    while(stok.hasMoreTokens()){
-                        prefix = curPrefix;
-                        curPrefix = stok.nextToken();
-                    }
-                }                
-                if(prefix!=null){
-                    if(getURI(prefix)==null)
-                        return prefix;
-                }else
-                    prefix = "ns";
-            }
-        }catch(URISyntaxException ignore){
-            // xml spec doesn't guarantee that namespace uri should be valid uri
-        }
-        
-        int i = 1;
-        while(getURI(prefix+i)!=null)
-            i++;
-        return prefix+i;
-    }
-
 
     @Override
     @SuppressWarnings({"unchecked"})
@@ -154,6 +122,33 @@ public class MyNamespaceSupport extends NamespaceSupport{
         }
 
         return new QName(getURI(prefix), localName, prefix);
+    }
+
+    /*-------------------------------------------------[ SAX Population ]---------------------------------------------------*/
+
+    private boolean needNewContext;
+
+    public void startDocument(){
+        reset();
+        needNewContext = true;
+    }
+
+    public void startPrefixMapping(String prefix, String uri){
+        if(needNewContext){
+            pushContext();
+            needNewContext = false;
+        }
+        declarePrefix(prefix, uri);
+    }
+
+    public void startElement(){
+        if(needNewContext)
+            pushContext();
+        needNewContext = true;
+    }
+
+    public void endElement(){
+        popContext();
     }
 
     public static void main(String[] args){
