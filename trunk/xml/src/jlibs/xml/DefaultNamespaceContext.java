@@ -15,54 +15,95 @@
 
 package jlibs.xml;
 
-import jlibs.core.util.Enumerator;
-import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import jlibs.core.net.URLUtil;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
  */
 public class DefaultNamespaceContext implements NamespaceContext{
-    private MyNamespaceSupport nsSupport;
+    private Properties suggested;
+    private Map<String, String> prefix2uriMap = new HashMap<String, String>();
+    private Map<String, String> uri2prefixMap = new HashMap<String, String>();
+    private String defaultURI = XMLConstants.NULL_NS_URI;
 
     public DefaultNamespaceContext(){
-        this(new MyNamespaceSupport());
+        this(Namespaces.getSuggested());
     }
-    
-    public DefaultNamespaceContext(MyNamespaceSupport nsSupport){
-        this.nsSupport = nsSupport;
+
+    public DefaultNamespaceContext(Properties suggested){
+        this.suggested = suggested;
+        declarePrefix(XMLConstants.DEFAULT_NS_PREFIX, XMLConstants.NULL_NS_URI);
+        declarePrefix(XMLConstants.XML_NS_PREFIX, XMLConstants.XML_NS_URI);
+        declarePrefix(XMLConstants.XMLNS_ATTRIBUTE, XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
     }
 
     @Override
     public String getNamespaceURI(String prefix){
-        String uri = nsSupport.getURI(prefix);
-        if(prefix.equals("") && uri==null)
-            uri = "";
-        return uri;
+        if(prefix.length()==0)
+            return defaultURI;
+        return prefix2uriMap.get(prefix);
     }
 
     @Override
     public String getPrefix(String namespaceURI){
-        return nsSupport.findPrefix(namespaceURI);
+        if(defaultURI.equals(namespaceURI))
+            return XMLConstants.DEFAULT_NS_PREFIX;
+        return uri2prefixMap.get(namespaceURI);
     }
 
     @Override
     public Iterator getPrefixes(String namespaceURI){
-        return new Enumerator<String>(nsSupport.getPrefixes(namespaceURI));
+        List<String> list = new ArrayList<String>(prefix2uriMap.size());
+        for(Map.Entry<String, String> entry: prefix2uriMap.entrySet()){
+            if(entry.getValue().equals(namespaceURI))
+                list.add(entry.getKey());
+        }
+        return list.iterator();
     }
 
     public void declarePrefix(String prefix, String uri){
-        nsSupport.declarePrefix(prefix, uri);
+        if(prefix.length()==0)
+            defaultURI = uri;
+        prefix2uriMap.put(prefix, uri);
+        uri2prefixMap.put(uri, prefix);
     }
 
     public String declarePrefix(String uri){
-        return nsSupport.declarePrefix(uri);
+        String prefix = getPrefix(uri);
+        if(prefix==null){
+            prefix = URLUtil.suggestPrefix(suggested, uri);
+            if(getNamespaceURI(prefix)!=null){
+                int i = 1;
+                String _prefix;
+                while(true){
+                    _prefix = prefix + i;
+                    if(getNamespaceURI(_prefix)==null){
+                        prefix = _prefix;
+                        break;
+                    }
+                    i++;
+                }
+            }
+            declarePrefix(prefix, uri);
+        }
+        return prefix;
     }
 
     public QName toQName(String qname){
-        return nsSupport.toQName(qname);
+        String prefix = "";
+        String localName = qname;
+
+        int colon = qname.indexOf(':');
+        if(colon!=-1){
+            prefix = qname.substring(0, colon);
+            localName = qname.substring(colon+1);
+        }
+
+        return new QName(getNamespaceURI(prefix), localName, prefix);
     }
 }
