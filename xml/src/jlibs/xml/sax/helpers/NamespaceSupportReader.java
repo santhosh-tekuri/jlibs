@@ -34,7 +34,7 @@ public class NamespaceSupportReader extends XMLFilterImpl{
     public NamespaceSupportReader(boolean nsPrefixes) throws ParserConfigurationException, SAXException{
         this(SAXUtil.newSAXParser(true, nsPrefixes).getXMLReader());
     }
-    
+
     public NamespaceSupportReader(XMLReader parent){
         super(parent);
     }
@@ -43,40 +43,30 @@ public class NamespaceSupportReader extends XMLFilterImpl{
         return nsSupport;
     }
 
-    private boolean needNewContext;
     @Override
     public void startDocument() throws SAXException{
-        nsSupport.reset();
-        needNewContext = true;
-        super.startDocument();
+        nsSupport.startDocument();
     }
 
     public void startPrefixMapping(String prefix, String uri) throws SAXException{
-        if(needNewContext){
-            nsSupport.pushContext();
-            needNewContext = false;
-        }
-        nsSupport.declarePrefix(prefix, uri);
-        
+        nsSupport.startPrefixMapping(prefix, uri);
         super.startPrefixMapping(prefix, uri);
     }
 
     public void startElement(String namespaceURI, String localName, String qualifiedName, Attributes atts) throws SAXException{
-        if(needNewContext)
-            nsSupport.pushContext();
-        needNewContext = true;
+        nsSupport.startElement();
         super.startElement(namespaceURI, localName, qualifiedName, atts);
     }
 
     public void endElement(String uri, String localName, String qName) throws SAXException{
-        nsSupport.popContext();
+        nsSupport.endElement();
         super.endElement(uri, localName, qName);
     }
 
     public void setDefaultHandler(DefaultHandler handler) throws SAXNotSupportedException, SAXNotRecognizedException{
         if(handler instanceof SAXHandler)
             ((SAXHandler)handler).nsSupport = nsSupport;
-        
+
         setContentHandler(handler);
         setEntityResolver(handler);
         setErrorHandler(handler);
@@ -86,7 +76,7 @@ public class NamespaceSupportReader extends XMLFilterImpl{
     }
 
     /*-------------------------------------------------[ Parsing ]---------------------------------------------------*/
-    
+
     public void parse(InputSource is, DefaultHandler handler) throws IOException, SAXException{
         setDefaultHandler(handler);
         parse(is);
