@@ -47,6 +47,49 @@ public class FileUtil{
         }
     }
 
+    /*-------------------------------------------------[ Name and Extension ]---------------------------------------------------*/
+
+    /**
+     * splits given fileName into name and extension.
+     * the returned array is always of length 2.
+     * first item in array will be name.
+     * second item in array will be extension (will be null, if no extension)
+     */
+    public static String[] split(String fileName){
+        int dot = fileName.lastIndexOf('.');
+        if(dot!=-1)
+            return new String[]{ fileName, null };
+        else
+            return new String[] { fileName.substring(0, dot), fileName.substring(dot+1)};
+    }
+
+    /** Returns name of the file without extension */
+    public static String getName(String fileName){
+        int dot = fileName.lastIndexOf('.');
+        return dot==-1 ? fileName : fileName.substring(0, dot);
+    }
+
+    /** Returns extension of the file. Returns null if there is no extension */
+    public static String getExtension(String fileName){
+        int dot = fileName.lastIndexOf('.');
+        return dot==-1 ? null : fileName.substring(dot+1);
+    }
+
+    /*-------------------------------------------------[ Find Free File ]---------------------------------------------------*/
+
+    /**
+     * Finds a free file (i.e non-existing) in specified directory, using specified pattern.
+     * for example:
+     *      findFreeFile(myDir, "sample${i}.xml", false)
+     *
+     * will search for free file in order:
+     *      sample1.xml, sample2.xml, sample3.xml and so on
+     *
+     * if tryEmptyVar is true, it it seaches for free file in order:
+     *      sample.xml, sample2.xml, sample3.xml and so on
+     *
+     * the given pattern must have variable part ${i}
+     */
     public static File findFreeFile(final File dir, String pattern, boolean tryEmptyVar){
         String name = StringUtil.suggest(new Filter<String>(){
             @Override
@@ -54,24 +97,26 @@ public class FileUtil{
                 return !new File(dir, name).exists();
             }
         }, pattern, tryEmptyVar);
-        
+
         return new File(dir, name);
     }
 
+    /**
+     * if file doesn't exist, it returns the same file. otherwize, it will find free
+     * file as follows:
+     *
+     * if given file name is test.txt, then it searches for non existing file in order:
+     *      test2.txt, test3.txt, test4.txt and so on
+     *
+     * if given file name is test(i,e with no extension), then it searches for non existing file in order:
+     *      test2, test3, test4 and so on
+     */
     public static File findFreeFile(File file){
         if(!file.exists())
             return file;
 
-        String fileName = file.getName();
-        int dot = fileName.lastIndexOf('.');
-        String pattern;
-        if(dot==-1)
-            pattern = fileName+"${var}";
-        else{
-            String name = fileName.substring(0, dot);
-            String ext = fileName.substring(dot+1);
-            pattern = name+"${var}."+ext;
-        }
+        String parts[] = split(file.getName());
+        String pattern = parts[1]==null ? parts[0]+"${i}" : parts[0]+"${i}."+parts[1];
         return findFreeFile(file.getParentFile(), pattern, true);
     }
 
@@ -84,7 +129,7 @@ public class FileUtil{
     public static void delete(@NotNull File file) throws IOException{
         if(!file.exists())
             return;
-        
+
         if(file.isFile()){
             if(!file.delete())
                 throw new IOException("couldn't delete file :"+file);
@@ -170,7 +215,7 @@ public class FileUtil{
     }
 
     /*-------------------------------------------------[ Copy ]---------------------------------------------------*/
-    
+
     public static interface FileCreator{
         public void createFile(File sourceFile, File targetFile) throws IOException;
         public String translate(String name);
