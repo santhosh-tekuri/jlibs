@@ -50,6 +50,16 @@ public class StringUtil{
         return true;
     }
 
+    /**
+     * Splits given string into tokens with delimiters specified.
+     * It uses StringTokenizer for tokenizing.
+     *
+     * @param str       string to be tokenized
+     * @param delim     delimiters used for tokenizing
+     * @param trim      trim the tokens
+     *
+     * @return non-null token array
+     */
     public static String[] getTokens(String str, String delim, boolean trim){
         StringTokenizer stok = new StringTokenizer(str, delim);
         String tokens[] = new String[stok.countTokens()];
@@ -61,18 +71,33 @@ public class StringUtil{
         return tokens;
     }
 
+    /**
+     * the pattern specified must have variable part ${i}
+     * example: test${i}.txt
+     *
+     * it will find a string using pattern, which is accepted by the specified filter.
+     * if tryEmptyVar is true, it searches in order:
+     *      test.txt, test2.txt, test3.txt and so on
+     * if tryEmptyVar is false, it searches in order:
+     *      test1.txt, test2.txt, test3.txt and so on
+     *
+     * @see jlibs.core.io.FileUtil#findFreeFile(java.io.File dir, String pattern, boolean tryEmptyVar)
+     */
     public static String suggest(Filter<String> filter, String pattern, boolean tryEmptyVar){
+        if(pattern.indexOf("${i}")==-1)
+            throw new IllegalArgumentException("pattern must have ${i}");
+
         TemplateMatcher matcher = new TemplateMatcher("${", "}");
 
         if(tryEmptyVar){
-            String value = matcher.replace(pattern, Collections.singletonMap("var", ""));
+            String value = matcher.replace(pattern, Collections.singletonMap("i", ""));
             if(filter.select(value))
                 return value;
         }
 
-        int i = tryEmptyVar ? 2 :1;
+        int i = tryEmptyVar ? 2 : 1;
         while(true){
-            String value = matcher.replace(pattern, Collections.singletonMap("var", String.valueOf(i)));
+            String value = matcher.replace(pattern, Collections.singletonMap("i", String.valueOf(i)));
             if(filter.select(value))
                 return value;
             i++;
