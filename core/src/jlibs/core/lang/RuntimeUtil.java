@@ -18,10 +18,7 @@ package jlibs.core.lang;
 import jlibs.core.io.IOPump;
 import jlibs.core.io.IOUtil;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.ref.WeakReference;
 import java.util.StringTokenizer;
 
@@ -29,6 +26,20 @@ import java.util.StringTokenizer;
  * @author Santhosh Kumar T
  */
 public class RuntimeUtil{
+    /**
+     * Redirects processes input and error streams to the specified streams.
+     * the streams specified are not closed automatically. The streams passed
+     * can be null, if you don't want to redirect them.
+     */
+    public static void redirectStreams(Process process, OutputStream output, OutputStream error){
+        if(output!=null)
+            new Thread(new IOPump(process.getInputStream(), output, false, false).asRunnable()).start();
+        if(error!=null)
+            new Thread(new IOPump(process.getErrorStream(), error, false, false).asRunnable()).start();
+    }
+
+    /*-------------------------------------------------[ Terminal Command ]---------------------------------------------------*/
+
     public static String runCommand(String command, String[] envp, File workingDir) throws IOException{
         String cmd[];
         if(OS.get().isUnix())
@@ -37,8 +48,8 @@ public class RuntimeUtil{
             cmd = new String[]{ "cmd", "/C", command };
 
         Process p = Runtime.getRuntime().exec(cmd, envp, workingDir);
-        new Thread(new IOPump(p.getErrorStream(), System.err, false, false).asRunnable()).start();
-        ByteArrayOutputStream bout = IOUtil.pump(p.getInputStream(), false);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        redirectStreams(p, output, System.err);
         try{
             p.waitFor();
         }catch(InterruptedException ex){
@@ -47,13 +58,15 @@ public class RuntimeUtil{
         if(p.exitValue()!=0)
             throw new IOException("exitValue is "+p.exitValue());
 
-        return bout.toString();
+        return output.toString();
     }
 
     public static String runCommand(String command) throws IOException{
         return runCommand(command, null, null);
     }
 
+    /*-------------------------------------------------[ PID ]---------------------------------------------------*/
+    
     public static String getPID() throws IOException{
         String pid = System.getProperty("pid"); //NOI18N
         if(pid==null){
@@ -76,6 +89,8 @@ public class RuntimeUtil{
         }
         return pid;
     }
+
+    /*-------------------------------------------------[ Garbage Collection ]---------------------------------------------------*/
 
     /**
      * This method guarantees that garbage collection is
