@@ -18,15 +18,14 @@ package jlibs.xml.sax.crawl;
 import jlibs.core.io.FileNavigator;
 import jlibs.core.io.FileUtil;
 import jlibs.core.net.URLUtil;
-import jlibs.xml.sax.helpers.NamespaceSupportReader;
 import jlibs.xml.xsl.TransformerUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.XMLFilterImpl;
 
 import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
@@ -39,12 +38,8 @@ import java.util.*;
 /**
  * @author Santhosh Kumar T
  */
-public class XMLCrawler extends NamespaceSupportReader{
+public class XMLCrawler extends XMLFilterImpl{
     private Stack<QName> path = new Stack<QName>();
-
-    public XMLCrawler() throws ParserConfigurationException, SAXException{
-        super(false);
-    }
 
     private List<AttributeLink> links = new ArrayList<AttributeLink>();
     public void addLink(AttributeLink link){
@@ -96,7 +91,7 @@ public class XMLCrawler extends NamespaceSupportReader{
                 ex.printStackTrace();
             }
         }
-        
+
         super.startElement(namespaceURI, localName, qualifiedName, atts);
     }
 
@@ -117,7 +112,7 @@ public class XMLCrawler extends NamespaceSupportReader{
     private URL sourceURL;
     private Map<URL, File> crawled = new LinkedHashMap<URL, File>();
     private Map<InputSource, File> pending = new LinkedHashMap<InputSource, File>();
-    
+
     public File crawlInto(InputSource document, File dir, String... extensions) throws TransformerException, IOException{
         URL url = URLUtil.toURL(document.getSystemId());
         String fileName = URLUtil.suggestFile(URLUtil.toURI(url), extensions);
@@ -129,14 +124,14 @@ public class XMLCrawler extends NamespaceSupportReader{
     public void crawl(InputSource document, File file) throws TransformerException, IOException{
         if(document.getSystemId()==null)
             throw new IllegalArgumentException("InputSource without systemID can't be crawled");
-        
+
         sourceFile = file;
         sourceURL = URLUtil.toURL(document.getSystemId());
         if(crawled.containsKey(sourceURL))
             return;
 
         pending.clear();
-        
+
         FileUtil.mkdirs(sourceFile.getParentFile());
         SAXSource source = new SAXSource(this, document);
         TransformerUtil.newTransformer(null, true, 4, null)

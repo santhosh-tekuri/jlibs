@@ -15,12 +15,10 @@
 
 package jlibs.xml.wsdl.crawl;
 
-import jlibs.xml.sax.crawl.XMLCrawler;
 import jlibs.core.io.FileUtil;
+import jlibs.xml.sax.crawl.XMLCrawler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +27,7 @@ import java.io.IOException;
  * @author Santhosh Kumar T
  */
 public class WSDLCrawler extends XMLCrawler{
-    public WSDLCrawler() throws ParserConfigurationException, SAXException{
+    public WSDLCrawler(){
         addLink(new WSDLImport());
         addLink(new WSDLInclude());
         addLink(new XSImport());

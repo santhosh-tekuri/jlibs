@@ -18,9 +18,7 @@ package jlibs.xml.xsd.crawl;
 import jlibs.core.io.FileUtil;
 import jlibs.xml.sax.crawl.XMLCrawler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +27,7 @@ import java.io.IOException;
  * @author Santhosh Kumar T
  */
 public class XSCrawler extends XMLCrawler{
-    public XSCrawler() throws ParserConfigurationException, SAXException{
+    public XSCrawler(){
         addLink(new XSImport());
         addLink(new XSInclude());
     }
