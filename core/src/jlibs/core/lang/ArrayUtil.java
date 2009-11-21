@@ -25,6 +25,30 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class ArrayUtil{
+
+    /*-------------------------------------------------[ Finding Item ]---------------------------------------------------*/
+
+    /**
+     * returns first index of <code>item<code> in given <code>array</code> starting
+     * from <code>fromIndex</code>(inclusive)
+     *
+     * @param array     object array, can be null
+     * @param item      item to be searched, can be null
+     * @param fromIndex index(inclusive) from which search happens.
+     * @return          -1 if array is null, or the item is not found
+     *                  otherwize returns first index of item in array
+     */
+    public static <T, S extends T> int indexOf(T array[], S item, int fromIndex){
+        if(array==null)
+            return -1;
+
+        for(int i=fromIndex; i<array.length; i++){
+            if(Util.equals(array[i], item))
+                return i;
+        }
+        return -1;
+    }
+
     /**
      * returns first index of <code>item<code> in given <code>array</code>
      *
@@ -34,14 +58,7 @@ public class ArrayUtil{
      *                  otherwize returns first index of item in array
      */
     public static <T, S extends T> int indexOf(T array[], S item){
-        if(array==null)
-            return -1;
-
-        for(int i=0; i<array.length; i++){
-            if(Util.equals(array[i], item))
-                return i;
-        }
-        return -1;
+        return indexOf(array, item, 0);
     }
 
     /**
@@ -56,20 +73,22 @@ public class ArrayUtil{
         return indexOf(array, item)!=-1;
     }
 
+    /*-------------------------------------------------[ Boundary Items ]---------------------------------------------------*/
+
     /**
-     * returns first element in given array
-     * if array is of length zero, returns null
+     * returns first element in given array.
+     * if array is null or of length zero, returns null
      */
     public static <T> T getFirst(T array[]){
-        return array.length>0 ? array[0] : null;
+        return array!=null && array.length>0 ? array[0] : null;
     }
 
     /**
-     * returns last element in given array
-     * if array is of length zero, returns null
+     * returns last element in given array.
+     * if array is null or of length zero, returns null
      */
     public static <T> T getLast(T array[]){
-        return array.length>0 ? array[array.length-1] : null;
+        return array!=null && array.length>0 ? array[array.length-1] : null;
     }
 
     /*-------------------------------------------------[ Contents Equality ]---------------------------------------------------*/
