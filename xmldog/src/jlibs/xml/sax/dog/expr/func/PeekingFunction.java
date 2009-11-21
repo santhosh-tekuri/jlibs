@@ -18,6 +18,11 @@ package jlibs.xml.sax.dog.expr.func;
 import jlibs.xml.sax.dog.DataType;
 
 /**
+ * PeekingFunction is a function which can evaluate its results before all its arguments are known.
+ * Note that such prediction might be possible only in some cases.
+ * For example:
+ *      Any arthimetic operation whose one operand is infinity always returns infinity
+ *
  * @author Santhosh Kumar T
  */
 public abstract class PeekingFunction extends Function{
@@ -29,5 +34,9 @@ public abstract class PeekingFunction extends Function{
         super(name, resultType, varArgs, mandatory, memberTypes);
     }
 
+    /**
+     * After each member result is evaluated, this method is called.
+     * Returns result(non-null), if the function can be evaluated.
+     */
     protected abstract Object onMemberResult(int index, Object result);
 }
