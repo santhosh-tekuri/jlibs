@@ -24,17 +24,25 @@ import java.util.List;
 
 /**
  * This class represents various possible datatypes of the xpath result.
- * This class also has methods to conevert result from one datatype to
+ *
+ * This class also has methods to convert result from one datatype to
  * another. Note that convertion of NodeSet to another and viceversa
  * is unsupported.
  *
  * @author Santhosh Kumar T
  */
 public enum DataType{
+    /**
+     * following are standard datatypes
+     */
     NODESET(XPathConstants.NODESET, Collections.emptyMap()),
     STRING(XPathConstants.STRING, ""),
     NUMBER(XPathConstants.NUMBER, 0d),
     BOOLEAN(XPathConstants.BOOLEAN, false),
+
+    /**
+     * these are extra datatypes that are used internally
+     */
     STRINGS(new QName("http://jlibs.org", "strings"), Collections.emptyList()),
     NUMBERS(new QName("http://jlibs.org", "numbers"), Collections.emptyList()),
     PRIMITIVE(new QName("http://jlibs.org", "primitive"), null);
@@ -45,6 +53,8 @@ public enum DataType{
         this.qname = qname;
         this.defaultValue = defaultValue;
     }
+
+    /*-------------------------------------------------[ Convertions ]---------------------------------------------------*/
 
     public Object convert(Object result){
         switch(this){
@@ -70,6 +80,8 @@ public enum DataType{
             throw new ImpossibleException(obj.getClass().getName());
     }
 
+    public static final Double ZERO = 0d;
+    public static final Double ONE = 1d;
     public static double asNumber(Object obj){
         if(obj instanceof String){
             try{
@@ -89,6 +101,8 @@ public enum DataType{
         return String.valueOf(obj);
     }
 
+    /*-------------------------------------------------[ Guessing Datatype ]---------------------------------------------------*/
+
     public static DataType valueOf(Object literal){
         if(literal instanceof String)
             return DataType.STRING;
@@ -101,7 +115,4 @@ public enum DataType{
             return DataType.NODESET;
         }
     }
-
-    public static final Double ZERO = 0d;
-    public static final Double ONE = 1d;
 }
