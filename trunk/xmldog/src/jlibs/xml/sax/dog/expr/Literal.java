@@ -21,6 +21,12 @@ import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.sniff.Event;
 
 /**
+ * Literal Expression knows its result statically.
+ * Note the result of any type is supported.
+ *
+ * All non-literal global expressions are simplified
+ * to literal expressions
+ *
  * @author Santhosh Kumar T
  */
 public final class Literal extends Expression{
