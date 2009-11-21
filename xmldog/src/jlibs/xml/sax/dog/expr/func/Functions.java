@@ -453,22 +453,15 @@ public class Functions{
          */
         public static Locale findLocale(String localeText) {
             StringTokenizer tokens = new StringTokenizer( localeText, "-" );
-            if (tokens.hasMoreTokens())
-            {
+            if(tokens.hasMoreTokens()){
                 String language = tokens.nextToken();
-                if (! tokens.hasMoreTokens())
-                {
+                if(!tokens.hasMoreTokens())
                     return findLocaleForLanguage(language);
-                }
-                else
-                {
+                else{
                     String country = tokens.nextToken();
-                    if (! tokens.hasMoreTokens())
-                    {
+                    if(!tokens.hasMoreTokens())
                         return new Locale(language, country);
-                    }
-                    else
-                    {
+                    else{
                         String variant = tokens.nextToken();
                         return new Locale(language, country, variant);
                     }
@@ -486,20 +479,13 @@ public class Functions{
          *      be found
          */
         private static Locale findLocaleForLanguage(String language) {
-            Locale[] locales = Locale.getAvailableLocales();
-            for ( int i = 0, size = locales.length; i < size; i++ )
-            {
-                Locale locale = locales[i];
-                if ( language.equals( locale.getLanguage() ) )
-                {
+            for(Locale locale: Locale.getAvailableLocales()){
+                if(language.equals(locale.getLanguage())){
                     String country = locale.getCountry();
-                    if ( country == null || country.length() == 0 )
-                    {
+                    if(country==null || country.length()==0){
                         String variant = locale.getVariant();
-                        if ( variant == null || variant.length() == 0 )
-                        {
+                        if(variant==null || variant.length()==0)
                             return locale;
-                        }
                     }
                 }
             }
