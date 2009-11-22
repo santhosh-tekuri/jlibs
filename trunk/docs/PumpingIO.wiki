@@ -1,6 +1,6 @@
 Pumping means reading from given {{{input}}} and writing to specified {{{output}}};
 
-''~IOUtil:''
+!~IOUtil:
 
 {{{jlibs.core.io.IOUtil}}} provides various utility method for pumping streams;
 
@@ -63,9 +63,8 @@ byte bytes[] = IOUtil.pump(new FileInputStream(file), true).toByteArray(); // ou
 }}}
 
 [[Source|http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/IOUtil.java]]
---------
 
-''Bytes:''
+!Bytes:
 
 Let us say we have an object of type {{{Company}}}:
 {{{
@@ -114,9 +113,8 @@ objIn.close();
 It reuses the same byte array for both output and input;
 
 [[Source|http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/Bytes.java]]
-------
 
-''~PumpedInputStream and ~PumpedReader:''
+!~PumpedInputStream and ~PumpedReader:
 
 You can use {{{PipedInputStream}}} and {{{PipedOutputStream}}} in above example, so that you can write and read concurrently using fixed byte buffer.
 
@@ -182,5 +180,5 @@ I like to use {{{PumpedInputStream}}} rather than {{{PipedInputStream/PipedOutpu
 * it doesn't clutter the exising flow of code
 * exception handling is better;
 [[Source|http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/io/PumpedInputStream.java]]
- 
+
 There is also {{{jlibs.core.io.PumpedReader}}} for charater-streams.

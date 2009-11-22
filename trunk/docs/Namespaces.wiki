@@ -1,5 +1,4 @@
-
-''Standard Namespaces''
+!Standard Namespaces
 
 [[Namespaces|http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/Namespaces.java]] class contains constants to many standard namespaces which we use in our daily projects.
 {{{
@@ -16,9 +15,8 @@ System.out.println(prefix); // prints "wsdl"
 }}}
 
 {{{Namespaces.getSuggested()}}} returns {{{java.util.Properties}}} object where key is URI and value is suggested prefix;
--------------------
 
-''~MyNamespaceSupport''
+!~MyNamespaceSupport
 
 [[MyNamespaceSupport|http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/helpers/MyNamespaceSupport.java]] extends {{{org.xml.sax.helpers.NamespaceSupport}}} to provide some handy features.
 It is tedious to find prefix from {{{org.xml.sax.helpers.NamespaceSupport}}}. for example:
@@ -61,7 +59,7 @@ System.out.println(nsSupport.findPrefix("http://mynamespace2")); // prints ""
 It also helps you in suggesting prefixes;
 {{{
 String prefix = nsSupport.declarePrefix("http://www.google.com"); // we are asking to generate prefix
-System.out.println(prefix); // prints "google"    
+System.out.println(prefix); // prints "google"
 }}}
 
 You can also override the suggested prefix for any uri, as below:
@@ -70,11 +68,10 @@ nsSupport.suggestPrefix("tns", "http://java.sun.com"); // we are just suggesting
 ....
 ....
 String prefix = nsSupport.declare("http://java.sun.com");
-System.out.println(prefix); // prints "tns"    
+System.out.println(prefix); // prints "tns"
 }}}
--------------------
 
-''~DefaultNamespaceContext''
+!~DefaultNamespaceContext
 
 JAXP provides interface {{{org.xml.sax.helpers.NamespaceContext}}} interface, but doesn't provide any concrete implementation for this.
 This interface is used to pass namespace and prefix binding for xpath evaluation (see {{{javax.xml.xpath.XPath}}})
@@ -94,9 +91,8 @@ MyNamespaceSupport nsSupport = .....
 ......
 DefaultNamespaceContext nsContext = new DefaultNamespaceContext(nsSupport);
 }}}
--------------------
 
-''~ClarkName''
+!~ClarkName
 
 [[ClarkName|http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/ClarkName.java]] is String notation for {{{javax.xml.namespaces.QName}}};
 {{{
