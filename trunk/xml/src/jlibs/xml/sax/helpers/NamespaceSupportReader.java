@@ -32,7 +32,7 @@ public class NamespaceSupportReader extends XMLFilterImpl{
     protected MyNamespaceSupport nsSupport = new MyNamespaceSupport();
 
     public NamespaceSupportReader(boolean nsPrefixes) throws ParserConfigurationException, SAXException{
-        this(SAXUtil.newSAXParser(true, nsPrefixes).getXMLReader());
+        this(SAXUtil.newSAXParser(true, nsPrefixes, false).getXMLReader());
     }
 
     public NamespaceSupportReader(XMLReader parent){
