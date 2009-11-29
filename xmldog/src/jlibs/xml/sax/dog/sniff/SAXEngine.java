@@ -101,7 +101,7 @@ public final class SAXEngine extends DefaultHandler2{
         SAXParser parser = saxParserLocal.get();
         if(parser==null){
             if(factory==null)
-                factory = SAXUtil.newSAXFactory(true, false);
+                factory = SAXUtil.newSAXFactory(true, false, false);
             parser = factory.newSAXParser();
             saxParserLocal.set(parser);
         }
