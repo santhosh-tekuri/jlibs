@@ -16,10 +16,12 @@
 package jlibs.core.lang;
 
 import jlibs.core.graph.Filter;
+import jlibs.core.graph.Convertor;
 import jlibs.core.util.regex.TemplateMatcher;
 
 import java.util.Collections;
 import java.util.StringTokenizer;
+import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
@@ -102,5 +104,137 @@ public class StringUtil{
                 return value;
             i++;
         }
+    }
+
+    /*-------------------------------------------------[ Array Join ]---------------------------------------------------*/
+    
+    public static <T> String join(T[] array){
+        return join(array, ", ", null);
+    }
+
+    public static <T> String join(T[] array, String separator, Convertor<T, String> convertor){
+        StringBuilder buff = new StringBuilder();
+        boolean addSeparator = false;
+        for(T item: array){
+            if(addSeparator)
+                buff.append(separator);
+            else
+                addSeparator = true;
+            if(item==null)
+                buff.append("null");
+            else
+                buff.append(convertor==null ? item.toString() : convertor.convert(item));
+        }
+        return buff.toString();
+    }
+
+    /*-------------------------------------------------[ Iterator Join ]---------------------------------------------------*/
+
+    public static <T> String join(Iterator<T> iter){
+        return join(iter, ", ", null);
+    }
+
+    public static <T> String join(Iterator<T> iter, String separator, Convertor<T, String> convertor){
+        StringBuilder buff = new StringBuilder();
+        boolean addSeparator = false;
+        while(iter.hasNext()){
+            T item = iter.next();
+            if(addSeparator)
+                buff.append(separator);
+            else
+                addSeparator = true;
+            if(item==null)
+                buff.append("null");
+            else
+                buff.append(convertor==null ? item.toString() : convertor.convert(item));
+        }
+        return buff.toString();
+    }
+
+    /*-------------------------------------------------[ Literal ]---------------------------------------------------*/
+
+    public static String toLiteral(String str, boolean useRaw){
+        StringBuffer buf = new StringBuffer(str.length()+25);
+        for(int i=0,len=str.length(); i<len; i++){
+            char c = str.charAt(i);
+            switch(c){
+                case '\b': buf.append("\\b"); break;
+                case '\t': buf.append("\\t"); break;
+                case '\n': buf.append("\\n"); break;
+                case '\f': buf.append("\\f"); break;
+                case '\r': buf.append("\\r"); break;
+                case '\"': buf.append("\\\""); break;
+                case '\\': buf.append("\\\\"); break;
+                default:
+                    if(c>=0x0020 && (useRaw || c<=0x007f)) // visible character in ascii
+                        buf.append(c);
+                    else{
+                        buf.append("\\u");
+                        String hex = Integer.toHexString(c);
+                        for(int j=4-hex.length(); j>0; j--)
+                            buf.append('0');
+                        buf.append(hex);
+                    }
+            }
+        }
+        return buf.toString();
+    }
+
+    public static String fromLiteral(String str){
+        StringBuffer buf = new StringBuffer();
+
+        for(int i=0,len=str.length(); i<len; i++){
+            char c = str.charAt(i);
+
+            switch(c){
+                case '\\':
+                    if(i == str.length()-1){
+                        buf.append('\\');
+                        break;
+                    }
+                    c = str.charAt(++i);
+                    switch(c){
+                        case 'n':
+                            buf.append('\n');
+                            break;
+                        case 't':
+                            buf.append('\t');
+                            break;
+                        case 'r':
+                            buf.append('\r');
+                            break;
+                        case 'u':
+                            int value = 0;
+                            for(int j=0; j<4; j++){
+                                c = str.charAt(++i);
+                                switch(c){
+                                    case '0': case '1': case '2': case '3': case '4':
+                                    case '5': case '6': case '7': case '8': case '9':
+                                        value = (value << 4) + c - '0';
+                                        break;
+                                    case 'a': case 'b': case 'c':
+                                    case 'd': case 'e': case 'f':
+                                        value = (value << 4) + 10 + c - 'a';
+                                        break;
+                                    case 'A': case 'B': case 'C':
+                                    case 'D': case 'E': case 'F':
+                                        value = (value << 4) + 10 + c - 'A';
+                                        break;
+                                    default:
+                                        throw new IllegalArgumentException("Malformed \\uxxxx encoding.");
+                                }
+                            }
+                            buf.append((char)value);
+                            break;
+                        default:
+                            buf.append(c);
+                            break;
+                    }
+                    break;
+                default:
+                    buf.append(c);
+            }
+        }
+        return buf.toString();
     }
 }
