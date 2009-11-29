@@ -20,10 +20,16 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 
 /**
+ * This interface tells how to convert this object to xml
+ * 
  * @author Santhosh Kumar T
  */
 public interface SAXProducer{
-    public QName getRootElement();
-    public void writeAttributes(ObjectInputSource xml) throws SAXException;
-    public void writeContent(ObjectInputSource xml) throws SAXException;
+    /**
+     * Serialize this object to xml
+     *
+     * @param rootElement   can be null, in case it should use its default root element
+     * @param xml           xml document into which serialization to be done
+     */
+    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException;
 }
