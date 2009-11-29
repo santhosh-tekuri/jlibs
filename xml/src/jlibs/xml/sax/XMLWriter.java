@@ -21,18 +21,15 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 
 /**
+ * XMLReader implementaion for ObjectInputSource
+ *
  * @author Santhosh Kumar T
  */
 public class XMLWriter extends AbstractXMLReader{
-    public XMLWriter(){
-        supportedFeatures.add(SAXFeatures.NAMESPACES);
-    }
-
     @Override
-    @SuppressWarnings({"unchecked"})
     public void parse(InputSource input) throws SAXException, IOException{
         if(input instanceof ObjectInputSource)
-            ((ObjectInputSource)input).writeTo(this);
+            ((ObjectInputSource)input).writeTo(handler);
         else
             throw new IOException("can't parse "+input);
     }
