@@ -17,23 +17,24 @@ package jlibs.xml.sax;
 
 import static jlibs.xml.sax.SAXFeatures.NAMESPACES;
 import static jlibs.xml.sax.SAXFeatures.NAMESPACE_PREFIXES;
-import static jlibs.xml.sax.SAXProperties.*;
 import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.ext.LexicalHandler;
-import org.xml.sax.ext.DeclHandler;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Base class for XMLReader implementation
+ *
  * @author Santhosh Kumar T
  */
-public abstract class AbstractXMLReader extends SAXDelegate2 implements XMLReader{
+public abstract class AbstractXMLReader extends BaseXMLReader{
+    protected AbstractXMLReader(){
+        supportedFeatures.add(SAXFeatures.NAMESPACES);
+    }
 
     /*-------------------------------------------------[ Features ]---------------------------------------------------*/
-    
+
     protected final Set<String> supportedFeatures = new HashSet<String>();
     private final Set<String> features = new HashSet<String>();
 
@@ -47,7 +48,7 @@ public abstract class AbstractXMLReader extends SAXDelegate2 implements XMLReade
                 features.add(name);
             else
                 features.remove(name);
-            
+
             if(NAMESPACES.equals(name))
                 nsFeature = value;
             else if(NAMESPACE_PREFIXES.equals(name))
@@ -68,26 +69,15 @@ public abstract class AbstractXMLReader extends SAXDelegate2 implements XMLReade
 
     @Override
     public void setProperty(String name, Object value) throws SAXNotRecognizedException, SAXNotSupportedException{
-        if(LEXICAL_HANDLER.equals(name) || LEXICAL_HANDLER_ALT.equals(name)){
-            if(value==null || value instanceof LexicalHandler)
-                setLexicalHandler((LexicalHandler)value);
-            else
-                throw new SAXNotSupportedException("value must implement "+LexicalHandler.class);
-        }else if(DECL_HANDLER.equals(name) || DECL_HANDLER_ALT.equals(name)){
-            if(value==null || value instanceof DeclHandler)
-                setDeclHandler((DeclHandler)value);
-            else
-                throw new SAXNotSupportedException("value must implement "+DeclHandler.class);
-        }else
+        if(!_setProperty(name, value))
             throw new SAXNotRecognizedException(name);
     }
 
     @Override
     public Object getProperty(String name) throws SAXNotRecognizedException{
-        if(LEXICAL_HANDLER.equals(name) || LEXICAL_HANDLER_ALT.equals(name))
-            return getLexicalHandler();
-        else if(DECL_HANDLER.equals(name) || DECL_HANDLER_ALT.equals(name))
-            return getDeclHandler();
+        Object value = _getProperty(name);
+        if(value!=null)
+            return value;
         else
             throw new SAXNotRecognizedException(name);
     }
