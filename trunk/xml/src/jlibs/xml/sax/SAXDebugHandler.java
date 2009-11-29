@@ -20,13 +20,17 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
+ * A SAXDelegate that prints sax event information before delgating.
+ * This is useful for debugging purposes.
+ * 
  * @author Santhosh Kumar T
  */
-public class SAXDebugHandler extends SAXDelegate2{
+public class SAXDebugHandler extends SAXDelegate{
     public SAXDebugHandler(DefaultHandler delegate){
         super(delegate);
     }
 
+    @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
         System.out.print("<"+qName);
         for(int i=0; i<attributes.getLength(); i++)
@@ -41,8 +45,9 @@ public class SAXDebugHandler extends SAXDelegate2{
         super.characters(ch, start, length);
     }
 
+    @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
         System.out.print("</"+qName+">");
         super.endElement(uri, localName, qName);
-    }    
+    }
 }
