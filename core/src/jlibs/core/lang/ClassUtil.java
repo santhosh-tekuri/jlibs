@@ -25,6 +25,10 @@ import java.net.URL;
  * @author Santhosh Kumar T
  */
 public class ClassUtil{
+    /**
+     * Returns the classpath resource(directory or jar) from which
+     * specified class is loaded.
+     */
     public static String getClassPath(Class clazz){
         URL url = clazz.getResource(clazz.getSimpleName() + ".class");
         if("jar".equals(url.getProtocol())){
@@ -42,8 +46,18 @@ public class ClassUtil{
         return resource;
     }
 
+    /**
+     * Returns the classloader for the speficied clazz. Unlike
+     * Class.getClassLoader() this will never return null.
+     */
+    public static ClassLoader getClassLoader(Class clazz){
+        ClassLoader classLoader = clazz.getClassLoader();
+        return classLoader==null ? ClassLoader.getSystemClassLoader() : classLoader;
+    }
+
     public static void main(String[] args){
         System.out.println(getClassPath(String.class));
         System.out.println(getClassPath(ClassUtil.class));
+        System.out.println(getClassLoader(String.class));
     }
 }
