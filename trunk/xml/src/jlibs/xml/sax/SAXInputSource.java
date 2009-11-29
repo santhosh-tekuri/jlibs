@@ -18,6 +18,8 @@ package jlibs.xml.sax;
 import org.xml.sax.SAXException;
 
 /**
+ * ObjectInputSource implementation for Object implementing SAXProducer
+ * 
  * @author Santhosh Kumar T
  */
 public class SAXInputSource<E extends SAXProducer> extends ObjectInputSource<E>{
@@ -26,7 +28,7 @@ public class SAXInputSource<E extends SAXProducer> extends ObjectInputSource<E>{
     }
 
     @Override
-    protected void write(E obj) throws SAXException{
-        add(obj);
+    protected void write(E input, XMLDocument xml) throws SAXException{
+        xml.add(input);
     }
 }
