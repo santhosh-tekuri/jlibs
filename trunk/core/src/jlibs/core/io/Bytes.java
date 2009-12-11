@@ -25,11 +25,11 @@ public class Bytes{
     private ByteArrayOutputStream bout;
 
     public Bytes(){
-        bout = new ByteArrayOutputStream();
+        bout = new MyByteArrayOutputStream();
     }
 
     public Bytes(int size){
-        bout = new ByteArrayOutputStream(size);
+        bout = new MyByteArrayOutputStream(size);
     }
 
     public ByteArrayOutputStream out(){
@@ -40,7 +40,7 @@ public class Bytes{
         return new ByteArrayInputStream(bout.toByteArray(), 0, bout.size());
     }
 
-    static class MyByteArrayOutputStream extends ByteArrayOutputStream{
+    private static class MyByteArrayOutputStream extends ByteArrayOutputStream{
         MyByteArrayOutputStream(){
         }
 
