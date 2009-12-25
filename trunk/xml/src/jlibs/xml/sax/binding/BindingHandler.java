@@ -31,7 +31,6 @@ import java.io.IOException;
 /**
  * @author Santhosh Kumar T
  */
-@SuppressWarnings({"unchecked"})
 public class BindingHandler extends DefaultHandler{
     public final BindingRegistry docRegistry;
     private final boolean ignoreUnresolved;
@@ -106,6 +105,7 @@ public class BindingHandler extends DefaultHandler{
         return rootObject;
     }
 
+    @SuppressWarnings({"unchecked"})
     private class BindingContext extends SAXContext{
         private BindingRelation bindingRelation;
         private BindingContext parent;
