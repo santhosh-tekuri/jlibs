@@ -34,7 +34,7 @@ public class BindingRegistry<T>{
     }
 
     public <C> void register(QName qname, Binding<C> binding){
-        register(qname, binding, TempRelation.<T, C>instance());
+        register(qname, binding, TempRelation.<T, C>put());
     }
 
     public void register(QName qname){

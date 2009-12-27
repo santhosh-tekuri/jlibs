@@ -21,14 +21,29 @@ package jlibs.xml.sax.binding;
  * @author Santhosh Kumar T
  */
 public class TempRelation<P, C> extends Relation<P, C>{
-    private static final TempRelation<?, ?> INSTANCE = new TempRelation<Object, Object>();
+    private boolean put;
 
-    @SuppressWarnings({"unchecked"})
-    public static <P, C> TempRelation<P, C> instance(){
-        return (TempRelation<P, C>)INSTANCE;
+    private TempRelation(boolean put){
+        this.put = put;
     }
+
     @Override
     public void finished(SAXContext<P> parent, SAXContext<C> current){
-        parent.put(current.element, current.object);
+        if(put)
+            parent.put(current.element, current.object);
+        else
+            parent.add(current.element, current.object);
+    }
+
+    private static final TempRelation<?, ?> PUT = new TempRelation<Object, Object>(true);
+    @SuppressWarnings({"unchecked"})
+    public static <P, C> TempRelation<P, C> put(){
+        return (TempRelation<P, C>)PUT;
+    }
+
+    private static final TempRelation<?, ?> ADD = new TempRelation<Object, Object>(false);
+    @SuppressWarnings({"unchecked"})
+    public static <P, C> TempRelation<P, C> add(){
+        return (TempRelation<P, C>)ADD;
     }
 }
