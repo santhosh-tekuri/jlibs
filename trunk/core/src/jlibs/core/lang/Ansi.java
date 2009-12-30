@@ -31,7 +31,7 @@ public class Ansi{
      * It tries best effort to guess whether ansi is supported or not. But
      * you can override this value using system property "Ansi" (-DAnsi=true/false)
      */
-    public static final boolean SUPPORTED = Boolean.valueOf("Ansi") || (OS.get().isUnix() && System.console()!=null);
+    public static final boolean SUPPORTED = Boolean.getBoolean("Ansi") || (OS.get().isUnix() && System.console()!=null);
 
     public enum Attribute{
         NORMAL(0), // Reset All Attributes (return to normal mode)
