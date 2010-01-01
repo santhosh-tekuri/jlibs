@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 import java.io.CharArrayWriter;
+import java.io.File;
 import java.util.*;
 
 /**
@@ -33,7 +34,7 @@ public class TestSuite{
     public int total;
 
     public TestSuite() throws Exception{
-        this("xpaths.xml");
+        this("resources/xpaths.xml");
     }
     
     public TestSuite(String configFile) throws Exception{
@@ -114,7 +115,7 @@ public class TestSuite{
         return XPathConstants.NODESET;
     }
 
-    public void readTestCases(String configFile) throws Exception{
+    public void readTestCases(final String configFile) throws Exception{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
             boolean generateNewXPaths = true;
             TestCase testCase;
@@ -163,10 +164,14 @@ public class TestSuite{
             @Override
             public void endElement(String uri, String localName, String qName) throws SAXException{
                 if(localName.equals("file")){
-                    if(testCase.file==null)
-                        testCase.file = contents.toString().trim();
-                    else
-                        files.add(contents.toString().trim());
+                    File f = new File(contents.toString().trim());
+                    if(!f.isAbsolute())
+                        f = new File(new File(configFile).getParentFile(), f.getPath());
+                    String file = f.getPath();
+                    if(testCase.file==null){
+                        testCase.file = file;
+                    }else
+                        files.add(file);
                 }else if(localName.equals("xpath")){
                     String xpath = contents.toString().trim();
                     testCase.xpaths.add(xpath);

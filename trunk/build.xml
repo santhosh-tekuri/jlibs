@@ -8,6 +8,7 @@
     <target name="clean">
         <ant dir="core" target="clean" inheritAll="false"/>
         <ant dir="xml" target="clean" inheritAll="false"/>
+        <ant dir="xmldog" target="clean" inheritAll="false"/>
         <ant dir="swing" target="clean" inheritAll="false"/>
         <ant dir="utils" target="clean" inheritAll="false"/>
 
@@ -19,12 +20,43 @@
         </delete>
     </target>
 
-    <target name="install">
-        <ant dir="core" inheritAll="false"/>
-        <ant dir="xml" inheritAll="false"/>
-        <ant dir="swing" inheritAll="false"/>
-        <ant dir="utils" inheritAll="false"/>
-        <antcall target="archive"/>
+    <target name="install" depends="svnRevision">
+        <copy todir="3rdparty">
+            <fileset dir="/Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j">
+                <include name="saxon9.jar"/>
+                <include name="saxon9-dom.jar"/>
+                <include name="saxon9-xpath.jar"/>
+            </fileset>
+        </copy>    
+
+        <ant dir="core" target="install" inheritAll="false"/>
+        <ant dir="xml" target="install" inheritAll="false"/>
+        <ant dir="xmldog" target="install" inheritAll="false"/>
+        <ant dir="swing" target="install" inheritAll="false"/>
+        <ant dir="utils" target="install" inheritAll="false"/>
+
+        <copy todir="installer">
+            <fileset dir=".">
+                <include name="launcher/**"/>
+                <include name="3rdparty/**"/>
+                <include name="readme.txt"/>
+            </fileset>
+        </copy>
+        
+        <if>
+            <not>
+                <os family="windows"/>
+            </not>
+            <then>
+                <dirname property="ant.dir" file="${ant.file}"/>
+                <exec executable="sh" failonerror="false">
+                    <arg line="-c 'find ${ant.dir}/installer -name *.sh | xargs chmod +x'"/>
+                </exec>
+            </then>
+        </if>
+
+        <zip destfile="jlibs_r${revision}.zip" basedir="installer" excludes="*/lib/**,3rdparty/**"/>
+        <zip destfile="3rdparty_r${revision}.zip" basedir="installer" includes="*/lib/**"/>
     </target>
 
     <target name="archive" depends="svnRevision">

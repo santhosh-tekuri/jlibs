@@ -1,0 +1,9 @@
+<xpaths generate="false">
+
+    <testcase xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <file>xmlFiles/note.xml</file>
+
+        <xpath>/xs:schema//@name</xpath>
+
+    </testcase>
+</xpaths>

@@ -22,7 +22,6 @@ import jlibs.core.graph.Sequence;
 import jlibs.core.graph.sequences.AbstractSequence;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.sniff.NodeTypes;
 import jlibs.xml.sax.dog.XPathEngine;
 import jlibs.xml.sax.dog.TestCase;
 import jlibs.xml.sax.dog.NodeItem;
@@ -177,7 +176,7 @@ public class SaxonEngine extends XPathEngine{
                     prefix = nsContext.getPrefix(source.getURI());
                     name = source.getLocalPart();
                     return '@'+ (StringUtil.isEmpty(prefix) ? name : prefix+':'+name);
-                case NodeTypes.NAMESPACE:
+                case NodeType.NAMESPACE:
                     return "namespace::"+source.getLocalPart();
                 default:
                     return null;

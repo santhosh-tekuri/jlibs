@@ -1,4 +1,4 @@
-<project name="swing" default="archive">
+<project name="xmldog" default="archive">
     <path id="classpath">
         <fileset dir="../core">
             <include name="lib/*.jar"/>
@@ -9,6 +9,11 @@
             <include name="lib/*.jar"/>
             <include name="*.jar"/>
             <exclude name="*-test.jar"/>
+        </fileset>
+        <fileset dir="../3rdparty">
+            <include name="saxon9.jar"/>
+            <include name="saxon9-dom.jar"/>
+            <include name="saxon9-xpath.jar"/>
         </fileset>
     </path>
 

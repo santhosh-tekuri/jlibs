@@ -1,9 +1,10 @@
 <project name="xml" default="archive">
     <path id="classpath">
-        <pathelement location="../3rdparty/annotations.jar"/>
-        <pathelement location="../3rdparty/xercesImpl.jar"/>
-        <pathelement location="../3rdparty/jaxen-1.1.1.jar"/>
-        <pathelement location="../core/build/jlibs-core.jar"/>
+        <fileset dir="../core">
+            <include name="lib/*.jar"/>
+            <include name="*.jar"/>
+            <exclude name="*-test.jar"/>
+        </fileset>
     </path>
 
     <import file="../common.xml"/>

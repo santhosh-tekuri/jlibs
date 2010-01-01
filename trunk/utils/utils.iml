@@ -11,6 +11,7 @@
     <orderEntry type="module" module-name="xml" exported="" />
     <orderEntry type="library" name="Saxon" level="project" />
     <orderEntry type="library" name="xalan" level="project" />
+    <orderEntry type="module" module-name="xmldog" />
   </component>
 </module>
 

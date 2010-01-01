@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!-- This comment belongs to Document Node -->
+
+<?xml-stylesheet href="XSL\Sample.html.xsl" type="text/xsl"?>
+
+<root doc-id="Sample.xml" purpose="test" xml:lang="en-us">
+    
+    <!-- This is first comment of root node -->
+<?odbc-to-xml table="test" ?>
+    
+    <pub>
+        <book FirstBook="false" id="0">
+            <price>15.00</price>
+            <name>NameA2</name>
+            <price type="discount">20.00</price>
+            <cost_price>15</cost_price>
+        </book>
+        <book FirstBook="true" id="1" testAttr="one">
+            <price>13.00</price>
+            <name>NameA1</name>
+            <author>AuthorA1</author>
+            <price type="discount">10.00</price>
+            <cost_price>15</cost_price>
+            <testElem>test</testElem>
+        </book>
+        <book id="2">
+            <price>14.00</price>
+            <name>NameA2B2</name>
+            <author>AuthorA2</author>
+            <author>AuthorB2</author>
+            <cost_price>8</cost_price>
+            <price type="discount">12.00</price>
+            <pub>
+                <book>
+                    <name>NameZ</name>
+                    <author>AuthorZ</author>
+                </book>
+                <year>1999</year>
+            </pub>
+        </book>
+        <year>2002</year>
+    </pub>
+
+    <!-- This is second comment of root node -->
+    <XMLFragment2>
+        <env:Envelope xmlns:env="http://mysoap">
+            <Body>
+                <Header>
+                    <Body>header_body</Body>
+                </Header>
+            </Body>
+            <Body>
+                <Order id="11">
+                    <Header>order_header1</Header>
+                    <Customer>X</Customer>
+                </Order>
+                <Order id="12">
+                    <Header>order_header2</Header>
+                    <Detail>
+                        <temp />
+                        <Item>
+                            <Price symbol="$">2</Price>
+                        </Item>
+                        <Item>
+                            <Price symbol="Y">100</Price>
+                            <Price symbol="$">200</Price>
+                        </Item>
+                        <temp>5</temp>
+                        <temp>1</temp>
+                    </Detail>
+                </Order>
+            </Body>
+        </env:Envelope>
+
+
+        <set_dns xmlns="http://default1" xml:lang="jp-us">
+            <chapter>
+                <para>1 - default namespace1</para>
+                <para>2 - default namespace1</para>
+            </chapter>
+            <chapter xmlns="http://default2">
+                <para>3 - default namespace2</para>
+            </chapter>
+            <chapter>
+                <para>4 - default namespace1</para>
+            </chapter>
+            <unset_dns xmlns="">
+                <chapter>
+                    <para>1 - no default namespace</para>
+                    <para>2 - no default namespace</para>
+                </chapter>
+                <chapter xmlns="">
+                    <para>3 - no default namespace</para>
+                </chapter>
+                <chapter>
+                    <para>4 - no default namespace</para>
+                </chapter>
+            </unset_dns>
+            <chapter>
+                <para>5 - default namespace1</para>
+            </chapter>
+            <chapter xmlns="http://default3">
+                <para>6 - default namespace3</para>
+            </chapter>
+        </set_dns>
+
+    </XMLFragment2>
+
+</root> 

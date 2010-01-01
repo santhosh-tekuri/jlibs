@@ -1,0 +1,11 @@
+<test>
+    <one>1<x>2</x></one>
+    <one>14</one>
+    <one>15<x></x></one>
+
+    <two>1<x>2</x><one>100</one></two>
+    <two>14</two>
+    <two>15</two>
+
+    <three>true</three>
+</test>
