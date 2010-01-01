@@ -17,8 +17,9 @@ package jlibs.xml.sax.dog.tests;
 
 import jlibs.core.io.FileUtil;
 import jlibs.core.lang.JavaProcessBuilder;
-import jlibs.xml.sax.dog.TestSuite;
+import jlibs.core.util.logging.AnsiFormatter;
 import jlibs.xml.sax.dog.TestCase;
+import jlibs.xml.sax.dog.TestSuite;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -84,16 +85,17 @@ public class XPathPerformanceTest{
         writer.close();
     }
 
-    private static void printLine(){
-        for(int i=0; i<70; i++)
+    private static void printLine(int maxlen){
+        maxlen += 41;
+        for(int i=0; i<maxlen; i++)
             System.out.print("-");
         System.out.println();
     }
 
-    private static void printStat(String file, int xpaths, long dogTime, long domTime){
+    private static void printStat(int maxlen, String file, int xpaths, long dogTime, long domTime){
         long diff = dogTime - domTime;
         double faster = (1.0*Math.max(dogTime, domTime)/Math.min(dogTime, domTime)) * (dogTime<=domTime ? -1 : +1);
-        System.out.format("%30s %6d %6d %6d %6d   %+2.2f%n", file, xpaths, (long)(dogTime*1E-06), (long)(domTime*1E-06), (long)(diff*1E-06), faster);
+        (diff>=0?AnsiFormatter.SEVERE:AnsiFormatter.INFO).outFormat("%"+maxlen+"s | %6d %6d %6d %6d   %+2.2f%n", file, xpaths, (long)(dogTime*1E-06), (long)(domTime*1E-06), (long)(diff*1E-06), faster);
     }
 
     public static void main(String[] args) throws Exception{
@@ -106,36 +108,42 @@ public class XPathPerformanceTest{
                     .arg(args[0]);
 
             jvm.arg("true");
+            System.out.format("%6s............", "XMLDog");
             if(jvm.launch(System.out, System.err).waitFor()!=0)
                 return;
-            System.out.println("Done");
+            System.out.println(" Done");
 
+            System.out.format("%6s............", TestCase.domEngine.getName());
             jvm.args().set(jvm.args().size()-1, "false");
             if(jvm.launch(System.out, System.err).waitFor()!=0)
                 return;
-            System.out.println("Done");
+            System.out.println(" Done");
 
             TestSuite testSuite = new TestSuite(args[0]);
             BufferedReader dogReader = new BufferedReader(new FileReader(FileUtil.TMP_DIR+FileUtil.SEPARATOR+"true.txt"));
             BufferedReader domReader = new BufferedReader(new FileReader(FileUtil.TMP_DIR+FileUtil.SEPARATOR+"false.txt"));
 
+            int maxlen = 0;
+            for(TestCase testCase: testSuite.testCases)
+                maxlen = Math.max(maxlen, testCase.file.length());
+
             System.out.format("%nAverage Execution Time over %d runs:%n", runCount);
-            printLine();
-            System.out.format("%30s %6s %6s %6s %6s %6s%n", "File", "XPaths", "XMLDog", TestCase.domEngine.getName(), "Diff", "Percentage");
-            printLine();
+            printLine(maxlen);
+            System.out.format("%"+maxlen+"s | %6s %6s %6s %6s %6s%n", "File", "XPaths", "XMLDog", TestCase.domEngine.getName(), "Diff", "Percentage");
+            printLine(maxlen);
 
             long dogTotal = 0;
             long domTotal = 0;
-            for(int i=0; i<testSuite.testCases.size(); i++){
-                TestCase testCase = testSuite.testCases.get(i);
+
+            for(TestCase testCase: testSuite.testCases){
                 long dogTime = Long.parseLong(dogReader.readLine());
                 long domTime = Long.parseLong(domReader.readLine());
-                printStat(testCase.file, testCase.xpaths.size(), dogTime, domTime);
+                printStat(maxlen, testCase.file, testCase.xpaths.size(), dogTime, domTime);
                 dogTotal += dogTime;
                 domTotal += domTime;
             }
-            printLine();
-            printStat("Total", testSuite.total, dogTotal, domTotal);
+            printLine(maxlen);
+            printStat(maxlen, "Total", testSuite.total, dogTotal, domTotal);
 
             dogReader.close();
             domReader.close();

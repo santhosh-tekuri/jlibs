@@ -1,12 +1,20 @@
 <project name="utils" default="archive">
     <path id="classpath">
-        <pathelement location="../3rdparty/annotations.jar"/>
-        <pathelement location="../3rdparty/xercesImpl.jar"/>
-        <pathelement location="../3rdparty/jaxen-1.1.1.jar"/>
-        <pathelement location="../3rdparty/org-netbeans-swing-outline.jar"/>
-        <pathelement location="../core/build/jlibs-core.jar"/>
-        <pathelement location="../xml/build/jlibs-xml.jar"/>
-        <pathelement location="../swing/build/jlibs-swing.jar"/>
+        <fileset dir="../core">
+            <include name="lib/*.jar"/>
+            <include name="*.jar"/>
+            <exclude name="*-test.jar"/>
+        </fileset>
+        <fileset dir="../xml">
+            <include name="lib/*.jar"/>
+            <include name="*.jar"/>
+            <exclude name="*-test.jar"/>
+        </fileset>
+        <fileset dir="../swing">
+            <include name="lib/*.jar"/>
+            <include name="*.jar"/>
+            <exclude name="*-test.jar"/>
+        </fileset>
     </path>
 
     <import file="../common.xml"/>

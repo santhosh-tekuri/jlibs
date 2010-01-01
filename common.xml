@@ -1,25 +1,95 @@
-<project name="common" default="archive">
+<project name="common" default="install">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+        <classpath>
+            <pathelement location="3rdparty/ant-contrib.jar"/>
+        </classpath>
+    </taskdef>
+
     <target name="compile">
-        <mkdir dir="build/classes"/>
-        <javac srcdir="src" destdir="build/classes"
-               includeAntRuntime="false"
+        <echo>compiling ${ant.project.name}...</echo>
+        <mkdir dir="build/classes/src"/>
+        <javac srcdir="src" destdir="build/classes/src" includeAntRuntime="false"
                debug="true" debuglevel="lines,vars,source">
             <classpath>
+                <fileset dir=".">
+                    <include name="lib/*.jar"/>
+                </fileset>
                 <path refid="classpath"/>
             </classpath>
         </javac>
+
+        <if>
+            <available file="test"/>
+            <then>
+                <mkdir dir="build/classes/test"/>
+                <javac srcdir="test" destdir="build/classes/test" includeAntRuntime="false"
+                       debug="true" debuglevel="lines,vars,source">
+                    <classpath>
+                        <pathelement location="build/classes/src"/>
+                        <pathelement location="../3rdparty/testng-5.8-jdk15.jar"/>
+                        <fileset dir=".">
+                            <include name="lib/*.jar"/>
+                        </fileset>
+                        <path refid="classpath"/>
+                    </classpath>
+                </javac>
+            </then>
+        </if>
     </target>
 
     <target name="archive" depends="compile">
-        <jar destfile="build/jlibs-${ant.project.name}.jar">
-            <fileset dir="build/classes"/>
+        <echo>archiving ${ant.project.name}...</echo>
+        <jar destfile="jlibs-${ant.project.name}.jar">
+            <fileset dir="build/classes/src"/>
             <fileset dir="src">
                 <exclude name="**/*.java"/>
             </fileset>
         </jar>
+        <if>
+            <available file="test"/>
+            <then>
+                <jar destfile="jlibs-${ant.project.name}-test.jar">
+                    <fileset dir="build/classes/test"/>
+                    <fileset dir="test">
+                        <exclude name="**/*.java"/>
+                    </fileset>
+                </jar>
+            </then>
+        </if>
     </target>
 
+    <target name="install" depends="archive">
+        <echo>installing ${ant.project.name}...</echo>
+        <copy todir="../installer/${ant.project.name}">
+            <fileset dir=".">
+                <exclude name="build/**"/>
+                <exclude name="*.iml"/>
+                <exclude name="build.xml"/>
+            </fileset>
+        </copy>
+    </target>
+    
     <target name="clean">
+        <echo>cleaning ${ant.project.name}...</echo>
         <delete dir="build"/>
+        <delete file="jlibs-${ant.project.name}.jar"/>
+        <delete file="jlibs-${ant.project.name}-test.jar"/>
+        <delete dir="../installer/${ant.project.name}"/>
+    </target>
+    
+    <target name="docs">
+        <echo>generating javadoc ${ant.project.name}...</echo>
+        <delete dir="build/docs/api"/>
+        <mkdir dir="build/docs/api"/>
+        <javadoc destdir="build/docs/api" failonerror="true">
+            <fileset dir="src">
+                <include name="**" />
+                <exclude name="**/*.properties"/>
+                <exclude name="**/*.exe"/>
+            </fileset>
+            <classpath>
+                <path refid="classpath"/>
+            </classpath>
+        </javadoc>
     </target>
 </project>
