@@ -20,7 +20,7 @@
         </delete>
     </target>
 
-    <target name="install" depends="svnRevision">
+    <target name="install">
         <copy todir="3rdparty">
             <fileset dir="/Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j">
                 <include name="saxon9.jar"/>
@@ -55,54 +55,18 @@
             </then>
         </if>
 
-        <zip destfile="jlibs_r${revision}.zip" basedir="installer" excludes="*/lib/**,3rdparty/**"/>
-        <zip destfile="3rdparty_r${revision}.zip" basedir="installer" includes="*/lib/**"/>
-    </target>
-
-    <target name="archive" depends="svnRevision">
-        <copy todir="installer">
-            <fileset dir=".">
-                <include name="readme.txt"/>
-                <include name="xpaths*.xml"/>
-                <include name="xmlFiles/*"/>
-                <include name="3rdparty/*.jar"/>
-                <exclude name="3rdparty/testng*.jar"/>
-                <exclude name="3rdparty/ant*.jar"/>
-            </fileset>
-        </copy>
-        <copy todir="installer" flatten="true">
-            <fileset dir=".">
-                <include name="*/build/*.jar"/>
-                <include name="*/*.sh"/>
-                <include name="*/*.bat"/>
-            </fileset>
-        </copy>
-        <zip destfile="installer/sources.zip">
-            <fileset dir=".">
-                <include name="*/src/**"/>
-                <exclude name="wiki/**"/>
-            </fileset>
-        </zip>
-
-        <if>
-            <not>
-                <os family="windows"/>
-            </not>
-            <then>
-                <dirname property="ant.dir" file="${ant.file}"/>
-                <exec executable="sh" failonerror="false">
-                    <arg line="-c 'find ${ant.dir}/installer -name *.sh | xargs chmod +x'"/>
-                </exec>
-            </then>
-        </if>
-
-        <zip destfile="jlibs_r${revision}.zip" basedir="installer" excludes="3rdparty/**"/>
-        <zip destfile="3rdparty_r${revision}.zip" basedir="installer/3rdparty"/>
-
-    </target>
-    
-    <target name="svnRevision">
-        <exec executable="svnversion" outputproperty="revision"/>
-        <echo>${revision}</echo>
+        <trycatch>
+            <try>
+                <exec executable="svnversion" outputproperty="revision"/>
+                <echo>revision = ${revision}</echo>
+                <property name="suffix" value="_r${revision}"/>
+            </try>
+            <catch>
+                <property name="suffix" value=""/>
+            </catch>
+        </trycatch>
+        
+        <zip destfile="jlibs${suffix}.zip" basedir="installer" excludes="*/lib/**,3rdparty/**"/>
+        <zip destfile="3rdparty${suffix}.zip" basedir="installer" includes="*/lib/**"/>
     </target>
 </project>
