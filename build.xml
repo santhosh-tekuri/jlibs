@@ -21,13 +21,18 @@
     </target>
 
     <target name="install">
-        <copy todir="3rdparty">
-            <fileset dir="/Users/santhosh/Java/Saxon/bin/saxonb9-1-0-5j">
-                <include name="saxon9.jar"/>
-                <include name="saxon9-dom.jar"/>
-                <include name="saxon9-xpath.jar"/>
-            </fileset>
-        </copy>    
+        <if>
+            <not>
+                <and>
+                    <available file="3rdparty/saxon9.jar"/>
+                    <available file="3rdparty/saxon9-dom.jar"/>
+                    <available file="3rdparty/saxon9-xpath.jar"/>
+                </and>
+            </not>
+            <then>
+                <fail>please download saxon9.jar, saxon9-dom.jar and saxon9-xpath.jar to 3rdparty folder</fail>
+            </then>
+        </if>
 
         <ant dir="core" target="install" inheritAll="false"/>
         <ant dir="xml" target="install" inheritAll="false"/>
