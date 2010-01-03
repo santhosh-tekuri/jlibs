@@ -54,12 +54,11 @@ public class OutlineNavigatorTest extends JFrame{
         return outline;
     }
 
+    @SuppressWarnings({"unchecked"})
     public static void main(String[] args) throws Exception{
         String url = JOptionPane.showInputDialog("File/URL", "http://schemas.xmlsoap.org/wsdl/");
         if(url==null)
             return;
-//        String str = "xml/xsds/note.xsd";
-//        String str = "/Users/santhosh/Sonoa/Workspaces/SVN/schemas_3050/sci/application.xsd";
         XSModel model = new XSParser().parse(url);
         MyNamespaceSupport nsSupport = XSUtil.createNamespaceSupport(model);
 

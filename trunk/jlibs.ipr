@@ -370,13 +370,6 @@
         <root url="file:///Users/santhosh/Java/Xerces/src/xerces-2_9_1/src" />
       </SOURCES>
     </library>
-    <library name="annotations">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/core/lib/annotations.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
     <library name="jaxen">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/xmldog/lib/jaxen-1.1.1.jar!/" />

@@ -19,8 +19,6 @@ import jlibs.core.lang.NotImplementedException;
 
 import java.util.Comparator;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -41,8 +39,11 @@ public class DefaultComparator<T> implements Comparator<T>{
             return _compare(o1, o2);
     }
 
+    /**
+     * params o1 and o2 will be non-null
+     */
     @SuppressWarnings({"unchecked"})
-    protected int _compare(@NotNull T o1, @NotNull T o2){
+    protected int _compare(T o1, T o2){
         if(o1 instanceof Comparable && o2 instanceof Comparable){
             if(o1.getClass().isInstance(o2))
                 return ((Comparable)o1).compareTo(o2);
