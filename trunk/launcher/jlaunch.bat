@@ -1,4 +1,4 @@
-@echo off
+@ECHO OFF
 
 REM JLibs: Common Utilities for Java
 REM Copyright (C) 2009  Santhosh Kumar T
@@ -13,123 +13,126 @@ REM but WITHOUT ANY WARRANTY; without even the implied warranty of
 REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 REM Lesser General Public License for more details.
 
-if defined APP goto conf
-echo APP variable is not defined
-pause
-goto end
+SET CMD=java.exe
+IF DEFINED JAVA_HOME SET CMD="%JAVA_HOME%\bin\%CMD%"
+IF DEFINED JAVA_CMD SET CMD="%JAVA_CMD%"
+SET JAVA_CMD=
 
-:conf
-set CMD=java.exe
-if defined JAVA_HOME set CMD="%JAVA_HOME%\bin\%CMD%"
-if defined JAVA_CMD set CMD="%JAVA_CMD%"
-set JAVA_CMD=
+SET SECTION=
+SET RESULT=
+SET FILE=%1
+SHIFT
 
-set SECTION=
-set RESULT=
-FOR /F "usebackq delims=" %%i in ("%APP%.conf") DO call :processline "%%i"
+FOR /F "usebackq delims=" %%i IN ("%FILE%") DO CALL :processline "%%i"
+REM append result to command
+if DEFINED RESULT CALL :processresult
 
-rem append result to command
-if DEFINED RESULT call :processresult
+:loop.start
+IF "%~1"=="" GOTO :loop.end
+SET CMD=%CMD% "%~1"
+SHIFT
+GOTO :loop.start
+:loop.end
 
-%CMD% %*
+%CMD%
+GOTO :end
 
-goto end
 :processline
-if %1 == "<java.classpath>" goto option
-if %1 == "<java.endorsed.dirs>" goto option
-if %1 == "<java.ext.dirs>" goto option
-if %1 == "<java.library.path>" goto option
-if %1 == "<java.system.props>" goto option
-if %1 == "<java.bootclasspath>" goto option
-if %1 == "<java.bootclasspath.append>" goto option
-if %1 == "<java.bootclasspath.prepend>" goto option
-if %1 == "<jvm.args>" goto option
+IF %1 == "<java.classpath>" GOTO option
+IF %1 == "<java.endorsed.dirs>" GOTO option
+IF %1 == "<java.ext.dirs>" GOTO option
+IF %1 == "<java.library.path>" GOTO option
+IF %1 == "<java.system.props>" GOTO option
+IF %1 == "<java.bootclasspath>" GOTO option
+IF %1 == "<java.bootclasspath.append>" GOTO option
+IF %1 == "<java.bootclasspath.prepend>" GOTO option
+IF %1 == "<jvm.args>" GOTO option
 
-rem ignore if line is comment
+REM ignore if line is comment
 SET LINE=%1
 SET FIRST_CHAR=%LINE:~1,1%
-IF "%FIRST_CHAR%" == "#" goto end
+IF "%FIRST_CHAR%" == "#" GOTO end
 
-rem join the line to result
-if defined RESULT set RESULT=%RESULT%%SEPARATOR%
-set RESULT=%RESULT%"%PREFIX%%~1"
-goto end
+REM join the line to result
+IF DEFINED RESULT SET RESULT=%RESULT%%SEPARATOR%
+SET RESULT=%RESULT%"%PREFIX%%~1"
+GOTO end
 
 :option
 
-rem append result to command
-if DEFINED RESULT call :processresult
+REM append result to command
+IF DEFINED RESULT CALL :processresult
 
-set OPTION=%1
-set SECTION=%OPTION:~2,-2%
-goto %SECTION%
+SET OPTION=%1
+SET SECTION=%OPTION:~2,-2%
+GOTO %SECTION%
 
 :java.classpath
-set RESULT=
-set SECTION_PREFIX=-classpath 
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-classpath 
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.endorsed.dirs
-set RESULT=
-set SECTION_PREFIX=-Djava.endorsed.dirs=
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Djava.endorsed.dirs=
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.ext.dirs
-set RESULT=
-set SECTION_PREFIX=-Djava.ext.dirs=
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Djava.ext.dirs=
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.library.path
-set RESULT=
-set SECTION_PREFIX=-Djava.library.path=
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Djava.library.path=
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.system.props
-set RESULT=
-set SECTION_PREFIX=
-set PREFIX=-D
-set SEPARATOR= 
-goto end
+SET RESULT=
+SET SECTION_PREFIX=
+SET PREFIX=-D
+SET SEPARATOR= 
+GOTO end
 
 :java.bootclasspath
-set RESULT=
-set SECTION_PREFIX=-Xbootclasspath:
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Xbootclasspath:
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.bootclasspath.prepend
-set RESULT=
-set SECTION_PREFIX=-Xbootclasspath/p:
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Xbootclasspath/p:
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :java.bootclasspath.append
-set RESULT=
-set SECTION_PREFIX=-Xbootclasspath/a:
-set PREFIX=
-set SEPARATOR=;
-goto end
+SET RESULT=
+SET SECTION_PREFIX=-Xbootclasspath/a:
+SET PREFIX=
+SET SEPARATOR=;
+GOTO end
 
 :jvm.args
-set CMD=%CMD% "-DSCRIPT_FILE=%APP%.bat"
-set RESULT=
-set SECTION_PREFIX=
-set PREFIX=
-set SEPARATOR= 
-goto end
+SET CMD=%CMD% "-DSCRIPT_FILE=%APP%.bat"
+SET RESULT=
+SET SECTION_PREFIX=
+SET PREFIX=
+SET SEPARATOR= 
+GOTO end
 
 :processresult
-if "%SECTION%" == "java.ext.dirs" set RESULT="%JAVA_HOME%\lib\ext";"%JAVA_HOME%\jre\lib\ext";%RESULT%
-set CMD=%CMD% %SECTION_PREFIX%%RESULT%
+IF "%SECTION%" == "java.ext.dirs" SET RESULT="%JAVA_HOME%\lib\ext";"%JAVA_HOME%\jre\lib\ext";%RESULT%
+SET CMD=%CMD% %SECTION_PREFIX%%RESULT%
 
 :end
