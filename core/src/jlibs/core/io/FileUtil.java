@@ -19,7 +19,6 @@ import jlibs.core.graph.*;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -39,7 +38,7 @@ public class FileUtil{
     public static final File USER_DIR = new File(System.getProperty("user.dir"));
     public static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 
-    public static @NotNull URL toURL(@NotNull File file){
+    public static URL toURL(File file){
         try{
             return file.toURI().toURL();
         }catch(MalformedURLException ex){
@@ -126,7 +125,7 @@ public class FileUtil{
      * deletes specified file or directory
      * if given file/dir doesn't exist, simply returns
      */
-    public static void delete(@NotNull File file) throws IOException{
+    public static void delete(File file) throws IOException{
         if(!file.exists())
             return;
 

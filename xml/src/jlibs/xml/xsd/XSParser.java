@@ -28,8 +28,6 @@ import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.LSResourceResolver;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import jlibs.core.lang.ImpossibleException;
 
 /**
@@ -42,7 +40,7 @@ public class XSParser{
         this(null, null);
     }
 
-    public XSParser(@Nullable LSResourceResolver entityResolver, @Nullable DOMErrorHandler errorHandler){
+    public XSParser(LSResourceResolver entityResolver, DOMErrorHandler errorHandler){
         System.setProperty(DOMImplementationRegistry.PROPERTY, DOMXSImplementationSourceImpl.class.getName());
         DOMImplementationRegistry registry;
         try{
@@ -63,13 +61,11 @@ public class XSParser{
             config.setParameter(Constants.DOM_ERROR_HANDLER, errorHandler);
     }
 
-    @Nullable
-    public XSModel parse(@NotNull String uri){
+    public XSModel parse(String uri){
         return xsLoader.loadURI(uri);
     }
 
-    @Nullable
-    public XSModel parse(@NotNull String... uris){
+    public XSModel parse(String... uris){
         return xsLoader.loadURIList(new StringListImpl(uris, uris.length));
     }
 
@@ -83,12 +79,10 @@ public class XSParser{
      * @param baseURI   The base URI to be used for resolving relative
      *                  URIs to absolute URIs.
      */
-    @Nullable
-    public XSModel parseString(@NotNull String schema, @Nullable String baseURI){
+    public XSModel parseString(String schema, String baseURI){
         return xsLoader.load(new DOMInputImpl(null, null, baseURI, schema, null));
     }
 
-    @NotNull
     public static XSModel getBuiltInSchema(){
         return new XSModelImpl(new SchemaGrammar[0]);
     }

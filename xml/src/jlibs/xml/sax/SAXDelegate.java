@@ -15,7 +15,6 @@
 
 package jlibs.xml.sax;
 
-import org.jetbrains.annotations.Nullable;
 import org.xml.sax.*;
 import org.xml.sax.ext.DeclHandler;
 import org.xml.sax.ext.LexicalHandler;
@@ -59,14 +58,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ ContentHandler ]---------------------------------------------------*/
 
-    private @Nullable ContentHandler contentHandler;
+    private ContentHandler contentHandler;
 
-    @Nullable
     public ContentHandler getContentHandler(){
         return contentHandler;
     }
 
-    public void setContentHandler(@Nullable ContentHandler handler){
+    public void setContentHandler(ContentHandler handler){
 	    contentHandler = handler;
     }
 
@@ -138,14 +136,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ ErrorHandler ]---------------------------------------------------*/
 
-    private @Nullable ErrorHandler errorHandler;
+    private ErrorHandler errorHandler;
 
-    @Nullable
     public ErrorHandler getErrorHandler(){
         return errorHandler;
     }
 
-    public void setErrorHandler(@Nullable ErrorHandler handler){
+    public void setErrorHandler(ErrorHandler handler){
         this.errorHandler = handler;
     }
 
@@ -169,14 +166,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ EntityResolver ]---------------------------------------------------*/
 
-    private @Nullable EntityResolver entityResolver;
+    private EntityResolver entityResolver;
 
-    @Nullable
     public EntityResolver getEntityResolver(){
         return entityResolver;
     }
 
-    public void setEntityResolver(@Nullable EntityResolver entityResolver){
+    public void setEntityResolver(EntityResolver entityResolver){
         this.entityResolver = entityResolver;
     }
 
@@ -190,14 +186,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ DTDHandler ]---------------------------------------------------*/
 
-    private @Nullable DTDHandler dtdHandler;
+    private DTDHandler dtdHandler;
 
-    @Nullable
     public DTDHandler getDTDHandler(){
         return dtdHandler;
     }
 
-    public void setDTDHandler(@Nullable DTDHandler dtdHandler){
+    public void setDTDHandler(DTDHandler dtdHandler){
         this.dtdHandler = dtdHandler;
     }
 
@@ -215,15 +210,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ LexicalHandler ]---------------------------------------------------*/
 
-    private @Nullable
-    LexicalHandler lexicalHandler;
+    private LexicalHandler lexicalHandler;
 
-    @Nullable
     public LexicalHandler getLexicalHandler(){
         return lexicalHandler;
     }
 
-    public void setLexicalHandler(@Nullable LexicalHandler lexicalHandler){
+    public void setLexicalHandler(LexicalHandler lexicalHandler){
         this.lexicalHandler = lexicalHandler;
     }
 
@@ -271,15 +264,13 @@ public class SAXDelegate implements EntityResolver, DTDHandler, ContentHandler, 
 
     /*-------------------------------------------------[ DeclHandler ]---------------------------------------------------*/
 
-    private @Nullable
-    DeclHandler declHandler;
+    private DeclHandler declHandler;
 
-    @Nullable
     public DeclHandler getDeclHandler(){
         return declHandler;
     }
 
-    public void setDeclHandler(@Nullable DeclHandler declHandler){
+    public void setDeclHandler(DeclHandler declHandler){
         this.declHandler = declHandler;
     }
 
