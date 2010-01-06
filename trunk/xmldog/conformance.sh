@@ -1,7 +1,6 @@
 #! /bin/sh ../launcher/jlaunch.sh
 
 <java.classpath>
-../core/lib/annotations.jar
 ../core/jlibs-core.jar
 ../xml/lib/xercesImpl.jar
 ../xml/jlibs-xml.jar
