@@ -21,6 +21,7 @@ SET JAVA_CMD=
 SET SECTION=
 SET RESULT=
 SET FILE=%1
+SET CONF_DIR=%~dp1
 SHIFT
 
 FOR /F "usebackq delims=" %%i IN ("%FILE%") DO CALL :processline "%%i"
@@ -34,7 +35,9 @@ SHIFT
 GOTO :loop.start
 :loop.end
 
+pushd "%CONF_DIR%"
 %CMD%
+popd
 GOTO :end
 
 :processline
