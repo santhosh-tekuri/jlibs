@@ -176,6 +176,7 @@ if [ ! -x "$JAVA_CMD" ] ; then
 fi
 
 FILE=$1
+cd `dirname $FILE`
 if [ -r "$FILE" ]; then
     readFile
     shift;
