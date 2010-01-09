@@ -1,11 +1,11 @@
 #summary Using SAX to Sniff XML
 #labels SAX,XPath
 
-[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/sniff/XMLDog.java XMLDog] is a dog that is trained to sniff xml documents.
+[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/dog/XMLDog.java XMLDog] is a dog that is trained to sniff xml documents.
 
 We give set of xpaths to `XMLDog` and ask to sniff some xml document. It uses SAX and with one pass over the document it evaluates all the given xpaths.
 
-Whether it is Xalan/XMLDog, first we need to define `javax.xml.namespace.NamespaceContext`. This interface defines the binding for prefixes to uri.
+Whether it is Xalan/XMLDog, first we need to define `javax.xml.namespace.NamespaceContext`. This interface defines the binding for prefix to uri.
 {{{
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
@@ -16,34 +16,34 @@ nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
 
 Now create an instance of `XMLDOG`, and add the xpaths that need to be evaluated. Note that `XMLDog` can evaluate multiple xpaths in single SAX parse of given xml document.
 {{{
-import jlibs.xml.sax.sniff.XMLDog;
-import jlibs.xml.sax.sniff.XPath;
+import jlibs.xml.sax.dog.XMLDog;
+import jlibs.xml.sax.dog.expr.Expression;
 
 XMLDog dog = new XMLDog(nsContext);
 
-XPath xpath1 = dog.add("/xs:schema/@targetNamespace");
-XPath xpath2 = dog.add("/xs:schema/xs:complexType/@name");
-XPath xpath3 = dog.add("/xs:schema/xs:*/@name");
+Expression xpath1 = dog.addXPath("/xs:schema/@targetNamespace");
+Expression xpath2 = dog.addXPath("/xs:schema/xs:complexType/@name");
+Expression xpath3 = dog.addXPath("/xs:schema/xs:*/@name");
 }}}
-When you add xpath to `XMLDog`, it returns `XPath` object. This object is the compiled xpath.
+When you add xpath to `XMLDog`, it returns `Expression` object. This object is the compiled xpath.
 
-you can get the original xpath from `XPath` using `toString()`:
+you can get the original xpath from `XPath` using `getXPath()`:
 {{{
-System.out.println(xpath1); // prints "/xs:schema/@targetNamespace"
+System.out.println(xpath1.getXPath()); // prints "/xs:schema/@targetNamespace"
 }}}
 
-you can ask `XPath` about its result type;
+you can ask `Expression` about its result type;
 {{{
 import javax.xml.namespace.QName;
 
-QName resultType = xpath1.resultType();
+QName resultType = xpath1.resultType.qname;
 System.out.println(resultType); // prints "{http://www.w3.org/1999/XSL/Transform}NODESET"
 }}}
 The `QName` returned will be one of constants in `javax.xml.xpath.XPathConstants`.
 
 To evaluate given xpaths on some xml document:
 {{{
-import jlibs.xml.sax.sniff.XPathResults;
+import jlibs.xml.sax.dog.XPathResults;
 
 XPathResults results = dog.sniff(new InputSource("note.xml"));
 }}}
@@ -64,22 +64,20 @@ Below is the actual result Type for each resultType returned by `XPath`:
 || `XPathConstants.STRING` || `java.lang.String` ||
 || `XPathConstants.BOOLEAN` || `java.lang.Boolean` ||
 || `XPathConstants.NUMBER` || `java.lang.Double` ||
-|| `XPathConstants.NODESET` || `java.util.TreeSet<NodeItem>` ||
+|| `XPathConstants.NODESET` || `java.util.Collection<NodeItem>` ||
 
-For `XPathConstants.NODESET` the `TreeSet` contains `NodeItem`s which are sorted by its document order.
-
-`NodeItem` represens an xml node in xml document; `NodeType` has following properties.
+`NodeItem` represens an xml node in xml document; `NodeItem` has following properties.
 
 `NodeItem.type`:
-    returns type of xml node. will be one of following constants in `NodeItem`:
-        COMMENT, PI, DOCUMENT_NODE, ELEMENT, ATTRIBUTE, NAMESPACE, TEXT;
+    returns type of xml node. will be one of following constants in `NodeType`:
+        COMMENT, PI, DOCUMENT, ELEMENT, ATTRIBUTE, NAMESPACE, TEXT;
 `NodeItem.location`:
     returns unique xpath to the xml node. ex: `/xs:schema[1]/xs:complexType[1]/@name`<br>
     the prefixes in this xpath can be resolved using `results.getNamespaceContext()`
     this can be used to create DOM, in case you need it.
 
-`NodeItem.value`, `NodeItem.localName`, `NodeItem.namespaceURI`, `NodeItem.name`:
-    return value/localName/namespaceURI/name of the xml node it represens.
+`NodeItem.value`, `NodeItem.localName`, `NodeItem.namespaceURI`, `NodeItem.qualifiedName`:
+    return value/localName/namespaceURI/qualifiedName of the xml node it represens.
 
 `NodeItem.toString()` simply returns its `location`.
 
@@ -102,23 +100,25 @@ XPath: /xs:schema/xs:*/@name
       4: /xs:schema[1]/xs:element[4]/@name
       5: /xs:schema[1]/xs:complexType[1]/@name
 }}}
-
-*MultiThreading:*
+---------------------------------------------------------------------------------------------------------------------------------------------------
+*Multi Threading:*
 
 `XMLDog` supports multi-hreading. You can add multiple xpaths once, <br>
 and sniff multiple documents with same `XMLDog` instance parallely;<br>
-
+---------------------------------------------------------------------------------------------------------------------------------------------------
 *XPath Support:*
 
-`XMLDog` doesn't support complete xpath spec (as of now).
+`XMLDog` supports subset of XPath 1.0;
 
-Axises supported are:
- * self axis
- * child axis
- * attribute axis
- * namespace axis
- * descendant axis
- * descendant-or-self axis
+Axises supported are: 
+ * self
+ * child
+ * descendant
+ * descendant-or-self
+ * following
+ * following-sibling
+ * attribute
+ * namespace
 
 Except `id()`, rest of the functions are supported.
 it supports predicates and all operators.
@@ -132,31 +132,69 @@ throws following exception:
 java.lang.UnsupportedOperationException: unsupported axis: parent
 }}}
 
-This will be very useful. for example you can first try using `XMLDog` and if it throws `UnsupportedOperationException`, then you can fallback to use `DOM`
+This will be very useful. for example you can first try using `XMLDog` and if it throws `UnsupportedOperationException`,<br>
+then you can fallback to use `DOM`
+---------------------------------------------------------------------------------------------------------------------------------------------------
+*Conformance*
 
-The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.sniff.XPathConformanceTest`
+The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.sax.dog.tests.XPathConformanceTest`
 
-You can look [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml here], to see the type of xpaths it has been tested.
+You can look [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/resources/xpaths.xml here], to see the type of xpaths it has been tested.
 
 *Performance:*
 
 You can find `xmldog.sh/xmldog.bat` in jlibs installation, which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
-This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xpaths.xml xpaths.xml] from jlibs installation.
+This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/resources/xpaths.xml xpaths.xml] from jlibs installation.
 
 Here is sample output of this performance test;
 {{{
-XMLDog: ...............................Done
-XALAN:  ...............................Done
-Total 1317 xpaths are executed
-       jdk time : 2959142000 nanoseconds/2.96 seconds
-       dog time : 2700920000 nanoseconds/2.70 seconds
-        WINNER : XMLDog (1.10x faster)
-    Difference : 258222000 nanoseconds/0.26 seconds 
+Average Execution Time over 20 runs:
+--------------------------------------------------------------------------------
+                                   File | XPaths XMLDog  SAXON   Diff Percentage
+--------------------------------------------------------------------------------
+            resources/xmlFiles/note.xml |    290     35     84    -49   -2.42
+          resources/xmlFiles/simple.xml |     29      4     13     -8   -3.04
+       resources/xmlFiles/positions.xml |    110     16     27    -10   -1.64
+          resources/xmlFiles/sample.xml |   2197    195    176     18   +1.11
+         resources/xmlFiles/sample1.xml |   2197     25     76    -51   -3.04
+         resources/xmlFiles/sample2.xml |   2197     29     77    -47   -2.59
+         resources/xmlFiles/sample3.xml |   2197     28     72    -44   -2.53
+         resources/xmlFiles/numbers.xml |     83      1      3     -2   -2.22
+      resources/xmlFiles/underscore.xml |     80      2      3     -1   -1.41
+        resources/xmlFiles/contents.xml |    160      4      9     -4   -1.99
+              resources/xmlFiles/pi.xml |     31      0      1     -1   -2.63
+        resources/xmlFiles/evaluate.xml |     40      1      2      0   -1.32
+             resources/xmlFiles/web.xml |    431      7     23    -16   -3.30
+            resources/xmlFiles/fibo.xml |     94      4     12     -7   -2.58
+resources/xmlFiles/defaultNamespace.xml |     80      0      2     -1   -3.28
+      resources/xmlFiles/namespaces.xml |    150      3      6     -3   -1.78
+            resources/xmlFiles/text.xml |     35      0      1      0   -2.16
+    resources/xmlFiles/organization.xml |    110      4      6     -2   -1.53
+        resources/xmlFiles/moreover.xml |    130     10     16     -6   -1.61
+              resources/xmlFiles/id.xml |     40      0      2     -1   -3.45
+        resources/xmlFiles/much_ado.xml |     78     14     17     -3   -1.24
+             resources/xmlFiles/sum.xml |     17      0      1     -1   -5.00
+  resources/xmlFiles/purchase_order.xml |    510      7     18    -11   -2.61
+            resources/xmlFiles/roof.xml |     20      0      1     -1   -2.64
+            resources/xmlFiles/nitf.xml |     60      1      3     -1   -2.28
+         resources/xmlFiles/message.xml |     10      0      1     -1   -3.42
+            resources/xmlFiles/lang.xml |     80      1      3     -2   -2.96
+  resources/xmlFiles/testNamespaces.xml |     22      0      1     -1   -3.65
+            resources/xmlFiles/test.xml |     20      0      1     -1   -3.06
+          resources/xmlFiles/jaxen3.xml |     10      0      1      0   -2.73
+         resources/xmlFiles/jaxen24.xml |     30      0      1      0   -3.01
+             resources/xmlFiles/pi2.xml |     10      0      1     -1   -5.00
+         resources/xmlFiles/library.xml |     20      1      1      0   -1.17
+            resources/xmlFiles/axis.xml |     32      0      1      0   -2.30
+               resources/xmlFiles/t.xml |     10      0      0      0   -2.58
+--------------------------------------------------------------------------------
+                                  Total |  11610    410    683   -273   -1.67
 }}}
 
-It shows that XMLDog is faster than XALAN.
+It shows that XMLDog is faster than Saxon9(1.67 times).
 
-The source code of testcase is [http://code.google.com/p/jlibs/source/browse/trunk/utils/src/jlibs/xml/sax/sniff/XPathPerformanceTest.java here]
+The source code of testcase is [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/tests/jlibs/xml/sax/dog/tests/XPathPerformanceTest.java here]
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 *Future:*
  * variable resolution
