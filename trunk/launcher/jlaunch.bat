@@ -41,6 +41,7 @@ popd
 GOTO :end
 
 :processline
+IF "%SEPARATOR%"=="" GOTO :end
 IF %1 == "<java.classpath>" GOTO option
 IF %1 == "<java.endorsed.dirs>" GOTO option
 IF %1 == "<java.ext.dirs>" GOTO option

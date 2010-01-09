@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 # JLibs: Common Utilities for Java
 # Copyright (C) 2009  Santhosh Kumar T
