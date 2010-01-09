@@ -31,6 +31,11 @@ path/to/jlauncher.sh path/to/myapp.conf
 
 the working directory of java process launched will the directory in which conf file is present.
 
+any additional arguments after conf file are passed as main class arguments
+{{{
+path/to/jlauncher.sh path/to/myapp.conf arg1 arg2 arg3
+}}}
+
 let us see a sample conf file:
 {{{
 <java.classpath>
