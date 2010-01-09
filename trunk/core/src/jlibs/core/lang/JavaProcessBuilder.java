@@ -284,6 +284,30 @@ public class JavaProcessBuilder{
         return mainClass;
     }
 
+    /*-------------------------------------------------[ debug ]---------------------------------------------------*/
+
+    private boolean debugSuspend;
+
+    public JavaProcessBuilder debugSuspend(boolean suspend){
+        this.debugSuspend = suspend;
+        return this;
+    }
+
+    public boolean debugSuspend(){
+        return debugSuspend;
+    }
+
+    private int debugPort = -1;
+
+    public JavaProcessBuilder debugPort(int port){
+        this.debugPort = port;
+        return this;
+    }
+
+    public int debugPort(){
+        return debugPort;
+    }
+
     /*-------------------------------------------------[ arguments ]---------------------------------------------------*/
 
     private List<String> args = new ArrayList<String>();
@@ -364,6 +388,11 @@ public class JavaProcessBuilder{
             cmd.add("-Xmx"+maxHeap);
         if(vmType!=null)
             cmd.add(vmType);
+        if(debugPort!=-1){
+            cmd.add("-Xdebug");
+            cmd.add("-Xnoagent");
+            cmd.add("-Xrunjdwp:transport=dt_socket,server=y,suspend="+(debugSuspend?'y':'n')+",address="+debugPort);
+        }
         cmd.addAll(jvmArgs);
         if(mainClass!=null){
             cmd.add(mainClass);
