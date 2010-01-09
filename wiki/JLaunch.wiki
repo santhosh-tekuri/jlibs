@@ -1,0 +1,99 @@
+#summary An easy approach for maintaining launching scripts
+#labels JAVA,Launcher,script
+
+It is common approach to provide os specific scripts(bat/sh files) to launch java application.<br>
+We populate classpath, system properties etc, in bat/sh file and launch java process.<br>
+Problem with this approach is, classpath etc are inlined in both bat and sh files.<br>
+You need to ensure that classpath etc in both bat/sh files are always in sync. This is a tedious task;
+
+There any many products which help you to create native launchers for java application. These products<br>
+take classpath etc as input and generate os specific launchers. Problem with this approach is,<br>
+If the end user wants to tweak some of those parameters like heap-size add database specific jars to classpath.<br>
+Because classpath etc informations is embedded inside generated native launcher, it is not possible to change them;
+
+`JLibs` comes with `JLaunch` scripts which help java developers to overcome these problems.
+
+you will find two script files:<br>
+ * [http://code.google.com/p/jlibs/source/browse/trunk/launcher/jlaunch.bat jlaunch.bat] - for windows<br>
+ * [http://code.google.com/p/jlibs/source/browse/trunk/launcher/jlaunch.sh jlaunch.sh]  - for `*`nix and mac
+
+these script files take a conf file as argument. This conf file contains all the information like classpath, system properties etc.
+
+to launch your java app on windows:
+{{{
+path/to/jlauncher.bat path/to/myapp.conf
+}}}
+
+to launch the same app on *nix:
+{{{
+path/to/jlauncher.sh path/to/myapp.conf
+}}}
+
+the working directory of java process launched will the directory in which conf file is present.
+
+let us see a sample conf file:
+{{{
+<java.classpath>
+engine.jar
+ui.jar
+jdom.jar
+
+<java.endorsed.dirs>
+lib/endorsed
+
+<java.ext.dirs>
+lib/ext
+
+<java.library.path>
+lib
+
+<java.system.props>
+# use mx4j mbean server
+javax.management.builder.initial=mx4j.server.MX4JMBeanServerBuilder
+
+# logging properties
+java.util.logging=mylog.properties
+
+<java.bootclasspath.prepend>
+#lib/mxj4.jar
+
+<jvm.args>
+-showversion
+com.foo.MyApplication
+-open
+some/file
+}}}
+
+The conf file is composed of following sections:
+{{{
+<java.classpath>
+<java.endorsed.dirs>
+<java.ext.dirs>
+<java.library.path>
+<java.system.props>
+<java.bootclasspath>
+<java.bootclasspath.prepend>
+<java.bootclasspath.append>
+<jvm.args>
+}}}
+
+ * Each section is followed by its configuration. You can omit the sections you don't need.
+ * the order of sections in conf file is not significant.
+ * A line starting with `#` is treated as comment.
+ * Any empty lines in conf file are ignored.
+ * Any line which is not in section is ignored (i.e lines before first section are ignored)
+ * wildcards are not supported. i,e. you shouldn't write `lib/*.jar`
+ * Environment variables can be used in conf file. But it makes your conf file no more platform independent.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+Rather than asking end user to type "jlaunch.sh myapp.conf" to launch your java app, you can create simple wrappers as explained below:
+
+[http://code.google.com/p/jlibs/source/browse/trunk/utils/xsd-viewer.sh xsd-viewer.sh] and 
+[http://code.google.com/p/jlibs/source/browse/trunk/utils/xsd-viewer.bat xsd-viewer.bat]
+from jlibs which launch xsd-viewer swing application.
+
+[http://code.google.com/p/jlibs/source/browse/trunk/utils/xsd-viewer.sh xsd-viewer.sh] is a shell script cum conf file.<br>
+[http://code.google.com/p/jlibs/source/browse/trunk/utils/xsd-viewer.bat xsd-viewer.bat] passes xsd-viewer.sh as conf file to jlaunch.bat; i.e you should ship xsd-viewer.sh along with xsd-viewer.bat for windows;
+
+Your comments are appreciated;
