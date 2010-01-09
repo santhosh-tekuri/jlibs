@@ -1,0 +1,67 @@
+#summary Launching Java Process Programatically
+
+Java comes with [http://java.sun.com/j2se/1.5.0/docs/api/java/lang/ProcessBuilder.html java.lang.ProcessBuilder] to make process creation easier;<br>
+Similarly JLibs comes with [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/JavaProcessBuilder.java jlibs.core.lang.JavaProcessBuilder] to make java process creation easier;
+
+`JavaProcessBuilder` simply manages collection of java process attributes and help your to create command out of it.
+{{{
+JavaProcessBuilder jvm = new JavaProcessBuilder();
+}}}
+
+`JavaProcessBuilder` is preconfigured with current java home and current working directory initialy.<br>
+you can change them as below:
+{{{
+JavaProcessBuilder jvm = new JavaProcessBuilder(new File("c:/jdk6"));
+jvm.javaHome(new File("c:/jdk5")); // to configure later
+jvm.workingDir(new File("c:/myProject")); // to configure working directory
+}}}
+
+to configure various attributes:
+{{{
+// to configure classpath
+jvm.classpath("lib/jlibs-core.jar") // relative path from configured working dir
+   .classpath(new File("c:/myproject/lib/jlibs-xml.jar");
+
+// to get configured classpath
+List<File> classpath = jvm.classpath();
+
+// to configure additional classpath
+jvm.endorsedDir("lib/endorsed")
+   .extDir("lib/ext")
+   .libraryPath("lib/native")
+   .bootClasspath("lib/boot/xerces.jar")
+   .appendBootClasspath("lib/boot/xalan.jar")
+   .prependBootClasspath("lib/boot/dom.jar");
+
+// to configure System Properties
+jvm.systemProperty("myprop", "myvalue")
+   .systemProperty("myflag");
+
+// to configure heap and vmtype
+jvm.initialHeap(512); // or jvm.initialHeap("512m");
+jvm.maxHeap(1024); // or jvm.maxHeap("1024m");
+jvm.client(); // to use -client
+jvm.server(); // to use -server
+
+// to configure remote debugging
+jvm.debugPort(7000)
+   .debugSuspend(true);
+
+// to configure any additional jvm args
+jvm.jvmArg("-Xgc:somealgo");
+
+// to configure mainclass and its arguments
+jvm.mainClass("example.MyTest")
+   .arg("-xvf")
+   .arg("testDir");
+
+// to get the created command:
+String command[] = jvm.command();
+
+// to launch it
+Process p = jvm.launch(system.out, System.err);
+}}}
+the two arguments to launch specify to which process output and error streams to be redirected.<br> 
+These arguments can be null.
+
+Your comments are appreciated;
