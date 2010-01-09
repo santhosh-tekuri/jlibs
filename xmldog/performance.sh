@@ -1,4 +1,8 @@
-#! /bin/sh ../launcher/jlaunch.sh
+#!/bin/sh
+`dirname $0`/../launcher/jlaunch.sh $0
+exit
+
+#---------------------[ Configuration ]--------------------
 
 <java.classpath>
 ../core/jlibs-core.jar
