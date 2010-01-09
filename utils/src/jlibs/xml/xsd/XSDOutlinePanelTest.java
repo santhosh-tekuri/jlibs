@@ -71,15 +71,20 @@ public class XSDOutlinePanelTest extends JFrame{
         SwingUtil.setInitialFocus(this, uriText);
     }
 
-    public static void main(String[] args){
-        try{
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }catch(Exception ex){
-            // ignore
-        }
-        XSDOutlinePanelTest frame = new XSDOutlinePanelTest();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(700, 500);
-        frame.setVisible(true);
+    public static void main(String[] args) throws Exception{
+        SwingUtilities.invokeAndWait(new Runnable(){
+            @Override
+            public void run(){
+                try{
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                }catch(Exception ex){
+                    // ignore
+                }
+                XSDOutlinePanelTest frame = new XSDOutlinePanelTest();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setSize(700, 500);
+                frame.setVisible(true);
+            }
+        });
     }
 }
