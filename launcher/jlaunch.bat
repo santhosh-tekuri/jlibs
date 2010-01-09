@@ -41,7 +41,6 @@ popd
 GOTO :end
 
 :processline
-IF "%SEPARATOR%"=="" GOTO :end
 IF %1 == "<java.classpath>" GOTO option
 IF %1 == "<java.endorsed.dirs>" GOTO option
 IF %1 == "<java.ext.dirs>" GOTO option
@@ -51,6 +50,7 @@ IF %1 == "<java.bootclasspath>" GOTO option
 IF %1 == "<java.bootclasspath.append>" GOTO option
 IF %1 == "<java.bootclasspath.prepend>" GOTO option
 IF %1 == "<jvm.args>" GOTO option
+IF "%SEPARATOR%"=="" GOTO :end
 
 REM ignore if line is comment
 SET LINE=%1
