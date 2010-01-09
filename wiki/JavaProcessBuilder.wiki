@@ -11,8 +11,7 @@ JavaProcessBuilder jvm = new JavaProcessBuilder();
 `JavaProcessBuilder` is preconfigured with current java home and current working directory initialy.<br>
 you can change them as below:
 {{{
-JavaProcessBuilder jvm = new JavaProcessBuilder(new File("c:/jdk6"));
-jvm.javaHome(new File("c:/jdk5")); // to configure later
+jvm.javaHome(new File("c:/jdk5")); // to configure java home
 jvm.workingDir(new File("c:/myProject")); // to configure working directory
 }}}
 
