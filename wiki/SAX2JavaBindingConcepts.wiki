@@ -1,0 +1,76 @@
+#summary SAX-JAVA Binding Concepts
+#labels SAX,JAVA,BINDING
+
+the package `jlibs.xml.sax.binding` contains classes which help you to read xml and create java objects.
+
+Before going into details, we will first go through the concepts. Then it will be easier to understand the code.
+
+we have employee.xml:
+{{{
+<employee>                     
+    <name>scott</name>         
+    <age>20</age>              
+    <experience>5</experience> 
+</employee>
+}}}
+and Employee class:
+{{{
+public class Employee{
+    private String name;
+    private int age;
+    private int experience;
+
+    // getter and setter methods
+}
+}}}
+
+Each element in xml will create a java object. We call this as *binding*.<br>
+Let us see the java objects created for above xml:
+{{{
+        XML                     |     (Binding)Java Object  
+--------------------------------|-----------------
+<employee>                      |   new Employee()
+    <name>scott</name>          |   new String(#text) 
+    <age>20</age>               |   new String(#text) 
+    <experience>5</experience>  |   new String(#text) 
+</employee>                     |
+}}}
+From above table you can see that:
+ * `<employe/>` element create new `Employee` object<br>
+ * `<name/>`, `<age/>` and `<experience/>` elements create `String` objects which their text content(i.e `#text`)
+
+How to create java object from xml element is defined by `jlibs.xml.sax.binding.Binding` class.<br>
+We will look into more details of coding `Binding` later.
+
+Now we have 4 java Objects ( one `Employee` object and four `String` objects)
+
+Now *Relation* comes into picture. Each element has a relation which tells how to relate current element's java object with parent element's java oject.
+
+{{{
+        XML                     |     (Binding)Java Object    |   Relation
+--------------------------------|--------------------------------------------------------
+<employee>                      |   emp = new Employee()      |   - No Relation -
+    <name>scott</name>          |   name = new String(#text)  | $emp.setName($name)
+    <age>20</age>               |   age = new String(#text)   | $emp.setAge($age)
+    <experience>5</experience>  |   exp = new String(#text)   | $emp.setExperience($exp)
+</employee>                     |
+}}}
+
+The above table shows how java objects created are related with each other.<br>
+To make understanding easier, we assigned each java object created into some variable.
+ * `Employee` object created is assigned to `emp` variable
+ * `String` created for `<name>` element is assigned to `name` variable
+ * `String` created for `<age>` element is assigned to `age` variable
+ * `String` created for `<experience>` element is assigned to `exp` variable
+
+Now you can see that relation of `<name>` element and its parent element `<employee>` in java is:
+{{{
+$emp.setName($name)
+}}}
+
+This relationship between java objects is captured by `jlibs.xml.sax.binding.Relation` class.<br>
+We will look into more details of coding `Relation` later.
+
+Once Binding and Relation are defined for each element type, It is piece of cake to read xml document into java objects.
+
+In next post we will look, how to put these concepts in coding...
