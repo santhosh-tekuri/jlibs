@@ -37,7 +37,7 @@ Let us see the java objects created for above xml:
 }}}
 From above table you can see that:
  * `<employe/>` element create new `Employee` object<br>
- * `<name/>`, `<age/>` and `<experience/>` elements create `String` objects which their text content(i.e `#text`)
+ * `<name/>`, `<age/>` and `<experience/>` elements create `String` objects with their text content(i.e `#text`)
 
 How to create java object from xml element is defined by `jlibs.xml.sax.binding.Binding` class.<br>
 We will look into more details of coding `Binding` later.
