@@ -44,7 +44,7 @@ We will look into more details of coding `Binding` later.
 
 Now we have 4 java Objects ( one `Employee` object and four `String` objects)
 
-Now *Relation* comes into picture. Each element has a relation which tells how to relate current element's java object with parent element's java oject.
+Now *relation* comes into picture. Each element has a relation which tells how to relate current element's java object with parent element's java oject.
 
 {{{
         XML                     |     (Binding)Java Object    |   Relation
@@ -73,4 +73,152 @@ We will look into more details of coding `Relation` later.
 
 Once Binding and Relation are defined for each element type, It is piece of cake to read xml document into java objects.
 
-In next post we will look, how to put these concepts in coding...
+===SAXContext===
+
+Bindings create java Objects for the elements and Relations chain these java objects.<br>
+Where are those java objects stored and how they are accessed in `Relation` ? the answer is `SAXContext`.
+
+Each element in xml has an associated `SAXContext` instance. Bindings have access to the current `SAXContext`.<br>
+They store the java object created in current context i.e, `SAXContext.object`.
+
+Similarly `Relation`s have access to the current `SAXContext` and parent `SAXContext`. `Relation` can access parent element's<br>
+java object and current element's java object from these contexts and chain them.
+
+[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/SAXContext.java SAXContext source]
+
+===Bindings===
+
+Let us create Bindings for this example.
+
+{{{
+import jlibs.xml.sax.binding.*;
+
+public class EmployeeBinding extends Binding<Employee>{
+    @Override
+    public void start(SAXContext<Employee> current, Attributes attributes) throws SAXException{
+        current.object = new Employee();
+    }
+}
+}}}
+
+We created a subclass of `Binding` named `EmployeeBinding`.<br>
+Our binding creates `Employee` object, so we are extending `Binding<Employee>`.<br>
+
+`Binding` has three methods: ([http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/Binding.java source])
+ * `start(...)` method is called on `<employee>` element begin
+ * `text(...)` method is called when text content is encountered in `<employee>` element
+ * `finish(...)` method is called on `<employee>` element end
+
+We are overriding `start(...)` method. In this method we are creating an `Employee` object and storing it in `current` context.
+
+Let us create bindings for `<name>`, `<age>` and `<experience>` elements.<br>
+For all these elements, the java object created is a `String` containing the content of that element.<br>
+Because for all these elements we are doing samething, we can create single binding and reuse it.
+
+{{{
+import jlibs.xml.sax.binding.*;
+
+public class TextBinding extends Binding<String>{
+    @Override
+    public void text(SAXContext<String> current, String text){
+        current.object = text;
+    }
+}
+}}}
+Notice that we are extending `Binding<String>`.<br>
+Here we are overriding `text(...)` method. This method is called when text is encountered.<br>
+The complete text content is passed as second argument.<br>
+We are simply storing this `text` argument in current context.
+
+Because the above binding is so frequently required, JLibs already comes with `TextBinding.INSTANCE`.<br>
+i.e You can use `TextBinding.INSTANCE` rather than creating `TextBinding` class yourself.
+
+[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/TextBinding.java TextBinding source]
+
+===Relations===
+
+We have to implement three relations, one each for `<name>`, `<age>` and `<experience>`.
+
+Let us implement relation for `<name>` element.
+{{{
+import jlibs.xml.sax.binding.*;
+
+new Relation<Employee, String>(){
+    @Override
+    public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+        parent.object.setName(current.object);
+    }
+}
+}}}
+Here we are creating an anonymous calss extending `Relation<Employee, String>`.<br>
+`<Employee, String>` says that, this relation expects `Employee` object in parent context and `String` object in current context.<br>
+
+`Relation` has two methods: ([http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/Relation.java source])
+ * `started(...)` method is called on `<name>` element begin
+ * `finished(...)` method is called on `<name>` element end
+
+Here we are overriding `finished(...)` but not `stared(...)`. This is because the `String` object <br>
+for `<name>` element is not yet created on `<name>` element begin.
+
+Similarly we can create `Relation` implementations for `<age>` and `<experience>`.
+
+===BindingRegistry===
+
+Each `Binding` should know about its child element bindings and the relations. We specify this in `EmployeeBinding` constructor:
+{{{
+public class EmployeeBinding extends Binding<Employee>{
+    public static final QName QNAME_NAME = new QName("name");
+    public static final QName QNAME_AGE = new QName("age");
+    public static final QName QNAME_EXPERIENCE = new QName("experience");
+
+    public EmployeeBinding(){
+        // for <name> element
+        registry.register(QNAME_NAME, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setName(current.object);
+            }
+        });
+
+        //for <age> element
+        registry.register(QNAME_AGE, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setAge(Integer.parseInt(current.object));
+            }
+        });
+
+        //for <experience> element
+        registry.register(QNAME_EXPERIENCE, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setExperience(Integer.parseInt(current.object));
+            }
+        });
+    }
+    
+    ...
+}}}
+
+`Binding` has a `registry` which maintains binding and relation for each possible child element.<br>
+We register binding and relation for each child element as follows:
+{{{
+registry.register(qname, binding, relation);
+}}}
+
+Now the last step is, How to use `EmployeeBinding` to read xml file.
+{{{
+BindingRegistry<?> registry = new BindingRegistry();
+registry.register(new QName("employee"), new EmployeeBinding()); // use EmployeeBinding for <employee> element
+
+BindingHandler handler = new BindingHandler(registry);
+Employee emp = (Employee)handler.parse(new InputSource("employee.xml"));
+}}}
+
+We create `BindingRegistry` instance and register bindings for all possible root elements.<br>
+Next we use `BindingHandler` to do sax parsing using this registry.
+
+[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingRegistry.java BindingRegistry source]<br>
+[http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingHandler.java BindingHandler source]
+
+Your comments are appreciated.
