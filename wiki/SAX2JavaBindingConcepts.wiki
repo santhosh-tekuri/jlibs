@@ -221,4 +221,84 @@ Next we use `BindingHandler` to do sax parsing using this registry.
 [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingRegistry.java BindingRegistry source]<br>
 [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingHandler.java BindingHandler source]
 
+===Summary====
+
+Pseudo code for employee binding:
+{{{
+        XML                     |     (Binding)Java Object              |   Relation
+--------------------------------|-------------------------------------------------------------------------------------
+<employee>                      |   current.object = new Employee()     |   - No Relation -
+    <name>scott</name>          |   current.object = new String(#text)  | parent.object.setName(current.object)
+    <age>20</age>               |   current.object = new String(#text)  | parent.object.setAge(current.object)
+    <experience>5</experience>  |   current.object = new String(#text)  | parent.object.setExperience(current.object)
+</employee>                     |
+}}}
+
+Here `current` refers to current `SAXContext` and `parent` refers to parent `SAXContext`.
+
+Java code:
+{{{
+import jlibs.xml.sax.binding.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.namespace.QName;
+import java.io.InputStream;
+
+/**
+ * @author Santhosh Kumar T
+ */
+public class EmployeeBinding extends Binding<Employee>{
+    public static final QName QNAME_NAME = new QName("name");
+    public static final QName QNAME_AGE = new QName("age");
+    public static final QName QNAME_EXPERIENCE = new QName("experience");
+
+    public EmployeeBinding(){
+        // for <name> element
+        registry.register(QNAME_NAME, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setName(current.object);
+            }
+        });
+
+        //for <age> element
+        registry.register(QNAME_AGE, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setAge(Integer.parseInt(current.object));
+            }
+        });
+
+        //for <experience> element
+        registry.register(QNAME_EXPERIENCE, TextBinding.INSTANCE, new Relation<Employee, String>(){
+            @Override
+            public void finished(SAXContext<Employee> parent, SAXContext<String> current){
+                parent.object.setExperience(Integer.parseInt(current.object));
+            }
+        });
+    }
+
+    // <employee> ==> current = new Employee();
+    @Override
+    public void start(SAXContext<Employee> current, Attributes attributes) throws SAXException{
+        current.object = new Employee();
+    }
+
+    public static void main(String[] args) throws Exception{
+        BindingRegistry<?> registry = new BindingRegistry();
+        registry.register(new QName("employee"), new EmployeeBinding());
+        BindingHandler handler = new BindingHandler(registry);
+        Employee emp = (Employee)handler.parse(new InputSource(args[0]));
+        System.out.println(emp);
+    }
+}
+}}}
+
+Binding instances are reusable. i.e one instanceof binding is enough to parse multipe documents in multiple threads
+Binding instances should not use any instance specific information. all methods in Binding are treated to be static i.e shouldn't access any instance data
+
+The java code looks verbose compared to pseudo code because anonymous classes otherwize the code is pretty concise.
+
 Your comments are appreciated.
