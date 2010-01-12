@@ -299,6 +299,6 @@ public class EmployeeBinding extends Binding<Employee>{
 Binding instances are reusable. i.e one instanceof binding is enough to parse multipe documents in multiple threads
 Binding instances should not use any instance specific information. all methods in Binding are treated to be static i.e shouldn't access any instance data
 
-The java code looks verbose compared to pseudo code because anonymous classes otherwize the code is pretty concise.
+The java code looks verbose compared to pseudo code because of anonymous classes otherwize the code is pretty concise.
 
 Your comments are appreciated.
