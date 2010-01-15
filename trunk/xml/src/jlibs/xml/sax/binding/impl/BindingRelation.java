@@ -13,25 +13,26 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.binding;
-
-import jlibs.xml.sax.binding.impl.Handler;
-
-import javax.xml.namespace.QName;
+package jlibs.xml.sax.binding.impl;
 
 /**
+ * Encapsulates both binding and relation. This is used by Registry.
+ *
  * @author Santhosh Kumar T
  */
-public class BindingHandler extends Handler{
-    public BindingHandler(Class clazz){
-        this(new BindingRegistry(clazz));
-    }
-    
-    public BindingHandler(QName qname, Class clazz){
-        this(new BindingRegistry(qname, clazz));
+public class BindingRelation{
+    public int bindingState;
+    public Binding binding;
+
+    public int relationState;
+    public Relation relation;
+
+    public BindingRelation(int bindingState, Binding binding, int relationState, Relation relation){
+        this.bindingState = bindingState;
+        this.binding = binding;
+        this.relationState = relationState;
+        this.relation = relation;
     }
 
-    public BindingHandler(BindingRegistry docRegistry){
-        super(docRegistry.registry);
-    }
+    public static final BindingRelation DO_NOTHING = new BindingRelation(-1, Binding.DO_NOTHING, -1, Relation.DO_NOTHING);
 }

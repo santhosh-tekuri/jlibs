@@ -15,32 +15,26 @@
 
 package jlibs.xml.sax.binding;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Binding<T>{
-    public final BindingRegistry<T> registry;
-
-    public Binding(){
-        this(new BindingRegistry<T>());
-    }
-
-    public Binding(BindingRegistry<T> registry){
-        this.registry = registry;
-    }
-
-    public void start(SAXContext<T> current, Attributes attributes) throws SAXException{}
-    public void text(SAXContext<T> current, String text) throws SAXException{}
-    public void finish(SAXContext<T> current) throws SAXException{}
-
-    /*-------------------------------------------------[ DO NOTHING ]---------------------------------------------------*/
+public @interface Binding{
+    public String value();
     
-    private static final Binding<?> DO_NOTHING = new Binding(){};
-    @SuppressWarnings({"unchecked"})
-    public static <T> Binding<T> doNothing(){
-        return (Binding<T>)DO_NOTHING;
+    public @interface Start{
+        public String[] value() default "";
+    }
+
+    public @interface Text{
+        public String[] value() default "";
+    }
+
+    public @interface Finish{
+        public String[] value() default "";
+    }
+
+    public @interface Element{
+        public String element();
+        public Class clazz();
     }
 }

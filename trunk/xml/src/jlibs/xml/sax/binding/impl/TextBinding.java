@@ -13,22 +13,19 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.binding;
+package jlibs.xml.sax.binding.impl;
+
+import jlibs.xml.sax.binding.SAXContext;
 
 /**
- * Encapsulates both binding and relation. This is used by BindingRegistry.
- *
  * @author Santhosh Kumar T
  */
-public class BindingRelation<P, C>{
-    Binding<C> binding;
-    Relation<P, C> relation;
+public final class TextBinding extends Binding{
+    public static final TextBinding INSTANCE = new TextBinding();
+    private TextBinding(){}
 
-    BindingRelation(Binding<C> binding, Relation<P, C> relation){
-        this.binding = binding;
-        this.relation = relation;
+    @Override
+    public void text(int state, SAXContext current, String text){
+        current.object = text;
     }
-
-    @SuppressWarnings({"unchecked"})
-    public static final BindingRelation<?, ?> DO_NOTHING = new BindingRelation(Binding.doNothing(), Relation.doNothing());
 }

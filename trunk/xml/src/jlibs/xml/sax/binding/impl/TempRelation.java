@@ -13,14 +13,17 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.binding;
+package jlibs.xml.sax.binding.impl;
+
+import jlibs.xml.sax.binding.SAXContext;
+import org.xml.sax.SAXException;
 
 /**
  * This relation puts child object in parent's temp
  * 
  * @author Santhosh Kumar T
  */
-public class TempRelation<P, C> extends Relation<P, C>{
+public class TempRelation implements Relation{
     private boolean put;
 
     private TempRelation(boolean put){
@@ -28,22 +31,16 @@ public class TempRelation<P, C> extends Relation<P, C>{
     }
 
     @Override
-    public void finished(SAXContext<P> parent, SAXContext<C> current){
+    public void startRelation(int state, SAXContext parent, SAXContext current) throws SAXException{}
+
+    @Override
+    public void endRelation(int state, SAXContext parent, SAXContext current){
         if(put)
-            parent.put(current.element, current.object);
+            parent.put(current.element(), current.object);
         else
-            parent.add(current.element, current.object);
+            parent.add(current.element(), current.object);
     }
 
-    private static final TempRelation<?, ?> PUT = new TempRelation<Object, Object>(true);
-    @SuppressWarnings({"unchecked"})
-    public static <P, C> TempRelation<P, C> put(){
-        return (TempRelation<P, C>)PUT;
-    }
-
-    private static final TempRelation<?, ?> ADD = new TempRelation<Object, Object>(false);
-    @SuppressWarnings({"unchecked"})
-    public static <P, C> TempRelation<P, C> add(){
-        return (TempRelation<P, C>)ADD;
-    }
+    public static final TempRelation PUT = new TempRelation(true);
+    public static final TempRelation ADD = new TempRelation(false);
 }
