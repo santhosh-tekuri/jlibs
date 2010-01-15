@@ -30,19 +30,23 @@ import java.util.Map;
 public abstract class SAXContext<T>{
     public T object;
 
-    public final NamespaceMap namespaceMap;
-    public final QName element;
-    protected SAXContext(NamespaceMap namespaceMap, QName element){
-        this.namespaceMap = namespaceMap;
-        this.element = element;
-    }
-
     public Map<QName, Object> temp;
 
     public Map<QName, Object> temp(){
         if(temp==null)
             temp = new HashMap<QName, Object>();
         return temp;
+    }
+
+    /** If you want to use this, ensure that BindingHandler.setPopulateNamespaces(true) is done */
+    protected NamespaceMap namespaceMap;
+    public NamespaceMap namespaceMap(){
+        return namespaceMap;
+    }
+
+    protected QName element;
+    public QName element(){
+        return element;
     }
 
     /*-------------------------------------------------[ Storing ]---------------------------------------------------*/
@@ -94,5 +98,15 @@ public abstract class SAXContext<T>{
             return defaultValue;
         X value = (X)temp.get(qname);
         return value!=null ? value : defaultValue;
+    }
+
+    /*-------------------------------------------------[ Debuging ]---------------------------------------------------*/
+
+    public abstract String xpath();
+    public abstract int line();
+    public abstract int column();
+
+    public String toString(){
+        return xpath() + " (line="+line()+", col="+column()+')';
     }
 }

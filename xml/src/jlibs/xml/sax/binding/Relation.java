@@ -16,19 +16,16 @@
 package jlibs.xml.sax.binding;
 
 /**
- * Establishes relation between parent and child objects
- *
  * @author Santhosh Kumar T
  */
-public abstract class Relation<P, C>{
-    public void started(SAXContext<P> parent, SAXContext<C> current){}
-    public void finished(SAXContext<P> parent, SAXContext<C> current){}
+public abstract class Relation{
+    public @interface Start{
+        public String parent() default "";
+        public String[] current();
+    }
 
-    /*-------------------------------------------------[ DO NOTHING ]---------------------------------------------------*/
-
-    private static final Relation<?, ?> DO_NOTHING = new Relation(){};
-    @SuppressWarnings({"unchecked"})
-    public static <P, C> Relation<P, C> doNothing(){
-        return (Relation<P, C>)DO_NOTHING;
+    public @interface Finish{
+        public String parent() default "";
+        public String[] current();
     }
 }

@@ -15,23 +15,13 @@
 
 package jlibs.xml.sax.binding;
 
-import jlibs.xml.sax.binding.impl.Handler;
-
-import javax.xml.namespace.QName;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * @author Santhosh Kumar T
  */
-public class BindingHandler extends Handler{
-    public BindingHandler(Class clazz){
-        this(new BindingRegistry(clazz));
-    }
-    
-    public BindingHandler(QName qname, Class clazz){
-        this(new BindingRegistry(qname, clazz));
-    }
-
-    public BindingHandler(BindingRegistry docRegistry){
-        super(docRegistry.registry);
-    }
+@Retention(RetentionPolicy.RUNTIME)
+public @interface NamespaceContext{
+    public Entry[] value();
 }

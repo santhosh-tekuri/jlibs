@@ -13,25 +13,17 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.binding;
+package jlibs.xml.sax.binding.impl;
 
-import jlibs.xml.sax.binding.impl.Handler;
-
-import javax.xml.namespace.QName;
+import jlibs.xml.sax.binding.SAXContext;
+import org.xml.sax.SAXException;
 
 /**
  * @author Santhosh Kumar T
  */
-public class BindingHandler extends Handler{
-    public BindingHandler(Class clazz){
-        this(new BindingRegistry(clazz));
-    }
-    
-    public BindingHandler(QName qname, Class clazz){
-        this(new BindingRegistry(qname, clazz));
-    }
-
-    public BindingHandler(BindingRegistry docRegistry){
-        super(docRegistry.registry);
-    }
+public class BindingCumRelation extends Binding implements Relation{
+    @Override
+    public void startRelation(int state, SAXContext parent, SAXContext current) throws SAXException{}
+    @Override
+    public void endRelation(int state, SAXContext parent, SAXContext current) throws SAXException{}
 }

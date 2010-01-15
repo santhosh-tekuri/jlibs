@@ -15,46 +15,47 @@
 
 package jlibs.xml.sax.binding;
 
+import jlibs.xml.sax.binding.impl.*;
+import jlibs.xml.sax.binding.impl.Relation;
+
 import javax.xml.namespace.QName;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
-public class BindingRegistry<T>{
-    public static final QName ANY = new QName("*", "*");
-    
-    private Map<QName, BindingRelation<T, ?>> registry;
+@SuppressWarnings({"unchecked"})
+public class BindingRegistry{
+    Registry registry = new Registry();
 
-    public <C> void register(QName qname, Binding<C> binding, Relation<T, C> relation){
-        if(registry ==null)
-            registry = new HashMap<QName, BindingRelation<T, ?>>();
-        registry.put(qname, new BindingRelation<T, C>(binding, relation));
+    public BindingRegistry(Class... classes){
+        for(Class clazz: classes)
+            register(clazz);
     }
 
-    public <C> void register(QName qname, Binding<C> binding){
-        register(qname, binding, TempRelation.<T, C>put());
+    public BindingRegistry(QName qname, Class clazz){
+        register(qname, clazz);
     }
 
-    public void register(QName qname){
-        register(qname, TextBinding.INSTANCE);
+    public void register(Class clazz){
+        register(null, clazz);
     }
 
-    public void register(QName qname, Relation<T, String> relation){
-        register(qname, TextBinding.INSTANCE, relation);
-    }
-
-    public BindingRelation<T, ?> get(QName qname){
-        if(registry==null)
-            return null;
-        else{
-            BindingRelation<T, ?> br = registry.get(qname);
-            if(br==null)
-                br = registry.get(new QName("*", qname.getLocalPart()));
-            if(br==null)
-                br = registry.get(ANY);
-            return br;
+    public void register(QName qname, Class clazz){
+        try{
+            clazz = clazz.getClassLoader().loadClass(clazz.getName()+ BindingAnnotationProcessor.SUFFIX);
+            if(qname==null)
+                qname = (QName)clazz.getDeclaredField("ELEMENT").get(null); 
+            if(qname==null)
+                throw new IllegalArgumentException("can't find qname for: "+clazz);
+            
+            jlibs.xml.sax.binding.impl.Binding binding = (jlibs.xml.sax.binding.impl.Binding)clazz.getDeclaredField("INSTANCE").get(null);
+            registry.register(qname, 0, binding, 0, Relation.DO_NOTHING);
+        }catch(ClassNotFoundException ex){
+            throw new RuntimeException(ex);
+        } catch(NoSuchFieldException ex){
+            throw new RuntimeException(ex);
+        } catch(IllegalAccessException ex){
+            throw new RuntimeException(ex);
         }
     }
 }

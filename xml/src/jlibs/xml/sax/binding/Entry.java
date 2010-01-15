@@ -15,15 +15,13 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * @author Santhosh Kumar T
  */
-public final class TextBinding extends Binding<String>{
-    public static final TextBinding INSTANCE = new TextBinding();
-    private TextBinding(){}
-
-    @Override
-    public void text(SAXContext<String> current, String text){
-        current.object = text;
-    }
+public @interface Entry{
+    public String prefix();
+    public String uri();
 }
