@@ -15,12 +15,14 @@
 
 package jlibs.xml.sax.binding;
 
+import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.ImpossibleException;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.xml.XMLConstants;
@@ -37,7 +39,37 @@ import java.util.*;
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class BindingAnnotationProcessor extends AbstractProcessor{
     public static final String SUFFIX = "Impl";
-    
+
+    private static final BindingAnnotation BINDING_ELEMENT = new ElementAnnotation();
+    private static final BindingAnnotation BINDING_START = new DefaultBindingAnnotation(
+            jlibs.xml.sax.binding.Binding.Start.class,
+            "public void startElement(int state, SAXContext current, Attributes attributes) throws SAXException{",
+            "current, attributes"
+    );
+    private static final BindingAnnotation BINDING_TEXT = new DefaultBindingAnnotation(
+            jlibs.xml.sax.binding.Binding.Text.class,
+            "public void text(int state, SAXContext current, String text) throws SAXException{",
+            "current, text"
+    );
+    private static final BindingAnnotation BINDING_FINISH = new DefaultBindingAnnotation(
+            jlibs.xml.sax.binding.Binding.Finish.class,
+            "public void endElement(int state, SAXContext current) throws SAXException{",
+            "current"
+    );
+    private static final BindingAnnotation RELATION_START = new RelationAnnotation(
+            jlibs.xml.sax.binding.Relation.Start.class,
+            "public void startRelation(int state, SAXContext parent, SAXContext current) throws SAXException{"
+    );
+    private static final BindingAnnotation RELATION_FINISH = new RelationAnnotation(
+            jlibs.xml.sax.binding.Relation.Finish.class,
+            "public void endRelation(int state, SAXContext parent, SAXContext current) throws SAXException{"
+    );
+
+    private static ProcessingEnvironment processingEnv;
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+    	BindingAnnotationProcessor.processingEnv = processingEnv;
+    }
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
         for(TypeElement annotation: annotations){
@@ -58,21 +90,26 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                         generate(binding);
                     }catch(IOException ex){
                         throw new RuntimeException(ex);
+                    }finally{
+                        try{
+                            Printer.get(processingEnv, binding.clazz).ps.close();
+                        } catch(IOException e){
+                            e.printStackTrace();
+                        }
                     }
                 }catch(ImpossibleException ex){
                     // ignore
                 }
             }
         }
-        return false;
+        return true;
     }
 
     private void process(Binding binding, TypeElement c, Map<String, String> map){
         for(ExecutableElement method: ElementFilter.methodsIn(c.getEnclosedElements())){
             for(AnnotationMirror mirror: method.getAnnotationMirrors()){
-                if(matches(mirror, jlibs.xml.sax.binding.Binding.Element.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Binding.Element.class);
-                    String element = getAnnotationValue(method, mirror, "element");
+                if(BINDING_ELEMENT.matches(mirror)){
+                    BINDING_ELEMENT.validate(method, mirror);
                     TypeElement bindingClazz = (TypeElement)((DeclaredType)getAnnotationValue(method, mirror, "clazz")).asElement();
                     if(getAnnotationMirror(bindingClazz, jlibs.xml.sax.binding.Binding.class)==null){
                         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
@@ -80,26 +117,27 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                                 method, mirror);
                         throw new ImpossibleException();
                     }
+                    String element = getAnnotationValue(method, mirror, "element");
                     getBinding(binding, method, mirror, map, element).element = bindingClazz;
-                }else if(matches(mirror, jlibs.xml.sax.binding.Binding.Start.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Binding.Start.class);
+                }else if(BINDING_START.matches(mirror)){
+                    BINDING_START.validate(method, mirror);
                     for(AnnotationValue xpath: (Collection<AnnotationValue>)getAnnotationValue(method, mirror, "value"))
                         getBinding(binding, method, mirror, map, (String)xpath.getValue()).startMethod = method;
-                }else if(matches(mirror, jlibs.xml.sax.binding.Binding.Text.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Binding.Text.class);
+                }else if(BINDING_TEXT.matches(mirror)){
+                    BINDING_TEXT.validate(method, mirror);
                     for(AnnotationValue xpath: (Collection<AnnotationValue>)getAnnotationValue(method, mirror, "value"))
                         getBinding(binding, method, mirror, map, (String)xpath.getValue()).textMethod = method;
-                }else if(matches(mirror, jlibs.xml.sax.binding.Binding.Finish.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Binding.Finish.class);
+                }else if(BINDING_FINISH.matches(mirror)){
+                    BINDING_FINISH.validate(method, mirror);
                     for(AnnotationValue xpath: (Collection<AnnotationValue>)getAnnotationValue(method, mirror, "value"))
                         getBinding(binding, method, mirror, map, (String)xpath.getValue()).finishMethod = method;
-                }else if(matches(mirror, jlibs.xml.sax.binding.Relation.Start.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Relation.Start.class);
+                }else if(RELATION_START.matches(mirror)){
+                    RELATION_START.validate(method, mirror);
                     Binding parentBinding = getBinding(binding, method, mirror, map, (String)getAnnotationValue(method, mirror, "parent"));
                     for(AnnotationValue child: (Collection<AnnotationValue>)getAnnotationValue(method, mirror, "current"))
                         getRelation(parentBinding, method, mirror, map, (String)child.getValue()).startedMethod = method;
-                }else if(matches(mirror, jlibs.xml.sax.binding.Relation.Finish.class)){
-                    validateMethod(method,  jlibs.xml.sax.binding.Relation.Finish.class);
+                }else if(RELATION_FINISH.matches(mirror)){
+                    RELATION_FINISH.validate(method, mirror);
                     Binding parentBinding = getBinding(binding, method, mirror, map, (String)getAnnotationValue(method, mirror, "parent"));
                     for(AnnotationValue child: (Collection<AnnotationValue>)getAnnotationValue(method, mirror, "current"))
                         getRelation(parentBinding, method, mirror, map, (String)child.getValue()).finishedMethod = method;
@@ -112,19 +150,13 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         return ((PackageElement)clazz.getEnclosingElement()).getQualifiedName().toString();
     }
 
-    private void validateMethod(ExecutableElement method, Class annotation){
-        Collection<Modifier> modifiers = method.getModifiers();
-        if(!modifiers.contains(Modifier.STATIC) && !modifiers.contains(Modifier.FINAL))
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "method with annotation "+annotation+" must be final", method);
-    }
-
     /*-------------------------------------------------[ Annotation ]---------------------------------------------------*/
 
-    private boolean matches(AnnotationMirror mirror, Class annotation){
+    private static boolean matches(AnnotationMirror mirror, Class annotation){
         return ((TypeElement)mirror.getAnnotationType().asElement()).getQualifiedName().contentEquals(annotation.getCanonicalName());
     }
 
-    private AnnotationMirror getAnnotationMirror(Element elem, Class annotation){
+    private static AnnotationMirror getAnnotationMirror(Element elem, Class annotation){
         for(AnnotationMirror mirror: elem.getAnnotationMirrors()){
             if(matches(mirror, annotation))
                 return mirror;
@@ -132,7 +164,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         return null;
     }
 
-    private <T> T getAnnotationValue(Element pos, AnnotationMirror mirror, String method){
+    private static <T> T getAnnotationValue(Element pos, AnnotationMirror mirror, String method){
         for(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : processingEnv.getElementUtils().getElementValuesWithDefaults(mirror).entrySet()){
             if(entry.getKey().getSimpleName().contentEquals(method))
                 return (T)entry.getValue().getValue();
@@ -143,7 +175,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    private <T> T getAnnotationValue(Element elem, Class annotation, String method){
+    private static <T> T getAnnotationValue(Element elem, Class annotation, String method){
         AnnotationMirror mirror = getAnnotationMirror(elem, annotation);
         if(mirror!=null)
             return (T)getAnnotationValue(elem, mirror, method);
@@ -373,17 +405,17 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         Map<Integer, ExecutableElement> relationFinish = new TreeMap<Integer, ExecutableElement>();
 
         void print(Printer pw){
-            printMethod(pw, bindingStart, "public void startElement(int state, SAXContext current, Attributes attributes) throws SAXException{", "current, attributes");
-            printMethod(pw, bindingText, "public void text(int state, SAXContext current, String text) throws SAXException{", "current, text");
-            printMethod(pw, bindingFinish, "public void endElement(int state, SAXContext current) throws SAXException{", "current");
-            printMethod(pw, relationStart, "public void startRelation(int state, SAXContext parent, SAXContext current) throws SAXException{", "parent, current");
-            printMethod(pw, relationFinish, "public void endRelation(int state, SAXContext parent, SAXContext current) throws SAXException{", "parent, current");
+            printMethod(pw, bindingStart, BINDING_START);
+            printMethod(pw, bindingText, BINDING_TEXT);
+            printMethod(pw, bindingFinish, BINDING_FINISH);
+            printMethod(pw, relationStart, RELATION_START);
+            printMethod(pw, relationFinish, RELATION_FINISH);
         }
 
-        void printMethod(Printer pw, Map<Integer, ExecutableElement> methods, String methodDecl, String args){
+        void printMethod(Printer pw, Map<Integer, ExecutableElement> methods, BindingAnnotation bindingAnnotation){
             if(methods.size()>0){
                 pw.println("@Override");
-                pw.println(methodDecl);
+                pw.println(bindingAnnotation.methodDecl);
                 pw.indent++;
 
                 pw.println("switch(state){");
@@ -391,7 +423,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 for(Map.Entry<Integer, ExecutableElement> entry : methods.entrySet()){
                     pw.println("case "+entry.getKey()+":");
                     pw.indent++;
-                    printMethod(pw, entry.getValue(), args);
+                    printMethod(pw, entry.getValue(), bindingAnnotation);
                     pw.println("break;");
                     pw.indent--;
                 }
@@ -404,11 +436,11 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
             }
         }
 
-        void printMethod(Printer pw, ExecutableElement method, String args){
+        void printMethod(Printer pw, ExecutableElement method, BindingAnnotation bindingAnnotation){
             if(method.getModifiers().contains(Modifier.STATIC))
-                pw.println(pw.clazz.getSimpleName()+"."+method.getSimpleName()+"("+args+");");
+                pw.println(pw.clazz.getSimpleName()+"."+method.getSimpleName()+"("+ bindingAnnotation.params(method)+");");
             else
-                pw.println("handler."+method.getSimpleName()+"("+args+");");
+                pw.println("handler."+method.getSimpleName()+"("+ bindingAnnotation.params(method)+");");
         }
     }
 
@@ -439,7 +471,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
 
         pw.print("public static final QName ELEMENT = ");
         AnnotationMirror bindingMirror = getAnnotationMirror(binding.clazz, jlibs.xml.sax.binding.Binding.class);
-        if(bindingMirror!=null)
+        if(bindingMirror==null)
             pw.println("null;");
         else{
             String element = getAnnotationValue(binding.clazz, bindingMirror, "value");            
@@ -517,5 +549,118 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         id = thisID;
         binding.process(id);
         return id;
+    }
+
+    private static abstract class BindingAnnotation{
+        protected String methodDecl;
+        protected Class annotation;
+
+        private BindingAnnotation(Class annotation, String methodDecl){
+            this.annotation = annotation;
+            this.methodDecl = methodDecl;
+        }
+
+        protected boolean matches(AnnotationMirror mirror){
+            return ((TypeElement)mirror.getAnnotationType().asElement()).getQualifiedName().contentEquals(annotation.getCanonicalName());
+        }
+        
+        protected void validate(ExecutableElement method, AnnotationMirror mirror){
+            validateModifiers(method);
+        }
+
+        public abstract String params(ExecutableElement method);
+        
+        protected void validateModifiers(ExecutableElement method){
+            Collection<Modifier> modifiers = method.getModifiers();
+            if(!modifiers.contains(Modifier.STATIC) && !modifiers.contains(Modifier.FINAL)){
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "method with annotation "+annotation+" must be final", method);
+                throw new ImpossibleException();
+            }
+        }
+
+        protected void validateParameterCount(ExecutableElement method, int expected){
+            if(method.getParameters().size()!=expected){
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        "method annotated with "+annotation.getCanonicalName()+" must take exactly two arguments",
+                        method);
+                throw new ImpossibleException();
+            }
+        }
+
+        protected boolean matches(ExecutableElement method, int paramIndex, Class expected){
+            VariableElement param = method.getParameters().get(paramIndex);
+            if(param.asType().getKind()== TypeKind.DECLARED){
+                Name paramType = ((TypeElement)((DeclaredType)param.asType()).asElement()).getQualifiedName();
+                if(paramType.contentEquals(expected.getName()))
+                    return true;
+            }
+            return false;
+        }
+        
+        protected String context(ExecutableElement method, int paramIndex, String defaultArg){
+            VariableElement param = method.getParameters().get(paramIndex);
+            switch(param.asType().getKind()){
+                case DECLARED:
+                    Name paramType = ((TypeElement)((DeclaredType)param.asType()).asElement()).getQualifiedName();
+                    if(paramType.contentEquals(SAXContext.class.getName()))
+                        return defaultArg;
+                    else
+                        return "("+paramType+")"+defaultArg+".object";
+                case INT:
+                    return "(java.lang.Integer)"+defaultArg+".object";
+                case BOOLEAN:
+                case FLOAT:
+                case DOUBLE:
+                case LONG:
+                case BYTE:
+                    return "(java.lang."+BeanUtil.firstLetterToUpperCase(param.asType().getKind().toString().toLowerCase())+")"+defaultArg+".object";
+                default:
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                            "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument",
+                            method);
+                    throw new ImpossibleException();
+            }
+        }
+    }
+
+    private static class DefaultBindingAnnotation extends BindingAnnotation{
+        private String params;
+        private DefaultBindingAnnotation(Class annotation, String methodDecl, String params){
+            super(annotation, methodDecl);
+            this.params = params;
+        }
+
+        @Override
+        public String params(ExecutableElement method){
+            return params;
+        }
+    }
+
+    private static class ElementAnnotation extends BindingAnnotation{
+        private ElementAnnotation(){
+            super(jlibs.xml.sax.binding.Binding.Element.class, null);
+        }
+
+        @Override
+        public String params(ExecutableElement method){
+            return null;
+        }
+    }
+    
+    private static class RelationAnnotation extends BindingAnnotation{
+        private RelationAnnotation(Class annotation, String methodDecl){
+            super(annotation, methodDecl);
+        }
+
+        @Override
+        protected void validate(ExecutableElement method, AnnotationMirror mirror){
+            super.validate(method, mirror);
+            validateParameterCount(method, 2);
+        }
+
+        @Override
+        public String params(ExecutableElement method){
+            return context(method, 0, "parent")+", "+ context(method, 1, "current");
+        }
     }
 }
