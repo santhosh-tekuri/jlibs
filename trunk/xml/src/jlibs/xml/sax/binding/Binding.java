@@ -21,18 +21,41 @@ package jlibs.xml.sax.binding;
 public @interface Binding{
     public String value();
     
+    /**
+     * method signatures supported:
+     *      void/C method(SAXContext current, Attributes attrs)
+     *      void/C method(C current, Attributes attrs)
+     *      void/C method(Attributes attrs)
+     *      void/C method()
+     */
     public @interface Start{
         public String[] value() default "";
     }
 
+    /**
+     * method signatures supported:
+     *      void/C method(SAXContext current, String text)
+     *      void/C method(C current, String text)
+     *      void/C method(String text)
+     */
     public @interface Text{
         public String[] value() default "";
     }
 
+    /**
+     * method signatures supported:
+     *      void/C method(SAXContext current)
+     *      void/C method(C current)
+     *      void/C method()
+     */
     public @interface Finish{
         public String[] value() default "";
     }
 
+    /**
+     * method signature is not taken into account.
+     * the method is used to hold the annotation, and is never called.
+     */
     public @interface Element{
         public String element();
         public Class clazz();
