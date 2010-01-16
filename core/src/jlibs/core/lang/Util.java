@@ -112,7 +112,7 @@ public class Util{
     public static int hashCode(Object... objects){
         int hashCode = 0;
         for(Object obj: objects)
-            hashCode += hashCode(obj);
+            hashCode = 31*hashCode + hashCode(obj);
         return hashCode;
     }
 
