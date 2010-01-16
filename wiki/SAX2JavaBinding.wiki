@@ -1,0 +1,183 @@
+#summary SAX-JAVA Binding Made Easier
+#labels SAX,JAVA,BINDING
+
+the package `jlibs.xml.sax.binding` contains classes which help you to read xml and create java objects.
+
+===Concepts===
+Before going into details, we will first go through the concepts. Then it will be easier to understand the code.
+
+we have employee.xml:
+{{{
+<employee>                     
+    <name>scott</name>         
+    <age>20</age>              
+    <experience>5</experience> 
+</employee>
+}}}
+and Employee class:
+{{{
+public class Employee{
+    private String name;
+    private int age;
+    private int experience;
+
+    // getter and setter methods
+}
+}}}
+
+Each element in xml will create a java object.
+Let us see the java objects created for above xml:
+{{{
+        XML                     |     Java Object  
+--------------------------------|-----------------
+<employee>                      |   new Employee()
+    <name>scott</name>          |   new String(#text) 
+    <age>20</age>               |   new String(#text) 
+    <experience>5</experience>  |   new String(#text) 
+</employee>                     |
+}}}
+From above table you can see that:
+ * `<employe/>` element create new `Employee` object<br>
+ * `<name/>`, `<age/>` and `<experience/>` elements create `String` objects with their text content(i.e `#text`)
+
+Now we have 4 java Objects ( one `Employee` object and four `String` objects)
+
+Now *relation* comes into picture. Each element has a relation which tells how to relate current element's java object with parent element's java oject.
+
+{{{
+        XML                     |     Java Object             |   Relation
+--------------------------------|--------------------------------------------------------
+<employee>                      |   emp = new Employee()      |   - No Relation -
+    <name>scott</name>          |   name = new String(#text)  | emp.setName(name)
+    <age>20</age>               |   age = new String(#text)   | emp.setAge(age)
+    <experience>5</experience>  |   exp = new String(#text)   | emp.setExperience(exp)
+</employee>                     |
+}}}
+
+The above table shows how java objects created are related with each other.<br>
+To make understanding easier, we assigned each java object created into some variable.
+ * `Employee` object created is assigned to `emp` variable
+ * `String` created for `<name>` element is assigned to `name` variable
+ * `String` created for `<age>` element is assigned to `age` variable
+ * `String` created for `<experience>` element is assigned to `exp` variable
+
+Now you can see that relation of `<name>` element and its parent element `<employee>` in java is:
+{{{
+emp.setName(name)
+}}}
+Once Java-Object and Relation are defined for each element type, It is piece of cake to read xml document into java objects.
+------------------------------------------------------------------------------------------------------------------------------
+
+===Implementing Binding===
+{{{
+import jlibs.xml.sax.binding.*;
+
+@Binding("employee")
+public class EmployeeBinding{
+    @Binding.Start
+    public static Employee onStart() throws SAXException{
+        return new Employee();
+    }
+
+    @Binding.Text({"name", "age", "experience"})
+    public static String onText(String text){
+        return text;
+    }
+
+    @Relation.Finish(current = "name")
+    public static void relateName(Employee employee, String name){
+        employee.setName(name);
+    }
+
+    @Relation.Finish(current = "age")
+    public static void relateAge(Employee employee, String age){
+        employee.setAge(Integer.parseInt(age));
+    }
+
+    @Relation.Finish(current = "experience")
+    public static void relateExperience(Employee employee, String experience){
+        employee.setExperience(Integer.parseInt(experience));
+    }
+}
+}}}
+
+Let us walk through the code:
+
+{{{
+import jlibs.xml.sax.binding.*;
+}}}
+package `jlibs.xml.sax.binding` contains various annotations, which we use to define binding.
+
+{{{
+@Binding("employee")
+public class EmployeeBinding{
+}}}
+`@Binding("employee")` annotation says that, `EmployeeBinding` class defines binding for `<employee>` element
+
+{{{
+@Binding.Start
+public static Employee onStart() throws SAXException{
+    return new Employee();
+}
+}}}
+`@Binding.Start` annotation says that, when `<employee>` element starts call this method.<br>
+this method returns new `Employee` object. i.e for each `<employee>` we create an `Employee` object.
+
+{{{
+@Binding.Text({"name", "age", "experience"})
+public static String onText(String text){
+    return text;
+}
+}}}
+`@Binding.Text({"name", "age", "experience"})` annotation says that, call this method for `<name>`, `<age>` and `<employee>` text content.<br>
+The argument `text` will be the text content of that element. The java object created for these elements is their text
+content, so we simply return the `text` argument.
+
+{{{
+@Relation.Finish(current = "name")
+public static void relateName(Employee employee, String name){
+    employee.setName(name);
+}
+}}}
+`@Relation.Finish(current = "name")` annotation says that, call this method on `<name>` element end.<br>
+The first argument will be the java object created for `<name>`'s parent element (i,e `<employee>` element), which is `Employee` object created by `onStart()` method.<br>
+The second argument will be the java object created for `<name>` element, which is `String` object created by `onText(...)` method.
+
+similarly `relateAge(...)` and `relateExperience(...)` are called on `<age>` and `<experience>` element end respectively.
+------------------------------------------------------------------------------------------------------------------------------
+
+===SAX Parsing===
+Now we have finished coding `EmployeeBinding`. Now let us see how to read employee xml document using this binding.
+{{{
+public static Employee read(File xmlFile) throws Exception{
+    BindingHandler handler = new BindingHandler(EmployeeBinding.class);
+    return (Employee)handler.parse(new InputSource(xmlFile.getPath()));
+}
+}}}
+
+`BindingHandler` is an implementation of SAX `DefaultHandler`. It's constructor takes the binding calss as argument.
+------------------------------------------------------------------------------------------------------------------------------
+
+===Behind the Scene===
+
+Let us see what happens behind the scene.
+
+All the annoations we have used have `RetentionPolicy.SOURCE`(except `@Binding`). i.e These annotations are not available at runtime.<br>
+`JLibs` comes with an [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingAnnotationProcessor.java annotation processor], 
+which processes these annotations at compile time.<br>
+This processor generates a class for each class with `@Binding` annotation.<br>
+This generated class defines the [http://en.wikipedia.org/wiki/State_diagram state diagram] for the binding.
+
+for example when you compile `EmployeeBinding` class, you will get an additional class `EmployeeBindingImpl` generated.
+
+`BindingHandler` is a SAX `DefaultHandler` which implements a [http://en.wikipedia.org/wiki/Finite-state_machine state machine].
+
+Because reflection is not used at runtime, the sax parsing will be faster.
+------------------------------------------------------------------------------------------------------------------------------
+
+I will be preparing more example use cases like:
+ * How to handle when `Employee` has no default constructor
+ * How to reuse one binding in another
+ * recursive bindings
+
+Your comments are appreciated.
