@@ -16,6 +16,10 @@
 package jlibs.xml.sax.binding;
 
 /**
+ * method signatures supported:
+ *      void method(SAXContext parent, SAXContext current)
+ *      void method(P parent, C current)
+ *
  * @author Santhosh Kumar T
  */
 public abstract class Relation{
