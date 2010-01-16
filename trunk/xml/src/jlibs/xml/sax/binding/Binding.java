@@ -15,12 +15,15 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Santhosh Kumar T
  */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Binding{
     public String value();
@@ -32,6 +35,7 @@ public @interface Binding{
      *      void/C method(Attributes attrs)
      *      void/C method()
      */
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Start{
         public String[] value() default "";
@@ -43,6 +47,7 @@ public @interface Binding{
      *      void/C method(C current, String text)
      *      void/C method(String text)
      */
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Text{
         public String[] value() default "";
@@ -54,6 +59,7 @@ public @interface Binding{
      *      void/C method(C current)
      *      void/C method()
      */
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Finish{
         public String[] value() default "";
@@ -63,6 +69,7 @@ public @interface Binding{
      * method signature is not taken into account.
      * the method is used to hold the annotation, and is never called.
      */
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Element{
         public String element();

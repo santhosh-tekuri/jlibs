@@ -15,8 +15,10 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * method signatures supported:
@@ -26,12 +28,14 @@ import java.lang.annotation.RetentionPolicy;
  * @author Santhosh Kumar T
  */
 public abstract class Relation{
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Start{
         public String parent() default "";
         public String[] current();
     }
 
+    @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Finish{
         public String parent() default "";
