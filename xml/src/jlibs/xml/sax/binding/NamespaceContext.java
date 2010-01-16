@@ -15,12 +15,15 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Santhosh Kumar T
  */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NamespaceContext{
     public Entry[] value();
