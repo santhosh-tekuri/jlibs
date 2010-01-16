@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * @author Santhosh Kumar T
  */
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Entry{
     public String prefix();
     public String uri();

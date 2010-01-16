@@ -15,6 +15,9 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * method signatures supported:
  *      void method(SAXContext parent, SAXContext current)
@@ -23,11 +26,13 @@ package jlibs.xml.sax.binding;
  * @author Santhosh Kumar T
  */
 public abstract class Relation{
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Start{
         public String parent() default "";
         public String[] current();
     }
 
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Finish{
         public String parent() default "";
         public String[] current();

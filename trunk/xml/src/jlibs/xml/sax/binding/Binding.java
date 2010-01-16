@@ -15,9 +15,13 @@
 
 package jlibs.xml.sax.binding;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * @author Santhosh Kumar T
  */
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Binding{
     public String value();
     
@@ -28,6 +32,7 @@ public @interface Binding{
      *      void/C method(Attributes attrs)
      *      void/C method()
      */
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Start{
         public String[] value() default "";
     }
@@ -38,6 +43,7 @@ public @interface Binding{
      *      void/C method(C current, String text)
      *      void/C method(String text)
      */
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Text{
         public String[] value() default "";
     }
@@ -48,6 +54,7 @@ public @interface Binding{
      *      void/C method(C current)
      *      void/C method()
      */
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Finish{
         public String[] value() default "";
     }
@@ -56,6 +63,7 @@ public @interface Binding{
      * method signature is not taken into account.
      * the method is used to hold the annotation, and is never called.
      */
+    @Retention(RetentionPolicy.SOURCE)
     public @interface Element{
         public String element();
         public Class clazz();
