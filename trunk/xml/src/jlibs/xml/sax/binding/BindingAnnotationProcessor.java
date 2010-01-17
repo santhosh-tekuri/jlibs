@@ -463,14 +463,18 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         }
 
         pw.println("public static final "+pw.generatedClazz +" INSTANCE = new "+pw.generatedClazz +"(new "+binding.clazz.getSimpleName()+"());");
-
+        pw.println("static{");
+        pw.indent++;
+        pw.println("INSTANCE.init();");
+        pw.indent--;
+        pw.println("}");
         pw.emptyLine(true);
+
         pw.println("private final "+binding.clazz.getSimpleName()+" handler;");
 
         pw.println("private "+pw.generatedClazz +"("+binding.clazz.getSimpleName()+" handler){");
         pw.indent++;
         pw.println("this.handler = handler;");
-        pw.println("init();");
         pw.indent--;
         pw.println("}");
         pw.emptyLine(true);
