@@ -16,7 +16,6 @@
 package jlibs.xml.sax.binding;
 
 import jlibs.core.lang.BeanUtil;
-import jlibs.core.lang.ImpossibleException;
 import org.xml.sax.Attributes;
 
 import javax.annotation.processing.*;
@@ -80,8 +79,8 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                             e.printStackTrace();
                         }
                     }
-                }catch(ImpossibleException ex){
-                    // ignore
+                }catch(BindingError error){
+                    error.report();
                 }
             }
         }
@@ -94,12 +93,8 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 if(BINDING_ELEMENT.matches(mirror)){
                     BINDING_ELEMENT.validate(method, mirror);
                     TypeElement bindingClazz = (TypeElement)((DeclaredType)getAnnotationValue(method, mirror, "clazz")).asElement();
-                    if(getAnnotationMirror(bindingClazz, jlibs.xml.sax.binding.Binding.class)==null){
-                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                bindingClazz.getQualifiedName()+" should have annotation "+jlibs.xml.sax.binding.Binding.class.getCanonicalName(),
-                                method, mirror);
-                        throw new ImpossibleException();
-                    }
+                    if(getAnnotationMirror(bindingClazz, jlibs.xml.sax.binding.Binding.class)==null)
+                        throw new BindingError(method, mirror, bindingClazz.getQualifiedName()+" should have annotation "+jlibs.xml.sax.binding.Binding.class.getCanonicalName());
                     String element = getAnnotationValue(method, mirror, "element");
                     getBinding(binding, method, mirror, map, element).element = bindingClazz;
                 }else if(BINDING_START.matches(mirror)){
@@ -152,9 +147,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
             if(entry.getKey().getSimpleName().contentEquals(method))
                 return (T)entry.getValue().getValue();
         }
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                "annotation "+((TypeElement)mirror.getAnnotationType().asElement()).getQualifiedName()+" is missing "+method, pos, mirror);
-        throw new ImpossibleException("can't find method: "+method);
+        throw new BindingError(pos, mirror, "annotation "+((TypeElement)mirror.getAnnotationType().asElement()).getQualifiedName()+" is missing "+method);
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
@@ -184,6 +177,32 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         return map;
     }
 
+    /*-------------------------------------------------[ Raising Errors ]---------------------------------------------------*/
+
+    private static class BindingError extends RuntimeException{
+        private Element pos1;
+        private AnnotationMirror pos2;
+
+        private BindingError(Element pos, String message){
+            this(pos, null, message);
+        }
+        
+        private BindingError(Element pos1, AnnotationMirror pos2, String message){
+            super(message);
+            this.pos1 = pos1;
+            this.pos2 = pos2;
+        }
+
+        public void report(){
+            if(pos1==null)
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage());
+            else if(pos2==null)
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1);
+            else
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2);
+        }
+    }
+    
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
 
     private QName toQName(Element pos1, AnnotationMirror pos2, Map<String, String> nsContext, String token){
@@ -198,7 +217,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         }
         String uri = nsContext.get(prefix);
         if(uri==null)
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "no namespace mapping found for prefix "+prefix, pos1, pos2);
+            throw new BindingError(pos1, pos2, "no namespace mapping found for prefix "+prefix);
         return new QName(uri, localName);
     }
 
@@ -458,7 +477,9 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         if(bindingMirror==null)
             pw.println("null;");
         else{
-            String element = getAnnotationValue(binding.clazz, bindingMirror, "value");            
+            String element = getAnnotationValue(binding.clazz, bindingMirror, "value");
+            if(element.indexOf('/')!=-1)
+                throw new BindingError(binding.clazz, bindingMirror, "value of "+jlibs.xml.sax.binding.Binding.class+" should be single element, but not element path");
             pw.println(toJava(toQName(binding.clazz, bindingMirror, binding.nsContext, element))+";");
         }
 
@@ -567,10 +588,8 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         
         protected void validateModifiers(ExecutableElement method){
             Collection<Modifier> modifiers = method.getModifiers();
-            if(!modifiers.contains(Modifier.STATIC) && !modifiers.contains(Modifier.FINAL)){
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "method with annotation "+annotation+" must be final", method);
-                throw new ImpossibleException();
-            }
+            if(!modifiers.contains(Modifier.STATIC) && !modifiers.contains(Modifier.FINAL))
+                throw new BindingError(method, "method with annotation "+annotation+" must be final");
         }
 
         protected boolean matches(ExecutableElement method, int paramIndex, Class expected){
@@ -601,10 +620,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 case BYTE:
                     return "(java.lang."+BeanUtil.firstLetterToUpperCase(param.asType().getKind().toString().toLowerCase())+")"+defaultArg+".object";
                 default:
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument",
-                            method);
-                    throw new ImpossibleException();
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument");
             }
         }
     }
@@ -652,10 +668,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 case 2:
                     return param(method, 0)+", "+param(method, 1);
                 default:
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" must not take more than two arguments",
-                            method);
-                    throw new ImpossibleException();
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" must not take more than two arguments");
             }
         }
     }
@@ -678,12 +691,8 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
         @Override
         public String params(ExecutableElement method){
             if(method.getParameters().size()>0){
-                if(!matches(method, method.getParameters().size()-1, String.class)){
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" must take String as last argument",
-                            method);
-                    throw new ImpossibleException();
-                }
+                if(!matches(method, method.getParameters().size()-1, String.class))
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" must take String as last argument");
             }
             switch(method.getParameters().size()){
                 case 1:
@@ -691,10 +700,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 case 2:
                     return context(method, 0, "current")+", text";
                 default:
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" must take either one or two argument(s)",
-                            method);
-                    throw new ImpossibleException();
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" must take either one or two argument(s)");
             }
         }
     }
@@ -722,10 +728,7 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 case 1:
                     return context(method, 0, "current");
                 default:
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" must not take more than one argument",
-                            method);
-                    throw new ImpossibleException();
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" must not take more than one argument");
             }
         }
     }
@@ -744,12 +747,8 @@ public class BindingAnnotationProcessor extends AbstractProcessor{
                 case 2:
                     return context(method, 0, "parent")+", "+ context(method, 1, "current");
                 default:
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "method annotated with "+annotation.getCanonicalName()+" must take exactly two arguments",
-                            method);
-                    throw new ImpossibleException();
+                    throw new BindingError(method, "method annotated with "+annotation.getCanonicalName()+" must take exactly two arguments");
             }
-
         }
     }
 }
