@@ -13,30 +13,18 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.sax.binding;
+package jlibs.core.annotation.processing;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 
 /**
- * method signatures supported:
- *      void method(SAXContext parent, SAXContext current)
- *      void method(P parent, C current)
- *
  * @author Santhosh Kumar T
  */
-public abstract class Relation{
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Start{
-        public String[] value();
-    }
-
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Finish{
-        public String[] value();
+public abstract class AnnotationProcessor extends AbstractProcessor{
+    @Override
+    public void init(ProcessingEnvironment processingEnv){
+        super.init(processingEnv);
+        Environment.set(processingEnv);
     }
 }

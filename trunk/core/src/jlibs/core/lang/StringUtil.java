@@ -15,13 +15,13 @@
 
 package jlibs.core.lang;
 
-import jlibs.core.graph.Filter;
 import jlibs.core.graph.Convertor;
+import jlibs.core.graph.Filter;
 import jlibs.core.util.regex.TemplateMatcher;
 
 import java.util.Collections;
-import java.util.StringTokenizer;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * @author Santhosh Kumar T
@@ -112,6 +112,10 @@ public class StringUtil{
         return join(array, ", ", null);
     }
 
+    public static <T> String join(T[] array, String separator){
+        return join(array, separator, null);
+    }
+
     public static <T> String join(T[] array, String separator, Convertor<T, String> convertor){
         StringBuilder buff = new StringBuilder();
         boolean addSeparator = false;
@@ -134,6 +138,10 @@ public class StringUtil{
         return join(iter, ", ", null);
     }
 
+    public static <T> String join(Iterator<T> iter, String separator){
+        return join(iter, separator, null);
+    }
+    
     public static <T> String join(Iterator<T> iter, String separator, Convertor<T, String> convertor){
         StringBuilder buff = new StringBuilder();
         boolean addSeparator = false;
