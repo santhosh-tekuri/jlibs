@@ -275,9 +275,129 @@ public static void onManager(){}
 `@Binding.Element(element = "manager", clazz = EmployeeBinding.class)` annotation says to reuse `EmployeeBinding` for `<manager>` element.
 
 ------------------------------------------------------------------------------------------------------------------------------
+===When no-arg constructor is missing===
+
+Let us say our `Employee` has no default constructor:
+{{{
+public class Employee{
+    private String name;
+    private int age;
+    private int experience;
+
+    public Employee(String name, int age, int experience){
+        this.name = name;
+        this.age = age;
+        this.experience = experience;
+    }
+
+    // getter methods
+}
+}}}
+Let us see how to handle this situation:
+{{{
+        XML                     |     Java Object                                                     |   Relation
+--------------------------------|---------------------------------------------------------------------|----------------------------
+<employee>                      |                                                                     |
+    <name>scott</name>          | name = new String(#text)                                            | parent[<name>] = name
+    <age>20</age>               | age = new String(#text)                                             | parent[<age>] = age
+    <experience>5</experience>  | exp = new String(#text)                                             | parent[<experience>] = exp
+</employee>                     | emp = new Employee(current[<name>], current[<age>], [<experience>]) | 
+}}}
+
+Notice that now we are creating `Employee` object in `<employee>` element end, rather than `<employee>` element begin.<br>
+This is because, we know the values of name, age and experience are available only on `<employee>` element end.<br>
+
+Earlier, the relation for `<name>`, `<age>` and `<experience>` used to call respective set method on `Employee` object.<br>
+Now we can't do that, because we don't have `Employee` created by that time.
+
+For each element in xml document, a [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/SAXContext.java SAXContext] is maintained by `BindingHandler`.<br>
+This context is used to store the java object you created for that element.<br>
+`SAXContext.object` gives the object you have created. 
+
+Other than that, `SAXContext` also has map, which you can use to store values temporarly which are required to create the java object later.<br>
+`SAXContext.temp` is that map. here key is `QName` and value is any `Object`.
+
+let us see the relation for `<name>` element:
+{{{
+parent[<name>] = name
+}}}
+here `parent` refers to parent element's (i,e `<employee>`) context;<br>
+we are storing the `String` object created for `<name>` element, in `<employee>`'s context.<br>
+here the key used is the qname name of current element i.e `<name>`
+
+similarly we are saving the values of `<age>` and `<experience>` elements also in `<employees>`'s context.
+
+now on `<employee>` element end we do:
+{{{
+emp = new Employee(current[<name>], current[<age>], [<experience>])
+}}}
+here `current` refers to current element's (i.e `<employee>`) context;<br>
+we are retriving the values of `<name>`, `<age>` and `<experience>` stored earlier, and creating `Employee` object using them.
+
+Let us see what it looks like in java code:
+{{{
+@Binding("employee")
+public class EmployeeBinding{
+    @Binding.Text({"name", "age", "experience"})
+    public static String onText(String text){
+        return text;
+    }
+
+    @Relation.Finish(current = {"name", "age", "experience"})
+    public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
+        parent.put(current.element(), current.object);
+    }
+
+    @Binding.Finish
+    public static Employee onFinish(SAXContext<Employee> current) throws SAXException{
+        String name = current.get(new QName("name"));
+        String age = current.get(new QName("age"), "0");
+        String experience = current.get(new QName("experience"), "0");
+        return new Employee(name, Integer.parseInt(age), Integer.parseInt(experience));
+    }
+}
+}}}
+Let us walk through the code;
+{{{
+@Relation.Finish(current = {"name", "age", "experience"})
+public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
+    parent.put(current.element(), current.object);
+}
+}}}
+`@Relation.Finish(current = {"name", "age", "experience"})` annotation says that, call this method on<br>
+`<name>`, `<age>` and `<experience>` element end.<br>
+the first argument `SAXContext<Employee> parent` is the context of parent element i.e `<employee>`<br>
+the second argument `SAXContext<String> current` is the context of current element i.e `<name>` or `<age>` or `<experience>`<br>
+`current.element()` gives `QName` of current element.<br>
+`current.object` gives the `String` object we have created for the current element<br>
+`parent.put(...)` saves the value the `SAXContext.temp`.<br>
+
+Here we used `parent.put(...)` rather than `parent.temp.put(...)`
+this is because `SAXContext.temp` is null initially and need to be initiazed before use.<br>
+This is to avoid unncessary map creation. <br>
+`SAXContext` provides some handy methods to access `temp` like `put(...)`, `get(...)`.
+These methods take care of initializing `temp` lazily when requried.
+
+{{{
+@Binding.Finish
+public static Employee onFinish(SAXContext<Employee> current) throws SAXException{
+    String name = current.get(new QName("name"));
+    String age = current.get(new QName("age"), "0");
+    String experience = current.get(new QName("experience"), "0");
+    return new Employee(name, Integer.parseInt(age), Integer.parseInt(experience));
+}
+}}}
+`@Binding.Finish` annotation says that, call this method on `<employee>` element end.<br>
+the argument `SAXContext<Employee> current` is the context of current element i.e `<employee>`<br>
+here we are retriving values of name, age and experience of current context using `SAXContext.get(...)` method.<br>
+The first argument to `get(...)` is the `QName` whose value you want to retrieve.<br>
+The second argument to `get(...)` is the default value to be returned when no value is present in `temp`.<br>
+the second argument to `get(...)` is optional.
+
+------------------------------------------------------------------------------------------------------------------------------
 
 I will be preparing more example use cases like:
- * How to handle when `Employee` has no default constructor
  * recursive bindings
+ * etc
 
 Your comments are appreciated.
