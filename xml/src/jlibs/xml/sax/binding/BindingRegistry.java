@@ -15,8 +15,9 @@
 
 package jlibs.xml.sax.binding;
 
-import jlibs.xml.sax.binding.impl.*;
+import jlibs.xml.sax.binding.impl.Registry;
 import jlibs.xml.sax.binding.impl.Relation;
+import jlibs.xml.sax.binding.impl.processor.BindingAnnotationProcessor;
 
 import javax.xml.namespace.QName;
 
