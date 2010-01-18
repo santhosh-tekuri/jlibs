@@ -84,17 +84,17 @@ public class EmployeeBinding{
         return text;
     }
 
-    @Relation.Finish(current = "name")
+    @Relation.Finish("name")
     public static void relateName(Employee employee, String name){
         employee.setName(name);
     }
 
-    @Relation.Finish(current = "age")
+    @Relation.Finish("age")
     public static void relateAge(Employee employee, String age){
         employee.setAge(Integer.parseInt(age));
     }
 
-    @Relation.Finish(current = "experience")
+    @Relation.Finish("experience")
     public static void relateExperience(Employee employee, String experience){
         employee.setExperience(Integer.parseInt(experience));
     }
@@ -134,12 +134,12 @@ The argument `text` will be the text content of that element. The java object cr
 content, so we simply return the `text` argument.
 
 {{{
-@Relation.Finish(current = "name")
+@Relation.Finish(name")
 public static void relateName(Employee employee, String name){
     employee.setName(name);
 }
 }}}
-`@Relation.Finish(current = "name")` annotation says that, call this method on `<name>` element end.<br>
+`@Relation.Finish("name")` annotation says that, call this method on `<name>` element end.<br>
 The first argument will be the java object created for `<name>`'s parent element (i,e `<employee>` element), which is `Employee` object created by `onStart()` method.<br>
 The second argument will be the java object created for `<name>` element, which is `String` object created by `onText(...)` method.
 
@@ -163,7 +163,7 @@ public static Employee read(File xmlFile) throws Exception{
 Let us see what happens behind the scene.
 
 All the annoations we have used have `RetentionPolicy.SOURCE`(except `@Binding`). i.e These annotations are not available at runtime.<br>
-`JLibs` comes with an [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingAnnotationProcessor.java annotation processor], 
+`JLibs` comes with an [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/impl/processor/BindingAnnotationProcessor.java annotation processor], 
 which processes these annotations at compile time.<br>
 This processor generates a class for each class with `@Binding` annotation.<br>
 This generated class defines the [http://en.wikipedia.org/wiki/State_diagram state diagram] for the binding.
@@ -253,7 +253,7 @@ public class CompanyBinding{
     @Binding.Element(element = "manager", clazz = EmployeeBinding.class)
     public static void onManager(){}
 
-    @Relation.Finish(current = "manager")
+    @Relation.Finish("manager")
     public static void relateManager(Company company, Employee manager){
         company.setManager(manager);
     }
@@ -261,7 +261,7 @@ public class CompanyBinding{
     @Binding.Element(element = "employee", clazz = EmployeeBinding.class)
     public static void onEmployee(){}
 
-    @Relation.Finish(current = "employee")
+    @Relation.Finish("employee")
     public static void relateEmployee(Company company, Employee employee){
         company.employees.add(employee);
     }
@@ -343,7 +343,7 @@ public class EmployeeBinding{
         return text;
     }
 
-    @Relation.Finish(current = {"name", "age", "experience"})
+    @Relation.Finish({"name", "age", "experience"})
     public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
         parent.put(current.element(), current.object);
     }
@@ -359,12 +359,12 @@ public class EmployeeBinding{
 }}}
 Let us walk through the code;
 {{{
-@Relation.Finish(current = {"name", "age", "experience"})
+@Relation.Finish({"name", "age", "experience"})
 public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
     parent.put(current.element(), current.object);
 }
 }}}
-`@Relation.Finish(current = {"name", "age", "experience"})` annotation says that, call this method on<br>
+`@Relation.Finish({"name", "age", "experience"})` annotation says that, call this method on<br>
 `<name>`, `<age>` and `<experience>` element end.<br>
 the first argument `SAXContext<Employee> parent` is the context of parent element i.e `<employee>`<br>
 the second argument `SAXContext<String> current` is the context of current element i.e `<name>` or `<age>` or `<experience>`<br>
