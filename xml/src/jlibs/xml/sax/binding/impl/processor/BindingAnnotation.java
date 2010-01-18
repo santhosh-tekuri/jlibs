@@ -20,6 +20,7 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.xml.sax.binding.Attr;
 import jlibs.xml.sax.binding.SAXContext;
 import org.xml.sax.Attributes;
 
@@ -69,7 +70,10 @@ abstract class BindingAnnotation{
     }
 
     protected boolean matches(ExecutableElement method, int paramIndex, Class expected){
-        VariableElement param = method.getParameters().get(paramIndex);
+        return matches(method.getParameters().get(paramIndex), expected);
+    }
+
+    protected boolean matches(VariableElement param, Class expected){
         if(param.asType().getKind()== TypeKind.DECLARED){
             Name paramType = ((TypeElement)((DeclaredType)param.asType()).asElement()).getQualifiedName();
             if(paramType.contentEquals(expected.getName()))
@@ -79,7 +83,10 @@ abstract class BindingAnnotation{
     }
 
     protected String context(ExecutableElement method, int paramIndex, String defaultArg){
-        VariableElement param = method.getParameters().get(paramIndex);
+        return context(method.getParameters().get(paramIndex), defaultArg);
+    }
+
+    protected String context(VariableElement param, String defaultArg){
         switch(param.asType().getKind()){
             case DECLARED:
                 Name paramType = ((TypeElement)((DeclaredType)param.asType()).asElement()).getQualifiedName();
@@ -96,7 +103,7 @@ abstract class BindingAnnotation{
             case BYTE:
                 return "(java.lang."+ BeanUtil.firstLetterToUpperCase(param.asType().getKind().toString().toLowerCase())+")"+defaultArg+".object";
             default:
-                throw new AnnotationError(method, "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument");
+                throw new AnnotationError(param, "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument");
         }
     }
 
@@ -197,25 +204,32 @@ class BindingStartAnnotation extends BindingAnnotation{
             return "current.object = ";
     }
 
-    private String param(ExecutableElement method, int paramIndex){
-        if(matches(method, paramIndex, Attributes.class))
-            return "attributes";
-        else
-            return context(method, paramIndex, "current");
-    }
-
     @Override
     public String params(ExecutableElement method){
-        switch(method.getParameters().size()){
-            case 0:
-                return "";
-            case 1:
-                return param(method, 0);
-            case 2:
-                return param(method, 0)+", "+param(method, 1);
-            default:
-                throw new AnnotationError(method, "method annotated with "+annotation.getCanonicalName()+" must not take more than two arguments");
+        List<String> params = new ArrayList<String>();
+        for(VariableElement param: method.getParameters()){
+            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(param, Attr.class);
+            if(mirror==null){
+                if(matches(param, Attributes.class))
+                    params.add("attributes");
+                else
+                    params.add(context(param, "current"));
+            }else{
+                String value = ModelUtil.getAnnotationValue(param, mirror, "value");
+                if(value.length()==0)
+                    value = param.getSimpleName().toString();
+
+                QName qname = Binding.toQName(param, mirror, value);
+                StringBuilder buff = new StringBuilder();
+                buff.append("attributes.getValue(");
+                if(qname.getNamespaceURI().length()>0)
+                    buff.append('"').append(qname.getNamespaceURI()).append("\", ");
+                buff.append('"').append(qname.getLocalPart()).append('"');
+                buff.append(")");
+                params.add(buff.toString());
+            }
         }
+        return StringUtil.join(params.iterator());
     }
 
     @Override
