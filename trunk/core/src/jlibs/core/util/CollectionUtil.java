@@ -16,6 +16,7 @@
 package jlibs.core.util;
 
 import jlibs.core.graph.Filter;
+import jlibs.core.lang.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,5 +90,18 @@ public class CollectionUtil{
                 filteredList.add(element);
         }
         return filteredList;
+    }
+
+    /**
+     * returns key whose value matches with specified value from given map
+     * if the given map contains multiple keys mapped to specified value, it
+     * returns first key encountered
+     */
+    public static <K, V> K getKey(Map<K, V> map, V value){
+        for(Map.Entry<K, V> entry : map.entrySet()){
+            if(Util.equals(entry.getValue(), value))
+                return entry.getKey();
+        }
+        return null;
     }
 }
