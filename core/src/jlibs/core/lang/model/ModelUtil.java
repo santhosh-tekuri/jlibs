@@ -17,9 +17,13 @@ package jlibs.core.lang.model;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Environment;
+import jlibs.core.lang.BeanUtil;
+import jlibs.core.lang.NotImplementedException;
 
 import javax.lang.model.element.*;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.util.Map;
 
 /**
@@ -37,8 +41,29 @@ public class ModelUtil{
     public static TypeElement getSuper(TypeElement clazz){
         return (TypeElement)((DeclaredType)clazz.getSuperclass()).asElement();
     }
+
     public static String getPackage(TypeElement clazz){
         return ((PackageElement)clazz.getEnclosingElement()).getQualifiedName().toString();
+    }
+
+    public static String toString(TypeMirror mirror){
+        switch(mirror.getKind()){
+            case DECLARED:
+                Name paramType = ((TypeElement)((DeclaredType)mirror).asElement()).getQualifiedName();
+                return paramType.toString();
+            case INT:
+                return "java.lang.Integer";
+            case BOOLEAN:
+            case FLOAT:
+            case DOUBLE:
+            case LONG:
+            case BYTE:
+                return "java.lang."+ BeanUtil.firstLetterToUpperCase(mirror.getKind().toString().toLowerCase());
+            case ARRAY:
+                return toString(((ArrayType)mirror).getComponentType())+"[]";
+            default:
+                throw new NotImplementedException(mirror.getKind()+" is not implemented for "+mirror.getClass());
+        }
     }
 
     /*-------------------------------------------------[ Annotation ]---------------------------------------------------*/
