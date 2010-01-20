@@ -15,24 +15,29 @@
 
 package jlibs.xml.sax.binding.impl;
 
+import javax.xml.namespace.QName;
+
 /**
  * Encapsulates both binding and relation. This is used by Registry.
  *
  * @author Santhosh Kumar T
  */
 public class BindingRelation{
+    public QName qname;
+
     public int bindingState;
     public Binding binding;
 
     public int relationState;
     public Relation relation;
 
-    public BindingRelation(int bindingState, Binding binding, int relationState, Relation relation){
+    public BindingRelation(QName qname, int bindingState, Binding binding, int relationState, Relation relation){
+        this.qname = qname;
         this.bindingState = bindingState;
         this.binding = binding;
         this.relationState = relationState;
         this.relation = relation;
     }
 
-    public static final BindingRelation DO_NOTHING = new BindingRelation(-1, Binding.DO_NOTHING, -1, Relation.DO_NOTHING);
+    public static final BindingRelation DO_NOTHING = new BindingRelation(Registry.ANY, -1, Binding.DO_NOTHING, -1, Relation.DO_NOTHING);
 }

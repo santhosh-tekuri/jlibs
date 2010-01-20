@@ -16,6 +16,7 @@
 package jlibs.xml.sax.binding.impl.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
+import jlibs.xml.sax.binding.impl.Registry;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -95,7 +96,7 @@ class Binding{
             prefix = token.substring(0, colon);
             localName = token.substring(colon+1);
         }
-        String uri = nsContext.getProperty(prefix);
+        String uri = prefix.equals(Registry.STAR) ? prefix : nsContext.getProperty(prefix);
         if(uri==null)
             throw new AnnotationError(pos1, pos2, "no namespace mapping found for prefix "+prefix);
         return new QName(uri, localName);

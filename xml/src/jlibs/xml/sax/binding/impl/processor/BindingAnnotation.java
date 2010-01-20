@@ -17,16 +17,15 @@ package jlibs.xml.sax.binding.impl.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
-import jlibs.xml.sax.binding.Attr;
-import jlibs.xml.sax.binding.SAXContext;
+import jlibs.xml.sax.binding.*;
 import org.xml.sax.Attributes;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,29 +81,20 @@ abstract class BindingAnnotation{
         return false;
     }
 
-    protected String context(ExecutableElement method, int paramIndex, String defaultArg){
-        return context(method.getParameters().get(paramIndex), defaultArg);
+    protected String context(ExecutableElement method, int paramIndex, boolean parent){
+        return context(method.getParameters().get(paramIndex), parent);
     }
 
-    protected String context(VariableElement param, String defaultArg){
-        switch(param.asType().getKind()){
-            case DECLARED:
-                Name paramType = ((TypeElement)((DeclaredType)param.asType()).asElement()).getQualifiedName();
-                if(paramType.contentEquals(SAXContext.class.getName()))
-                    return defaultArg;
-                else
-                    return "("+paramType+")"+defaultArg+".object";
-            case INT:
-                return "(java.lang.Integer)"+defaultArg+".object";
-            case BOOLEAN:
-            case FLOAT:
-            case DOUBLE:
-            case LONG:
-            case BYTE:
-                return "(java.lang."+ BeanUtil.firstLetterToUpperCase(param.asType().getKind().toString().toLowerCase())+")"+defaultArg+".object";
-            default:
-                throw new AnnotationError(param, "method annotated with "+annotation.getCanonicalName()+" can't take "+param.asType().getKind()+" as argument");
-        }
+    protected String context(VariableElement param, boolean parent){
+        String str = ModelUtil.toString(param.asType());
+        if(str.equals(SAXContext.class.getName()))
+            return toString(parent);
+        else
+            return "("+str+")"+toString(parent)+".object";
+    }
+
+    private String toString(boolean parent){
+        return parent ? "parent" : "current";
     }
 
     public void printMethod(Printer pw, Binding binding){
@@ -146,11 +136,15 @@ abstract class BindingAnnotation{
     abstract boolean getMethods(Binding binding, List<ExecutableElement> methods);
 
     private void printCase(Printer pw, ExecutableElement method){
-        pw.print(lvalue(method));
+        String lvalue = lvalue(method);
+        pw.print(lvalue);
         if(method.getModifiers().contains(Modifier.STATIC))
-            pw.println(pw.clazz.getSimpleName()+"."+method.getSimpleName()+"("+ params(method)+");");
+            pw.print(pw.clazz.getSimpleName()+"."+method.getSimpleName()+"("+ params(method)+")");
         else
-            pw.println("handler."+method.getSimpleName()+"("+ params(method)+");");
+            pw.print("handler."+method.getSimpleName()+"("+ params(method)+")");
+        if(lvalue.length()>0 && !lvalue.endsWith("= "))
+            pw.print(")");
+        pw.println(";");
     }
     
 }
@@ -213,7 +207,7 @@ class BindingStartAnnotation extends BindingAnnotation{
                 if(matches(param, Attributes.class))
                     params.add("attributes");
                 else
-                    params.add(context(param, "current"));
+                    params.add(context(param, false));
             }else{
                 String value = ModelUtil.getAnnotationValue(param, mirror, "value");
                 if(value.length()==0)
@@ -275,7 +269,7 @@ class BindingTextAnnotation extends BindingAnnotation{
             case 1:
                 return "text";
             case 2:
-                return context(method, 0, "current")+", text";
+                return context(method, 0, false)+", text";
             default:
                 throw new AnnotationError(method, "method annotated with "+annotation.getCanonicalName()+" must take either one or two argument(s)");
         }
@@ -316,14 +310,28 @@ class BindingFinishAnnotation extends BindingAnnotation{
 
     @Override
     public String params(ExecutableElement method){
-        switch(method.getParameters().size()){
-            case 0:
-                return "";
-            case 1:
-                return context(method, 0, "current");
-            default:
-                throw new AnnotationError(method, "method annotated with "+annotation.getCanonicalName()+" must not take more than one argument");
+        List<String> params = new ArrayList<String>();
+        for(VariableElement param: method.getParameters()){
+            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(param, Temp.class);
+            if(mirror==null)
+                params.add(context(param, false));
+            else{
+                String value = ModelUtil.getAnnotationValue(param, mirror, "value");
+                if(value.length()==0)
+                    value = param.getSimpleName().toString();
+
+                QName qname = Binding.toQName(param, mirror, value);
+                StringBuilder buff = new StringBuilder();
+
+                buff.append("(").append(ModelUtil.toString(param.asType())).append(")");
+                buff.append("current.get(");
+                buff.append('"').append(qname.getNamespaceURI()).append("\", ");
+                buff.append('"').append(qname.getLocalPart()).append('"');
+                buff.append(")");
+                params.add(buff.toString());
+            }
         }
+        return StringUtil.join(params.iterator());
     }
 
     @Override
@@ -370,14 +378,50 @@ class RelationAnnotation extends BindingAnnotation{
     }
 
     @Override
-    public String params(ExecutableElement method){
-        switch(method.getParameters().size()){
-            case 2:
-                return context(method, 0, "parent")+", "+ context(method, 1, "current");
+    public String lvalue(ExecutableElement method){
+        TypeMirror mirror = method.getReturnType();
+        switch(mirror.getKind()){
+            case VOID:
+                return "";
             default:
-                throw new AnnotationError(method, "method annotated with "+annotation.getCanonicalName()+" must take exactly two arguments");
+                String m = ModelUtil.getAnnotationMirror(method, Temp.Add.class)==null ? "put" : "add";
+                return "parent."+m+"(current.element(), ";
         }
     }
+
+    @Override
+    public String params(ExecutableElement method){
+        boolean parent = method.getReturnType().getKind() == TypeKind.VOID;
+
+        List<String> params = new ArrayList<String>();
+        for(VariableElement param: method.getParameters()){
+            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(param, Temp.class);
+            if(mirror==null){
+                if(ModelUtil.getAnnotationMirror(param, Parent.class)!=null)
+                    parent = true;
+                else if(ModelUtil.getAnnotationMirror(param, Current.class)!=null)
+                    parent = false;
+                params.add(context(param, parent));
+                parent = !parent;
+            }else{
+                String value = ModelUtil.getAnnotationValue(param, mirror, "value");
+                if(value.length()==0)
+                    value = param.getSimpleName().toString();
+
+                QName qname = Binding.toQName(param, mirror, value);
+                StringBuilder buff = new StringBuilder();
+
+                buff.append("(").append(ModelUtil.toString(param.asType())).append(")");
+                buff.append("current.get(");
+                buff.append('"').append(qname.getNamespaceURI()).append("\", ");
+                buff.append('"').append(qname.getLocalPart()).append('"');
+                buff.append(")");
+                params.add(buff.toString());
+            }
+        }
+        return StringUtil.join(params.iterator());
+    }
+    
     @Override
     boolean getMethods(Binding binding, List<ExecutableElement> methods){
         methods.add(null);

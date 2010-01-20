@@ -17,6 +17,7 @@ package jlibs.xml.sax.binding.impl;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.NamespaceMap;
+import jlibs.xml.QNameFake;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.binding.SAXContext;
 import org.xml.sax.Attributes;
@@ -109,8 +110,7 @@ public class Handler extends DefaultHandler{
             nsHandler.startElement();
         if(context!=null && content.size()>0)
             context.onText();
-        QName element = new QName(uri, localName);
-        context = newContext(element, attributes);
+        context = newContext(uri, localName, attributes);
     }
 
     @Override
@@ -134,16 +134,17 @@ public class Handler extends DefaultHandler{
 
     /*-------------------------------------------------[ Context ]---------------------------------------------------*/
     
+    private QNameFake qnameFake = new QNameFake();
     private BindingContext context;
     private BindingContext cache;
 
-    public BindingContext newContext(QName element, Attributes attributes) throws SAXException{
+    public BindingContext newContext(String namespaceURI, String localPart, Attributes attributes) throws SAXException{
         if(cache==null)
-            return new BindingContext(element, context, attributes);
+            return new BindingContext(namespaceURI, localPart, context, attributes);
         else{
             BindingContext reusingContext = cache;
             cache = cache.parent;
-            reusingContext.init(element, context, attributes);
+            reusingContext.init(namespaceURI, localPart, context, attributes);
             return reusingContext;
         }
     }
@@ -153,21 +154,24 @@ public class Handler extends DefaultHandler{
         private BindingRelation bindingRelation;
         private BindingContext parent;
 
-        public BindingContext(QName element, BindingContext parent, Attributes attributes) throws SAXException{
-            init(element, parent, attributes);
+        public BindingContext(String namespaceURI, String localPart, BindingContext parent, Attributes attributes) throws SAXException{
+            init(namespaceURI, localPart, parent, attributes);
         }
         
-        private void init(QName element, BindingContext parent, Attributes attributes) throws SAXException{
+        private void init(String namespaceURI, String localPart, BindingContext parent, Attributes attributes) throws SAXException{
+            this.qnameFake = Handler.this.qnameFake;
             namespaceMap = nsHandler.namespaceMap;
-            this.element = element;
             this.parent = parent;
-            bindingRelation = (parent!=null?parent.bindingRelation.binding.registry:docRegistry).get(element);
+            bindingRelation = (parent!=null?parent.bindingRelation.binding.registry:docRegistry).get(qnameFake.set(namespaceURI, localPart));
             if(bindingRelation==null){
                 if(ignoreUnresolved)
                     bindingRelation = BindingRelation.DO_NOTHING;
                 else
                     throw new SAXException(String.format("can't find binding for %s", this));
             }
+            this.element = bindingRelation.qname;
+            if(element.getNamespaceURI().equals("*") || element.getLocalPart().equals("*"))
+                this.element = new QName(namespaceURI, localPart);
             if(parent!=null)
                 object = parent.object;
             bindingRelation.binding.startElement(bindingRelation.bindingState, this, attributes);
@@ -192,6 +196,7 @@ public class Handler extends DefaultHandler{
             namespaceMap = null;
             element = null;
             object = null;
+            qnameFake = null;
             if(temp!=null)
                 temp.clear();
             bindingRelation = null;
