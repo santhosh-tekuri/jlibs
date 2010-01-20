@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.binding.impl;
 
+import jlibs.xml.QNameFake;
+
 import javax.xml.namespace.QName;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +25,15 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class Registry{
-    public static final QName ANY = new QName("*", "*");
+    public static final String STAR = "*";
+    public static final QName ANY = new QName(STAR, STAR);
     
     public Map<QName, BindingRelation> registry;
 
     public Registry register(QName qname, int bindingState, Binding binding, int relationState, Relation relation){
         if(registry ==null)
             registry = new HashMap<QName, BindingRelation>();
-        BindingRelation bindingRelation = new BindingRelation(bindingState, binding, relationState, relation);
+        BindingRelation bindingRelation = new BindingRelation(qname, bindingState, binding, relationState, relation);
         registry.put(qname, bindingRelation);
         return bindingRelation.binding.registry;
     }
@@ -47,13 +50,18 @@ public class Registry{
         register(qname, 0, TextBinding.INSTANCE, relationState, relation);
     }
 
-    public BindingRelation get(QName qname){
+    @SuppressWarnings({"SuspiciousMethodCalls"})
+    public BindingRelation get(QNameFake qname){
         if(registry==null)
             return null;
         else{
             BindingRelation br = registry.get(qname);
+            String namespaceURI = qname.namespaceURI;
+            String localPart = qname.localPart;
             if(br==null)
-                br = registry.get(new QName("*", qname.getLocalPart()));
+                br = registry.get(qname.set(STAR, localPart));
+            if(br==null)
+                br = registry.get(qname.set(namespaceURI, STAR));
             if(br==null)
                 br = registry.get(ANY);
             return br;

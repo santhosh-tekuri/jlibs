@@ -16,6 +16,7 @@
 package jlibs.xml.sax.binding;
 
 import jlibs.xml.NamespaceMap;
+import jlibs.xml.QNameFake;
 import org.xml.sax.Attributes;
 
 import javax.xml.namespace.QName;
@@ -31,6 +32,7 @@ public abstract class SAXContext<T>{
     public T object;
 
     public Map<QName, Object> temp;
+    protected QNameFake qnameFake;
 
     public Map<QName, Object> temp(){
         if(temp==null)
@@ -88,15 +90,15 @@ public abstract class SAXContext<T>{
 
     /*-------------------------------------------------[ Retriving ]---------------------------------------------------*/
     
-    public <X> X get(QName qname){
-        return get(qname, (X)null);
+    public <X> X get(String namespaceURI, String localPart){
+        return get(namespaceURI, localPart, (X)null);
     }
 
-    @SuppressWarnings({"unchecked"})
-    public <X> X get(QName qname, X defaultValue){
+    @SuppressWarnings({"unchecked", "SuspiciousMethodCalls"})
+    public <X> X get(String namespaceURI, String localPart, X defaultValue){
         if(temp==null)
             return defaultValue;
-        X value = (X)temp.get(qname);
+        X value = (X)temp.get(qnameFake.set(namespaceURI, localPart));
         return value!=null ? value : defaultValue;
     }
 
@@ -110,3 +112,4 @@ public abstract class SAXContext<T>{
         return xpath() + " (line="+line()+", col="+column()+')';
     }
 }
+
