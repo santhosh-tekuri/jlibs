@@ -24,6 +24,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,7 +40,11 @@ public class ModelUtil{
     }
 
     public static TypeElement getSuper(TypeElement clazz){
-        return (TypeElement)((DeclaredType)clazz.getSuperclass()).asElement();
+        TypeMirror superMirror = clazz.getSuperclass();
+        if(superMirror instanceof DeclaredType)
+            return (TypeElement)((DeclaredType)superMirror).asElement();
+        else
+            return null;
     }
 
     public static String getPackage(TypeElement clazz){
@@ -96,5 +101,50 @@ public class ModelUtil{
             return (T)getAnnotationValue(elem, mirror, method);
         else
             return null;
+    }
+
+
+    /*-------------------------------------------------[ javadoc ]---------------------------------------------------*/
+
+    public static String getMethodDoc(String doc){
+        if(doc==null)
+            return null;
+        else{
+            int index = doc.indexOf("@param");
+            if(index==-1)
+                return doc.trim();
+            else
+                return doc.substring(0, index).trim();
+        }
+    }
+
+    private static String[] split(String str, boolean whitespace){
+        int i = 0;
+        while(i<str.length()){
+            char ch = str.charAt(i);
+            if(Character.isWhitespace(ch)==whitespace)
+                i++;
+            else
+                break;
+        }
+        return new String[]{ str.substring(0, i), str.substring(i) };
+    }
+
+    private static final String PARAM = "@param";
+    public static Map<String, String> getMethodParamDocs(String doc){
+        Map<String, String> docs = new HashMap<String, String>();
+        
+        int index = doc.indexOf(PARAM);
+        doc = doc.substring(index).trim();
+        for(String token: doc.split(PARAM)){
+            token = token.trim();
+            if(token.length()>0){
+                String str[] = split(token, false);
+                str[1] = str[1].trim();
+                if(str[0].length()>0 && str[1].length()>0)
+                    docs.put(str[0], str[1]);
+            }
+        }
+        return docs;
     }
 }
