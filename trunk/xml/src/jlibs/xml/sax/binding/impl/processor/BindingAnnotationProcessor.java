@@ -41,7 +41,8 @@ import java.util.Set;
 @SupportedAnnotationTypes("jlibs.xml.sax.binding.Binding")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class BindingAnnotationProcessor extends AnnotationProcessor{
-    public static final String SUFFIX = "Impl";
+    private static final String SUFFIX = "Impl";
+    public static final String FORMAT = "${package}.${class}"+SUFFIX;
 
     private static final BindingAnnotation BINDING_ELEMENT = new ElementAnnotation();
     private static final BindingAnnotation BINDING_START = new BindingStartAnnotation();
@@ -65,10 +66,9 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
 
                     binding.initID(0);
                     
-
                     Printer pw = null;
                     try{
-                        pw = Printer.get((TypeElement)elem, SUFFIX);
+                        pw = Printer.get((TypeElement)elem, FORMAT);
                         generateClass(binding, pw);
                     }catch(IOException ex){
                         throw new RuntimeException(ex);

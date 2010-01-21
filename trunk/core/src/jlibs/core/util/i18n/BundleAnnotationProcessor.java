@@ -44,7 +44,7 @@ import static jlibs.core.util.i18n.PropertiesUtil.writeProperty;
 @SupportedAnnotationTypes("jlibs.core.util.i18n.ResourceBundle")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class BundleAnnotationProcessor extends AnnotationProcessor{
-    public static final String SUFFIX = "Impl";
+    public static final String FORMAT = "${package}._Bundle";
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
@@ -57,7 +57,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
                     if(c.getKind()!=ElementKind.INTERFACE)
                         throw new AnnotationError(elem, ResourceBundle.class.getName()+" annotation can be applied only for interface");
                     
-                    printer = Printer.get(c, SUFFIX);
+                    printer = Printer.get(c, FORMAT);
                     printer.printPackage();
 
                     printer.println("import java.util.ResourceBundle;");

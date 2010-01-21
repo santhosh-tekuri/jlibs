@@ -19,6 +19,7 @@ import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Environment;
 import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.NotImplementedException;
+import jlibs.core.util.regex.TemplateMatcher;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
@@ -146,5 +147,33 @@ public class ModelUtil{
             }
         }
         return docs;
+    }
+
+    /*-------------------------------------------------[ Finding Generated Class ]---------------------------------------------------*/
+
+    public static String[] findClass(TypeElement clazz, String format){
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("package", ModelUtil.getPackage(clazz));
+        vars.put("class", clazz.getSimpleName().toString());
+        String qname = new TemplateMatcher("${", "}").replace(format, vars);
+        String pakage, clazzName;        
+
+        int dot = qname.lastIndexOf('.');
+        if(dot==-1){
+            pakage = "";
+            clazzName = qname;
+        }else{
+            pakage = qname.substring(0, dot);
+            clazzName = qname.substring(dot+1);
+        }
+        return new String[]{ qname, pakage, clazzName };
+    }
+
+    public static Class findClass(Class clazz, String format) throws ClassNotFoundException{
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("package", clazz.getPackage().getName());
+        vars.put("class", clazz.getSimpleName());
+        String qname = new TemplateMatcher("${", "}").replace(format, vars);
+        return clazz.getClassLoader().loadClass(qname);
     }
 }
