@@ -28,14 +28,14 @@ import java.util.Map;
  */
 public class Printer{
     public TypeElement clazz;
+    public String generatedQName;
     public String generatedPakage;
     public String generatedClazz;
 
     public int indent;
     PrintWriter ps;
 
-    public Printer(int indent, PrintWriter ps){
-        this.indent = indent;
+    public Printer(PrintWriter ps){
         this.ps = ps;
     }
 
@@ -77,23 +77,16 @@ public class Printer{
     }
     
     private static Map<TypeElement, Printer> registry = new HashMap<TypeElement, Printer>();
-    public static Printer get(TypeElement clazz, String suffix) throws IOException{
+    public static Printer get(TypeElement clazz, String format) throws IOException{
         Printer printer = registry.get(clazz);
         if(printer==null){
-            String generatedPakage = ModelUtil.getPackage(clazz);
-            String generatedClazz = clazz.getSimpleName()+ suffix;
-
-            String generatedClazzQName;
-            if(generatedPakage==null||generatedPakage.length()==0)
-                generatedClazzQName = generatedClazz;
-            else
-                generatedClazzQName = generatedPakage+"."+generatedClazz;
-
-            PrintWriter writer = new PrintWriter(Environment.get().getFiler().createSourceFile(generatedClazzQName).openWriter());
-            printer=new Printer(0, writer);
+            String str[] = ModelUtil.findClass(clazz, format);
+            PrintWriter writer = new PrintWriter(Environment.get().getFiler().createSourceFile(str[0]).openWriter());
+            printer=new Printer(writer);
             printer.clazz = clazz;
-            printer.generatedPakage = generatedPakage;
-            printer.generatedClazz = generatedClazz;
+            printer.generatedQName = str[0];
+            printer.generatedPakage = str[1];
+            printer.generatedClazz = str[2];
             registry.put(clazz, printer);
         }
         return printer;

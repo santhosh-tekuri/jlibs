@@ -15,6 +15,8 @@
 
 package jlibs.core.util.i18n;
 
+import jlibs.core.lang.model.ModelUtil;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -22,7 +24,7 @@ public class I18N{
     @SuppressWarnings({"unchecked"})
     public static <T> T newInstance(Class<T> bundleClass){
         try{
-            return (T)bundleClass.getClassLoader().loadClass(bundleClass.getName()+ BundleAnnotationProcessor.SUFFIX).newInstance();
+            return (T)ModelUtil.findClass(bundleClass, BundleAnnotationProcessor.FORMAT).newInstance();
         }catch(Exception ex){
             throw new RuntimeException(ex);
         }

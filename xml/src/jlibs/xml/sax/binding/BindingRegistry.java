@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.binding;
 
+import jlibs.core.lang.model.ModelUtil;
 import jlibs.xml.sax.binding.impl.Registry;
 import jlibs.xml.sax.binding.impl.Relation;
 import jlibs.xml.sax.binding.impl.processor.BindingAnnotationProcessor;
@@ -43,7 +44,7 @@ public class BindingRegistry{
 
     public void register(QName qname, Class clazz){
         try{
-            clazz = clazz.getClassLoader().loadClass(clazz.getName()+ BindingAnnotationProcessor.SUFFIX);
+            clazz = ModelUtil.findClass(clazz, BindingAnnotationProcessor.FORMAT);
             if(qname==null)
                 qname = (QName)clazz.getDeclaredField("ELEMENT").get(null); 
             if(qname==null)
