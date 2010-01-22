@@ -192,10 +192,17 @@ class BindingStartAnnotation extends BindingAnnotation{
     }
 
     public String lvalue(ExecutableElement method){
-        if(method.getReturnType().getKind()== TypeKind.VOID)
-            return "";
-        else
-            return "current.object = ";
+        switch(method.getReturnType().getKind()){
+            case VOID:
+                return "";
+            case DECLARED:
+                if(ModelUtil.toString(method.getReturnType()).equals(Attributes.class.getName())){
+                    String m = ModelUtil.getAnnotationMirror(method, Temp.Add.class)==null ? "put" : "add";
+                    return "current."+m+"Attributes(";
+                }
+           default:
+                return "current.object = ";
+        }
     }
 
     @Override
