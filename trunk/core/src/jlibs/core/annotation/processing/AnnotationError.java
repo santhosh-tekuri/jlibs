@@ -16,6 +16,7 @@
 package jlibs.core.annotation.processing;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
@@ -25,6 +26,11 @@ import javax.tools.Diagnostic;
 public class AnnotationError extends Error{
     private Element pos1;
     private AnnotationMirror pos2;
+    private AnnotationValue pos3;
+
+    public AnnotationError(String message){
+        this(null, null, message);
+    }
 
     public AnnotationError(Element pos, String message){
         this(pos, null, message);
@@ -36,12 +42,23 @@ public class AnnotationError extends Error{
         this.pos2 = pos2;
     }
 
+    public AnnotationError(Element pos1, AnnotationMirror pos2, AnnotationValue pos3, String message){
+        super(message);
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.pos3 = pos3;
+    }
+
     public void report(){
         if(pos1==null)
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage());
         else if(pos2==null)
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1);
-        else
+        else if(pos3==null)
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2);
+        else{
+            System.out.println("came here");
+            Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2, pos3);
+        }
     }
 }
