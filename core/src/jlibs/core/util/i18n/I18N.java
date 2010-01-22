@@ -24,7 +24,7 @@ public class I18N{
     @SuppressWarnings({"unchecked"})
     public static <T> T newInstance(Class<T> bundleClass){
         try{
-            return (T)ModelUtil.findClass(bundleClass, BundleAnnotationProcessor.FORMAT).newInstance();
+            return (T)ModelUtil.findClass(bundleClass, BundleAnnotationProcessor.FORMAT).getDeclaredField("INSTANCE").get(null);
         }catch(Exception ex){
             throw new RuntimeException(ex);
         }
