@@ -68,7 +68,7 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
                     
                     Printer pw = null;
                     try{
-                        pw = Printer.get((TypeElement)elem, FORMAT);
+                        pw = Printer.get((TypeElement)elem, jlibs.xml.sax.binding.Binding.class, FORMAT);
                         generateClass(binding, pw);
                     }catch(IOException ex){
                         throw new RuntimeException(ex);
