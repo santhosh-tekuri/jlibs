@@ -54,6 +54,8 @@ public class ModelUtil{
 
     public static String toString(TypeMirror mirror){
         switch(mirror.getKind()){
+            case VOID:
+                return "void";
             case DECLARED:
                 Name paramType = ((TypeElement)((DeclaredType)mirror).asElement()).getQualifiedName();
                 return paramType.toString();

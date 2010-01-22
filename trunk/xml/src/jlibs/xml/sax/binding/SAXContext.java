@@ -88,6 +88,23 @@ public abstract class SAXContext<T>{
             put(qname, value);
     }
 
+    public void addAttributes(Attributes attributes){
+        int attrCount = attributes.getLength();
+        if(attrCount>0){
+            temp();
+            for(int i=0; i<attrCount; i++){
+                QName qname = new QName(attributes.getURI(i), attributes.getLocalName(i));
+                add(qname, attributes.getValue(i));
+            }
+        }
+    }
+
+    public void addAttribute(Attributes attributes, QName qname){
+        String value = attributes.getValue(qname.getNamespaceURI(), qname.getLocalPart());
+        if(value!=null)
+            add(qname, value);
+    }
+
     /*-------------------------------------------------[ Retriving ]---------------------------------------------------*/
     
     public <X> X get(String namespaceURI, String localPart){
