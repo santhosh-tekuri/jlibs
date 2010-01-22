@@ -17,6 +17,8 @@ package jlibs.core.util.i18n;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 /**
  * @author Santhosh Kumar T
@@ -131,4 +133,73 @@ final class PropertiesUtil{
     private static final char[] hexDigit = {
 	'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
+
+    public static NavigableSet<Integer> findArgs(String pattern){
+        NavigableSet<Integer> args = new TreeSet<Integer>();
+        StringBuffer[] segments = new StringBuffer[4];
+        for (int i = 0; i < segments.length; ++i) {
+            segments[i] = new StringBuffer();
+        }
+        int part = 0;
+        boolean inQuote = false;
+        int braceStack = 0;
+        for (int i = 0; i < pattern.length(); ++i) {
+            char ch = pattern.charAt(i);
+            if (part == 0) {
+                if (ch == '\'') {
+                    if (i + 1 < pattern.length()
+                        && pattern.charAt(i+1) == '\'') {
+                        segments[part].append(ch);  // handle doubles
+                        ++i;
+                    } else {
+                        inQuote = !inQuote;
+                    }
+                } else if (ch == '{' && !inQuote) {
+                    part = 1;
+                } else {
+                    segments[part].append(ch);
+                }
+            } else  if (inQuote) {              // just copy quotes in parts
+                segments[part].append(ch);
+                if (ch == '\'') {
+                    inQuote = false;
+                }
+            } else {
+                switch (ch) {
+                case ',':
+                    if (part < 3)
+                        part += 1;
+                    else
+                        segments[part].append(ch);
+                    break;
+                case '{':
+                    ++braceStack;
+                    segments[part].append(ch);
+                    break;
+                case '}':
+                    if (braceStack == 0) {
+                        part = 0;
+                        args.add(Integer.parseInt(segments[1].toString()));
+                        segments[1].setLength(0);   // throw away other segments
+                        segments[2].setLength(0);
+                        segments[3].setLength(0);
+                    } else {
+                        --braceStack;
+                        segments[part].append(ch);
+                    }
+                    break;
+                case '\'':
+                    inQuote = true;
+                    // fall through, so we keep quotes in other parts
+                default:
+                    segments[part].append(ch);
+                    break;
+                }
+            }
+        }
+        if (braceStack == 0 && part != 0) {
+            throw new IllegalArgumentException("Unmatched braces in the pattern.");
+        }
+        return args;
+    }
 }
