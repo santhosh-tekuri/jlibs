@@ -1,0 +1,286 @@
+#summary I18N made easier
+#labels I18N
+
+In traditional approach, we create properties file;<br>
+But with JLibs you create an interface and annotate it with `@ResourceBundle`<br>
+Let us see sample code.
+
+{{{
+import jlibs.core.util.i18n.I18N;
+import jlibs.core.util.i18n.Message;
+import jlibs.core.util.i18n.ResourceBundle;
+
+@ResourceBundle
+public interface DBBundle{
+    public static final DBBundle DB_BUNDLE = I18N.getImplementation(DBBundle.class);
+    
+    @Message("SQL Execution completed in {0} seconds with {1} errors")
+    public String executionFinished(long seconds, int errorCount);
+
+    @Message(key="SQLExecutionException", value="Encountered an exception while executing the following statement:\n{0}")
+    public String executionException(String query);
+
+    @Message("executing {0}")
+    public String executing(String query);
+}
+}}}
+let us walk through code.
+
+{{{
+@ResourceBundle
+public interface DBBundle{
+}}}
+`@ResourceBundle` says that this interface is used for I18N purpose.<br>
+this annotation can be applied only on interface.
+
+all methods in this interface should be annotated with `@Message`
+For each message you want, you will add a method in this interface
+{{{
+@Message("SQL Execution completed in {0} seconds with {1} errors")
+public String executionFinished(long seconds, int errorCount);
+}}}
+here the key of message is the name of the method. i.e, `executionFinished`
+and the value of message is `SQL Execution completed in {0} seconds with {1} errors`
+
+{{{
+@Message(key="SQLExecutionException", value="Encountered an exception while executing the following statement:\n{0}")
+public String executionException(String query);
+}}}
+here we are explicitly specifying key as `SQLExecutionException`
+
+When you compile this interface with `jlibs-core.jar` in classpath, it will generate:
+ * `Bundle.properties` which contains the messages
+ * `_Bundle.class` which implements your interface and each method implementation returns its corresponding message from `Bundle.properties`
+
+{{{
+public static final DBBundle DB_BUNDLE = I18N.getImplementation(DBBundle.class);
+}}}
+`I18N.getImplementation(DBBundle.class)` returns an instance of `_Bundle` class that is generated.
+
+You can have more than one interface with `@ResourceBundle` in a package. In such case:
+ * `Bundle.properties` will have messages from all interfaces
+ * `_Bundle.class` will be implementing all these interfaces
+
+i.e it would be easier to group messages based on the context they are used.<br>
+Let us say I have UIBundle interface in same package:
+
+{{{
+@ResourceBundle
+public interface UIBundle{
+    public static final UIBundle UI_BUNDLE = I18N.getImplementation(UIBundle.class);
+
+    @Message("Execute")
+    public String executeButton();
+    
+    @Message("File {0} already exists.  Do you really want to replace it?")
+    public String confirmReplace(File file);
+}
+}}}
+
+`DBBundle` contains all messages used in database interaction<br>
+`UIBundle` contains all messages used by UI classes
+
+let us see sample code using these bundles:
+{{{
+import static i18n.DBBundle.DB_BUNDLE;
+import static i18n.UIBundle.UI_BUNDLE;
+
+executeButton.setText(UI_BUNDLE.executeButton());
+
+try{
+    System.out.println(DB_BUNDLE.executing(query));
+    // execute query
+    System.out.println(DB_BUNDLE.executionFinished(5, 0));
+}catch(SQLException ex){
+    System.out.println(DB_BUNDLE.executionException(query));
+}
+}}}
+
+You can see that, the code looks clean without any hardcoded message keys.
+
+------------------------------------------------------------------------------------------------------------------------------
+===Documentation===
+{{{
+@Message("SQL Execution completed in {0} seconds with {1} errors")
+public String executionFinished(long seconds, int errorCount);
+}}}
+the message generated in `Bundle.properties` will be:
+{{{
+# {0} seconds
+# {1} errorCount
+executionFinished=SQL Execution completed in {0} seconds with {1} errors
+}}}
+the generated message tells what `{0}` and `{1}` are referring to.<br>
+This makes the job of translator (who is translating to some other language) easier, because he/she now understand the message better.
+
+{{{
+/**
+    * thrown when failed to load application
+    * because of network failure
+    *
+    * @param application   UID of application
+    * @param version       version of the application
+    */
+@Message(key = "cannotKillApplication", value="failed to kill application {0} with version {1}")
+public String cannotKillApplication(String application, String version);
+}}}
+the message generated in `Bundle.properties` will be:
+{{{
+# thrown when failed to load application
+# because of network failure
+# {0} application ==> UID of application
+# {1} version ==> version of the application
+cannotKillApplication=failed to kill application {0} with version {1}
+}}}
+any additional javadoc specified is also made available in generated `Bundle.properties`.
+This makes the job of translator more comfortable.
+
+`Bundle.properties` generated for DBBundle, UIBundle will look as below:
+{{{
+# DON'T EDIT THIS FILE. THIS IS GENERATED BY JLIBS
+# @author Santhosh Kumar T
+
+#-------------------------------------------------[ DBBundle ]---------------------------------------------------
+
+# {0} query
+executing=executing {0}
+
+# {0} query
+SQLExecutionException=Encountered an exception while executing the following statement\:\n{0}
+
+# {0} seconds
+# {1} errorCount
+executionFinished=SQL Execution completed in {0} seconds with {1} errors
+
+#-------------------------------------------------[ UIBundle ]---------------------------------------------------
+
+executeButton=Execute
+
+# {0} file
+confirmReplace=File {0} already exists.  Do you really want to replace it?
+}}}
+
+You can see that the messages from each interface are clearly separated in genrated properties file
+
+------------------------------------------------------------------------------------------------------------------------------
+
+===Developer/IDE Friendly===
+{{{
+import static i18n.DBBundle.DB_BUNDLE;
+import static i18n.UIBundle.UI_BUNDLE;
+
+executeButton.setText(UI_BUNDLE.executeButton());
+
+try{
+    System.out.println(DB_BUNDLE.executing(query));
+    // execute query
+    System.out.println(DB_BUNDLE.executionFinished(5, 0));
+}catch(SQLException ex){
+    System.out.println(DB_BUNDLE.executionException(query));
+}
+}}}
+
+the code using I18N messages is no longer cluttered with hardcoded strings. you never need to fear of
+ * misspelling message keys
+ * specifying wrong number of arguments to message
+ * specifying arguments in incorrect order to message
+
+i.e you get complete compile-time safty, and IDE help, because messages are now java methods rather than hard-coded Strings
+------------------------------------------------------------------------------------------------------------------------------
+===Invalid Messge Formats===
+{{{
+@Message("your lass successfull login is on {0, timee}")
+public String lastSucussfullLogin(Date date);
+}}}
+here we misspelled the format `time` as `timee`<br>
+this will give following compile time error
+{{{
+[javac] /jlibsuser/src/i18n/UIBundle.java:23: Invalid Message Format: unknown format type at 
+[javac]     @Message("your lass successfull login is on {0, timee}")
+[javac]     ^
+}}}
+i.e any invalid message formats are caught at compile time
+------------------------------------------------------------------------------------------------------------------------------
+===Argument Count Mismatch===
+{{{
+@Message("SQL Execution completed in {0} seconds with {1} errors")
+public String executionFinished(long seconds);
+}}}
+here the message requires two arguments `{0}` and `{1}`. but the java method is taking only one argument.<br>
+this will give following compile time error
+{{{
+[javac] /jlibsuser/src/i18n/DBBundle.java:15: no of args in message format doesn't match with the number of parameters this method accepts
+[javac]     public String executionFinished(long seconds);
+[javac]                   ^
+}}}
+------------------------------------------------------------------------------------------------------------------------------
+===Missing Argument===
+{{{
+@Message("SQL Execution completed in {0} seconds with {2} errors and {2} warnings")
+public String executionFinished(long seconds, int errorCount, int warningCount);
+}}}
+here we misspelled `{1} errros` as `{2} errors`.<br>
+this will give following compile time error
+{{{
+[javac] /jlibsuser/src/i18n/DBBundle.java:14: {1} is missing in message
+[javac]     @Message("SQL Execution completed in {0} seconds with {2} errors and {2} warnings")
+[javac]     ^
+}}}
+------------------------------------------------------------------------------------------------------------------------------
+===Duplicate Key====
+{{{
+@Message(key="JLIBS015", value="SQL Execution completed in {0} seconds with {1} errors and {2} warnings")
+public String executionFinished(long seconds, int errorCount, int warningCount);
+
+@Message(key="JLIBS015", value="Encountered an exception while executing the following statement:\n{0}")
+public String executionException(String query);
+}}}
+here we accidently used same key `JLIBS015` for both methods.<br>
+this will give following compile time error
+{{{
+[javac] /jlibsuser/src/i18n/DBBundle.java:18: key 'JLIBS015' is already used by "java.lang.String executionFinished(long, int, int)" in i18n.DBBundle interface
+[javac]     public String executionException(String query);
+[javac]                   ^
+}}}
+------------------------------------------------------------------------------------------------------------------------------
+===Method Signature Clash===
+{{{
+public interface DBBundle{
+    ...
+    @Message(key="EXECUTING", value="executing {0}")
+    public String executing(String query);
+    ...
+}
+
+public interface UIBundle{
+    ...
+    @Message(key="EXECUTING_QUERY", value="executing {0}")
+    public String executing(String query);
+    ...
+}
+}}}
+here both `DBBundle` and `UIBundle` has methods with identical signature.<br>
+The generated `_Bundle` class implements both the interfaces `DBBundle` and `UIBundle`,<br>
+so it can't decide whether to use key `EXECUTING` or `EXECUTING_QUERY`<br>
+thus this will give following compile time error.
+{{{
+[javac] /jlibsuser/src/i18n/UIBundle.java:27: clashes with similar method in i18n.DBBundle interface
+[javac]     public String executing(String query);
+[javac]                   ^
+}}}
+------------------------------------------------------------------------------------------------------------------------------
+===Optimization===
+All annotations have source level retention policy. So there is no reflection used at runtime.
+
+Only one `_Bundle` class is generated per package, and this class will implement all interfaces with `@ResourceBundle` annatation in that package
+
+there is only one instance of `_Bundle` created by `I18N.getImplementation(clazz)`<br>
+i.e both `DBBundle.DB_BUNDLE` and `UIBundle.UI_BUNDLE` are referring to same instanceof `_Bundle`.
+
+the `_Bundle` class caches the `ResourceBundle` loaded.
+------------------------------------------------------------------------------------------------------------------------------
+===Customization===
+You can change the name of the properties file generated by passing `-AResourceBundle.basename=MyBundle` to `javac`<br>
+this will create `MyBundle.properties`
+
+Your comments are appreciated;
