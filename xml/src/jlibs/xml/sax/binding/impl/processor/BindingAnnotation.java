@@ -86,7 +86,7 @@ abstract class BindingAnnotation{
     }
 
     protected String context(VariableElement param, boolean parent){
-        String str = ModelUtil.toString(param.asType());
+        String str = ModelUtil.toString(param.asType(), true);
         if(str.equals(SAXContext.class.getName()))
             return toString(parent);
         else
@@ -196,7 +196,7 @@ class BindingStartAnnotation extends BindingAnnotation{
             case VOID:
                 return "";
             case DECLARED:
-                if(ModelUtil.toString(method.getReturnType()).equals(Attributes.class.getName())){
+                if(ModelUtil.toString(method.getReturnType(), true).equals(Attributes.class.getName())){
                     String m = ModelUtil.getAnnotationMirror(method, Temp.Add.class)==null ? "put" : "add";
                     return "current."+m+"Attributes(";
                 }
@@ -330,7 +330,7 @@ class BindingFinishAnnotation extends BindingAnnotation{
                 QName qname = Binding.toQName(param, mirror, value);
                 StringBuilder buff = new StringBuilder();
 
-                buff.append("(").append(ModelUtil.toString(param.asType())).append(")");
+                buff.append("(").append(ModelUtil.toString(param.asType(), true)).append(")");
                 buff.append("current.get(");
                 buff.append('"').append(qname.getNamespaceURI()).append("\", ");
                 buff.append('"').append(qname.getLocalPart()).append('"');
@@ -418,7 +418,7 @@ class RelationAnnotation extends BindingAnnotation{
                 QName qname = Binding.toQName(param, mirror, value);
                 StringBuilder buff = new StringBuilder();
 
-                buff.append("(").append(ModelUtil.toString(param.asType())).append(")");
+                buff.append("(").append(ModelUtil.toString(param.asType(), true)).append(")");
                 buff.append("current.get(");
                 buff.append('"').append(qname.getNamespaceURI()).append("\", ");
                 buff.append('"').append(qname.getLocalPart()).append('"');
