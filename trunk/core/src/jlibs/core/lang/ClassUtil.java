@@ -61,9 +61,40 @@ public class ClassUtil{
         return classLoader==null ? ClassLoader.getSystemClassLoader() : classLoader;
     }
 
-    public static void main(String[] args){
-        System.out.println(getClassPath(String.class));
-        System.out.println(getClassPath(ClassUtil.class));
-        System.out.println(getClassLoader(String.class));
+    /*-------------------------------------------------[ ClassContext ]---------------------------------------------------*/
+    
+    /**
+     * A helper class to get the call context. It subclasses SecurityManager
+     * to make getClassContext() accessible.
+     */
+    private static class ClassContext extends SecurityManager{
+        public static final ClassContext INSTANCE = new ClassContext();
+
+        @Override
+        protected Class[] getClassContext(){
+            return super.getClassContext();
+        }
+    }
+
+    /**
+     * returns the calling class.
+     *
+     * offset 0 returns class who is calling this method
+     * offset 1 returns class who called your method
+     * and so on
+     */
+    public static Class getClassingClass(int offset){
+        Class[] context = ClassContext.INSTANCE.getClassContext();
+        offset += 2;
+        return context.length>offset ? context[offset] : null;
+    }
+
+    public static Class getClassingClass(){
+        return getClassingClass(1);
+    }
+
+    public static ClassLoader getClassingClassLoader(){
+        Class caller = getClassingClass(1);
+        return caller==null ? ClassLoader.getSystemClassLoader() : getClassLoader(caller);
     }
 }
