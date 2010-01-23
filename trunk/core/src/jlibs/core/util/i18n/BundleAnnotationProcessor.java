@@ -87,7 +87,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             ExecutableElement clash = entries.put(key, method);
             Element interfase = method.getEnclosingElement();
             if(clash!=null)
-                throw new AnnotationError("method "+signature+" in "+ interfase +" and "+clash.getEnclosingElement()+" share share bundle key");
+                throw new AnnotationError(method, "key '"+key+"' is already used by \""+ModelUtil.signature(clash, false)+"\" in "+ clash.getEnclosingElement());
 
             Map<String, ExecutableElement> methods = classes.get(interfase);
             if(methods==null)
