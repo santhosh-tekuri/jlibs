@@ -56,9 +56,7 @@ public class AnnotationError extends Error{
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1);
         else if(pos3==null)
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2);
-        else{
-            System.out.println("came here");
+        else
             Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2, pos3);
-        }
     }
 }
