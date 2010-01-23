@@ -22,7 +22,7 @@ import jlibs.core.lang.model.ModelUtil;
  */
 public class I18N{
     @SuppressWarnings({"unchecked"})
-    public static <T> T newInstance(Class<T> bundleClass){
+    public static <T> T getImplementation(Class<T> bundleClass){
         try{
             return (T)ModelUtil.findClass(bundleClass, BundleAnnotationProcessor.FORMAT).getDeclaredField("INSTANCE").get(null);
         }catch(Exception ex){
