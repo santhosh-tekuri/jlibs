@@ -204,7 +204,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
         basename = Environment.get().getOptions().get("ResourceBundle.basename");
         if(basename==null)
-            basename = "bundle";
+            basename = "Bundle";
         
         try{
             for(TypeElement annotation: annotations){
