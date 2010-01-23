@@ -17,10 +17,10 @@ package jlibs.core.util.regex;
 
 import jlibs.core.io.FileUtil;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.Map;
 import java.io.*;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Santhosh Kumar T
@@ -114,7 +114,7 @@ public class TemplateMatcher{
         public String resolve(String variable);
     }
 
-    private static class MapVariableResolver implements VariableResolver{
+    public static class MapVariableResolver implements VariableResolver{
         private Map<String, String> variables;
 
         private MapVariableResolver(Map<String, String> variables){
