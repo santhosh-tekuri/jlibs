@@ -169,6 +169,10 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
                     int argCount = args.size()==0 ? 0 : (args.last()+1);
                     if(argCount!=method.getParameters().size())
                         throw new AnnotationError(method, "no of args in message format doesn't match with the number of parameters this method accepts");
+                    for(i=0; i<argCount; i++){
+                        if(!args.remove(i))
+                            throw new AnnotationError(method, messageMirror, "{"+i+"} is missing in message");
+                    }
 
                     writeProperty(props, key, value);
                     props.newLine();
