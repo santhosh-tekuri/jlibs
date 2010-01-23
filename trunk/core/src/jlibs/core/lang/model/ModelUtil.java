@@ -52,7 +52,7 @@ public class ModelUtil{
         return ((PackageElement)clazz.getEnclosingElement()).getQualifiedName().toString();
     }
 
-    public static String toString(TypeMirror mirror){
+    public static String toString(TypeMirror mirror, boolean usePrimitiveWrappers){
         switch(mirror.getKind()){
             case VOID:
                 return "void";
@@ -60,15 +60,16 @@ public class ModelUtil{
                 Name paramType = ((TypeElement)((DeclaredType)mirror).asElement()).getQualifiedName();
                 return paramType.toString();
             case INT:
-                return "java.lang.Integer";
+                return usePrimitiveWrappers ? "java.lang.Integer" : "int";
             case BOOLEAN:
             case FLOAT:
             case DOUBLE:
             case LONG:
             case BYTE:
-                return "java.lang."+ BeanUtil.firstLetterToUpperCase(mirror.getKind().toString().toLowerCase());
+                String name = mirror.getKind().toString().toLowerCase();
+                return usePrimitiveWrappers ? "java.lang."+ BeanUtil.firstLetterToUpperCase(name) : name;
             case ARRAY:
-                return toString(((ArrayType)mirror).getComponentType())+"[]";
+                return toString(((ArrayType)mirror).getComponentType(), usePrimitiveWrappers)+"[]";
             default:
                 throw new NotImplementedException(mirror.getKind()+" is not implemented for "+mirror.getClass());
         }
@@ -77,7 +78,7 @@ public class ModelUtil{
     public static String signature(ExecutableElement method, boolean useParamNames){
         StringBuilder buff = new StringBuilder();
 
-        buff.append(toString(method.getReturnType()));
+        buff.append(toString(method.getReturnType(), false));
         buff.append(' ');
         buff.append(method.getSimpleName());
         buff.append('(');
@@ -85,7 +86,7 @@ public class ModelUtil{
         for(VariableElement param : method.getParameters()){
             if(i>0)
                 buff.append(", ");
-            buff.append(toString(param.asType()));
+            buff.append(toString(param.asType(), false));
             if(useParamNames)
                 buff.append(' ').append(param.getSimpleName());
             i++;

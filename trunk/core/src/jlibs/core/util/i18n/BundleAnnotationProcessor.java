@@ -70,7 +70,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Message.class);
             if(mirror==null)
                 throw new AnnotationError(method, Message.class.getName()+" annotation is missing on this method");
-            if(!String.class.getName().equals(ModelUtil.toString(method.getReturnType())))
+            if(!String.class.getName().equals(ModelUtil.toString(method.getReturnType(), true)))
                 throw new AnnotationError(method, "method annotated with "+Message.class.getName()+" must return java.lang.String");
 
             String signature = ModelUtil.signature(method, false);
@@ -150,7 +150,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
                         if(i>0)
                             printer.print(", ");
                         params.append(paramName);
-                        printer.print(ModelUtil.toString(param.asType())+" "+paramName);
+                        printer.print(ModelUtil.toString(param.asType(), false)+" "+paramName);
                         i++;
                     }
                     if(params.length()==0)
