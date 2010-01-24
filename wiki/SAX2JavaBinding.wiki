@@ -428,7 +428,91 @@ similar to `@Attr` you can explicitly specify the qname as follows:
 }}}
 
 Here in `onFinish(...) method, we are creating `Employee` object using the values that are stored earlier in temp, and returning it.
+------------------------------------------------------------------------------------------------------------------------------
+===Recursive Bindings===
+Let us say we have `Component` class:
+{{{
+public class Component{
+    public final String name;
+    public Properties initParams = new Properties();
+    public List<Component> dependencies = new ArrayList<Component>();
 
+    public Component(String name){
+        this.name = name;
+    }
+}
+}}}
+each component has:
+ * name
+ * init params
+ * dependencies (list of components) i.e, we have recursion
+
+Let us see sample xml:
+{{{
+        XML                                               |     Java Object                                                     |   Relation
+----------------------------------------------------------|---------------------------------------------------------------------|----------------------------
+<component name="comp1">                                  | comp = new Company(@name)                                           |
+    <init-param>                                          |                                                                     |
+        <param-name>param1</param-name>                   | paramName = #text                                                   | parent[<param-name>] = paramName
+        <param-value>value1</param-value>                 | paramValue = #text                                                  | parent[<param-value>] = paramValue
+    </init-param>                                         | comp.initParams.put(current[<param-name>], current[<param-value>])  |
+    <init-param>                                          |                                                                     |
+        <param-name>param2</param-name>                   |                                                                     |
+        <param-value>value2</param-value>                 |                                                                     |
+    </init-param>                                         |                                                                     |
+    <dependencies>                                        |                                                                     |
+        <component name="comp2">                          | dependent = /* use Recursion */                                     |
+            <init-param>                                  |                                                                     |
+                <param-name>param3</param-name>           |                                                                     |
+                <param-value>value3</param-value>         |                                                                     |
+            </init-param>                                 |                                                                     |
+            <dependencies>                                |                                                                     |
+                <component name="comp3">                  |                                                                     |
+                    <init-param>                          |                                                                     |
+                        <param-name>param4</param-name>   |                                                                     |
+                        <param-value>value4</param-value> |                                                                     |
+                    </init-param>                         |                                                                     |
+                </component>                              |                                                                     |
+            </dependencies>                               |                                                                     |
+        </component>                                      |                                                                     | comp.dependencies.add(dependent)
+    </dependencies>                                       |                                                                     |
+</component>                                              |                                                                     |
+}}}
+here we have recursion. `comp1` depends on `comp2` which in turn depends on `comp3`
+
+let us the Binding implementation:
+{{{
+@Binding("component")
+public class ComponentBinding{
+    @Binding.Start
+    public static Component onStart(@Attr String name){
+        return new Component(name);
+    }
+
+    @Binding.Text({ "init-param/param-name", "init-param/param-value" })
+    public static String onParamNameAndValue(String text){
+        return text;
+    }
+
+    @Relation.Finish({"init-param/param-name", "init-param/param-value"})
+    public static String relateParamNameAndValue(String content){
+        return content;
+    }
+
+    @Relation.Finish("init-param")
+    public static void relateParam(Component comp, @Temp("param-name") String paramName, @Temp("param-value") String paramValue){
+        comp.initParams.put(paramName, paramValue);
+    }
+
+    @Binding.Element(element="dependencies/component", clazz=ComponentBinding.class)
+    public static void onDependecy(){}
+
+    @Relation.Finish("dependencies/component")
+    public static void relateDependency(Component comp, Component dependent){
+        comp.dependencies.add(dependent);
+    }
+}
+}}}
 ------------------------------------------------------------------------------------------------------------------------------
 
 I will be preparing more example use cases like:
