@@ -134,7 +134,7 @@ The argument `text` will be the text content of that element. The java object cr
 content, so we simply return the `text` argument.
 
 {{{
-@Relation.Finish(name")
+@Relation.Finish("name")
 public static void relateName(Employee employee, String name){
     employee.setName(name);
 }
@@ -163,7 +163,7 @@ public static Employee read(File xmlFile) throws Exception{
 Let us see what happens behind the scene.
 
 All the annoations we have used have `RetentionPolicy.SOURCE`(except `@Binding`). i.e These annotations are not available at runtime.<br>
-`JLibs` comes with an [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/impl/processor/BindingAnnotationProcessor.java annotation processor], 
+`JLibs` comes with an [http://code.google.com/p/jlibs/source/browse/trunk/xml/src/jlibs/xml/sax/binding/BindingAnnotationProcessor.java annotation processor], 
 which processes these annotations at compile time.<br>
 This processor generates a class for each class with `@Binding` annotation.<br>
 This generated class defines the [http://en.wikipedia.org/wiki/State_diagram state diagram] for the binding.
@@ -246,8 +246,8 @@ Let us implmennt `CompanyBinding`:
 @Binding("company")
 public class CompanyBinding{
     @Binding.Start
-    public static Company onStart(Attributes attributes) throws SAXException{
-        return new Company(attributes.getValue("name"));
+    public static Company onStart(@Attr String name) throws SAXException{
+        return new Company(name);
     }
 
     @Binding.Element(element = "manager", clazz = EmployeeBinding.class)
@@ -268,6 +268,23 @@ public class CompanyBinding{
 }
 }}}
 Let us walk through the code:
+{{{
+@Binding.Start
+public static Company onStart(@Attr String name) throws SAXException{
+    return new Company(name);
+}
+}}}
+`@Attr` annotation is used to get attribute value.<br>
+the attribute name is derived from the parameter name.<br>
+i.e, `@Attr String name` will give value of attribute `name`<br>
+
+in some cases, attribute name may not be valid java identifier.<br>
+for example `param-name` is a valid attribute name, but not a valid java identifier. <br>
+in such cases you can do:
+{{{
+@Attr("param-name") String paramName
+}}}
+
 {{{
 @Binding.Element(element = "manager", clazz = EmployeeBinding.class)
 public static void onManager(){}
@@ -305,7 +322,7 @@ Let us see how to handle this situation:
 }}}
 
 Notice that now we are creating `Employee` object in `<employee>` element end, rather than `<employee>` element begin.<br>
-This is because, we know the values of name, age and experience are available only on `<employee>` element end.<br>
+This is because, the values of name, age and experience are available only on `<employee>` element end.<br>
 
 Earlier, the relation for `<name>`, `<age>` and `<experience>` used to call respective set method on `Employee` object.<br>
 Now we can't do that, because we don't have `Employee` created by that time.
@@ -344,55 +361,54 @@ public class EmployeeBinding{
     }
 
     @Relation.Finish({"name", "age", "experience"})
-    public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
-        parent.put(current.element(), current.object);
+    public static String relateWithEmployee(String value){
+        return value;
     }
 
     @Binding.Finish
-    public static Employee onFinish(SAXContext<Employee> current) throws SAXException{
-        String name = current.get(new QName("name"));
-        String age = current.get(new QName("age"), "0");
-        String experience = current.get(new QName("experience"), "0");
-        return new Employee(name, Integer.parseInt(age), Integer.parseInt(experience));
+    public static Employee onFinish(@Temp String name, @Temp String age, @Temp String experience) throws SAXException{
+        return new Employee(name,
+                Integer.parseInt(age==null ? "0" : age),
+                Integer.parseInt(experience==null ? "0" : experience)
+        );
     }
 }
 }}}
 Let us walk through the code;
 {{{
 @Relation.Finish({"name", "age", "experience"})
-public static void relateWithEmployee(SAXContext<Employee> parent, SAXContext<String> current){
-    parent.put(current.element(), current.object);
+public static String relateWithEmployee(String value){
+    return value;
 }
 }}}
 `@Relation.Finish({"name", "age", "experience"})` annotation says that, call this method on<br>
-`<name>`, `<age>` and `<experience>` element end.<br>
-the first argument `SAXContext<Employee> parent` is the context of parent element i.e `<employee>`<br>
-the second argument `SAXContext<String> current` is the context of current element i.e `<name>` or `<age>` or `<experience>`<br>
-`current.element()` gives `QName` of current element.<br>
-`current.object` gives the `String` object we have created for the current element<br>
-`parent.put(...)` saves the value the `SAXContext.temp`.<br>
+`<name>`, `<age>` and `<experience>` element end.
 
-Here we used `parent.put(...)` rather than `parent.temp.put(...)`
-this is because `SAXContext.temp` is null initially and need to be initiazed before use.<br>
-This is to avoid unncessary map creation. <br>
-`SAXContext` provides some handy methods to access `temp` like `put(...)`, `get(...)`.
-These methods take care of initializing `temp` lazily when requried.
+When a method with relation annotation returns something:
+ * the returned value is stored in parent element's temp with current element's qname as key
+ * the first argument will be the object created for the current element.
+
+i.e `String value` is the `String` object created for current element.<br>
+and the value returned is stored in `<employee>` element's temp.
 
 {{{
 @Binding.Finish
-public static Employee onFinish(SAXContext<Employee> current) throws SAXException{
-    String name = current.get(new QName("name"));
-    String age = current.get(new QName("age"), "0");
-    String experience = current.get(new QName("experience"), "0");
-    return new Employee(name, Integer.parseInt(age), Integer.parseInt(experience));
+public static Employee onFinish(@Temp String name, @Temp String age, @Temp String experience) throws SAXException{
+    return new Employee(name,
+            Integer.parseInt(age==null ? "0" : age),
+            Integer.parseInt(experience==null ? "0" : experience)
+    );
 }
 }}}
 `@Binding.Finish` annotation says that, call this method on `<employee>` element end.<br>
-the argument `SAXContext<Employee> current` is the context of current element i.e `<employee>`<br>
-here we are retriving values of name, age and experience of current context using `SAXContext.get(...)` method.<br>
-The first argument to `get(...)` is the `QName` whose value you want to retrieve.<br>
-The second argument to `get(...)` is the default value to be returned when no value is present in `temp`.<br>
-the second argument to `get(...)` is optional.
+
+`@Temp String name` says that give me the value mapped to `name` in current element's temp.<br>
+similar to `@Attr` you can explicitly specify the qname as follows:
+{{{
+@Temp("name") String employeeName
+}}}
+
+Here in `onFinish(...) method, we are creating `Employee` object using the values that are stored earlier in temp, and returning it.
 
 ------------------------------------------------------------------------------------------------------------------------------
 
