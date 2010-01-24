@@ -33,13 +33,13 @@ public interface DBBundle{
 `@ResourceBundle` says that this interface is used for I18N purpose.<br>
 this annotation can be applied only on interface.
 
-all methods in this interface should be annotated with `@Message`
+all methods in this interface should be annotated with `@Message`.<br>
 For each message you want, you will add a method in this interface
 {{{
 @Message("SQL Execution completed in {0} seconds with {1} errors")
 public String executionFinished(long seconds, int errorCount);
 }}}
-here the key of message is the name of the method. i.e, `executionFinished`
+here the key of message is the name of the method. i.e, `executionFinished`<br>
 and the value of message is `SQL Execution completed in {0} seconds with {1} errors`
 
 {{{
@@ -58,11 +58,11 @@ public static final DBBundle DB_BUNDLE = I18N.getImplementation(DBBundle.class);
 `I18N.getImplementation(DBBundle.class)` returns an instance of `_Bundle` class that is generated.
 
 You can have more than one interface with `@ResourceBundle` in a package. In such case:
- * `Bundle.properties` will have messages from all interfaces
- * `_Bundle.class` will be implementing all these interfaces
+ * generated `Bundle.properties` will have messages from all interfaces
+ * generated `_Bundle.class` will be implementing all these interfaces
 
 i.e it would be easier to group messages based on the context they are used.<br>
-Let us say I have UIBundle interface in same package:
+Let us say I have UIBundle interface in same package, which contains messages used by UI:
 
 {{{
 @ResourceBundle
@@ -132,7 +132,7 @@ the message generated in `Bundle.properties` will be:
 # {1} version ==> version of the application
 cannotKillApplication=failed to kill application {0} with version {1}
 }}}
-any additional javadoc specified is also made available in generated `Bundle.properties`.
+i.e, any additional javadoc specified is also made available in generated `Bundle.properties`.
 This makes the job of translator more comfortable.
 
 `Bundle.properties` generated for DBBundle, UIBundle will look as below:
