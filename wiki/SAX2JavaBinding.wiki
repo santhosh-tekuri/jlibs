@@ -514,9 +514,91 @@ public class ComponentBinding{
 }
 }}}
 ------------------------------------------------------------------------------------------------------------------------------
+===Storing List of values in temp===
+{{{
+public class Employee{
+    public String name;
+    public int age;
+    public int experience;
+    public String contacts[];
 
-I will be preparing more example use cases like:
- * recursive bindings
- * etc
+    public Employee(String name, int age, int experience){
+        this.name = name;
+        this.age = age;
+        this.experience = experience;
+    }
+}
+}}}
+{{{
+        XML                                     |     Java Object                              |   Relation
+------------------------------------------------|----------------------------------------------|----------------------------
+<employee name="scott" age="20" experience="5"> | emp = new Employee(@name, @age, @experience) |
+    <contacts>                                  |                                              |
+        <email>scott@yahoo.com</email>          | email = #text                                | parent[<email>] += email
+        <email>scott@google.com</email>         | email = #text                                | parent[<email>] += email
+        <email>scott@msn.com</email>            | email = #text                                | parent[<email>] += email
+    </contacts>                                 |                                              | emp.contacts = current[<email>]
+</employee>                                     |                                              |
+}}}
 
+notice that the relation for `<email>` element end is:
+{{{
+parent[<email>] += email
+}}}
+here '+=' means add to temp (i.e don't replace existing value)<br>
+that is, `parent[<email>]` value is a list of strings rather than string
+
+the relation for `<contacts>` element end is:
+{{{
+emp.contacts = parent[<email>]
+}}}
+i.e we are assigning the list of emails from current element's temp int `emp.conctacts`
+
+Let us see the java code:
+{{{
+@Binding("employee")
+public class EmployeeBinding{
+    @Binding.Start
+    public static Employee onStart(@Attr String name, @Attr String age, @Attr String experience){
+        return new Employee(name,
+                age!=null ? Integer.parseInt(age) : 0,
+                experience!=null ? Integer.parseInt(experience) : 0
+        );
+    }
+
+    @Binding.Text("contacts/email")
+    public static String onText(String text){
+        return text;
+    }
+
+    @Relation.Finish("contacts/email")
+    public static @Temp.Add String relateEmail(String email){
+        return email;
+    }
+
+    @Binding.Finish("contacts")
+    public static void onFinish(Employee emp, @Temp("email") List<String> emails){
+        emp.contacts = emails.toArray(new String[emails.size()]);
+    }
+}
+}}}
+let us walk through the code:
+{{{
+@Relation.Finish("contacts/email")
+public static @Temp.Add String relateEmail(String email){
+    return email;
+}
+}}}
+`@Temp.Add` on return type says that, add the returned value to the existing value.<br>
+i.e we want to save it as list of emails
+
+{{{
+@Binding.Finish("contacts")
+public static void onFinish(Employee emp, @Temp("email") List<String> emails){
+    if(emails!=null)
+        emp.contacts = emails.toArray(new String[emails.size()]);
+}
+}}}
+notice the second argument. It is mapped to `@Temp("email")` and its type is `List<String>`
+------------------------------------------------------------------------------------------------------------------------------
 Your comments are appreciated.
