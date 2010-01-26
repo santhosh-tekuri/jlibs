@@ -601,4 +601,49 @@ public static void onFinish(Employee emp, @Temp("email") List<String> emails){
 }}}
 notice the second argument. It is mapped to `@Temp("email")` and its type is `List<String>`
 ------------------------------------------------------------------------------------------------------------------------------
-Your comments are appreciated.
+===Comparision with existing Binding Frameworks===
+Most of java-xml binding implementations provide two way support.<br>
+ * serializing domain object to xml<br>
+ * serializing xml to domain object. 
+
+But JLibs implementation is only one way. that is "deserializing xml to domain object".<br>
+to serialize xml to domain object, you can use `XMLDocument`
+
+the main advantages of JLibs implementation:
+ * works with hand-coded domain objects 
+   
+   most binding implementations mandate that domain objects has to be generated<br>
+   from schema or dtd. They don't work with hand-coded domain objects 
+
+ * domain objects are not tied to binding implementation 
+
+   domain objects dont need to extend/implement a particular class/interface from binding implementation.<br>
+   for example,
+    * XMLBeans mandates that all domain objects implement `org.apache.xmlbeans.XmlObject`<br> 
+    * Similarly EMF mandates that all domain objects implement `EObject` interface<br> 
+
+ * domain objects are light-weight. i.e not poluted with binding implementation specific information 
+
+   for example: the domain objects created by XMLBeans or EMF carry lot of information which are specific<br> 
+   to them. This will bloat up memory. 
+
+ * easier migration. 
+
+    let us say in version 2 of your project, you want to change the structure of xml how it looks like, and still wants to provide backward<br> 
+    compatibility to end-users. 
+
+    This is tedious task with other binding frameworks. With JLibs you can have different Binding implementations<br> 
+    for a domain object and use appropriate one at runtime based on version of xml document. 
+
+ * clear separation of binding and domain object
+ * in jlibs, it is like a callback methods. 
+ 
+   callback methods can define when it has to be called and what information from xml document you want. <br>
+   You have complete control how to consume that information into domain object (because you are implementing it in java code) 
+
+ * The runtime memory used by jlibs binding is minimal and no reflection api is used. The number of `SAXContext` is equal to the maximum element depth of the xml document. 
+
+JLibs binding implementation more of resembels [http://commons.apache.org/digester/ Apache's Commons-Digestor] but without reflection
+
+
+===Your Feedback is valuable===
