@@ -77,12 +77,11 @@ public class Printer{
     }
     
     private static Map<TypeElement, Printer> registry = new HashMap<TypeElement, Printer>();
+    @SuppressWarnings({"UnusedDeclaration"})
     public static Printer get(TypeElement clazz, Class annoation, String format) throws IOException{
         Printer printer = registry.get(clazz);
         if(printer==null){
             String str[] = ModelUtil.findClass(clazz, format);
-            if(Environment.get().getElementUtils().getTypeElement(str[0])!=null)
-                throw new AnnotationError(clazz, ModelUtil.getAnnotationMirror(clazz, annoation), "cann't generate class "+str[0]+" because it already exists");
             PrintWriter writer = new PrintWriter(Environment.get().getFiler().createSourceFile(str[0]).openWriter());
             printer=new Printer(writer);
             printer.clazz = clazz;
