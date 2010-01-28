@@ -108,7 +108,7 @@ public class Handler extends DefaultHandler{
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
         if(populateNamespaces)
             nsHandler.startElement();
-        if(context!=null && content.size()>0)
+        if(context!=null)
             context.onText();
         context = newContext(uri, localName, attributes);
     }
@@ -122,8 +122,7 @@ public class Handler extends DefaultHandler{
     public void endElement(String uri, String localName, String qName) throws SAXException{
         if(populateNamespaces)
             nsHandler.endElement();
-        if(content.size()>0)
-            context.onText();
+        context.onText();
         context = context.pop();
     }
 
