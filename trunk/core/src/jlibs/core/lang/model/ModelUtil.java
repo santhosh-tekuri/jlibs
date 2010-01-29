@@ -25,6 +25,9 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.StandardLocation;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -221,5 +224,21 @@ public class ModelUtil{
         vars.put("class", clazz.getSimpleName());
         String qname = new TemplateMatcher("${", "}").replace(format, vars);
         return clazz.getClassLoader().loadClass(qname);
+    }
+
+    public static boolean exists(String pakage, String relativeName){
+        try{
+            InputStream is = null;
+            try{
+                is = Environment.get().getFiler().getResource(StandardLocation.SOURCE_PATH, pakage, relativeName).openInputStream();
+                System.out.println("is: "+is);
+                return true;
+            }finally{
+                if(is!=null)
+                    is.close();
+            }
+        }catch(IOException ex){
+            return false;
+        }
     }
 }

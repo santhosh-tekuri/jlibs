@@ -77,11 +77,12 @@ public class Printer{
     }
     
     private static Map<TypeElement, Printer> registry = new HashMap<TypeElement, Printer>();
-    @SuppressWarnings({"UnusedDeclaration"})
-    public static Printer get(TypeElement clazz, Class annoation, String format) throws IOException{
+    public static Printer get(TypeElement clazz, Class annotation, String format) throws IOException{
         Printer printer = registry.get(clazz);
         if(printer==null){
             String str[] = ModelUtil.findClass(clazz, format);
+            if(ModelUtil.exists(str[1], str[2]+".java"))
+                throw new AnnotationError(clazz, ModelUtil.getAnnotationMirror(clazz, annotation), "Class "+str[0]+" already exists in source path");
             PrintWriter writer = new PrintWriter(Environment.get().getFiler().createSourceFile(str[0]).openWriter());
             printer=new Printer(writer);
             printer.clazz = clazz;

@@ -62,6 +62,9 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             printer = Printer.get(clazz, annotation, FORMAT);
             pakage = ModelUtil.getPackage(clazz);
             interfaces.add(clazz.getSimpleName().toString());
+            if(ModelUtil.exists(pakage, basename+".properties"))
+                throw new AnnotationError(clazz, ModelUtil.getAnnotationMirror(clazz, annotation), basename+".properties in package "+pakage+" already exists in source path");
+
             FileObject resource = Environment.get().getFiler().createResource(StandardLocation.SOURCE_OUTPUT, pakage, basename+".properties");
             props = new BufferedWriter(resource.openWriter());
         }
