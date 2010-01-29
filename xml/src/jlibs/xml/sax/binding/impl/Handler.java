@@ -165,8 +165,10 @@ public class Handler extends DefaultHandler{
             if(bindingRelation==null){
                 if(ignoreUnresolved)
                     bindingRelation = BindingRelation.DO_NOTHING;
-                else
+                else{
+                    this.element = new QName(namespaceURI, localPart);
                     throw new SAXException(String.format("can't find binding for %s", this));
+                }
             }
             this.element = bindingRelation.qname;
             if(element.getNamespaceURI().equals("*") || element.getLocalPart().equals("*"))
