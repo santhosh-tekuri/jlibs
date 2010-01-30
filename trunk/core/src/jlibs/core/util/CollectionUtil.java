@@ -104,4 +104,62 @@ public class CollectionUtil{
         }
         return null;
     }
+
+    /*-------------------------------------------------[ To Primitive Array ]---------------------------------------------------*/
+
+    public static boolean[] toBooleanArray(Collection<Boolean> c){
+        boolean arr[] = new boolean[c.size()];
+        int i=0;
+        for(Boolean item: c)
+            arr[i++] = item;
+        return arr;
+    }
+
+    public static int[] toIntArray(Collection<? extends Number> c){
+        int arr[] = new int[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.intValue();
+        return arr;
+    }
+
+    public static long[] toLongArray(Collection<? extends Number> c){
+        long arr[] = new long[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.longValue();
+        return arr;
+    }
+
+    public static float[] toFloatArray(Collection<? extends Number> c){
+        float arr[] = new float[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.floatValue();
+        return arr;
+    }
+
+    public static double[] toDoubleArray(Collection<? extends Number> c){
+        double arr[] = new double[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.doubleValue();
+        return arr;
+    }
+
+    public static byte[] toByteArray(Collection<? extends Number> c){
+        byte arr[] = new byte[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.byteValue();
+        return arr;
+    }
+
+    public static short[] toShortArray(Collection<? extends Number> c){
+        short arr[] = new short[c.size()];
+        int i=0;
+        for(Number item: c)
+            arr[i++] = item.shortValue();
+        return arr;
+    }
 }
