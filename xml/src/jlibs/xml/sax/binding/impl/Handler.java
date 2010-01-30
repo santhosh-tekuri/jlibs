@@ -41,18 +41,6 @@ public class Handler extends DefaultHandler{
         this.docRegistry = docRegistry;
     }
 
-    /*-------------------------------------------------[ ignoreUnresolved ]---------------------------------------------------*/
-
-    private boolean ignoreUnresolved = true;
-
-    public boolean isIgnoreUnresolved(){
-        return ignoreUnresolved;
-    }
-
-    public void setIgnoreUnresolved(boolean ignoreUnresolved){
-        this.ignoreUnresolved = ignoreUnresolved;
-    }
-
     /*-------------------------------------------------[ populateNamespaces ]---------------------------------------------------*/
 
     private boolean populateNamespaces = false;
@@ -130,7 +118,10 @@ public class Handler extends DefaultHandler{
         return rootObject;
     }
 
-
+    protected void onUnresolvedElement(SAXContext context) throws SAXException{
+        // do nothing
+    }
+    
     /*-------------------------------------------------[ Context ]---------------------------------------------------*/
     
     private QNameFake qnameFake = new QNameFake();
@@ -162,19 +153,16 @@ public class Handler extends DefaultHandler{
             namespaceMap = nsHandler.namespaceMap;
             this.parent = parent;
             bindingRelation = (parent!=null?parent.bindingRelation.binding.registry:docRegistry).get(qnameFake.set(namespaceURI, localPart));
-            if(bindingRelation==null){
-                if(ignoreUnresolved)
-                    bindingRelation = BindingRelation.DO_NOTHING;
-                else{
-                    this.element = new QName(namespaceURI, localPart);
-                    throw new SAXException(String.format("can't find binding for %s", this));
-                }
-            }
+            boolean unresolvedElement = bindingRelation==null;
+            if(unresolvedElement)
+                bindingRelation = BindingRelation.DO_NOTHING;
             this.element = bindingRelation.qname;
             if(element.getNamespaceURI().equals("*") || element.getLocalPart().equals("*"))
                 this.element = new QName(namespaceURI, localPart);
             if(parent!=null)
                 object = parent.object;
+            if(unresolvedElement)
+                onUnresolvedElement(this);
             bindingRelation.binding.startElement(bindingRelation.bindingState, this, attributes);
             if(parent!=null)
                 bindingRelation.relation.startRelation(bindingRelation.relationState, parent, this);
@@ -228,14 +216,8 @@ public class Handler extends DefaultHandler{
             return buff.toString();
         }
 
-        @Override
-        public int line(){
-            return locator.getLineNumber();
-        }
-
-        @Override
-        public int column(){
-            return locator.getColumnNumber();
+        public Locator locator(){
+            return locator;
         }
     }
 }

@@ -18,6 +18,7 @@ package jlibs.xml.sax.binding;
 import jlibs.xml.NamespaceMap;
 import jlibs.xml.QNameFake;
 import org.xml.sax.Attributes;
+import org.xml.sax.Locator;
 
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
@@ -122,11 +123,10 @@ public abstract class SAXContext<T>{
     /*-------------------------------------------------[ Debuging ]---------------------------------------------------*/
 
     public abstract String xpath();
-    public abstract int line();
-    public abstract int column();
+    public abstract Locator locator();
 
     public String toString(){
-        return xpath() + " (line="+line()+", col="+column()+')';
+        return xpath() + " (line="+locator().getLineNumber()+", col="+locator().getColumnNumber()+')';
     }
 }
 
