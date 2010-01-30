@@ -11,11 +11,14 @@
         <moduleSet>
             <includeSubModules>true</includeSubModules>
             <sources>
+                <outputDirectoryMapping>${module.name}</outputDirectoryMapping>
                 <fileSets>
                     <fileSet>
                         <excludes>
                             <exclude>src/**</exclude>
                             <exclude>pom.xml</exclude>
+                            <exclude>*.iml</exclude>
+                            <exclude>target/**</exclude>
                         </excludes>
                     </fileSet>
                     <fileSet>
@@ -27,8 +30,8 @@
                 </fileSets>
             </sources>
             <binaries>
-                <outputDirectory>${module.artifactId}</outputDirectory>
-                <outputFileNameMapping>${module.groupId}-${module.artifactId}.${module.extension}</outputFileNameMapping>
+                <outputDirectory>${module.name}</outputDirectory>
+                <outputFileNameMapping>${module.artifactId}.${module.extension}</outputFileNameMapping>
                 <unpack>false</unpack>
                 <dependencySets>
                     <dependencySet>
