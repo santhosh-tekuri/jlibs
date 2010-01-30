@@ -1,4 +1,0 @@
-<project name="core" default="archive">
-    <path id="classpath"/>
-    <import file="../common.xml"/>
-</project>
