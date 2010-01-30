@@ -16,6 +16,7 @@
 package jlibs.xml.sax.binding;
 
 import jlibs.xml.sax.binding.impl.Handler;
+import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
 
@@ -33,5 +34,17 @@ public class BindingHandler extends Handler{
 
     public BindingHandler(BindingRegistry docRegistry){
         super(docRegistry.registry);
+    }
+
+    private BindingListener listener;
+
+    public void setBindingListener(BindingListener listener){
+        this.listener = listener;
+    }
+
+    @Override
+    protected void onUnresolvedElement(SAXContext context) throws SAXException{
+        if(listener!=null)
+            listener.unresolvedElement(context);
     }
 }
