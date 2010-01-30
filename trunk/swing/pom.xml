@@ -8,7 +8,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>swing</artifactId>
+    <artifactId>jlibs-swing</artifactId>
     <packaging>jar</packaging>
 
     <name>swing</name>
@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>xml</artifactId>
+            <artifactId>jlibs-xml</artifactId>
             <version>${project.version}</version>
         </dependency> 
         <dependency>
