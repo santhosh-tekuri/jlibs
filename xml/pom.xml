@@ -8,7 +8,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>xml</artifactId>
+    <artifactId>jlibs-xml</artifactId>
     <packaging>jar</packaging>
 
     <name>xml</name>
@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>core</artifactId>
+            <artifactId>jlibs-core</artifactId>
             <version>${project.version}</version>
         </dependency> 
         <dependency>

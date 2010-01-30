@@ -8,7 +8,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>xmldog</artifactId>
+    <artifactId>jlibs-xmldog</artifactId>
     <packaging>jar</packaging>
 
     <name>xmldog</name>
@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>xml</artifactId>
+            <artifactId>jlibs-xml</artifactId>
             <version>${project.version}</version>
         </dependency> 
         <dependency>
