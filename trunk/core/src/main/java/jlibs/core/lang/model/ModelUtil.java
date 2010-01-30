@@ -237,8 +237,8 @@ public class ModelUtil{
                 if(is!=null)
                     is.close();
             }
-        }catch(IOException ex){
-            return false;
+        }catch(Exception ignore){
+            return false; //http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6647998
         }
     }
 }
