@@ -54,7 +54,7 @@
                 <configuration>
                     <finalName>distribution</finalName>
                     <descriptors>
-                        <descriptor>src/main/assembly/bin.xml</descriptor>
+                        <descriptor>src/main/assembly/default.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>
