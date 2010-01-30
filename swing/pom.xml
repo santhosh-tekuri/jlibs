@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>jlibs</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>swing</artifactId>
+    <packaging>jar</packaging>
+
+    <name>swing</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>xml</artifactId>
+            <version>${project.version}</version>
+        </dependency> 
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-swing-outline</artifactId>
+            <version>RELEASE65BETA</version>
+        </dependency> 
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>netbeans</id>
+            <name>Repository for hosting NetBeans API artifacts</name>
+            <url>http://deadlock.netbeans.org/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+</project>
