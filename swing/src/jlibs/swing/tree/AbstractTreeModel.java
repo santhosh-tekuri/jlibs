@@ -53,6 +53,8 @@ public abstract class AbstractTreeModel implements TreeModel{
         listenerList.remove(TreeModelListener.class, listener);
     }
 
+    /*-------------------------------------------------[ Firing Changes ]---------------------------------------------------*/
+    
     @Override
     public void valueForPathChanged(TreePath path, Object newValue){
         Object[] listeners = listenerList.getListenerList();
@@ -64,13 +66,33 @@ public abstract class AbstractTreeModel implements TreeModel{
         }
     }
 
-    protected void fireTreeStructureChanged(Object source, Object[] path, int[] childIndices, Object[] children){
+    public void fireTreeStructureChanged(Object source, Object[] path, int[] childIndices, Object[] children){
         Object[] listeners = listenerList.getListenerList();
         TreeModelEvent e = null;
         for(int i = listeners.length-2; i>=0; i-=2){
             if(e==null)
                 e = new TreeModelEvent(source, path, childIndices, children);
             ((TreeModelListener)listeners[i+1]).treeStructureChanged(e);
+        }
+    }
+
+    public void fireTreeNodesInserted(Object source, Object[] path, int[] childIndices, Object[] children){
+        Object[] listeners = listenerList.getListenerList();
+        TreeModelEvent e = null;
+        for(int i = listeners.length-2; i>=0; i-=2){
+            if(e==null)
+                e = new TreeModelEvent(source, path, childIndices, children);
+            ((TreeModelListener)listeners[i+1]).treeNodesInserted(e);
+        }
+    }
+
+    public void fireTreeNodesRemoved(Object source, Object[] path, int[] childIndices, Object[] children){
+        Object[] listeners = listenerList.getListenerList();
+        TreeModelEvent e = null;
+        for(int i = listeners.length-2; i>=0; i-=2){
+            if(e==null)
+                e = new TreeModelEvent(source, path, childIndices, children);
+            ((TreeModelListener)listeners[i+1]).treeNodesRemoved(e);
         }
     }
 }
