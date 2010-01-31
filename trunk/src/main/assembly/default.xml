@@ -7,42 +7,25 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
 
-    <moduleSets>
-        <moduleSet>
-            <includeSubModules>true</includeSubModules>
-            <sources>
-                <outputDirectoryMapping>${module.name}</outputDirectoryMapping>
-                <fileSets>
-                    <fileSet>
-                        <excludes>
-                            <exclude>src/**</exclude>
-                            <exclude>pom.xml</exclude>
-                            <exclude>*.iml</exclude>
-                            <exclude>target/**</exclude>
-                        </excludes>
-                    </fileSet>
-                    <fileSet>
-                        <directory>target</directory>
-                        <includes>
-                            <include>*-sources.jar</include>
-                        </includes>
-                    </fileSet>
-                </fileSets>
-            </sources>
-            <binaries>
-                <outputDirectory>${module.name}</outputDirectory>
-                <outputFileNameMapping>${module.artifactId}.${module.extension}</outputFileNameMapping>
-                <unpack>false</unpack>
-                <dependencySets>
-                    <dependencySet>
-                        <outputDirectory>3rdparty</outputDirectory>
-                        <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-                        <excludes>
-                            <exclude>jlibs:*</exclude>
-                        </excludes>
-                    </dependencySet>
-                </dependencySets>
-            </binaries>
-        </moduleSet>
-    </moduleSets>
+    <files>
+        <file>
+            <source>target/${project.build.finalName}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+        </file>
+        <file>
+            <source>target/${project.build.finalName}-sources.jar</source>
+            <outputDirectory>src</outputDirectory>
+            <destName>${project.build.finalName}.jar</destName>
+        </file>
+    </files>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib/external</outputDirectory>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <excludes>
+                <exclude>jlibs:*</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
 </assembly>
