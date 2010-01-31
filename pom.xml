@@ -109,6 +109,7 @@
         <snapshotRepository>
             <id>internal-repo</id>
             <url>file://${user.dir}/repository</url>
+            <!-- the download url: http://dl.dropbox.com/u/326301/repository -->
         </snapshotRepository>
     </distributionManagement>
 </project>
