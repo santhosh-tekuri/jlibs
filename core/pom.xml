@@ -5,6 +5,7 @@
         <groupId>jlibs</groupId>
         <artifactId>parent</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../parent.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -32,6 +33,9 @@
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
