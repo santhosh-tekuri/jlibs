@@ -106,6 +106,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             printer.emptyLine(true);
 
             printer.printClassDoc();
+            printer.println("@SuppressWarnings(\"unchecked\")");
             printer.println("public class "+printer.generatedClazz +" implements "+StringUtil.join(interfaces.iterator(), ", ")+"{");
             printer.indent++;
 
