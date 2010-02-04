@@ -18,6 +18,12 @@
             <destName>${project.build.finalName}.jar</destName>
         </file>
     </files>
+    
+    <fileSets>
+        <fileSet>
+            <directory>bin</directory>
+        </fileSet>
+    </fileSets>
 
     <dependencySets>
         <dependencySet>
