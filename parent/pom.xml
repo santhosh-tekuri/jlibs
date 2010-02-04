@@ -11,6 +11,10 @@
     <name>jlibs</name>
     <url>http://jlibs.googlecode.com</url>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    
     <scm>
         <connection>scm:svn:https://jlibs.googlecode.com/svn/trunk/jlibs</connection>
         <developerConnection>scm:svn:http://jlibs.googlecode.com/svn/trunk/jlibs</developerConnection>
