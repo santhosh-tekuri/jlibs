@@ -15,9 +15,18 @@
 
 package jlibs.core.graph;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * @author Santhosh Kumar T
  */
 public interface Visitor<E, R>{
-    public R visit(E elem); 
+    public R visit(E elem);
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.SOURCE)
+    public static @interface Implement{}
 }
