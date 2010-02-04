@@ -44,13 +44,13 @@ public class BindingRegistry{
 
     public void register(QName qname, Class clazz){
         try{
-            clazz = ModelUtil.findClass(clazz, BindingAnnotationProcessor.FORMAT);
+            Class implClass = ModelUtil.findClass(clazz, BindingAnnotationProcessor.FORMAT);
             if(qname==null)
-                qname = (QName)clazz.getDeclaredField("ELEMENT").get(null); 
+                qname = (QName)implClass.getDeclaredField("ELEMENT").get(null);
             if(qname==null)
-                throw new IllegalArgumentException("can't find qname for: "+clazz);
+                throw new IllegalArgumentException("can't find qname for: "+implClass);
             
-            jlibs.xml.sax.binding.impl.Binding binding = (jlibs.xml.sax.binding.impl.Binding)clazz.getDeclaredField("INSTANCE").get(null);
+            jlibs.xml.sax.binding.impl.Binding binding = (jlibs.xml.sax.binding.impl.Binding)implClass.getDeclaredField("INSTANCE").get(null);
             registry.register(qname, 0, binding, 0, Relation.DO_NOTHING);
         }catch(ClassNotFoundException ex){
             throw new RuntimeException(ex);
