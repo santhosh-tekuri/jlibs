@@ -15,15 +15,15 @@
 
 package jlibs.core.graph.visitors;
 
+import jlibs.core.graph.Filter;
+import jlibs.core.graph.Navigator;
 import jlibs.core.graph.Sequence;
 import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.sequences.FilteredSequence;
 import jlibs.core.graph.sequences.IterableSequence;
-import jlibs.core.graph.Filter;
-import jlibs.core.graph.Navigator;
 
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -36,7 +36,7 @@ public class ClassSorter{
                 return new FilteredSequence<Class<?>>(classes.copy(), new Filter<Class<?>>(){
                     @Override
                     public boolean select(Class<?> child){
-                        return child.isAssignableFrom(parent);
+                        return child!=parent && child.isAssignableFrom(parent);
                     }
                 });
             }
