@@ -4,7 +4,6 @@
     <id>final</id>
     <formats>
         <format>dir</format>
-        <format>zip</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
 
@@ -21,4 +20,11 @@
             </sources>
         </moduleSet>
     </moduleSets>
+    <files>
+    	<file>
+            <source>dependencies.xml</source>
+            <outputDirectory>lib/external</outputDirectory>
+            <destName>build.xml</destName>
+    	</file>
+    </files>
 </assembly>

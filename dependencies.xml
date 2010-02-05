@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="jlibs-dependencies" default="download">
+    <target name="download" description="download dependencies">
+        <get src="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" 
+             dest="xercesImpl.jar" usetimestamp="true"/> 
+        <get src="http://mirrors.ibiblio.org/pub/mirrors/maven2/jaxen/jaxen/1.1.1/jaxen-1.1.1.jar" 
+             dest="jaxen.jar" usetimestamp="true"/> 
+        <get src="http://deadlock.netbeans.org/maven2/org/netbeans/api/org-netbeans-swing-outline/RELEASE65BETA/org-netbeans-swing-outline-RELEASE65BETA.jar" 
+             dest="org-netbeans-swing-outline.jar" usetimestamp="true"/> 
+        <get src="http://svn.apache.org/repos/asf/tuscany/maven/net/sf/saxon/saxon/9.0.0.2/saxon-9.0.0.2.jar" 
+             dest="saxon.jar" usetimestamp="true"/> 
+        <get src="http://svn.apache.org/repos/asf/tuscany/maven/net/sf/saxon/saxon-dom/9.0.0.2/saxon-dom-9.0.0.2.jar" 
+             dest="saxon-dom.jar" usetimestamp="true"/> 
+        <get src="http://svn.apache.org/repos/asf/tuscany/maven/net/sf/saxon/saxon-xpath/9.0.0.2/saxon-xpath-9.0.0.2.jar" 
+             dest="saxon-xpath.jar" usetimestamp="true"/> 
+    </target>
+</project>
+
