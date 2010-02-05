@@ -1,3 +1,3 @@
 #!/bin/sh
 
-`dirname $0`/launcher/jlaunch.sh examples.conf jlibs.xml.xsd.XSDOutlinePanelTest $*
+`dirname $0`/launcher/jlaunch.sh `dirname $0`/examples.conf jlibs.xml.xsd.XSDOutlinePanelTest $*
