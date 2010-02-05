@@ -13,7 +13,7 @@ exit
 ../lib/external/org-netbeans-swing-outline.jar
 ../lib/jlibs-swing.jar
 
-../lib/jlibs-utils.jar
+../lib/jlibs-examples.jar
 
 <jvm.args>
 -ea
