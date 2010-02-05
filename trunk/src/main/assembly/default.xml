@@ -23,6 +23,9 @@
         <fileSet>
             <directory>bin</directory>
         </fileSet>
+        <fileSet>
+            <directory>resources</directory>
+        </fileSet>
     </fileSets>
 
     <dependencySets>

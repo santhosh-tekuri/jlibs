@@ -30,7 +30,7 @@
         <module>xml</module>
         <module>xmldog</module>
         <module>swing</module>
-        <module>utils</module>
+        <module>examples</module>
     </modules> 
   
     <build>
