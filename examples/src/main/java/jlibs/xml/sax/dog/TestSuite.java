@@ -34,7 +34,7 @@ public class TestSuite{
     public int total;
 
     public TestSuite() throws Exception{
-        this("resources/xpaths.xml");
+        this("../resources/xpaths.xml");
     }
     
     public TestSuite(String configFile) throws Exception{
