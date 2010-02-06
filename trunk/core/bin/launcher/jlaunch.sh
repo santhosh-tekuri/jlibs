@@ -19,7 +19,7 @@ join() {
         if [ `echo $line | cut -c 1` = '#' ]; then
             return # ignore lines starting with '#'
         fi
-        line=`echo $line | sed 's/\(%\)\([a-zA-Z0-9_]*\)\(\%\)/\$\2/g'`
+        line=`echo $line | sed 's/%\([^%]*\)%/${\1}/g'`
         line=`eval echo "$line"` # evaluate environment variables used, if any
         if [ -n "$RESULT" ]; then
             RESULT=$RESULT$SEPARATOR
