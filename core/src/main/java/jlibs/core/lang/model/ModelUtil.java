@@ -26,7 +26,6 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.StandardLocation;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,8 +50,10 @@ public class ModelUtil{
             return null;
     }
 
-    public static String getPackage(TypeElement clazz){
-        return ((PackageElement)clazz.getEnclosingElement()).getQualifiedName().toString();
+    public static String getPackage(Element elem){
+        while(!(elem instanceof PackageElement))
+            elem = elem.getEnclosingElement();
+        return ((PackageElement)elem).getQualifiedName().toString();
     }
 
     public static String toString(TypeMirror mirror, boolean usePrimitiveWrappers){
