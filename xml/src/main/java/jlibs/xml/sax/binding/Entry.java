@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 /**
  * @author Santhosh Kumar T
  */
-@Target(ElementType.TYPE)
+@Target({}) 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Entry{
     public String prefix();
