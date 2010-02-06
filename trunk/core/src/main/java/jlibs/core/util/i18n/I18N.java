@@ -15,12 +15,17 @@
 
 package jlibs.core.util.i18n;
 
+import java.text.MessageFormat;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import jlibs.core.lang.model.ModelUtil;
 
 /**
  * @author Santhosh Kumar T
  */
 public class I18N{
+    public static final String BASENAME = "Bundle";
+    
     @SuppressWarnings({"unchecked"})
     public static <T> T getImplementation(Class<T> bundleClass){
         try{
@@ -28,5 +33,25 @@ public class I18N{
         }catch(Exception ex){
             throw new RuntimeException(ex);
         }
+    }
+
+    public static ResourceBundle bundle(Class clazz){
+        return ResourceBundle.getBundle(clazz.getPackage().getName().replace('.', '/')+"/"+BASENAME);
+    }
+
+    public static String getValue(Class clazz, String key, Object... args){
+        try{
+            return MessageFormat.format(bundle(clazz).getString(key), args);
+        }catch(MissingResourceException ex){
+            return null;
+        }
+    }    
+
+    public static String getHint(Class clazz, String member, String hint, Object... args){
+        return getValue(clazz, clazz.getSimpleName()+'.'+member+'.'+hint, args);
+    }
+
+    public static String getHint(Class clazz, String hint, Object... args){
+        return getValue(clazz, clazz.getSimpleName()+'.'+hint, args);
     }
 }
