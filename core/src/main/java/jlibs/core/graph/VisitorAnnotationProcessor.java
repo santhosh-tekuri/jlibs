@@ -154,9 +154,6 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
                 return new FilteredSequence<TypeMirror>(classes.copy(), new Filter<TypeMirror>(){
                     @Override
                     public boolean select(TypeMirror child){
-                        System.out.println("child:"+child);
-                        System.out.println("parent:"+parent);
-                        System.out.println("result:"+Environment.get().getTypeUtils().isAssignable(parent, child));
                         return Environment.get().getTypeUtils().isSubtype(parent, child);
                     }
                 });
