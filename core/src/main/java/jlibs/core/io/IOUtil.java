@@ -21,6 +21,8 @@ import java.io.*;
  * @author Santhosh Kumar T
  */
 public class IOUtil{
+    /*-------------------------------------------------[ Pumping ]---------------------------------------------------*/
+    
     public static ByteArrayOutputStream pump(InputStream is, boolean closeIn) throws IOException{
         return pump(is, new ByteArrayOutputStream(), closeIn, true);
     }
@@ -73,5 +75,24 @@ public class IOUtil{
             }
         }
         return writer;
+    }
+
+    /*-------------------------------------------------[ Read-Fully ]---------------------------------------------------*/
+    
+    public static int readFully(InputStream in, byte b[]) throws IOException {
+    	return readFully(in, b, 0, b.length);
+    }
+
+    public static int readFully(InputStream in, byte b[], int off, int len) throws IOException{
+	    if(len<0)
+	        throw new IndexOutOfBoundsException();
+	    int n = 0;
+	    while(n<len){
+	        int count = in.read(b, off+n, len-n);
+	        if(count<0)
+		        return n;
+	        n += count;
+	    }
+        return n;
     }
 }
