@@ -1,3 +1,18 @@
+@REM
+@REM JLibs: Common Utilities for Java
+@REM Copyright (C) 2009  Santhosh Kumar T <santhosh.tekuri@gmail.com>
+@REM
+@REM This library is free software; you can redistribute it and/or
+@REM modify it under the terms of the GNU Lesser General Public
+@REM License as published by the Free Software Foundation; either
+@REM version 2.1 of the License, or (at your option) any later version.
+@REM
+@REM This library is distributed in the hope that it will be useful,
+@REM but WITHOUT ANY WARRANTY; without even the implied warranty of
+@REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+@REM Lesser General Public License for more details.
+@REM
+
 @ECHO OFF
 
 REM JLibs: Common Utilities for Java
