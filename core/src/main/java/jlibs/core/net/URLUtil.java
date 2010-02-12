@@ -16,6 +16,7 @@
 package jlibs.core.net;
 
 import jlibs.core.io.FileUtil;
+import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
@@ -79,7 +80,7 @@ public class URLUtil{
      */
     public static Map<String, String> getQueryParams(String uri, String encoding) throws URISyntaxException, UnsupportedEncodingException{
         if(encoding==null)
-            encoding = "UTF-8";
+            encoding = IOUtil.UTF_8.name();
 
         String query = new URI(uri).getRawQuery();
         String params[] = Pattern.compile("&", Pattern.LITERAL).split(query);
