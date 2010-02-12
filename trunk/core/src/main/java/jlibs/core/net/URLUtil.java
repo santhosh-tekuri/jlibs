@@ -21,9 +21,13 @@ import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 
+import javax.net.ssl.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -34,11 +38,29 @@ import java.util.regex.Pattern;
  * @author Santhosh Kumar T
  */
 public class URLUtil{
+    /**
+     * Constructs <code>URI</code> from given string.
+     *
+     * The <code>URISyntaxException</code> is rethrown as <code>IllegalArgumentException</code>
+     */
+    public static URI toURI(String str){
+        try{
+            return new URI(str);
+        }catch(URISyntaxException ex){
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    /**
+     * Constructs <code>URI</code> from given <code>URL</code>.
+     *
+     * The <code>URISyntaxException</code> is rethrown as <code>IllegalArgumentException</code>
+     */
     public static URI toURI(URL url){
         try{
             return url.toURI();
         }catch(URISyntaxException ex){
-            throw new RuntimeException(ex);
+            throw new IllegalArgumentException(ex);
         }
     }
 
@@ -156,6 +178,52 @@ public class URLUtil{
         return "ns";
     }
 
+    private static SSLContext sc;
+
+    /**
+     * Creates connection to the specified url. If the protocol is <code>https</code> the connection
+     * created doesn't validate any certificates.
+     *
+     * @param url   url to which connection has to be created
+     * @param proxy proxy to be used. can be null
+     * @return <code>URLConnection</code>. the connection is not yet connected
+     *
+     * @throws IOException if an I/O exception occurs
+     */
+    public static URLConnection createUnCertifiedConnection(URL url, Proxy proxy) throws IOException{
+        if(sc==null){
+            TrustManager[] trustAllCerts = new TrustManager[]{
+               new X509TrustManager() {
+                   public X509Certificate[] getAcceptedIssuers(){
+                       return new X509Certificate[0];
+                   }
+                   public void checkClientTrusted(X509Certificate[] certs, String authType ){}
+                   public void checkServerTrusted(X509Certificate[] certs, String authType ){}
+               }
+            };
+
+            try{
+                SSLContext sc = SSLContext.getInstance("SSL");
+                sc.init(null, trustAllCerts, new SecureRandom());
+                URLUtil.sc = sc;
+            }catch(Exception ex){
+                throw new ImpossibleException(ex);
+            }
+        }
+
+        URLConnection con = proxy==null ? url.openConnection() : url.openConnection(proxy);
+        if("https".equals(url.getProtocol())){
+            HttpsURLConnection httpsCon = (HttpsURLConnection)con;
+            httpsCon.setSSLSocketFactory(sc.getSocketFactory());
+            httpsCon.setHostnameVerifier(new HostnameVerifier(){
+                public boolean verify(String urlHostName, SSLSession session){
+                    return true;
+                }
+            });
+        }
+        return con;
+    }
+    
     public static void main(String[] args) throws Exception{
         System.out.println(getQueryParams("http://www.google.co.in/search?hl=en&client=firefox-a&rls=org.mozilla%3Aen-US%3Aofficial&hs=Jvw&q=java%26url+encode&btnG=Search&meta=&aq=f&oq=", null));
     }
