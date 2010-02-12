@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax;
 
+import jlibs.core.io.IOUtil;
 import jlibs.xml.xsl.TransformerUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -99,6 +100,6 @@ public abstract class ObjectInputSource<E> extends InputSource{
                 xml.addComment("this is comment");
                 xml.addCDATA("this is sample cdata");
             }
-        }.writeTo(new OutputStreamWriter(System.out, "utf-8"), false, 4);
+        }.writeTo(new OutputStreamWriter(System.out, IOUtil.UTF_8), false, 4);
     }
 }
