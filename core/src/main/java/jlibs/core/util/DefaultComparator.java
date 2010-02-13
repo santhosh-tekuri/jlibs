@@ -44,12 +44,8 @@ public class DefaultComparator<T> implements Comparator<T>{
      */
     @SuppressWarnings({"unchecked"})
     protected int _compare(T o1, T o2){
-        if(o1 instanceof Comparable && o2 instanceof Comparable){
-            if(o1.getClass().isInstance(o2))
-                return ((Comparable)o1).compareTo(o2);
-            else if(o2.getClass().isInstance(o1))
-                return ((Comparable)o2).compareTo(o1);
-        }
+        if(o1 instanceof Comparable && o2 instanceof Comparable)
+            return ((Comparable<T>)o1).compareTo(o2);
         throw new NotImplementedException("can't compare objects of type: "+o1.getClass());
     }
 }
