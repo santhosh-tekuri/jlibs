@@ -54,7 +54,7 @@ public final class XPathParser implements XPathHandler{
         frames.clear();
         peekFrame = null;
         stepStack.clear();
-        noOfLocationPaths = 0;
+        locationPathDepth = 0;
         expr = null;
 
         reader.parse(xpath);
@@ -68,6 +68,10 @@ public final class XPathParser implements XPathHandler{
         pushFrame();
     }
 
+    /**
+     * the expression object created for currently parsing xpath is saved
+     * in this variable by endXPath()
+     */
     private Expression expr;
 
     @Override
@@ -81,11 +85,22 @@ public final class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ LocationPath ]---------------------------------------------------*/
 
-    private int noOfLocationPaths;
+    /**
+     * represents depath of current location path.<br>
+     * when location-path starts it is incremented. and decrement on end.<br>
+     *
+     * All relative location-paths that are depth 1 should be treated as absolute.
+     * for example:
+     *    "book/chapter/name" should be treated as "/book/chapter/name"
+     *    "sum(book/chapter/pages, book/chapter)" should be treated as "sum(/book/chapter/pages, /book/chapter)"
+     *
+     * i.e top level location paths should always be treated as absolute
+     */
+    private int locationPathDepth;
 
     @Override
     public void startAbsoluteLocationPath(){
-        noOfLocationPaths++;
+        locationPathDepth++;
         pushFrame();
     }
 
@@ -96,18 +111,18 @@ public final class XPathParser implements XPathHandler{
 
     @Override
     public void startRelativeLocationPath(){
-        noOfLocationPaths++;
+        locationPathDepth++;
         pushFrame();
     }
 
     @Override
     public void endRelativeLocationPath(){
-        endLocationPath(noOfLocationPaths==1 ? Scope.DOCUMENT : Scope.LOCAL);
+        endLocationPath(locationPathDepth ==1 ? Scope.DOCUMENT : Scope.LOCAL);
     }
 
     @SuppressWarnings({"unchecked"})
     private void endLocationPath(int scope){
-        noOfLocationPaths--;
+        locationPathDepth--;
         ArrayDeque stack = popFrame();
         LocationPath path = new LocationPath(scope, stack.size());
         stack.toArray(path.steps);
@@ -144,6 +159,12 @@ public final class XPathParser implements XPathHandler{
         -1, //ANCESTOR_OR_SELF
     };
 
+    /**
+     * This is used to track the step we are in. When step starts it is pushed and popped when it ends. 
+     * <p><br>
+     * {@link jlibs.xml.sax.dog.sniff.XPathParser#createFunction(String, int) createFunction(String, int)} uses current step
+     * to do some optimizations for position and last functions.
+     */
     private ArrayDeque<Step> stepStack = new ArrayDeque<Step>();
 
     private void startStep(int axis, Constraint constraint){
@@ -398,7 +419,7 @@ public final class XPathParser implements XPathHandler{
         int noOfParams = params.size();
         switch(noOfParams){
             case 0:{
-                LocationPath locationPath = noOfLocationPaths==0 ? LocationPath.DOCUMENT_CONTEXT : LocationPath.LOCAL_CONTEXT;
+                LocationPath locationPath = locationPathDepth ==0 ? LocationPath.DOCUMENT_CONTEXT : LocationPath.LOCAL_CONTEXT;
                 Expression expr = locationPath.apply(name);
                 if(expr!=null)
                     return expr;
