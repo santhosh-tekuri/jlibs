@@ -43,8 +43,9 @@ public abstract class Constraint{
     public static final int ID_START      = 7;
 
     /**
-     * each constraint instanceof in a xmldog
-     * is assigned a unique id.
+     * each constraint instance in a xmldog is assigned a unique id by
+     * {@link jlibs.xml.sax.dog.sniff.XPathParser XPathParser}.
+     * this unique id is used as hascode for fast lookup.
      */
     public final int id;
 

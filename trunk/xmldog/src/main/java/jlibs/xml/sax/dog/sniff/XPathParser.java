@@ -51,7 +51,7 @@ public final class XPathParser implements XPathHandler{
     }
 
     public Expression parse(String xpath) throws SAXPathException{
-        stack.clear();
+        frames.clear();
         peekFrame = null;
         stepStack.clear();
         noOfLocationPaths = 0;
@@ -116,6 +116,17 @@ public final class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ Steps ]---------------------------------------------------*/
 
+    /**
+     * This array is used to convert jaxen's axis constant to xmldog's axis constant.<br>
+     * for example:<br><blockquote>
+     * <code>axisMap[org.jaxen.saxpath.Axis.CHILD]</code> returns <code>jlibs.xml.sax.dog.path.Axis.CHILD</code>
+     * </blockquote>
+     * <p><br>
+     * it contains <code>-1</code> if that axis is not supported by xmldog.<br>
+     * for example:<br><blockquote>
+     * <code>axisMap[org.jaxen.saxpath.Axis.PARENT]</code> returns <code>-1</code>
+     * </blockquote>
+     */
     private static final int axisMap[] = {
         -1, //INVALID_AXIS
         Axis.CHILD,
@@ -377,6 +388,11 @@ public final class XPathParser implements XPathHandler{
         push(createFunction(name, stack).simplify());
     }
 
+    /**
+     * Tells whether any xpath parsed by this parser uses lang() function.<br>
+     * This is used by xpath engine to avoid tracking of language when none of xpaths
+     * used lang() function. 
+     */
     public boolean langInterested;
     private Expression createFunction(String name, ArrayDeque params) throws SAXPathException{
         int noOfParams = params.size();
@@ -495,35 +511,62 @@ public final class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ Context ]---------------------------------------------------*/
 
-    private ArrayDeque<ArrayDeque> stack = new ArrayDeque<ArrayDeque>();
+    /**
+     * This manages stack of frames. on location-path and function start a frame is pushed, and on its end
+     * it is popped. When a frame is popped, based on its contents Expression is created.
+     *
+     * During the start of xpath parsing a frame is pushed. on xpath parsing end, this frame contains the Expression
+     * created for the given xpath.
+     *
+     * the frame is again a stack into which Expression or LocationPaths are pushed/popped.
+     */
+    private ArrayDeque<ArrayDeque> frames = new ArrayDeque<ArrayDeque>();
+
+    /**
+     * the peek frame is maintained in this variable, to improve performance.
+     */
     private ArrayDeque peekFrame;
 
     private void pushFrame(){
-        stack.addLast(peekFrame=new ArrayDeque());
+        frames.addLast(peekFrame=new ArrayDeque());
     }
 
     private ArrayDeque popFrame(){
-        ArrayDeque frame = stack.pollLast();
-        peekFrame = stack.peekLast();
+        ArrayDeque frame = frames.pollLast();
+        peekFrame = frames.peekLast();
         return frame;
     }
 
-    @SuppressWarnings({"unchecked"})
+    /** pushes into current frame */
+     @SuppressWarnings("unchecked")
     private void push(Object obj){
         peekFrame.addLast(obj);
     }
 
+    /** pops from current frame */
     private Object pop(){
         return peekFrame.pollLast();
     }
 
+    /** peeks into current frame */
     private Object peek(){
         return peekFrame.peekLast();
     }
 
-    /*-------------------------------------------------[ Stubs ]---------------------------------------------------*/
+    /*-------------------------------------------------[ Stubs ]-----------------------------------------------------------
+      XPath Parser reuses non-signleton Constraint instances. for example it never creates two QName instances with same
+      value. This is achieved using Stub classes. For each non-singleton Constraint type, these is one stub implementation
+      below. These stubs assign a unique id to each constraint they created.
+    */
 
+    /**
+     * this list contains all constraints created by parser. when a constraint is created its id is computed from
+     * the size of this list.
+     *
+     * Stub classes also use this list to find whether the requested constraint is already created or not
+     */
     public ArrayList constraints = new ArrayList();
+
     private NamespaceURIStub namespaceURIStub = new NamespaceURIStub();
     private QNameStub qnameStub = new QNameStub();
     private PITargetStub piTargetStub = new PITargetStub();
