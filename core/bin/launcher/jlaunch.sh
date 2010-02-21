@@ -176,12 +176,12 @@ if [ ! -x "$JAVA_CMD" ] ; then
   exit 1
 fi
 
-FILE=$1
-cd `dirname $FILE`
-if [ -r "$FILE" ]; then
+if [ ! -r "$1" ]; then
+    echo "$1" not found
+else
+    FILE=`cd \`dirname $1\`;echo \`pwd\`/\`basename $1\`` # absolute path to conf file
+    cd `dirname $FILE`
     readFile
     shift;
     exec $JAVA_CMD -Dpid=$$ $CMD $*
-else
-    echo $FILE not found
 fi
