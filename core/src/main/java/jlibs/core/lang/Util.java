@@ -15,7 +15,7 @@
 
 package jlibs.core.lang;
 
-import jlibs.core.io.Bytes;
+import jlibs.core.io.ByteArrayOutputStream2;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -128,21 +128,19 @@ public class Util{
                     method.setAccessible(true);
                 return (T)method.invoke(obj);
             }else if(obj instanceof Serializable){
-                Bytes bytes = new Bytes();
-                ObjectOutputStream objOut = new ObjectOutputStream(bytes.out());
+                ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
+                ObjectOutputStream objOut = new ObjectOutputStream(bout);
                 objOut.writeObject(obj);
                 objOut.close();
-                ObjectInputStream objIn = new ObjectInputStream(bytes.in());
+                ObjectInputStream objIn = new ObjectInputStream(bout.toByteSequence().asInputStream());
                 return (T)objIn.readObject();
             }else
                 throw new CloneNotSupportedException(obj.getClass().getName());
         }catch(Exception ex){
-            CloneNotSupportedException cloneEx;
             if(ex instanceof CloneNotSupportedException)
-                throw cloneEx = (CloneNotSupportedException)ex;
+                throw (CloneNotSupportedException)ex;
             else
-                cloneEx = (CloneNotSupportedException)new CloneNotSupportedException().initCause(ex);
-            throw cloneEx;
+                throw (CloneNotSupportedException)new CloneNotSupportedException().initCause(ex);
         }
     }
 }
