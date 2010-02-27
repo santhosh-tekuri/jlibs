@@ -1,6 +1,6 @@
 package jlibs.core.io;
 
-import jlibs.core.ByteSequence;
+import jlibs.core.lang.ByteSequence;
 
 import java.io.ByteArrayOutputStream;
 
