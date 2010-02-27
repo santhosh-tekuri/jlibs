@@ -1,4 +1,4 @@
-package jlibs.core;
+package jlibs.core.lang;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
