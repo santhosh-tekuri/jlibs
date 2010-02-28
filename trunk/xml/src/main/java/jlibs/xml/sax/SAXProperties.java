@@ -16,41 +16,114 @@
 package jlibs.xml.sax;
 
 /**
+ * This interface contains constants for various SAX Properties.
+ * 
  * @author Santhosh Kumar T
  */
 public interface SAXProperties{
     /**
-     *  Used to see some syntax events that are essential in some applications:
-     * comments, CDATA delimiters, selected general entity inclusions, and
-     * the start and end of the DTD (and declaration of document element name).
-     * The Object must implement org.xml.sax.ext.LexicalHandler.
+     * <table border=1>
+     *  <tr>
+     *    <td>Description</td>
+     *    <td>
+     *      Set the handler for lexical parsing events: comments, CDATA delimiters,
+     *      selected general entity inclusions, and the start and end of the DTD
+     *      (and declaration of document element name).
+     *    </td>
+     *  </tr>
+     *  <tr>
+     *    <td>Type</td>
+     *    <td>{@link org.xml.sax.ext.LexicalHandler}</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Access</td>
+     *    <td>read-write</td>
+     *  </tr>
+     * </table>
      */
     String LEXICAL_HANDLER = "http://xml.org/sax/properties/lexical-handler"; //NOI18N
 
     /**
-     * Used to see most DTD declarations except those treated as lexical ("document element name is ...")
-     * or which are mandatory for all SAX parsers (DTDHandler).
-     * The Object must implement org.xml.sax.ext.DeclHandler.
+     * <table border=1>
+     *  <tr>
+     *    <td>Description</td>
+     *    <td>Set the handler for DTD declarations</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Type</td>
+     *    <td>{@link org.xml.sax.ext.DeclHandler}</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Access</td>
+     *    <td>read-write</td>
+     *  </tr>
+     * </table>
      */
     String DECL_HANDLER = "http://xml.org/sax/properties/declaration-handler"; //NOI18N
 
     /**
-     * May be examined only during a parse, after the startDocument() callback
-     * has been completed; read-only. This property is a literal string describing
-     * the actual XML version of the document, such as "1.0" or "1.1".
+     * <table border=1>
+     *  <tr>
+     *    <td>Description</td>
+     *    <td>A literal string describing the actual XML version of the document, such as "1.0" or "1.1"</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Type</td>
+     *    <td>{@link java.lang.String}</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Access</td>
+     *    <td>read-only</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Note</td>
+     *    <td>This property may only be examined during a parse after the startDocument callback has been completed.</td>
+     *  </tr>
+     * </table>
      */
     String XML_VERSION = "http://xml.org/sax/properties/document-xml-version"; //NOI18N
 
     /**
-     * Readable only during a parser callback, this exposes a TBS chunk
-     * of characters responsible for the current event.
+     * <table border=1>
+     *  <tr>
+     *    <td>Description</td>
+     *    <td>
+     *       Get the string of characters associated with the current event. <br>If the parser
+     *       recognizes and supports this property but is not currently parsing text,
+     *       it should return null
+     *    </td>
+     *  </tr>
+     *  <tr>
+     *    <td>Type</td>
+     *    <td>{@link java.lang.String}</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Access</td>
+     *    <td>read-only</td>
+     *  </tr>
+     * </table>
      */
     String XML_STRING = "http://xml.org/sax/properties/xml-string"; //NOI18N
 
     /**
-     * For "DOM Walker" style parsers, which ignore their parser.parse() parameters,
-     * this is used to specify the DOM (sub)tree being walked by the parser.
-     * The Object must implement the org.w3c.dom.Node interface.
+     * <table border=1>
+     *  <tr>
+     *    <td>Description</td>
+     *    <td>
+     *       The DOM node currently being visited, if SAX is being used as a DOM iterator.<br>
+     *       If the parser recognizes and supports this property but is not currently
+     *       visiting a DOM node, it should return null.
+     *    </td>
+     *  </tr>
+     *  <tr>
+     *    <td>Type</td>
+     *    <td>{@link org.w3c.dom.Node}</td>
+     *  </tr>
+     *  <tr>
+     *    <td>Access</td>
+     *    <td>(parsing) read-only; (not parsing) read-write;</td>
+     *  </tr>
+     * </table>
      */
     String DOM_NODE = "http://xml.org/sax/properties/dom-node"; //NOI18N
 
