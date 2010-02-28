@@ -98,6 +98,16 @@ public class CharArray implements CharSequence{
         return length;
     }
 
+    public char[] toCharArray(boolean clone){
+        if(!clone){
+            if(offset==0 && buff.length==length)
+                return buff;
+        }
+        char array[] = new char[length];
+        System.arraycopy(buff, offset, array, 0, length);
+        return array;
+    }
+
     @Override
     public char charAt(int index){
         if(index<0 || index>=length)
