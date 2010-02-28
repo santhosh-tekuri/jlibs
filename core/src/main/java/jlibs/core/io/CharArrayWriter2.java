@@ -15,30 +15,30 @@
 
 package jlibs.core.io;
 
-import jlibs.core.lang.ByteSequence;
+import jlibs.core.lang.CharArray;
 
-import java.io.ByteArrayOutputStream;
+import java.io.CharArrayWriter;
 
 /**
- * This is an extension of {@link java.io.ByteArrayOutputStream}.
+ * This is an extension of {@link java.io.CharArrayWriter}.
  * <p/>
  * You can get access to the internal char buffer using
- * {@link #toByteSequence()}
- *
+ * {@link #toCharSequence()}
+ * 
  * @author Santhosh Kumar T
  */
-public class ByteArrayOutputStream2 extends ByteArrayOutputStream{
-    public ByteArrayOutputStream2(){}
+public class CharArrayWriter2 extends CharArrayWriter{
+    public CharArrayWriter2(){}
 
-    public ByteArrayOutputStream2(int size){
-        super(size);
+    public CharArrayWriter2(int initialSize){
+        super(initialSize);
     }
 
     /**
-     * Returns the input data as {@link ByteSequence}.<br>
+     * Returns the input data as {@link CharArray}.<br>
      * Note that the internal buffer is not copied.
      */
-    public ByteSequence toByteSequence(){
-        return new ByteSequence(buf, 0, size());
+    public CharArray toCharSequence(){
+        return new CharArray(buf, 0, size());
     }
 }
