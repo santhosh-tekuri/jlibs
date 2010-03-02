@@ -23,13 +23,21 @@ import java.lang.ref.WeakReference;
 import java.util.StringTokenizer;
 
 /**
+ * The class contains Runtime related utilities
+ * 
  * @author Santhosh Kumar T
  */
 public class RuntimeUtil{
     /**
-     * Redirects processes input and error streams to the specified streams.
+     * Redirects given process's input and error streams to the specified streams.
      * the streams specified are not closed automatically. The streams passed
      * can be null, if you don't want to redirect them.
+     *
+     * @param process   process whose streams to be redirected
+     * @param output    outputStream to which process's inputStream is redirected.<br>
+     *                  null if you don't want to redirect.
+     * @param error     outputStream to which process's errorStream is redirected.<br>
+     *                  null if you don't want to redirect. 
      */
     public static void redirectStreams(Process process, OutputStream output, OutputStream error){
         if(output!=null)
@@ -40,6 +48,27 @@ public class RuntimeUtil{
 
     /*-------------------------------------------------[ Terminal Command ]---------------------------------------------------*/
 
+    /**
+     * Runs the specified <code>command</code> in terminal (sh in *nix/cmd in windows) and
+     * returns the command output.
+     *
+     * @param command     complete command to be executed
+     * @param envp        array of strings, each element of which
+     *                    has environment variable settings in the format
+     *                    <i>name</i>=<i>value</i>, or
+     *                    <tt>null</tt> if the subprocess should inherit
+     *                    the environment of the current process.
+     *
+     * @param workingDir  the working directory of the subprocess, or
+     *                    <tt>null</tt> if the subprocess should inherit
+     *                    the working directory of the current process.
+     *
+     * @return output of the command.
+     *
+     * @throws IOException If an I/O error occurs
+     *
+     * @see #runCommand(String) 
+     */
     public static String runCommand(String command, String[] envp, File workingDir) throws IOException{
         String cmd[];
         if(OS.get().isUnix())
@@ -61,12 +90,31 @@ public class RuntimeUtil{
         return output.toString();
     }
 
+    /**
+     * Runs the specified <code>command</code> in terminal (sh in *nix/cmd in windows) and
+     * returns the command output. The subprocess created inherits environment and working
+     * directory from the current process
+     *
+     * @param command     complete command to be executed
+     * @return output of the command.
+     *
+     * @throws IOException If an I/O error occurs
+     *
+     * @see #runCommand(String, String[], java.io.File)
+     */
     public static String runCommand(String command) throws IOException{
         return runCommand(command, null, null);
     }
 
     /*-------------------------------------------------[ PID ]---------------------------------------------------*/
-    
+
+    /**
+     * Returns the PID of the current process. The PID will also be saved in system property <code>"pid"</code>
+     *
+     * @return PID of current progress
+     *
+     * @throws IOException If an I/O error occurs
+     */
     public static String getPID() throws IOException{
         String pid = System.getProperty("pid"); //NOI18N
         if(pid==null){

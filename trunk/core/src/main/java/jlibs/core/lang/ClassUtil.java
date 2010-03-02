@@ -29,6 +29,9 @@ public class ClassUtil{
     /**
      * Returns the classpath resource(directory or jar) from which
      * specified class is loaded.
+     *
+     * @param clazz class
+     * @return resource from which the class is loaded
      */
     public static String getClassPath(Class clazz){
         CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
@@ -53,8 +56,8 @@ public class ClassUtil{
     }
 
     /**
-     * Returns the classloader for the speficied clazz. Unlike
-     * Class.getClassLoader() this will never return null.
+     * Returns the classloader for the speficied <code>clazz</code>. Unlike
+     * {@link Class#getClassLoader()} this will never return null.
      */
     public static ClassLoader getClassLoader(Class clazz){
         ClassLoader classLoader = clazz.getClassLoader();
