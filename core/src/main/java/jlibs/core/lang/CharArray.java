@@ -22,8 +22,8 @@ import java.io.CharArrayReader;
  *
  * <ul>
  * <li>the char array passed to the constructor is not copied.</li>
- * <li>supports to change the char array using {@link CharArray#set(char[], int, int)}
- * <li>internal state can be queried using {@link CharArray#buffer()}, {@link CharArray#offset()} buffer()} and {@link CharArray#length()}
+ * <li>supports to change the char array using {@link #set(char[], int, int)}
+ * <li>internal state can be queried using {@link #buffer()}, {@link #offset()} and {@link #length()}
  * </ul>
  *
  * @author Santhosh Kumar T
