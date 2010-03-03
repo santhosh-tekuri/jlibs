@@ -22,6 +22,45 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * This class provides guaranteed finalization for java objects.
+ * <p>
+ * This is singleton class and its instance can be accessed as {@code Finalizer.}{@link #INSTANCE}
+ * <p>
+ * you can tell {@code Finalizer} to execute given {@code runnable} when a particular
+ * object gets garbage collected:
+ * <pre>
+ * Object myObject = ...;
+ * Finalizer.INSTANCE.{@link #track(Object, Runnable) track}(myObject, new Runnable(){
+ *    public void run(){
+ *        System.out.println("myObject is garbage collected");
+ *    }
+ * });
+ * </pre>
+ *
+ * {@code Finalizer} creates a {@link java.lang.ref.WeakReference} for the object that needs to
+ * be tracked. you can also tell which type of {@link java.lang.ref.Reference} to use as below:
+ *
+ * <pre>
+ * Object myObject = ...;
+ * Finalizer.INSTANCE.{@link #track(Object, Class, Runnable) track}(myObject, {@link java.lang.ref.SoftReference}.class, new Runnable(){
+ *    public void run(){
+ *        System.out.println("myObject is garbage collected");
+ *    }
+ * });
+ * </pre>
+ *
+ * All the {@code track(...)} methods return the {@link java.lang.ref.Reference} object created.
+ * <p>
+ * You can also use {@code Finalizer} as a simple profiler.
+ * <pre>
+ * Object myObject = ...;
+ * Finalizer.INSTANCE.{@link #trackGC(Object, String) trackGC}(myObject, "myObject is garbage collected");
+ * </pre>
+ * the above code says to print {@code "myObject is garbage collected"} to console, when {@code myObject} gets
+ * garbage collected.
+ * <p>
+ * This class starts a {@link Thread} named {@code "JLibsFinalizer} with {@link Thread#MIN_PRIORITY}
+ *
  * @author Santhosh Kumar T
  */
 public class Finalizer extends ReferenceQueue implements Runnable{
@@ -57,11 +96,34 @@ public class Finalizer extends ReferenceQueue implements Runnable{
 
     private Map<Reference, Runnable> tracked = new HashMap<Reference, Runnable>();
 
-    @SuppressWarnings({"unchecked"})
+    /**
+     * tracks the given {@code obj} using {@link java.lang.ref.WeakReference}.<br>
+     * Specified {@code runnable} is executed when {@code obj} gets garbage collected.
+     *
+     * @param obj       object needs to be tracked
+     * @param runnable  runnable to be executed when {@code obj} gets garbage collected
+     *
+     * @return the {@link java.lang.ref.WeakReference} created for {@code obj}
+     *
+     * @see #track(Object, Class, Runnable)
+     */
+    @SuppressWarnings("unchecked")
     public <T> WeakReference<T> track(T obj, Runnable runnable){
         return (WeakReference<T>)track(obj, WeakReference.class, runnable);
     }
 
+    /**
+     * tracks the given {@code obj} using specified reference {@code type}.<br>
+     * Specified {@code runnable} is executed when {@code obj} gets garbage collected.
+     *
+     * @param obj       object needs to be tracked
+     * @param type      type of reference to be used for tracking
+     * @param runnable  runnable to be executed when {@code obj} gets garbage collected
+     *
+     * @return the {@link java.lang.ref.Reference} created for {@code obj}
+     *
+     * @see #track(Object, Runnable)
+     */
     @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
     public <T, R extends Reference<T>> R track(T obj, Class<R> type, Runnable runnable){
         Class clazz = type;
@@ -79,10 +141,25 @@ public class Finalizer extends ReferenceQueue implements Runnable{
         return (R)ref;
     }
 
+    /**
+     * Prints message to {@code System.out} when {@code obj} gets garbage collected.<p>
+     * The message will be {@code obj.getClass().getName()+'@'+System.identityHashCode(obj)}
+     *
+     * @param obj       object needs to be tracked
+     *
+     * @see #trackGC(Object, String)
+     */
     public void trackGC(Object obj){
         trackGC(obj, null);
     }
 
+    /**
+     * Prints {@code message} to {@code System.out} when {@code obj} gets garbage collected
+     *
+     * @param obj       object needs to be tracked
+     * @param message   message to be printed when {@code obj} gets garbage collected.
+     *                  if null, the message will be {@code obj.getClass().getName()+'@'+System.identityHashCode(obj)} 
+     */
     public void trackGC(Object obj, String message){
         if(message==null)
             message = obj.getClass().getName()+'@'+System.identityHashCode(obj);
