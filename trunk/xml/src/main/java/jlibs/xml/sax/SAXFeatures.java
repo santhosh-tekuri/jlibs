@@ -16,49 +16,58 @@
 package jlibs.xml.sax;
 
 /**
+ * This interface contains constants for various SAX Features.
+ *
  * @author Santhosh Kumar T
  */
 public interface SAXFeatures{
     /**
      * A value of "true" indicates namespace URIs and unprefixed
      * local names for element and attribute names will be available.
-     *
-     * access: read/write
-     * default: true
+     * <p>
+     * <b>Default:</b> true<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
+     * <b>Note:</b> If the validation feature is set to true, then the document
+     * must contain a grammar that supports the use of namespaces
      */
     String NAMESPACES = "http://xml.org/sax/features/namespaces"; //NOI18N
 
     /**
      * A value of "true" indicates that XML qualified names (with prefixes)
      * and attributes (including xmlns* attributes) will be available.
-     *
-     * access: read/write
-     * default: false
+     * <p>
+     * <b>Default:</b> false<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
      */
     String NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes"; //NOI18N
 
     /**
-     * Controls whether the parser is reporting all validity errors;
-     * if true, all external entities will be read.
-     *
-     * access: read/write
-     * default: unspecified
+     * Controls whether the parser is reporting all validity errors
+     * <p>
+     * <b>Default:</b> false<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
+     * <b>Note:</b> If this feature is set to true, the document must specify a grammar.
+     * If this feature is set to false, the document may specify a grammar
+     * and that grammar will be parsed but no validation of the document
+     * contents will be performed.
      */
     String VALIDATION = "http://xml.org/sax/features/validation"; //NOI18N
 
     /**
-     * Reports whether this parser processes external general entities; always true if validating.
-     *
-     * access: read/write
-     * default: unspecified
+     * Reports whether this parser processes external general entities
+     * <p>
+     * <b>Default:</b>unspecified<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
+     * <b>Note:</b> always true if validating
      */
     String EXTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities"; //NOI18N
 
     /**
-     * Reports whether this parser processes external parameter entities; always true if validating.
-     *
-     * access: read/write
-     * default: unspecified
+     * Reports whether this parser processes external parameter entities
+     * <p>
+     * <b>Default:</b>unspecified<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
+     * <b>Note:</b> always true if validating
      */
     String EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities"; //NOI18N
 
@@ -66,9 +75,9 @@ public interface SAXFeatures{
      * May be examined only during a parse, after the startDocument() callback
      * has been completed; read-only. The value is true if the document specified
      * standalone="yes" in its XML declaration, and otherwise is false.
-     *
-     * access: (parsing) read-only, (not parsing) none
-     * default: not-applicable
+     * <p>
+     * <b>Default:</b>not-applicable<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
      */
     String IS_STANDALONE = "http://xml.org/sax/features/is-standalone"; //NOI18N
 
@@ -107,9 +116,9 @@ public interface SAXFeatures{
      * been interned using java.lang.String.intern. This supports fast testing of
      * equality/inequality against string constants, rather than forcing slower
      * calls to String.equals().
-     *
-     * access: read/write
-     * default: unspecified
+     * <p>
+     * <b>Default:</b>unspecified<br>
+     * <b>Access:</b> (parsing) read-only; (not parsing) read/write <br>
      */
     String STRING_INTERNING = "http://xml.org/sax/features/string-interning"; //NOI18N
 
