@@ -15,33 +15,68 @@
 
 package jlibs.core.util.logging;
 
+import jlibs.core.io.FileUtil;
 import jlibs.core.lang.Ansi;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.util.CollectionUtil;
-import jlibs.core.io.FileUtil;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.*;
-import java.io.IOException;
-import java.io.File;
-import java.net.URL;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 /**
- * Adds color to the standard Ant output by prefixing and suffixing ANSI color code escape sequences to it
+ * This is an implementation of {@link java.util.logging.Formatter}, to use ansi colors in logging.
+ * <p>
+ * Example Usage:
+ * <pre>
+ * Logger logger = LogManager.getLogManager().getLogger("");
+ * logger.setLevel(Level.FINEST);
  *
- * You can override default colors using a system variable named ansiformatter.defaults
- * for ex: -Dansiformatter.defaults=/path/to/your/file
+ * Handler handler = logger.getHandlers()[0];
+ * handler.setLevel(Level.FINEST);
+ * handler.setFormatter(new {@link AnsiFormatter}());
  *
- * this file is a standard properties file, with entries of the form:
- *    LEVEL=Attribute[;Foreground[;Background]]
+ * for(Level level: map.keySet())
+ *     logger.log(level, "this is "+level+" message"); * </pre>
+ * </pre>
  *
+ * This class has public final constants to access Ansi instance used for each level.<br>
+ * These constants are made public, so that you can use them any where. for example you can do:
+ * <pre>
+ * import static jlibs.core.util.logging.AnsiFormatter.*;
+ *
+ * {@link #SEVERE}.out("User authentication failed");
+ * </pre>
+ *
+ * The colors used by AnsiFormatter for any level can be changed to match you taste. To do this you need to create a properties file.<br>
  * for example:
- *          SEVERE=DIM;RED
- *
- * see jlibs.core.lang.Ansi for supported values of Attribute and Color
- *
+ * <pre>
+ * # myansi.properties
+ * SEVERE=DIM;RED;GREEN
+ * WARNING=BRIGHT;RED;YELLOW
+ * </pre>
+ * Now use following system property:
+ * <pre>
+ * -Dansiformatter.default=/path/to/myansi.properties
+ * </pre>
+ * Each entry in this property file is to be given as below:
+ * <pre>
+ * LEVEL=Attribute[;Foreground[;Background]]
+ * </pre>
+ * key is the level name;<br>
+ * value is semicolon(;) separated values, where each argument is considered as argument to Ansi class constructor.<br>
+ * if any agument in value is null, you still need to specify empty argument. for example:
+ * <pre>
+ * SEVERE=DIM;;GREEN # foreground is not specified
+ * </pre>
+ * In your properties file, you don't need to specify entries for each level. you can specify entries only for those levels that you want to change.
+ *  
  * @author Santhosh Kumar T
  */
 public class AnsiFormatter extends Formatter{
@@ -118,16 +153,6 @@ public class AnsiFormatter extends Formatter{
     @Override
     public String format(LogRecord record){
         return map.get(record.getLevel()).colorize(delegate.format(record));
-    }
-
-    public static void main(String[] args){
-        Logger logger = LogManager.getLogManager().getLogger("");
-        logger.setLevel(Level.FINEST);
-        Handler handler = logger.getHandlers()[0];
-        handler.setLevel(Level.FINEST);
-        handler.setFormatter(new AnsiFormatter());
-        for(Level level: map.keySet())
-            logger.log(level, "this is "+level+" message");
     }
 }
 
