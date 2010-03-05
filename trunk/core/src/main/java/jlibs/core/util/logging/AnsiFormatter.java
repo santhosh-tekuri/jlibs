@@ -70,8 +70,8 @@ import java.util.logging.LogRecord;
  * LEVEL=Attribute[;Foreground[;Background]]
  * </pre>
  * key is the level name;<br>
- * value is semicolon(;) separated values, where each argument is considered as argument to Ansi class constructor.<br>
- * if any agument in value is null, you still need to specify empty argument. for example:
+ * value is semicolon(;) separated values, where where tokens are attribute, foreground and background respectively.<br>
+ * if any non-trailing token in value is null, you still need to specify empty value. for example:
  * <pre>
  * SEVERE=DIM;;GREEN # foreground is not specified
  * </pre>
@@ -108,36 +108,8 @@ public class AnsiFormatter extends Formatter{
 
     private static void load(URL url) throws IOException{
         Properties props = CollectionUtil.readProperties(url.openStream(), null);
-        for(String name: props.stringPropertyNames()){
-            Level level = Level.parse(name);
-            String tokens[] = props.getProperty(name).split(";");
-
-            Ansi.Attribute attribute = null;
-            try{
-                if(tokens.length==1)
-                    attribute = Ansi.Attribute.valueOf(tokens[0]);
-            }catch(IllegalArgumentException ex){
-                ex.printStackTrace();
-            }
-
-            Ansi.Color foreground = null;
-            try{
-                if(tokens.length==2)
-                    foreground = Ansi.Color.valueOf(tokens[1]);
-            }catch(IllegalArgumentException e){
-                e.printStackTrace();
-            }
-
-            Ansi.Color background = null;
-            try{
-                if(tokens.length==3)
-                    foreground = Ansi.Color.valueOf(tokens[2]);
-            }catch(IllegalArgumentException e){
-                e.printStackTrace();
-            }
-
-            map.put(level, new Ansi(attribute, foreground, background));
-        }
+        for(String name: props.stringPropertyNames())
+            map.put(Level.parse(name), new Ansi(props.getProperty(name)));
     }
     
     private Formatter delegate;

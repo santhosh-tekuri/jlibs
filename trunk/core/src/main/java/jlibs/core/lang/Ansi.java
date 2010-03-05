@@ -103,6 +103,54 @@ public class Ansi{
      * @param background  background color of text, null means don't change
      */
     public Ansi(Attribute attr, Color foreground, Color background){
+        init(attr, foreground, background);
+    }
+
+    /**
+     * Creates new instanceof of ansi with specified format.<p>
+     * The format syntax is
+     * <pre>
+     * Attribute[;Foreground[;Background]]
+     * </pre>
+     * i.e, semicolon(;) separated values, where tokens are attribute, foreground and background respectively.<br>
+     * if any non-trailing token in value is null, you still need to specify empty value. for example:
+     * <pre>
+     * DIM;;GREEN # foreground is not specified
+     * </pre>
+     * 
+     * @param format
+     */
+    public Ansi(String format){
+        String tokens[] = format.split(";");
+
+        Ansi.Attribute attribute = null;
+        try{
+            if(tokens.length>0 && tokens[0].length()>0)
+                attribute = Ansi.Attribute.valueOf(tokens[0]);
+        }catch(IllegalArgumentException ex){
+            ex.printStackTrace();
+        }
+
+        Ansi.Color foreground = null;
+        try{
+            if(tokens.length>1 && tokens[1].length()>0)
+                foreground = Ansi.Color.valueOf(tokens[1]);
+        }catch(IllegalArgumentException e){
+            e.printStackTrace();
+        }
+
+        Ansi.Color background = null;
+        try{
+            if(tokens.length>2 && tokens[2].length()>0)
+                background = Ansi.Color.valueOf(tokens[2]);
+        }catch(IllegalArgumentException e){
+            e.printStackTrace();
+        }
+
+        init(attribute, foreground, background);
+    }
+
+    private void init(Attribute attr, Color foreground, Color background){
         StringBuilder buff = new StringBuilder();
 
         if(attr!=null)
@@ -120,8 +168,52 @@ public class Ansi{
         }
         buff.insert(0, PREFIX);
         buff.append(SUFFIX);
-        
+
         start = buff.toString();
+    }
+
+    /**
+     * The string representation of this object. This string will be the same that is
+     * expected by {@link #Ansi(String)}
+     *
+     * @return string representation of this object
+     */
+    @Override
+    public String toString(){
+        Attribute attr = null;
+        Color foreground = null;
+        Color background = null;
+        
+        for(String token: start.substring(PREFIX.length(), start.length()-SUFFIX.length()).split(SEPARATOR)){
+            int i = Integer.parseInt(token);
+            if(i<30){
+                for(Attribute value: Attribute.values()){
+                    if(value.toString().equals(token)){
+                        attr = value;
+                        break;
+                    }
+                }
+            }else if(i<40)
+                foreground = Color.values()[i-30];
+            else
+                background = Color.values()[i-40];
+        }
+
+
+        StringBuilder buff = new StringBuilder();
+        if(attr!=null)
+            buff.append(attr.name());
+        buff.append(';');
+        if(foreground!=null)
+            buff.append(foreground.name());
+        buff.append(';');
+        if(background!=null)
+            buff.append(background.name());
+
+        int end = buff.length()-1;
+        while(end>=0 && buff.charAt(end)==';')
+            end--;
+        return buff.substring(0, end+1);
     }
 
     /** Wrapps given <code>message</message> with special ansi control sequences and returns it */
@@ -135,7 +227,15 @@ public class Ansi{
     }
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
-    
+
+    /**
+     * Prints colorized {@code message} to specified {@code ps}.
+     * <p>
+     * if {@link #SUPPORTED} is false, it prints raw {@code message} to {@code ps}
+     *
+     * @param ps        stream to print
+     * @param message   message to be colorized
+     */
     public void print(PrintStream ps, String message){
         if(SUPPORTED)
             ps.print(start);
@@ -144,44 +244,93 @@ public class Ansi{
             ps.print(END);
     }
 
+    /**
+     * Prints colorized {@code message} to specified {@code ps} followed by newline.
+     * <p>
+     * if {@link #SUPPORTED} is false, it prints raw {@code message} to {@code ps} followed by newline.
+     *
+     * @param ps        stream to print
+     * @param message   message to be colorized
+     */
     public void println(PrintStream ps, String message){
         print(ps, message);
-        System.out.println();
+        ps.println();
     }
 
-    public void format(PrintStream ps, String message, Object... args){
+    /**
+     * Prints formatted and colorized {@code message} to specified {@code ps}.
+     * <p>
+     * if {@link #SUPPORTED} is false, it prints formatted {@code message} to {@code ps}
+     *
+     * @param ps        stream to print
+     * @param format    A format string whose output to be colorized
+     * @param args      Arguments referenced by the format specifiers in the format
+     */
+    public void format(PrintStream ps, String format, Object... args){
         if(SUPPORTED)
             ps.print(start);
-        ps.format(message, args);
+        ps.format(format, args);
         if(SUPPORTED)
             ps.print(END);
     }
 
     /*-------------------------------------------------[ System.out ]---------------------------------------------------*/
 
+    /**
+     * Prints colorized {@code message} to {@link System#out}
+     *
+     * @param message message to be colorized
+     */
     public void out(String message){
         print(System.out, message);
     }
 
+    /**
+     * Prints colorized {@code message} to {@link System#out} followed by newline
+     *
+     * @param message message to be colorized
+     */
     public void outln(String message){
         println(System.out, message);
     }
 
-    public void outFormat(String message, Object... args){
-        format(System.out, message, args);
+    /**
+     * Prints formatted and colorized {@code format} to {@link System#out}
+     *
+     * @param format  A format string whose output to be colorized
+     * @param args      Arguments referenced by the format specifiers in the format
+     */
+    public void outFormat(String format, Object... args){
+        format(System.out, format, args);
     }
 
     /*-------------------------------------------------[ System.err ]---------------------------------------------------*/
     
+    /**
+     * Prints colorized {@code message} to {@link System#err}
+     *
+     * @param message message to be colorized
+     */
     public void err(String message){
         print(System.err, message);
     }
 
+    /**
+     * Prints colorized {@code message} to {@link System#err} followed by newline
+     *
+     * @param message message to be colorized
+     */
     public void errln(String message){
         print(System.err, message);
     }
 
-    public void errFormat(String message, Object... args){
-        format(System.err, message, args);
+    /**
+     * Prints formatted and colorized {@code format} to {@link System#err}
+     *
+     * @param format  A format string whose output to be colorized
+     * @param args      Arguments referenced by the format specifiers in the format
+     */
+    public void errFormat(String format, Object... args){
+        format(System.err, format, args);
     }
 }
