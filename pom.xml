@@ -102,11 +102,41 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.6.1</version>
                 <configuration>
                     <source>1.6</source>
                     <links>
                         <link>http://java.sun.com/javase/6/docs/api/</link>
                     </links>
+                    <linksource>true</linksource>
+                    <groups>
+                        <group>
+                            <title>JLibs-Core</title>
+                            <packages>jlibs.core*</packages>
+                        </group>
+                        <group>
+                            <title>JLibs-XMLDog</title>
+                            <packages>jlibs.xml.sax.dog*</packages>
+                        </group>
+                        <group>
+                            <title>JLibs-XML</title>
+                            <packages>jlibs.xml*</packages>
+                        </group>
+                        <group>
+                            <title>JLibs-Swing</title>
+                            <packages>jlibs.swing*</packages>
+                        </group>
+                    </groups>
+                    <top>
+                        <![CDATA[
+                        <link href="{@docRoot}/resources/prettify.css" type="text/css" rel="stylesheet" />
+                        <script type="text/javascript" src="{@docRoot}/resources/prettify.js"></script>
+                        <script language="javascript">
+                            window.onload = function(){ prettyPrint(); }
+                        </script>
+                        ]]>
+                    </top>
+                    <docfilessubdirs>true</docfilessubdirs> 
                 </configuration>
             </plugin>
         </plugins>
