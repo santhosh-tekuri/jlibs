@@ -24,35 +24,35 @@ import java.nio.charset.Charset;
  * <br>
  * <b>Stardard Charsets:</b><br>
  * This class contains constants to stardard charsets that are supported by JVM Spec.
- * <pre>
+ * <pre class="prettyprint">
  * byte buff[] = ...
  * String str = new String(buff, IOUtil.{@link IOUtil#UTF_8 UTF_8});
  * </pre>
  *
  * <b>Pumping:</b><br>
  * To read a file content as String:
- * <pre>
+ * <pre class="prettyprint">
  * CharArrayWriter cout = new CharArrayWriter();
  * IOUtil.{@link IOUtil#pump(java.io.Reader, java.io.Writer, boolean, boolean) pump}(new FileReader(file), cout, true, true);
  * String content = cout.toString();
  * </pre>
  * To simplify code, <code>pump(...)</code> method returns output; So the above code could be written in single line as follows:
- * <pre>
+ * <pre class="prettyprint">
  * String content = IOUtil.pump(new FileReader(file), new CharArrayWriter(), true, true).toString();
  * </pre>
  * if output is not specified, it defaults to {@link CharArrayWriter2}. so the same code can be written as:
- * <pre>
+ * <pre class="prettyprint">
  * String content = IOUtil.{@link IOUtil#pump(java.io.Reader, boolean) pump}(new FileReader(file), true).toString();
  * </pre>
  * Similar versions of pump(...) methods are available for byte-streams also;<br>
  * Let us see how these methods simplify some code;
  * <br><br>
  * To copy file:
- * <pre>
+ * <pre class="prettyprint">
  * IOUtil.{@link IOUtil#pump(java.io.InputStream, java.io.OutputStream, boolean, boolean) pump}(new FileInputStream(fromFile), new FileOutputStream(toFile), true, true);
  * </pre>
  * To create zip file:
- * <pre>
+ * <pre class="prettyprint">
  * ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));
  * for(File file: files){
  *    zipOut.putNextEntry(new ZipEntry(file.getName());
@@ -62,12 +62,12 @@ import java.nio.charset.Charset;
  * zipOut.close();
  * </pre>
  * To create file with given string:
- * <pre>
+ * <pre class="prettyprint">
  * String content = ...
  * IOUtil.{@link IOUtil#pump(java.io.Reader, java.io.Writer, boolean, boolean) pump}(new StringReader(content), new FileWriter(file), true, true);
  * </pre>
  * to read a file content into byte array:
- * <pre>
+ * <pre class="prettyprint">
  * byte bytes[] = IOUtil.{@link IOUtil#pump(java.io.InputStream, boolean) pump}(new FileInputStream(file), true).toByteArray(); // output defaults to {@link ByteArrayOutputStream2}
  * </pre>
  * 
