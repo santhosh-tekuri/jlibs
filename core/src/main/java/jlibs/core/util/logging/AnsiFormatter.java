@@ -34,7 +34,7 @@ import java.util.logging.LogRecord;
  * This is an implementation of {@link java.util.logging.Formatter}, to use ansi colors in logging.
  * <p>
  * Example Usage:
- * <pre>
+ * <pre class="prettyprint">
  * Logger logger = LogManager.getLogManager().getLogger("");
  * logger.setLevel(Level.FINEST);
  *
@@ -48,7 +48,7 @@ import java.util.logging.LogRecord;
  *
  * This class has public final constants to access Ansi instance used for each level.<br>
  * These constants are made public, so that you can use them any where. for example you can do:
- * <pre>
+ * <pre class="prettyprint">
  * import static jlibs.core.util.logging.AnsiFormatter.*;
  *
  * {@link #SEVERE}.out("User authentication failed");
@@ -56,26 +56,28 @@ import java.util.logging.LogRecord;
  *
  * The colors used by AnsiFormatter for any level can be changed to match you taste. To do this you need to create a properties file.<br>
  * for example:
- * <pre>
+ * <pre class="prettyprint">
  * # myansi.properties
  * SEVERE=DIM;RED;GREEN
  * WARNING=BRIGHT;RED;YELLOW
  * </pre>
  * Now use following system property:
- * <pre>
+ * <pre class="prettyprint">
  * -Dansiformatter.default=/path/to/myansi.properties
  * </pre>
  * Each entry in this property file is to be given as below:
- * <pre>
+ * <pre class="prettyprint">
  * LEVEL=Attribute[;Foreground[;Background]]
  * </pre>
  * key is the level name;<br>
  * value is semicolon(;) separated values, where where tokens are attribute, foreground and background respectively.<br>
  * if any non-trailing token in value is null, you still need to specify empty value. for example:
- * <pre>
+ * <pre class="prettyprint">
  * SEVERE=DIM;;GREEN # foreground is not specified
  * </pre>
  * In your properties file, you don't need to specify entries for each level. you can specify entries only for those levels that you want to change.
+ *
+ * @see jlibs.core.lang.Ansi
  *  
  * @author Santhosh Kumar T
  */

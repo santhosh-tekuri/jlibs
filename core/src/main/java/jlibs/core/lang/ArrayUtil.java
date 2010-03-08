@@ -50,12 +50,14 @@ public class ArrayUtil{
     }
 
     /**
-     * returns first index of <code>item<code> in given <code>array</code>
+     * Returns first index of {@code item} in given {@code array}
      *
      * @param array     object array, can be null
      * @param item      item to be searched, can be null
-     * @return          -1 if array is null, or the item is not found
-     *                  otherwize returns first index of item in array
+     * @return          -1 if array is null, or the item is not found.
+     *                  Otherwise returns first index of item in array
+     *
+     * @see #indexOf(Object[], Object, int) 
      */
     public static <T, S extends T> int indexOf(T array[], S item){
         return indexOf(array, item, 0);
@@ -76,16 +78,18 @@ public class ArrayUtil{
     /*-------------------------------------------------[ Boundary Items ]---------------------------------------------------*/
 
     /**
-     * returns first element in given array.
-     * if array is null or of length zero, returns null
+     * Returns first element in given {@code array}.
+     * <p>
+     * if {@code array} is null or of length zero, then returns {@code null}
      */
     public static <T> T getFirst(T array[]){
         return array!=null && array.length>0 ? array[0] : null;
     }
 
     /**
-     * returns last element in given array.
-     * if array is null or of length zero, returns null
+     * Returns last element in given {@code array}.
+     * <p>
+     * if {@code array} is null or of length zero, then returns {@code null}
      */
     public static <T> T getLast(T array[]){
         return array!=null && array.length>0 ? array[array.length-1] : null;
@@ -122,11 +126,15 @@ public class ArrayUtil{
     /*-------------------------------------------------[ Copy ]---------------------------------------------------*/
 
     /**
-     * Copies all elements from <code>src</code> to <code>dest</code>
-     * If dest.length<src.length, it copies only the number of elements
-     * that can fit in dest array.
+     * Copies all elements from {@code src} array to {@code dest} array.
+     * <p>
+     * If {@code dest.length&lt;src.length}, it copies only the number of elements
+     * that can fit in {@code dest} array.
      *
-     * @return the dest array spcified
+     * @param src   source array
+     * @param dest  destination array
+     * 
+     * @return the destination array specified
      */
     @SuppressWarnings({"SuspiciousSystemArraycopy"})
     public static <T> T[] copy(Object src[], T dest[]){
@@ -135,9 +143,12 @@ public class ArrayUtil{
     }
 
     /**
-     * returns the clone of given array <code>src</code>.
+     * returns the clone of {@code src} array.
      *
+     * @param src               source array
      * @param componentType 	the componentType used for the new array created
+     *
+     * @return cloned array
      */
     @SuppressWarnings({"unchecked"})
     public static <T> T[] clone(Object src[], Class<T> componentType){
@@ -145,8 +156,13 @@ public class ArrayUtil{
     }
 
     /**
-     * returns new array which contains only those elements from given array
-     * which are selected by the filter
+     * Returns new array which contains only those elements from given {@code array}
+     * which are selected by the {@code filter}
+     *
+     * @param array the array to be filtered
+     * @param filter filter to use
+     *
+     * @return filtered array
      */
     public static <T> T[] filter(T array[], Filter<T> filter){
         List<T> filteredList = new ArrayList<T>(array.length);

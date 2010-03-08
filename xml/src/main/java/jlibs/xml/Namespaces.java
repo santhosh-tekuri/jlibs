@@ -17,19 +17,43 @@ package jlibs.xml;
 
 import jlibs.core.lang.ImpossibleException;
 
+import javax.xml.XMLConstants;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
 /**
- * Interface containing commonly used namespaces and their common prefixes.
+ * This class most commonly used namespaces and their common prefixes.
+ * <p>
+ * This class contains constants to many standard namespaces which we use in our daily projects.
+ * <pre class="prettyprint">
+ * import static jlibs.xml.Namespaces.*;
  *
- * NOTE: The naming convention that should be followed for an uri is:
- *             String URI_<suggestedPrefixInUppercase> = "<namespaceURI>
+ * System.out.println({@link #URI_SOAP});
+ * System.out.println({@link #URI_WSDL});
+ * </pre>
+ *
+ * It can also suggest standard prefixes used for those namespaces.
+ * <pre class="prettyprint">
+ * import static jlibs.xml.Namespaces.*;
+ * 
+ * String prefix = Namespaces.{@link #suggestPrefix(String) suggestPrefix}({@link #URI_WSDL});
+ * System.out.println(prefix); // prints "wsdl"
+ * </pre>
+ * {@link #getSuggested()} returns {@link java.util.Properties} object where key is {@code URI} and value is suggested {@code prefix}.
+ * <p>
+ * <b>NOTE:</b><br>
+ * The naming convention that should be followed for an uri is:
+ * <pre class="prettyprint">
+ * String URI_&lt;suggestedPrefixInUppercase&gt; = "&lt;namespaceURI&gt;";
+ * </pre>
+ * 
  * @author Santhosh Kumar T
  */
 public class Namespaces{
-    public static final String URI_XML   = "http://www.w3.org/XML/1998/namespace";                     //NOI18N
-    public static final String URI_XMLNS   = "http://www.w3.org/2000/xmlns/";                          //NOI18N
+    /** The official XML Namespace name URI */
+    public static final String URI_XML   = XMLConstants.XML_NS_URI;
+    /** Namespace URI used by the official XML attribute used for specifying XML Namespace declarations <code>"xmlns"</code> */
+    public static final String URI_XMLNS   = XMLConstants.XMLNS_ATTRIBUTE_NS_URI;
 
     /** Schema namespace as defined by XSD **/
     public static final String URI_XSD   = "http://www.w3.org/2001/XMLSchema";                         //NOI18N
@@ -37,7 +61,7 @@ public class Namespaces{
     /** Instance namespace as defined by XSD **/
     public static final String URI_XSI   = "http://www.w3.org/2001/XMLSchema-instance";                //NOI18N
 
-
+    /** Namespace used by XSL Documents */
     public static final String URI_XSL   = "http://www.w3.org/1999/XSL/Transform";                     //NOI18N
     public static final String URI_BPWS  = "http://schemas.xmlsoap.org/ws/2003/03/business-process/";  //NOI18N
     public static final String URI_XHTML = "http://www.w3.org/1999/xhtml";                             //NOI18N
@@ -67,6 +91,7 @@ public class Namespaces{
     private static final Properties suggested = new Properties();
 
     static{
+        suggested.put("", "");
         for(Field field: Namespaces.class.getFields()){
             if(field.getName().startsWith("URI_")) //NOI18N
                 try{
@@ -79,12 +104,22 @@ public class Namespaces{
         }
     }
 
+    /**
+     * Returns suggested prefix fore the given {@code uri}.
+     *
+     * @param uri namespace uri
+     * @return empty string if {@code uri} is null or empty.
+     *         If the {@code uri} is one of the constants
+     *         defined in this class, then it returns commonly
+     *         used prefix. Otherwise it returns null.
+     */
     public static String suggestPrefix(String uri){
         if(uri==null)
             uri = "";
         return suggested.getProperty(uri);
     }
 
+    /** returns {@link java.util.Properties} object where key is {@code URI} and value is suggested {@code prefix}. */
     public static Properties getSuggested(){
         return new Properties(suggested);
     }

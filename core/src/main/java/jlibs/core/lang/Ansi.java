@@ -19,21 +19,21 @@ import java.io.PrintStream;
 
 /**
  * Ansi coloring support is provided by this class.
- * <p><br>
+ * <p>
  * To print "hello ansi world" in bold with blue foreground and white background:
- * <pre>
+ * <pre class="prettyprint">
  * Ansi ansi = new Ansi(Ansi.Attribute.BRIGHT, Ansi.Color.BLUE, Ansi.Color.WHITE);
  * ansi.{@link #out(String) out}("hello ansi world")
  * </pre>
  *
  * same can be done as below:
- * <pre>
+ * <pre class="prettyprint">
  * String msg = ansi.{@link #colorize(String) colorize}("hello ansi world"); // msg is original string wrapped with ansi control sequences
  * System.out.println(msg);
  * </pre>
  *
  * <b>Ansi Support:</b>
- * <p><br>
+ * <p>
  * Ansi might not be supported on all systems. Ansi is mostly supported by all unix operating systems.
  * <br><br>
  * {@link Ansi#SUPPORTED} is a final boolean, that can be used to check whether your console supports Ansi format;
@@ -45,7 +45,9 @@ import java.io.PrintStream;
  * if {@link Ansi#SUPPORTED} is false, any ansi method will not produce ansi control sequences. so you can safely use:
  * <code>ansi.out("hello ansi world")</code> irrespective of ansi is supported or not.
  * if ansi is not supported, this will simply do <code>System.out.print("hello ansi world")</code>
- * 
+ *
+ * @see jlibs.core.util.logging.AnsiFormatter
+ *
  * @author Santhosh Kumar T
  */
 public class Ansi{
