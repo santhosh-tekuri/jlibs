@@ -23,6 +23,39 @@ import javax.xml.namespace.QName;
 import java.util.*;
 
 /**
+ * This is an implementation of {@link NamespaceContext}.
+ * <p>
+ * Example Usage:
+ * <pre class="prettyprint">
+ * import jlibs.core.lang.StringUtil;
+ * import jlibs.xml.DefaultNamespaceContext;
+ * import jlibs.xml.Namespaces;
+ *
+ * DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
+ * nsContext.declarePrefix("xsd", Namespaces.URI_XSD)
+ * nsContext.declarePrefix("jlibs", "http://code.google.com/p/jlibs");
+ * nsContext.declarePrefix("tns", "http://code.google.com/p/jlibs");
+ *
+ * System.out.println(nsContext.getPrefix("http://code.google.com/p/jlibs")); // prints "jlibs"
+ * System.out.println(nsContext.getNamespaceURI("jlibs"); // prints "http://code.google.com/p/jlibs"
+ * System.out.println(StringUtil.{@link jlibs.core.lang.StringUtil#join(java.util.Iterator) join}(nsContext.getPrefixes("http://code.google.com/p/jlibs"))); // prints "jlibs, tns"
+ * </pre>
+ *
+ * <b>Prefix Suggestions:</b>
+ * <p>
+ * You can speficy the suggested {@code prefix} for a {@code uri} by passing {@link java.util.Properties} to the {@link #DefaultNamespaceContext(java.util.Properties) constructor}<br>
+ * If {@link #DefaultNamespaceContext() no-arg constructor} is used, then it uses {@link Namespaces#getSuggested()} as suggestions.
+ * <p>
+ * Thus you can declare a {@code uri} without specified {@code prefix} manually. It finds the {@code prefix} automatically and returns the {@code prefix} it used.
+ * <pre class="prettyprint">
+ * System.out.println(nsContext.{@link #declarePrefix(String) declarePrefix}("http://www.google.com")); // returns "google"
+ * </pre> 
+ *
+ * This class also provides a handy method to compute {@code javax.xml.namespace.QName}:
+ * <pre class="prettyprint">
+ * javax.xml.namespace.QName qname = nsContext.{@link #toQName(String) toQName}("tns:myElement");
+ * System.out.println(qname); // prints "{http://code.google.com/p/jlibs}myElement"
+ * </pre>
  * @author Santhosh Kumar T
  */
 public class DefaultNamespaceContext implements NamespaceContext{
@@ -31,10 +64,23 @@ public class DefaultNamespaceContext implements NamespaceContext{
     private Map<String, String> uri2prefixMap = new HashMap<String, String>();
     private String defaultURI = XMLConstants.NULL_NS_URI;
 
+    /**
+     * Creates new instance of DefaultNamespaceContext with suggested prefixes
+     * {@link Namespaces#getSuggested()}
+     *
+     * @see #declarePrefix(String)
+     */
     public DefaultNamespaceContext(){
         this(Namespaces.getSuggested());
     }
 
+    /**
+     * Creates new instance of DefaultNamespaceContext with specified suggested prefixes
+     *
+     * @param suggested suggested prefixes, where key is {@code URI} and value is suggested {@code prefix}
+     *
+     * @see #declarePrefix(String)
+     */
     public DefaultNamespaceContext(Properties suggested){
         this.suggested = suggested;
         declarePrefix(XMLConstants.DEFAULT_NS_PREFIX, XMLConstants.NULL_NS_URI);
@@ -66,6 +112,12 @@ public class DefaultNamespaceContext implements NamespaceContext{
         return list.iterator();
     }
 
+    /**
+     * Binds specified {@code prefix} to the given {@code uri}
+     *
+     * @param prefix the prefix to be bound
+     * @param uri the uri to which specified {@code prefix} to be bound
+     */
     public void declarePrefix(String prefix, String uri){
         if(prefix.length()==0)
             defaultURI = uri;
@@ -73,6 +125,19 @@ public class DefaultNamespaceContext implements NamespaceContext{
         uri2prefixMap.put(uri, prefix);
     }
 
+    /**
+     * Declared the specified {@code uri} in this namespaceContext and returns
+     * the prefix to which it is bound.
+     * <p>
+     * the prefix is guessed from the suggested namespaces specified at construction
+     * or derived from the specified {@code uri}
+     *
+     * @param uri uri to be declared
+     *
+     * @return the prefix to which {@code uri} is bound
+     *
+     * @see jlibs.core.net.URLUtil#suggestPrefix(java.util.Properties, String) 
+     */
     public String declarePrefix(String uri){
         String prefix = getPrefix(uri);
         if(prefix==null){
@@ -94,6 +159,14 @@ public class DefaultNamespaceContext implements NamespaceContext{
         return prefix;
     }
 
+    /**
+     * Constructs {@link javax.xml.namespace.QName} for the specified {@code qname}.
+     * 
+     * @param qname the qualified name
+     * @return {@link javax.xml.namespace.QName} object constructed.
+     *
+     * @throws IllegalArgumentException if the prefix in {@code qname} is undeclared.
+     */
     public QName toQName(String qname){
         String prefix = "";
         String localName = qname;
@@ -103,7 +176,10 @@ public class DefaultNamespaceContext implements NamespaceContext{
             prefix = qname.substring(0, colon);
             localName = qname.substring(colon+1);
         }
+        String ns = getNamespaceURI(prefix);
+        if(ns==null)
+            throw new IllegalArgumentException("undeclared prefix: "+prefix);
 
-        return new QName(getNamespaceURI(prefix), localName, prefix);
+        return new QName(ns, localName, prefix);
     }
 }
