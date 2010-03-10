@@ -27,15 +27,69 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class is used to create a java process.
+ * Similar to {@link ProcessBuilder}, this class makes the java process creation easier.
+ * <p>
+ * This class simply manages collection of java process attributes and help your to create command out of it.
+ * <pre class="prettyprint">
+ * JavaProcessBuilder jvm = new JavaProcessBuilder();
+ * </pre>
+ * {@code JavaProcessBuilder} is pre-configured with current java home and current working directory initially.<br>
+ * you can change them as below:
+ * <pre class="prettyprint">
+ * jvm.javaHome(new File("c:/jdk5")); // to configure java home
+ * jvm.workingDir(new File("c:/myProject")); // to configure working directory
+ * </pre>
+ * To configure various attributes:
+ * <pre class="prettyprint">
+ * // to configure classpath
+ * jvm.classpath("lib/jlibs-core.jar") // relative path from configured working dir
+ *    .classpath(new File("c:/myproject/lib/jlibs-xml.jar");
  *
- * by default, javaHome and workingDir are picked from
- * current process.
+ * // to get configured classpath
+ * List<File> classpath = jvm.classpath();
  *
- * any relative path specified will get resolved relative
- * to working directory lazily.
+ * // to configure additional classpath
+ * jvm.endorsedDir("lib/endorsed")
+ *    .extDir("lib/ext")
+ *    .libraryPath("lib/native")
+ *    .bootClasspath("lib/boot/xerces.jar")
+ *    .appendBootClasspath("lib/boot/xalan.jar")
+ *    .prependBootClasspath("lib/boot/dom.jar");
  *
- * This class favors method chaining.
+ * // to configure System Properties
+ * jvm.systemProperty("myprop", "myvalue")
+ *    .systemProperty("myflag");
+ *
+ * // to configure heap and vmtype
+ * jvm.initialHeap(512); // or jvm.initialHeap("512m");
+ * jvm.maxHeap(1024); // or jvm.maxHeap("1024m");
+ * jvm.client(); // to use -client
+ * jvm.server(); // to use -server
+ *
+ * // to configure remote debugging
+ * jvm.debugPort(7000)
+ *    .debugSuspend(true);
+ *
+ * // to configure any additional jvm args
+ * jvm.jvmArg("-Xgc:somealgo");
+ *
+ * // to configure mainclass and its arguments
+ * jvm.mainClass("example.MyTest")
+ *    .arg("-xvf")
+ *    .arg("testDir");
+ * </pre>
+ * To get the created command:
+ * <pre class="prettyprint">
+ * String command[] = jvm.command();
+ * </pre>
+ * Any relative paths specified, will get resolved relative to working directory during command creation.
+ * <p>
+ * To launch it:
+ * <pre class="prettyprint">
+ * Process p = jvm.{@link #launch(java.io.OutputStream, java.io.OutputStream) launch}(System.out, System.err);
+ * </pre>
+ * the two arguments to {@link #launch(java.io.OutputStream, java.io.OutputStream) launch(...)} specify to which process output and error streams to be redirected.
+ * These arguments can be null, if you don't want them to be redirected.
  *
  * @author Santhosh Kumar T
  */
@@ -412,6 +466,8 @@ public class JavaProcessBuilder{
      * @param error     outputstream to which process's error stream to be redirected.
      *                  if null, it is not redirected
      * @return          the process created
+     * 
+     * @exception  IOException  if an I/O error occurs.
      *
      * @see jlibs.core.lang.RuntimeUtil#redirectStreams(Process, java.io.OutputStream, java.io.OutputStream) 
      */
