@@ -59,7 +59,7 @@ public final class LocationPath{
             case NUMBERS:
                 return new Strings(this, DataType.NUMBERS, true, false);
             default:
-                throw new ImpossibleException("can't type case locationPath to "+dataType.name());
+                throw new ImpossibleException("can't type cast locationPath to "+dataType.name());
         }
     }
 
