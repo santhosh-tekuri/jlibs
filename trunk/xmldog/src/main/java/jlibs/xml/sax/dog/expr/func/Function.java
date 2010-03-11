@@ -22,6 +22,7 @@ import jlibs.xml.sax.dog.DataType;
  * @author Santhosh Kumar T
  */
 public abstract class Function{
+    public final String namespace;
     public final String name;
     public final DataType resultType;
     public final DataType memberTypes[];
@@ -36,10 +37,15 @@ public abstract class Function{
     public final int mandatory;
 
     protected Function(String name, DataType resultType, boolean varArgs, DataType... memberTypes){
-        this(name, resultType, varArgs, memberTypes.length, memberTypes);
+        this("", name, resultType, varArgs, memberTypes.length, memberTypes);
     }
 
-    protected Function(String name, DataType resultType, boolean varArgs, int mandatory, DataType... memberTypes){
+    protected Function(String namespace, String name, DataType resultType, boolean varArgs, DataType... memberTypes){
+        this(namespace, name, resultType, varArgs, memberTypes.length, memberTypes);
+    }
+
+    protected Function(String namespace, String name, DataType resultType, boolean varArgs, int mandatory, DataType... memberTypes){
+        this.namespace = namespace;
         this.name = name;
         this.resultType = resultType;
         this.memberTypes = memberTypes;

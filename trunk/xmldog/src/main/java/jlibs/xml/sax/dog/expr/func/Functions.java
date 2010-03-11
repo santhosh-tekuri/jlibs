@@ -74,8 +74,8 @@ public class Functions{
     public static class UserFunction extends Function{
         public final XPathFunction xpathFunction;
 
-        public UserFunction(String name, XPathFunction xpathFunction){
-            super(name, DataType.PRIMITIVE, true, DataType.PRIMITIVE);
+        public UserFunction(String namespace, String name, XPathFunction xpathFunction){
+            super(namespace, name, DataType.PRIMITIVE, true, DataType.PRIMITIVE);
             this.xpathFunction = xpathFunction;
         }
 
@@ -356,7 +356,7 @@ public class Functions{
         }
     };
 
-    public static final Function SUBSTRING = new Function("substring", DataType.STRING, false, 2, DataType.STRING, DataType.NUMBER, DataType.NUMBER){
+    public static final Function SUBSTRING = new Function("", "substring", DataType.STRING, false, 2, DataType.STRING, DataType.NUMBER, DataType.NUMBER){
         @Override
         public Object evaluate(Object... args){
             String str = (String)args[0];
@@ -425,7 +425,7 @@ public class Functions{
 
     public static abstract class ChangeCase extends Function{
         protected ChangeCase(String name){
-            super(name, DataType.STRING, false, 1, DataType.STRING, DataType.STRING);
+            super("", name, DataType.STRING, false, 1, DataType.STRING, DataType.STRING);
         }
 
         @Override
