@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.dog.expr.func;
 
+import jlibs.xml.ClarkName;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
@@ -199,7 +200,7 @@ public final class FunctionCall extends Expression{
                 buff.append(')');
         }
         if(separator.equals(", "))
-            return String.format("%s(%s)", function.name, buff);
+            return String.format("%s(%s)", ClarkName.valueOf(function.namespace, function.name), buff);
         else
             return buff.toString();
     }
