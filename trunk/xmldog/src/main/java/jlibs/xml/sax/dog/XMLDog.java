@@ -50,7 +50,7 @@ public final class XMLDog{
         this.nsContext = nsContext;
         this.variableResolver = variableResolver;
         this.functionResolver = functionResolver;
-        parser = new XPathParser(nsContext);
+        parser = new XPathParser(nsContext, functionResolver);
     }
 
     private final List<Expression> expressions = new ArrayList<Expression>();
