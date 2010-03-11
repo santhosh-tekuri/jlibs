@@ -35,6 +35,8 @@ import org.jaxen.saxpath.XPathHandler;
 import org.jaxen.saxpath.XPathReader;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.xpath.XPathFunction;
+import javax.xml.xpath.XPathFunctionResolver;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
@@ -43,10 +45,12 @@ import java.util.ArrayList;
  */
 public final class XPathParser implements XPathHandler{
     private final NamespaceContext nsContext;
+    private final XPathFunctionResolver functionResolver;
     private final XPathReader reader = new org.jaxen.saxpath.base.XPathReader();
 
-    public XPathParser(NamespaceContext nsContext){
+    public XPathParser(NamespaceContext nsContext, XPathFunctionResolver functionResolver){
         this.nsContext = nsContext;
+        this.functionResolver = functionResolver;
         reader.setXPathHandler(this);
     }
 
@@ -396,17 +400,29 @@ public final class XPathParser implements XPathHandler{
         if(uri==null)
             throw new SAXPathException("undeclared prefix: " + prefix);
 
-        if(uri.length()!=0)
-            throw new NotImplementedException();
+        if(uri.length()==0 && functionResolver==null)
+            throw new SAXPathException("FunctionResolver is required");
+        
         pushFrame();
-        push(name);
+        push(new javax.xml.namespace.QName(uri, name));
     }
 
     @Override
     public void endFunction() throws SAXPathException{
-        ArrayDeque stack = popFrame();
-        String name = (String)stack.pollFirst();
-        push(createFunction(name, stack).simplify());
+        ArrayDeque params = popFrame();
+        javax.xml.namespace.QName name = (javax.xml.namespace.QName)params.pollFirst();
+        if(name.getNamespaceURI().length()==0)
+            push(createFunction(name.getLocalPart(), params).simplify());
+        else{
+            int noOfParams = params.size();
+            XPathFunction function = functionResolver.resolveFunction(name, noOfParams);
+            if(function==null)
+                throw new SAXPathException("Unknown Function: "+name);
+            FunctionCall functionCall = new FunctionCall(new Functions.UserFunction(name.getNamespaceURI(), name.getLocalPart(), function), noOfParams);
+            for(int i=0; i<noOfParams; i++)
+                functionCall.addMember(params.pollFirst(), i);
+            push(functionCall);
+        }
     }
 
     /**
