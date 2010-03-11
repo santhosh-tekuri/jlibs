@@ -1,6 +1,7 @@
 <xpaths generate="true">
     <testcase xmlns:xs="http://www.w3.org/2001/XMLSchema"
               xmlns:abc="http://www.w3schools.com"
+              xmlns:jlibs="http://jlibs.googlecode.com"
               >
         <file>xmlFiles/note.xml</file>
 
@@ -42,6 +43,8 @@
         <xpath>xs:schema/xs:any/@namespace</xpath>
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
         <xpath>name(/*/*/*)</xpath>
+        
+        <xpath type="string">jlibs:reverse(string(/xs:schema//@name))</xpath>
     </testcase>
 
     <testcase>
