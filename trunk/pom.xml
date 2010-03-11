@@ -101,6 +101,7 @@
                     	<exclude>**/src/test/resources/**</exclude>
                     	<exclude>**/*.conf</exclude>
                     	<exclude>examples/bin/**</exclude>
+                        <exclude>**/prettify.*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
