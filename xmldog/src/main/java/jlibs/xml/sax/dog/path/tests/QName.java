@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.dog.path.tests;
 
+import jlibs.xml.ClarkName;
 import jlibs.xml.sax.dog.NodeType;
 import jlibs.xml.sax.dog.path.Constraint;
 import jlibs.xml.sax.dog.sniff.Event;
@@ -47,9 +48,6 @@ public final class QName extends Constraint{
 
     @Override
     public String toString(){
-        if(namespaceURI.isEmpty())
-            return localName;
-        else
-            return String.format("{%s}%s", namespaceURI, localName);
+        return ClarkName.valueOf(namespaceURI, localName);
     }
 }
