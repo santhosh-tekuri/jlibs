@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.dog.engines;
 
+import jlibs.xml.sax.dog.TestCase;
+import jlibs.xml.sax.dog.XPathEngine;
 import net.sf.saxon.xpath.JAXPXPathStaticContext;
 import net.sf.saxon.xpath.XPathEvaluator;
 import org.w3c.dom.Document;
@@ -24,9 +26,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
-
-import jlibs.xml.sax.dog.XPathEngine;
-import jlibs.xml.sax.dog.TestCase;
 
 
 /**
@@ -64,6 +63,7 @@ public class JDKEngine extends XPathEngine{
         }
         for(int i=0; i<testCase.xpaths.size(); i++){
             xpathObj.setXPathVariableResolver(testCase.variableResolver);
+            xpathObj.setXPathFunctionResolver(testCase.functionResolver);
             xpathObj.setNamespaceContext(testCase.nsContext);
             results.add(xpathObj.evaluate(testCase.xpaths.get(i), doc, testCase.resultTypes.get(i)));
         }

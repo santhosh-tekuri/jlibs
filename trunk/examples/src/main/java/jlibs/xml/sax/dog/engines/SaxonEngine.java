@@ -22,10 +22,10 @@ import jlibs.core.graph.Sequence;
 import jlibs.core.graph.sequences.AbstractSequence;
 import jlibs.core.lang.StringUtil;
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.dog.XPathEngine;
-import jlibs.xml.sax.dog.TestCase;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
+import jlibs.xml.sax.dog.TestCase;
+import jlibs.xml.sax.dog.XPathEngine;
 import net.sf.saxon.om.Axis;
 import net.sf.saxon.om.AxisIterator;
 import net.sf.saxon.om.NodeInfo;
@@ -59,6 +59,7 @@ public class SaxonEngine extends XPathEngine{
         });
         xpe.setBackwardsCompatible(true);
         xpe.setXPathVariableResolver(testCase.variableResolver);
+        xpe.setXPathFunctionResolver(testCase.functionResolver);
         xpe.setNamespaceContext(testCase.nsContext);
         NodeInfo doc = xpe.setSource(new SAXSource(new InputSource(file)));
 

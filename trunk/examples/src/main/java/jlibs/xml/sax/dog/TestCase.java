@@ -17,8 +17,8 @@ package jlibs.xml.sax.dog;
 
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.dom.DOMNavigator;
-import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.engines.SaxonEngine;
+import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
 
 import javax.xml.namespace.QName;
@@ -45,7 +45,7 @@ public class TestCase{
     public DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     public DefaultNamespaceContext resultNSContext = new DefaultNamespaceContext();
     public DefaultXPathVariableResolver variableResolver = new DefaultXPathVariableResolver();
-    public XPathFunctionResolver functionResolver;
+    public XPathFunctionResolver functionResolver = new TestFunctionResolver();
 
     public List<Object> jdkResult = new ArrayList<Object>(xpaths.size());
     public List<Object> usingDOM() throws Exception{
