@@ -31,7 +31,7 @@ public abstract class PeekingFunction extends Function{
     }
 
     protected PeekingFunction(String name, DataType resultType, boolean varArgs, int mandatory, DataType... memberTypes){
-        super(name, resultType, varArgs, mandatory, memberTypes);
+        super("", name, resultType, varArgs, mandatory, memberTypes);
     }
 
     /**
