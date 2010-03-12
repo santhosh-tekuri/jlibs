@@ -20,7 +20,7 @@ import org.xml.sax.ext.Locator2;
 import javax.xml.stream.XMLStreamReader;
 
 /**
- * SAX Locator2 implementation for XMLStreamReader
+ * SAX {@link Locator2} implementation for {@link XMLStreamReader}.
  * 
  * @author Santhosh Kumar T
  */

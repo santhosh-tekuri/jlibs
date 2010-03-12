@@ -33,7 +33,21 @@ import java.util.List;
 import static javax.xml.stream.XMLStreamConstants.*;
 
 /**
- * XMLReader implementation using STAX
+ * {@link org.xml.sax.XMLReader} implementation using STAX.
+ * <p>
+ * This class also provides handy utility method {@link #fire(javax.xml.stream.XMLStreamReader, jlibs.xml.sax.SAXDelegate) fire(...)}
+ * to translate STAX events to SAX events.
+ * 
+ * <pre class="prettyprint">
+ * XMLStreamReader reader = ...;
+ * SAXDelegate delegate = new SAXDelegate();
+ * 
+ * // set any handlers you are interested
+ * delegate.setContentHandler(myContentHandler);
+ * delegate.setErrorHandler(myErrorHandler);
+ * 
+ * STAXXMLReader.fire(reader, delegate);
+ * </pre> 
  * 
  * @author Santhosh Kumar T
  */
@@ -72,6 +86,17 @@ public class STAXXMLReader extends AbstractXMLReader{
         parse(new InputSource(systemId));
     }
 
+    /**
+     * Reads data from specified {@code reader}, and delegates translated SAX Events
+     * to {@code handler}.
+     * <p>
+     * <b>Note:</b> The {@code reader} is not closed by this method.
+     * 
+     * @param reader    reader to reads data from
+     * @param handler   the SAXHandler which receives SAX events
+     * 
+     * @throws SAXException any {@link XMLStreamException} occured is rethrown as {@link SAXException}
+     */
     @SuppressWarnings({"unchecked"})
     public static void fire(XMLStreamReader reader, SAXDelegate handler) throws SAXException{
         Attributes attrs = new STAXAttributes(reader);
