@@ -20,7 +20,7 @@ import org.xml.sax.Attributes;
 import javax.xml.stream.XMLStreamReader;
 
 /**
- * SAX Attributes implementation for XMLStreamReader
+ * SAX {@link Attributes} implementation for {@link XMLStreamReader}.
  * 
  * @author Santhosh Kumar T
  */
