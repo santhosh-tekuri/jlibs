@@ -20,6 +20,7 @@ import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.Literal;
+import jlibs.xml.sax.dog.expr.Variable;
 import jlibs.xml.sax.dog.expr.func.Function;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.func.Functions;
@@ -37,6 +38,7 @@ import org.jaxen.saxpath.XPathReader;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathFunction;
 import javax.xml.xpath.XPathFunctionResolver;
+import javax.xml.xpath.XPathVariableResolver;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
@@ -45,11 +47,13 @@ import java.util.ArrayList;
  */
 public final class XPathParser implements XPathHandler{
     private final NamespaceContext nsContext;
+    private final XPathVariableResolver variableResolver;
     private final XPathFunctionResolver functionResolver;
     private final XPathReader reader = new org.jaxen.saxpath.base.XPathReader();
 
-    public XPathParser(NamespaceContext nsContext, XPathFunctionResolver functionResolver){
+    public XPathParser(NamespaceContext nsContext, XPathVariableResolver variableResolver, XPathFunctionResolver functionResolver){
         this.nsContext = nsContext;
+        this.variableResolver = variableResolver;
         this.functionResolver = functionResolver;
         reader.setXPathHandler(this);
     }
@@ -542,8 +546,14 @@ public final class XPathParser implements XPathHandler{
     }
 
     @Override
-    public void variableReference(String prefix, String variableName){
-        throw new NotImplementedException("VariableReference");
+    public void variableReference(String prefix, String variableName) throws SAXPathException{
+        String uri = nsContext.getNamespaceURI(prefix);
+        if(uri==null)
+            throw new SAXPathException("undeclared prefix: " + prefix);
+
+        if(variableResolver==null)
+            throw new SAXPathException("VariableResolver is required");
+        push(new Variable(variableResolver, new javax.xml.namespace.QName(uri, variableName)));
     }
 
     /*-------------------------------------------------[ Context ]---------------------------------------------------*/
