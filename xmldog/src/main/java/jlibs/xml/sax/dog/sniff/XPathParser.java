@@ -24,12 +24,10 @@ import jlibs.xml.sax.dog.expr.Variable;
 import jlibs.xml.sax.dog.expr.func.Function;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.func.Functions;
-import jlibs.xml.sax.dog.expr.nodset.ExactPosition;
-import jlibs.xml.sax.dog.expr.nodset.Language;
-import jlibs.xml.sax.dog.expr.nodset.Last;
-import jlibs.xml.sax.dog.expr.nodset.Position;
+import jlibs.xml.sax.dog.expr.nodset.*;
 import jlibs.xml.sax.dog.path.*;
 import jlibs.xml.sax.dog.path.tests.*;
+import jlibs.xml.sax.dog.path.tests.NamespaceURI;
 import org.jaxen.saxpath.Operator;
 import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathHandler;
@@ -507,12 +505,51 @@ public final class XPathParser implements XPathHandler{
     /*-------------------------------------------------[ Pending ]---------------------------------------------------*/
 
     @Override
-    public void startUnionExpr(){}
+    public void startUnionExpr(){
+        pushFrame();
+    }
 
     @Override
     public void endUnionExpr(boolean create){
-        if(create)
-            throw new NotImplementedException("Union");
+        ArrayDeque stack = popFrame();
+        if(create){
+            Object first = stack.pollFirst();
+            Object second = stack.pollFirst();
+            boolean union1 = first instanceof FunctionCall;
+            boolean union2 = second instanceof FunctionCall;
+
+            int count = 0;
+            if(union1)
+                count += ((FunctionCall)first).members.length;
+            else
+                count++;
+            if(union2)
+                count += ((FunctionCall)second).members.length;
+            else
+                count++;
+
+            int i = 0;
+
+            FunctionCall functionCall = new FunctionCall(Functions.UNION, count);
+            if(union1){
+                for(Expression member: ((FunctionCall)first).members)
+                    functionCall.addMember(member, i++);
+            }else
+                functionCall.addMember(first, i++);
+            if(union2){
+                for(Expression member: ((FunctionCall)second).members)
+                    functionCall.addMember(member, i++);
+            }else
+                functionCall.addMember(second, i++);
+
+            assert i==count;
+
+            for(Expression member: functionCall.members)
+                ((LocationExpression)member).rawResult = true;
+
+            push(functionCall);
+        }else
+            push(stack.peek());
     }
 
     private static final Object FILTER_FLAG = new Object();
