@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.dog.expr.nodset;
 
+import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.path.LocationPath;
@@ -33,9 +34,15 @@ public final class NodeSet extends LocationExpression{
     @Override
     public Object getResult(){
         if(locationPath==LocationPath.IMPOSSIBLE)
-            return Collections.EMPTY_LIST;
-        else
-            return Collections.singletonList(NodeItem.NODEITEM_DOCUMENT);
+            return rawResult ? new LongTreeMap() : Collections.EMPTY_LIST;
+        else{
+            if(rawResult){
+                LongTreeMap<NodeItem> result = new LongTreeMap<NodeItem>();
+                result.put(0, NodeItem.NODEITEM_DOCUMENT);
+                return result;
+            }else
+                return Collections.singletonList(NodeItem.NODEITEM_DOCUMENT);
+        }
     }
 
     @Override

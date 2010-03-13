@@ -29,6 +29,7 @@ import java.util.ArrayList;
  * @author Santhosh Kumar T
  */
 public abstract class LocationExpression extends Expression{
+    public boolean rawResult;
     public final LocationPath locationPath;
     public final boolean many;
     public final boolean first;
@@ -55,6 +56,9 @@ public abstract class LocationExpression extends Expression{
     protected abstract Object getResultItem(Event event);
 
     protected Object getResult(LongTreeMap<Object> result){
+        if(rawResult)
+            return result;
+        
         switch(resultType){
             case NODESET:
             case STRINGS:

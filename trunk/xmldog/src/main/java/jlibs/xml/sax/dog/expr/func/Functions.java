@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.dog.expr.func;
 
+import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.path.LocationPath;
@@ -88,6 +89,17 @@ public class Functions{
             }
         }
     }
+
+    public static final Function UNION = new Function("|", DataType.NODESET, true, DataType.NODESET, DataType.NODESET){
+        @Override
+        @SuppressWarnings({"unchecked"})
+        public Object evaluate(Object... args){
+            LongTreeMap<Object> result = new LongTreeMap<Object>();
+            for(Object arg: args)
+                result.putAll((LongTreeMap<Object>)arg);
+            return new ArrayList(result.values());
+        }
+    };
 
     /*-------------------------------------------------[ Arithmetic ]---------------------------------------------------*/
 
