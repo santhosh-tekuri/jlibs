@@ -81,8 +81,8 @@ public final class StringEvaluation extends AxisListener<Strings>{
         fireFinished();
     }
 
-    public ArrayList<EvaluationListener> numberListeners = new ArrayList<EvaluationListener>();
-    public ArrayList<EvaluationListener> stringListeners = new ArrayList<EvaluationListener>();
+    private ArrayList<EvaluationListener> numberListeners = new ArrayList<EvaluationListener>();
+    private ArrayList<EvaluationListener> stringListeners = new ArrayList<EvaluationListener>();
 
     @Override
     public void addListener(EvaluationListener listener){
