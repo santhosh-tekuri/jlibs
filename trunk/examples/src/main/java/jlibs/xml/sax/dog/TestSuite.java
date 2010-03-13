@@ -117,7 +117,8 @@ public class TestSuite{
 
     public void readTestCases(final String configFile) throws Exception{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
-            boolean generateNewXPaths = true;
+            boolean generateNewXPathsGlobal = true;
+            boolean generateNewXPathsCurrent = true;
             TestCase testCase;
             CharArrayWriter contents = new CharArrayWriter();
             QName variableName;
@@ -127,7 +128,7 @@ public class TestSuite{
                 if(localName.equals("xpaths")){
                     String value = attributes.getValue("generate");
                     if(value!=null)
-                        generateNewXPaths = Boolean.valueOf(value);
+                        generateNewXPathsGlobal = Boolean.valueOf(value);
                 }else if(localName.equals("testcase")){
                     testCases.add(testCase = new TestCase());
                     Enumeration<String> enumer = nsSupport.getPrefixes();
@@ -149,6 +150,9 @@ public class TestSuite{
                         else if(type.equals("boolean"))
                             testCase.resultTypes.add(XPathConstants.BOOLEAN);
                     }
+
+                    String value = attributes.getValue("generate");
+                    generateNewXPathsCurrent = value!=null ? Boolean.valueOf(value) : generateNewXPathsGlobal;
                 }else if(localName.equals("variable"))
                     variableName = testCase.nsContext.toQName(attributes.getValue("name"));
                 contents.reset();
@@ -178,7 +182,7 @@ public class TestSuite{
                     if(testCase.resultTypes.size()!=testCase.xpaths.size())
                         testCase.resultTypes.add(getResultType(xpath));
 
-                    if(generateNewXPaths){
+                    if(generateNewXPathsGlobal && generateNewXPathsCurrent){
                         QName resultType = testCase.resultTypes.get(testCase.resultTypes.size()-1);
                         if(resultType.equals(XPathConstants.NODESET)){
                             if(xpath.indexOf("namespace::")==-1){
