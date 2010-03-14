@@ -23,29 +23,26 @@ import jlibs.xml.sax.dog.sniff.Event;
 import javax.xml.namespace.NamespaceContext;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
 public class XPathResults extends EvaluationListener{
     private Event event;
-    private Map<Expression, Object> results = new HashMap<Expression, Object>();
+    private Object results[];
 
-    public XPathResults(Event event, Iterable<Expression> expressions){
+    public XPathResults(Event event, int documentXPathsCount, Iterable<Expression> expressions){
         this.event = event;
+        results = new Object[documentXPathsCount];
         for(Expression expr: expressions){
-            if(expr.scope()==Scope.GLOBAL)
-                results.put(expr, expr.getResult());
-            else
+            if(expr.scope()==Scope.DOCUMENT)
                 event.addListener(expr, this);
         }
     }
 
     @Override
     public void finished(Evaluation evaluation){
-        results.put(evaluation.expression, evaluation.getResult());
+        results[evaluation.expression.id] = evaluation.getResult();
     }
 
     public NamespaceContext getNamespaceContext(){
@@ -53,7 +50,12 @@ public class XPathResults extends EvaluationListener{
     }
 
     public Object getResult(Expression expr){
-        return results.get(expr);
+        if(expr.scope()==Scope.DOCUMENT)
+            return results[expr.id];
+        else{
+            assert expr.scope()==Scope.GLOBAL;
+            return expr.getResult();
+        }
     }
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
@@ -71,12 +73,12 @@ public class XPathResults extends EvaluationListener{
     }
 
     public void printResult(PrintStream out, Expression expr){
-        print(out, expr.getXPath(), results.get(expr));
+        print(out, expr.getXPath(), getResult(expr));
     }
 
-    public void print(PrintStream out){
-        for(Map.Entry<Expression, Object> entry: results.entrySet()){
-            print(out, entry.getKey().getXPath(), entry.getValue());
+    public void print(Iterable<Expression> expressions, PrintStream out){
+        for(Expression expr: expressions){
+            print(out, expr.getXPath(), getResult(expr));
             out.println();
         }
     }

@@ -106,6 +106,10 @@ public final class XMLDog{
         return expressions;
     }
 
+    public int getDocumentXPathsCount(){
+        return docExpressions.size();
+    }
+
     @SuppressWarnings({"unchecked"})
     public Event createEvent(){
         return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size());
@@ -124,7 +128,7 @@ public final class XMLDog{
 
     public XPathResults sniff(String uri, boolean useSTAX) throws XPathException{
         Event event = createEvent();
-        XPathResults results = new XPathResults(event, expressions);
+        XPathResults results = new XPathResults(event, getDocumentXPathsCount(), expressions);
         sniff(event, uri, useSTAX);
         return results;
     }
@@ -136,7 +140,7 @@ public final class XMLDog{
 
     public XPathResults sniff(InputSource is) throws XPathException{
         Event event = createEvent();
-        XPathResults results = new XPathResults(event, expressions);
+        XPathResults results = new XPathResults(event, getDocumentXPathsCount(), expressions);
         sniff(event, is);
         return results;
     }
