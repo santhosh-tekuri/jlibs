@@ -18,7 +18,6 @@ package jlibs.xml.sax.dog.path;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
-import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.nodset.*;
 
 /**
@@ -44,7 +43,7 @@ public final class LocationPath{
             return scope;
     }
 
-    public Expression typeCast(DataType dataType){
+    public LocationExpression typeCast(DataType dataType){
         switch(dataType){
             case NODESET:
                 return new NodeSet(this);
@@ -63,7 +62,7 @@ public final class LocationPath{
         }
     }
 
-    public Expression apply(String function){
+    public LocationExpression apply(String function){
         switch(function.length()){
             case 3:
                 if(function.equals("sum"))
