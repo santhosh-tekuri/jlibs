@@ -813,9 +813,9 @@
 
         <xpath generate="false">//shipTo | //billTo</xpath>
         <xpath generate="false">//shipTo | //billTo | //item</xpath>
-<!--    <xpath>count(//shipTo | //billTo | //item)</xpath>-->
+        <xpath>count(//shipTo | //billTo | //item)</xpath>
         <xpath generate="false">//shipTo | //billTo | //item | //items/*</xpath>
-<!--    <xpath>count(//shipTo | //billTo | //item | //items/*)</xpath>-->
+        <xpath>count(//shipTo | //billTo | //item | //items/*)</xpath>
 
         <xpath>/purchaseOrder/shipTo/streetX/following-sibling::*</xpath>
         <xpath>/purchaseOrder/shipTo/streetX/following-sibling::node()</xpath>
