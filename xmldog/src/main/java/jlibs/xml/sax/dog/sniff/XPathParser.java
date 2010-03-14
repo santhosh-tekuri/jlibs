@@ -456,6 +456,25 @@ public final class XPathParser implements XPathHandler{
                         Expression expr = ((LocationPath)current).apply(name);
                         if(expr!=null)
                             return expr;
+                    }else if(current instanceof FunctionCall){
+                        FunctionCall currentFunctionCall = (FunctionCall)current;
+                        Function function = currentFunctionCall.function;
+                        if(function instanceof Functions.UnionFunction && function.resultType==DataType.NODESET){
+                            FunctionCall functionCall = null;
+                            int count = currentFunctionCall.members.length;
+                            for(int i=0; i< count; i++){
+                                LocationExpression expr = ((NodeSet)currentFunctionCall.members[i]).locationPath.apply(name);
+                                expr.rawResult = true;
+                                if(functionCall==null){
+                                    Functions.UnionFunction unionFunction = new Functions.UnionFunction(expr.resultType);
+                                    unionFunction.countFunction = "count".equals(name);
+                                    functionCall = new FunctionCall(unionFunction, count);
+                                }
+                                functionCall.addValidMember(expr, i);
+                            }
+                            assert functionCall!=null;
+                            return functionCall;
+                        }
                     }
                     FunctionCall functionCall = (FunctionCall)createFunction(name, 1);
                     functionCall.addMember(current, 0);
@@ -530,7 +549,7 @@ public final class XPathParser implements XPathHandler{
 
             int i = 0;
 
-            FunctionCall functionCall = new FunctionCall(Functions.UNION, count);
+            FunctionCall functionCall = new FunctionCall(new Functions.UnionFunction(DataType.NODESET), count);
             if(union1){
                 for(Expression member: ((FunctionCall)first).members)
                     functionCall.addMember(member, i++);
