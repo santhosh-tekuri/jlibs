@@ -44,7 +44,10 @@ public final class Count extends LocationExpression{
     @Override
     @SuppressWarnings({"UnnecessaryBoxing"})
     protected Object getResult(LongTreeMap<Object> result){
-        return new Double(result.size());
+        if(rawResult)
+            return result;
+        else
+            return new Double(result.size());
     }
 
     @Override
