@@ -297,7 +297,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
     }
 
     @Override
-    public void fireFinished(){
+    protected void fireFinished(){
         super.fireFinished();
         if(stringEvaluations!=null){
             for(Evaluation stringEval: stringEvaluations)

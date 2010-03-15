@@ -45,7 +45,7 @@ public abstract class Evaluation<X extends Expression> extends EvaluationListene
         }
     }
 
-    public void fireFinished(){
+    protected void fireFinished(){
         listener.finished(this);
     }
 

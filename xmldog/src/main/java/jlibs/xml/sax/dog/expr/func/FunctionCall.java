@@ -268,7 +268,7 @@ class FunctionEvaluation extends Evaluation<FunctionCall>{
     }
 
     @Override
-    public final void fireFinished(){
+    protected final void fireFinished(){
         if(result==null)
             result = expression.function.evaluate(memberResults);
         super.fireFinished();
