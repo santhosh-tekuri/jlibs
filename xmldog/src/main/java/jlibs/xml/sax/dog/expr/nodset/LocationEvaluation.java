@@ -285,8 +285,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         }
     }
 
-    protected boolean finished = false;
-    protected void finished(){
+    private boolean finished = false;
+    private void finished(){
         if(!finished){
             finished = true;
             for(LinkableEvaluation pendingEval=pendingEvaluationHead; pendingEval!=null; pendingEval=pendingEval.next)
