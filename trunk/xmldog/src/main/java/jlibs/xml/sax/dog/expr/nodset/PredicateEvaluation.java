@@ -68,7 +68,7 @@ public final class PredicateEvaluation extends LinkableEvaluation<LocationExpres
     }
 
     @Override
-    public void fireFinished(){
+    protected void fireFinished(){
         super.fireFinished();
         if(resultItem instanceof Evaluation)
             ((Evaluation)resultItem).removeListener(this);

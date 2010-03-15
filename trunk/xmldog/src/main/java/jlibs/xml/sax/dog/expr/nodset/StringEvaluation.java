@@ -126,7 +126,7 @@ public final class StringEvaluation extends AxisListener<Strings>{
     }
 
     @Override
-    public void fireFinished(){
+    protected void fireFinished(){
         if(stringListeners.size()>0)
             fireFinished(stringListeners, buff.toString());
         if(numberListeners.size()>0){
