@@ -66,7 +66,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         }
     }
 
-    protected LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID, Expression predicate, Evaluation predicateEvaluation){
+    private LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID, Expression predicate, Evaluation predicateEvaluation){
         this(expression, stepIndex, event, eventID);
         predicateResult = null;
         if(predicateEvaluation==null)
@@ -264,7 +264,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
     }
 
     private boolean resultPrepared = false;
-    public void resultPrepared(){
+    private void resultPrepared(){
         if(!resultPrepared){
             manuallyExpired = true;
             resultPrepared = true;
@@ -317,7 +317,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
     /*-------------------------------------------------[ Result Management ]---------------------------------------------------*/
 
-    protected LongTreeMap<Object> result = new LongTreeMap<Object>();
+    private LongTreeMap<Object> result = new LongTreeMap<Object>();
 
     private void consumedResult(){
         int resultSize = result.size();
@@ -337,7 +337,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             resultPrepared();
     }
 
-    protected void consume(Event event){
+    private void consume(Event event){
         Object resultItem = expression.getResultItem(event);
         if(resultItem instanceof Evaluation){
             Evaluation eval = (Evaluation)resultItem;
@@ -350,7 +350,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         consumedResult();
     }
 
-    protected void consumeChildEvaluation(long order, Object resultItem){
+    private void consumeChildEvaluation(long order, Object resultItem){
         boolean prepareResult = false;
         if(expression.resultType==DataType.NUMBER){
             if(resultItem instanceof Double && ((Double)resultItem).isNaN()){
@@ -366,7 +366,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             resultPrepared();
     }
 
-    protected void consumeChildEvaluation(LongTreeMap<Object> childResult){
+    private void consumeChildEvaluation(LongTreeMap<Object> childResult){
         boolean prepareResult = false;
         int size = childResult.size();
         if(size==1 && expression.resultType==DataType.NUMBER){
