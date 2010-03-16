@@ -43,32 +43,11 @@ public final class Variable extends Expression{
 
     @Override
     public Object getResult(Event event){
-        return new StaticEvaluation<Variable>(this, event.order(), variableResolver.resolveVariable(qname));
+        return variableResolver.resolveVariable(qname);
     }
 
     @Override
     public String toString(){
         return '$'+ qname.toString();
     }
-}
-
-class StaticEvaluation<X extends Expression> extends Evaluation<X>{
-    protected StaticEvaluation(X expression, long order, Object result){
-        super(expression, order);
-        this.result = result;
-    }
-
-    @Override
-    public void start(){
-        fireFinished();
-    }
-
-    private Object result;
-    @Override
-    public Object getResult(){
-        return result;
-    }
-
-    @Override
-    public void finished(Evaluation evaluation){}
 }

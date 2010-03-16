@@ -23,6 +23,7 @@ import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.expr.StaticEvaluation;
 import jlibs.xml.sax.dog.expr.nodset.LocationEvaluation;
 import jlibs.xml.sax.dog.expr.nodset.StringEvaluation;
 import jlibs.xml.sax.dog.path.EventID;
@@ -368,12 +369,16 @@ public final class Event extends EvaluationListener{
         value = namespaceURI = localName = qualifiedName = "";
 
         Object results[] = this.results;
-        Iterator<Expression> iter = exprList.iterator();
-        for(int i=0; i<noOfXPaths; i++){
-            Evaluation eval = (Evaluation)iter.next().getResult(this);
-            results[i] = eval;
-            eval.addListener(this);
-            eval.start();
+        for(int i=noOfXPaths-1; i>=0; i--){
+            Expression expression = exprList.get(i);
+            Object result = expression.getResult(this);
+            results[i] = result;
+            if(result instanceof Evaluation){
+                Evaluation eval = (Evaluation)result;
+                eval.addListener(this);
+                eval.start();
+            }else
+                finished(new StaticEvaluation<Expression>(expression, order, result));
         }
         current.listenersAdded();
         firePush();
