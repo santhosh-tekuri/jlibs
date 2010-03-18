@@ -92,7 +92,7 @@ public abstract class LocationExpression extends Expression{
     protected abstract String getName();
 
     @Override
-    public String toString(){
+    public final String toString(){
         return String.format("%s(%s)", getName(), locationPath);
     }
 }
