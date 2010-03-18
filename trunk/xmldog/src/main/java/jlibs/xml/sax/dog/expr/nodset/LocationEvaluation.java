@@ -127,13 +127,20 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
                 childEval = new LocationEvaluation(expression, index+1, event, eventID);
         }else if(predicateResult==null){
             Evaluation predicateEvaluation = event.evaluation;
-            if(lastStep)
+            if(lastStep){
                 childEval = new PredicateEvaluation(expression, event.order(), expression.getResultItem(event), event, predicate, predicateEvaluation);
-            else
+                if(nodeSetListener !=null)
+                    nodeSetListener.mayHit();
+            }else
                 childEval = new LocationEvaluation(expression, index+1, event, eventID, predicate, predicateEvaluation);
         }
 
         if(childEval!=null){
+            if(childEval instanceof LocationEvaluation)
+                ((LocationEvaluation)childEval).nodeSetListener = nodeSetListener;
+            else
+                ((PredicateEvaluation)childEval).nodeSetListener = nodeSetListener;
+            
             childEval.addListener(this);
             if(pendingEvaluationTail!=null){
                 pendingEvaluationTail.next = childEval;
@@ -298,6 +305,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
     @Override
     protected void fireFinished(){
+        if(index==0 && nodeSetListener !=null)
+            nodeSetListener.finished();
         super.fireFinished();
         if(stringEvaluations!=null){
             for(Evaluation stringEval: stringEvaluations)
@@ -307,6 +316,10 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
     @Override
     protected void dispose(){
+        if(nodeSetListener !=null){
+            for(LongTreeMap.Entry<Object> entry = result.firstEntry(); entry!=null ; entry = entry.next())
+                nodeSetListener.discard(entry.getKey());
+        }
         manuallyExpired = true;
         for(LinkableEvaluation pendingEval=pendingEvaluationHead; pendingEval!=null; pendingEval=pendingEval.next)
             pendingEval.removeListener(this);
@@ -348,6 +361,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         assert resultItem!=null : "ResultItem should be non-null";
         result.put(event.order(), resultItem);
         consumedResult();
+        if(nodeSetListener !=null)
+            nodeSetListener.mayHit();
     }
 
     private void consumeChildEvaluation(long order, Object resultItem){
@@ -378,9 +393,15 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         }
 
         if(size>0){
-            if(result.size()>0)
-                result.putAll(childResult);
-            else
+            if(result.size()>0){
+                if(nodeSetListener !=null){
+                    for(LongTreeMap.Entry<Object> entry = childResult.firstEntry(); entry!=null ; entry = entry.next()){
+                        if(result.put(entry.getKey(), entry.value)!=null)
+                            nodeSetListener.discard(entry.getKey());
+                    }
+                }else
+                    result.putAll(childResult);
+            }else
                 result = childResult;
         }
         consumedResult();
@@ -412,6 +433,10 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             predicateResult = (Boolean)evaluation.getResult();
             assert predicateResult!=null : "evaluation result should be non-null";
             if(predicateResult==Boolean.FALSE){
+                if(nodeSetListener !=null){
+                    for(LongTreeMap.Entry<Object> entry = result.firstEntry(); entry!=null ; entry = entry.next())
+                        nodeSetListener.discard(entry.getKey());
+                }
                 result.clear();
                 if(stringEvaluations!=null){
                     for(Evaluation stringEval: stringEvaluations)
@@ -433,8 +458,11 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
                     stringEval.addListener(this);
                 }
                 consumeChildEvaluation(predicateEvaluation.order, resultItem);
-            }else
+            }else{
+                if(nodeSetListener !=null)
+                    nodeSetListener.discard(predicateEvaluation.order);
                 consumedResult();
+            }
         }else if(evaluation instanceof LocationEvaluation){
             LocationEvaluation locEval = (LocationEvaluation)evaluation;
             remove(locEval);
@@ -469,4 +497,6 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             finalResult = expression.getResult(result);
         return finalResult;
     }
+
+    public NodeSetListener nodeSetListener;
 }

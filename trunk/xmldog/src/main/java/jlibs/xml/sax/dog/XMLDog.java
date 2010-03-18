@@ -19,6 +19,7 @@ import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.Literal;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.nodset.LocationExpression;
+import jlibs.xml.sax.dog.expr.nodset.PathExpression;
 import jlibs.xml.sax.dog.path.Constraint;
 import jlibs.xml.sax.dog.path.PositionalPredicate;
 import jlibs.xml.sax.dog.path.Step;
@@ -95,6 +96,12 @@ public final class XMLDog{
                         if(member.scope()!=Scope.GLOBAL)
                             tempStack.add(member);
                     }
+                }else if(expr instanceof PathExpression){
+                    PathExpression pathExpr = (PathExpression)expr;
+                    if(pathExpr.union.getPredicate()!=null)
+                        tempStack.add(pathExpr.union.getPredicate());
+                    for(LocationExpression context: pathExpr.contexts)
+                        tempStack.add(context);
                 }
             }
         }

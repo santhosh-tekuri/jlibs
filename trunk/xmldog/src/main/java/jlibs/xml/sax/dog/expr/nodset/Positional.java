@@ -20,7 +20,6 @@ import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.Expression;
-import jlibs.xml.sax.dog.path.Step;
 import jlibs.xml.sax.dog.sniff.Event;
 
 
@@ -29,7 +28,6 @@ import jlibs.xml.sax.dog.sniff.Event;
  */
 public abstract class Positional extends Expression{
     public final boolean position;
-    public Step step;
     public Expression predicate;
 
     public Positional(boolean position){

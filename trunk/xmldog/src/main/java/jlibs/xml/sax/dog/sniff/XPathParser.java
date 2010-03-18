@@ -24,10 +24,12 @@ import jlibs.xml.sax.dog.expr.Variable;
 import jlibs.xml.sax.dog.expr.func.Function;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.func.Functions;
-import jlibs.xml.sax.dog.expr.nodset.*;
+import jlibs.xml.sax.dog.expr.nodset.ExactPosition;
+import jlibs.xml.sax.dog.expr.nodset.Language;
+import jlibs.xml.sax.dog.expr.nodset.Last;
+import jlibs.xml.sax.dog.expr.nodset.Position;
 import jlibs.xml.sax.dog.path.*;
 import jlibs.xml.sax.dog.path.tests.*;
-import jlibs.xml.sax.dog.path.tests.NamespaceURI;
 import org.jaxen.saxpath.Operator;
 import org.jaxen.saxpath.SAXPathException;
 import org.jaxen.saxpath.XPathHandler;
@@ -60,7 +62,7 @@ public final class XPathParser implements XPathHandler{
         frames.clear();
         peekFrame = null;
         stepStack.clear();
-        locationPathDepth = 0;
+        predicateDepth = 0;
         expr = null;
 
         reader.parse(xpath);
@@ -91,47 +93,36 @@ public final class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ LocationPath ]---------------------------------------------------*/
 
-    /**
-     * represents depath of current location path.<br>
-     * when location-path starts it is incremented. and decrement on end.<br>
-     *
-     * All relative location-paths that are depth 1 should be treated as absolute.
-     * for example:
-     *    "book/chapter/name" should be treated as "/book/chapter/name"
-     *    "sum(book/chapter/pages, book/chapter)" should be treated as "sum(/book/chapter/pages, /book/chapter)"
-     *
-     * i.e top level location paths should always be treated as absolute
-     */
-    private int locationPathDepth;
-
     @Override
     public void startAbsoluteLocationPath(){
-        locationPathDepth++;
         pushFrame();
     }
 
     @Override
     public void endAbsoluteLocationPath(){
-        endLocationPath(Scope.DOCUMENT);
+        endLocationPath(Scope.DOCUMENT, popFrame());
     }
 
     @Override
     public void startRelativeLocationPath(){
-        locationPathDepth++;
         pushFrame();
     }
 
     @Override
     public void endRelativeLocationPath(){
-        endLocationPath(locationPathDepth ==1 ? Scope.DOCUMENT : Scope.LOCAL);
+        ArrayDeque steps = popFrame();
+        int scope;
+        if(peekFrame.size()==2 && peekFrame.getFirst()==PATH_FLAG && peekFrame.getLast() instanceof LocationPath)
+            scope = Scope.LOCAL;
+        else
+            scope = predicateDepth==0 ? Scope.DOCUMENT : Scope.LOCAL;
+        endLocationPath(scope, steps);
     }
 
     @SuppressWarnings({"unchecked"})
-    private void endLocationPath(int scope){
-        locationPathDepth--;
-        ArrayDeque stack = popFrame();
-        LocationPath path = new LocationPath(scope, stack.size());
-        stack.toArray(path.steps);
+    private void endLocationPath(int scope, ArrayDeque steps){
+        LocationPath path = new LocationPath(scope, steps.size());
+        steps.toArray(path.steps);
         push(LocationPathAnalyzer.simplify(path));
     }
 
@@ -249,13 +240,30 @@ public final class XPathParser implements XPathHandler{
 
     /*-------------------------------------------------[ Predicate ]---------------------------------------------------*/
 
+    /**
+     * represents depth of current predicate.<br>
+     * when predicate starts it is incremented. and decrement on end.<br>
+     *
+     * All relative location-paths that are depth 0 should be treated as absolute.
+     * for example:
+     *    "book/chapter/name" should be treated as "/book/chapter/name"
+     *    "sum(book/chapter/pages, book/chapter)" should be treated as "sum(/book/chapter/pages, /book/chapter)"
+     *
+     * i.e top level location paths should always be treated as absolute
+     */
+    int predicateDepth;
+    
     @Override
-    public void startPredicate(){}
+    public void startPredicate(){
+        predicateDepth++;
+    }
 
     @Override
     public void endPredicate(){
+        predicateDepth--;
         Object predicate = pop();
-        Step step = (Step)peek();
+        Predicated predicated = (Predicated)peek();
+        Step step = predicated instanceof Step ? (Step)predicated : null;
 
         Expression predicateExpr;
         if(predicate instanceof Expression){
@@ -267,9 +275,10 @@ public final class XPathParser implements XPathHandler{
                     if(d!=pos)
                         predicateExpr = new Literal(Boolean.FALSE, DataType.BOOLEAN);
                     else{
-                        if(step.axis==Axis.SELF
+                        if(step!=null &&
+                                ( step.axis==Axis.SELF
                                 || ((step.axis==Axis.ATTRIBUTE || step.axis==Axis.NAMESPACE) && step.constraint instanceof QName)
-                                || step.getPredicate() instanceof ExactPosition)
+                                || step.getPredicate() instanceof ExactPosition))
                             predicateExpr = new Literal(pos==1, DataType.BOOLEAN);
                         else
                             predicateExpr = new ExactPosition(pos);
@@ -284,7 +293,7 @@ public final class XPathParser implements XPathHandler{
                 predicateExpr = Functions.typeCast(predicateExpr, DataType.BOOLEAN);
         }else
             predicateExpr = Functions.typeCast(predicate, DataType.BOOLEAN);
-        step.setPredicate(predicateExpr);
+        predicated.setPredicate(predicateExpr);
     }
 
     /*-------------------------------------------------[ Literals ]---------------------------------------------------*/
@@ -437,7 +446,7 @@ public final class XPathParser implements XPathHandler{
         int noOfParams = params.size();
         switch(noOfParams){
             case 0:{
-                LocationPath locationPath = locationPathDepth ==0 ? LocationPath.DOCUMENT_CONTEXT : LocationPath.LOCAL_CONTEXT;
+                LocationPath locationPath = predicateDepth==0 ? LocationPath.DOCUMENT_CONTEXT : LocationPath.LOCAL_CONTEXT;
                 Expression expr = locationPath.apply(name);
                 if(expr!=null)
                     return expr;
@@ -456,25 +465,6 @@ public final class XPathParser implements XPathHandler{
                         Expression expr = ((LocationPath)current).apply(name);
                         if(expr!=null)
                             return expr;
-                    }else if(current instanceof FunctionCall){
-                        FunctionCall currentFunctionCall = (FunctionCall)current;
-                        Function function = currentFunctionCall.function;
-                        if(function instanceof Functions.UnionFunction && function.resultType==DataType.NODESET){
-                            FunctionCall functionCall = null;
-                            int count = currentFunctionCall.members.length;
-                            for(int i=0; i< count; i++){
-                                LocationExpression expr = ((NodeSet)currentFunctionCall.members[i]).locationPath.apply(name);
-                                expr.rawResult = true;
-                                if(functionCall==null){
-                                    Functions.UnionFunction unionFunction = new Functions.UnionFunction(expr.resultType);
-                                    unionFunction.countFunction = "count".equals(name);
-                                    functionCall = new FunctionCall(unionFunction, count);
-                                }
-                                functionCall.addValidMember(expr, i);
-                            }
-                            assert functionCall!=null;
-                            return functionCall;
-                        }
                     }
                     FunctionCall functionCall = (FunctionCall)createFunction(name, 1);
                     functionCall.addMember(current, 0);
@@ -532,41 +522,10 @@ public final class XPathParser implements XPathHandler{
     public void endUnionExpr(boolean create){
         ArrayDeque stack = popFrame();
         if(create){
-            Object first = stack.pollFirst();
-            Object second = stack.pollFirst();
-            boolean union1 = first instanceof FunctionCall;
-            boolean union2 = second instanceof FunctionCall;
-
-            int count = 0;
-            if(union1)
-                count += ((FunctionCall)first).members.length;
-            else
-                count++;
-            if(union2)
-                count += ((FunctionCall)second).members.length;
-            else
-                count++;
-
-            int i = 0;
-
-            FunctionCall functionCall = new FunctionCall(new Functions.UnionFunction(DataType.NODESET), count);
-            if(union1){
-                for(Expression member: ((FunctionCall)first).members)
-                    functionCall.addMember(member, i++);
-            }else
-                functionCall.addMember(first, i++);
-            if(union2){
-                for(Expression member: ((FunctionCall)second).members)
-                    functionCall.addMember(member, i++);
-            }else
-                functionCall.addMember(second, i++);
-
-            assert i==count;
-
-            for(Expression member: functionCall.members)
-                ((LocationExpression)member).rawResult = true;
-
-            push(functionCall);
+            LocationPath result = new LocationPath(Scope.LOCAL, 0);
+            result.addToContext((LocationPath)stack.pollFirst());
+            result.addToContext((LocationPath)stack.pollFirst());
+            push(result);
         }else
             push(stack.peek());
     }
@@ -586,7 +545,7 @@ public final class XPathParser implements XPathHandler{
         push(obj);
     }
 
-    private static final Object PATH_FLAG = new Object();
+    private static final Object PATH_FLAG = "PATH_FLAG";
 
     @Override
     public void startPathExpr(){
@@ -595,10 +554,17 @@ public final class XPathParser implements XPathHandler{
 
     @Override
     public void endPathExpr(){
-        Object obj = pop();
-        if(pop()!=PATH_FLAG)
+        Object relative = pop();
+        Object context = pop();
+        if(relative instanceof LocationPath && context instanceof LocationPath){
+            ((LocationPath)relative).addToContext((LocationPath)context);
+            context = pop();
+        }
+        
+        if(context!=PATH_FLAG)
             throw new NotImplementedException("Path");
-        push(obj);
+        
+        push(relative);
     }
 
     @Override
