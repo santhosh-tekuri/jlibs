@@ -18,12 +18,16 @@ package jlibs.xml.sax.dog.path;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
+import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.nodset.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public final class LocationPath{
+public final class LocationPath extends Predicated{
     public static final LocationPath LOCAL_CONTEXT = new LocationPath(Scope.LOCAL, 0);
     public static final LocationPath DOCUMENT_CONTEXT = new LocationPath(Scope.DOCUMENT, 0);
     public static final LocationPath IMPOSSIBLE = new LocationPath(Scope.GLOBAL, 0);
@@ -36,6 +40,19 @@ public final class LocationPath{
         steps = new Step[noOfSteps];
     }
 
+    public final List<LocationPath> contexts = new ArrayList<LocationPath>();
+    
+    public void addToContext(LocationPath path){
+        if(path.contexts.size()>0)
+            contexts.addAll(path.contexts);
+        else
+            contexts.add(path);
+        if(path.predicate!=null){
+            setPredicate(path.predicate);
+            path.predicate = null;
+        }
+    }
+    
     public int enlargedScope(){
         if(scope==Scope.DOCUMENT && steps.length==0)
             return Scope.GLOBAL;
@@ -43,7 +60,15 @@ public final class LocationPath{
             return scope;
     }
 
-    public LocationExpression typeCast(DataType dataType){
+    public Expression typeCast(DataType dataType){
+        LocationExpression expr = _typeCast(dataType);
+        if(contexts.size()>0)
+            return new PathExpression(this, expr);
+        else
+            return expr;
+    }
+    
+    private LocationExpression _typeCast(DataType dataType){
         switch(dataType){
             case NODESET:
                 return new NodeSet(this);
@@ -62,7 +87,15 @@ public final class LocationPath{
         }
     }
 
-    public LocationExpression apply(String function){
+    public Expression apply(String function){
+        LocationExpression expr = _apply(function);
+        if(contexts.size()>0)
+            return new PathExpression(this, expr);
+        else
+            return expr;
+    }
+    
+    private LocationExpression _apply(String function){
         switch(function.length()){
             case 3:
                 if(function.equals("sum"))

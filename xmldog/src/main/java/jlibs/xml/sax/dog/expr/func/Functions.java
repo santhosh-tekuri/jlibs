@@ -15,7 +15,6 @@
 
 package jlibs.xml.sax.dog.expr.func;
 
-import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.path.LocationPath;
@@ -86,45 +85,6 @@ public class Functions{
                 return xpathFunction.evaluate(Arrays.asList(args));
             }catch(XPathFunctionException ex){
                 throw new RuntimeException(ex);
-            }
-        }
-    }
-
-    public static class UnionFunction extends Function{
-        public UnionFunction(DataType type){
-            super("|", type, true, type, type);
-        }
-
-        public boolean countFunction;
-
-        @Override
-        @SuppressWarnings({"unchecked", "UnnecessaryBoxing"})
-        public Object evaluate(Object... args){
-            LongTreeMap<Object> result = new LongTreeMap<Object>();
-            for(Object arg: args)
-                result.putAll((LongTreeMap<Object>)arg);
-
-            switch(resultType){
-                case NODESET:
-                case STRINGS:
-                case NUMBERS:
-                    return new ArrayList<Object>(result.values());
-                case NUMBER:
-                    if(countFunction)
-                        return new Double(result.size());
-                    else{
-                        double d = 0;
-                        for(LongTreeMap.Entry entry=result.firstEntry(); entry!=null; entry=entry.next())
-                            d += (Double)entry.value;
-                        return d;
-                    }
-                case BOOLEAN:
-                    return !result.isEmpty();
-                default:
-                    if(result.isEmpty())
-                        return resultType.defaultValue;
-                    else
-                        return result.firstEntry().value;
             }
         }
     }

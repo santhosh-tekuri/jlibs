@@ -78,15 +78,20 @@ public final class PredicateEvaluation extends LinkableEvaluation<LocationExpres
     protected void dispose(){
         if(resultItem instanceof Evaluation)
             ((Evaluation)resultItem).removeListener(this);
+        else if(nodeSetListener !=null)
+            nodeSetListener.discard(order);
 
-        if(booleanEvaluation!=null)
+        if(booleanEvaluation==null){
+            if(predicate.scope()==Scope.DOCUMENT)
+                event.removeListener(predicate, this);
+        }else
             booleanEvaluation.removeListener(this);
-        else if(predicate.scope()==Scope.DOCUMENT)
-            event.removeListener(predicate, this);
     }
 
     @Override
     public Object getResult(){
         throw new UnsupportedOperationException();
     }
+
+    public NodeSetListener nodeSetListener;
 }
