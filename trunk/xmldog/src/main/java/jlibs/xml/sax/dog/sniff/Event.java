@@ -340,6 +340,10 @@ public final class Event extends EvaluationListener{
             evaluationListener.disposed = true;
     }
 
+    public Object result(Expression expr){
+        return results[expr.id];
+    }
+    
     /*-------------------------------------------------[ OnEvent ]---------------------------------------------------*/
 
     private void onEvent(int type, String namespaceURI, String localName, String qualifiedName, String value){
