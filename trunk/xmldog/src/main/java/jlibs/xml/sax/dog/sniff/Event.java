@@ -24,7 +24,7 @@ import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.StaticEvaluation;
-import jlibs.xml.sax.dog.expr.nodset.LocationEvaluation;
+import jlibs.xml.sax.dog.expr.nodset.PositionTracker;
 import jlibs.xml.sax.dog.expr.nodset.StringEvaluation;
 import jlibs.xml.sax.dog.path.EventID;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
@@ -294,8 +294,10 @@ public final class Event extends EvaluationListener{
     public void finished(Evaluation evaluation){
         assert evaluation.expression.scope()==Scope.DOCUMENT;
         assert evaluation.getResult()!=null : "evaluation result shouldn't be null";
+        assert pendingExpressions>0;
 
         int id = evaluation.expression.id;
+        assert results[id]==null || results[id]==evaluation; // null for StaticEvaluation
         results[id] = evaluation.getResult();
 
         List<EvaluationListener> listeners = this.listeners[id];
@@ -376,8 +378,8 @@ public final class Event extends EvaluationListener{
         for(int i=noOfXPaths-1; i>=0; i--){
             Expression expression = exprList.get(i);
             Object result = expression.getResult(this);
-            results[i] = result;
             if(result instanceof Evaluation){
+                results[i] = result;
                 Evaluation eval = (Evaluation)result;
                 eval.addListener(this);
                 eval.start();
@@ -596,6 +598,6 @@ public final class Event extends EvaluationListener{
         }
     }
 
-    public ArrayDeque<LocationEvaluation> locationEvaluationStack = new ArrayDeque<LocationEvaluation>();
+    public ArrayDeque<PositionTracker> positionTrackerStack = new ArrayDeque<PositionTracker>();
     public StringEvaluation stringEvaluation;
 }

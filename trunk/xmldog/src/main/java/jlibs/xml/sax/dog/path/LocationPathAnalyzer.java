@@ -66,7 +66,7 @@ public class LocationPathAnalyzer{
         int lastAxis = -1;
         for(Step step: path.steps){
             // any step having predicate as false() returns nothing
-            if(step.impossible)
+            if(step.predicateSet.impossible)
                 return true;
 
             // following-sibling after attribute or namespace axis always returns nothing
@@ -86,8 +86,8 @@ public class LocationPathAnalyzer{
 
         for(int i=steps.length-1; i>=0; --i){
             Step step = steps[i];
-            if(step.axis==Axis.SELF && step.constraint.id==Constraint.ID_NODE && !step.hasPosition){
-                if(step.getPredicate()==null){
+            if(step.axis==Axis.SELF && step.constraint.id==Constraint.ID_NODE && !step.predicateSet.hasPosition){
+                if(step.predicateSet.getPredicate()==null){
                     steps[i] = null;
                     noOfNulls++;
                 }else{
@@ -112,7 +112,7 @@ public class LocationPathAnalyzer{
         for(int i=1, len=steps.length; i<len; i++){
             Step curStep = steps[i];
 
-            if(!curStep.hasPosition && prevStep.getPredicate()==null){
+            if(!curStep.predicateSet.hasPosition && prevStep.predicateSet.getPredicate()==null){
                 if(prevStep.axis==Axis.DESCENDANT_OR_SELF && prevStep.constraint.id==Constraint.ID_NODE){
                     if(curStep.axis==Axis.CHILD){
                         steps[i-1] = null;
@@ -138,7 +138,7 @@ public class LocationPathAnalyzer{
                     // if the step preceding attribute/namespace has no predicate and doing node() test,
                     // the test can be replaced with element() test
                     Step prevStep = steps[i-1];
-                    if(!prevStep.hasPosition && prevStep.constraint.id==Constraint.ID_NODE){
+                    if(!prevStep.predicateSet.hasPosition && prevStep.constraint.id==Constraint.ID_NODE){
                         steps[i-1] = new Step(prevStep.axis, Element.INSTANCE);
                         steps[i-1].setPredicate(prevStep);
                     }
@@ -148,7 +148,7 @@ public class LocationPathAnalyzer{
                     // if the step preceding child/decendant has no predicate and doing node() test,
                     // the test can be replaced with pnode() test
                     prevStep = steps[i-1];
-                    if(!prevStep.hasPosition && prevStep.constraint.id==Constraint.ID_NODE){
+                    if(!prevStep.predicateSet.hasPosition && prevStep.constraint.id==Constraint.ID_NODE){
                         steps[i-1] = new Step(prevStep.axis, ParentNode.INSTANCE);
                         steps[i-1].setPredicate(prevStep);
                     }

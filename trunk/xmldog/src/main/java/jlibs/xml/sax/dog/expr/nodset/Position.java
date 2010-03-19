@@ -28,7 +28,7 @@ public final class Position extends Positional{
     @Override
     public Object getResult(Event event){
         if(predicate==null)
-            return (double)event.locationEvaluationStack.peekFirst().position;
+            return (double)event.positionTrackerStack.peekFirst().position;
         else
             return super.getResult(event);
     }

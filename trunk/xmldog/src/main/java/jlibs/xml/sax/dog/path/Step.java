@@ -27,19 +27,15 @@ public class Step extends Predicated{
         this.constraint = constraint;
     }
 
-    public void setPredicate(Step step){
-        this.predicate = step.predicate;
-    }
-
     @Override
     public String toString(){
-        if(predicate==null)
+        if(predicateSet.predicate==null)
             return String.format("%s::%s", Axis.names[axis], constraint);
         else{
             StringBuilder buff = new StringBuilder();
-            for(PositionalPredicate positionPredicate=headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next)
+            for(PositionalPredicate positionPredicate=predicateSet.headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next)
                 buff.append('[').append(positionPredicate.predicate).append(']');
-            return String.format("%s::%s%s[%s]", Axis.names[axis], constraint, buff, predicate);
+            return String.format("%s::%s%s[%s]", Axis.names[axis], constraint, buff, predicateSet.predicate);
         }
     }
 }

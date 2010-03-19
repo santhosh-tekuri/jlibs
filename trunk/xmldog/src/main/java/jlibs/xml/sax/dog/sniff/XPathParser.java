@@ -278,7 +278,7 @@ public final class XPathParser implements XPathHandler{
                         if(step!=null &&
                                 ( step.axis==Axis.SELF
                                 || ((step.axis==Axis.ATTRIBUTE || step.axis==Axis.NAMESPACE) && step.constraint instanceof QName)
-                                || step.getPredicate() instanceof ExactPosition))
+                                || step.predicateSet.getPredicate() instanceof ExactPosition))
                             predicateExpr = new Literal(pos==1, DataType.BOOLEAN);
                         else
                             predicateExpr = new ExactPosition(pos);
@@ -293,7 +293,18 @@ public final class XPathParser implements XPathHandler{
                 predicateExpr = Functions.typeCast(predicateExpr, DataType.BOOLEAN);
         }else
             predicateExpr = Functions.typeCast(predicate, DataType.BOOLEAN);
-        predicated.setPredicate(predicateExpr);
+        
+        if(predicated instanceof LocationPath){
+            LocationPath path = (LocationPath)predicated;
+            if(path.contexts.size()==0){
+                LocationPath newPath = new LocationPath(Scope.LOCAL, 0);
+                newPath.contexts.add(path);
+                pop();
+                push(newPath);
+                predicated = newPath;
+            }
+        }
+        predicated.addPredicate(predicateExpr);
     }
 
     /*-------------------------------------------------[ Literals ]---------------------------------------------------*/
@@ -483,22 +494,24 @@ public final class XPathParser implements XPathHandler{
         if(noOfMembers==0){
             if(name.equals("position")){
                 Step step = stepStack.peekLast();
-                int axis = step.axis;
-                if(axis==Axis.SELF
-                        || ((axis==Axis.ATTRIBUTE || axis==Axis.NAMESPACE) && step.constraint instanceof QName)
-                        || step.getPredicate() instanceof ExactPosition)
-                    return new Literal(DataType.ONE, DataType.NUMBER);
-                else
-                    return new Position();
+                if(step!=null){
+                    int axis = step.axis;
+                    if(axis==Axis.SELF
+                            || ((axis==Axis.ATTRIBUTE || axis==Axis.NAMESPACE) && step.constraint instanceof QName)
+                            || step.predicateSet.getPredicate() instanceof ExactPosition)
+                        return new Literal(DataType.ONE, DataType.NUMBER);
+                }
+                return new Position();
             } else if(name.equals("last")){
                 Step step = stepStack.peekLast();
-                int axis = step.axis;
-                if(axis==Axis.SELF
-                        || ((axis==Axis.ATTRIBUTE || axis==Axis.NAMESPACE) && step.constraint instanceof QName)
-                        || step.getPredicate() instanceof ExactPosition)
-                    return new Literal(DataType.ONE, DataType.NUMBER);
-                else
-                    return new Last();
+                if(step!=null){
+                    int axis = step.axis;
+                    if(axis==Axis.SELF
+                            || ((axis==Axis.ATTRIBUTE || axis==Axis.NAMESPACE) && step.constraint instanceof QName)
+                            || step.predicateSet.getPredicate() instanceof ExactPosition)
+                        return new Literal(DataType.ONE, DataType.NUMBER);
+                }
+                return new Last();
             } else if(name.equals("true"))
                 return new Literal(Boolean.TRUE, DataType.BOOLEAN);
             else if(name.equals("false"))

@@ -15,8 +15,10 @@
 
 package jlibs.xml.sax.dog.expr.nodset;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.util.LongTreeMap;
+import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.Expression;
@@ -47,8 +49,8 @@ public class PathExpression extends Expression{
         this.relativeExpression = relativeExpression;
         relativeExpression.rawResult = true;
         
-        if(union.hasPosition)
-            throw new NotImplementedException("positional evaluations in path expressions");
+        if(union.hitExpression!=null)
+            union.hitExpression.pathExpression = this;
     }
 
 
@@ -70,11 +72,11 @@ public class PathExpression extends Expression{
                 buff.append(", ");
             buff.append(context);
         }
-        if(union.getPredicate()!=null){
+        if(union.predicateSet.getPredicate()!=null){
             buff.insert(0, '(');
             buff.append(')');
             buff.append('[');
-            buff.append(union.getPredicate());
+            buff.append(union.predicateSet.getPredicate());
             buff.append(']');
         }
         String relativePath = relativeExpression.locationPath.toString();
@@ -83,15 +85,36 @@ public class PathExpression extends Expression{
         else
             return String.format("%s(context(%s))", relativeExpression.getName(), buff);
     }
+
+    public static class HitExpression extends Expression{
+        public PathExpression pathExpression;
+        
+        public HitExpression(){
+            super(Scope.LOCAL, DataType.BOOLEAN);
+        }
+
+        @Override
+        public Object getResult(){
+            throw new ImpossibleException();
+        }
+
+        @Override
+        public Object getResult(Event event){
+            PathEvaluation pathEvaluation = (PathEvaluation)event.result(pathExpression);
+            return pathEvaluation.evaluations.get(event.order());
+        }
+    }
 }
 
 class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListener{
     private Event event;
 
+    private PositionTracker positionTracker;
     public PathEvaluation(PathExpression expression, Event event){
         super(expression, event.order());
         this.event = event;
         contextsPending = expression.contexts.length;
+        positionTracker = new PositionTracker(expression.union.predicateSet.headPositionalPredicate);
     }
 
     @Override
@@ -109,35 +132,46 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
     @Override
     public void mayHit(){
         long order = event.order();
-        LongTreeMap.Entry<EvaluationInfo> entry = evaluations.getEntry(order);
-        if(entry==null){
-            Expression predicate = expression.union.getPredicate();
+        EvaluationInfo evalInfo = evaluations.get(order);
+        if(evalInfo==null){
+            evaluations.put(order, evalInfo=new EvaluationInfo(expression.union.hitExpression, order));
+            
+            event.positionTrackerStack.addFirst(positionTracker);
+            positionTracker.addEvaluation(event);
+            
+            Expression predicate = expression.union.predicateSet.getPredicate();
             Object predicateResult = predicate==null ? Boolean.TRUE : event.evaluate(predicate);
             if(predicateResult==Boolean.TRUE){
                 Object r = event.evaluate(expression.relativeExpression);
                 if(r==null){
                     event.evaluation.addListener(this);
                     event.evaluation.start();
-                    evaluations.put(order, new EvaluationInfo(order, event.evaluation));
+                    evalInfo.eval = event.evaluation;
                 }else{
-                    evaluations.put(order, new EvaluationInfo(order, r));
+                    evalInfo.setResult(r);
                 }
             }else if(predicateResult==null){
                 Evaluation predicateEvaluation = event.evaluation;
                 Evaluation childEval = new PredicateEvaluation(expression.relativeExpression, event.order(), expression.relativeExpression.getResult(event), event, predicate, predicateEvaluation);
                 childEval.addListener(this);
                 childEval.start();
-                evaluations.put(order, new EvaluationInfo(order, childEval));
-            }
-        }else
-            entry.value.hitCount++;
+                evalInfo.eval = childEval;
+            }else
+                throw new ImpossibleException();
+        }
+        evalInfo.hitCount++;
+        
+        if(evalInfo.hitCount==1){
+            positionTracker.startEvaluation();
+            event.positionTrackerStack.pollFirst();
+        }
     }
 
     @Override
     public void discard(long order){
         LongTreeMap.Entry<EvaluationInfo> entry = evaluations.getEntry(order);
         if(entry!=null){
-            if(--entry.value.hitCount==0){
+            if(entry.value.discard()==0){
                 evaluations.deleteEntry(entry);
                 entry.value.eval.removeListener(this);
             }
@@ -148,22 +182,32 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
     @Override
     public void finished(){
         contextsPending--;
-        if(canFinish())
+        if(contextsPending==0){
+            if(expression.union.hitExpression!=null){
+                for(EvaluationInfo evalInfo: new ArrayList<EvaluationInfo>(evaluations.values()))
+                    evalInfo.finished();
+                positionTracker.expired();
+            }
+        }
+        tryToFinish();
+    }
+
+    private Object finalResult;
+    private void tryToFinish(){
+        if(finalResult==null){
+            if(contextsPending>0)
+                return;
+            for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next()){
+                if(entry.value.eval!=null)
+                    return;
+            }
+            finalResult = computeResult();
             fireFinished();
+        }
     }
-
-    private boolean canFinish(){
-        if(contextsPending>0)
-            return false;
-        for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
-            if(entry.value.eval!=null)
-                return false;
-        return true;
-    }
-
-    @Override
-    @SuppressWarnings({"unchecked", "UnnecessaryBoxing"})
-    public Object getResult(){
+    
+    @SuppressWarnings({"unchecked", "UnnecessaryBoxing"})    
+    public Object computeResult(){
         LongTreeMap result = new LongTreeMap();
         for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
             result.putAll(entry.value.result);
@@ -193,6 +237,11 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
     }
 
     @Override
+    public Object getResult(){
+        return finalResult;
+    }
+    
+    @Override
     @SuppressWarnings({"unchecked"})
     public void finished(Evaluation evaluation){
         LongTreeMap.Entry<EvaluationInfo> entry = evaluations.getEntry(evaluation.order);
@@ -216,29 +265,55 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
             }else
                 evaluations.deleteEntry(entry);
         }else{
-            entry.value.result = (LongTreeMap)evaluation.getResult();
+            Object r = evaluation.getResult();
+            if(r instanceof LongTreeMap)
+                entry.value.result = (LongTreeMap)r;
+            else
+                entry.value.setResult(r);
             entry.value.eval = null;
         }
-        if(canFinish())
-            fireFinished();
+        tryToFinish();
     }
 }
 
-class EvaluationInfo{
-    long order;
+class EvaluationInfo extends Evaluation<PathExpression.HitExpression>{
     Evaluation eval;
     LongTreeMap result;
-    int hitCount;
 
-    EvaluationInfo(long order, Evaluation eval){
-        this.order = order;
-        this.eval = eval;
+    EvaluationInfo(PathExpression.HitExpression expression, long order){
+        super(expression, order);
     }
-
+    
     @SuppressWarnings({"unchecked"})
-    EvaluationInfo(long order, Object result){
-        this.order = order;
-        this.result = new LongTreeMap<Object>();
+    public void setResult(Object result){
+        this.result = new LongTreeMap();
         this.result.put(order, result);
     }
+
+    public int hitCount;
+    private Boolean hit;
+
+    public int discard(){
+        if(--hitCount==0){
+            hit = Boolean.FALSE;
+            fireFinished();
+        }
+        return hitCount;
+    }
+
+    public void finished(){
+        hit = Boolean.TRUE;
+        fireFinished();
+    }
+    
+    @Override
+    public void start(){}
+
+    @Override
+    public Object getResult(){
+        return hit;
+    }
+
+    @Override
+    public void finished(Evaluation evaluation){}
 }
