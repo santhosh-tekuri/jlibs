@@ -32,7 +32,7 @@ public final class ExactPosition extends Positional{
     @Override
     public Object getResult(Event event){
         if(predicate==null)
-            return event.locationEvaluationStack.peekFirst().position==pos;
+            return event.positionTrackerStack.peekFirst().position==pos;
         else
             return super.getResult(event);
     }

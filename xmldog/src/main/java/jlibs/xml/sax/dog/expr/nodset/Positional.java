@@ -46,7 +46,7 @@ public abstract class Positional extends Expression{
 
     @Override
     public Object getResult(Event event){
-        return new PositionalEvaluation(this, event.order(), event.locationEvaluationStack.peekFirst());
+        return new PositionalEvaluation(this, event.order(), event.positionTrackerStack.peekFirst());
     }
 
     protected Object translate(Double result){
@@ -57,8 +57,8 @@ public abstract class Positional extends Expression{
 final class PositionalEvaluation extends Evaluation<Positional>{
     public PositionalEvaluation previous, next;
 
-    private LocationEvaluation locationEval;
-    protected PositionalEvaluation(Positional expression, long order, LocationEvaluation locationEval){
+    private PositionTracker locationEval;
+    protected PositionalEvaluation(Positional expression, long order, PositionTracker locationEval){
         super(expression, order);
         this.locationEval = locationEval;
     }

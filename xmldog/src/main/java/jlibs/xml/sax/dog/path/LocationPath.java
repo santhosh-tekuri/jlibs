@@ -47,12 +47,31 @@ public final class LocationPath extends Predicated{
             contexts.addAll(path.contexts);
         else
             contexts.add(path);
-        if(path.predicate!=null){
-            setPredicate(path.predicate);
-            path.predicate = null;
+        if(path.predicateSet.predicate!=null){
+            assert predicateSet.predicate==null;
+            predicateSet = path.predicateSet;
+            path.predicateSet = new PredicateSet();
+            
+            assert hitExpression==null;
+            hitExpression = path.hitExpression;
+            path.hitExpression = null;
         }
     }
+
+    public PathExpression.HitExpression hitExpression;
     
+    @Override
+    public void addPredicate(Expression predicate){
+        if(hitExpression==null && !predicateSet.hasPosition){
+            boolean hasPosition = predicateSet.hasPosition(predicate);
+            if(hasPosition){
+                hitExpression = new PathExpression.HitExpression();
+                super.addPredicate(hitExpression);
+            }
+        }
+        super.addPredicate(predicate);
+    }
+
     public int enlargedScope(){
         if(scope==Scope.DOCUMENT && steps.length==0)
             return Scope.GLOBAL;

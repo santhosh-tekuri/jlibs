@@ -23,7 +23,6 @@ import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.LinkableEvaluation;
 import jlibs.xml.sax.dog.path.AxisListener;
 import jlibs.xml.sax.dog.path.EventID;
-import jlibs.xml.sax.dog.path.PositionalPredicate;
 import jlibs.xml.sax.dog.path.Step;
 import jlibs.xml.sax.dog.sniff.Event;
 
@@ -44,7 +43,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
     private Evaluation predicateEvaluation;
     private Boolean predicateResult = Boolean.TRUE;
 
-    private PositionMatches positionMatchesHead;
+    private PositionTracker positionTracker;
 
     protected LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID){
         super(expression, event.order());
@@ -57,13 +56,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             stringEvaluations = new ArrayList<Evaluation>();
 
         currentStep = expression.locationPath.steps[stepIndex];
-        exactPosition = currentStep.getPredicate() instanceof ExactPosition;
-        PositionalPredicate positionPredicate = currentStep.headPositionalPredicate;
-        if(positionPredicate!=null){
-            PositionMatches positionMatches = positionMatchesHead = new PositionMatches(positionPredicate);
-            while((positionPredicate = positionPredicate.next)!=null)
-                positionMatches = positionMatches.next = new PositionMatches(positionPredicate);
-        }
+        exactPosition = currentStep.predicateSet.getPredicate() instanceof ExactPosition;
+        positionTracker = new PositionTracker(currentStep.predicateSet.headPositionalPredicate);
     }
 
     private LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID, Expression predicate, Evaluation predicateEvaluation){
@@ -83,7 +77,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         assert !finished;
 
         if(predicateEvaluation!=null){
-            Expression predicate = expression.locationPath.steps[index-1].getPredicate();
+            Expression predicate = expression.locationPath.steps[index-1].predicateSet.getPredicate();
             if(predicate.scope()!=Scope.DOCUMENT)
                 predicateEvaluation.start();
         }
@@ -93,12 +87,9 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
     private LinkableEvaluation pendingEvaluationHead, pendingEvaluationTail;
     private List<Evaluation> stringEvaluations;
 
-    protected int position;
-
     @Override
     public void onHit(EventID eventID){
         assert !finished : "getting events even after finish";
-        position++;
 
         final LocationExpression expression = this.expression;
         if(!lastStep){
@@ -107,18 +98,13 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         }
 
         final Event event = this.event;
-        event.locationEvaluationStack.addFirst(this);
 
-        if(positionMatchesHead!=null){
-            PositionMatches positionMatches = positionMatchesHead;
-            do{
-                positionMatches.addEvaluation(event);
-            }while((positionMatches=positionMatches.next)!=null);
-        }
+        event.positionTrackerStack.addFirst(positionTracker);
+        positionTracker.addEvaluation(event);
 
         LinkableEvaluation childEval = null;
 
-        Expression predicate = currentStep.getPredicate();
+        Expression predicate = currentStep.predicateSet.getPredicate();
         Object predicateResult = predicate==null ? Boolean.TRUE : event.evaluate(predicate);
         if(predicateResult==Boolean.TRUE){
             if(lastStep)
@@ -151,95 +137,12 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             childEval.start();
         }
 
-        if(positionMatchesHead!=null){
-            PositionMatches positionMatches = positionMatchesHead;
-            do{
-                positionMatches.startEvaluation();
-            }while((positionMatches=positionMatches.next)!=null);
-        }
-
-        event.locationEvaluationStack.pollFirst();
+        positionTracker.startEvaluation();
+        event.positionTrackerStack.pollFirst();
 
         if(exactPosition && predicateResult==Boolean.TRUE){
             manuallyExpired = true;
             expired();
-        }
-    }
-
-    private PositionMatches getPositionMatches(Expression predicate){
-        PositionMatches positionMatches = positionMatchesHead;
-        do{
-            if(positionMatches.predicate==predicate)
-                return positionMatches;
-        }while((positionMatches=positionMatches.next)!=null);
-
-        return null;
-    }
-
-    void addPositionListener(PositionalEvaluation evaluation){
-        PositionMatches positionMatches = getPositionMatches(evaluation.expression.predicate);
-        assert positionMatches.map.lastEntry().value==positionMatches.listeners;
-        positionMatches.listeners.addListener(evaluation);
-    }
-
-    void removePositionListener(PositionalEvaluation evaluation){
-        PositionMatches positionMatches = getPositionMatches(evaluation.expression.predicate);
-        PositionalListeners positionalListeners = positionMatches.map.get(evaluation.order);
-        if(positionalListeners==null)
-            evaluation.disposed = true;
-        else
-            positionalListeners.removeListener(evaluation);
-    }
-
-    private PositionalEvaluation lastListenerHead, lastListenerTail;
-    void addLastLitener(PositionalEvaluation evaluation){
-        Expression predicate = evaluation.expression.predicate;
-        if(predicate==null){
-            if(lastListenerTail==null)
-                lastListenerHead = lastListenerTail = evaluation;
-            else{
-                lastListenerTail.next = evaluation;
-                evaluation.previous = lastListenerTail;
-                lastListenerTail = evaluation;
-            }
-        }else{
-            PositionMatches matches = getPositionMatches(predicate);
-            if(matches.lastListenerTail==null)
-                matches.lastListenerHead = matches.lastListenerTail = evaluation;
-            else{
-                matches.lastListenerTail.next = evaluation;
-                evaluation.previous = matches.lastListenerTail;
-                matches.lastListenerTail = evaluation;
-            }
-        }
-    }
-
-    void removeLastLitener(PositionalEvaluation evaluation){
-        PositionalEvaluation prev = evaluation.previous;
-        PositionalEvaluation next = evaluation.next;
-
-        Expression predicate = evaluation.expression.predicate;
-        if(predicate==null){
-            if(prev!=null)
-                prev.next = next;
-            else
-                lastListenerHead = next;
-
-            if(next!=null)
-                next.previous = prev;
-            else
-                lastListenerTail = prev;
-        }else{
-            PositionMatches matches = getPositionMatches(predicate);
-            if(prev!=null)
-                prev.next = next;
-            else
-                matches.lastListenerHead = next;
-
-            if(next!=null)
-                next.previous = prev;
-            else
-                matches.lastListenerTail = prev;
         }
     }
 
@@ -252,20 +155,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         assert !expired;
         expired = true;
 
-        if(lastListenerHead!=null){
-            Double last = (double)position;
-            for(PositionalEvaluation lastEval=lastListenerHead; lastEval!=null; lastEval=lastEval.next)
-                lastEval.setResult(last);
-            lastListenerHead = lastListenerTail = null;
-        }
-
-        if(positionMatchesHead!=null){
-            PositionMatches positionMatches = positionMatchesHead;
-            do{
-                positionMatches.expired();
-            }while((positionMatches=positionMatches.next)!=null);
-        }
-
+        positionTracker.expired();
         if(pendingEvaluationHead==null)
             resultPrepared();
     }
@@ -283,7 +173,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         if(predicateResult!=null && (index!=0 || (stringEvaluations==null || stringEvaluations.size()==0)))
             finished();
         else if(result.size()==0 && predicateResult==null){ // when result is empty, there is no need to wait for predicateEvaluation to finish
-            Expression predicate = expression.locationPath.steps[index-1].getPredicate();
+            Expression predicate = expression.locationPath.steps[index-1].predicateSet.getPredicate();
             if(predicate.scope()!=Scope.DOCUMENT)
                 predicateEvaluation.removeListener(this);
             else

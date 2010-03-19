@@ -80,11 +80,11 @@ public final class XMLDog{
 
                 if(expr instanceof LocationExpression){
                     for(Step step: ((LocationExpression)expr).locationPath.steps){
-                        Expression predicate = step.getPredicate();
+                        Expression predicate = step.predicateSet.getPredicate();
                         if(predicate!=null){
                             if(predicate.scope()!=Scope.GLOBAL)
                                 tempStack.addLast(predicate);  
-                            for(PositionalPredicate positionPredicate=step.headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next){
+                            for(PositionalPredicate positionPredicate=step.predicateSet.headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next){
                                 if(positionPredicate.predicate.scope()!=Scope.GLOBAL)
                                     tempStack.addLast(positionPredicate.predicate);
                             }
@@ -98,10 +98,11 @@ public final class XMLDog{
                     }
                 }else if(expr instanceof PathExpression){
                     PathExpression pathExpr = (PathExpression)expr;
-                    if(pathExpr.union.getPredicate()!=null)
-                        tempStack.add(pathExpr.union.getPredicate());
+                    if(pathExpr.union.predicateSet.getPredicate()!=null)
+                        tempStack.add(pathExpr.union.predicateSet.getPredicate());
                     for(LocationExpression context: pathExpr.contexts)
                         tempStack.add(context);
+                    tempStack.add(pathExpr.relativeExpression);
                 }
             }
         }
