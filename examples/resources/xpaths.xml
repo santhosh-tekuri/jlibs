@@ -44,6 +44,16 @@
         <xpath>//xs:sequence/child::xs:any/@namespace</xpath>
         <xpath>name(/*/*/*)</xpath>
 
+        <xpath>(/xs:schema/xs:element/*)[@name][3]</xpath>
+        <xpath>(/xs:schema/xs:element/*)[3]</xpath>
+        <xpath>/xs:schema/xs:element | /xs:schema/xs:complexType | //xs:sequence</xpath>
+        <xpath>(/xs:schema/xs:element)//xs:sequence</xpath>
+        <xpath>(/xs:schema/xs:element | xs:schema/xs:complexType| //xs:sequence)/*</xpath>
+        <xpath>count((/xs:schema/xs:element)/*)</xpath>
+        <xpath>(/xs:schema/xs:element | /xs:schema/xs:complexType)[contains(@name, "Element")]/*</xpath>
+        <xpath>(/xs:schema/xs:element | /xs:schema/xs:complexType)[contains(@name, "Element")]</xpath>
+        <xpath>(/xs:schema/xs:element)[contains(@name, "Element")]</xpath>
+
         <xpath type="string">jlibs:reverse(string(/xs:schema//@name))</xpath>
     </testcase>
 
