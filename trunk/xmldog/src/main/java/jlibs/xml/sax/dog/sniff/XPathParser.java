@@ -570,6 +570,7 @@ public final class XPathParser implements XPathHandler{
         Object relative = pop();
         Object context = pop();
         if(relative instanceof LocationPath && context instanceof LocationPath){
+            ((LocationPath)relative).pathExpression = true;
             ((LocationPath)relative).addToContext((LocationPath)context);
             context = pop();
         }

@@ -26,6 +26,7 @@ import jlibs.xml.sax.dog.path.LocationPath;
 import jlibs.xml.sax.dog.sniff.Event;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO: simplify has to be implemented
@@ -34,7 +35,7 @@ import java.util.ArrayList;
  */
 public class PathExpression extends Expression{
     public final LocationPath union;
-    public final LocationExpression contexts[];
+    public final Expression contexts[];
     public final LocationExpression relativeExpression;
 
     public PathExpression(LocationPath union, LocationExpression relativeExpression){
@@ -42,9 +43,9 @@ public class PathExpression extends Expression{
         assert relativeExpression.scope()==Scope.LOCAL;
 
         this.union = union;
-        contexts = new LocationExpression[union.contexts.size()];
+        contexts = new Expression[union.contexts.size()];
         for(int i=0; i<contexts.length; i++)
-            contexts[i] = new NodeSet(union.contexts.get(i));
+            contexts[i] = union.contexts.get(i).typeCast(DataType.NODESET);
 
         this.relativeExpression = relativeExpression;
         relativeExpression.rawResult = true;
@@ -67,7 +68,7 @@ public class PathExpression extends Expression{
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(LocationExpression context: contexts){
+        for(Expression context: contexts){
             if(buff.length()>0)
                 buff.append(", ");
             buff.append(context);
@@ -119,11 +120,15 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
 
     @Override
     public void start(){
-        for(LocationExpression context: expression.contexts){
+        for(Expression context: expression.contexts){
             Object result = event.evaluate(context);
-            if(result==null)
-                ((LocationEvaluation)event.result(context)).nodeSetListener = this;
-            else
+            if(result==null){
+                Object eval = event.result(context);
+                if(eval instanceof LocationEvaluation)
+                    ((LocationEvaluation)eval).nodeSetListener = this;
+                else
+                    ((PathEvaluation)eval).nodeSetListener = this;
+            }else
                 throw new NotImplementedException();
         }
     }
@@ -134,7 +139,7 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
         long order = event.order();
         EvaluationInfo evalInfo = evaluations.get(order);
         if(evalInfo==null){
-            evaluations.put(order, evalInfo=new EvaluationInfo(expression.union.hitExpression, order));
+            evaluations.put(order, evalInfo=new EvaluationInfo(event, expression.union.hitExpression, order, nodeSetListener));
             
             event.positionTrackerStack.addFirst(positionTracker);
             positionTracker.addEvaluation(event);
@@ -147,12 +152,27 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
                     event.evaluation.addListener(this);
                     event.evaluation.start();
                     evalInfo.eval = event.evaluation;
+                    if(nodeSetListener!=null){
+                        if(event.evaluation instanceof LocationEvaluation)
+                            ((LocationEvaluation)event.evaluation).nodeSetListener = evalInfo;
+                        else
+                            ((PathEvaluation)event.evaluation).nodeSetListener = evalInfo;
+                    }
                 }else{
+                    if(nodeSetListener!=null)
+                        nodeSetListener.mayHit();
                     evalInfo.setResult(r);
                 }
             }else if(predicateResult==null){
                 Evaluation predicateEvaluation = event.evaluation;
-                Evaluation childEval = new PredicateEvaluation(expression.relativeExpression, event.order(), expression.relativeExpression.getResult(event), event, predicate, predicateEvaluation);
+                Object resultItem = expression.relativeExpression.getResult(event);
+                if(nodeSetListener!=null){
+                    if(resultItem instanceof LocationEvaluation)
+                        ((LocationEvaluation)resultItem).nodeSetListener = evalInfo;
+                    else
+                        ((PathEvaluation)resultItem).nodeSetListener = evalInfo;
+                }
+                Evaluation childEval = new PredicateEvaluation(expression.relativeExpression, event.order(), resultItem, event, predicate, predicateEvaluation);
                 childEval.addListener(this);
                 childEval.start();
                 evalInfo.eval = childEval;
@@ -173,7 +193,8 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
         if(entry!=null){
             if(entry.value.discard()==0){
                 evaluations.deleteEntry(entry);
-                entry.value.eval.removeListener(this);
+                if(entry.value.eval!=null)
+                    entry.value.eval.removeListener(this);
             }
         }
     }
@@ -185,7 +206,7 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
         if(contextsPending==0){
             if(expression.union.hitExpression!=null){
                 for(EvaluationInfo evalInfo: new ArrayList<EvaluationInfo>(evaluations.values()))
-                    evalInfo.finished();
+                    evalInfo.doFinish();
                 positionTracker.expired();
             }
         }
@@ -202,6 +223,8 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
                     return;
             }
             finalResult = computeResult();
+            if(nodeSetListener!=null)
+                nodeSetListener.finished();
             fireFinished();
         }
     }
@@ -262,8 +285,10 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
                     }
                     entry.value.eval = null;
                 }
-            }else
+            }else{
+                entry.value.doDiscards();
                 evaluations.deleteEntry(entry);
+            }
         }else{
             Object r = evaluation.getResult();
             if(r instanceof LongTreeMap)
@@ -274,14 +299,21 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
         }
         tryToFinish();
     }
+
+    public NodeSetListener nodeSetListener;
 }
 
-class EvaluationInfo extends Evaluation<PathExpression.HitExpression>{
+class EvaluationInfo extends Evaluation<PathExpression.HitExpression> implements NodeSetListener{
+    Event event;
     Evaluation eval;
     LongTreeMap result;
 
-    EvaluationInfo(PathExpression.HitExpression expression, long order){
+    EvaluationInfo(Event event, PathExpression.HitExpression expression, long order, NodeSetListener nodeSetListener){
         super(expression, order);
+        this.event = event;
+        this.nodeSetListener = nodeSetListener;
+        if(nodeSetListener!=null)
+            mayHits = new ArrayList<Long>();
     }
     
     @SuppressWarnings({"unchecked"})
@@ -296,14 +328,17 @@ class EvaluationInfo extends Evaluation<PathExpression.HitExpression>{
     public int discard(){
         if(--hitCount==0){
             hit = Boolean.FALSE;
-            fireFinished();
+            doDiscards();
+            if(listener!=null)
+                fireFinished();
         }
         return hitCount;
     }
 
-    public void finished(){
+    public void doFinish(){
         hit = Boolean.TRUE;
-        fireFinished();
+        if(listener!=null)
+            fireFinished();
     }
     
     @Override
@@ -316,4 +351,31 @@ class EvaluationInfo extends Evaluation<PathExpression.HitExpression>{
 
     @Override
     public void finished(Evaluation evaluation){}
+
+    /*-------------------------------------------------[ NodeSetListener ]---------------------------------------------------*/
+    
+    public NodeSetListener nodeSetListener;
+    private List<Long> mayHits;
+    
+    @Override
+    public void mayHit(){
+        mayHits.add(event.order());
+        nodeSetListener.mayHit();
+    }
+
+    public void doDiscards(){
+        if(nodeSetListener!=null){
+            for(long order: mayHits)
+                nodeSetListener.discard(order);
+        }
+    }
+    
+    @Override
+    public void discard(long order){
+        mayHits.remove(order);
+        nodeSetListener.discard(order);
+    }
+
+    @Override
+    public void finished(){}
 }

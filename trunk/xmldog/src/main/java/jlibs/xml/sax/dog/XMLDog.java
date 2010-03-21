@@ -100,7 +100,7 @@ public final class XMLDog{
                     PathExpression pathExpr = (PathExpression)expr;
                     if(pathExpr.union.predicateSet.getPredicate()!=null)
                         tempStack.add(pathExpr.union.predicateSet.getPredicate());
-                    for(LocationExpression context: pathExpr.contexts)
+                    for(Expression context: pathExpr.contexts)
                         tempStack.add(context);
                     tempStack.add(pathExpr.relativeExpression);
                 }

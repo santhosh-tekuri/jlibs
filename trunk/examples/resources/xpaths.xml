@@ -54,6 +54,9 @@
         <xpath>(/xs:schema/xs:element | /xs:schema/xs:complexType)[contains(@name, "Element")]</xpath>
         <xpath>(/xs:schema/xs:element)[contains(@name, "Element")]</xpath>
 
+        <xpath>((/xs:schema/xs:element/*)[3]/xs:sequence)/*</xpath>
+        <xpath>((/xs:schema/xs:element/*)[3])/*</xpath>
+
         <xpath type="string">jlibs:reverse(string(/xs:schema//@name))</xpath>
     </testcase>
 
