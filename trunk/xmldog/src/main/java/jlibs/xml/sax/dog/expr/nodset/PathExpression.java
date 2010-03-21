@@ -107,7 +107,7 @@ public class PathExpression extends Expression{
     }
 }
 
-class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListener{
+final class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListener{
     private Event event;
 
     private PositionTracker positionTracker;
@@ -300,10 +300,10 @@ class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListen
         tryToFinish();
     }
 
-    public NodeSetListener nodeSetListener;
+    private NodeSetListener nodeSetListener;
 }
 
-class EvaluationInfo extends Evaluation<PathExpression.HitExpression> implements NodeSetListener{
+final class EvaluationInfo extends Evaluation<PathExpression.HitExpression> implements NodeSetListener{
     Event event;
     Evaluation eval;
     LongTreeMap result;
