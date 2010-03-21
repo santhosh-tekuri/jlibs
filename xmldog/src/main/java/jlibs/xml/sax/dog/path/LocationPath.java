@@ -16,6 +16,7 @@
 package jlibs.xml.sax.dog.path;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Expression;
@@ -34,6 +35,7 @@ public final class LocationPath extends Predicated{
 
     public final int scope;
     public final Step steps[];
+    public boolean pathExpression;
 
     public LocationPath(int scope, int noOfSteps){
         this.scope = scope;
@@ -43,11 +45,13 @@ public final class LocationPath extends Predicated{
     public final List<LocationPath> contexts = new ArrayList<LocationPath>();
     
     public void addToContext(LocationPath path){
-        if(path.contexts.size()>0)
+//        if(path.pathExpression)
+//            throw new NotImplementedException("nested path expressions");
+        if(!path.pathExpression && path.contexts.size()>0)
             contexts.addAll(path.contexts);
         else
             contexts.add(path);
-        if(path.predicateSet.predicate!=null){
+        if(!path.pathExpression && path.predicateSet.predicate!=null){
             assert predicateSet.predicate==null;
             predicateSet = path.predicateSet;
             path.predicateSet = new PredicateSet();

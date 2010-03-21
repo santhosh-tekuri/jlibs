@@ -32,7 +32,7 @@ public abstract class Evaluation<X extends Expression> extends EvaluationListene
 
     /*-------------------------------------------------[ Listener Support ]---------------------------------------------------*/
 
-    private EvaluationListener listener;
+    protected EvaluationListener listener;
 
     public void addListener(EvaluationListener listener){
         this.listener = listener;

@@ -343,6 +343,7 @@ public final class Event extends EvaluationListener{
     }
 
     public Object result(Expression expr){
+        assert expr.scope()==Scope.DOCUMENT;
         return results[expr.id];
     }
     
