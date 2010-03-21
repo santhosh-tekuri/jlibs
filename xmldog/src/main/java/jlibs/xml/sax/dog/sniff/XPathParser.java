@@ -185,7 +185,7 @@ public final class XPathParser implements XPathHandler{
         if(star && prefix.length()==0)
             constraint = Star.INSTANCE;
         else{
-            String uri = nsContext.getNamespaceURI(prefix);
+            String uri = (axis==org.jaxen.saxpath.Axis.ATTRIBUTE && prefix.length()==0) ? "" : nsContext.getNamespaceURI(prefix);
             if(uri==null)
                 throw new SAXPathException("undeclared prefix: " + prefix);
             constraint = star ? namespaceURIStub.get(uri) : qnameStub.get(uri, localName);
@@ -251,7 +251,7 @@ public final class XPathParser implements XPathHandler{
      *
      * i.e top level location paths should always be treated as absolute
      */
-    int predicateDepth;
+    private int predicateDepth;
     
     @Override
     public void startPredicate(){
@@ -263,7 +263,6 @@ public final class XPathParser implements XPathHandler{
         predicateDepth--;
         Object predicate = pop();
         Predicated predicated = (Predicated)peek();
-        Step step = predicated instanceof Step ? (Step)predicated : null;
 
         Expression predicateExpr;
         if(predicate instanceof Expression){
@@ -275,6 +274,7 @@ public final class XPathParser implements XPathHandler{
                     if(d!=pos)
                         predicateExpr = new Literal(Boolean.FALSE, DataType.BOOLEAN);
                     else{
+                        Step step = predicated instanceof Step ? (Step)predicated : null;
                         if(step!=null &&
                                 ( step.axis==Axis.SELF
                                 || ((step.axis==Axis.ATTRIBUTE || step.axis==Axis.NAMESPACE) && step.constraint instanceof QName)
