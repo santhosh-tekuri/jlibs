@@ -44,6 +44,8 @@ public class XMLDogTest{
         SAXUtil.newSAXParser(true, false, false).parse(new InputSource(args[0]), new DefaultHandler(){
             @Override
             public void startPrefixMapping(String prefix, String uri) throws SAXException{
+                if(uri.length()>0 && prefix.length()==0)
+                    prefix = "ns";
                 if(nsContext.getPrefix(uri)==null){
                     String _uri = nsContext.getNamespaceURI(prefix);
                     if(_uri!=null && _uri.length()>0){
