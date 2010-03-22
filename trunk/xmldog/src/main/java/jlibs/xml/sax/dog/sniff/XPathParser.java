@@ -185,7 +185,7 @@ public final class XPathParser implements XPathHandler{
         if(star && prefix.length()==0)
             constraint = Star.INSTANCE;
         else{
-            String uri = (axis==org.jaxen.saxpath.Axis.ATTRIBUTE && prefix.length()==0) ? "" : nsContext.getNamespaceURI(prefix);
+            String uri = prefix.length()==0 ? "" : nsContext.getNamespaceURI(prefix);
             if(uri==null)
                 throw new SAXPathException("undeclared prefix: " + prefix);
             constraint = star ? namespaceURIStub.get(uri) : qnameStub.get(uri, localName);
@@ -418,11 +418,11 @@ public final class XPathParser implements XPathHandler{
 
     @Override
     public void startFunction(String prefix, String name) throws SAXPathException{
-        String uri = nsContext.getNamespaceURI(prefix);
+        String uri = prefix.length()==0 ? "": nsContext.getNamespaceURI(prefix);
         if(uri==null)
             throw new SAXPathException("undeclared prefix: " + prefix);
 
-        if(uri.length()==0 && functionResolver==null)
+        if(uri.length()>0 && functionResolver==null)
             throw new SAXPathException("FunctionResolver is required");
         
         pushFrame();
@@ -583,7 +583,7 @@ public final class XPathParser implements XPathHandler{
 
     @Override
     public void variableReference(String prefix, String variableName) throws SAXPathException{
-        String uri = nsContext.getNamespaceURI(prefix);
+        String uri = prefix.length()==0 ? "": nsContext.getNamespaceURI(prefix);
         if(uri==null)
             throw new SAXPathException("undeclared prefix: " + prefix);
 
