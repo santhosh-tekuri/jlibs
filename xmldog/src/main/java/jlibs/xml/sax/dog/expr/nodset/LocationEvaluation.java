@@ -57,7 +57,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
         currentStep = expression.locationPath.steps[stepIndex];
         exactPosition = currentStep.predicateSet.getPredicate() instanceof ExactPosition;
-        positionTracker = new PositionTracker(currentStep.predicateSet.headPositionalPredicate);
+        if(currentStep.predicateSet.headPositionalPredicate!=null)
+            positionTracker = new PositionTracker(currentStep.predicateSet.headPositionalPredicate);
     }
 
     private LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID, Expression predicate, Evaluation predicateEvaluation){
@@ -99,9 +100,10 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
         final Event event = this.event;
 
-        event.positionTrackerStack.addFirst(positionTracker);
-        positionTracker.addEvaluation(event);
-
+        if(positionTracker!=null){
+            event.positionTrackerStack.addFirst(positionTracker);
+            positionTracker.addEvaluation(event);
+        }
         LinkableEvaluation childEval = null;
 
         Expression predicate = currentStep.predicateSet.getPredicate();
@@ -137,9 +139,10 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
             childEval.start();
         }
 
-        positionTracker.startEvaluation();
-        event.positionTrackerStack.pollFirst();
-
+        if(positionTracker!=null){
+            positionTracker.startEvaluation();
+            event.positionTrackerStack.pollFirst();
+        }
         if(exactPosition && predicateResult==Boolean.TRUE){
             manuallyExpired = true;
             expired();
@@ -155,7 +158,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
         assert !expired;
         expired = true;
 
-        positionTracker.expired();
+        if(positionTracker!=null)
+            positionTracker.expired();
         if(pendingEvaluationHead==null)
             resultPrepared();
     }
