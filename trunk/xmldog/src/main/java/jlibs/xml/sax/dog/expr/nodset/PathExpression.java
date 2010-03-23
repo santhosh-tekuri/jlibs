@@ -115,7 +115,8 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         super(expression, event.order());
         this.event = event;
         contextsPending = expression.contexts.length;
-        positionTracker = new PositionTracker(expression.union.predicateSet.headPositionalPredicate);
+        if(expression.union.predicateSet.headPositionalPredicate!=null)
+            positionTracker = new PositionTracker(expression.union.predicateSet.headPositionalPredicate);
     }
 
     @Override
@@ -141,9 +142,10 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         if(evalInfo==null){
             evaluations.put(order, evalInfo=new EvaluationInfo(event, expression.union.hitExpression, order, nodeSetListener));
             
-            event.positionTrackerStack.addFirst(positionTracker);
-            positionTracker.addEvaluation(event);
-            
+            if(positionTracker!=null){
+                event.positionTrackerStack.addFirst(positionTracker);
+                positionTracker.addEvaluation(event);
+            }
             Expression predicate = expression.union.predicateSet.getPredicate();
             Object predicateResult = predicate==null ? Boolean.TRUE : event.evaluate(predicate);
             if(predicateResult==Boolean.TRUE){
@@ -181,7 +183,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         }
         evalInfo.hitCount++;
         
-        if(evalInfo.hitCount==1){
+        if(evalInfo.hitCount==1 && positionTracker!=null){
             positionTracker.startEvaluation();
             event.positionTrackerStack.pollFirst();
         }
@@ -207,7 +209,8 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
             if(expression.union.hitExpression!=null){
                 for(EvaluationInfo evalInfo: new ArrayList<EvaluationInfo>(evaluations.values()))
                     evalInfo.doFinish();
-                positionTracker.expired();
+                if(positionTracker!=null)
+                    positionTracker.expired();
             }
         }
         tryToFinish();
