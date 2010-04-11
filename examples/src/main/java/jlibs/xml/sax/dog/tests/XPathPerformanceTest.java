@@ -99,6 +99,9 @@ public class XPathPerformanceTest{
     }
 
     public static void main(String[] args) throws Exception{
+        if(args.length==0)
+            args = new String[]{ TestSuite.DEFAULT_TEST_SUITE };
+
         if(args.length==1){
             JavaProcessBuilder jvm = new JavaProcessBuilder()
                     .jvmArg("-server")
