@@ -30,11 +30,13 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class TestSuite{
+    public static final String DEFAULT_TEST_SUITE = "../resources/xpaths.xml";
+    
     public List<TestCase> testCases = new ArrayList<TestCase>();
     public int total;
 
     public TestSuite() throws Exception{
-        this("../resources/xpaths.xml");
+        this(DEFAULT_TEST_SUITE);
     }
     
     public TestSuite(String configFile) throws Exception{
