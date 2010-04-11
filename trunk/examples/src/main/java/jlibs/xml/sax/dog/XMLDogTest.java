@@ -87,7 +87,10 @@ public class XMLDogTest{
         System.out.println("|          XPath-Results                |");
         System.out.println("=========================================");
         System.out.println();
+        long time = System.nanoTime();
         XPathResults results = dog.sniff(new InputSource(args[0]));
+        time = System.nanoTime() - time;
         results.print(expressions, System.out);
+        System.out.println("Evaluated in "+(long)(time*1E-06)+" milliseconds");
     }
 }
