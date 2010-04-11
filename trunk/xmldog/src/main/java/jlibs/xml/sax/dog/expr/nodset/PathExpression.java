@@ -115,7 +115,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         super(expression, event.order());
         this.event = event;
         contextsPending = expression.contexts.length;
-        if(expression.union.predicateSet.headPositionalPredicate!=null)
+        if(expression.union.predicateSet.hasPosition)
             positionTracker = new PositionTracker(expression.union.predicateSet.headPositionalPredicate);
     }
 

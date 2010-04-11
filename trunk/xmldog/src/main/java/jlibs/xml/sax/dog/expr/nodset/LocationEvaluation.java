@@ -57,7 +57,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
 
         currentStep = expression.locationPath.steps[stepIndex];
         exactPosition = currentStep.predicateSet.getPredicate() instanceof ExactPosition;
-        if(currentStep.predicateSet.headPositionalPredicate!=null)
+        if(currentStep.predicateSet.hasPosition)
             positionTracker = new PositionTracker(currentStep.predicateSet.headPositionalPredicate);
     }
 
