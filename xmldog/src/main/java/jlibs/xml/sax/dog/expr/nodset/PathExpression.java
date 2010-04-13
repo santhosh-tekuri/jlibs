@@ -154,6 +154,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
                     event.evaluation.addListener(this);
                     event.evaluation.start();
                     evalInfo.eval = event.evaluation;
+                    pendingCount++;
                     if(nodeSetListener!=null){
                         if(event.evaluation instanceof LocationEvaluation)
                             ((LocationEvaluation)event.evaluation).nodeSetListener = evalInfo;
@@ -178,6 +179,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
                 childEval.addListener(this);
                 childEval.start();
                 evalInfo.eval = childEval;
+                pendingCount++;
             }else
                 throw new ImpossibleException();
         }
@@ -195,8 +197,10 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         if(entry!=null){
             if(entry.value.discard()==0){
                 evaluations.deleteEntry(entry);
-                if(entry.value.eval!=null)
+                if(entry.value.eval!=null){
+                    pendingCount--;
                     entry.value.eval.removeListener(this);
+                }
             }
         }
     }
@@ -216,19 +220,28 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         tryToFinish();
     }
 
+    private int pendingCount;
+    private int pendingCount(){
+        int count = 0;
+        for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next()){
+            if(entry.value.eval!=null)
+                count++;
+        }
+        return count;
+    }
+    
     private Object finalResult;
     private void tryToFinish(){
         if(finalResult==null){
             if(contextsPending>0)
                 return;
-            for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next()){
-                if(entry.value.eval!=null)
-                    return;
+            assert pendingCount==pendingCount();
+            if(pendingCount==0){
+                finalResult = computeResult();
+                if(nodeSetListener!=null)
+                    nodeSetListener.finished();
+                fireFinished();
             }
-            finalResult = computeResult();
-            if(nodeSetListener!=null)
-                nodeSetListener.finished();
-            fireFinished();
         }
     }
     
@@ -287,10 +300,13 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
                         entry.value.result.put(evaluation.order, predicateEvaluation.result);
                     }
                     entry.value.eval = null;
+                    pendingCount--;
                 }
             }else{
                 entry.value.doDiscards();
                 evaluations.deleteEntry(entry);
+                if(entry.value.eval!=null)
+                    pendingCount--;
             }
         }else{
             Object r = evaluation.getResult();
@@ -299,6 +315,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
             else
                 entry.value.setResult(r);
             entry.value.eval = null;
+            pendingCount--;
         }
         tryToFinish();
     }
