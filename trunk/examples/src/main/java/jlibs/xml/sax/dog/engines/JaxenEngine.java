@@ -18,6 +18,7 @@ package jlibs.xml.sax.dog.engines;
 import jlibs.xml.ClarkName;
 import jlibs.xml.sax.dog.TestCase;
 import jlibs.xml.sax.dog.XPathEngine;
+import jlibs.xml.sax.dog.XPathInfo;
 import org.jaxen.*;
 import org.jaxen.dom.DOMXPath;
 import org.w3c.dom.Document;
@@ -77,8 +78,8 @@ public class JaxenEngine extends XPathEngine{
         };
 
         List<Object> results = new ArrayList<Object>(testCase.xpaths.size());
-        for(String xpath : testCase.xpaths){
-            DOMXPath xpathObj = new DOMXPath(xpath);
+        for(XPathInfo xpathInfo : testCase.xpaths){
+            DOMXPath xpathObj = new DOMXPath(xpathInfo.xpath);
             xpathObj.setVariableContext(variableContext);
             xpathObj.setFunctionContext(functionContext);
             xpathObj.setNamespaceContext(jaxenNSContext);

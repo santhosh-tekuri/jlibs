@@ -24,7 +24,9 @@ import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 import java.io.CharArrayWriter;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -71,51 +73,6 @@ public class TestSuite{
     }
 
     /*-------------------------------------------------[ Loading ]---------------------------------------------------*/
-    
-    private static HashMap<QName, List<String>> types = new HashMap<QName, List<String>>();
-    static{
-        List<String> list = new ArrayList<String>();
-        list.add("name(");
-        list.add("local-name(");
-        list.add("namespace-uri(");
-        list.add("string(");
-        list.add("substring(");
-        list.add("substring-after(");
-        list.add("substring-before(");
-        list.add("normalize-space(");
-        list.add("concat(");
-        list.add("translate(");
-        list.add("upper-case(");
-        list.add("lower-case(");
-        types.put(XPathConstants.STRING, list);
-
-        list = new ArrayList<String>();
-        list.add("number(");
-        list.add("sum(");
-        list.add("count(");
-        list.add("string-length(");
-        types.put(XPathConstants.NUMBER, list);
-
-        list = new ArrayList<String>();
-        list.add("boolean(");
-        list.add("true(");
-        list.add("false(");
-        list.add("not(");
-        list.add("contains(");
-        list.add("starts-with(");
-        list.add("ends-with(");
-        types.put(XPathConstants.BOOLEAN, list);
-    }
-
-    private QName getResultType(String xpath){
-        for(Map.Entry<QName, List<String>> entry: types.entrySet()){
-            for(String str: entry.getValue()){
-                if(xpath.startsWith(str))
-                    return entry.getKey();
-            }
-        }
-        return XPathConstants.NODESET;
-    }
 
     public void readTestCases(final String configFile) throws Exception{
         new NamespaceSupportReader(true).parse(configFile, new SAXHandler(){
@@ -124,6 +81,7 @@ public class TestSuite{
             TestCase testCase;
             CharArrayWriter contents = new CharArrayWriter();
             QName variableName;
+            XPathInfo xpathInfo;
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
@@ -141,16 +99,17 @@ public class TestSuite{
                     if(nsSupport.getURI("")!=null)
                         testCase.nsContext.declarePrefix("", nsSupport.getURI(""));
                 }else if(localName.equals("xpath")){
+                    xpathInfo = new XPathInfo();
                     String type = attributes.getValue("type");
                     if(type!=null){
                         if(type.equals("nodeset"))
-                            testCase.resultTypes.add(XPathConstants.NODESET);
+                            xpathInfo.resultType = XPathConstants.NODESET;
                         else if(type.equals("string"))
-                            testCase.resultTypes.add(XPathConstants.STRING);
+                            xpathInfo.resultType = XPathConstants.STRING;
                         else if(type.equals("number"))
-                            testCase.resultTypes.add(XPathConstants.NUMBER);
+                            xpathInfo.resultType = XPathConstants.NUMBER;
                         else if(type.equals("boolean"))
-                            testCase.resultTypes.add(XPathConstants.BOOLEAN);
+                            xpathInfo.resultType = XPathConstants.BOOLEAN;
                     }
 
                     String value = attributes.getValue("generate");
@@ -180,36 +139,25 @@ public class TestSuite{
                         files.add(file);
                 }else if(localName.equals("xpath")){
                     String xpath = contents.toString().trim();
-                    testCase.xpaths.add(xpath);
-                    if(testCase.resultTypes.size()!=testCase.xpaths.size())
-                        testCase.resultTypes.add(getResultType(xpath));
+                    xpathInfo.xpath = xpath;
+                    if(xpathInfo.resultType==null)
+                        xpathInfo.guessResultType();;
+                    testCase.xpaths.add(xpathInfo);
 
                     if(generateNewXPathsGlobal && generateNewXPathsCurrent){
-                        QName resultType = testCase.resultTypes.get(testCase.resultTypes.size()-1);
-                        if(resultType.equals(XPathConstants.NODESET)){
+                        if(xpathInfo.resultType.equals(XPathConstants.NODESET)){
                             if(xpath.indexOf("namespace::")==-1){
-                                testCase.xpaths.add("name("+xpath+")");
-                                testCase.resultTypes.add(XPathConstants.STRING);
-                                testCase.xpaths.add("local-name("+xpath+")");
-                                testCase.resultTypes.add(XPathConstants.STRING);
-                                testCase.xpaths.add("namespace-uri("+xpath+")");
-                                testCase.resultTypes.add(XPathConstants.STRING);
-                                testCase.xpaths.add("string("+xpath+")");
-                                testCase.resultTypes.add(XPathConstants.STRING);
+                                testCase.xpaths.add(new XPathInfo("name("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo("local-name("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo("namespace-uri("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo("string("+xpath+")", XPathConstants.STRING));
 
-                                testCase.xpaths.add(xpath+"[1]");
-                                testCase.resultTypes.add(XPathConstants.NODESET);
-                                
-                                testCase.xpaths.add(xpath+"[last()]");
-                                testCase.resultTypes.add(XPathConstants.NODESET);
-
-                                testCase.xpaths.add(xpath+"[position()>1 and position()<last()]");
-                                testCase.resultTypes.add(XPathConstants.NODESET);
+                                testCase.xpaths.add(new XPathInfo(xpath+"[1]", XPathConstants.NODESET));
+                                testCase.xpaths.add(new XPathInfo(xpath+"[last()]", XPathConstants.NODESET));
+                                testCase.xpaths.add(new XPathInfo(xpath+"[position()>1 and position()<last()]", XPathConstants.NODESET));
                             }
-                            testCase.xpaths.add("count("+xpath+")");
-                            testCase.resultTypes.add(XPathConstants.NUMBER);
-                            testCase.xpaths.add("boolean("+xpath+")");
-                            testCase.resultTypes.add(XPathConstants.BOOLEAN);
+                            testCase.xpaths.add(new XPathInfo("count("+xpath+")", XPathConstants.NUMBER));
+                            testCase.xpaths.add(new XPathInfo("boolean("+xpath+")", XPathConstants.BOOLEAN));
                         }
                     }
                 }else if(localName.equals("testcase")){
@@ -219,7 +167,6 @@ public class TestSuite{
                         t.file = file;
                         t.nsContext = testCase.nsContext;
                         t.xpaths = testCase.xpaths;
-                        t.resultTypes = testCase.resultTypes;
                         testCases.add(t);
                         total += t.xpaths.size();
                     }

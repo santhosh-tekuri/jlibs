@@ -16,12 +16,10 @@
 package jlibs.xml.sax.dog;
 
 import jlibs.xml.DefaultNamespaceContext;
-import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.sax.dog.engines.SaxonEngine;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
 
-import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFunctionResolver;
 import java.util.*;
@@ -31,17 +29,15 @@ import java.util.*;
  */
 public class TestCase{
     static final boolean useSTAX = false;
-//    public static XPathEngine domEngine = new JDKEngine(new com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl());
-//    public static XPathEngine domEngine = new JDKEngine(new org.apache.xpath.jaxp.XPathFactoryImpl());
-//    public static XPathEngine domEngine = new JDKEngine(new net.sf.saxon.xpath.XPathFactoryImpl());
-    public static XPathEngine domEngine = new SaxonEngine();
-//    public static XPathEngine domEngine = new JaxenEngine();
+    public static XPathEngine domEngine =
+//            new JDKEngine(new com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl());
+//            new JDKEngine(new org.apache.xpath.jaxp.XPathFactoryImpl());
+//            new JDKEngine(new net.sf.saxon.xpath.XPathFactoryImpl());
+            new SaxonEngine();
+//            new JaxenEngine();
 
     public String file;
-    public List<String> xpaths = new ArrayList<String>();
-    public List<QName> resultTypes = new ArrayList<QName>();
-    public List<Integer> hasAttributes = new ArrayList<Integer>();
-    public List<Integer> hasNamespaces = new ArrayList<Integer>();
+    public List<XPathInfo> xpaths = new ArrayList<XPathInfo>();
     public DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
     public DefaultNamespaceContext resultNSContext = new DefaultNamespaceContext();
     public DefaultXPathVariableResolver variableResolver = new DefaultXPathVariableResolver();
@@ -56,10 +52,8 @@ public class TestCase{
     public List<Object> usingXMLDog() throws Exception{
         XMLDog dog = new XMLDog(nsContext, variableResolver, functionResolver);
         Expression expressions[] = new Expression[xpaths.size()];
-        for(int i=0; i<xpaths.size(); i++){
-            expressions[i] = dog.addXPath(xpaths.get(i));
-            resultTypes.add(expressions[i].resultType.qname);
-        }
+        for(int i=0; i<xpaths.size(); i++)
+            expressions[i] = dog.addXPath(xpaths.get(i).xpath);
 
         XPathResults dogResults = dog.sniff(file, useSTAX);
         resultNSContext = (DefaultNamespaceContext)dogResults.getNamespaceContext();
@@ -70,8 +64,6 @@ public class TestCase{
         return dogResult;
     }
 
-    DOMNavigator navigator = new DOMNavigator();
-
     public void translateDOMResult(int test){
         Object obj = jdkResult.get(test);
         List<NodeItem> result = domEngine.translate(obj, resultNSContext);
@@ -79,10 +71,10 @@ public class TestCase{
 
         for(NodeItem item: result){
             if(item.type==NodeItem.ATTRIBUTE){
-                hasAttributes.add(test);
+                xpaths.get(test).hasAttributes = true;
                 break;
             }else if(item.type==NodeItem.NAMESPACE){
-                hasNamespaces.add(test);
+                xpaths.get(test).hasNamespaces = true;
                 break;
             }
         }
@@ -90,7 +82,7 @@ public class TestCase{
 
     private List<Integer> translated = new ArrayList<Integer>();
     public Object jdkResults(int i){
-        if(!translated.contains(i) && resultTypes.get(i).equals(XPathConstants.NODESET)){
+        if(!translated.contains(i) && xpaths.get(i).resultType.equals(XPathConstants.NODESET)){
             translateDOMResult(i);
             translated.add(i);
         }
@@ -127,10 +119,10 @@ public class TestCase{
         if(dogResults instanceof TreeSet)
             dogResult.set(i, dogResults = new ArrayList((TreeSet)dogResults));
 
-        if(hasAttributes.contains(i)){
+        if(xpaths.get(i).hasAttributes){
             Collections.sort((List<NodeItem>)jdkResults, attrComparator);
             Collections.sort((List<NodeItem>)dogResults, attrComparator);
-        }else if(hasNamespaces.contains(i)){
+        }else if(xpaths.get(i).hasNamespaces){
             Collections.sort((List<NodeItem>)jdkResults, nsComparator);
             Collections.sort((List<NodeItem>)dogResults, nsComparator);
         }
