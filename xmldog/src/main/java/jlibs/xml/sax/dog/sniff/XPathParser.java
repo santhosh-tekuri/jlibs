@@ -58,7 +58,9 @@ public final class XPathParser implements XPathHandler{
         reader.setXPathHandler(this);
     }
 
-    public Expression parse(String xpath) throws SAXPathException{
+    private boolean documentContext;
+    public Expression parse(String xpath, boolean documentContext) throws SAXPathException{
+        this.documentContext = documentContext; 
         frames.clear();
         peekFrame = null;
         stepStack.clear();
@@ -112,10 +114,13 @@ public final class XPathParser implements XPathHandler{
     public void endRelativeLocationPath(){
         ArrayDeque steps = popFrame();
         int scope;
-        if(peekFrame.size()==2 && peekFrame.getFirst()==PATH_FLAG && peekFrame.getLast() instanceof LocationPath)
+        if(documentContext){
+            if(peekFrame.size()==2 && peekFrame.getFirst()==PATH_FLAG && peekFrame.getLast() instanceof LocationPath)
+                scope = Scope.LOCAL;
+            else
+                scope = predicateDepth==0 ? Scope.DOCUMENT : Scope.LOCAL;
+        }else
             scope = Scope.LOCAL;
-        else
-            scope = predicateDepth==0 ? Scope.DOCUMENT : Scope.LOCAL;
         endLocationPath(scope, steps);
     }
 

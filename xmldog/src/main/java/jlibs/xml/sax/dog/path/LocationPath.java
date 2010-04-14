@@ -84,7 +84,7 @@ public final class LocationPath extends Predicated{
     public Expression typeCast(DataType dataType){
         LocationExpression expr = _typeCast(dataType);
         if(contexts.size()>0)
-            return new PathExpression(this, expr);
+            return new PathExpression(this, expr, false);
         else
             return expr;
     }
@@ -111,7 +111,7 @@ public final class LocationPath extends Predicated{
     public Expression apply(String function){
         LocationExpression expr = _apply(function);
         if(contexts.size()>0)
-            return new PathExpression(this, expr);
+            return new PathExpression(this, expr, false);
         else
             return expr;
     }
