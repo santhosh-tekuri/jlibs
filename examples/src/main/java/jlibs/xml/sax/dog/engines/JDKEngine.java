@@ -17,6 +17,7 @@ package jlibs.xml.sax.dog.engines;
 
 import jlibs.xml.sax.dog.TestCase;
 import jlibs.xml.sax.dog.XPathEngine;
+import jlibs.xml.sax.dog.XPathInfo;
 import net.sf.saxon.xpath.JAXPXPathStaticContext;
 import net.sf.saxon.xpath.XPathEvaluator;
 import org.w3c.dom.Document;
@@ -61,11 +62,11 @@ public class JDKEngine extends XPathEngine{
             });
             xpe.setBackwardsCompatible(true);
         }
-        for(int i=0; i<testCase.xpaths.size(); i++){
+        for(XPathInfo xpathInfo: testCase.xpaths){
             xpathObj.setXPathVariableResolver(testCase.variableResolver);
             xpathObj.setXPathFunctionResolver(testCase.functionResolver);
             xpathObj.setNamespaceContext(testCase.nsContext);
-            results.add(xpathObj.evaluate(testCase.xpaths.get(i), doc, testCase.resultTypes.get(i)));
+            results.add(xpathObj.evaluate(xpathInfo.xpath, doc, xpathInfo.resultType));
         }
         return results;
     }
