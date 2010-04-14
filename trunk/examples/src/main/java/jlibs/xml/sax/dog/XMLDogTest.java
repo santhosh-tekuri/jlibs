@@ -77,7 +77,12 @@ public class XMLDogTest{
         String line;
         while((line=console.readLine())!=null){
             line = line.trim();
-            if(line.length()>0)
+            if(line.startsWith("#for-each ")){
+                int i = line.indexOf("#eval ");
+                String forEach = line.substring("#for-each ".length(), i);
+                String xpath = line.substring(i+"#eval ".length());
+                expressions.add(dog.addForEach(forEach, xpath));
+            }else if(line.length()>0)
                 expressions.add(dog.addXPath(line));
             else
                 break;
