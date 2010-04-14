@@ -37,8 +37,9 @@ public class PathExpression extends Expression{
     public final LocationPath union;
     public final Expression contexts[];
     public final LocationExpression relativeExpression;
+    public final boolean forEach;
 
-    public PathExpression(LocationPath union, LocationExpression relativeExpression){
+    public PathExpression(LocationPath union, LocationExpression relativeExpression, boolean forEach){
         super(Scope.DOCUMENT, relativeExpression.resultType);
         assert relativeExpression.scope()==Scope.LOCAL;
 
@@ -49,6 +50,7 @@ public class PathExpression extends Expression{
 
         this.relativeExpression = relativeExpression;
         relativeExpression.rawResult = true;
+        this.forEach = forEach;
         
         if(union.hitExpression!=null)
             union.hitExpression.pathExpression = this;
@@ -245,12 +247,22 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
         }
     }
     
-    @SuppressWarnings({"unchecked", "UnnecessaryBoxing"})    
+    @SuppressWarnings({"unchecked"})
     public Object computeResult(){
-        LongTreeMap result = new LongTreeMap();
-        for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
-            result.putAll(entry.value.result);
+        if(expression.forEach){
+            for(LongTreeMap.Entry entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
+                entry.value = computeResultItem(((EvaluationInfo)entry.value).result);
+            return evaluations;
+        }else{
+            LongTreeMap result = new LongTreeMap();
+            for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
+                result.putAll(entry.value.result);
+            return computeResultItem(result);
+        }
+    }
 
+    @SuppressWarnings({"unchecked", "UnnecessaryBoxing"})
+    private Object computeResultItem(LongTreeMap result){
         switch(expression.resultType){
             case NODESET:
             case STRINGS:

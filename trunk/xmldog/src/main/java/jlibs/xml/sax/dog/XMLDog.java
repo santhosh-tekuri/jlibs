@@ -21,6 +21,7 @@ import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.nodset.LocationExpression;
 import jlibs.xml.sax.dog.expr.nodset.PathExpression;
 import jlibs.xml.sax.dog.path.Constraint;
+import jlibs.xml.sax.dog.path.LocationPath;
 import jlibs.xml.sax.dog.path.PositionalPredicate;
 import jlibs.xml.sax.dog.path.Step;
 import jlibs.xml.sax.dog.sniff.Event;
@@ -59,8 +60,28 @@ public final class XMLDog{
     private final ArrayDeque<Expression> tempStack = new ArrayDeque<Expression>();
 
     public Expression addXPath(String xpath) throws SAXPathException{
-        Expression compiledExpr = parser.parse(xpath);
+        Expression compiledExpr = parser.parse(xpath, true);
         compiledExpr.setXPath(xpath);
+        addXPath(compiledExpr);
+        return compiledExpr;
+    }
+
+    public Expression addForEach(String forEach, String xpath) throws SAXPathException{
+        Expression forEachExpr = parser.parse(forEach, true);
+        LocationPath union = new LocationPath(Scope.LOCAL, 0);
+        if(forEachExpr instanceof LocationExpression)
+            union.addToContext(((LocationExpression)forEachExpr).locationPath);
+        else
+            union.addToContext(((PathExpression)forEachExpr).union);
+
+        Expression relativeExpr = parser.parse(xpath, false);
+        PathExpression compiledExpr = new PathExpression(union, (LocationExpression)relativeExpr, true);
+        compiledExpr.setXPath("#for-each "+forEach+" #eval "+xpath);
+        addXPath(compiledExpr);
+        return compiledExpr;
+    }
+
+    private void addXPath(Expression compiledExpr) throws SAXPathException{
         expressions.add(compiledExpr);
 
         assert compiledExpr.scope()!=Scope.LOCAL;
@@ -106,8 +127,6 @@ public final class XMLDog{
                 }
             }
         }
-
-        return compiledExpr;
     }
 
     public Iterable<Expression> getXPaths(){
