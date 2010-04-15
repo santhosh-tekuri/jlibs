@@ -26,6 +26,7 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class XPathInfo{
+    public String forEach;
     public String xpath;
     public QName resultType;
     public boolean hasAttributes;
@@ -38,7 +39,8 @@ public class XPathInfo{
         this.resultType = resultType;
     }
     
-    public XPathInfo(String xpath, QName resultType){
+    public XPathInfo(String forEach, String xpath, QName resultType){
+        this.forEach = forEach;
         this.xpath = xpath;
         this.resultType = resultType;
     }
@@ -53,6 +55,11 @@ public class XPathInfo{
             }
         }
         resultType = XPathConstants.NODESET;
+    }
+
+    @Override
+    public String toString(){
+        return forEach==null ? xpath : "#for-each "+forEach+" #eval "+xpath;
     }
 
     private static HashMap<QName, List<String>> types = new HashMap<QName, List<String>>();

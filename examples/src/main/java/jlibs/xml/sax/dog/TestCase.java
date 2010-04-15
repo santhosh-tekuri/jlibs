@@ -52,8 +52,10 @@ public class TestCase{
     public List<Object> usingXMLDog() throws Exception{
         XMLDog dog = new XMLDog(nsContext, variableResolver, functionResolver);
         Expression expressions[] = new Expression[xpaths.size()];
-        for(int i=0; i<xpaths.size(); i++)
-            expressions[i] = dog.addXPath(xpaths.get(i).xpath);
+        for(int i=0; i<xpaths.size(); i++){
+            XPathInfo xpathInfo = xpaths.get(i);
+            expressions[i] = xpathInfo.forEach==null ? dog.addXPath(xpathInfo.xpath) : dog.addForEach(xpathInfo.forEach, xpathInfo.xpath);
+        }
 
         XPathResults dogResults = dog.sniff(file, useSTAX);
         resultNSContext = (DefaultNamespaceContext)dogResults.getNamespaceContext();
@@ -69,15 +71,20 @@ public class TestCase{
         List<NodeItem> result = domEngine.translate(obj, resultNSContext);
         jdkResult.set(test, result);
 
-        for(NodeItem item: result){
-            if(item.type==NodeItem.ATTRIBUTE){
-                xpaths.get(test).hasAttributes = true;
-                break;
-            }else if(item.type==NodeItem.NAMESPACE){
-                xpaths.get(test).hasNamespaces = true;
-                break;
-            }
+        xpaths.get(test).hasAttributes = has(result, NodeItem.ATTRIBUTE);
+        xpaths.get(test).hasNamespaces = has(result, NodeItem.NAMESPACE);
+    }
+
+    private boolean has(List list, int nodeItemType){
+        for(Object item: list){
+            if(item instanceof NodeItem){
+                NodeItem nodeItem = (NodeItem)item;
+                if(nodeItem.type==nodeItemType)
+                    return true;
+            }else if(has((List)item, nodeItemType))
+                return true;
         }
+        return false;
     }
 
     private List<Integer> translated = new ArrayList<Integer>();
@@ -120,11 +127,11 @@ public class TestCase{
             dogResult.set(i, dogResults = new ArrayList((TreeSet)dogResults));
 
         if(xpaths.get(i).hasAttributes){
-            Collections.sort((List<NodeItem>)jdkResults, attrComparator);
-            Collections.sort((List<NodeItem>)dogResults, attrComparator);
+            sort((List)jdkResults, attrComparator);
+            sort((List)dogResults, attrComparator);
         }else if(xpaths.get(i).hasNamespaces){
-            Collections.sort((List<NodeItem>)jdkResults, nsComparator);
-            Collections.sort((List<NodeItem>)dogResults, nsComparator);
+            sort((List)jdkResults, nsComparator);
+            sort((List)dogResults, nsComparator);
         }
 
         if(jdkResults instanceof List)
@@ -133,24 +140,46 @@ public class TestCase{
             return jdkResults.equals(dogResults);
     }
 
+    @SuppressWarnings({"unchecked"})
+    private void sort(List list, Comparator comparator){
+        if(list.size()==0)
+            return;
+        if(list.get(0) instanceof List){
+            for(Object item: list)
+                sort((List)item, comparator);
+        }else
+            Collections.sort(list, comparator);
+    }
+
+    @SuppressWarnings({"unchecked"})
     private boolean equals(List<NodeItem> jdkList, List<NodeItem> dogList){
         if(jdkList.size()!=dogList.size())
             return false;
 
-        Iterator<NodeItem> jdkIter = jdkList.iterator();
-        Iterator<NodeItem> dogIter = dogList.iterator();
+        Iterator jdkIter = jdkList.iterator();
+        Iterator dogIter = dogList.iterator();
         while(jdkIter.hasNext()){
-            NodeItem jdkItem = jdkIter.next();
-            NodeItem dogItem = dogIter.next();
+            Object jdkItem = jdkIter.next();
+            Object dogItem = dogIter.next();
 
-            String jdkLocation = jdkItem.location;
-            String dogLocation = dogItem.location;
-            if(dogItem.type==NodeItem.NAMESPACE){
-                jdkLocation = jdkLocation.substring(jdkLocation.lastIndexOf('/'));
-                dogLocation = dogLocation.substring(dogLocation.lastIndexOf('/'));
+            if(jdkItem instanceof List){
+                if(!equals((List)jdkItem, (List)dogItem))
+                    return false;
+            }else if(jdkItem instanceof NodeItem){
+                NodeItem jdkNodeItem = (NodeItem)jdkItem;
+                NodeItem dogNodeItem = (NodeItem)dogItem;
+                String jdkLocation = jdkNodeItem.location;
+                String dogLocation = dogNodeItem.location;
+                if(dogNodeItem.type==NodeItem.NAMESPACE){
+                    jdkLocation = jdkLocation.substring(jdkLocation.lastIndexOf('/'));
+                    dogLocation = dogLocation.substring(dogLocation.lastIndexOf('/'));
+                }
+                if(!jdkLocation.equals(dogLocation))
+                    return false;
+            }else{
+                if(!jdkItem.equals(dogItem))
+                    return false;
             }
-            if(!jdkLocation.equals(dogLocation))
-                return false;
         }
 
         return true;

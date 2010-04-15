@@ -100,6 +100,7 @@ public class TestSuite{
                         testCase.nsContext.declarePrefix("", nsSupport.getURI(""));
                 }else if(localName.equals("xpath")){
                     xpathInfo = new XPathInfo();
+                    xpathInfo.forEach = attributes.getValue("for-each");
                     String type = attributes.getValue("type");
                     if(type!=null){
                         if(type.equals("nodeset"))
@@ -141,23 +142,23 @@ public class TestSuite{
                     String xpath = contents.toString().trim();
                     xpathInfo.xpath = xpath;
                     if(xpathInfo.resultType==null)
-                        xpathInfo.guessResultType();;
+                        xpathInfo.guessResultType();
                     testCase.xpaths.add(xpathInfo);
 
                     if(generateNewXPathsGlobal && generateNewXPathsCurrent){
                         if(xpathInfo.resultType.equals(XPathConstants.NODESET)){
                             if(xpath.indexOf("namespace::")==-1){
-                                testCase.xpaths.add(new XPathInfo("name("+xpath+")", XPathConstants.STRING));
-                                testCase.xpaths.add(new XPathInfo("local-name("+xpath+")", XPathConstants.STRING));
-                                testCase.xpaths.add(new XPathInfo("namespace-uri("+xpath+")", XPathConstants.STRING));
-                                testCase.xpaths.add(new XPathInfo("string("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "name("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "local-name("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "namespace-uri("+xpath+")", XPathConstants.STRING));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "string("+xpath+")", XPathConstants.STRING));
 
-                                testCase.xpaths.add(new XPathInfo(xpath+"[1]", XPathConstants.NODESET));
-                                testCase.xpaths.add(new XPathInfo(xpath+"[last()]", XPathConstants.NODESET));
-                                testCase.xpaths.add(new XPathInfo(xpath+"[position()>1 and position()<last()]", XPathConstants.NODESET));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, xpath+"[1]", XPathConstants.NODESET));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, xpath+"[last()]", XPathConstants.NODESET));
+                                testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, xpath+"[position()>1 and position()<last()]", XPathConstants.NODESET));
                             }
-                            testCase.xpaths.add(new XPathInfo("count("+xpath+")", XPathConstants.NUMBER));
-                            testCase.xpaths.add(new XPathInfo("boolean("+xpath+")", XPathConstants.BOOLEAN));
+                            testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "count("+xpath+")", XPathConstants.NUMBER));
+                            testCase.xpaths.add(new XPathInfo(xpathInfo.forEach, "boolean("+xpath+")", XPathConstants.BOOLEAN));
                         }
                     }
                 }else if(localName.equals("testcase")){
