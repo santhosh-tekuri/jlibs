@@ -35,6 +35,7 @@ import org.xml.sax.InputSource;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.transform.SourceLocator;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.xpath.XPathConstants;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,8 +62,17 @@ public class SaxonEngine extends XPathEngine{
         NodeInfo doc = xpe.setSource(new SAXSource(new InputSource(file)));
 
         List<Object> results = new ArrayList<Object>(testCase.xpaths.size());
-        for(XPathInfo xpathInfo: testCase.xpaths)
-            results.add(xpe.evaluate(xpathInfo.xpath, doc, xpathInfo.resultType));
+        for(XPathInfo xpathInfo: testCase.xpaths){
+            if(xpathInfo.forEach==null)
+                results.add(xpe.evaluate(xpathInfo.xpath, doc, xpathInfo.resultType));
+            else{
+                List<Object> list = new ArrayList<Object>();
+                List nodeList = (List)xpe.evaluate(xpathInfo.forEach, doc, XPathConstants.NODESET);
+                for(Object context: nodeList)
+                    list.add(xpe.evaluate(xpathInfo.xpath, context, xpathInfo.resultType));
+                results.add(list);
+            }
+        }
         return results;
     }
 
@@ -72,16 +82,20 @@ public class SaxonEngine extends XPathEngine{
         List nodeList = (List)result;
         int i = 0;
         for(Object item: nodeList){
-            NodeInfo node = (NodeInfo)item;
-            int type = node.getNodeKind();
-            String value = "";
-            if(type!= NodeType.DOCUMENT && type!=NodeType.ELEMENT)
-                value = node.getStringValue();
-            String localName = node.getLocalPart();
-            String namespaceURI = node.getURI();
-            String qualifiedName = node.getDisplayName();
-            String location = SaxonNavigator.INSTANCE.getXPath(node, nsContext);
-            nodeList.set(i, new NodeItem(type, location, value, localName, namespaceURI, qualifiedName));
+            if(item instanceof List)
+                nodeList.set(i, translate(item, nsContext));
+            else{
+                NodeInfo node = (NodeInfo)item;
+                int type = node.getNodeKind();
+                String value = "";
+                if(type!= NodeType.DOCUMENT && type!=NodeType.ELEMENT)
+                    value = node.getStringValue();
+                String localName = node.getLocalPart();
+                String namespaceURI = node.getURI();
+                String qualifiedName = node.getDisplayName();
+                String location = SaxonNavigator.INSTANCE.getXPath(node, nsContext);
+                nodeList.set(i, new NodeItem(type, location, value, localName, namespaceURI, qualifiedName));
+            }
             i++;
         }
         return nodeList;
