@@ -24,13 +24,13 @@ import jlibs.xml.sax.dog.sniff.Event;
 /**
  * @author Santhosh Kumar T
  */
-public final class PredicateEvaluation extends LinkableEvaluation<LocationExpression>{
+public final class PredicateEvaluation extends LinkableEvaluation<Expression>{
     private final Event event;
     private Object resultItem;
     private final Expression predicate;
     private final Evaluation booleanEvaluation;
 
-    public PredicateEvaluation(LocationExpression expression, long order, Object resultItem, Event event, Expression predicate, Evaluation booleanEvaluation){
+    public PredicateEvaluation(Expression expression, long order, Object resultItem, Event event, Expression predicate, Evaluation booleanEvaluation){
         super(expression, order);
         this.resultItem = resultItem;
         this.event = event;

@@ -22,6 +22,7 @@ import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.expr.Literal;
 import jlibs.xml.sax.dog.path.LocationPath;
 import jlibs.xml.sax.dog.sniff.Event;
 
@@ -36,12 +37,12 @@ import java.util.List;
 public class PathExpression extends Expression{
     public final LocationPath union;
     public final Expression contexts[];
-    public final LocationExpression relativeExpression;
+    public final Expression relativeExpression;
     public final boolean forEach;
 
-    public PathExpression(LocationPath union, LocationExpression relativeExpression, boolean forEach){
+    public PathExpression(LocationPath union, Expression relativeExpression, boolean forEach){
         super(Scope.DOCUMENT, relativeExpression.resultType);
-        assert relativeExpression.scope()==Scope.LOCAL;
+        assert relativeExpression.scope()!=Scope.DOCUMENT;
 
         this.union = union;
         contexts = new Expression[union.contexts.size()];
@@ -49,7 +50,11 @@ public class PathExpression extends Expression{
             contexts[i] = union.contexts.get(i).typeCast(DataType.NODESET);
 
         this.relativeExpression = relativeExpression;
-        relativeExpression.rawResult = true;
+        if(relativeExpression instanceof LocationExpression)
+            ((LocationExpression)relativeExpression).rawResult = true;
+        else
+            ((Literal)relativeExpression).rawResultRequired();
+        
         this.forEach = forEach;
         
         if(union.hitExpression!=null)
@@ -82,11 +87,7 @@ public class PathExpression extends Expression{
             buff.append(union.predicateSet.getPredicate());
             buff.append(']');
         }
-        String relativePath = relativeExpression.locationPath.toString();
-        if(relativePath.length()>0)
-            return String.format("%s(context(%s), %s)", relativeExpression.getName(), buff, relativePath);
-        else
-            return String.format("%s(context(%s))", relativeExpression.getName(), buff);
+        return String.format("path-expression(context(%s), %s, %s)", buff, relativeExpression, forEach);
     }
 
     public static class HitExpression extends Expression{
@@ -306,12 +307,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
                     entry.value.eval.addListener(this);
                     return;
                 }else{
-                    if(predicateEvaluation.result instanceof LongTreeMap)
-                        entry.value.result = (LongTreeMap)predicateEvaluation.result;
-                    else{
-                        entry.value.result = new LongTreeMap();
-                        entry.value.result.put(evaluation.order, predicateEvaluation.result);
-                    }
+                    entry.value.setResult(predicateEvaluation.result);
                     entry.value.eval = null;
                     pendingCount--;
                 }
@@ -322,11 +318,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
                     pendingCount--;
             }
         }else{
-            Object r = evaluation.getResult();
-            if(r instanceof LongTreeMap)
-                entry.value.result = (LongTreeMap)r;
-            else
-                entry.value.setResult(r);
+            entry.value.setResult(evaluation.getResult());
             entry.value.eval = null;
             pendingCount--;
         }
@@ -351,8 +343,12 @@ final class EvaluationInfo extends Evaluation<PathExpression.HitExpression> impl
     
     @SuppressWarnings({"unchecked"})
     public void setResult(Object result){
-        this.result = new LongTreeMap();
-        this.result.put(order, result);
+        if(result instanceof LongTreeMap)
+            this.result = (LongTreeMap)result;
+        else{
+            this.result = new LongTreeMap();
+            this.result.put(order, result);
+        }
     }
 
     public int hitCount;

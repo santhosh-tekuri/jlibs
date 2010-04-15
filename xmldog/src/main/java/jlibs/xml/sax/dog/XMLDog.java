@@ -75,7 +75,7 @@ public final class XMLDog{
             union.addToContext(((PathExpression)forEachExpr).union);
 
         Expression relativeExpr = parser.parse(xpath, false);
-        PathExpression compiledExpr = new PathExpression(union, (LocationExpression)relativeExpr, true);
+        PathExpression compiledExpr = new PathExpression(union, relativeExpr, true);
         compiledExpr.setXPath("#for-each "+forEach+" #eval "+xpath);
         addXPath(compiledExpr);
         return compiledExpr;
