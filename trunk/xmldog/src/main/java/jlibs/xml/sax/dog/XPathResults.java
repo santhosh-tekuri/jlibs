@@ -72,23 +72,22 @@ public class XPathResults extends EvaluationListener{
     }
     
     private void print(PrintStream out, Object result, int indent){
-        if(result instanceof LongTreeMap){
-            LongTreeMap treeMap = (LongTreeMap)result;
-            for(LongTreeMap.Entry entry = treeMap.firstEntry(); entry!=null; entry=entry.next()){
-                printIndent(out, indent);
-                out.println("[");
-                print(out, entry.value, indent+2);
-                printIndent(out, indent);
-                out.println("]");
-            }
-        }else if(result instanceof Collection){
+        if(result instanceof Collection){
             int i = 0;
             Collection c = (Collection)result;
 
             String format = "%0"+String.valueOf(c.size()).length()+"d: %s%n";
             for(Object item: c){
-                printIndent(out, indent);
-                out.printf(format, ++i, item);
+                if(item instanceof Collection){
+                    printIndent(out, indent);
+                    out.println("[");
+                    print(out, item, indent+2);
+                    printIndent(out, indent);
+                    out.println("]");
+                }else{
+                    printIndent(out, indent);
+                    out.printf(format, ++i, item);
+                }
             }
         }else{
             printIndent(out, indent);

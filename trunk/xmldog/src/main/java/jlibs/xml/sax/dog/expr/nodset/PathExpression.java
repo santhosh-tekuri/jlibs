@@ -250,9 +250,10 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
     @SuppressWarnings({"unchecked"})
     public Object computeResult(){
         if(expression.forEach){
+            List<Object> result = new ArrayList<Object>(evaluations.size());
             for(LongTreeMap.Entry entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
-                entry.value = computeResultItem(((EvaluationInfo)entry.value).result);
-            return evaluations;
+                result.add(computeResultItem(((EvaluationInfo)entry.value).result));
+            return result;
         }else{
             LongTreeMap result = new LongTreeMap();
             for(LongTreeMap.Entry<EvaluationInfo> entry = evaluations.firstEntry(); entry!=null; entry=entry.next())
