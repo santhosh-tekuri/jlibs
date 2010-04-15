@@ -16,9 +16,13 @@
 package jlibs.xml.sax.dog.expr;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
+import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.sniff.Event;
+
+import java.util.List;
 
 /**
  * Literal Expression knows its result statically.
@@ -30,7 +34,7 @@ import jlibs.xml.sax.dog.sniff.Event;
  * @author Santhosh Kumar T
  */
 public final class Literal extends Expression{
-    public final Object literal;
+    private Object literal;
 
     public Literal(Object literal, DataType dataType){
         super(Scope.GLOBAL, dataType);
@@ -38,6 +42,22 @@ public final class Literal extends Expression{
         this.literal = literal;
     }
 
+    @SuppressWarnings({"unchecked"})
+    public void rawResultRequired(){
+        if(resultType== DataType.NODESET && literal instanceof List){
+            List list = (List)literal;
+            if(list.size()==0)
+                literal = new LongTreeMap();
+            else{
+                assert list.size()==1;
+                assert list.get(0)== NodeItem.NODEITEM_DOCUMENT;
+                LongTreeMap treeMap = new LongTreeMap();
+                treeMap.put(0, list.get(0));
+                literal = treeMap;
+            }
+        }
+    }
+    
     @Override
     public Object getResult(){
         return literal;
