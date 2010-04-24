@@ -50,13 +50,13 @@ public class FileUtil{
 
     /**
      * splits given fileName into name and extension.
-     * the returned array is always of length 2.
-     * first item in array will be name.
-     * second item in array will be extension (will be null, if no extension)
+     *
+     * @param fileName fileName
+     * @return string array is of length 2, where 1st item is name and 2nd item is extension(null if no extension)
      */
     public static String[] split(String fileName){
         int dot = fileName.lastIndexOf('.');
-        if(dot!=-1)
+        if(dot==-1)
             return new String[]{ fileName, null };
         else
             return new String[] { fileName.substring(0, dot), fileName.substring(dot+1)};
