@@ -58,6 +58,9 @@
         <xpath>((/xs:schema/xs:element/*)[3])/*</xpath>
 
         <xpath type="string">jlibs:reverse(string(/xs:schema//@name))</xpath>
+
+        <xpath for-each="//xs:element | //xs:complexType">.//@name</xpath>
+        <xpath for-each="//xs:element | //xs:complexType">*</xpath>
     </testcase>
 
     <testcase>
