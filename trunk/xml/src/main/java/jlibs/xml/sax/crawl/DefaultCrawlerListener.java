@@ -13,18 +13,31 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.xsd.crawl;
+package jlibs.xml.sax.crawl;
 
-import jlibs.xml.sax.crawl.AttributeLink;
-import jlibs.xml.Namespaces;
+import jlibs.core.io.FileUtil;
+import jlibs.core.net.URLUtil;
+
+import java.io.File;
+import java.net.URL;
 
 /**
  * @author Santhosh Kumar T
  */
-public class XSInclude extends AttributeLink{
-    public XSInclude(){
-        super("schemaLocation", "xsd");
-        pushElement(Namespaces.URI_XSD, "schema");
-        pushElement(Namespaces.URI_XSD, "include");
+public class DefaultCrawlerListener implements CrawlerListener{
+    protected File dir;
+    public DefaultCrawlerListener(File dir){
+        this.dir = dir;
+    }
+
+    @Override
+    public boolean doCrawl(URL url){
+        return true;
+    }
+
+    @Override
+    public File toFile(URL url, String extension){
+        String fileName = URLUtil.suggestFile(URLUtil.toURI(url), extension);
+        return FileUtil.findFreeFile(new File(dir, fileName));
     }
 }
