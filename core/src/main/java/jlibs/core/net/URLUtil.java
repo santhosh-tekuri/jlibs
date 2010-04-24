@@ -17,7 +17,6 @@ package jlibs.core.net;
 
 import jlibs.core.io.FileUtil;
 import jlibs.core.io.IOUtil;
-import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 
@@ -86,10 +85,6 @@ public class URLUtil{
         }
     }
 
-    public static URI resolve(URL base, URL url){
-        return toURI(base).resolve(toURI(url));
-    }
-
     /**
      * returns Query Parameters in specified uri as <code>Map</code>.
      * key will be param name and value wil be param value.
@@ -118,26 +113,15 @@ public class URLUtil{
         return map;
     }
 
-    public static String suggestFile(URI uri, String... extensions){
-        if(extensions==null || extensions.length==0)
-            throw new IllegalArgumentException("atleast one extension must be specified");
-
+    public static String suggestFile(URI uri, String extension){
         String path = uri.getPath();
         String tokens[] = StringUtil.getTokens(path, "/", true);
         String file = tokens[tokens.length-1];
         int dot = file.indexOf(".");
-        if(dot==-1){
-            String query = uri.getQuery();
-            if(query!=null){
-                query = query.toLowerCase();
-                if(ArrayUtil.contains(extensions, query))
-                    return file+'.'+query;
-            }
-            return file+'.'+extensions[0];
-        }else if(ArrayUtil.contains(extensions, file.substring(dot+1)))
-            return file;
+        if(dot==-1)
+            return file+'.'+extension;
         else
-            return file.substring(0, dot+1)+extensions[0];
+            return file.substring(0, dot+1)+extension;
     }
 
     public static String suggestPrefix(Properties suggested, String uri){
