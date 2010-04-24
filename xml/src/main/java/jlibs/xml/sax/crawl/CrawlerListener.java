@@ -22,6 +22,6 @@ import java.net.URL;
  * @author Santhosh Kumar T
  */
 public interface CrawlerListener{
-    public void saved(URL url, File file);
-    public void skipped(URL url);
+    public boolean doCrawl(URL url);
+    public File toFile(URL url, String extension);
 }

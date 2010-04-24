@@ -15,9 +15,14 @@
 
 package jlibs.xml.sax.crawl;
 
+import jlibs.core.io.ByteArrayOutputStream2;
 import jlibs.core.io.FileNavigator;
 import jlibs.core.io.FileUtil;
+import jlibs.core.lang.ByteSequence;
+import jlibs.core.lang.OS;
 import jlibs.core.net.URLUtil;
+import jlibs.xml.Namespaces;
+import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.xsl.TransformerUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -26,71 +31,104 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 import javax.xml.namespace.QName;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.CharArrayWriter;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
 public class XMLCrawler extends XMLFilterImpl{
-    private Stack<QName> path = new Stack<QName>();
+    private CrawlingRules rules;
 
-    private List<AttributeLink> links = new ArrayList<AttributeLink>();
-    public void addLink(AttributeLink link){
-        links.add(link);
+    private Element current;
+    private int depth;
+
+    public XMLCrawler(){
+        rules = new CrawlingRules();
+
+        QName xsd_schema = new QName(Namespaces.URI_XSD, "schema");
+        QName xsd_import = new QName(Namespaces.URI_XSD, "import");
+        QName attr_schemaLocation = new QName("schemaLocation");
+        QName xsd_include = new QName(Namespaces.URI_XSD, "include");
+        QName xsl_stylesheet = new QName(Namespaces.URI_XSL, "stylesheet");
+        QName attr_href = new QName("href");
+        QName wsdl_definitions = new QName(Namespaces.URI_WSDL, "definitions");
+        QName attr_location = new QName("location");
+        QName wsdl_types = new QName(Namespaces.URI_WSDL, "types");
+
+        rules.addExtension("xsd", xsd_schema);
+        rules.addAttributeLink(xsd_schema, xsd_import, attr_schemaLocation);
+        rules.addAttributeLink(xsd_schema, xsd_include, attr_schemaLocation);
+
+        rules.addExtension("xsl", xsl_stylesheet);
+        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "import"), attr_href);
+        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "include"), attr_href);
+
+        rules.addExtension("wsdl", wsdl_definitions);
+        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "import"), attr_location);
+        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "include"), attr_location);
+        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_import, attr_schemaLocation);
+        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_include, attr_schemaLocation);
+
+        crawled = new HashMap<URL, File>();
+    }
+    
+    public XMLCrawler(CrawlingRules rules){
+        this.rules = rules;
+        crawled = new HashMap<URL, File>();
     }
 
-    private CharArrayWriter contents = new CharArrayWriter();
+    private XMLCrawler(XMLCrawler crawler){
+        rules = crawler.rules;
+        crawled = crawler.crawled;
+    }
 
     @Override
     public void startDocument() throws SAXException{
-        path.clear();
+        current = rules.doc;
         super.startDocument();
     }
 
     @Override
     public void startElement(String namespaceURI, String localName, String qualifiedName, Attributes atts) throws SAXException{
-        contents.reset();
-        path.push(new QName(namespaceURI, localName));
-
-        for(AttributeLink link: links){
-            try{
-                if(link.matches(path)){
-                    String location = link.resolve(atts);
-                    if(location!=null){
-                        URL linkURL = new URL(sourceURL, location);
-                        location = URLUtil.resolve(sourceURL, linkURL).toString();
-                        File linkFile = crawled.get(linkURL);
-                        if(linkFile==null){
-                            linkFile = link.suggestFile(sourceFile, location);
-                            if(linkFile!=null)
-                                pending.put(new InputSource(linkURL.toString()), linkFile);
-                            else if(listener!=null)
-                                listener.skipped(linkURL);
+        if(depth==0){
+            Element elem = current.findChild(namespaceURI, localName);
+            if(elem==null)
+                depth = 1;
+            else{
+                current = elem;
+                try{
+                    if(file==null && current.extension!=null)
+                        setFile(listener.toFile(url, current.extension));
+                    if(current.attribute!=null){
+                        String location = atts.getValue(current.attribute.getNamespaceURI(), current.attribute.getLocalPart());
+                        if(location!=null){
+                            location = URLUtil.toURI(url).resolve(location).toString();
+                            URL targetURL = URLUtil.toURL(location);
+                            File targetFile = null;
+                            if(crawled!=null)
+                                targetFile = crawled.get(targetURL);
+                            if(targetFile==null && listener.doCrawl(targetURL))
+                                targetFile = new XMLCrawler(this).crawl(new InputSource(location), listener, null);
+                            String href = targetFile==null ? location : FileNavigator.INSTANCE.getRelativePath(file.getParentFile(), targetFile);
+                            AttributesImpl newAtts = new AttributesImpl(atts);
+                            int index = atts.getIndex(current.attribute.getNamespaceURI(), current.attribute.getLocalPart());
+                            newAtts.setValue(index, href);
+                            atts = newAtts;
                         }
-
-                        AttributesImpl newAtts = new AttributesImpl(atts);
-                        String newLocation;
-                        if(linkFile!=null)
-                            newLocation = FileNavigator.INSTANCE.getRelativePath(sourceFile.getParentFile(), linkFile);
-                        else
-                            newLocation = linkURL.toString();
-                        link.repair(newAtts, newLocation);
-                        atts = newAtts;
-
-                        break;
                     }
+                }catch(IOException ex){
+                    throw new SAXException(ex);
                 }
-            }catch(Exception ex){
-                ex.printStackTrace();
             }
-        }
+        }else
+            depth++;
 
         super.startElement(namespaceURI, localName, qualifiedName, atts);
     }
@@ -98,56 +136,80 @@ public class XMLCrawler extends XMLFilterImpl{
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
         super.endElement(uri, localName, qName);
-        path.pop();
+        if(depth==0)
+            current = current.parent;
+        else
+            depth--;
     }
 
     /*-------------------------------------------------[ Crawling ]---------------------------------------------------*/
 
     private CrawlerListener listener;
-    public void setListener(CrawlerListener listener){
-        this.listener = listener;
+
+    private URL url;
+    private File file;
+    private DelegatingOutputStream out;
+
+    private Map<URL, File> crawled;
+    private void setFile(File file) throws IOException{
+        this.file = file;
+        out.setDelegate(new FileOutputStream(file));
+        crawled.put(url, file);
     }
 
-    private File sourceFile;
-    private URL sourceURL;
-    private Map<URL, File> crawled = new LinkedHashMap<URL, File>();
-    private Map<InputSource, File> pending = new LinkedHashMap<InputSource, File>();
-
-    public File crawlInto(InputSource document, File dir, String... extensions) throws TransformerException, IOException{
-        URL url = URLUtil.toURL(document.getSystemId());
-        String fileName = URLUtil.suggestFile(URLUtil.toURI(url), extensions);
-        File file = FileUtil.findFreeFile(new File(dir, fileName));
-        crawl(document, file);
-        return file;
-    }
-
-    public void crawl(InputSource document, File file) throws TransformerException, IOException{
+    public File crawl(InputSource document, CrawlerListener listener, File file) throws IOException{
         if(document.getSystemId()==null)
             throw new IllegalArgumentException("InputSource without systemID can't be crawled");
+        this.listener = listener;
+        url = URLUtil.toURL(document.getSystemId());
 
-        sourceFile = file;
-        sourceURL = URLUtil.toURL(document.getSystemId());
-        if(crawled.containsKey(sourceURL))
-            return;
+        try{
+            setParent(SAXUtil.newSAXParser(true, false, false).getXMLReader());
+            SAXSource source = new SAXSource(this, document);
+            out = new DelegatingOutputStream();
+            if(file!=null)
+                setFile(file);
 
-        pending.clear();
-
-        FileUtil.mkdirs(sourceFile.getParentFile());
-        SAXSource source = new SAXSource(this, document);
-        TransformerUtil.newTransformer(null, true, 4, null)
-                .transform(source, new StreamResult(file));
-
-        crawled.put(sourceURL, sourceFile);
-        if(listener!=null)
-            listener.saved(sourceURL, sourceFile);
-
-        Map<InputSource, File> map = new LinkedHashMap<InputSource, File>(pending);
-        for(Map.Entry<InputSource, File> entry: map.entrySet()){
-            try{
-                crawl(entry.getKey(), entry.getValue());
-            }catch(Exception ex){
-                ex.printStackTrace();
-            }
+            TransformerUtil.newTransformer(null, false, 4, null)
+                    .transform(source, new StreamResult(out));
+        }catch(SAXException ex){
+            throw new IOException(ex);
+        } catch(ParserConfigurationException ex){
+            throw new IOException(ex);
+        } catch(TransformerException ex){
+            throw new IOException(ex);
         }
+        return this.file;
+    }
+
+    public File crawlInto(InputSource document, File dir) throws IOException{
+        return crawl(document, new DefaultCrawlerListener(dir), null);
+    }
+
+    public void crawl(InputSource document, File file) throws IOException{
+        crawl(document, new DefaultCrawlerListener(file.getParentFile()), file);
+    }
+
+    private static class DelegatingOutputStream extends FilterOutputStream{
+        public DelegatingOutputStream(){
+            super(new ByteArrayOutputStream2());
+        }
+
+        public void setDelegate(OutputStream out) throws IOException{
+            ByteSequence seq = ((ByteArrayOutputStream2)this.out).toByteSequence();
+            out.write(seq.buffer(), seq.offset(), seq.length());
+            this.out = out;
+        }
+    }
+
+    public static void main(String[] args) throws Exception{
+        if(args.length!=2){
+            System.out.println("usage: crawl-xml."+(OS.get().isWindows()?"bat":"sh")+" <url> <dir>");
+            System.exit(1);
+        }
+
+        File dir = new File(args[1]);
+        FileUtil.mkdirs(dir);
+        new XMLCrawler().crawlInto(new InputSource(args[0]), dir);
     }
 }
