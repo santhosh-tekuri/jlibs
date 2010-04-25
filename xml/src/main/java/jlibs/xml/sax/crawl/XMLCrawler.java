@@ -50,7 +50,7 @@ public class XMLCrawler extends XMLFilterImpl{
     private int depth;
 
     public XMLCrawler(){
-        rules = new CrawlingRules();
+        rules = CrawlingRules.defaultRules();
 
         QName xsd_schema = new QName(Namespaces.URI_XSD, "schema");
         QName xsd_import = new QName(Namespaces.URI_XSD, "import");

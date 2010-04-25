@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.crawl;
 
+import jlibs.xml.Namespaces;
+
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +35,36 @@ public class CrawlingRules{
     public void addAttributeLink(QName... attributePath){
         QName elementPath[] = Arrays.copyOf(attributePath, attributePath.length-1);
         doc.descendant(elementPath).attribute = attributePath[attributePath.length-1];
+    }
+
+    public static CrawlingRules defaultRules(){
+        CrawlingRules rules = new CrawlingRules();
+
+        QName xsd_schema = new QName(Namespaces.URI_XSD, "schema");
+        QName xsd_import = new QName(Namespaces.URI_XSD, "import");
+        QName attr_schemaLocation = new QName("schemaLocation");
+        QName xsd_include = new QName(Namespaces.URI_XSD, "include");
+        QName xsl_stylesheet = new QName(Namespaces.URI_XSL, "stylesheet");
+        QName attr_href = new QName("href");
+        QName wsdl_definitions = new QName(Namespaces.URI_WSDL, "definitions");
+        QName attr_location = new QName("location");
+        QName wsdl_types = new QName(Namespaces.URI_WSDL, "types");
+
+        rules.addExtension("xsd", xsd_schema);
+        rules.addAttributeLink(xsd_schema, xsd_import, attr_schemaLocation);
+        rules.addAttributeLink(xsd_schema, xsd_include, attr_schemaLocation);
+
+        rules.addExtension("xsl", xsl_stylesheet);
+        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "import"), attr_href);
+        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "include"), attr_href);
+
+        rules.addExtension("wsdl", wsdl_definitions);
+        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "import"), attr_location);
+        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "include"), attr_location);
+        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_import, attr_schemaLocation);
+        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_include, attr_schemaLocation);
+
+        return rules;
     }
 }
 
