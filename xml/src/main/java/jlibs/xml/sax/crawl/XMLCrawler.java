@@ -21,7 +21,6 @@ import jlibs.core.io.FileUtil;
 import jlibs.core.lang.ByteSequence;
 import jlibs.core.lang.OS;
 import jlibs.core.net.URLUtil;
-import jlibs.xml.Namespaces;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.xsl.TransformerUtil;
 import org.xml.sax.Attributes;
@@ -30,7 +29,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
-import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
@@ -51,31 +49,6 @@ public class XMLCrawler extends XMLFilterImpl{
 
     public XMLCrawler(){
         rules = CrawlingRules.defaultRules();
-
-        QName xsd_schema = new QName(Namespaces.URI_XSD, "schema");
-        QName xsd_import = new QName(Namespaces.URI_XSD, "import");
-        QName attr_schemaLocation = new QName("schemaLocation");
-        QName xsd_include = new QName(Namespaces.URI_XSD, "include");
-        QName xsl_stylesheet = new QName(Namespaces.URI_XSL, "stylesheet");
-        QName attr_href = new QName("href");
-        QName wsdl_definitions = new QName(Namespaces.URI_WSDL, "definitions");
-        QName attr_location = new QName("location");
-        QName wsdl_types = new QName(Namespaces.URI_WSDL, "types");
-
-        rules.addExtension("xsd", xsd_schema);
-        rules.addAttributeLink(xsd_schema, xsd_import, attr_schemaLocation);
-        rules.addAttributeLink(xsd_schema, xsd_include, attr_schemaLocation);
-
-        rules.addExtension("xsl", xsl_stylesheet);
-        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "import"), attr_href);
-        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "include"), attr_href);
-
-        rules.addExtension("wsdl", wsdl_definitions);
-        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "import"), attr_location);
-        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "include"), attr_location);
-        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_import, attr_schemaLocation);
-        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_include, attr_schemaLocation);
-
         crawled = new HashMap<URL, File>();
     }
     
