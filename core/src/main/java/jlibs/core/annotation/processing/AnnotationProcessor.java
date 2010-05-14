@@ -17,6 +17,7 @@ package jlibs.core.annotation.processing;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic;
 
 /**
  * @author Santhosh Kumar T
@@ -26,5 +27,9 @@ public abstract class AnnotationProcessor extends AbstractProcessor{
     public void init(ProcessingEnvironment processingEnv){
         super.init(processingEnv);
         Environment.set(processingEnv);
+    }
+    
+    public void debug(String message){
+        super.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message);
     }
 }
