@@ -169,7 +169,11 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
 	            mirror = ModelUtil.getAnnotationMirror(method, Delete.class);
 	            if(mirror==null){
 	                mirror = ModelUtil.getAnnotationMirror(method, Update.class);
-	                if(mirror!=null)
+	                if(mirror==null){
+                        mirror = ModelUtil.getAnnotationMirror(method, Upsert.class);
+                        if(mirror!=null)
+                            generateUpsertMethod(printer, method);
+                    }else
 	                    generateUpdateMethod(printer, method);
 	            }else
 	           	generateDeleteMethod(printer, method);
@@ -339,7 +343,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         return params;
     }
 
-    private void generateDMLMethod(Printer printer, ExecutableElement method, String code){
+    private void generateDMLMethod(Printer printer, ExecutableElement method, String... code){
         printer.printlns(
             "",
             "@Override",
@@ -354,7 +358,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                     PLUS
             );
         }
-        printer.println(code);
+        printer.printlns(code);
         if(noException){
             printer.printlns(
                     MINUS,
@@ -410,21 +414,58 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         }
     };
 
-    private void generateInsertMethod(Printer printer, ExecutableElement method){
-        if(method.getParameters().size()==0)
-            throw new AnnotationError(method, "method with @Insert annotation should take atleast one argument");
-        
-        StringBuilder columns = columns(method, null, null, ", ").insert(0, "(").append(')');
-        StringBuilder values = parameters(method, null, new Visitor<String, String>(){
+    private String insertQuery(ExecutableElement method, Visitor<String, String> propertyVisitor){
+        StringBuilder columns = columns(method, propertyVisitor, null, ", ").insert(0, "(").append(')');
+        StringBuilder values = parameters(method, propertyVisitor, new Visitor<String, String>(){
             @Override
             public String visit(String elem){
                 return "?";
             }
         }, ", ").insert(0, "values(").append(')');
-        StringBuilder params = parameters(method, null, null, ", ");
+        StringBuilder params = parameters(method, propertyVisitor, null, ", ");
+
+        return "insert(\""+StringUtil.toLiteral(columns+" "+values, false)+"\", "+params+')';
+    }
+
+    private void generateInsertMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Insert annotation should take atleast one argument");
         
         boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
-        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"insert(\""+StringUtil.toLiteral(columns+" "+values, false)+"\", "+params+");");
+        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+insertQuery(method, null)+';');
+    }
+
+    private String updateQuery(ExecutableElement method){
+        StringBuilder set = columns(method, SET_VISITOR, ASSIGN_VISITOR, ", ").insert(0, "set ");
+        StringBuilder where = columns(method, WHERE_VISITOR, ASSIGN_VISITOR, " and ").insert(0, "where ");
+        StringBuilder params = parameters(method, SET_WHERE_VISITOR, null, ", ");
+        return "update(\""+StringUtil.toLiteral(set+" "+where, false)+"\", "+params+')';
+    }
+    
+    private void generateUpdateMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Update annotation should take atleast one argument");
+
+        boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
+        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+updateQuery(method)+';');
+    }
+
+    private void generateUpsertMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Upsert annotation should take atleast one argument");
+
+        String insertQuery = insertQuery(method, SET_WHERE_VISITOR);
+
+        List<String> code = new ArrayList<String>();
+        code.add("int count = "+updateQuery(method)+';');
+        if(method.getReturnType().getKind()==TypeKind.VOID){
+            code.add("if(count==0)");
+            code.add(PLUS);
+            code.add(insertQuery +';');
+            code.add(MINUS);
+        }else
+            code.add("return count==0 ? "+insertQuery+" : count;");
+        generateDMLMethod(printer, method, code.toArray(new String[code.size()]));
     }
 
     private void generateDeleteMethod(Printer printer, ExecutableElement method){
@@ -436,17 +477,5 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
 
         boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
         generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"delete(\""+StringUtil.toLiteral(where.toString(), false)+"\", "+params+");");
-    }
-
-    private void generateUpdateMethod(Printer printer, ExecutableElement method){
-        if(method.getParameters().size()==0)
-            throw new AnnotationError(method, "method with @Update annotation should take atleast one argument");
-        
-        StringBuilder set = columns(method, SET_VISITOR, ASSIGN_VISITOR, ", ").insert(0, "set ");
-        StringBuilder where = columns(method, WHERE_VISITOR, ASSIGN_VISITOR, " and ").insert(0, "where ");
-        StringBuilder params = parameters(method, SET_WHERE_VISITOR, null, ", ");
-        
-        boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
-        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"update(\""+StringUtil.toLiteral(set+" "+where, false)+"\", "+params+");");
     }
 }

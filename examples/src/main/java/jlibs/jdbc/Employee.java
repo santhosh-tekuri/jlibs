@@ -21,16 +21,10 @@ import jlibs.jdbc.annotations.Table;
 /**
  * @author Santhosh Kumar T
  */
-@Table(value=Employee.TABLE_NAME, extend= EmployeeDAO.class)
+@Table(value="employees", extend= EmployeeDAO.class)
 public class Employee{
-    public static final String TABLE_NAME =    "employees";
-    public static final String COL_ID = "id";
-    public static final String COL_FIRST_NAME = "first_name";
-    public static final String COL_LAST_NAME = "last_name";
-    public static final String COL_AGE = "age";
-
     private int id;
-    @Column(value=COL_ID, primary=true)
+    @Column(value="id", primary=true)
     public int getID(){
         return id;
     }
@@ -39,7 +33,7 @@ public class Employee{
     }
 
     private String firstName;
-    @Column(COL_FIRST_NAME)
+    @Column("first_name")
     public String getFirstName(){
         return firstName;
     }
@@ -48,7 +42,7 @@ public class Employee{
     }
 
     private String lastName;
-    @Column(COL_LAST_NAME)
+    @Column("last_name")
     public String getLastName(){
         return lastName;
     }
@@ -57,7 +51,7 @@ public class Employee{
     }
 
     private int age;
-    @Column(COL_AGE)
+    @Column("age")
     public int getAge(){
         return age;
     }
