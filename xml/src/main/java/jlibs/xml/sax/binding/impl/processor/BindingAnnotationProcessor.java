@@ -20,6 +20,10 @@ import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.graph.Visitor;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.xml.sax.binding.SAXContext;
+import jlibs.xml.sax.binding.impl.Delegate;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -31,6 +35,8 @@ import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+
+import static jlibs.core.annotation.processing.Printer.*;
 
 /**
  * @author Santhosh Kumar T
@@ -110,25 +116,26 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
 
         pw.printPackage();
 
-        pw.println("import jlibs.xml.sax.binding.impl.*;");
-        pw.println("import jlibs.xml.sax.binding.SAXContext;");
-        pw.println("import org.xml.sax.Attributes;");
-        pw.println("import org.xml.sax.SAXException;");
-        pw.println("import javax.xml.namespace.QName;");
+        pw.importPackage(Delegate.class);
+        pw.importClass(SAXContext.class);
+        pw.importClass(Attributes.class);
+        pw.importClass(SAXException.class);
+        pw.importClass(QName.class);
         pw.println();
 
         pw.printClassDoc();
 
-        pw.println("@SuppressWarnings({\"unchecked\"})");
-        pw.println("public class "+pw.generatedClazz +" extends BindingCumRelation{");
-        pw.indent++;
-
-        pw.println("public static final "+pw.generatedClazz +" INSTANCE = new "+pw.generatedClazz +"(new "+clazz.getSimpleName()+"());");
-        pw.println("static{");
-        pw.indent++;
-        pw.println("INSTANCE.init();");
-        pw.indent--;
-        pw.println("}");
+        pw.printlns(
+            "@SuppressWarnings({\"unchecked\"})",
+            "public class "+pw.generatedClazz +" extends BindingCumRelation{",
+                PLUS,
+                "public static final "+pw.generatedClazz +" INSTANCE = new "+pw.generatedClazz +"(new "+clazz.getSimpleName()+"());",
+                "static{",
+                    PLUS,
+                    "INSTANCE.init();",
+                    MINUS,
+                "}"
+        );
         pw.emptyLine(true);
 
         pw.print("public static final QName ELEMENT = ");
@@ -143,14 +150,14 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
         }
         pw.emptyLine(true);
 
-
-        pw.println("private final "+clazz.getSimpleName()+" handler;");
-
-        pw.println("private "+pw.generatedClazz +"("+clazz.getSimpleName()+" handler){");
-        pw.indent++;
-        pw.println("this.handler = handler;");
-        pw.indent--;
-        pw.println("}");
+        pw.printlns(
+            "private final "+clazz.getSimpleName()+" handler;",
+            "private "+pw.generatedClazz +"("+clazz.getSimpleName()+" handler){",
+                PLUS,
+                "this.handler = handler;",
+                MINUS,
+            "}"
+        );
         pw.emptyLine(true);
 
         pw.print("private void init()");
