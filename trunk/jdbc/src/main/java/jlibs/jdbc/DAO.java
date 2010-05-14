@@ -279,9 +279,9 @@ public abstract class DAO<T>{
 
     /*-------------------------------------------------[ Upsert ]---------------------------------------------------*/
     
-    public void upsert(T record) throws SQLException{
-        if(update(record)==0)
-            insert(record);
+    public int upsert(T record) throws SQLException{
+        int count = update(record);
+        return count==0 ? insert(record) : count;
     }
 
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
