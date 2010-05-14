@@ -18,13 +18,12 @@ package jlibs.jdbc;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.graph.Visitor;
 import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
-import jlibs.jdbc.annotations.Column;
-import jlibs.jdbc.annotations.Delete;
-import jlibs.jdbc.annotations.Table;
+import jlibs.jdbc.annotations.*;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -32,6 +31,8 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
 
     private Map<ExecutableElement, AnnotationMirror> methods = new HashMap<ExecutableElement, AnnotationMirror>();
     private Map<String, String> properties = new HashMap<String, String>();
-    
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
         for(TypeElement annotation: annotations){
@@ -110,6 +111,14 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         }
     }
 
+    public TypeMirror propertyType(String propertyName){
+        for(ExecutableElement method: methods.keySet()){
+            if(propertyName(method).equals(propertyName))
+                return method.getReturnType();
+        }
+        return null;
+    }
+
     public Set<String> columnNames(){
         Set<String> columns = new LinkedHashSet<String>();
         for(Map.Entry<ExecutableElement, AnnotationMirror> entry: methods.entrySet()){
@@ -155,9 +164,17 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         generateSetColumnValue(printer, methods);
 
         for(ExecutableElement method: ElementFilter.methodsIn(extendClass.getEnclosedElements())){
-            AnnotationMirror delete = ModelUtil.getAnnotationMirror(method, Delete.class);
-            if(delete!=null)
-                generateDeleteMethod(printer, method);
+            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Insert.class);
+            if(mirror==null){
+	            mirror = ModelUtil.getAnnotationMirror(method, Delete.class);
+	            if(mirror==null){
+	                mirror = ModelUtil.getAnnotationMirror(method, Update.class);
+	                if(mirror!=null)
+	                    generateUpdateMethod(printer, method);
+	            }else
+	           	generateDeleteMethod(printer, method);
+            }else
+                generateInsertMethod(printer, method);
         }
         printer.indent--;
         printer.println("}");
@@ -269,23 +286,60 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         addDefaultCase(printer);
     }
 
-    private void generateDeleteMethod(Printer printer, ExecutableElement method){
-        StringBuilder condition = new StringBuilder("where ");
+    private StringBuilder columns(final ExecutableElement method, final Visitor<String, String> propertyVisitor, final Visitor<String, String> visitor, String separator){
+        StringBuilder columns = new StringBuilder();
+        int i = 0;
+        for(VariableElement param : method.getParameters()){
+            String paramName = param.getSimpleName().toString();
+            String propertyName = propertyVisitor==null ? paramName : propertyVisitor.visit(paramName);
+            if(propertyName!=null){
+                TypeMirror columnType = propertyType(propertyName);
+                if(columnType==null)
+                    throw new AnnotationError(method, "invalid column property: "+paramName+"->"+propertyName);
+                if(columnType!=param.asType())
+                    throw new AnnotationError(param, paramName+" must be of type "+ModelUtil.toString(columnType, true));
+                
+                String columnName = properties.get(propertyName);
+                if(columnName==null)
+                    throw new AnnotationError(method, "invalid column property: "+propertyName);
+                
+                String value = visitor == null ? columnName : visitor.visit(columnName);
+                if(value!=null){
+                    if(i>0)
+                        columns.append(separator);
+                    columns.append(value);
+                    i++;
+                }
+            }
+        }
+        return columns;
+    }
+    
+    private StringBuilder parameters(ExecutableElement method, Visitor<String, String> propertyVisitor, Visitor<String, String> visitor, String separator){
         StringBuilder params = new StringBuilder();
         int i = 0;
         for(VariableElement param : method.getParameters()){
             String paramName = param.getSimpleName().toString();
-            params.append(", ");
-            if(i>0){
-                condition.append(" and ");
+            String propertyName = propertyVisitor==null ? paramName : propertyVisitor.visit(paramName);
+            if(propertyName!=null){
+                TypeMirror columnType = propertyType(propertyName);
+                if(columnType==null)
+                    throw new AnnotationError(method, "invalid column property: "+paramName);
+                if(columnType!=param.asType())
+                    throw new AnnotationError(param, paramName+" must be of type "+ModelUtil.toString(columnType, true));
+                String value = visitor == null ? paramName : visitor.visit(paramName);
+                if(value!=null){
+                    if(i>0)
+                        params.append(separator);
+                    params.append(value);
+                    i++;
+                }
             }
-            params.append(paramName);
-            String columnName = properties.get(paramName);
-            if(columnName==null)
-                throw new AnnotationError(method, "invalid column property: "+paramName);
-            condition.append(columnName).append("=?");
-            i++;
         }
+        return params;
+    }
+
+    private void generateDMLMethod(Printer printer, ExecutableElement method, String code){
         printer.printlns(
             "",
             "@Override",
@@ -300,7 +354,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                     PLUS
             );
         }
-        printer.println("return delete(\""+StringUtil.toLiteral(condition.toString(), false)+'"'+params+");");
+        printer.println(code);
         if(noException){
             printer.printlns(
                     MINUS,
@@ -315,5 +369,84 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                 MINUS,
             "}"
         );
+    }
+
+    private static final Visitor<String, String> ASSIGN_VISITOR = new Visitor<String, String>(){
+        @Override
+        public String visit(String columnName){
+            return columnName+"=?";
+        }
+    };
+
+    private static final Visitor<String, String> SET_VISITOR = new Visitor<String, String>(){
+        @Override
+        public String visit(String paramName){
+            return paramName.startsWith("where") ? null : paramName;
+        }
+    };
+    
+    private static final Visitor<String, String> WHERE_VISITOR = new Visitor<String, String>(){
+        @Override
+        public String visit(String paramName){
+            if(paramName.startsWith("where")){
+                paramName = paramName.substring("where".length());
+                switch(paramName.charAt(0)){
+                    case '_':
+                    case '$':
+                        return paramName.substring(1);
+                    default:
+                        return paramName;
+                }
+            }else
+                return null;
+        }
+    };
+
+    private static final Visitor<String, String> SET_WHERE_VISITOR = new Visitor<String, String>(){
+        @Override
+        public String visit(String paramName){
+            String propertyName = SET_VISITOR.visit(paramName);
+            return propertyName==null ? WHERE_VISITOR.visit(paramName) : propertyName;
+        }
+    };
+
+    private void generateInsertMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Insert annotation should take atleast one argument");
+        
+        StringBuilder columns = columns(method, null, null, ", ").insert(0, "(").append(')');
+        StringBuilder values = parameters(method, null, new Visitor<String, String>(){
+            @Override
+            public String visit(String elem){
+                return "?";
+            }
+        }, ", ").insert(0, "values(").append(')');
+        StringBuilder params = parameters(method, null, null, ", ");
+        
+        boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
+        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"insert(\""+StringUtil.toLiteral(columns+" "+values, false)+"\", "+params+");");
+    }
+
+    private void generateDeleteMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Delete annotation should take atleast one argument");
+        
+        StringBuilder where = columns(method, null, ASSIGN_VISITOR, " and ").insert(0, "where ");
+        StringBuilder params = parameters(method, null, null, ", ");
+
+        boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
+        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"delete(\""+StringUtil.toLiteral(where.toString(), false)+"\", "+params+");");
+    }
+
+    private void generateUpdateMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Update annotation should take atleast one argument");
+        
+        StringBuilder set = columns(method, SET_VISITOR, ASSIGN_VISITOR, ", ").insert(0, "set ");
+        StringBuilder where = columns(method, WHERE_VISITOR, ASSIGN_VISITOR, " and ").insert(0, "where ");
+        StringBuilder params = parameters(method, SET_WHERE_VISITOR, null, ", ");
+        
+        boolean noReturn = method.getReturnType().getKind()==TypeKind.VOID;
+        generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"update(\""+StringUtil.toLiteral(set+" "+where, false)+"\", "+params+");");
     }
 }
