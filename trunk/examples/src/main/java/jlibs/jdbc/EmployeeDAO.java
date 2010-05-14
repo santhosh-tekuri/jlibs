@@ -15,6 +15,8 @@
 
 package jlibs.jdbc;
 
+import jlibs.jdbc.annotations.Insert;
+import jlibs.jdbc.annotations.Update;
 import jlibs.jdbc.annotations.Delete;
 
 import javax.sql.DataSource;
@@ -27,6 +29,15 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public EmployeeDAO(DataSource dataSource, String tableName, String[] columnNames, boolean[] primaries){
         super(dataSource, tableName, columnNames, primaries);
     }
+
+    @Insert
+    public abstract int insert(String firstName, String lastName) throws SQLException;
+
+    @Insert
+    public abstract int insert(String firstName, int age);
+    
+    @Update
+    public abstract int update(int iD, int age, String where_firstName, String where_lastName);
 
     @Delete
     public abstract int delete(String firstName, String lastName) throws SQLException;
