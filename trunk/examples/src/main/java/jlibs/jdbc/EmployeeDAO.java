@@ -18,6 +18,7 @@ package jlibs.jdbc;
 import jlibs.jdbc.annotations.Insert;
 import jlibs.jdbc.annotations.Update;
 import jlibs.jdbc.annotations.Delete;
+import jlibs.jdbc.annotations.Upsert;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -38,6 +39,12 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     
     @Update
     public abstract int update(int iD, int age, String where_firstName, String where_lastName);
+
+    @Upsert
+    public abstract int upsert1(int iD, int age, String where_firstName, String where_lastName);
+
+    @Upsert
+    public abstract void upsert2(int iD, int age, String where_firstName, String where_lastName);
 
     @Delete
     public abstract int delete(String firstName, String lastName) throws SQLException;
