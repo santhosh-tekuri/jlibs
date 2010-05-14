@@ -37,6 +37,8 @@ import javax.lang.model.util.ElementFilter;
 import java.io.IOException;
 import java.util.*;
 
+import static jlibs.core.annotation.processing.Printer.*;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -82,7 +84,6 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
             }
         }
         return true;
-
     }
 
     private boolean accept(ExecutableElement method){
@@ -103,35 +104,38 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
         printer.printPackage();
 
         printer.printClassDoc();
-        printer.println("@SuppressWarnings(\"unchecked\")");
-        printer.println("public class "+printer.generatedClazz +" extends "+ printer.clazz.getSimpleName()+"{");
-        printer.indent++;
-
+        printer.printlns(
+            "@SuppressWarnings(\"unchecked\")",
+            "public class "+printer.generatedClazz +" extends "+ printer.clazz.getSimpleName()+"{",
+                PLUS
+        );
         printVisitMethod("", classes, printer);
-
-        printer.indent--;
-        printer.println("}");
+        printer.printlns(
+                MINUS,
+            "}"
+        );
     }
 
     private void generateDelegatingClass(Map<TypeMirror, ExecutableElement> classes, Printer printer){
         printer.printPackage();
 
         printer.printClassDoc();
-        printer.println("public class "+printer.generatedClazz +" implements "+ Visitor.class.getCanonicalName()+"{");
-        printer.indent++;
-
-        printer.println("private final "+printer.clazz.getSimpleName()+" delegate;");
-        printer.println("public "+printer.generatedClazz+"("+printer.clazz.getSimpleName()+" delegate){");
-        printer.indent++;
-        printer.println("this.delegate = delegate;");
-        printer.indent--;
-        printer.println("}");
+        printer.printlns(
+            "public class "+printer.generatedClazz +" implements "+ Visitor.class.getCanonicalName()+"{",
+                PLUS,
+                "private final "+printer.clazz.getSimpleName()+" delegate;",
+                "public "+printer.generatedClazz+"("+printer.clazz.getSimpleName()+" delegate){",
+                    PLUS,
+                    "this.delegate = delegate;",
+                    MINUS,
+                "}"
+        );
         printer.emptyLine(true);
-        
         printVisitMethod("delegate.", classes, printer);
-
-        printer.indent--;
-        printer.println("}");
+        printer.printlns(
+                MINUS,
+            "}"
+        );
     }
 
     private void printVisitMethod(String prefix, Map<TypeMirror, ExecutableElement> classes, Printer printer){
