@@ -26,9 +26,14 @@
         </dependency> 
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>jlibs-xmldog</artifactId>
+            <artifactId>jlibs-jdbc</artifactId>
             <version>${project.version}</version>
         </dependency> 
+        <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>jlibs-xmldog</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>saxon</artifactId>
