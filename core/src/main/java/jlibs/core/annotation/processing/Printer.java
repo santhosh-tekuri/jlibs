@@ -27,6 +27,9 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class Printer{
+    public static final String PLUS = "indent++";
+    public static final String MINUS = "indent--";
+    
     public TypeElement clazz;
     public String generatedQName;
     public String generatedPakage;
@@ -54,6 +57,24 @@ public class Printer{
         indent();
         ps.println(str);
         doIndent = true;
+    }
+
+    public void println(String... tokens){
+        for(String token: tokens)
+            print(token);
+        println();
+    }
+    
+    @SuppressWarnings({"StringEquality"})
+    public void printlns(String... lines){
+        for(String line: lines){
+            if(line==PLUS)
+                indent++;
+            else if(line==MINUS)
+                indent--;
+            else
+                println(line);
+        }
     }
 
     public void print(String str){
@@ -101,6 +122,14 @@ public class Printer{
             println("package "+generatedPakage +";");
             emptyLine(true);
         }
+    }
+
+    public void importClass(Class clazz){
+        println("import "+ clazz.getName()+';');
+    }
+
+    public void importPackage(Class clazz){
+        println("import "+ clazz.getPackage().getName()+".*;");
     }
 
     public void printClassDoc(){
