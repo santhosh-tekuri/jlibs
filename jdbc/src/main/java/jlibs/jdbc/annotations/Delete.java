@@ -13,24 +13,17 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.jdbc;
+package jlibs.jdbc.annotations;
 
-import jlibs.jdbc.annotations.Delete;
-
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class EmployeeDAO extends DAO<Employee>{
-    public EmployeeDAO(DataSource dataSource, String tableName, String[] columnNames, boolean[] primaries){
-        super(dataSource, tableName, columnNames, primaries);
-    }
-
-    @Delete
-    public abstract int delete(String firstName, String lastName) throws SQLException;
-
-    @Delete
-    public abstract int delete(String firstName, int age);
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.SOURCE)
+public @interface Delete{
 }
