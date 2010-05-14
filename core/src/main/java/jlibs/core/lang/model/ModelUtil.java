@@ -28,7 +28,9 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.StandardLocation;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
@@ -79,8 +81,21 @@ public class ModelUtil{
         }
     }
 
+    public static Modifier getModifier(Set<Modifier> set, Modifier... modifiers){
+        for(Modifier modifier: modifiers){
+            if(set.contains(modifier))
+                return modifier;
+        }
+        return null;
+    }
+    
     public static String signature(ExecutableElement method, boolean useParamNames){
         StringBuilder buff = new StringBuilder();
+
+        Set<Modifier> modifiers = method.getModifiers();
+        Modifier modifier = getModifier(modifiers, Modifier.PUBLIC, Modifier.PROTECTED, Modifier.PRIVATE);
+        if(modifier!=null)
+            buff.append(modifier).append(' ');
 
         buff.append(toString(method.getReturnType(), false));
         buff.append(' ');
@@ -96,6 +111,17 @@ public class ModelUtil{
             i++;
         }
         buff.append(')');
+
+        List<? extends TypeMirror> throwTypes = method.getThrownTypes();
+        if(throwTypes.size()>0){
+            buff.append(" throws ");
+            i = 0;
+            for(TypeMirror throwType: throwTypes){
+                if(i>0)
+                    buff.append(", ");
+                buff.append(throwType);
+            }
+        }
 
         return buff.toString();
     }
