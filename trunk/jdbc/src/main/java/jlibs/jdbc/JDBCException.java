@@ -15,22 +15,13 @@
 
 package jlibs.jdbc;
 
-import jlibs.jdbc.annotations.Delete;
-
-import javax.sql.DataSource;
 import java.sql.SQLException;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class EmployeeDAO extends DAO<Employee>{
-    public EmployeeDAO(DataSource dataSource, String tableName, String[] columnNames, boolean[] primaries){
-        super(dataSource, tableName, columnNames, primaries);
+public class JDBCException extends RuntimeException{
+    public JDBCException(SQLException cause){
+        super(cause);
     }
-
-    @Delete
-    public abstract int delete(String firstName, String lastName) throws SQLException;
-
-    @Delete
-    public abstract int delete(String firstName, int age);
 }

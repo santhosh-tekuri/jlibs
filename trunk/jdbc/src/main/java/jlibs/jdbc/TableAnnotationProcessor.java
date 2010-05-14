@@ -18,27 +18,27 @@ package jlibs.jdbc;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.annotations.Column;
+import jlibs.jdbc.annotations.Delete;
 import jlibs.jdbc.annotations.Table;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.*;
 
-import static jlibs.core.annotation.processing.Printer.*;
+import static jlibs.core.annotation.processing.Printer.MINUS;
+import static jlibs.core.annotation.processing.Printer.PLUS;
 
 /**
  * @author Santhosh Kumar T
@@ -49,15 +49,20 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "DAO";
     public static final String FORMAT = "${package}._${class}"+SUFFIX;
 
+    private Map<ExecutableElement, AnnotationMirror> methods = new HashMap<ExecutableElement, AnnotationMirror>();
+    private Map<String, String> properties = new HashMap<String, String>();
+    
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
         for(TypeElement annotation: annotations){
             for(Element elem: roundEnv.getElementsAnnotatedWith(annotation)){
                 try{
+                    methods.clear();
+                    properties.clear();
+                    
                     TypeElement c = (TypeElement)elem;
-                    Map<ExecutableElement, AnnotationMirror> methods = new HashMap<ExecutableElement, AnnotationMirror>();
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
-                        process(c, methods);
+                        process(c);
                         c = ModelUtil.getSuper(c);
                     }
                     c = (TypeElement)elem;
@@ -65,7 +70,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                     Printer pw = null;
                     try{
                         pw = Printer.get(c, Table.class, FORMAT);
-                        generateClass(pw, methods);
+                        generateClass(pw);
                     }catch(IOException ex){
                         throw new RuntimeException(ex);
                     }finally{
@@ -80,15 +85,32 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         return true;
     }
 
-    private void process(TypeElement c, Map<ExecutableElement, AnnotationMirror> methods){
+    private void process(TypeElement c){
         for(ExecutableElement method: ElementFilter.methodsIn(c.getEnclosedElements())){
             AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Column.class);
-            if(mirror!=null)
+            if(mirror!=null){
                 methods.put(method, mirror);
+                String columnName = ModelUtil.getAnnotationValue(method, mirror, "value");
+                if(properties.put(propertyName(method), columnName)!=null)
+                    throw new AnnotationError(method, mirror, "duplicate column: "+columnName);
+            }
         }
     }
 
-    public Set<String> columnNames(Map<ExecutableElement, AnnotationMirror> methods){
+    public String propertyName(ExecutableElement method){
+        String methodName = method.getSimpleName().toString();
+        methodName = methodName.substring(methodName.startsWith("get") ? 3 : 2);
+        switch(methodName.length()){
+            case 0:
+                return methodName;
+            case 1:
+                return methodName.toLowerCase();
+            default:
+                return Character.toLowerCase(methodName.charAt(0))+methodName.substring(1);
+        }
+    }
+
+    public Set<String> columnNames(){
         Set<String> columns = new LinkedHashSet<String>();
         for(Map.Entry<ExecutableElement, AnnotationMirror> entry: methods.entrySet()){
             String column = ModelUtil.getAnnotationValue(entry.getKey(), entry.getValue(), "value");
@@ -98,7 +120,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         return columns;
     }
 
-    public List<Boolean> primaries(Map<ExecutableElement, AnnotationMirror> methods){
+    public List<Boolean> primaries(){
         List<Boolean> primaries = new ArrayList<Boolean>();
         for(Map.Entry<ExecutableElement, AnnotationMirror> entry: methods.entrySet()){
             Boolean primary = ModelUtil.getAnnotationValue(entry.getKey(), entry.getValue(), "primary");
@@ -107,7 +129,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         return primaries;
     }
 
-    private void generateClass(Printer printer, Map<ExecutableElement, AnnotationMirror> methods){
+    private void generateClass(Printer printer){
         printer.printPackage();
 
         printer.importClass(ImpossibleException.class);
@@ -123,7 +145,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.println("{");
         printer.indent++;
 
-        generateConstructor(printer, methods);
+        generateConstructor(printer);
         printer.println();
         generateNewRow(printer);
         printer.println();
@@ -132,16 +154,21 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.println();
         generateSetColumnValue(printer, methods);
 
+        for(ExecutableElement method: ElementFilter.methodsIn(extendClass.getEnclosedElements())){
+            AnnotationMirror delete = ModelUtil.getAnnotationMirror(method, Delete.class);
+            if(delete!=null)
+                generateDeleteMethod(printer, method);
+        }
         printer.indent--;
         printer.println("}");
     }
 
-    private void generateConstructor(Printer printer, Map<ExecutableElement, AnnotationMirror> methods){
+    private void generateConstructor(Printer printer){
         String tableName = ModelUtil.getAnnotationValue(printer.clazz, Table.class, "value");
         printer.printlns(
             "public "+printer.generatedClazz+"(DataSource dataSource){",
                 PLUS,
-                "super(dataSource, \""+tableName+"\", "+columnsArray(methods)+", "+primariesArray(methods)+");",
+                "super(dataSource, \""+tableName+"\", "+columnsArray()+", "+primariesArray()+");",
                 MINUS,
             "}"
         );
@@ -158,10 +185,10 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
     }
 
-    private String columnsArray(Map<ExecutableElement, AnnotationMirror> methods){
+    private String columnsArray(){
         StringBuilder buff = new StringBuilder("new String[]{ ");
         int i = 0;
-        for(String column: columnNames(methods)){
+        for(String column: columnNames()){
             if(i>0)
                 buff.append(", ");
             buff.append('"').append(StringUtil.toLiteral(column, false)).append('"');
@@ -171,10 +198,10 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         return buff.toString();
     }
 
-    private String primariesArray(Map<ExecutableElement, AnnotationMirror> methods){
+    private String primariesArray(){
         StringBuilder buff = new StringBuilder("new boolean[]{ ");
         int i = 0;
-        for(Boolean primary: primaries(methods)){
+        for(Boolean primary: primaries()){
             if(i>0)
                 buff.append(", ");
             buff.append(primary);
@@ -228,18 +255,65 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
         int i = 0;
         for(ExecutableElement method: methods.keySet()){
-            String methodName = method.getSimpleName().toString();
-            methodName = methodName.substring(methodName.startsWith("get") ? 3 : 2);
+            String propertyName = propertyName(method);
             String returnType = ModelUtil.toString(method.getReturnType(), true);
             printer.printlns(
                 "case "+i+":",
                     PLUS,
-                    "record.set"+methodName+"(("+returnType+")value);",
+                    "record.set"+ BeanUtil.firstLetterToUpperCase(propertyName)+"(("+returnType+")value);",
                     "break;",
                     MINUS
             );
             i++;
         }
         addDefaultCase(printer);
+    }
+
+    private void generateDeleteMethod(Printer printer, ExecutableElement method){
+        StringBuilder condition = new StringBuilder("where ");
+        StringBuilder params = new StringBuilder();
+        int i = 0;
+        for(VariableElement param : method.getParameters()){
+            String paramName = param.getSimpleName().toString();
+            params.append(", ");
+            if(i>0){
+                condition.append(" and ");
+            }
+            params.append(paramName);
+            String columnName = properties.get(paramName);
+            if(columnName==null)
+                throw new AnnotationError(method, "invalid column property: "+paramName);
+            condition.append(columnName).append("=?");
+            i++;
+        }
+        printer.printlns(
+            "",
+            "@Override",
+            ModelUtil.signature(method, true)+"{",
+                PLUS
+        );
+
+        boolean noException = method.getThrownTypes().size() == 0;
+        if(noException){
+            printer.printlns(
+                "try{",
+                    PLUS
+            );
+        }
+        printer.println("return delete(\""+StringUtil.toLiteral(condition.toString(), false)+'"'+params+");");
+        if(noException){
+            printer.printlns(
+                    MINUS,
+                "}catch(java.sql.SQLException ex){",
+                    PLUS,
+                    "throw new "+JDBCException.class.getName()+"(ex);",
+                    MINUS,
+                "}"
+            );
+        }
+        printer.printlns(
+                MINUS,
+            "}"
+        );
     }
 }
