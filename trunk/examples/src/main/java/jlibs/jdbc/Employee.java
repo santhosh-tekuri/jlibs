@@ -23,6 +23,8 @@ import jlibs.jdbc.annotations.Table;
  */
 @Table(value="employees", extend= EmployeeDAO.class)
 public class Employee{
+
+
     private int id;
     @Column(value="id", primary=true)
     public int getID(){
