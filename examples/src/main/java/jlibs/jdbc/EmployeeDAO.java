@@ -25,8 +25,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public abstract class EmployeeDAO extends DAO<Employee>{
-    public EmployeeDAO(DataSource dataSource, String tableName, String[] columnNames, boolean[] primaries){
-        super(dataSource, tableName, columnNames, primaries);
+    public EmployeeDAO(DataSource dataSource, TableMetaData table){
+        super(dataSource, table);
     }
 
     @Select

@@ -150,7 +150,17 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.printlns(
             "public "+printer.generatedClazz+"(DataSource dataSource){",
                 PLUS,
-                "super(dataSource, \""+tableName+"\", "+columns.columnsDeclaration()+", "+columns.primariesDeclaration()+");",
+                "super(dataSource, new TableMetaData(\""+StringUtil.toLiteral(tableName, false)+"\",",
+                    PLUS
+        );
+        int i = 0;
+        for(ColumnProperty column: columns){
+            printer.println("new ColumnMetaData(\""+StringUtil.toLiteral(column.columnName(), false)+"\", "+column.primary()+')'+(i==columns.size()-1 ? "" : ","));
+            i++;
+        }
+        printer.printlns(
+                    MINUS,
+                "));",
                 MINUS,
             "}"
         );

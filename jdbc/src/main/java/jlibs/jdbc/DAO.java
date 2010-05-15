@@ -32,16 +32,11 @@ import java.util.List;
  */
 public abstract class DAO<T>{
     private DataSource dataSource;
+    private TableMetaData table;
 
-    private String tableName;
-    private String columnNames[];
-    private boolean primaries[];
-
-    public DAO(DataSource dataSource, String tableName, String columnNames[], boolean primaries[]){
+    public DAO(DataSource dataSource, TableMetaData table){
         this.dataSource = dataSource;
-        this.tableName = tableName;
-        this.columnNames = columnNames;
-        this.primaries = primaries;
+        this.table = table;
         buildQueries();
     }
 
@@ -73,7 +68,7 @@ public abstract class DAO<T>{
     
     private T newRecord(ResultSet rs) throws SQLException{
         T record = newRow();
-        for(int i=0; i<columnNames.length; i++)
+        for(int i=0; i<table.columns.length; i++)
             setColumnValue(i, record, rs.getObject(i+1));
         return record;
     }
@@ -97,22 +92,22 @@ public abstract class DAO<T>{
     private void buildQueries(){
         // SELECT Query
         StringBuilder query = new StringBuilder("select ");
-        for(int i=0; i<columnNames.length; i++){
+        for(int i=0; i<table.columns.length; i++){
             if(i>0)
                 query.append(',');
-            query.append(columnNames[i]);
+            query.append(table.columns[i].name);
         }
-        query.append(" from ").append(tableName).append(" ");
+        query.append(" from ").append(table.name).append(" ");
         selectQuery = query.toString();
         
         // INSERT Query
         query.setLength(0);
         query.append('(');
         int i = 0;
-        for(; i<columnNames.length; i++){
+        for(; i<table.columns.length; i++){
             if(i>0)
                 query.append(',');
-            query.append(columnNames[i]);
+            query.append(table.columns[i].name);
         }
         query.append(") values(");
         for(int j=0; j<i; j++){
@@ -127,21 +122,21 @@ public abstract class DAO<T>{
         query.setLength(0);
         query.append("set ");
         List<Integer> args = new ArrayList<Integer>();
-        for(i=0; i<columnNames.length; i++){
-            if(!primaries[i]){
+        for(i=0; i<table.columns.length; i++){
+            if(!table.columns[i].primary){
                 if(args.size()>0)
                     query.append(", ");
-                query.append(columnNames[i]).append("=?");
+                query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
         }
         query.append(" where ");
         int size = args.size();
-        for(i=0; i<columnNames.length; i++){
-            if(primaries[i]){
+        for(i=0; i<table.columns.length; i++){
+            if(table.columns[i].primary){
                 if(args.size()>size)
                     query.append(" and ");
-                query.append(columnNames[i]).append("=?");
+                query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
         }
@@ -152,11 +147,11 @@ public abstract class DAO<T>{
         query.setLength(0);
         query.append("where ");
         args.clear();
-        for(i=0; i<columnNames.length; i++){
-            if(primaries[i]){
+        for(i=0; i<table.columns.length; i++){
+            if(table.columns[i].primary){
                 if(args.size()>0)
                     query.append(" and ");
-                query.append(columnNames[i]).append("=?");
+                query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
         }
@@ -255,12 +250,12 @@ public abstract class DAO<T>{
     public int insert(String query, Object... args) throws SQLException{
         if(query==null)
             query = "";        
-        return executeUpdate("insert into "+tableName+" "+query, args);
+        return executeUpdate("insert into "+table.name+" "+query, args);
     }
     
     public int insert(T record) throws SQLException{
-        Object args[] = new Object[columnNames.length];
-        for(int i=0; i<columnNames.length; i++)
+        Object args[] = new Object[table.columns.length];
+        for(int i=0; i<table.columns.length; i++)
             args[i] = getColumnValue(i, record);
         return insert(insertQuery, args);
     }
@@ -270,7 +265,7 @@ public abstract class DAO<T>{
     public int update(String query, Object... args) throws SQLException{
         if(query==null)
             query = "";        
-        return executeUpdate("update "+tableName+" "+query, args);
+        return executeUpdate("update "+table.name+" "+query, args);
     }
 
     public int update(T record) throws SQLException{
@@ -289,7 +284,7 @@ public abstract class DAO<T>{
     public int delete(String query, Object... args) throws SQLException{
         if(query==null)
             query = "";
-        return executeUpdate("delete from "+tableName+" "+query, args);
+        return executeUpdate("delete from "+table.name+" "+query, args);
     }
 
     public int delete() throws SQLException{
