@@ -64,7 +64,16 @@ public class ModelUtil{
                 return "void";
             case DECLARED:
                 Name paramType = ((TypeElement)((DeclaredType)mirror).asElement()).getQualifiedName();
-                return paramType.toString();
+
+                List<? extends TypeMirror> typeArguments = ((DeclaredType)mirror).getTypeArguments();
+                if(typeArguments.size()==0)
+                    return paramType.toString();
+                else{
+                    StringBuilder buff = new StringBuilder(paramType).append('<');
+                    for(TypeMirror typeArgument: typeArguments)
+                        buff.append(toString(typeArgument, false));
+                    return buff.append('>').toString();
+                }
             case INT:
                 return usePrimitiveWrappers ? "java.lang.Integer" : "int";
             case BOOLEAN:
