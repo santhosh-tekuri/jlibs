@@ -161,7 +161,7 @@ public class StringUtil{
 
     /*-------------------------------------------------[ Literal ]---------------------------------------------------*/
 
-    public static String toLiteral(String str, boolean useRaw){
+    public static String toLiteral(CharSequence str, boolean useRaw){
         StringBuffer buf = new StringBuffer(str.length()+25);
         for(int i=0,len=str.length(); i<len; i++){
             char c = str.charAt(i);
