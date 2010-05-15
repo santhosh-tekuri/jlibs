@@ -117,23 +117,30 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.println();
         columns.generateSetColumnValue(printer);
 
+        Class queryAnnotations[] = { Select.class, Insert.class, Update.class, Upsert.class, Delete.class };
         for(ExecutableElement method: ElementFilter.methodsIn(extendClass.getEnclosedElements())){
-            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Insert.class);
-            if(mirror==null){
-	            mirror = ModelUtil.getAnnotationMirror(method, Delete.class);
-	            if(mirror==null){
-	                mirror = ModelUtil.getAnnotationMirror(method, Update.class);
-	                if(mirror==null){
-                        mirror = ModelUtil.getAnnotationMirror(method, Upsert.class);
-                        if(mirror!=null)
-                            generateUpsertMethod(printer, method);
-                    }else
-	                    generateUpdateMethod(printer, method);
-	            }else
-	           	generateDeleteMethod(printer, method);
-            }else
+            Class queryAnnotation = null;
+            AnnotationMirror mirror = null;
+            for(Class annotation: queryAnnotations){
+                mirror = ModelUtil.getAnnotationMirror(method, annotation);
+                if(mirror!=null){
+                    queryAnnotation = annotation;
+                    break;
+                }
+            }
+
+            if(queryAnnotation==Select.class)
+                generateSelectMethod(printer, method);
+            else if(queryAnnotation==Insert.class)
                 generateInsertMethod(printer, method);
+            else if(queryAnnotation==Update.class)
+                generateUpdateMethod(printer, method);
+            else if(queryAnnotation==Upsert.class)
+                generateUpsertMethod(printer, method);
+            else if(queryAnnotation==Delete.class)
+                generateDeleteMethod(printer, method);
         }
+        
         printer.indent--;
         printer.println("}");
     }
@@ -264,6 +271,16 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             return propertyName==null ? WHERE_VISITOR.visit(paramName) : propertyName;
         }
     };
+
+    private void generateSelectMethod(Printer printer, ExecutableElement method){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with @Select annotation should take atleast one argument");
+
+        StringBuilder where = columns(method, null, ASSIGN_VISITOR, " and ").insert(0, "where ");
+        StringBuilder params = parameters(method, null, null, ", ");
+        String methodName = method.getReturnType()==printer.clazz.asType() ? "first" : "all";
+        generateDMLMethod(printer, method, "return "+methodName+"(\""+StringUtil.toLiteral(where, false)+"\", "+params+");");
+    }
 
     private String insertQuery(ExecutableElement method, Visitor<String, String> propertyVisitor){
         StringBuilder columns = columns(method, propertyVisitor, null, ", ").insert(0, "(").append(')');

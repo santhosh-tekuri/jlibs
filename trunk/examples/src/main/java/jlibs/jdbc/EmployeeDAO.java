@@ -15,13 +15,11 @@
 
 package jlibs.jdbc;
 
-import jlibs.jdbc.annotations.Insert;
-import jlibs.jdbc.annotations.Update;
-import jlibs.jdbc.annotations.Delete;
-import jlibs.jdbc.annotations.Upsert;
+import jlibs.jdbc.annotations.*;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -30,6 +28,15 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public EmployeeDAO(DataSource dataSource, String tableName, String[] columnNames, boolean[] primaries){
         super(dataSource, tableName, columnNames, primaries);
     }
+
+    @Select
+    public abstract Employee findByID(int iD);
+
+    @Select
+    public abstract List<Employee> findByAge(int age);
+
+    @Select
+    public abstract List<Employee> find(String firstName, String lastName);
 
     @Insert
     public abstract int insert(String firstName, String lastName) throws SQLException;
