@@ -135,6 +135,14 @@ public class ModelUtil{
         return buff.toString();
     }
 
+    public static VariableElement getParameter(ExecutableElement method, String paramName){
+        for(VariableElement param : method.getParameters()){
+            if(param.getSimpleName().contentEquals(paramName))
+                return param;
+        }
+        return null;
+    }
+    
     /*-------------------------------------------------[ Annotation ]---------------------------------------------------*/
 
     public static boolean matches(AnnotationMirror mirror, Class annotation){
