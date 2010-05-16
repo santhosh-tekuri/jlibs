@@ -58,4 +58,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
 
     @Delete
     public abstract int delete(String firstName, int age);
+
+    @Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
+    public abstract int delete(int fromAge, int toAge, String lastN);
 }
