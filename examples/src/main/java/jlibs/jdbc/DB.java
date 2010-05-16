@@ -47,7 +47,7 @@ public class DB{
 
         Employee emp = new Employee();
         emp.setID(1);
-        emp.setFirstName("santhosh");
+        emp.firstName = "santhosh";
         emp.setLastName("kumar");
         emp.setAge(25);
         EMPLOYEES.insert(emp);
@@ -63,7 +63,7 @@ public class DB{
                 public Object run(Connection con) throws SQLException{
                     Employee emp = new Employee();
                     emp.setID(2);
-                    emp.setFirstName("santhosh");
+                    emp.firstName = "santhosh";
                     emp.setLastName("kumar");
                     emp.setAge(25);
                     EMPLOYEES.insert(emp);
@@ -76,8 +76,8 @@ public class DB{
                     throw new RuntimeException();
                 }
             });
-        } catch(RuntimeException e){
-            
+        } catch(RuntimeException ignore){
+            // ignore
         }
 //        assert table.findOlderEmployees(1).size()==0;
         System.out.println(EMPLOYEES.all().size());
