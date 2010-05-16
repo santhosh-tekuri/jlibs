@@ -17,6 +17,7 @@ package jlibs.jdbc;
 
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
+import jlibs.jdbc.annotations.processor.TableAnnotationProcessor;
 
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;

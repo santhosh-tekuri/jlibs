@@ -24,7 +24,6 @@ import jlibs.jdbc.annotations.Table;
 @Table(value="employees", extend= EmployeeDAO.class)
 public class Employee{
 
-
     private int id;
     @Column(value="id", primary=true)
     public int getID(){
@@ -34,20 +33,20 @@ public class Employee{
         this.id = id;
     }
 
-    private String firstName;
     @Column("first_name")
-    public String getFirstName(){
-        return firstName;
-    }
-    public void setFirstName(String firstName){
-        this.firstName = firstName;
-    }
+    public String firstName;
+//    public String getFirstName(){
+//        return firstName;
+//    }
+//    public void setFirstName(String firstName){
+//        this.firstName = firstName;
+//    }
 
     private String lastName;
-    @Column("last_name")
     public String getLastName(){
         return lastName;
     }
+    @Column("last_name")
     public void setLastName(String lastName){
         this.lastName = lastName;
     }

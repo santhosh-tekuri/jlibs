@@ -13,16 +13,17 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.jdbc;
+package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.graph.Visitor;
-import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.jdbc.DAO;
+import jlibs.jdbc.JDBCException;
 import jlibs.jdbc.annotations.*;
 
 import javax.annotation.processing.RoundEnvironment;
@@ -32,11 +33,12 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -90,6 +92,11 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             if(mirror!=null)
                 columns.add(new MethodColumnProperty(method, mirror));
         }
+        for(VariableElement element: ElementFilter.fieldsIn(c.getEnclosedElements())){
+            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(element, Column.class);
+            if(mirror!=null)
+                columns.add(new FieldColumnProperty(element, mirror));
+        }
     }
 
     private void generateClass(Printer printer){
@@ -120,9 +127,8 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         Class queryAnnotations[] = { Select.class, Insert.class, Update.class, Upsert.class, Delete.class };
         for(ExecutableElement method: ElementFilter.methodsIn(extendClass.getEnclosedElements())){
             Class queryAnnotation = null;
-            AnnotationMirror mirror = null;
             for(Class annotation: queryAnnotations){
-                mirror = ModelUtil.getAnnotationMirror(method, annotation);
+                AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, annotation);
                 if(mirror!=null){
                     queryAnnotation = annotation;
                     break;
@@ -232,7 +238,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                     MINUS,
                 "}catch(java.sql.SQLException ex){",
                     PLUS,
-                    "throw new "+JDBCException.class.getName()+"(ex);",
+                    "throw new "+ JDBCException.class.getName()+"(ex);",
                     MINUS,
                 "}"
             );
@@ -357,206 +363,6 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         generateDMLMethod(printer, method, (noReturn ? "" : "return ")+"delete(\""+StringUtil.toLiteral(where.toString(), false)+"\", "+params+");");
     }
 
-    private static abstract class ColumnProperty<E extends Element>{
-        public E element;
-        public AnnotationMirror annotation;
-        protected ColumnProperty(E element, AnnotationMirror annotation){
-            this.element = element;
-            this.annotation = annotation;
-        }
 
-        public String columnName(){
-            return ModelUtil.getAnnotationValue((Element)element, annotation, "value");
-        }
 
-        public boolean primary(){
-            return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "primary");
-        }
-
-        public abstract String propertyName();
-        public abstract TypeMirror propertyType();
-        public abstract String getPropertyCode(String object);
-        public abstract String setPropertyCode(String object, String value);
-
-        @Override
-        public int hashCode(){
-            return propertyName().hashCode();
-        }
-
-        @Override
-        public boolean equals(Object that){
-            return that instanceof ColumnProperty && ((ColumnProperty)that).propertyName().equals(this.propertyName());
-        }
-    }
-
-    private static class MethodColumnProperty extends ColumnProperty<ExecutableElement>{
-        protected MethodColumnProperty(ExecutableElement method, AnnotationMirror annotation){
-            super(method, annotation);
-        }
-
-        @Override
-        public String propertyName(){
-            String methodName = element.getSimpleName().toString();
-            methodName = methodName.substring(methodName.startsWith("get") ? 3 : 2);
-            switch(methodName.length()){
-                case 0:
-                    return methodName;
-                case 1:
-                    return methodName.toLowerCase();
-                default:
-                    return Character.toLowerCase(methodName.charAt(0))+methodName.substring(1);
-            }
-        }
-
-        @Override
-        public TypeMirror propertyType(){
-            return element.getReturnType();
-        }
-
-        @Override
-        public String getPropertyCode(String object){
-            return object+'.'+element.getSimpleName()+"()";
-        }
-
-        @Override
-        public String setPropertyCode(String object, String value){
-            String propertyType = ModelUtil.toString(propertyType(), true);
-            return object+".set"+BeanUtil.firstLetterToUpperCase(propertyName())+"(("+propertyType+')'+value+')';
-        }
-    }
-
-    private static class Columns extends ArrayList<ColumnProperty>{
-        public ColumnProperty findByProperty(String propertyName){
-            for(ColumnProperty prop: this){
-                if(prop.propertyName().equals(propertyName))
-                    return prop;
-            }
-            return null;
-        }
-
-        public ColumnProperty findByColumn(String columnName){
-            for(ColumnProperty prop: this){
-                if(prop.columnName().equals(columnName))
-                    return prop;
-            }
-            return null;
-        }
-
-        public String columnName(String propertyName){
-            ColumnProperty column = findByProperty(propertyName);
-            return column!=null ? column.columnName() : null;
-        }
-
-        public String propertyName(String columnName){
-            ColumnProperty column = findByColumn(columnName);
-            return column!=null ? column.propertyName() : null;
-        }
-
-        public String[] columnNames(){
-            String columnNames[] = new String[size()];
-            for(int i=0; i<columnNames.length; i++)
-                columnNames[i] = get(i).columnName();
-            return columnNames;
-        }
-
-        public String columnsDeclaration(){
-            StringBuilder buff = new StringBuilder("new String[]{ ");
-            int i = 0;
-            for(String column: columnNames()){
-                if(i>0)
-                    buff.append(", ");
-                buff.append('"').append(StringUtil.toLiteral(column, false)).append('"');
-                i++;
-            }
-            buff.append(" }");
-            return buff.toString();
-        }
-
-        public boolean[] primaries(){
-            boolean primaries[] = new boolean[size()];
-            for(int i=0; i<primaries.length; i++)
-                primaries[i] = get(i).primary();
-            return primaries;
-        }
-
-        public String primariesDeclaration(){
-            StringBuilder buff = new StringBuilder("new boolean[]{ ");
-            int i = 0;
-            for(Boolean primary: primaries()){
-                if(i>0)
-                    buff.append(", ");
-                buff.append(primary);
-                i++;
-            }
-            buff.append(" }");
-            return buff.toString();
-        }
-
-        @Override
-        public boolean add(ColumnProperty columnProperty){
-            ColumnProperty clash = findByProperty(columnProperty.propertyName());
-            if(clash!=null)
-                throw new AnnotationError(columnProperty.element, columnProperty.annotation, "this property is already used by: "+clash.element);
-            clash = findByColumn(columnProperty.columnName());
-            if(clash!=null)
-                throw new AnnotationError(columnProperty.element, columnProperty.annotation, "this column is already used by: "+clash.element);
-            return super.add(columnProperty);
-        }
-
-        private void addDefaultCase(Printer printer){
-            printer.printlns(
-                    "default:",
-                        PLUS,
-                        "throw new ImpossibleException();",
-                        MINUS,
-                        MINUS,
-                    "}",
-                 MINUS,
-                "}"
-            );
-        }
-
-        public void generateGetColumnValue(Printer printer){
-            printer.printlns(
-                "@Override",
-                "public Object getColumnValue(int i, "+printer.clazz.getSimpleName()+" record){",
-                    PLUS,
-                    "switch(i){",
-                        PLUS
-            );
-            int i = 0;
-            for(ColumnProperty column: this){
-                printer.printlns(
-                    "case "+i+":",
-                        PLUS,
-                        "return "+column.getPropertyCode("record")+';',
-                        MINUS
-                );
-                i++;
-            }
-            addDefaultCase(printer);
-        }
-
-        public void generateSetColumnValue(Printer printer){
-            printer.printlns(
-                "@Override",
-                "public void setColumnValue(int i, "+printer.clazz.getSimpleName()+" record, Object value){",
-                    PLUS,
-                    "switch(i){",
-                        PLUS
-            );
-            int i = 0;
-            for(ColumnProperty column: this){
-                printer.printlns(
-                    "case "+i+":",
-                        PLUS,
-                        column.setPropertyCode("record", "value")+';',
-                        "break;",
-                        MINUS
-                );
-                i++;
-            }
-            addDefaultCase(printer);
-        }
-    }
 }
