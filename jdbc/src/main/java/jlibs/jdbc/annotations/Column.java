@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 /**
  * @author Santhosh Kumar T
  */
-@Target(ElementType.METHOD)
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Column{
     String value();
