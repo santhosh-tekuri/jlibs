@@ -15,16 +15,13 @@
 
 package jlibs.jdbc.annotations.processor;
 
-import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.graph.Visitor;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.JDBCException;
 import jlibs.jdbc.annotations.*;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -102,56 +99,4 @@ abstract class DMLMethod{
             "}"
         );
     }
-
-    /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
-    
-    private StringBuilder join(boolean useColumnName, Visitor<String, String> propertyVisitor, Visitor<String, String> visitor, String separator){
-        StringBuilder buff = new StringBuilder();
-        int i = 0;
-        for(VariableElement param : method.getParameters()){
-            String paramName = param.getSimpleName().toString();
-            String propertyName = propertyVisitor==null ? paramName : propertyVisitor.visit(paramName);
-            if(propertyName!=null){
-                ColumnProperty column = columns.findByProperty(propertyName);
-                if(column==null)
-                    throw new AnnotationError(method, "invalid column property: "+paramName+"->"+propertyName);
-                if(column.propertyType()!=param.asType())
-                    throw new AnnotationError(param, paramName+" must be of type "+ModelUtil.toString(column.propertyType(), true));
-
-                String item =  useColumnName ? column.columnName() : paramName;
-                String value = visitor == null ? item : visitor.visit(item);
-                if(value!=null){
-                    if(i>0)
-                        buff.append(separator);
-                    buff.append(value);
-                    i++;
-                }
-            }
-        }
-        return buff;
-    }
-
-    protected StringBuilder columns(Visitor<String, String> propertyVisitor, Visitor<String, String> visitor, String separator){
-        return join(true, propertyVisitor, visitor, separator);
-    }
-
-    protected StringBuilder parameters(Visitor<String, String> propertyVisitor, Visitor<String, String> visitor, String separator){
-        return join(false, propertyVisitor, visitor, separator);
-    }
-
-    /*-------------------------------------------------[ Visitors ]---------------------------------------------------*/
-    
-    static final Visitor<String, String> ASSIGN_VISITOR = new Visitor<String, String>(){
-        @Override
-        public String visit(String columnName){
-            return columnName+"=?";
-        }
-    };
-
-    static final Visitor<String, String> SET_VISITOR = new Visitor<String, String>(){
-        @Override
-        public String visit(String paramName){
-            return paramName.startsWith("where") ? null : paramName;
-        }
-    };    
 }

@@ -15,9 +15,7 @@
 
 package jlibs.jdbc.annotations.processor;
 
-import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.StringUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -25,20 +23,20 @@ import javax.lang.model.element.ExecutableElement;
 /**
  * @author Santhosh Kumar T
  */
-public class SelectMethod extends DMLMethod{
+public class SelectMethod extends AbstractDMLMethod{
     protected SelectMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
     }
 
     @Override
-    protected String[] code(){
-        if(method.getParameters().size()==0)
-            throw new AnnotationError(method, "method with @Select annotation should take atleast one argument");
+    protected CharSequence[] defaultSQL(){
+        return new CharSequence[]{
+            columns(null, ASSIGN_VISITOR, " and ").insert(0, "where "),
+            parameters(null, null, ", ")
+        };
+    }
 
-        StringBuilder where = columns(null, ASSIGN_VISITOR, " and ").insert(0, "where ");
-        StringBuilder params = parameters(null, null, ", ");
-        String methodName = method.getReturnType()==printer.clazz.asType() ? "first" : "all";
-
-        return new String[]{ "return "+methodName+"(\""+ StringUtil.toLiteral(where, false)+"\", "+params+");" };
+    protected String methodName(){
+        return method.getReturnType()==printer.clazz.asType() ? "first" : "all";
     }
 }

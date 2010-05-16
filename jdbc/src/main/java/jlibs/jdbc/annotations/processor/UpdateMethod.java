@@ -15,37 +15,29 @@
 
 package jlibs.jdbc.annotations.processor;
 
-import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.graph.Visitor;
-import jlibs.core.lang.StringUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.type.TypeKind;
 
 /**
  * @author Santhosh Kumar T
  */
-class UpdateMethod extends DMLMethod{
+class UpdateMethod extends AbstractDMLMethod{
     protected UpdateMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
     }
 
-    String queryMethod(){
+    @Override
+    protected CharSequence[] defaultSQL(){
         StringBuilder set = columns(SET_VISITOR, ASSIGN_VISITOR, ", ").insert(0, "set ");
         StringBuilder where = columns(WHERE_VISITOR, ASSIGN_VISITOR, " and ").insert(0, "where ");
-        StringBuilder params = parameters(SET_WHERE_VISITOR, null, ", ");
-        return "update(\""+ StringUtil.toLiteral(set+" "+where, false)+"\", "+params+')';
-    }
 
-    @Override
-    protected String[] code(){
-        if(method.getParameters().size()==0)
-            throw new AnnotationError(method, "method with @Update annotation should take atleast one argument");
-
-        boolean noReturn = method.getReturnType().getKind()== TypeKind.VOID;
-        return new String[]{ (noReturn ? "" : "return ")+queryMethod()+';' };
+        return new CharSequence[]{
+            set.append(' ').append(where),
+            parameters(SET_WHERE_VISITOR, null, ", ")
+        };
     }
 
     /*-------------------------------------------------[ Visitors ]---------------------------------------------------*/

@@ -40,18 +40,31 @@ public class UpsertMethod extends DMLMethod{
         if(method.getParameters().size()==0)
             throw new AnnotationError(method, "method with @Upsert annotation should take atleast one argument");
 
-        String insertMethod = new InsertMethod(printer, method, mirror, columns).queryMethod(UpdateMethod.SET_WHERE_VISITOR);
-        String updateMethod = new UpdateMethod(printer, method, mirror, columns).queryMethod();
+        InsertMethod insertMethod = new InsertMethod(printer, method, mirror, columns){
+            @Override
+            protected String methodName(){
+                return "insert";
+            }
+        };
+        String insertCode = insertMethod.queryMethod(insertMethod.defaultSQL(UpdateMethod.SET_WHERE_VISITOR));
+
+        UpdateMethod updateMethod = new UpdateMethod(printer, method, mirror, columns){
+            @Override
+            protected String methodName(){
+                return "update";
+            }
+        };
+        String updateCode = updateMethod.queryMethod(updateMethod.defaultSQL());
 
         List<String> code = new ArrayList<String>();
-        code.add("int count = "+updateMethod+';');
+        code.add("int count = "+updateCode+';');
         if(method.getReturnType().getKind()== TypeKind.VOID){
             code.add("if(count==0)");
             code.add(PLUS);
-            code.add(insertMethod+';');
+            code.add(insertCode+';');
             code.add(MINUS);
         }else
-            code.add("return count==0 ? "+insertMethod+" : count;");
+            code.add("return count==0 ? "+insertCode+" : count;");
 
         return code.toArray(new String[code.size()]);
     }
