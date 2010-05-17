@@ -32,8 +32,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public abstract class DAO<T>{
-    private DataSource dataSource;
-    private TableMetaData table;
+    public final DataSource dataSource;
+    public final TableMetaData table;
 
     public DAO(DataSource dataSource, TableMetaData table){
         this.dataSource = dataSource;
