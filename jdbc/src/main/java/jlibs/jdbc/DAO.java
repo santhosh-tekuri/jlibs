@@ -21,8 +21,6 @@ import jlibs.jdbc.annotations.processor.TableAnnotationProcessor;
 
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,12 +29,12 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class DAO<T>{
-    public final DataSource dataSource;
+public abstract class DAO<T> implements RowMapper<T>{
+    public final JDBC jdbc;
     public final TableMetaData table;
 
     public DAO(DataSource dataSource, TableMetaData table){
-        this.dataSource = dataSource;
+        jdbc = new JDBC(dataSource);
         this.table = table;
         buildQueries();
     }
@@ -67,7 +65,8 @@ public abstract class DAO<T>{
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
     
-    private T newRecord(ResultSet rs) throws SQLException{
+    @Override
+    public T newRecord(ResultSet rs) throws SQLException{
         T record = newRow();
         for(int i=0; i<table.columns.length; i++)
             setColumnValue(i, record, rs.getObject(i+1));
@@ -160,70 +159,6 @@ public abstract class DAO<T>{
         deleteOrder = CollectionUtil.toIntArray(args);
     }
     
-    /*-------------------------------------------------[ JDBC ]---------------------------------------------------*/
-    
-    private T selectFirst(final String query, final Object... params) throws SQLException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
-            @Override
-            public T run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query);
-                stmt.setMaxRows(1);
-                for(int i=0; i<params.length; i++)
-                    stmt.setObject(i+1, params[i]);
-
-                ResultSet rs = stmt.executeQuery();
-                try{
-                    if(rs.next())
-                        return newRecord(rs);
-                    else
-                        return null;
-                }finally{
-                    stmt.close();
-                }
-            }
-        });
-    }
-
-    private List<T> selectAll(final String query, final Object... params) throws SQLException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
-            @Override
-            public List<T> run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query);
-                for(int i=0; i<params.length; i++)
-                    stmt.setObject(i+1, params[i]);
-
-                ResultSet rs = stmt.executeQuery();
-                List<T> result = new ArrayList<T>();
-                try{
-                    while(rs.next())
-                        result.add(newRecord(rs));
-                    return result;
-                }finally{
-                    stmt.close();
-                }
-            }
-        });
-    }
-
-    private int executeUpdate(final String query, final Object... params) throws SQLException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<Integer>(){
-            @Override
-            public Integer run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query);
-                try{
-                    for(int i=0; i<params.length; i++)
-                        stmt.setObject(i+1, params[i]);
-                    return stmt.executeUpdate();
-                }finally{
-                    stmt.close();
-                }
-            }
-        });
-    }
-
     /*-------------------------------------------------[ Select ]---------------------------------------------------*/
     
     private String selectQuery(String condition){
@@ -235,7 +170,7 @@ public abstract class DAO<T>{
     }
     
     public List<T> all(String condition, Object... args) throws SQLException{
-        return selectAll(selectQuery(condition), args);
+        return jdbc.selectAll(selectQuery(condition), this, args);
     }
 
     public T first() throws SQLException{
@@ -243,15 +178,33 @@ public abstract class DAO<T>{
     }
 
     public T first(String condition, Object... args) throws SQLException{
-        return selectFirst(selectQuery(condition), args);
+        return jdbc.selectFirst(selectQuery(condition), this, args);
     }
     
+    /*-------------------------------------------------[ Count ]---------------------------------------------------*/
+
+    protected int integer(String functionCall, String condition, Object... args) throws SQLException{
+        if(condition==null)
+            condition = "";
+
+        return jdbc.selectFirst("select "+functionCall+" from "+table.name+' '+condition, new RowMapper<Integer>(){
+            @Override
+            public Integer newRecord(ResultSet rs) throws SQLException{
+                return rs.getInt(1);
+            }
+        }, args);
+    }
+
+    public int count(String condition, Object... args) throws SQLException{
+        return integer("count(*)", condition, args);
+    }
+
     /*-------------------------------------------------[ Insert ]---------------------------------------------------*/
     
     public int insert(String query, Object... args) throws SQLException{
         if(query==null)
-            query = "";        
-        return executeUpdate("insert into "+table.name+" "+query, args);
+            query = "";
+        return jdbc.executeUpdate("insert into "+table.name+" "+query, args);
     }
     
     public int insert(T record) throws SQLException{
@@ -265,8 +218,8 @@ public abstract class DAO<T>{
     
     public int update(String query, Object... args) throws SQLException{
         if(query==null)
-            query = "";        
-        return executeUpdate("update "+table.name+" "+query, args);
+            query = "";
+        return jdbc.executeUpdate("update "+table.name+" "+query, args);
     }
 
     public int update(T record) throws SQLException{
@@ -285,7 +238,7 @@ public abstract class DAO<T>{
     public int delete(String query, Object... args) throws SQLException{
         if(query==null)
             query = "";
-        return executeUpdate("delete from "+table.name+" "+query, args);
+        return jdbc.executeUpdate("delete from "+table.name+" "+query, args);
     }
 
     public int delete() throws SQLException{
