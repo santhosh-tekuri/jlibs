@@ -21,8 +21,10 @@ package jlibs.jdbc;
 public class ColumnMetaData{
     public final String name;
     public final boolean primary;
-    public ColumnMetaData(String name, boolean primary){
+    public final boolean auto;
+    public ColumnMetaData(String name, boolean primary, boolean auto){
         this.name = name;
         this.primary = primary;
+        this.auto = auto;
     }
 }

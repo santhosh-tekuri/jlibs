@@ -40,6 +40,10 @@ abstract class ColumnProperty<E extends Element>{
         return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "primary");
     }
 
+    public boolean auto(){
+        return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "auto");
+    }
+
     public abstract String propertyName();
     public abstract TypeMirror propertyType();
     public abstract String getPropertyCode(String object);

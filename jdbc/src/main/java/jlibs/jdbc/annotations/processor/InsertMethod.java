@@ -15,11 +15,13 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.graph.Visitor;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeKind;
 
 /**
  * @author Santhosh Kumar T
@@ -27,6 +29,8 @@ import javax.lang.model.element.ExecutableElement;
 class InsertMethod extends AbstractDMLMethod{
     protected InsertMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
+        if(method.getReturnType().getKind()!= TypeKind.VOID)
+            throw new AnnotationError("method with @Insert annotation should return void");
     }
 
     @Override
@@ -47,5 +51,10 @@ class InsertMethod extends AbstractDMLMethod{
             columns.append(' ').append(values),
             parameters(propertyVisitor, null, ", ")
         };
+    }
+
+    @Override
+    protected String userSQL(){
+        return "";
     }
 }

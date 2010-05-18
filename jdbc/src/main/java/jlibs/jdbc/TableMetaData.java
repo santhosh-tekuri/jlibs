@@ -21,8 +21,18 @@ package jlibs.jdbc;
 public class TableMetaData{
     public final String name;
     public final ColumnMetaData columns[];
+    public final int autoColumn;
     public TableMetaData(String name, ColumnMetaData... columns){
         this.name = name;
         this.columns = columns;
+
+        int auto = -1;
+        for(int i=0; i<columns.length; i++){
+            if(columns[i].auto){
+                auto = i;
+                break;
+            }
+        }
+        autoColumn = auto;
     }
 }
