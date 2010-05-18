@@ -17,8 +17,8 @@ package jlibs.core.lang.model;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Environment;
-import jlibs.core.lang.BeanUtil;
 import jlibs.core.lang.NotImplementedException;
+import jlibs.core.lang.StringUtil;
 import jlibs.core.util.regex.TemplateMatcher;
 
 import javax.lang.model.element.*;
@@ -82,7 +82,7 @@ public class ModelUtil{
             case LONG:
             case BYTE:
                 String name = mirror.getKind().toString().toLowerCase();
-                return usePrimitiveWrappers ? "java.lang."+ BeanUtil.firstLetterToUpperCase(name) : name;
+                return usePrimitiveWrappers ? "java.lang."+ StringUtil.capitalize(name) : name;
             case ARRAY:
                 return toString(((ArrayType)mirror).getComponentType(), usePrimitiveWrappers)+"[]";
             default:
