@@ -30,7 +30,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     }
 
     @Select
-    public abstract Employee findByID(long iD);
+    public abstract Employee findByID(long id);
 
     @Select
     public abstract List<Employee> findByAge(int age);
@@ -39,19 +39,22 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public abstract List<Employee> find(String firstName, String lastName);
 
     @Insert
-    public abstract void insert(String firstName, String lastName) throws SQLException;
+    public abstract void insert1(long id, String firstName, String lastName) throws SQLException;
+
+    @Insert
+    public abstract Employee insert2(long id, String firstName, String lastName) throws SQLException;
 
     @Insert
     public abstract void insert(String firstName, int age);
     
     @Update
-    public abstract int update(long iD, int age, String where_firstName, String where_lastName);
+    public abstract int update(long id, int age, String where_firstName, String where_lastName);
 
     @Upsert
-    public abstract void upsert1(long iD, int age, String where_firstName, String where_lastName);
+    public abstract void upsert1(long id, int age, String where_firstName, String where_lastName);
 
     @Upsert
-    public abstract void upsert2(long iD, int age, String where_firstName, String where_lastName);
+    public abstract void upsert2(long id, int age, String where_firstName, String where_lastName);
 
     @Delete
     public abstract int delete(String firstName, String lastName) throws SQLException;

@@ -23,23 +23,17 @@ import jlibs.jdbc.annotations.Table;
  */
 @Table(value="employees", extend= EmployeeDAO.class)
 public class Employee{
-    private long id;
     @Column(value="id", primary=true, auto=true)
-    public long getID(){
-        return id;
-    }
-    public void setID(long id){
-        this.id = id;
-    }
+    public long id;
 
+    private String firstName;
     @Column("first_name")
-    public String firstName;
-//    public String getFirstName(){
-//        return firstName;
-//    }
-//    public void setFirstName(String firstName){
-//        this.firstName = firstName;
-//    }
+    public String getFirstName(){
+        return firstName;
+    }
+    public void setFirstName(String firstName){
+        this.firstName = firstName;
+    }
 
     private String lastName;
     public String getLastName(){
