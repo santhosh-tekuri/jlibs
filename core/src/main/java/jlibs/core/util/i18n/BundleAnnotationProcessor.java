@@ -62,7 +62,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             if(ModelUtil.exists(pakage, basename+".properties"))
                 throw new AnnotationError(element, mirror, basename+".properties in package "+pakage+" already exists in source path");
 
-            FileObject resource = Environment.get().getFiler().createResource(StandardLocation.SOURCE_OUTPUT, pakage, basename+".properties");
+            FileObject resource = Environment.get().getFiler().createResource(StandardLocation.CLASS_OUTPUT, pakage, basename+".properties");
             props = new BufferedWriter(resource.openWriter());
         }
 
