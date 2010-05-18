@@ -64,8 +64,28 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <configuration>
+                    <tasks>
+                        <mkdir dir="${project.build.outputDirectory}"/>
+                    </tasks>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-classes-directory</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
+                <configuration>
+                    <compilerArguments>-d ${project.build.outputDirectory}</compilerArguments>                    
+                </configuration>
                 <executions>
                     <execution>
                         <id>process</id>
