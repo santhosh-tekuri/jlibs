@@ -17,6 +17,7 @@ package jlibs.core.lang;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 /**
  * This class contains helper methods for working with java beans
@@ -24,6 +25,57 @@ import java.lang.reflect.Method;
  * @author Santhosh Kumar T
  */
 public class BeanUtil{
+    public static String getMethodSuffix(String property){
+        switch(property.length()){
+            case 0:
+                throw new IllegalArgumentException("invalid property name: "+property);
+            case 1:
+                return property.toUpperCase(Locale.ENGLISH);
+            default:
+                char char0 = property.charAt(0);
+                boolean upper0 = Character.isUpperCase(char0);
+                char char1 = property.charAt(1);
+                boolean upper1 = Character.isUpperCase(char1);
+                if(upper0 && upper1) // XCoordinate ==> getXCordinate()
+                    return property;
+                if(!upper0 && !upper1) // xcoordinate ==> getXcoordinate()
+                    return Character.toUpperCase(char0)+property.substring(1);
+                if(!upper0 && upper1) // xCoordinate ==> getxCoordinate()
+                    return property;
+                throw new IllegalArgumentException("invalid property name: "+property); 
+        }
+    }
+
+    @SuppressWarnings({"ConstantConditions"})
+    public static String getPropertyName(String methodName){
+        String suffix;
+        if(methodName.startsWith(GET) || methodName.startsWith(SET))
+            suffix = methodName.substring(3);
+        else if(methodName.startsWith(IS))
+            suffix = methodName.substring(2);
+        else
+            throw new IllegalArgumentException("invalid method name: "+methodName);
+
+        switch(suffix.length()){
+            case 0:
+                throw new IllegalArgumentException("invalid method name: "+methodName);
+            case 1:
+                return suffix.toLowerCase(Locale.ENGLISH);
+            default:
+                char char0 = suffix.charAt(0);
+                boolean upper0 = Character.isUpperCase(char0);
+                char char1 = suffix.charAt(1);
+                boolean upper1 = Character.isUpperCase(char1);
+                if(upper0 && upper1) // getXCordinate() ==> XCoordinate
+                    return suffix;
+                if(upper0 && !upper1) // getXcoordinate() ==> xcoordinate
+                    return Character.toLowerCase(char0)+suffix.substring(1);
+                if(!upper0 && upper1) // getxCoordinate() ==> xCoordinate
+                    return suffix;
+                throw new IllegalArgumentException("invalid method name: "+methodName);
+        }
+    }
+
     /*-------------------------------------------------[ Getter Method ]---------------------------------------------------*/
 
     /** prefix used by non-boolean getter methods */
@@ -43,10 +95,10 @@ public class BeanUtil{
      */
     public static Method getGetterMethod(Class beanClass, String property){
         try{
-            return beanClass.getMethod(GET+firstLetterToUpperCase(property));
+            return beanClass.getMethod(GET+getMethodSuffix(property));
         }catch(NoSuchMethodException ex1){
             try{
-                return beanClass.getMethod(IS+firstLetterToUpperCase(property));
+                return beanClass.getMethod(IS+getMethodSuffix(property));
             }catch(NoSuchMethodException ex2){
                 return null;
             }
@@ -65,9 +117,14 @@ public class BeanUtil{
      * @see #getGetterMethod(Class, String)
      */
     public static Method getGetterMethod(Class beanClass, String property, Class propertyType){
-        String prefix = propertyType==boolean.class || propertyType==Boolean.class ? IS : GET;
         try{
-            return beanClass.getMethod(prefix+firstLetterToUpperCase(property));
+            try{
+                if(propertyType==boolean.class)
+                    return beanClass.getMethod(IS+getMethodSuffix(property));
+            }catch(NoSuchMethodException ignore){
+                // ignore
+            }
+            return beanClass.getMethod(GET+getMethodSuffix(property));
         }catch(NoSuchMethodException ex){
             return null;
         }
@@ -109,7 +166,7 @@ public class BeanUtil{
      */
     public static Method getSetterMethod(Class beanClass, String property, Class propertyType){
         try{
-            return beanClass.getMethod(SET+firstLetterToUpperCase(property), propertyType);
+            return beanClass.getMethod(SET+getMethodSuffix(property), propertyType);
         } catch(NoSuchMethodException ex){
             return null;
         }
@@ -168,28 +225,6 @@ public class BeanUtil{
             getSetterMethod(bean.getClass(), property).invoke(bean, value);
         }catch(IllegalAccessException ex){
             throw new ImpossibleException(ex); // because setter method is public
-        }
-
-    }
-
-    /*-------------------------------------------------[ Helper ]---------------------------------------------------*/
-
-    /**
-     * Converts first character in <code>str</code> to uppercase.
-     * <p>
-     * This method can be called on string of any length.
-     *
-     * @param str string to be converted
-     * @return string with first letter changed to uppercase
-     */
-    public static String firstLetterToUpperCase(String str){
-        switch(str.length()){
-            case 0:
-                return str;
-            case 1:
-                return str.toUpperCase();
-            default:
-                return Character.toUpperCase(str.charAt(0))+str.substring(1);
         }
     }
 }
