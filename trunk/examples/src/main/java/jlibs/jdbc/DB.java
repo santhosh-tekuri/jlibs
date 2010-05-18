@@ -46,8 +46,8 @@ public class DB{
         assert EMPLOYEES.all().size()==0;
 
         Employee emp = new Employee();
-        emp.setID(1);
-        emp.firstName = "santhosh";
+        emp.id = 1;
+        emp.setFirstName("santhosh");
         emp.setLastName("kumar");
         emp.setAge(25);
         EMPLOYEES.insert(emp);
@@ -62,13 +62,13 @@ public class DB{
                 @Override
                 public Object run(Connection con) throws SQLException{
                     Employee emp = new Employee();
-                    emp.setID(2);
-                    emp.firstName = "santhosh";
+                    emp.id = 2;
+                    emp.setFirstName("santhosh");
                     emp.setLastName("kumar");
                     emp.setAge(25);
                     EMPLOYEES.insert(emp);
 
-                    emp.setID(3);
+                    emp.id = 3;
                     EMPLOYEES.insert(emp);
 
                     assert EMPLOYEES.all().size()==3;
@@ -86,7 +86,7 @@ public class DB{
         emp.setAge(10);
         EMPLOYEES.upsert(emp);
         assert EMPLOYEES.first("where id=?", 1).getAge()==10;
-        emp.setID(4);
+        emp.id = 4;
         EMPLOYEES.upsert(emp);
         assert EMPLOYEES.first("where id=?", 4)!=null;
         assert EMPLOYEES.all().size()==2;
