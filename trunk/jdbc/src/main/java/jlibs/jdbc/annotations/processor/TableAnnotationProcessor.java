@@ -55,9 +55,9 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         for(TypeElement annotation: annotations){
             for(Element elem: roundEnv.getElementsAnnotatedWith(annotation)){
                 try{
-                    columns.clear();
-                    
                     TypeElement c = (TypeElement)elem;
+                    columns.clear();
+                    columns.tableName = ModelUtil.getAnnotationValue(c, Table.class, "value");
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
                         process(c);
                         c = ModelUtil.getSuper(c);
@@ -131,11 +131,10 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
     }
 
     private void generateConstructor(Printer printer){
-        String tableName = ModelUtil.getAnnotationValue(printer.clazz, Table.class, "value");
         printer.printlns(
             "public "+printer.generatedClazz+"(DataSource dataSource){",
                 PLUS,
-                "super(dataSource, new TableMetaData(\""+StringUtil.toLiteral(tableName, false)+"\",",
+                "super(dataSource, new TableMetaData(\""+StringUtil.toLiteral(columns.tableName, false)+"\",",
                     PLUS
         );
         int i = 0;
