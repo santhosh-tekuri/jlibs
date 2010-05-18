@@ -84,6 +84,7 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     private String selectQuery;
     private String insertQuery;
+    private int insertOrder[];
     private String updateQuery;
     private int updateOrder[];
     private String deleteQuery;
@@ -103,26 +104,39 @@ public abstract class DAO<T> implements RowMapper<T>{
         // INSERT Query
         query.setLength(0);
         query.append('(');
-        int i = 0;
-        for(; i<table.columns.length; i++){
-            if(i>0)
-                query.append(',');
-            query.append(table.columns[i].name);
+        boolean first = true;
+        for(ColumnMetaData column: table.columns){
+            if(!column.auto){
+                if(first)
+                    first = false;
+                else
+                    query.append(',');
+                query.append(column.name);
+            }
         }
         query.append(") values(");
-        for(int j=0; j<i; j++){
-            if(j>0)
-                query.append(',');
-            query.append('?');
+        first = true;
+        List<Integer> args = new ArrayList<Integer>();
+        for(int i=0; i<table.columns.length; i++){
+            if(!table.columns[i].auto){
+                if(first)
+                    first = false;
+                else
+                    query.append(',');
+                query.append('?');
+                args.add(i);
+            }
         }
         query.append(')');
         insertQuery = query.toString();
+        if(table.autoColumn!=-1)
+            insertOrder = CollectionUtil.toIntArray(args);
 
         // UPDATE Query
         query.setLength(0);
         query.append("set ");
-        List<Integer> args = new ArrayList<Integer>();
-        for(i=0; i<table.columns.length; i++){
+        args.clear();
+        for(int i=0; i<table.columns.length; i++){
             if(!table.columns[i].primary){
                 if(args.size()>0)
                     query.append(", ");
@@ -132,7 +146,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         }
         query.append(" where ");
         int size = args.size();
-        for(i=0; i<table.columns.length; i++){
+        for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
                 if(args.size()>size)
                     query.append(" and ");
@@ -147,7 +161,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         query.setLength(0);
         query.append("where ");
         args.clear();
-        for(i=0; i<table.columns.length; i++){
+        for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
                 if(args.size()>0)
                     query.append(" and ");
@@ -201,17 +215,29 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     /*-------------------------------------------------[ Insert ]---------------------------------------------------*/
     
-    public int insert(String query, Object... args) throws SQLException{
+    public void insert(String query, Object... args) throws SQLException{
         if(query==null)
             query = "";
-        return jdbc.executeUpdate("insert into "+table.name+" "+query, args);
+        jdbc.executeUpdate("insert into "+table.name+" "+query, args);
     }
     
-    public int insert(T record) throws SQLException{
+    private static final RowMapper<Object> generaedKeyMapper = new RowMapper<Object>(){
+        @Override
+        public Object newRecord(ResultSet rs) throws SQLException{
+            return rs.getObject(1);
+        }
+    };
+
+    public void insert(T record) throws SQLException{
         Object args[] = new Object[table.columns.length];
         for(int i=0; i<table.columns.length; i++)
             args[i] = getColumnValue(i, record);
-        return insert(insertQuery, args);
+        if(table.autoColumn==-1)
+            insert(insertQuery, args);
+        else{
+            Object generatedKey = jdbc.executeUpdate("insert into "+table.name+" "+insertQuery, generaedKeyMapper, values(record, insertOrder));
+            setColumnValue(table.autoColumn, record, generatedKey);
+        }
     }
 
     /*-------------------------------------------------[ Update ]---------------------------------------------------*/
@@ -228,9 +254,9 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     /*-------------------------------------------------[ Upsert ]---------------------------------------------------*/
     
-    public int upsert(T record) throws SQLException{
-        int count = update(record);
-        return count==0 ? insert(record) : count;
+    public void upsert(T record) throws SQLException{
+        if(update(record)==0)
+            insert(record);
     }
 
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/

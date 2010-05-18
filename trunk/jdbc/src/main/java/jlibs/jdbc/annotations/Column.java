@@ -28,4 +28,5 @@ import java.lang.annotation.Target;
 public @interface Column{
     String value();
     boolean primary() default false;
+    boolean auto() default false;
 }

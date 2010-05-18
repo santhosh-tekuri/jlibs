@@ -23,13 +23,12 @@ import jlibs.jdbc.annotations.Table;
  */
 @Table(value="employees", extend= EmployeeDAO.class)
 public class Employee{
-
-    private int id;
-    @Column(value="id", primary=true)
-    public int getID(){
+    private long id;
+    @Column(value="id", primary=true, auto=true)
+    public long getID(){
         return id;
     }
-    public void setID(int id){
+    public void setID(long id){
         this.id = id;
     }
 

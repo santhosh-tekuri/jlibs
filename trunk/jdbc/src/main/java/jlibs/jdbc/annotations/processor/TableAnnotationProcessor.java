@@ -140,7 +140,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
         int i = 0;
         for(ColumnProperty column: columns){
-            printer.println("new ColumnMetaData(\""+StringUtil.toLiteral(column.columnName(), false)+"\", "+column.primary()+')'+(i==columns.size()-1 ? "" : ","));
+            printer.println("new ColumnMetaData(\""+StringUtil.toLiteral(column.columnName(), false)+"\", "+column.primary()+", "+column.auto()+')'+(i==columns.size()-1 ? "" : ","));
             i++;
         }
         printer.printlns(

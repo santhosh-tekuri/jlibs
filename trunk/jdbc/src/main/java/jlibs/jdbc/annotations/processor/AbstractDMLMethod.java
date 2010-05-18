@@ -36,17 +36,21 @@ abstract class AbstractDMLMethod extends DMLMethod{
         super(printer, method, mirror, columns);
     }
 
+    protected String userSQL(){
+        return ModelUtil.getAnnotationValue(method, mirror, "value");
+    }
+
     @Override
     protected String[] code(){
         CharSequence[] sequences;
 
-        String value = ModelUtil.getAnnotationValue(method, mirror, "value");
-        if(value.length()==0){
+        String userSQL = userSQL();
+        if(userSQL.length()==0){
             if(method.getParameters().size()==0)
                 throw new AnnotationError(method, "method with "+mirror.getAnnotationType().asElement().getSimpleName()+" annotation should take atleast one argument");
             sequences = defaultSQL();
         }else
-            sequences = preparedSQL(value);
+            sequences = preparedSQL(userSQL);
 
         String code = queryMethod(sequences)+';';
         if(method.getReturnType().getKind()!=TypeKind.VOID)
