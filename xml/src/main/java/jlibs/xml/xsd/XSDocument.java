@@ -16,7 +16,7 @@
 package jlibs.xml.xsd;
 
 import jlibs.core.lang.ArrayUtil;
-import jlibs.core.lang.BeanUtil;
+import jlibs.core.lang.StringUtil;
 import jlibs.xml.Namespaces;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
@@ -294,7 +294,7 @@ public class XSDocument extends Namespaces{
             if(underscore==-1)
                 return str;
             else
-                return str.substring(0, underscore)+ BeanUtil.firstLetterToUpperCase(str.substring(underscore+1));
+                return str.substring(0, underscore)+ StringUtil.capitalize(str.substring(underscore+1));
         }
     }
 
