@@ -24,6 +24,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import static jlibs.core.lang.BeanUtil.*;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -34,27 +36,15 @@ class MethodColumnProperty extends ColumnProperty<ExecutableElement>{
     protected MethodColumnProperty(ExecutableElement method, AnnotationMirror annotation){
         super(method, annotation);
         String methodName = element.getSimpleName().toString();
-        if(methodName.startsWith("get")){
-            methodName = methodName.substring(3);
-            propertyType = method.getReturnType();
-        }else if(methodName.startsWith("is")){
-            methodName = methodName.substring(2);
-            propertyType = method.getReturnType();
-        }else if(methodName.startsWith("set")){
-            methodName = methodName.substring(3);
+        if(methodName.startsWith(SET))
             propertyType = method.getParameters().get(0).asType();
-        }else
-            throw new AnnotationError(element, "@Column annotation cann't be applied to this method");
+        else
+            propertyType = method.getReturnType();
 
-        switch(methodName.length()){
-            case 0:
-                propertyName = methodName;
-                break;
-            case 1:
-                propertyName = methodName.toLowerCase();
-                break;
-            default:
-                propertyName = Character.toLowerCase(methodName.charAt(0))+methodName.substring(1);
+        try{
+            propertyName = getPropertyName(methodName);
+        }catch(IllegalArgumentException ex){
+            throw new AnnotationError(element, "@Column annotation can't be applied to this method");
         }
     }
 
@@ -70,13 +60,13 @@ class MethodColumnProperty extends ColumnProperty<ExecutableElement>{
 
     @Override
     public String getPropertyCode(String object){
-        String prefix = propertyType.getKind() == TypeKind.BOOLEAN ? "is" : "get";
-        return object+'.'+prefix+BeanUtil.firstLetterToUpperCase(propertyName())+"()";
+        String prefix = propertyType.getKind()==TypeKind.BOOLEAN ? IS : GET;
+        return object+'.'+prefix+ BeanUtil.getMethodSuffix(propertyName())+"()";
     }
 
     @Override
     public String setPropertyCode(String object, String value){
         String propertyType = ModelUtil.toString(propertyType(), true);
-        return object+".set"+BeanUtil.firstLetterToUpperCase(propertyName())+"(("+propertyType+')'+value+')';
+        return object+'.'+SET+getMethodSuffix(propertyName())+"(("+propertyType+')'+value+')';
     }
 }
