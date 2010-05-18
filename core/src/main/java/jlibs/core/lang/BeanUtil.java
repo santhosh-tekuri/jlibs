@@ -79,9 +79,9 @@ public class BeanUtil{
     /*-------------------------------------------------[ Getter Method ]---------------------------------------------------*/
 
     /** prefix used by non-boolean getter methods */
-    private static final String GET = "get"; //NOI18N
+    public static final String GET = "get"; //NOI18N
     /** prefix used by boolean getter methods */
-    private static final String IS  = "is";  //NOI18N
+    public static final String IS  = "is";  //NOI18N
 
     /**
      * Returns getter method for <code>property</code> in specified <code>beanClass</code>
@@ -151,7 +151,7 @@ public class BeanUtil{
     }
 
     /** prefix used by setter methods */
-    private static final String SET = "set"; //NOI18N
+    public static final String SET = "set"; //NOI18N
 
     /**
      * Returns setter method for <code>property</code> in specified <code>beanClass</code>
