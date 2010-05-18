@@ -106,6 +106,25 @@ public class StringUtil{
         }
     }
 
+    /**
+     * Converts first character in <code>str</code> to uppercase.
+     * <p>
+     * This method can be called on string of any length.
+     *
+     * @param str string to be converted
+     * @return string with first letter changed to uppercase
+     */
+    public static String capitalize(String str){
+        switch(str.length()){
+            case 0:
+                return str;
+            case 1:
+                return str.toUpperCase();
+            default:
+                return Character.toUpperCase(str.charAt(0))+str.substring(1);
+        }
+    }
+
     /*-------------------------------------------------[ Array Join ]---------------------------------------------------*/
     
     public static <T> String join(T[] array){
