@@ -30,6 +30,6 @@ public abstract class AnnotationProcessor extends AbstractProcessor{
     }
     
     public void debug(String message){
-        super.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message);
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
 }
