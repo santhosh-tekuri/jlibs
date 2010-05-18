@@ -122,7 +122,7 @@ abstract class AbstractDMLMethod extends DMLMethod{
             if(propertyName!=null){
                 ColumnProperty column = columns.findByProperty(propertyName);
                 if(column==null)
-                    throw new AnnotationError(method, "invalid column property: "+paramName+"->"+propertyName);
+                    throw new AnnotationError(method, "invalid column property: "+propertyName);
                 if(column.propertyType()!=param.asType())
                     throw new AnnotationError(param, paramName+" must be of type "+ModelUtil.toString(column.propertyType(), true));
 
