@@ -64,14 +64,18 @@ abstract class AbstractDMLMethod extends DMLMethod{
     }
 
     protected String queryMethod(CharSequence sequences[]){
+        return queryMethod(methodName(), sequences);
+    }
+
+    protected static String queryMethod(String methodName, CharSequence... sequences){
         CharSequence query = sequences[0];
         CharSequence params = sequences[1];
 
         query = '"'+ StringUtil.toLiteral(query, false)+'"';
-        String code = methodName()+'('+query;
+        String code = methodName+'('+query;
         if(params.length()>0)
             code += ", "+params;
-        return code += ")";
+        return code += ')';
     }
 
     protected abstract CharSequence[] defaultSQL();
