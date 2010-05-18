@@ -215,12 +215,6 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     /*-------------------------------------------------[ Insert ]---------------------------------------------------*/
     
-    public void insert(String query, Object... args) throws SQLException{
-        if(query==null)
-            query = "";
-        jdbc.executeUpdate("insert into "+table.name+" "+query, args);
-    }
-    
     private static final RowMapper<Object> generaedKeyMapper = new RowMapper<Object>(){
         @Override
         public Object newRecord(ResultSet rs) throws SQLException{
@@ -228,14 +222,24 @@ public abstract class DAO<T> implements RowMapper<T>{
         }
     };
 
+    public Object insert(String query, Object... args) throws SQLException{
+        if(query==null)
+            query = "";
+        if(table.autoColumn==-1){
+            jdbc.executeUpdate("insert into "+table.name+" "+query, args);
+            return null;
+        }else
+            return jdbc.executeUpdate("insert into "+table.name+" "+insertQuery, generaedKeyMapper, args);
+    }
+    
     public void insert(T record) throws SQLException{
-        Object args[] = new Object[table.columns.length];
-        for(int i=0; i<table.columns.length; i++)
-            args[i] = getColumnValue(i, record);
-        if(table.autoColumn==-1)
+        if(table.autoColumn==-1){
+            Object args[] = new Object[table.columns.length];
+            for(int i=0; i<table.columns.length; i++)
+                args[i] = getColumnValue(i, record);
             insert(insertQuery, args);
-        else{
-            Object generatedKey = jdbc.executeUpdate("insert into "+table.name+" "+insertQuery, generaedKeyMapper, values(record, insertOrder));
+        }else{
+            Object generatedKey = insert(insertQuery, values(record, insertOrder));
             setColumnValue(table.autoColumn, record, generatedKey);
         }
     }
