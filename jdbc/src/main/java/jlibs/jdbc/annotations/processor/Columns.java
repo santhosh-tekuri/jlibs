@@ -27,6 +27,8 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  * @author Santhosh Kumar T
  */
 class Columns extends ArrayList<ColumnProperty>{
+    public String tableName;
+    
     public ColumnProperty findByProperty(String propertyName){
         for(ColumnProperty prop: this){
             if(prop.propertyName().equals(propertyName))
@@ -53,6 +55,8 @@ class Columns extends ArrayList<ColumnProperty>{
         return column!=null ? column.propertyName() : null;
     }
 
+    public int autoColumn = -1;
+    
     @Override
     public boolean add(ColumnProperty columnProperty){
         ColumnProperty clash = findByProperty(columnProperty.propertyName());
@@ -61,6 +65,11 @@ class Columns extends ArrayList<ColumnProperty>{
         clash = findByColumn(columnProperty.columnName());
         if(clash!=null)
             throw new AnnotationError(columnProperty.element, columnProperty.annotation, "this column is already used by: "+clash.element);
+        if(columnProperty.auto()){
+            if(autoColumn!=-1)
+                throw new AnnotationError(columnProperty.element, columnProperty.annotation, "only one column can be auto");
+            autoColumn = size();
+        }
         return super.add(columnProperty);
     }
 
