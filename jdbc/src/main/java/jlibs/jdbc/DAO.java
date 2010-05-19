@@ -179,37 +179,49 @@ public abstract class DAO<T> implements RowMapper<T>{
         return condition==null ? selectQuery : selectQuery+condition;
     }
 
-    public List<T> all() throws SQLException{
+    public List<T> all() throws JDBCException{
         return all(null);
     }
     
-    public List<T> all(String condition, Object... args) throws SQLException{
-        return jdbc.selectAll(selectQuery(condition), this, args);
+    public List<T> all(String condition, Object... args) throws JDBCException{
+        try{
+            return jdbc.selectAll(selectQuery(condition), this, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
 
-    public T first() throws SQLException{
+    public T first() throws JDBCException{
         return first(null);
     }
 
-    public T first(String condition, Object... args) throws SQLException{
-        return jdbc.selectFirst(selectQuery(condition), this, args);
+    public T first(String condition, Object... args) throws JDBCException{
+        try{
+            return jdbc.selectFirst(selectQuery(condition), this, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
     
     /*-------------------------------------------------[ Count ]---------------------------------------------------*/
 
-    protected int integer(String functionCall, String condition, Object... args) throws SQLException{
+    protected int integer(String functionCall, String condition, Object... args) throws JDBCException{
         if(condition==null)
             condition = "";
 
-        return jdbc.selectFirst("select "+functionCall+" from "+table.name+' '+condition, new RowMapper<Integer>(){
-            @Override
-            public Integer newRecord(ResultSet rs) throws SQLException{
-                return rs.getInt(1);
-            }
-        }, args);
+        try{
+            return jdbc.selectFirst("select "+functionCall+" from "+table.name+' '+condition, new RowMapper<Integer>(){
+                @Override
+                public Integer newRecord(ResultSet rs) throws SQLException{
+                    return rs.getInt(1);
+                }
+            }, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
 
-    public int count(String condition, Object... args) throws SQLException{
+    public int count(String condition, Object... args) throws JDBCException{
         return integer("count(*)", condition, args);
     }
 
@@ -222,17 +234,21 @@ public abstract class DAO<T> implements RowMapper<T>{
         }
     };
 
-    public Object insert(String query, Object... args) throws SQLException{
-        if(query==null)
-            query = "";
-        if(table.autoColumn==-1){
-            jdbc.executeUpdate("insert into "+table.name+" "+query, args);
-            return null;
-        }else
-            return jdbc.executeUpdate("insert into "+table.name+" "+query, generaedKeyMapper, args);
+    public Object insert(String query, Object... args) throws JDBCException{
+        try{
+            if(query==null)
+                query = "";
+            if(table.autoColumn==-1){
+                jdbc.executeUpdate("insert into "+table.name+" "+query, args);
+                return null;
+            }else
+                return jdbc.executeUpdate("insert into "+table.name+" "+query, generaedKeyMapper, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
     
-    public void insert(T record) throws SQLException{
+    public void insert(T record) throws JDBCException{
         if(table.autoColumn==-1){
             Object args[] = new Object[table.columns.length];
             for(int i=0; i<table.columns.length; i++)
@@ -246,36 +262,44 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     /*-------------------------------------------------[ Update ]---------------------------------------------------*/
     
-    public int update(String query, Object... args) throws SQLException{
-        if(query==null)
-            query = "";
-        return jdbc.executeUpdate("update "+table.name+" "+query, args);
+    public int update(String query, Object... args) throws JDBCException{
+        try{
+            if(query==null)
+                query = "";
+            return jdbc.executeUpdate("update "+table.name+" "+query, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
 
-    public int update(T record) throws SQLException{
+    public int update(T record) throws JDBCException{
         return update(updateQuery, values(record, updateOrder));
     }
 
     /*-------------------------------------------------[ Upsert ]---------------------------------------------------*/
     
-    public void upsert(T record) throws SQLException{
+    public void upsert(T record) throws JDBCException{
         if(update(record)==0)
             insert(record);
     }
 
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
 
-    public int delete(String query, Object... args) throws SQLException{
-        if(query==null)
-            query = "";
-        return jdbc.executeUpdate("delete from "+table.name+" "+query, args);
+    public int delete(String query, Object... args) throws JDBCException{
+        try{
+            if(query==null)
+                query = "";
+            return jdbc.executeUpdate("delete from "+table.name+" "+query, args);
+        }catch(SQLException ex){
+            throw new JDBCException(ex);
+        }
     }
 
-    public int delete() throws SQLException{
+    public int delete() throws JDBCException{
         return delete(null, new Object[0]);
     }
 
-    public int delete(T record) throws SQLException{
+    public int delete(T record) throws JDBCException{
         return delete(deleteQuery, values(record, deleteOrder));
     }
 }
