@@ -62,17 +62,11 @@ public abstract class DAO<T> implements RowMapper<T>{
     public abstract T newRow();
     public abstract Object getColumnValue(int i, T record);
     public abstract void setColumnValue(int i, T record, Object value);
+    public abstract T newRecord(ResultSet rs) throws SQLException;
+    public abstract Object getAutoColumnValue(ResultSet rs) throws SQLException;
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
     
-    @Override
-    public T newRecord(ResultSet rs) throws SQLException{
-        T record = newRow();
-        for(int i=0; i<table.columns.length; i++)
-            setColumnValue(i, record, rs.getObject(i+1));
-        return record;
-    }
-
     private Object[] values(T record, int order[]){
         Object args[] = new Object[order.length];
         for(int i=0; i<args.length; i++)
@@ -227,10 +221,10 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     /*-------------------------------------------------[ Insert ]---------------------------------------------------*/
     
-    private static final RowMapper<Object> generaedKeyMapper = new RowMapper<Object>(){
+    private final RowMapper<Object> generaedKeyMapper = new RowMapper<Object>(){
         @Override
         public Object newRecord(ResultSet rs) throws SQLException{
-            return rs.getObject(1);
+            return getAutoColumnValue(rs);
         }
     };
 

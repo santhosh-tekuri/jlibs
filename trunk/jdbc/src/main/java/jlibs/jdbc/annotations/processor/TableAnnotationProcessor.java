@@ -18,6 +18,7 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
@@ -31,9 +32,11 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.Set;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -100,6 +103,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
 
         printer.importClass(ImpossibleException.class);
         printer.importPackage(DAO.class);
+        printer.importPackage(Connection.class);
         printer.importClass(DataSource.class);
         printer.println();
 
@@ -114,6 +118,10 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         generateConstructor(printer);
         printer.println();
         generateNewRow(printer);
+        printer.println();
+        generateNewRecord(printer);
+        printer.println();
+        generateGetAutoColumnValue(printer);
         printer.println();
 
         columns.generateGetColumnValue(printer);
@@ -156,6 +164,72 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             "public "+printer.clazz.getSimpleName()+" newRow(){",
                 PLUS,
                 "return new "+printer.clazz.getSimpleName()+"();",
+                MINUS,
+            "}"
+        );
+    }
+
+    private String[] getValueFromResultSet(ColumnProperty column, int index){
+        TypeMirror propertyType = column.propertyType();
+        boolean primitive = ModelUtil.isPrimitive(propertyType);
+        boolean primitiveWrapper = ModelUtil.isPrimitiveWrapper(propertyType);
+
+        if(primitive){
+            String type = ModelUtil.toString(propertyType, false);
+            return new String[]{ "rs.get"+StringUtil.capitalize(type)+'('+index+')' };
+        }else if(primitiveWrapper){
+            String name = column.columnName();
+            String type = ModelUtil.toString(propertyType, false);
+            String primitiveType = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
+            return new String[]{
+                primitiveType+' '+name+" = rs.get"+StringUtil.capitalize(primitiveType)+'('+index+");",
+                "rs.wasNull() ? null : "+name
+            };
+        }else {
+            String type = ((DeclaredType)propertyType).asElement().getSimpleName().toString();
+            return new String[]{ "rs.get"+StringUtil.capitalize(type)+'('+index+')' };
+        }
+    }
+
+    private void generateNewRecord(Printer printer){
+        printer.printlns(
+            "@Override",
+            "public "+printer.clazz.getSimpleName()+" newRecord(ResultSet rs) throws SQLException{",
+                PLUS,
+                printer.clazz.getSimpleName()+" __record = newRow();"
+        );
+        int i = 1;
+        for(ColumnProperty column: columns){
+            String code[] = getValueFromResultSet(column, i);
+            if(code.length>1)
+                printer.println(code[0]);
+            String value = code[code.length-1];
+            printer.println("setColumnValue("+i+", __record, "+value+");");
+            i++;
+        }
+        printer.printlns(
+                "return __record;",
+                MINUS,
+            "}"
+        );
+    }
+
+    private void generateGetAutoColumnValue(Printer printer){
+        printer.printlns(
+            "@Override",
+            "public Object getAutoColumnValue(ResultSet rs) throws SQLException{",
+                PLUS
+        );
+        if(columns.autoColumn==-1)
+            printer.println("throw new "+ImpossibleException.class.getName()+"();");
+        else{
+            ColumnProperty column = columns.get(columns.autoColumn);
+            String code[] = getValueFromResultSet(column, 1);
+            if(code.length>1)
+                printer.println(code[0]);
+            printer.println("return "+code[code.length-1]+';');
+        }
+        printer.printlns(
                 MINUS,
             "}"
         );
