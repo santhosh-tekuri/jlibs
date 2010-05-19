@@ -15,13 +15,21 @@
 
 package jlibs.jdbc;
 
-import java.sql.SQLException;
-
 /**
  * @author Santhosh Kumar T
  */
 public class JDBCException extends RuntimeException{
-    public JDBCException(SQLException cause){
+    public JDBCException(){}
+
+    public JDBCException(String message){
+        super(message);
+    }
+
+    public JDBCException(String message, Throwable cause){
+        super(message, cause);
+    }
+
+    public JDBCException(Throwable cause){
         super(cause);
     }
 }
