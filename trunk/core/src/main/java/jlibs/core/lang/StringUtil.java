@@ -115,6 +115,8 @@ public class StringUtil{
      * @return string with first letter changed to uppercase
      */
     public static String capitalize(String str){
+        if(str==null)
+            return null;
         switch(str.length()){
             case 0:
                 return str;
@@ -122,6 +124,55 @@ public class StringUtil{
                 return str.toUpperCase();
             default:
                 return Character.toUpperCase(str.charAt(0))+str.substring(1);
+        }
+    }
+
+    /**
+     * Makes an underscored form from the expression in the string.
+     * <p>
+     * Examples:
+     * <pre class="prettyprint">
+     * underscore("activeRecord")     // "active_record"
+     * underscore("ActiveRecord")     // "active_record"
+     * underscore("firstName")        // "first_name"
+     * underscore("FirstName")        // "first_name"
+     * underscore("name")             // "name"
+     * </pre>
+     *
+     * @param camelCaseWord the camel-cased word that is to be converted;
+     * @return a lower-cased version of the input, with separate words delimited by the underscore character.
+     */
+    public static String underscore(String camelCaseWord){
+        if(camelCaseWord==null)
+            return null;
+        camelCaseWord = camelCaseWord.trim();
+        if(camelCaseWord.length()==0)
+            return "";
+        camelCaseWord = camelCaseWord.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2");
+        camelCaseWord = camelCaseWord.replaceAll("([a-z\\d])([A-Z])", "$1_$2");
+        return camelCaseWord.toLowerCase();
+    }
+
+    /**
+     * Turns a non-negative number into an ordinal string used to
+     * denote the position in an ordered sequence, such as 1st, 2nd,
+     * 3rd, 4th
+     *
+     * @param number the non-negative number
+     * @return the string with the number and ordinal suffix
+     */
+    public static String ordinalize(int number){
+        if(number>=11 && number<=13)
+            return number+"th";
+        switch(number%10){
+            case 1:
+                return number+"st";
+            case 2:
+                return number+"nd";
+            case 3:
+                return number+"rd";
+            default:
+                return number+"th";
         }
     }
 
