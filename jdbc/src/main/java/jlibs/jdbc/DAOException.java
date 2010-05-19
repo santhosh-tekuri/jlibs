@@ -18,18 +18,18 @@ package jlibs.jdbc;
 /**
  * @author Santhosh Kumar T
  */
-public class JDBCException extends RuntimeException{
-    public JDBCException(){}
+public class DAOException extends RuntimeException{
+    public DAOException(){}
 
-    public JDBCException(String message){
+    public DAOException(String message){
         super(message);
     }
 
-    public JDBCException(String message, Throwable cause){
+    public DAOException(String message, Throwable cause){
         super(message, cause);
     }
 
-    public JDBCException(Throwable cause){
+    public DAOException(Throwable cause){
         super(cause);
     }
 }
