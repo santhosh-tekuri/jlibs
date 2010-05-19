@@ -17,7 +17,6 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.model.ModelUtil;
-import jlibs.jdbc.JDBCException;
 import jlibs.jdbc.annotations.*;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -76,24 +75,7 @@ abstract class DMLMethod{
                 PLUS
         );
 
-        boolean noException = method.getThrownTypes().size() == 0;
-        if(noException){
-            printer.printlns(
-                "try{",
-                    PLUS
-            );
-        }
         printer.printlns(code());
-        if(noException){
-            printer.printlns(
-                    MINUS,
-                "}catch(java.sql.SQLException ex){",
-                    PLUS,
-                    "throw new "+ JDBCException.class.getName()+"(ex);",
-                    MINUS,
-                "}"
-            );
-        }
         printer.printlns(
                 MINUS,
             "}"
