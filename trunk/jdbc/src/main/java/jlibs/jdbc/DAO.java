@@ -229,7 +229,7 @@ public abstract class DAO<T> implements RowMapper<T>{
             jdbc.executeUpdate("insert into "+table.name+" "+query, args);
             return null;
         }else
-            return jdbc.executeUpdate("insert into "+table.name+" "+insertQuery, generaedKeyMapper, args);
+            return jdbc.executeUpdate("insert into "+table.name+" "+query, generaedKeyMapper, args);
     }
     
     public void insert(T record) throws SQLException{
