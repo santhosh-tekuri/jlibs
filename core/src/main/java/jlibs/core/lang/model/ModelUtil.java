@@ -17,6 +17,7 @@ package jlibs.core.lang.model;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Environment;
+import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.util.regex.TemplateMatcher;
@@ -24,6 +25,7 @@ import jlibs.core.util.regex.TemplateMatcher;
 import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.StandardLocation;
 import java.io.InputStream;
@@ -58,8 +60,45 @@ public class ModelUtil{
         return ((PackageElement)elem).getQualifiedName().toString();
     }
 
-    public static String toString(TypeMirror mirror, boolean usePrimitiveWrappers){
+    public static boolean isPrimitive(TypeMirror mirror){
         switch(mirror.getKind()){
+            case ARRAY:
+            case DECLARED:
+                return false;
+            default:
+                return true;
+        }
+    }
+    
+    public static String primitiveWrappers[] = new String[]{
+        Boolean.class.getName(),
+        Byte.class.getName(),
+        Short.class.getName(),
+        Integer.class.getName(),
+        Long.class.getName(),
+        Character.class.getName(),
+        Float.class.getName(),
+        Double.class.getName()
+    };
+
+    public static String primitives[] = new String[]{
+        boolean.class.getName(),
+        byte.class.getName(),
+        short.class.getName(),
+        int.class.getName(),
+        long.class.getName(),
+        char.class.getName(),
+        float.class.getName(),
+        double.class.getName()
+    };
+
+    public static boolean isPrimitiveWrapper(TypeMirror mirror){
+        return mirror.getKind()==TypeKind.DECLARED && ArrayUtil.contains(primitiveWrappers, toString(mirror, false));
+    }
+
+    public static String toString(TypeMirror mirror, boolean usePrimitiveWrappers){
+        TypeKind kind = mirror.getKind();
+        switch(kind){
             case VOID:
                 return "void";
             case DECLARED:
@@ -75,18 +114,21 @@ public class ModelUtil{
                     return buff.append('>').toString();
                 }
             case INT:
-                return usePrimitiveWrappers ? "java.lang.Integer" : "int";
+                return usePrimitiveWrappers ? Integer.class.getName() : kind.toString().toLowerCase();
+            case CHAR:
+                return usePrimitiveWrappers ? Character.class.getName() : kind.toString().toLowerCase();
             case BOOLEAN:
             case FLOAT:
             case DOUBLE:
             case LONG:
+            case SHORT:
             case BYTE:
-                String name = mirror.getKind().toString().toLowerCase();
+                String name = kind.toString().toLowerCase();
                 return usePrimitiveWrappers ? "java.lang."+ StringUtil.capitalize(name) : name;
             case ARRAY:
                 return toString(((ArrayType)mirror).getComponentType(), usePrimitiveWrappers)+"[]";
             default:
-                throw new NotImplementedException(mirror.getKind()+" is not implemented for "+mirror.getClass());
+                throw new NotImplementedException(kind +" is not implemented for "+mirror.getClass());
         }
     }
 
