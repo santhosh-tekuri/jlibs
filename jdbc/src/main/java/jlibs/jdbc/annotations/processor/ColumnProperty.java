@@ -15,6 +15,7 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -34,7 +35,7 @@ abstract class ColumnProperty<E extends Element>{
 
     public String columnName(){
         String columnName = ModelUtil.getAnnotationValue((Element) element, annotation, "value");
-        return columnName.length()==0 ? propertyName() : columnName;
+        return columnName.length()==0 ? StringUtil.underscore(propertyName()) : columnName;
     }
 
     public boolean primary(){
