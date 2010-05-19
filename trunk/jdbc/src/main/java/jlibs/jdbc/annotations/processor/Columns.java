@@ -67,7 +67,7 @@ class Columns extends ArrayList<ColumnProperty>{
             throw new AnnotationError(columnProperty.element, columnProperty.annotation, "this column is already used by: "+clash.element);
         if(columnProperty.auto()){
             if(autoColumn!=-1)
-                throw new AnnotationError(columnProperty.element, columnProperty.annotation, "only one column can be auto");
+                throw new AnnotationError(columnProperty.element, columnProperty.annotation, "two auto columns found: "+get(autoColumn).propertyName()+", "+columnProperty.propertyName());
             autoColumn = size();
         }
         return super.add(columnProperty);
