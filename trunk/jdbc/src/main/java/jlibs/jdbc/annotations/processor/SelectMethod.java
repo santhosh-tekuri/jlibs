@@ -18,7 +18,7 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.model.ModelUtil;
-import jlibs.jdbc.DAOException;
+import jlibs.jdbc.IncorrectResultSizeException;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -49,7 +49,7 @@ public class SelectMethod extends AbstractDMLMethod{
                     pojoClass+" __pojo = "+code[0].substring("return ".length()),
                     "if(__pojo==null)",
                     PLUS,
-                    "throw new "+ DAOException.class.getSimpleName()+"(\""+pojoName+" doesn't exist\");",
+                    "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", 1, 0);",
                     MINUS,
                     "return __pojo;"    
                 };
