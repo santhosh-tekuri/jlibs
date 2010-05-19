@@ -48,7 +48,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "DAO";
     public static final String FORMAT = "${package}._${class}"+SUFFIX;
 
-    private Columns columns = new Columns();
+    private Columns columns;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
@@ -56,7 +56,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             for(Element elem: roundEnv.getElementsAnnotatedWith(annotation)){
                 try{
                     TypeElement c = (TypeElement)elem;
-                    columns.clear();
+                    columns = new Columns();
                     columns.tableName = ModelUtil.getAnnotationValue(c, Table.class, "value");
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
                         process(c);
@@ -99,7 +99,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.printPackage();
 
         printer.importClass(ImpossibleException.class);
-        printer.importClass(DAO.class);
+        printer.importPackage(DAO.class);
         printer.importClass(DataSource.class);
         printer.println();
 
