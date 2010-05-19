@@ -52,4 +52,13 @@ public class Employee{
     public void setAge(int age){
         this.age = age;
     }
+
+    private Integer experience;
+    @Column
+    public Integer getExperience(){
+        return experience;
+    }
+    public void setExperience(Integer experience){
+        this.experience = experience;
+    }
 }
