@@ -15,6 +15,7 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 
@@ -25,6 +26,7 @@ import javax.lang.model.type.TypeMirror;
 /**
  * @author Santhosh Kumar T
  */
+// @todo ensure that column-property is accessible to the DAO generated
 abstract class ColumnProperty<E extends Element>{
     public E element;
     public AnnotationMirror annotation;
@@ -44,6 +46,20 @@ abstract class ColumnProperty<E extends Element>{
 
     public boolean auto(){
         return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "auto");
+    }
+
+    public String resultSetType(){
+        TypeMirror propertyType = propertyType();
+        boolean primitive = ModelUtil.isPrimitive(propertyType);
+        boolean primitiveWrapper = ModelUtil.isPrimitiveWrapper(propertyType);
+
+        if(primitive)
+            return ModelUtil.toString(propertyType, false);
+        else if(primitiveWrapper){
+            String type = ModelUtil.toString(propertyType, false);
+            return ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
+        }else
+            return ModelUtil.toString(propertyType, false);
     }
 
     public abstract String propertyName();

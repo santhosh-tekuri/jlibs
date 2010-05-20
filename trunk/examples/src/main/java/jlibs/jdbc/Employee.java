@@ -61,4 +61,7 @@ public class Employee{
     public void setExperience(Integer experience){
         this.experience = experience;
     }
+
+//    @Column
+//    public java.util.Date creationDate;
 }

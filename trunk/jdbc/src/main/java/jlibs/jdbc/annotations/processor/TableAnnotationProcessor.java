@@ -18,7 +18,6 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
@@ -32,7 +31,6 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -170,25 +168,19 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
     }
 
     private String[] getValueFromResultSet(ColumnProperty column, int index){
-        TypeMirror propertyType = column.propertyType();
-        boolean primitive = ModelUtil.isPrimitive(propertyType);
-        boolean primitiveWrapper = ModelUtil.isPrimitiveWrapper(propertyType);
-
-        if(primitive){
-            String type = ModelUtil.toString(propertyType, false);
-            return new String[]{ "rs.get"+StringUtil.capitalize(type)+'('+index+')' };
-        }else if(primitiveWrapper){
+        String resultSetType = column.resultSetType();
+        int dot = resultSetType.lastIndexOf('.');
+        if(dot!=-1)
+            resultSetType = resultSetType.substring(dot+1);
+        
+        if(ModelUtil.isPrimitiveWrapper(column.propertyType())){
             String name = column.columnName();
-            String type = ModelUtil.toString(propertyType, false);
-            String primitiveType = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
             return new String[]{
-                primitiveType+' '+name+" = rs.get"+StringUtil.capitalize(primitiveType)+'('+index+");",
+                resultSetType+' '+name+" = rs.get"+StringUtil.capitalize(resultSetType)+'('+index+");",
                 "rs.wasNull() ? null : "+name
             };
-        }else {
-            String type = ((DeclaredType)propertyType).asElement().getSimpleName().toString();
-            return new String[]{ "rs.get"+StringUtil.capitalize(type)+'('+index+')' };
-        }
+        }else
+            return new String[]{ "rs.get"+StringUtil.capitalize(resultSetType)+'('+index+')' };
     }
 
     private void generateNewRecord(Printer printer){
