@@ -196,7 +196,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             if(code.length>1)
                 printer.println(code[0]);
             String value = code[code.length-1];
-            printer.println("setColumnValue("+i+", __record, "+value+");");
+            printer.println("setColumnValue("+(i-1)+", __record, "+value+");");
             i++;
         }
         printer.printlns(
