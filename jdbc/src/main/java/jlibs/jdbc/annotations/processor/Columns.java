@@ -17,7 +17,12 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.StringUtil;
+import jlibs.core.lang.model.ModelUtil;
 
+import javax.lang.model.type.TypeMirror;
+import java.lang.reflect.Method;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -65,11 +70,28 @@ class Columns extends ArrayList<ColumnProperty>{
         clash = findByColumn(columnProperty.columnName());
         if(clash!=null)
             throw new AnnotationError(columnProperty.element, columnProperty.annotation, "this column is already used by: "+clash.element);
+
         if(columnProperty.auto()){
             if(autoColumn!=-1)
                 throw new AnnotationError(columnProperty.element, columnProperty.annotation, "two auto columns found: "+get(autoColumn).propertyName()+", "+columnProperty.propertyName());
             autoColumn = size();
         }
+
+        // ensure that propertyType is valid javaType that can be fetched from ResultSet
+        TypeMirror propertyType = columnProperty.propertyType();
+        if(!ModelUtil.isPrimitive(propertyType) && !ModelUtil.isPrimitiveWrapper(propertyType)){
+            String resultSetType = columnProperty.resultSetType();
+            int dot = resultSetType.lastIndexOf('.');
+            String simpleName = dot==-1 ? resultSetType : resultSetType.substring(dot+1);
+            try{
+                Method method = ResultSet.class.getMethod("get"+ StringUtil.capitalize(simpleName), int.class);
+                if(!method.getReturnType().getName().equals(resultSetType))
+                    throw new NoSuchMethodException();
+            }catch(NoSuchMethodException ex){
+                throw new AnnotationError(columnProperty.element, columnProperty.annotation, resultSetType+" has no mapping SQL Type");
+            }
+        }
+
         return super.add(columnProperty);
     }
 
