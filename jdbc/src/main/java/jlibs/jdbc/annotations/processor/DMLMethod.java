@@ -28,6 +28,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 /**
  * @author Santhosh Kumar T
  */
+// @enhancement allow to ignore nulls in where condition to make dynamic queries
 abstract class DMLMethod{
     protected Printer printer;
     protected ExecutableElement method;
