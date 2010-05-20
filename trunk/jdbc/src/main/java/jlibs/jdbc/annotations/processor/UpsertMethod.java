@@ -33,6 +33,8 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 public class UpsertMethod extends DMLMethod{
     protected UpsertMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
+
+        // @enhancement allow to return pojo
         if(method.getReturnType().getKind()!= TypeKind.VOID)
             throw new AnnotationError("method with @Upsert annotation should return void");
     }

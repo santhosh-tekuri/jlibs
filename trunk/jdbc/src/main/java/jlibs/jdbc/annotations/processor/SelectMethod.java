@@ -30,6 +30,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 /**
  * @author Santhosh Kumar T
  */
+// @enhancement allow to return single/listOf column values
 public class SelectMethod extends AbstractDMLMethod{
     protected SelectMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
