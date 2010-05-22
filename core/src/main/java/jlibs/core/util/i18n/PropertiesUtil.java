@@ -23,7 +23,7 @@ import java.util.TreeSet;
 /**
  * @author Santhosh Kumar T
  */
-final class PropertiesUtil{
+public final class PropertiesUtil{
     public static void writeComments(BufferedWriter bw,  String comments) throws IOException{
         bw.write("#");
         int len = comments.length();
@@ -67,42 +67,43 @@ final class PropertiesUtil{
         bw.newLine();
     }
     
-    private static String saveConvert(String theString,
-			       boolean escapeSpace,
-			       boolean escapeUnicode) {
+    private static String saveConvert(String theString, boolean escapeSpace, boolean escapeUnicode){
         int len = theString.length();
         int bufLen = len * 2;
-        if (bufLen < 0) {
+        if(bufLen<0)
             bufLen = Integer.MAX_VALUE;
-        }
         StringBuffer outBuffer = new StringBuffer(bufLen);
 
-        for(int x=0; x<len; x++) {
+        for(int x=0; x<len; x++){
             char aChar = theString.charAt(x);
             // Handle common case first, selecting largest block that
             // avoids the specials below
-            if ((aChar > 61) && (aChar < 127)) {
-                if (aChar == '\\') {
+            if (aChar>61 && aChar<127){
+                if(aChar=='\\'){
                     outBuffer.append('\\'); outBuffer.append('\\');
                     continue;
                 }
                 outBuffer.append(aChar);
                 continue;
             }
-            switch(aChar) {
-		case ' ':
-		    if (x == 0 || escapeSpace)
-			outBuffer.append('\\');
-		    outBuffer.append(' ');
-		    break;
-                case '\t':outBuffer.append('\\'); outBuffer.append('t');
-                          break;
-                case '\n':outBuffer.append('\\'); outBuffer.append('n');
-                          break;
-                case '\r':outBuffer.append('\\'); outBuffer.append('r');
-                          break;
-                case '\f':outBuffer.append('\\'); outBuffer.append('f');
-                          break;
+            switch(aChar){
+                case ' ':
+                    if (x == 0 || escapeSpace)
+                    outBuffer.append('\\');
+                    outBuffer.append(' ');
+                    break;
+                case '\t':
+                    outBuffer.append('\\'); outBuffer.append('t');
+                    break;
+                case '\n':
+                    outBuffer.append('\\'); outBuffer.append('n');
+                    break;
+                case '\r':
+                    outBuffer.append('\\'); outBuffer.append('r');
+                    break;
+                case '\f':
+                    outBuffer.append('\\'); outBuffer.append('f');
+                    break;
                 case '=': // Fall through
                 case ':': // Fall through
                 case '#': // Fall through
@@ -110,96 +111,89 @@ final class PropertiesUtil{
                     outBuffer.append('\\'); outBuffer.append(aChar);
                     break;
                 default:
-                    if (((aChar < 0x0020) || (aChar > 0x007e)) & escapeUnicode ) {
+                    if((aChar<0x0020 || aChar>0x007e) & escapeUnicode){
                         outBuffer.append('\\');
                         outBuffer.append('u');
                         outBuffer.append(toHex((aChar >> 12) & 0xF));
                         outBuffer.append(toHex((aChar >>  8) & 0xF));
                         outBuffer.append(toHex((aChar >>  4) & 0xF));
                         outBuffer.append(toHex( aChar        & 0xF));
-                    } else {
+                    }else
                         outBuffer.append(aChar);
-                    }
             }
         }
         return outBuffer.toString();
     }
 
-    private static char toHex(int nibble) {
+    private static char toHex(int nibble){
     	return hexDigit[(nibble & 0xF)];
     }
 
     /** A table of hex digits */
-    private static final char[] hexDigit = {
-	'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    private static final char[] hexDigit ={
+	    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
 
     public static NavigableSet<Integer> findArgs(String pattern){
         NavigableSet<Integer> args = new TreeSet<Integer>();
         StringBuffer[] segments = new StringBuffer[4];
-        for (int i = 0; i < segments.length; ++i) {
+        for(int i=0; i<segments.length; ++i)
             segments[i] = new StringBuffer();
-        }
         int part = 0;
         boolean inQuote = false;
         int braceStack = 0;
-        for (int i = 0; i < pattern.length(); ++i) {
+        for(int i=0; i<pattern.length(); ++i){
             char ch = pattern.charAt(i);
-            if (part == 0) {
-                if (ch == '\'') {
-                    if (i + 1 < pattern.length()
-                        && pattern.charAt(i+1) == '\'') {
+            if(part==0){
+                if(ch=='\''){
+                    if(i+1<pattern.length() && pattern.charAt(i+1)=='\''){
                         segments[part].append(ch);  // handle doubles
                         ++i;
-                    } else {
+                    }else
                         inQuote = !inQuote;
-                    }
-                } else if (ch == '{' && !inQuote) {
+                }else if(ch=='{'&&!inQuote)
                     part = 1;
-                } else {
+                else
                     segments[part].append(ch);
-                }
-            } else  if (inQuote) {              // just copy quotes in parts
+            }else if(inQuote){              // just copy quotes in parts
                 segments[part].append(ch);
-                if (ch == '\'') {
+                if(ch=='\'')
                     inQuote = false;
-                }
-            } else {
-                switch (ch) {
-                case ',':
-                    if (part < 3)
-                        part += 1;
-                    else
+            }else{
+                switch(ch){
+                    case ',':
+                        if(part<3)
+                            part += 1;
+                        else
+                            segments[part].append(ch);
+                        break;
+                    case '{':
+                        ++braceStack;
                         segments[part].append(ch);
-                    break;
-                case '{':
-                    ++braceStack;
-                    segments[part].append(ch);
-                    break;
-                case '}':
-                    if (braceStack == 0) {
-                        part = 0;
-                        args.add(Integer.parseInt(segments[1].toString()));
-                        segments[1].setLength(0);   // throw away other segments
-                        segments[2].setLength(0);
-                        segments[3].setLength(0);
-                    } else {
-                        --braceStack;
+                        break;
+                    case '}':
+                        if(braceStack==0){
+                            part = 0;
+                            args.add(Integer.parseInt(segments[1].toString()));
+                            segments[1].setLength(0);   // throw away other segments
+                            segments[2].setLength(0);
+                            segments[3].setLength(0);
+                        }else{
+                            --braceStack;
+                            segments[part].append(ch);
+                        }
+                        break;
+                    case '\'':
+                        inQuote = true;
+                        // fall through, so we keep quotes in other parts
+                    default:
                         segments[part].append(ch);
-                    }
-                    break;
-                case '\'':
-                    inQuote = true;
-                    // fall through, so we keep quotes in other parts
-                default:
-                    segments[part].append(ch);
-                    break;
+                        break;
                 }
             }
         }
-        if (braceStack == 0 && part != 0) {
+        if(braceStack==0 && part!=0)
             throw new IllegalArgumentException("Unmatched braces in the pattern.");
-        }
         return args;
     }
 }
