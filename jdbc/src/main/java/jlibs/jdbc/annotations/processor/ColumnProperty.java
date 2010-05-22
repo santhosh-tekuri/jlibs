@@ -36,7 +36,7 @@ abstract class ColumnProperty<E extends Element>{
     }
 
     public String columnName(){
-        String columnName = ModelUtil.getAnnotationValue((Element) element, annotation, "value");
+        String columnName = ModelUtil.getAnnotationValue((Element) element, annotation, "name");
         return columnName.length()==0 ? StringUtil.underscore(propertyName()) : columnName;
     }
 

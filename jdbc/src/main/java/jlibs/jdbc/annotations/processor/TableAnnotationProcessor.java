@@ -58,7 +58,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                 try{
                     TypeElement c = (TypeElement)elem;
                     columns = new Columns();
-                    columns.tableName = ModelUtil.getAnnotationValue(c, Table.class, "value");
+                    columns.tableName = ModelUtil.getAnnotationValue(c, Table.class, "name");
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
                         process(c);
                         c = ModelUtil.getSuper(c);
