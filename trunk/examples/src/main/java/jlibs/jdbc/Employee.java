@@ -21,13 +21,13 @@ import jlibs.jdbc.annotations.Table;
 /**
  * @author Santhosh Kumar T
  */
-@Table(value="employees", extend= EmployeeDAO.class)
+@Table(name="employees", extend= EmployeeDAO.class)
 public class Employee{
-    @Column(value="id", primary=true, auto=true)
+    @Column(name="id", primary=true, auto=true)
     public long id;
 
     private String firstName;
-    @Column("first_name")
+    @Column(name="first_name")
     public String getFirstName(){
         return firstName;
     }
@@ -39,13 +39,13 @@ public class Employee{
     public String getLastName(){
         return lastName;
     }
-    @Column("last_name")
+    @Column(name="last_name")
     public void setLastName(String lastName){
         this.lastName = lastName;
     }
 
     private int age;
-    @Column("age")
+    @Column(name="age")
     public int getAge(){
         return age;
     }

@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Column{
-    String value() default "";
+    String name() default "";
     boolean primary() default false;
     boolean auto() default false;
 }
