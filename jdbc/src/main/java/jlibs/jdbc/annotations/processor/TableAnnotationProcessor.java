@@ -86,13 +86,19 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
     private void process(TypeElement c){
         for(ExecutableElement method: ElementFilter.methodsIn(c.getEnclosedElements())){
             AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Column.class);
-            if(mirror!=null)
+            if(mirror!=null){
+                if(!ModelUtil.isAccessible(method, true, false))
+                    throw new AnnotationError(method, "Invalid access modifier used on method with @Column");
                 columns.add(new MethodColumnProperty(method, mirror));
+            }
         }
         for(VariableElement element: ElementFilter.fieldsIn(c.getEnclosedElements())){
             AnnotationMirror mirror = ModelUtil.getAnnotationMirror(element, Column.class);
-            if(mirror!=null)
+            if(mirror!=null){
+                if(!ModelUtil.isAccessible(element, true, false))
+                    throw new AnnotationError(element, "Invalid access modifier used on field with @Column");
                 columns.add(new FieldColumnProperty(element, mirror));
+            }
         }
     }
 

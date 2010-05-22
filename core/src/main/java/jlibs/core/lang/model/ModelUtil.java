@@ -139,6 +139,23 @@ public class ModelUtil{
         }
         return null;
     }
+
+    public static boolean isAccessible(Element element, boolean samePackage, boolean subClass){
+        Modifier modifier = getModifier(element.getModifiers(), Modifier.PUBLIC, Modifier.PROTECTED, Modifier.PRIVATE);
+        if(modifier==null){
+            if(!samePackage)
+                return false;
+        }else{
+            switch(modifier){
+                case PRIVATE:
+                    return false;
+                case PROTECTED:
+                    if(!samePackage && !subClass)
+                        return false;
+            }
+        }
+        return true;
+    }
     
     public static String signature(ExecutableElement method, boolean useParamNames){
         StringBuilder buff = new StringBuilder();
