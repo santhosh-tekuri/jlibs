@@ -293,7 +293,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         return delete(null, new Object[0]);
     }
 
-    public int delete(T record) throws DAOException{
-        return delete(deleteQuery, values(record, deleteOrder));
+    public boolean delete(T record) throws DAOException{
+        return delete(deleteQuery, values(record, deleteOrder))==1;
     }
 }
