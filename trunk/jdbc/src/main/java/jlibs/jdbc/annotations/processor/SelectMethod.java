@@ -39,8 +39,8 @@ public class SelectMethod extends AbstractDMLMethod{
     @Override
     protected String[] code() {
         String code[] = super.code();
-        int count = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertCount");
-        if(count==-1)
+        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinmumCount");
+        if(assertMinmumCount==-1)
             return code;
         else{
             if(methodName().equals("first")){
