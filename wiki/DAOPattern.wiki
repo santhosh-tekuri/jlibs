@@ -1,0 +1,488 @@
+#summary J2EE DAO Pattern made easier
+#labels JDBC,DAO,SQL
+
+Create a POJO and map it to database using annotations
+{{{
+package sample;
+
+import jlibs.jdbc.annotations.*;
+
+@Table(name="employees")
+public class Employee{
+    @Column(primary=true)
+    public int id;
+    
+    @Column public String firstName;
+    @Column public String lastName;
+    @Column public int age;
+}
+}}}
+
+----------------------
+==@Table Annotation==
+
+{{{
+@Table(name="employees")
+public class Employee{
+}}}
+
+Here we are mapping `Employee` class to `employees` table in database.
+----------------------
+==@Column Annotation==
+{{{
+@Column public String firstName;
+}}}
+
+here we are saying that the property `firstName` is mapped to `first_name` in `employees` table.<br>
+We call `firstName` as column-property (i.e, property that is mapped to table column).
+
+The name of the column is derived from property name by joining words with underscore and converting to lowercase.<br>
+You can also explicitly specify the column name as below:
+{{{
+@Column(name="first_name")
+public String firstName;
+}}}
+
+The primary key can be specified by specifying `primary=true` as below.
+{{{
+@Column(primary=true)
+public int id;
+}}}
+If primary key is combination of multiple columns, specify `primary=true` on all those column properties;
+
+If the primary key is auto-incremented value in databse, then specify `auto=true` as below:
+{{{
+@Column(primary=true, auto=true)
+public int id;
+}}}
+
+`@Column` annotation can also be applied on `getXXX` or `setXXX` method rather than on field as below:
+{{{
+private String firstName;
+@Column(name="first_name")
+public String getFirstName(){
+    return firstName;
+}
+public void setFirstName(String firstName){
+    this.firstName = firstName;
+}
+}}}
+-----------------------
+==Invalid Column-Property Type==
+
+Only the java types which have sql type mapping can be used for column-property. For example:
+{{{
+@Column Properties defautls;
+}}}
+gives compilation error `java.util.Properties has no mapping SQL Type`.
+-----------------------
+==Duplicate Column-Property Type==
+
+If two column-properties are mapped to same column as below:
+{{{
+@Column(name="first_name")
+public String firstName;
+
+@Column(name="first_name")
+public String lastName;
+}}}
+gives compilation error. This can happen when you used copy/paste and forgot to change column name.
+------------------------
+==DataAccessObject==
+
+Let us create DAO:
+{{{
+package sample;
+
+import jlibs.jdbc.*;
+import org.apache.commons.dbcp.BasicDataSource;
+
+public class DB{
+    public static final BasicDataSource DATA_SOURCE;
+    public static final DAO<Employee> EMPLOYEES;
+    
+    static{
+        DATA_SOURCE = new BasicDataSource();
+ 	    DATA_SOURCE.setUrl("jdbc:mysql://localhost/test");
+        EMPLOYEES = DAO.create(Employee.class, DATA_SOURCE);
+    }
+}
+}}}
+We created class `DB` with constants to all DAO's.
+{{{
+EMPLOYEES = DAO.create(Employee.class, DATA_SOURCE);
+}}}
+The above line creates DAO for `Employee` pojo on given `javax.sql.DataSource`.<br>
+`jlibs.jdbc.DAO` is an abstract base class for all DAO's.<br>
+It has common methods like `insert(...)`, `delete(...)` etc that are expected in all DAO's.
+
+When you compile `Employee` class, `_EmployeeDAO.java` is generated and compiled.<br>
+This class extends `jlibs.jdbc.DAO<Employee>` and implements the abstract methods.
+
+Let us see how to use `DAO`.
+----------------------------
+==CRUD Operations==
+
+Inserting record:
+{{{
+import static sample.DB.*;
+
+Employee emp = new Employee();
+emp.id = 1;
+emp.firstName = "santhosh";
+emp.lastName = "kumar";
+emp.age = 28;
+
+EMPLOYEES.insert(emp);
+}}}
+
+let us say `id` of employee is defined as auto-increment as below:
+{{{
+@Column(primary=true, auto=true)
+public int id;
+}}}
+then after inserting employee, its `id` value will be updated with the actual `id` assigned by database.
+{{{
+Employee emp = new Employee();
+emp.firstName = "santhosh";
+emp.lastName = "kumar";
+emp.age = 28;
+
+EMPLOYEES.insert(emp);
+System.out.println("ID of new employee: "+emp.id);
+}}}
+
+Updating record:
+{{{
+emp.age = 27;
+EMPLOYEES.update(emp);
+}}}
+Listing records:
+{{{
+List<Employee> employees = EMPLOYEES.all();
+Employee emp = EMPLOYEES.first(); // get first employee from table
+}}}
+Deleting records:
+{{{
+if(!EMPLOYEES.delete(emp))
+    System.out.println("employee with id '"+emp.id+"' doesn't exist"); 
+}}}
+Deleting all records:
+{{{
+int count = EMPLOYEES.delete();
+System.out.println(count+" employees deleted"); 
+}}}
+
+Update if exists, otherwise insert (i.e, upsert):
+{{{
+import static sample.DB.*;
+
+Employee emp = new Employee();
+emp.id = 1;
+emp.firstName = "Santhosh";
+emp.lastName = "Sumar";
+emp.age = 26;
+
+EMPLOYEES.upsert(emp);
+}}}
+The above code updates the values of employee with id `1`.<br>
+If employee with id `1` doesn't exist, it inserts new record.
+
+All `DAO` methods throw `jlibs.jdbc.DAOException`.<br>
+This is runtime exception wrapping SQLException.
+---------------------
+==Custom Queries==
+
+Except `upsert(...)` all above methods in `DAO` support custom queries.
+{{{
+int id = (Integer)EMPLOYEES.insert("(first_name, last_name) values(?, ?)", "james", "gosling");
+int numberOfEmployeesUpdated = EMPLOYEES.update("set age=? where last_name=?", 25, "kumar");
+int numberOfEmployeesDeleted = EMPLOYEES.delete("where age < ?", 20);
+Employee emp = EMPLOYEES.first("where id=?", 5);
+List<Employees> youngEmployees = EMPLOYEES.all("where age < ?", 21);
+}}}
+
+Rather than doing custom queries like this, you can use the following technique.
+---------------------
+==@Select Annotation==
+
+Create a separator DAO for Employee, and add abstract methods for each custom query you want:
+{{{
+package sample;
+
+import jlibs.jdbc.*;
+import javax.sql.*;
+
+public abstract class EmployeeDAO extends DAO<Employee>{
+    public EmployeeDAO(DataSource dataSource, TableMetaData table){
+        super(dataSource, table);
+    }
+    
+    @Select
+    public abstract Employee findByID(int id);
+}
+}}}
+
+Here we created `abstract EmployeeDAO` class which extends `DAO<Employee>`.
+{{{
+public abstract class EmployeeDAO extends DAO<Employee>{
+}}}
+The constructor simply delegates to the constructor in superclass.
+{{{
+public EmployeeDAO(DataSource dataSource, TableMetaData table){
+    super(dataSource, table);
+}
+}}}
+Next, we added an abstract query method:
+{{{
+@Select
+public abstract Employee findByID(int id);
+}}}
+`@Select` annotation on this method says that you want to use `SELECT` query.
+
+The method signature should follow some rules.<br>
+When these rules are violated, you will get compilation error.
+
+*Return Type:*
+
+If you want to select single employee use return type as `Employee`.<br>
+If you want to select list of employees use return type as `List<Employee>`.
+
+*Parameters:*
+
+The parameter names should match the column-proprty name in your POJO,<br>
+and their type should match with the type of that column-property in POJO.
+
+For example, here the method `findByID(...)` takes one parameter `int id`.<br>
+Its name and type matches with the column-property `Employee.id` in POJO.
+
+*Method Name:*
+
+There is no restriction on method name.<br>
+i.e you can name the method of your choice.
+
+*Exceptions:*
+
+The abstract query methods can only throw `jlibs.jdbc.DAOException` which is runtime exception.
+
+We have seen that, when you compile `Employee.java`, the `_EmployeeDAO.java` generated extends `DAO<Employee>`.<br>
+Now we have to say that `_EmployeeDAO.java` generated should extend `EmployeeDAO` that we have written.<br>
+This is done by specifing `extend` attribute of `@Table` annotation
+{{{
+@Table(name="employees", extend=EmployeeDAO.class)
+public class Employee{
+}}}
+Now the generated `_EmployeeDAO` class extends our `EmployeeDAO` class and implements the abstract query method `findByID(...)`
+
+If you open `_EmployeeDAO.java`, you can see the following implementation generated:
+{{{
+@Override
+public jlibs.jdbc.Employee findByID(long id){
+    return first("where id=?", id);
+}
+}}}
+
+To find employees by last name and age, you define abstract query method as below:
+{{{
+@Select
+public abstract List<Employee> findByLastNameAndAge(String lastName, int age);
+}}}
+and the generated implementation will be:
+{{{
+@Override
+public java.util.List<jlibs.jdbc.Employee> findByLastNameAndAge(java.lang.String lastName, int age){
+    return all("where last_name=? and age=?", lastName, age);
+}
+}}}
+
+If you want to find all employees with complex conditions:
+{{{
+@Select("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
+public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastName);
+}}}
+here we are specifying the sql query in @Select annotation.<br>
+
+`#{column-property} in query will be replaced by its columnName<br>
+i,e #{age} is replaced by `age` and #{lastName} is replaced by `last_name`
+
+`${parameter-name} in query will be replaced by its parameter value<br>
+i,e ${fromAge} is replaced by the value of fromAge passed to the method.
+
+the generated implementation for the above method will be:
+{{{
+@Override
+public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastName){
+    return all("where age between ? and ? or last_name=?", fromAge, toAge, lastName);
+}
+}}}
+
+---------------------------
+==@Insert Annotation==
+
+{{{
+@Insert
+public abstract void insert(int id, String firstName);
+}}}
+
+The parameter names should match the column-proprty name in your POJO,<br>
+and their type should match with the type of that column-property in POJO.
+
+the generated implementation will be:
+{{{
+@Override
+public void insert(int id, java.lang.String firstName){
+    insert("(id, first_name) values(?, ?)", id, firstName);
+}
+}}}
+
+The method can return either void or the POJO. for example:
+{{{
+@Insert
+public Employee insert(long id, String firstName, String lastName);
+}}}
+the generated implemenation will be:
+{{{
+@Override
+public jlibs.jdbc.Employee insert(long id, java.lang.String firstName, java.lang.String lastName){
+    insert("(id, first_name, last_name) values(?, ?, ?)", id, firstName, lastName);
+    return first("where id=?", id);
+}
+}}}
+
+---------------------------
+==@Delete Annotation==
+
+{{{
+@Delete
+public abstract int delete(String firstName, String lastName);
+}}}
+
+The parameter names should match the column-proprty name in your POJO,<br>
+and their type should match with the type of that column-property in POJO.
+
+The return value will be the number of employees deleted;<br>
+The method can return void, if you are not interested in that number.
+
+the generated implementation will be:
+{{{
+@Override
+public int delete(java.lang.String firstName, java.lang.String lastName){
+    return delete("where first_name=? and last_name=?", firstName, lastName);
+}
+}}}
+
+If you want to use complex conditions:
+{{{
+@Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
+public abstract int delete(int fromAge, int toAge, String lastN);
+}}}
+
+the generated implementation will be:
+{{{
+@Override
+public int delete(int fromAge, int toAge, java.lang.String lastN){
+    return delete("where age between ? and ? or last_name=?", fromAge, toAge, lastN);
+}
+}}}
+
+---------------------------
+==@Update Annotation==
+
+{{{
+@Update
+public abstract int update(int age, String where_firstName, String where_lastName);
+}}}
+
+The parameter names should match the column-proprty name in your POJO,<br>
+and their type should match with the type of that column-property in POJO.<br>
+the parameters to be used in `WHERE` condition should be prefixed with `where_`.
+
+The return value will be the number of employees updated;<br>
+The method can return void, if you are not interested in that number.
+
+the generated implementation will be:
+{{{
+@Override
+public int update(int age, java.lang.String where_firstName, java.lang.String where_lastName){
+    return update("set age=? where first_name=? and last_name=?", id, age, where_firstName, where_lastName);
+}
+}}}
+
+If you want to use complex conditions:
+{{{
+@Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
+public abstract int delete(int fromAge, int toAge, String lastN);
+}}}
+
+the generated implementation will be:
+{{{
+@Override
+public int delete(int fromAge, int toAge, java.lang.String lastN){
+    return delete("where age between ? and ? or last_name=?", fromAge, toAge, lastN);
+}
+}}}
+
+---------------------------
+==@Upsert Annotation==
+
+This is similar to `@Update` except that the method should return `void`.
+
+---------------------------
+==Transactions==
+
+To run multiple statements in a transaction:
+
+{{{
+import static sample.DB.*;
+
+Object returnValue = TransactionManager.run(DATA_SOURCE, new Transaction<Object>(){
+    @Override
+    public Object run(Connection con) throws SQLException{
+        // invoke some DAO/DB actions
+        // return something
+    }
+});
+}}}
+
+If `Transaction.run(...)` throws exception, then the current transaction is rolled back.
+
+What happens when transactions are nested as below:
+
+{{{
+    public void method1(){
+        Object returnValue = TransactionManager.run(DATA_SOURCE, new Transaction<Object>(){
+            @Override
+            public Object run(Connection con) throws SQLException{
+                // invoke some DAO/DB actions
+                method2();
+                // return something
+            }
+        });
+    }
+
+    public void method2(){
+        Object returnValue = TransactionManager.run(DATA_SOURCE, new Transaction<Object>(){
+            @Override
+            public Object run(Connection con) throws SQLException{
+                // invoke some DAO/DB actions
+                // return something
+            }
+        });
+    }
+}}}
+
+here both both `method1()` and `method1()` use transactions. Notice that `method1()` is calling `method2()`.<br>
+Here `method2()` will run in the same transaction that is started by `method1()`.
+
+-------------------------
+==What Next==
+
+This is not finished yet. I am still developing new features in this.<br>
+If you have any suggestions or comments, they will be great help to me.
+
+just now found [https://eodsql.dev.java.net/ eodsql] project, which uses somewhat similar approach.<br>
+some advantages over eodsql are:
+ * no reflection is used at runtime
+ * for simple DAO methods, you don't need to write sql
+ * columnnames are not hardcode in queries
+ * strict compile-time checks
