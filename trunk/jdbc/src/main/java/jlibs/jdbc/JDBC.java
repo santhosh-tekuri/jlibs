@@ -59,8 +59,7 @@ public class JDBC{
                 System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = con.prepareStatement(query);
                 stmt.setMaxRows(1);
-                for(int i=0; i<params.length; i++)
-                    stmt.setObject(i+1, params[i]);
+                setParams(stmt, params);
                 try{
                     return processFirst(stmt.executeQuery(), rowMapper);
                 }finally{
@@ -70,18 +69,28 @@ public class JDBC{
         });
     }
 
+    private void setParams(PreparedStatement stmt, Object[] params) throws SQLException{
+        for(int i=0; i<params.length; i++){
+            if(params[i] instanceof SQLType)
+                stmt.setNull(i+1, ((SQLType)params[i]).type);
+            else
+                stmt.setObject(i+1, params[i]);
+        }
+    }
+
     public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws SQLException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
                 System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query);
-                for(int i=0; i<params.length; i++)
-                    stmt.setObject(i+1, params[i]);
+                PreparedStatement stmt = null;
                 try{
+                    stmt = con.prepareStatement(query);
+                    setParams(stmt, params);
                     return processAll(stmt.executeQuery(), rowMapper);
                 }finally{
-                    stmt.close();
+                    if(stmt!=null)
+                        stmt.close();
                 }
             }
         });
@@ -92,13 +101,14 @@ public class JDBC{
             @Override
             public Integer run(Connection con) throws SQLException{
                 System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query);
+                PreparedStatement stmt = null;
                 try{
-                    for(int i=0; i<params.length; i++)
-                        stmt.setObject(i+1, params[i]);
+                    stmt = con.prepareStatement(query);
+                    setParams(stmt, params);
                     return stmt.executeUpdate();
                 }finally{
-                    stmt.close();
+                    if(stmt!=null)
+                        stmt.close();
                 }
             }
         });
@@ -109,14 +119,15 @@ public class JDBC{
             @Override
             public T run(Connection con) throws SQLException{
                 System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement stmt = null;
                 try{
-                    for(int i=0; i<params.length; i++)
-                        stmt.setObject(i+1, params[i]);
+                    stmt = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+                    setParams(stmt, params);
                     stmt.executeUpdate();
                     return processFirst(stmt.getGeneratedKeys(), generatedKeysMapper);
                 }finally{
-                    stmt.close();
+                    if(stmt!=null)
+                        stmt.close();
                 }
             }
         });

@@ -19,6 +19,7 @@ import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.jdbc.SQLType;
 
 import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Method;
@@ -113,6 +114,7 @@ class Columns extends ArrayList<ColumnProperty>{
             "@Override",
             "public Object getColumnValue(int i, "+printer.clazz.getSimpleName()+" record){",
                 PLUS,
+                "Object value;",
                 "switch(i){",
                     PLUS
         );
@@ -121,7 +123,8 @@ class Columns extends ArrayList<ColumnProperty>{
             printer.printlns(
                 "case "+i+":",
                     PLUS,
-                    "return "+column.getPropertyCode("record")+';',
+                    "value = "+column.getPropertyCode("record")+';',
+                    "return value==null ? "+SQLType.class.getSimpleName()+'.'+column.sqlType().name()+" : value;",
                     MINUS
             );
             i++;

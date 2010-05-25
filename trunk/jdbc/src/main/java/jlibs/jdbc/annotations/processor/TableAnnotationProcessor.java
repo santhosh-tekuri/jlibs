@@ -22,6 +22,8 @@ import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.DAO;
+import jlibs.jdbc.JavaType;
+import jlibs.jdbc.SQLType;
 import jlibs.jdbc.annotations.Column;
 import jlibs.jdbc.annotations.Table;
 
@@ -151,7 +153,15 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
         int i = 0;
         for(ColumnProperty column: columns){
-            printer.println("new ColumnMetaData(\""+StringUtil.toLiteral(column.columnName(), false)+"\", "+column.primary()+", "+column.auto()+')'+(i==columns.size()-1 ? "" : ","));
+            printer.println(
+                    "new ColumnMetaData(" ,
+                    "\""+StringUtil.toLiteral(column.columnName(), false)+"\", ",
+                    JavaType.class.getSimpleName()+'.'+column.javaType().name()+", ",
+                    SQLType.class.getSimpleName()+'.'+column.sqlType().name()+", ",
+                    column.primary()+", ",
+                    column.auto()+")",
+                    (i==columns.size()-1 ? "" : ",")
+            );
             i++;
         }
         printer.printlns(
