@@ -69,6 +69,7 @@ public class ClassUtil{
     
     private static final HashMap<Class, Class> PRIMITIVES = new HashMap<Class, Class>();
     static{
+        PRIMITIVES.put(Void.class,         void.class  );
         PRIMITIVES.put(Boolean.class,      boolean.class  );
         PRIMITIVES.put(Character.class,    char.class     );
         PRIMITIVES.put(Byte.class,         byte.class     );
@@ -88,6 +89,7 @@ public class ClassUtil{
 
     private static final HashMap<Class, Class> PRIMITIVE_WRAPPERS = new HashMap<Class, Class>();
     static{
+        PRIMITIVE_WRAPPERS.put(void.class,    void.class  );
         PRIMITIVE_WRAPPERS.put(boolean.class, Boolean.class  );
         PRIMITIVE_WRAPPERS.put(char.class,    Character.class);
         PRIMITIVE_WRAPPERS.put(byte.class,    Byte.class     );
@@ -100,6 +102,29 @@ public class ClassUtil{
     public static Class box(Class clazz){
         Class boxedClass = PRIMITIVE_WRAPPERS.get(clazz);
         return boxedClass==null ? clazz : boxedClass;
+    }
+
+    public static Class getPrimitiveType(String className){
+        if(className.equals("void"))
+            return void.class;
+        else if(className.equals("boolean"))
+            return boolean.class;
+        else if(className.equals("char"))
+            return char.class;
+        else if(className.equals("byte"))
+            return byte.class;
+        else if(className.equals("short"))
+            return short.class;
+        else if(className.equals("int"))
+            return int.class;
+        else if(className.equals("long"))
+            return long.class;
+        else if(className.equals("float"))
+            return float.class;
+        else if(className.equals("double"))
+            return double.class;
+        else
+            return null;
     }
 
     /*-------------------------------------------------[ ClassContext ]---------------------------------------------------*/
