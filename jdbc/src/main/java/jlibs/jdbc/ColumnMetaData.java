@@ -20,10 +20,14 @@ package jlibs.jdbc;
  */
 public class ColumnMetaData{
     public final String name;
+    public final JavaType javaType;
+    public final SQLType sqlType;
     public final boolean primary;
     public final boolean auto;
-    public ColumnMetaData(String name, boolean primary, boolean auto){
+    public ColumnMetaData(String name, JavaType javaType, SQLType sqlType, boolean primary, boolean auto){
         this.name = name;
+        this.javaType = javaType;
+        this.sqlType = sqlType;
         this.primary = primary;
         this.auto = auto;
     }

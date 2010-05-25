@@ -15,9 +15,13 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.lang.ArrayUtil;
+import jlibs.core.lang.ClassUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.jdbc.JavaType;
+import jlibs.jdbc.SQLType;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -60,6 +64,20 @@ abstract class ColumnProperty<E extends Element>{
             return ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
         }else
             return ModelUtil.toString(propertyType, false);
+    }
+
+    public JavaType javaType(){
+        try{
+            Class propertyType = Class.forName(ModelUtil.toString(propertyType(), true));
+            propertyType = ClassUtil.unbox(propertyType);
+            return JavaType.valueOf(propertyType);
+        }catch(ClassNotFoundException ex){
+            throw new AnnotationError(ex.getClass().getName()+": "+ex.getMessage());
+        }
+    }
+
+    public SQLType sqlType(){
+        return javaType().sqlTypes[0];
     }
 
     public abstract String propertyName();
