@@ -21,6 +21,7 @@ import jlibs.core.net.URLUtil;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.CodeSource;
+import java.util.HashMap;
 
 /**
  * @author Santhosh Kumar T
@@ -62,6 +63,43 @@ public class ClassUtil{
     public static ClassLoader getClassLoader(Class clazz){
         ClassLoader classLoader = clazz.getClassLoader();
         return classLoader==null ? ClassLoader.getSystemClassLoader() : classLoader;
+    }
+
+    /*-------------------------------------------------[ PRIMITIVES ]---------------------------------------------------*/
+    
+    private static final HashMap<Class, Class> PRIMITIVES = new HashMap<Class, Class>();
+    static{
+        PRIMITIVES.put(Boolean.class,      boolean.class  );
+        PRIMITIVES.put(Character.class,    char.class     );
+        PRIMITIVES.put(Byte.class,         byte.class     );
+        PRIMITIVES.put(Short.class,        short.class    );
+        PRIMITIVES.put(Integer.class,      int.class      );
+        PRIMITIVES.put(Long.class,         long.class     );
+        PRIMITIVES.put(Float.class,        float.class    );
+        PRIMITIVES.put(Double.class,       double.class   );
+    }
+    public static Class unbox(Class clazz){
+        Class unboxedClass = PRIMITIVES.get(clazz);
+        return unboxedClass==null ? clazz : unboxedClass;
+    }
+    public static boolean isPrimitiveWrapper(Class clazz){
+        return PRIMITIVES.containsKey(clazz);
+    }
+
+    private static final HashMap<Class, Class> PRIMITIVE_WRAPPERS = new HashMap<Class, Class>();
+    static{
+        PRIMITIVE_WRAPPERS.put(boolean.class, Boolean.class  );
+        PRIMITIVE_WRAPPERS.put(char.class,    Character.class);
+        PRIMITIVE_WRAPPERS.put(byte.class,    Byte.class     );
+        PRIMITIVE_WRAPPERS.put(short.class,   Short.class    );
+        PRIMITIVE_WRAPPERS.put(int.class,     Integer.class  );
+        PRIMITIVE_WRAPPERS.put(long.class,    Long.class     );
+        PRIMITIVE_WRAPPERS.put(float.class,   Float.class    );
+        PRIMITIVE_WRAPPERS.put(double.class,  Double.class   );
+    }
+    public static Class box(Class clazz){
+        Class boxedClass = PRIMITIVE_WRAPPERS.get(clazz);
+        return boxedClass==null ? clazz : boxedClass;
     }
 
     /*-------------------------------------------------[ ClassContext ]---------------------------------------------------*/
