@@ -126,7 +126,7 @@ public class ModelUtil{
                 String name = kind.toString().toLowerCase();
                 return usePrimitiveWrappers ? "java.lang."+ StringUtil.capitalize(name) : name;
             case ARRAY:
-                return toString(((ArrayType)mirror).getComponentType(), usePrimitiveWrappers)+"[]";
+                return toString(((ArrayType)mirror).getComponentType(), false)+"[]";
             default:
                 throw new NotImplementedException(kind +" is not implemented for "+mirror.getClass());
         }
