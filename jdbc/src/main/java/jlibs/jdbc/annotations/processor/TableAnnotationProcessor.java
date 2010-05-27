@@ -67,6 +67,9 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                     }
                     c = (TypeElement)elem;
 
+                    if(columns.size()==0)
+                        throw new AnnotationError(c, "Class with @Table must have atleast one column-property");
+
                     Printer pw = null;
                     try{
                         pw = Printer.get(c, Table.class, FORMAT);
