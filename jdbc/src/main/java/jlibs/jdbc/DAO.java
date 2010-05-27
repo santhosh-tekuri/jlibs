@@ -128,22 +128,24 @@ public abstract class DAO<T> implements RowMapper<T>{
 
         // UPDATE Query
         query.setLength(0);
-        query.append("set ");
         args.clear();
         for(int i=0; i<table.columns.length; i++){
             if(!table.columns[i].primary){
-                if(args.size()>0)
+                if(args.size()==0)
+                    query.append(" set ");
+                else
                     query.append(", ");
                 query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
         }
-        query.append(" where ");
         int size = args.size();
         for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
                 if(args.size()>size)
                     query.append(" and ");
+                else
+                    query.append(" where ");
                 query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
@@ -153,11 +155,12 @@ public abstract class DAO<T> implements RowMapper<T>{
 
         // DELETE Query
         query.setLength(0);
-        query.append("where ");
         args.clear();
         for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
-                if(args.size()>0)
+                if(args.size()==0)
+                    query.append(" where ");
+                else
                     query.append(" and ");
                 query.append(table.columns[i].name).append("=?");
                 args.add(i);
