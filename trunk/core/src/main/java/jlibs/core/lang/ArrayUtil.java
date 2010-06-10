@@ -198,4 +198,86 @@ public class ArrayUtil{
                                     : (class2.isAssignableFrom(class1) ? class2 : Object.class);
         return concat(array1, array2, commonClass);
     }
+
+    /*-------------------------------------------------[ toObjectArray ]---------------------------------------------------*/
+
+    public static Boolean[] toObjectArray(boolean arr[]){
+        if(arr==null)
+            return null;
+        
+        Boolean result[] = new Boolean[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Character[] toObjectArray(char arr[]){
+        if(arr==null)
+            return null;
+
+        Character result[] = new Character[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Byte[] toObjectArray(byte arr[]){
+        if(arr==null)
+            return null;
+
+        Byte result[] = new Byte[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Short[] toObjectArray(short arr[]){
+        if(arr==null)
+            return null;
+
+        Short result[] = new Short[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Integer[] toObjectArray(int arr[]){
+        if(arr==null)
+            return null;
+
+        Integer result[] = new Integer[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Long[] toObjectArray(long arr[]){
+        if(arr==null)
+            return null;
+
+        Long result[] = new Long[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Float[] toObjectArray(float arr[]){
+        if(arr==null)
+            return null;
+
+        Float result[] = new Float[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
+
+    public static Double[] toObjectArray(double arr[]){
+        if(arr==null)
+            return null;
+
+        Double result[] = new Double[arr.length];
+        for(int i=arr.length-1; i>=0; i--)
+            result[i] = arr[i];
+        return result;
+    }
 }
