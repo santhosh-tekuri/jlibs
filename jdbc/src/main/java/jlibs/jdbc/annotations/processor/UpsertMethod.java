@@ -17,10 +17,14 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.NotImplementedException;
+import jlibs.core.lang.StringUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +34,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 /**
  * @author Santhosh Kumar T
  */
-public class UpsertMethod extends DMLMethod{
+public class UpsertMethod extends UpdateMethod{
     protected UpsertMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
 
@@ -44,32 +48,66 @@ public class UpsertMethod extends DMLMethod{
         if(method.getParameters().size()==0)
             throw new AnnotationError(method, "method with @Upsert annotation should take atleast one argument");
 
-        InsertMethod insertMethod = new InsertMethod(printer, method, mirror, columns){
-            @Override
-            protected String methodName(){
-                return "insert";
-            }
-        };
-        String insertCode = insertMethod.queryMethod(insertMethod.defaultSQL(UpdateMethod.SET_WHERE_VISITOR));
-
-        UpdateMethod updateMethod = new UpdateMethod(printer, method, mirror, columns){
-            @Override
-            protected String methodName(){
-                return "update";
-            }
-        };
-        String updateCode = updateMethod.queryMethod(updateMethod.defaultSQL());
+        String updateCode = queryMethod("update", defaultSQL());
+        String insertCode = queryMethod("insert", insertSQL());
 
         List<String> code = new ArrayList<String>();
         code.add("int count = "+updateCode+';');
-        if(method.getReturnType().getKind()== TypeKind.VOID){
-            code.add("if(count==0)");
-            code.add(PLUS);
-            code.add(insertCode+';');
-            code.add(MINUS);
-        }else
-            code.add("return count==0 ? "+insertCode+" : count;");
+        code.add("if(count==0)");
+        code.add(PLUS);
+        code.add(insertCode+';');
+        code.add(MINUS);
+
+        TypeMirror returnType = method.getReturnType();
+        if(returnType==printer.clazz.asType()){
+            throw new NotImplementedException("Upsert Method returning Model Object");
+        }else{
+            switch(returnType.getKind()){
+                case INT:
+                    code.add("return count;");
+                    break;
+                case VOID:
+                    break;
+                default:
+                    throw new AnnotationError(method, "unsupported return type");
+            }
+        }            
 
         return code.toArray(new String[code.size()]);
+    }
+
+    private CharSequence[] insertSQL(){
+        List<String> columnNames = new ArrayList<String>();
+        List<String> columnValues = new ArrayList<String>();
+        List<String> params = new ArrayList<String>();
+        for(VariableElement param : method.getParameters()){
+            String paramName = param.getSimpleName().toString();
+            if(paramName.indexOf('_')==-1){
+                ColumnProperty column = getColumn(param);
+                columnNames.add(column.columnName());
+                columnValues.add("?");
+                params.add(paramName);
+            }else{
+                int underscore = paramName.indexOf('_');
+                String hint = paramName.substring(0, underscore);
+                String propertyName = paramName.substring(underscore+1);
+                ColumnProperty column = getColumn(param, propertyName);
+
+                if("where".equals(hint) || "is".equals(hint)){
+                    columnNames.add(column.columnName());
+                    columnValues.add("?");
+                    params.add(paramName);
+                }else
+                    throw new AnnotationError(param, "invalid hint: "+hint);
+            }
+        }
+        StringBuilder query = new StringBuilder(StringUtil.join(columnNames.iterator(), ", "))
+                                    .append(" VALUES(")
+                                    .append(StringUtil.join(columnValues.iterator(), ", "))
+                                    .append(')');
+        return new CharSequence[]{
+            query,
+            StringUtil.join(params.iterator(), ", ")
+        };
     }
 }

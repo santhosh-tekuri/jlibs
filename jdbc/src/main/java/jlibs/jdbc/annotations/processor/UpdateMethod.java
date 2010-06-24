@@ -15,55 +15,85 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.graph.Visitor;
+import jlibs.core.lang.StringUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-class UpdateMethod extends AbstractDMLMethod{
+class UpdateMethod extends DMLMethod{
     protected UpdateMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
     }
 
     @Override
     protected CharSequence[] defaultSQL(){
-        StringBuilder set = columns(SET_VISITOR, ASSIGN_VISITOR, ", ").insert(0, "set ");
-        StringBuilder where = columns(WHERE_VISITOR, ASSIGN_VISITOR, " and ").insert(0, "where ");
+        List<VariableElement> elements = new ArrayList<VariableElement>(method.getParameters());
+
+        List<String> params = new ArrayList<String>();
+
+        List<String> set = new ArrayList<String>();
+        Iterator<VariableElement> iter=elements.iterator();
+        while(iter.hasNext()){
+            VariableElement param = iter.next();
+            String paramName = param.getSimpleName().toString();
+            if(paramName.indexOf('_')==-1){
+                ColumnProperty column = getColumn(param);
+                set.add(column.propertyName()+"=?");
+                params.add(param.getSimpleName().toString());
+                iter.remove();
+            }
+        }
+        if(set.size()==0)
+            throw new AnnotationError(method, "no columns to be set in query");
+
+        List<String> where = new ArrayList<String>();
+
+        iter=elements.iterator();
+        while(iter.hasNext()){
+            final VariableElement param = iter.next();
+            final String paramName = param.getSimpleName().toString();
+            int underscore = paramName.indexOf('_');
+            String hint = paramName.substring(0, underscore);
+            String propertyName = paramName.substring(underscore+1);
+            ColumnProperty column = getColumn(param, propertyName);
+
+            String hintValue = HINTS.get(hint);
+            if(hintValue!=null){
+                where.add(column.propertyName()+hintValue);
+                params.add(paramName);
+                iter.remove();
+            }else if("from".equals(hint)){
+                iter.remove();
+                final VariableElement nextParam = iter.next();
+                final String nextParamName = nextParam.getSimpleName().toString();
+                if(!nextParamName.equals("to_"+propertyName))
+                    throw new AnnotationError(method, "the next parameter of "+paramName+" must be to_"+propertyName);
+                if(param.asType()!=nextParam.asType())
+                    throw new AnnotationError(method, paramName+" and "+nextParamName+" must be of same type");
+                where.add(column.propertyName()+" BETWEEN ? and ?");
+                params.add(paramName);
+                params.add(nextParamName);
+                iter.remove();
+            }else
+                throw new AnnotationError(param, "invalid hint: "+hint);
+        }
+
+        StringBuilder query = new StringBuilder("SET ").append(StringUtil.join(set.iterator(), ", "));
+        if(where.size()>0)
+            query.append(" WHERE ").append(StringUtil.join(where.iterator(), " AND "));
 
         return new CharSequence[]{
-            set.append(' ').append(where),
-            parameters(SET_WHERE_VISITOR, null, ", ")
+            query,
+            StringUtil.join(params.iterator(), ", ")
         };
     }
-
-    /*-------------------------------------------------[ Visitors ]---------------------------------------------------*/
-
-    static final Visitor<String, String> WHERE_VISITOR = new Visitor<String, String>(){
-        @Override
-        public String visit(String paramName){
-            if(paramName.startsWith("where")){
-                paramName = paramName.substring("where".length());
-                switch(paramName.charAt(0)){
-                    case '_':
-                    case '$':
-                        return paramName.substring(1);
-                    default:
-                        return paramName;
-                }
-            }else
-                return null;
-        }
-    };
-
-    static final Visitor<String, String> SET_WHERE_VISITOR = new Visitor<String, String>(){
-        @Override
-        public String visit(String paramName){
-            String propertyName = SET_VISITOR.visit(paramName);
-            return propertyName==null ? WHERE_VISITOR.visit(paramName) : propertyName;
-        }
-    };
 }

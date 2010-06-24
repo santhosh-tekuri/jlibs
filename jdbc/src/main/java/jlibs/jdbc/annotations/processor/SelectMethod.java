@@ -16,7 +16,6 @@
 package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.NotImplementedException;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.IncorrectResultSizeException;
 
@@ -31,7 +30,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  * @author Santhosh Kumar T
  */
 // @enhancement allow to return single/listOf column values
-public class SelectMethod extends AbstractDMLMethod{
+public class SelectMethod extends WhereMethod{
     protected SelectMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
     }
@@ -43,9 +42,9 @@ public class SelectMethod extends AbstractDMLMethod{
         if(assertMinmumCount==-1)
             return code;
         else{
+            String pojoClass = ModelUtil.toString(printer.clazz.asType(), true);
+            String pojoName = ((DeclaredType)printer.clazz.asType()).asElement().getSimpleName().toString();
             if(methodName().equals("first")){
-                String pojoClass = ModelUtil.toString(printer.clazz.asType(), true);
-                String pojoName = ((DeclaredType)printer.clazz.asType()).asElement().getSimpleName().toString();
                 return new String[]{
                     pojoClass+" __pojo = "+code[0].substring("return ".length()),
                     "if(__pojo==null)",
@@ -55,17 +54,16 @@ public class SelectMethod extends AbstractDMLMethod{
                     "return __pojo;"    
                 };
             }else{
-                throw new NotImplementedException();
+                return new String[]{
+                    "java.util.List<"+pojoClass+"> __pojos = "+code[0].substring("return ".length()),
+                    "if(__pojos.size()<"+assertMinmumCount+")",
+                    PLUS,
+                    "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", "+assertMinmumCount+", __pojos.size());",
+                    MINUS,
+                    "return __pojos;"
+                };
             }
         }            
-    }
-
-    @Override
-    protected CharSequence[] defaultSQL(){
-        return new CharSequence[]{
-            columns(null, ASSIGN_VISITOR, " and ").insert(0, "where "),
-            parameters(null, null, ", ")
-        };
     }
 
     protected String methodName(){
