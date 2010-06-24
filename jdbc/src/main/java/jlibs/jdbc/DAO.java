@@ -86,13 +86,13 @@ public abstract class DAO<T> implements RowMapper<T>{
 
     private void buildQueries(){
         // SELECT Query
-        StringBuilder query = new StringBuilder("select ");
+        StringBuilder query = new StringBuilder("SELECT ");
         for(int i=0; i<table.columns.length; i++){
             if(i>0)
                 query.append(',');
             query.append(table.columns[i].name);
         }
-        query.append(" from ").append(table.name).append(" ");
+        query.append(" FROM ").append(table.name).append(" ");
         selectQuery = query.toString();
         
         // INSERT Query
@@ -108,7 +108,7 @@ public abstract class DAO<T> implements RowMapper<T>{
                 query.append(column.name);
             }
         }
-        query.append(") values(");
+        query.append(") VALUES(");
         first = true;
         List<Integer> args = new ArrayList<Integer>();
         for(int i=0; i<table.columns.length; i++){
@@ -132,7 +132,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         for(int i=0; i<table.columns.length; i++){
             if(!table.columns[i].primary){
                 if(args.size()==0)
-                    query.append(" set ");
+                    query.append(" SET ");
                 else
                     query.append(", ");
                 query.append(table.columns[i].name).append("=?");
@@ -143,9 +143,9 @@ public abstract class DAO<T> implements RowMapper<T>{
         for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
                 if(args.size()>size)
-                    query.append(" and ");
+                    query.append(" AND ");
                 else
-                    query.append(" where ");
+                    query.append(" WHERE ");
                 query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
@@ -159,9 +159,9 @@ public abstract class DAO<T> implements RowMapper<T>{
         for(int i=0; i<table.columns.length; i++){
             if(table.columns[i].primary){
                 if(args.size()==0)
-                    query.append(" where ");
+                    query.append(" WHERE ");
                 else
-                    query.append(" and ");
+                    query.append(" AND ");
                 query.append(table.columns[i].name).append("=?");
                 args.add(i);
             }
@@ -207,7 +207,7 @@ public abstract class DAO<T> implements RowMapper<T>{
             condition = "";
 
         try{
-            return jdbc.selectFirst("select "+functionCall+" from "+table.name+' '+condition, new RowMapper<Integer>(){
+            return jdbc.selectFirst("SELECT "+functionCall+" FROM "+table.name+' '+condition, new RowMapper<Integer>(){
                 @Override
                 public Integer newRecord(ResultSet rs) throws SQLException{
                     return rs.getInt(1);
@@ -236,10 +236,10 @@ public abstract class DAO<T> implements RowMapper<T>{
             if(query==null)
                 query = "";
             if(table.autoColumn==-1){
-                jdbc.executeUpdate("insert into "+table.name+" "+query, args);
+                jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, args);
                 return null;
             }else
-                return jdbc.executeUpdate("insert into "+table.name+" "+query, generaedKeyMapper, args);
+                return jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, generaedKeyMapper, args);
         }catch(SQLException ex){
             throw new DAOException(ex);
         }
@@ -263,7 +263,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         try{
             if(query==null)
                 query = "";
-            return jdbc.executeUpdate("update "+table.name+" "+query, args);
+            return jdbc.executeUpdate("UPDATE "+table.name+" "+query, args);
         }catch(SQLException ex){
             throw new DAOException(ex);
         }
@@ -286,7 +286,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         try{
             if(query==null)
                 query = "";
-            return jdbc.executeUpdate("delete from "+table.name+" "+query, args);
+            return jdbc.executeUpdate("DELETE FROM "+table.name+" "+query, args);
         }catch(SQLException ex){
             throw new DAOException(ex);
         }
