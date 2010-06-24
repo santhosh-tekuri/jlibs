@@ -23,16 +23,8 @@ import javax.lang.model.element.ExecutableElement;
 /**
  * @author Santhosh Kumar T
  */
-public class DeleteMethod extends AbstractDMLMethod{
+public class DeleteMethod extends WhereMethod{
     protected DeleteMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
-    }
-
-    @Override
-    protected CharSequence[] defaultSQL(){
-        return new CharSequence[]{
-            columns(null, ASSIGN_VISITOR, " and ").insert(0, "where "),
-            parameters(null, null, ", ")
-        };
     }
 }

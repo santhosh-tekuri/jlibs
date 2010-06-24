@@ -17,18 +17,21 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.graph.Visitor;
+import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-class InsertMethod extends AbstractDMLMethod{
+class InsertMethod extends DMLMethod{
     protected InsertMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
     }
@@ -41,59 +44,58 @@ class InsertMethod extends AbstractDMLMethod{
         if(returnType.getKind()==TypeKind.VOID)
             return insertCode;
         else if(returnType==printer.clazz.asType()){
-            if(columns.autoColumn==-1){
-                StringBuilder condition = new StringBuilder();
-                StringBuilder params = new StringBuilder();
-                for(ColumnProperty column: columns){
-                    if(column.primary()){
-                        if(condition.length()>0){
-                            condition.append(" and ");
-                            params.append(',');
-                        }
-                        condition.append(column.columnName()).append("=?");
-                        params.append(column.propertyName());
-                    }
-                }
-                String selectQuery = queryMethod("first", condition.insert(0, "where "), params);
-                return new String[]{
-                    insertCode[0].substring("return ".length()),
-                    "return "+selectQuery+';'
-                };
-            }else{
-                ColumnProperty autoColumn = columns.get(columns.autoColumn);
-                String generatedKey = insertCode[0].substring("return ".length(), insertCode[0].length()-1);
-                String generatedKeyType = ModelUtil.toString(autoColumn.propertyType(), true);
-                return new String[]{
-                    generatedKeyType+" __generatedKey = ("+generatedKeyType+')'+generatedKey+';',    
-                    "return first(\"where "+autoColumn.columnName()+"=?\", __generatedKey);"
-                };
-            }
+            String insertQuery = insertCode[0].substring("return ".length(), insertCode[0].length()-1);
+            return selectSQL(insertQuery);
         }else
             throw new AnnotationError(method, "invalid return type");
     }
 
     @Override
     protected CharSequence[] defaultSQL(){
-        return defaultSQL(null);
-    }
+        List<String> columnNames = new ArrayList<String>();
+        List<String> columnValues = new ArrayList<String>();
+        List<String> params = new ArrayList<String>();
+        for(VariableElement param : method.getParameters()){
+            ColumnProperty column = getColumn(param);
 
-    CharSequence[] defaultSQL(Visitor<String, String> propertyVisitor){
-        StringBuilder columns = columns(propertyVisitor, null, ", ").insert(0, "(").append(')');
-        StringBuilder values = parameters(propertyVisitor, new Visitor<String, String>(){
-            @Override
-            public String visit(String elem){
-                return "?";
-            }
-        }, ", ").insert(0, "values(").append(')');
-
+            columnNames.add(column.columnName());
+            columnValues.add("?");
+            params.add(column.propertyName());
+        }
+        StringBuilder sql = new StringBuilder(StringUtil.join(columnNames.iterator(), ", "))
+                                    .append(" VALUES(")
+                                    .append(StringUtil.join(columnValues.iterator(), ", "))
+                                    .append(')');
         return new CharSequence[]{
-            columns.append(' ').append(values),
-            parameters(propertyVisitor, null, ", ")
+            sql,
+            StringUtil.join(params.iterator(), ", ")
         };
     }
 
-    @Override
-    protected String userSQL(){
-        return "";
+    private String[] selectSQL(String insertQuery){
+        if(columns.autoColumn==-1){
+            List<String> where = new ArrayList<String>();
+            List<String> params = new ArrayList<String>();
+            for(ColumnProperty column: columns){
+                if(column.primary()){
+                    if(ModelUtil.getParameter(method, column.propertyName())==null)
+                        throw new AnnotationError(method, "column property '"+column.propertyName()+"' is missing in arguments.");
+                    where.add(column.columnName()+"=?");
+                    params.add(column.propertyName());
+                }
+            }
+            StringBuilder sql = new StringBuilder(" WHERE ").append(StringUtil.join(where.iterator(), " AND "));
+            return new String[]{
+                insertQuery+';',
+                "return "+queryMethod("first", sql, StringUtil.join(params.iterator(), ", "))+';'
+            };
+        }else{
+            ColumnProperty autoColumn = columns.get(columns.autoColumn);
+            String generatedKeyType = ModelUtil.toString(autoColumn.propertyType(), true);
+            return new String[]{
+                generatedKeyType+" __generatedKey = ("+generatedKeyType+')'+insertQuery+';',
+                "return first(\"WHERE "+autoColumn.columnName()+"=?\", __generatedKey);"
+            };
+        }
     }
 }
