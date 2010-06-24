@@ -28,6 +28,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface Table{
-    public abstract String name();
+    /**
+     * Name of the database table. If not specified it is computed from
+     * the Class name by converting it to lowercase and
+     * inserting underscores between words
+     */
+    public abstract String name() default "";
     public abstract Class extend() default DAO.class;
 }

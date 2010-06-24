@@ -26,6 +26,11 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Column{
+    /**
+     * Name of the table column. If not specified it is computed from
+     * the field/property name by converting it to lowercase and
+     * inserting underscores between words
+     */
     String name() default "";
     boolean primary() default false;
     boolean auto() default false;
