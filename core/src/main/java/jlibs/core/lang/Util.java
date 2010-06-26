@@ -29,6 +29,18 @@ import java.util.Arrays;
  */
 public class Util{
     /**
+     * Returns first non null element in <code>values</code>.
+     * If all elements are null, it returns null.
+     */
+    public static <T> T notNull(T... values){
+        for(T value: values){
+            if(value!=null)
+                return value;
+        }
+        return null;
+    }
+
+    /**
      * Returns true if given two objects are same.
      *
      * null values are handled as follows:
