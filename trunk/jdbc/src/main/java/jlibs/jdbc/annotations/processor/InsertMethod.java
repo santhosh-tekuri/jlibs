@@ -62,8 +62,9 @@ class InsertMethod extends DMLMethod{
             columnValues.add("?");
             params.add(column.propertyName());
         }
-        StringBuilder sql = new StringBuilder(StringUtil.join(columnNames.iterator(), ", "))
-                                    .append(" VALUES(")
+        StringBuilder sql = new StringBuilder("(")
+                                    .append(StringUtil.join(columnNames.iterator(), ", "))
+                                    .append(") VALUES(")
                                     .append(StringUtil.join(columnValues.iterator(), ", "))
                                     .append(')');
         return new CharSequence[]{
