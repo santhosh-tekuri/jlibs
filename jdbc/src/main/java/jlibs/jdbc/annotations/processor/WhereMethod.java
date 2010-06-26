@@ -48,7 +48,7 @@ public class WhereMethod extends DMLMethod{
             String paramName = param.getSimpleName().toString();
             if(paramName.indexOf('_')==-1){
                 ColumnProperty column = getColumn(param);
-                where.add(column.propertyName()+"=?");
+                where.add(column.columnName()+"=?");
                 params.add(paramName);
                 iter.remove();
             }else{
@@ -59,7 +59,7 @@ public class WhereMethod extends DMLMethod{
 
                 String hintValue = HINTS.get(hint);
                 if(hintValue!=null){
-                    where.add(column.propertyName()+hintValue);
+                    where.add(column.columnName()+hintValue);
                     params.add(paramName);
                     iter.remove();
                 }else if("from".equals(hint)){
@@ -70,7 +70,7 @@ public class WhereMethod extends DMLMethod{
                         throw new AnnotationError(method, "the next parameter of "+paramName+" must be to_"+propertyName);
                     if(param.asType()!=nextParam.asType())
                         throw new AnnotationError(method, paramName+" and "+nextParamName+" must be of same type");
-                    where.add(column.propertyName()+" BETWEEN ? and ?");
+                    where.add(column.columnName()+" BETWEEN ? and ?");
                     params.add(paramName);
                     params.add(nextParamName);
                     iter.remove();
