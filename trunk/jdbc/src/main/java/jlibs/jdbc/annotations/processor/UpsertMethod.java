@@ -101,7 +101,8 @@ public class UpsertMethod extends UpdateMethod{
                     throw new AnnotationError(param, "invalid hint: "+hint);
             }
         }
-        StringBuilder query = new StringBuilder(StringUtil.join(columnNames.iterator(), ", "))
+        StringBuilder query = new StringBuilder("(")
+                                    .append(StringUtil.join(columnNames.iterator(), ", "))
                                     .append(" VALUES(")
                                     .append(StringUtil.join(columnValues.iterator(), ", "))
                                     .append(')');
