@@ -48,6 +48,7 @@ abstract class DMLMethod{
         HINTS.put("gt", ">?");
         HINTS.put("ge", ">=?");
         HINTS.put("like", "LIKE ?");
+        HINTS.put("nlike", "NOT LIKE ?");
     }
 
     protected Printer printer;
