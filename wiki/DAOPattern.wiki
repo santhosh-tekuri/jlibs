@@ -1,5 +1,5 @@
 #summary J2EE DAO Pattern made easier
-#labels JDBC,DAO,SQL
+#labels JDBC,DAO,SQL,ORM
 
 Create a POJO and map it to database using annotations
 {{{
