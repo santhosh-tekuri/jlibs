@@ -15,6 +15,7 @@
 
 package jlibs.jdbc.annotations.processor;
 
+import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.IncorrectResultSizeException;
@@ -67,6 +68,15 @@ public class SelectMethod extends WhereMethod{
     }
 
     protected String methodName(){
-        return method.getReturnType()==printer.clazz.asType() ? "first" : "all";
+        String returnType = ModelUtil.toString(method.getReturnType(), true);
+        String singleType = ModelUtil.toString(printer.clazz.asType(), true);
+        String listType = "java.util.List<"+singleType+">";
+
+        if(singleType.equals(returnType))
+            return "first";
+        else if(listType.equals(returnType))
+            return "all";
+        else
+            throw new AnnotationError(method, "return value must be of type "+singleType+" or "+listType);
     }
 }

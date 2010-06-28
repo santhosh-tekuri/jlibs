@@ -190,22 +190,6 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
     }
 
-    private String[] getValueFromResultSet(ColumnProperty column, int index){
-        String resultSetType = column.resultSetType();
-        int dot = resultSetType.lastIndexOf('.');
-        if(dot!=-1)
-            resultSetType = resultSetType.substring(dot+1);
-        
-        if(ModelUtil.isPrimitiveWrapper(column.propertyType())){
-            String name = column.columnName();
-            return new String[]{
-                resultSetType+' '+name+" = rs.get"+StringUtil.capitalize(resultSetType)+'('+index+");",
-                "rs.wasNull() ? null : "+name
-            };
-        }else
-            return new String[]{ "rs.get"+StringUtil.capitalize(resultSetType)+'('+index+')' };
-    }
-
     private void generateNewRecord(Printer printer){
         printer.printlns(
             "@Override",
@@ -215,7 +199,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         );
         int i = 1;
         for(ColumnProperty column: columns){
-            String code[] = getValueFromResultSet(column, i);
+            String code[] = column.getValueFromResultSet(i);
             if(code.length>1)
                 printer.println(code[0]);
             String value = code[code.length-1];
@@ -239,7 +223,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             printer.println("throw new "+ImpossibleException.class.getName()+"();");
         else{
             ColumnProperty column = columns.get(columns.autoColumn);
-            String code[] = getValueFromResultSet(column, 1);
+            String code[] = column.getValueFromResultSet(1);
             if(code.length>1)
                 printer.println(code[0]);
             printer.println("return "+code[code.length-1]+';');

@@ -27,5 +27,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface Select{
     String value() default "";
+    String column() default "";
     int assertMinmumCount() default -1;
 }

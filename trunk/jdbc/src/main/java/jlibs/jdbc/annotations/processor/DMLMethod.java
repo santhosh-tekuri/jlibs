@@ -65,8 +65,13 @@ abstract class DMLMethod{
 
     public static DMLMethod create(Printer printer, ExecutableElement method, Columns columns){
         AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Select.class);
-        if(mirror!=null)
-            return new SelectMethod(printer, method, mirror, columns);
+        if(mirror!=null){
+            String columnProp = ModelUtil.getAnnotationValue(method, mirror, "column");
+            if(columnProp.length()>0)
+                return new SelectColumnMethod(printer, method, mirror, columns);
+            else
+                return new SelectMethod(printer, method, mirror, columns);
+        }
 
         mirror = ModelUtil.getAnnotationMirror(method, Insert.class);
         if(mirror!=null)
@@ -115,17 +120,7 @@ abstract class DMLMethod{
     }
 
     protected String[] code(){
-        CharSequence[] sequences;
-
-        String userSQL = userSQL();
-        if(userSQL.length()==0){
-            if(method.getParameters().size()==0)
-                throw new AnnotationError(method, "method with "+mirror.getAnnotationType().asElement().getSimpleName()+" annotation should take atleast one argument");
-            sequences = defaultSQL();
-        }else
-            sequences = preparedSQL(userSQL);
-
-        String code = queryMethod(sequences)+';';
+        String code = queryMethod(sql())+';';
         if(method.getReturnType().getKind()!= TypeKind.VOID)
             code = "return "+code;
 
@@ -145,6 +140,16 @@ abstract class DMLMethod{
         if(params.length()>0)
             code += ", "+params;
         return code += ')';
+    }
+
+    protected final CharSequence[] sql(){
+        String userSQL = userSQL();
+        if(userSQL.length()==0){
+            if(method.getParameters().size()==0)
+                throw new AnnotationError(method, "method with "+mirror.getAnnotationType().asElement().getSimpleName()+" annotation should take atleast one argument");
+            return defaultSQL();
+        }else
+            return preparedSQL(userSQL);
     }
 
     protected abstract CharSequence[] defaultSQL();

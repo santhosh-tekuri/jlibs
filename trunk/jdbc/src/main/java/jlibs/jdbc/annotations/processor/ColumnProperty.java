@@ -85,6 +85,22 @@ abstract class ColumnProperty<E extends Element>{
     public abstract String getPropertyCode(String object);
     public abstract String setPropertyCode(String object, String value);
 
+    public String[] getValueFromResultSet(int index){
+        String resultSetType = resultSetType();
+        int dot = resultSetType.lastIndexOf('.');
+        if(dot!=-1)
+            resultSetType = resultSetType.substring(dot+1);
+
+        if(ModelUtil.isPrimitiveWrapper(propertyType())){
+            String name = columnName();
+            return new String[]{
+                resultSetType+' '+name+" = rs.get"+StringUtil.capitalize(resultSetType)+'('+index+");",
+                "rs.wasNull() ? null : "+name
+            };
+        }else
+            return new String[]{ "rs.get"+StringUtil.capitalize(resultSetType)+'('+index+')' };
+    }
+
     @Override
     public int hashCode(){
         return propertyName().hashCode();
