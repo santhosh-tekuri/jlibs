@@ -181,11 +181,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
     
     public List<T> all(String condition, Object... args) throws DAOException{
-        try{
-            return jdbc.selectAll(selectQuery(condition), this, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        return jdbc.selectAll(selectQuery(condition), this, args);
     }
 
     public T first() throws DAOException{
@@ -193,11 +189,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
 
     public T first(String condition, Object... args) throws DAOException{
-        try{
-            return jdbc.selectFirst(selectQuery(condition), this, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        return jdbc.selectFirst(selectQuery(condition), this, args);
     }
     
     /*-------------------------------------------------[ Count ]---------------------------------------------------*/
@@ -206,16 +198,12 @@ public abstract class DAO<T> implements RowMapper<T>{
         if(condition==null)
             condition = "";
 
-        try{
-            return jdbc.selectFirst("SELECT "+functionCall+" FROM "+table.name+' '+condition, new RowMapper<Integer>(){
-                @Override
-                public Integer newRecord(ResultSet rs) throws SQLException{
-                    return rs.getInt(1);
-                }
-            }, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        return jdbc.selectFirst("SELECT "+functionCall+" FROM "+table.name+' '+condition, new RowMapper<Integer>(){
+            @Override
+            public Integer newRecord(ResultSet rs) throws SQLException{
+                return rs.getInt(1);
+            }
+        }, args);
     }
 
     public int count(String condition, Object... args) throws DAOException{
@@ -232,17 +220,13 @@ public abstract class DAO<T> implements RowMapper<T>{
     };
 
     public Object insert(String query, Object... args) throws DAOException{
-        try{
-            if(query==null)
-                query = "";
-            if(table.autoColumn==-1){
-                jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, args);
-                return null;
-            }else
-                return jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, generaedKeyMapper, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        if(query==null)
+            query = "";
+        if(table.autoColumn==-1){
+            jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, args);
+            return null;
+        }else
+            return jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, generaedKeyMapper, args);
     }
     
     public void insert(T record) throws DAOException{
@@ -260,13 +244,9 @@ public abstract class DAO<T> implements RowMapper<T>{
     /*-------------------------------------------------[ Update ]---------------------------------------------------*/
     
     public int update(String query, Object... args) throws DAOException{
-        try{
-            if(query==null)
-                query = "";
-            return jdbc.executeUpdate("UPDATE "+table.name+" "+query, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        if(query==null)
+            query = "";
+        return jdbc.executeUpdate("UPDATE "+table.name+" "+query, args);
     }
 
     public int update(T record) throws DAOException{
@@ -283,13 +263,9 @@ public abstract class DAO<T> implements RowMapper<T>{
     /*-------------------------------------------------[ Delete ]---------------------------------------------------*/
 
     public int delete(String query, Object... args) throws DAOException{
-        try{
-            if(query==null)
-                query = "";
-            return jdbc.executeUpdate("DELETE FROM "+table.name+" "+query, args);
-        }catch(SQLException ex){
-            throw new DAOException(ex);
-        }
+        if(query==null)
+            query = "";
+        return jdbc.executeUpdate("DELETE FROM "+table.name+" "+query, args);
     }
 
     public int delete() throws DAOException{

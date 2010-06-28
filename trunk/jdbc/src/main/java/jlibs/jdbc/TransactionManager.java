@@ -33,7 +33,7 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
         return new IdentityHashMap<DataSource, Connection>();
     }
 
-    private static Connection find(DataSource ds) throws SQLException{
+    private static Connection find(DataSource ds){
         Map<DataSource, Connection> transactions = INSTANCE.get();
         return transactions.get(ds);
     }
@@ -51,12 +51,14 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
             }catch(SQLException ignore){
                 ignore.printStackTrace();
             }
-        } catch(IllegalStateException e){
+            throw new SQLException(ex);
+        } catch(IllegalStateException ex){
             try{
                 con.close();
             }catch(SQLException ignore){
                 ignore.printStackTrace();
             }
+            throw ex;
         }
         return con;
     }
@@ -83,14 +85,18 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
         System.out.println("rolledback");
     }
 
-    public static <R> R run(DataSource ds, Transaction<R> transaction) throws SQLException{
+    public static <R> R run(DataSource ds, Transaction<R> transaction) throws DAOException{
         boolean single = transaction instanceof SingleStatementTransaction;
         
         Connection con = find(ds);
         boolean noTransaction = con==null;
         if(con==null){
-            con = single ? ds.getConnection() : start(ds);
-            System.out.println(single ? "newConnection" : "newTransaction");
+            try{
+                con = single ? ds.getConnection() : start(ds);
+                System.out.println(single ? "newConnection" : "newTransaction");
+            }catch(SQLException ex){
+                throw new DAOException(ex);
+            }
         }
 
         Exception ex = null;
@@ -130,7 +136,7 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
             return result;
         else{
             if(ex instanceof SQLException)
-                throw (SQLException)ex;
+                throw new DAOException(ex);
             else
                 throw (RuntimeException)ex;
         }

@@ -52,7 +52,7 @@ public class JDBC{
         }
     }
 
-    public <T> T selectFirst(final String query, final RowMapper<T> rowMapper, final Object... params) throws SQLException{
+    public <T> T selectFirst(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
             @Override
             public T run(Connection con) throws SQLException{
@@ -78,7 +78,7 @@ public class JDBC{
         }
     }
 
-    public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws SQLException{
+    public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
@@ -96,7 +96,7 @@ public class JDBC{
         });
     }
 
-    public int executeUpdate(final String query, final Object... params) throws SQLException{
+    public int executeUpdate(final String query, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<Integer>(){
             @Override
             public Integer run(Connection con) throws SQLException{
@@ -114,7 +114,7 @@ public class JDBC{
         });
     }
 
-    public <T> T executeUpdate(final String query, final RowMapper<T> generatedKeysMapper, final Object... params) throws SQLException{
+    public <T> T executeUpdate(final String query, final RowMapper<T> generatedKeysMapper, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
             @Override
             public T run(Connection con) throws SQLException{
