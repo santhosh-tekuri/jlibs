@@ -18,7 +18,6 @@ package jlibs.jdbc;
 import jlibs.jdbc.annotations.*;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -28,6 +27,21 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public EmployeeDAO(DataSource dataSource, TableMetaData table){
         super(dataSource, table);
     }
+
+    @Select(column="firstName")
+    public abstract String findFirstName(long id);
+
+    @Select(column="firstName")
+    public abstract List<String> findFirstNames(long id);
+
+    @Select(column="experience")
+    public abstract int findExperience(long id);
+
+    @Select(column="experience")
+    public abstract Integer findExperience1(long id);
+
+    @Select(column="experience")
+    public abstract List<Integer> findExperiences(long id);
 
     @Select
     public abstract Employee findByID(long id);
