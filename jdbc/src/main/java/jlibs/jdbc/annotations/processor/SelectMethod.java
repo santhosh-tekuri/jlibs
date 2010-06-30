@@ -49,18 +49,18 @@ public class SelectMethod extends WhereMethod{
                 return new String[]{
                     pojoClass+" __pojo = "+code[0].substring("return ".length()),
                     "if(__pojo==null)",
-                    PLUS,
-                    "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", 1, 0);",
-                    MINUS,
+                        PLUS,
+                        "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", 1, 0);",
+                        MINUS,
                     "return __pojo;"    
                 };
             }else{
                 return new String[]{
                     "java.util.List<"+pojoClass+"> __pojos = "+code[0].substring("return ".length()),
                     "if(__pojos.size()<"+assertMinmumCount+")",
-                    PLUS,
-                    "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", "+assertMinmumCount+", __pojos.size());",
-                    MINUS,
+                        PLUS,
+                        "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", "+assertMinmumCount+", __pojos.size());",
+                        MINUS,
                     "return __pojos;"
                 };
             }
