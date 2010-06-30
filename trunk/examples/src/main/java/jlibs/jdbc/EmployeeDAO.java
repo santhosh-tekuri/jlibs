@@ -40,8 +40,14 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Select(column="experience")
     public abstract Integer findExperience1(long id);
 
+    @Select(column="experience", assertMinmumCount=1)
+    public abstract Integer findExperience2(long id);
+
     @Select(column="experience")
     public abstract List<Integer> findExperiences(long id);
+
+    @Select(column="experience", assertMinmumCount=5)
+    public abstract List<Integer> findExperiences1(long id);
 
     @Select
     public abstract Employee findByID(long id);
@@ -62,7 +68,10 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public abstract void insert(String firstName, int age);
     
     @Update
-    public abstract int update(long id, int age, String where_firstName, String where_lastName);
+    public abstract int update1(long id, int age, String where_firstName, String where_lastName);
+
+    @Update
+    public abstract int update2(int age, String where_firstName, long id, String where_lastName);
 
     @Upsert
     public abstract void upsert1(long id, int age, String where_firstName, String where_lastName);

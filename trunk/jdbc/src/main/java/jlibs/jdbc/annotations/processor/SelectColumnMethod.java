@@ -20,9 +20,11 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
+import jlibs.jdbc.IncorrectResultSizeException;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.DeclaredType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,16 +52,22 @@ public class SelectColumnMethod extends WhereMethod{
     protected String[] code(){
         ColumnProperty column = getColumn();
 
+        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinmumCount");
+
         String columnType = ModelUtil.toString(column.propertyType(), true);
         CharSequence[] sequences = sql();
         String sql = String.format("SELECT %s FROM %s %s", column.columnName(), columns.tableName, sequences[0]);
         List<String> code = new ArrayList<String>();
+        String methodName = methodName();
         CollectionUtil.addAll(code,
-            String.format("return jdbc.select%s(\"%s\", new RowMapper<%s>(){", methodName(), StringUtil.toLiteral(sql, true), columnType),
+            String.format("jdbc.select%s(\"%s\", new RowMapper<%s>(){", methodName, StringUtil.toLiteral(sql, true), columnType),
                 PLUS,
                 String.format("public %s newRecord(ResultSet rs) throws SQLException{", columnType),
                     PLUS
         );
+
+        if(methodName.equals("First") && assertMinmumCount!=-1)
+            code.add("__found[0] = true;");
         String rowMapperCode[] = column.getValueFromResultSet(1);
         if(rowMapperCode.length>1)
             code.add(rowMapperCode[0]);
@@ -71,6 +79,31 @@ public class SelectColumnMethod extends WhereMethod{
                 MINUS,
             String.format("}, %s);", sequences[1])
         );
+
+        if(assertMinmumCount!=-1){
+            String pojoName = ((DeclaredType)printer.clazz.asType()).asElement().getSimpleName().toString();
+            if(methodName.equals("First")){
+                code.set(0, columnType+" __result = "+code.get(0));
+                code.add(0, "final boolean __found[] = { false };");
+                CollectionUtil.addAll(code,
+                    "if(!__found[0])",
+                        PLUS,
+                        "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", 1, 0);",
+                        MINUS,
+                    "return __result;"
+                );
+            }else{
+                code.set(0, "java.util.List<"+columnType+"> __result = "+code.get(0));
+                CollectionUtil.addAll(code,
+                    "if(__result.size()<"+assertMinmumCount+")",
+                        PLUS,
+                        "throw new "+ IncorrectResultSizeException.class.getSimpleName()+"(\""+pojoName+"\", "+assertMinmumCount+", __result.size());",
+                        MINUS,
+                    "return __result;"
+                );
+            }
+        }else
+            code.set(0, "return "+code.get(0));
         return code.toArray(new String[code.size()]);
     }
 
