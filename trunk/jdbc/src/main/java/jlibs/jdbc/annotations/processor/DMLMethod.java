@@ -23,6 +23,7 @@ import jlibs.core.util.regex.TemplateMatcher;
 import jlibs.jdbc.annotations.*;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -104,10 +105,28 @@ abstract class DMLMethod{
         }
     }
 
+    private CharSequence annotationAsString(){
+        StringBuilder buff = new StringBuilder("@");
+        buff.append(mirror.getAnnotationType().asElement().getSimpleName());
+        if(mirror.getElementValues().size()>0)
+            buff.append('(');
+        boolean first = true;
+        for(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()){
+            if(first)
+                first = false;
+            else
+                buff.append(", ");
+            buff.append(entry.getKey().getSimpleName()).append('=').append(entry.getValue());
+        }
+        if(mirror.getElementValues().size()>0)
+            buff.append(')');
+        return buff.toString();
+    }
+    
     public void generate(){
         printer.printlns(
             "",
-            "@Override",
+            "@Override //"+annotationAsString(),
             ModelUtil.signature(method, true)+"{",
                 PLUS
         );
