@@ -78,22 +78,26 @@ public class JDBC{
         }
     }
 
-    public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
+    public <T> List<T> selectMax(final String query, final int maxRows, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
                 System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
-                PreparedStatement stmt = null;
+                PreparedStatement stmt = con.prepareStatement(query);
+                stmt.setMaxRows(maxRows);
+                for(int i=0; i<params.length; i++)
+                    stmt.setObject(i+1, params[i]);
                 try{
-                    stmt = con.prepareStatement(query);
-                    setParams(stmt, params);
                     return processAll(stmt.executeQuery(), rowMapper);
                 }finally{
-                    if(stmt!=null)
-                        stmt.close();
+                    stmt.close();
                 }
             }
         });
+    }
+
+    public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
+        return selectMax(query, 0, rowMapper, params);
     }
 
     public int executeUpdate(final String query, final Object... params) throws DAOException{
