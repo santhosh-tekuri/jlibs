@@ -35,4 +35,12 @@ public class TableMetaData{
         }
         autoColumn = auto;
     }
+
+    public int getColumnIndex(String property){
+        for(int i=columns.length-1; i>=0; i--){
+            if(columns[i].property.equals(property))
+                return i;
+        }
+        return -1;
+    }
 }

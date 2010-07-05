@@ -162,6 +162,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         for(ColumnProperty column: columns){
             printer.println(
                     "new ColumnMetaData(" ,
+                    "\""+StringUtil.toLiteral(column.propertyName(), false)+"\", ",
                     "\""+StringUtil.toLiteral(column.columnName(), false)+"\", ",
                     JavaType.class.getSimpleName()+'.'+column.javaType().name()+", ",
                     SQLType.class.getSimpleName()+'.'+column.sqlType().name()+", ",
