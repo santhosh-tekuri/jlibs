@@ -427,6 +427,8 @@ public int delete(int fromAge, int toAge, java.lang.String lastN){
 
 This is similar to `@Update` except that the method should return `void`.
 
+If the record is found in database it is updated, otherwise new record is inserted.
+
 ---------------------------
 ==Transactions==
 
@@ -493,10 +495,10 @@ Here `method2()` will run in the same transaction that is started by `method1()`
  for example to find all employees whose age is less than specified age:
  {{{
  @Select
- public abstract List<Employee> findYoungEmployees(lt_age age);
+ public abstract List<Employee> findYoungEmployees(int lt_age);
  }}}
  the supported operators are:
-|| *Prefix*   || *Operator*      ||
+|| *Prefix*     || *Operator*        ||
 || `where_`     || `= ?`             ||
 || `eq_`        || `= ?`             ||
 || `ne_`        || `<> ?`            ||
@@ -508,6 +510,28 @@ Here `method2()` will run in the same transaction that is started by `method1()`
 || `nlike_`     || `NOT LIKE ?`      ||
 || `from_, to_` || `BETWEEN ? AND ?` ||
 
+ * r899 methods in `JDBC` and `TransactionManager` now throw `DAOException` instead of `SQLException`
+ * r902 
+ support for selecting single column in `@Select`. For example:<br>
+ to find first name of employee given id:
+ {{{
+ @Select(column="firstName")
+ public abstract String findFirstName(int id);
+ }}}
+ to find first names of employees whose age is less than specified:
+ {{{
+ @Select(column="firstName")
+ public abstract List<String> findFirstNamesOfYoungEmployees(int lt_age);
+ }}}
+ * r909 
+ select only specified number of rows rather than all from database.<br>
+ for example, to find first 10 employees whose age is less than specified:
+ {{{
+ int age = ...;
+ List<Employee> employees = employeeDAO.top(10, "where age<?", age);
+ }}}
+ if first argument to `top(...)` is zero, then it fetches all rows.
+ 
 -------------------------
 ==What Next==
 
