@@ -92,7 +92,7 @@ public class Page<T>{
         int page = 0;
         String orderBy = paging.orderBy(false);
         String condition = StringUtil.isEmpty(paging.condition) ? orderBy : paging.condition+' '+orderBy;
-        return records(page, paging.dao.top(condition, pageSize, paging.args), false);
+        return records(page, paging.dao.top(pageSize, condition, paging.args), false);
     }
 
     public List<T> last(){
@@ -102,7 +102,7 @@ public class Page<T>{
         int page = getTotalPageCount()-1;
         String condition = StringUtil.isEmpty(paging.condition) ? orderBy : paging.condition+' '+orderBy;
         int max = getTotalRowCount() - page*pageSize;
-        return records(page, paging.dao.top(condition, max, paging.args), true);
+        return records(page, paging.dao.top(max, condition, paging.args), true);
     }
 
     private List<T> page(boolean previous){
@@ -120,7 +120,7 @@ public class Page<T>{
         for(PagingColumn col: paging.orderBy)
             args[i] = paging.dao.getColumnValue(col.index, previous?firstRow:lastRow);
 
-        return records(page, paging.dao.top(condition, pageSize, args), previous);
+        return records(page, paging.dao.top(pageSize, condition, args), previous);
     }
 
     public List<T> next(){

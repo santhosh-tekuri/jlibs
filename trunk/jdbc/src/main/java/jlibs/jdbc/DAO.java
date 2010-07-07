@@ -181,11 +181,11 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
     
     public List<T> all(String condition, Object... args) throws DAOException{
-        return top(condition, 0, args);
+        return top(0, condition, args);
     }
 
-    public List<T> top(String condition, int max, Object... args) throws DAOException{
-            return jdbc.selectTop(selectQuery(condition), max, this, args);
+    public List<T> top(int max, String condition, Object... args) throws DAOException{
+            return jdbc.selectTop(max, selectQuery(condition), this, args);
     }
 
     public T first() throws DAOException{
