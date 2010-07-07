@@ -78,7 +78,7 @@ public class JDBC{
         }
     }
 
-    public <T> List<T> selectTop(final String query, final int maxRows, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
+    public <T> List<T> selectTop(final int maxRows, final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
@@ -97,7 +97,7 @@ public class JDBC{
     }
 
     public <T> List<T> selectAll(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
-        return selectTop(query, 0, rowMapper, params);
+        return selectTop(0, query, rowMapper, params);
     }
 
     public int executeUpdate(final String query, final Object... params) throws DAOException{
