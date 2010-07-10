@@ -1,3 +1,18 @@
+/**
+ * JLibs: Common Utilities for Java
+ * Copyright (C) 2009  Santhosh Kumar T <santhosh.tekuri@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ */
+
 package jlibs.jdbc.paging;
 
 import jlibs.core.lang.ImpossibleException;
@@ -105,7 +120,7 @@ public class Page<T>{
         return records(page, paging.dao.top(max, condition, paging.args), true);
     }
 
-    private List<T> page(boolean previous){
+    private List<T> move(boolean previous){
         if(getTotalRowCount()==0)
             return Collections.emptyList();
         int page = index + (previous ? -1 : +1);
@@ -124,11 +139,11 @@ public class Page<T>{
     }
 
     public List<T> next(){
-        return page(false);
+        return move(false);
     }
 
     public List<T> previous(){
-        return page(true);
+        return move(true);
     }
 
     /*-------------------------------------------------[ Actions ]---------------------------------------------------*/
