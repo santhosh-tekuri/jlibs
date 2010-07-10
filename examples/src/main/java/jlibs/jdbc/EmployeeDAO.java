@@ -28,6 +28,15 @@ public abstract class EmployeeDAO extends DAO<Employee>{
         super(dataSource, table);
     }
 
+    @Select(expression="count(*)")
+    public abstract int total();
+
+    @Select(expression="sum(*)")
+    public abstract int experienceSum(int lt_age);
+
+    @Select(expression="#{age}-#{experience}")
+    public abstract List<Integer> ageMinusExperiences();
+
     @Select(column="firstName")
     public abstract String findFirstName(long id);
 
