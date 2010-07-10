@@ -68,7 +68,8 @@ abstract class DMLMethod{
         AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Select.class);
         if(mirror!=null){
             String columnProp = ModelUtil.getAnnotationValue(method, mirror, "column");
-            if(columnProp.length()>0)
+            String expressionProp = ModelUtil.getAnnotationValue(method, mirror, "expression");
+            if(columnProp.length()>0 || expressionProp.length()>0)
                 return new SelectColumnMethod(printer, method, mirror, columns);
             else
                 return new SelectMethod(printer, method, mirror, columns);
@@ -122,7 +123,7 @@ abstract class DMLMethod{
             buff.append(')');
         return buff.toString();
     }
-    
+
     public void generate(){
         printer.printlns(
             "",

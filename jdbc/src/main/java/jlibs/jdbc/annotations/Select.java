@@ -28,5 +28,6 @@ import java.lang.annotation.Target;
 public @interface Select{
     String value() default "";
     String column() default "";
+    String expression() default "";
     int assertMinmumCount() default -1;
 }

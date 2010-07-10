@@ -25,6 +25,7 @@ import jlibs.jdbc.IncorrectResultSizeException;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +41,52 @@ public class SelectColumnMethod extends WhereMethod{
         super(printer, method, mirror, columns);
     }
 
+    protected void validateParamCount(){}
+    
     private ColumnProperty getColumn(){
         String columnProp = ModelUtil.getAnnotationValue(method, mirror, "column");
-        ColumnProperty column = columns.findByProperty(columnProp);
-        if(column==null)
-            throw new AnnotationError(method, "invalid column property: "+columnProp);
-        return column;
+        if(columnProp.length()>0){
+            ColumnProperty column = columns.findByProperty(columnProp);
+            if(column==null)
+                throw new AnnotationError(method, "invalid column property: "+columnProp);
+            return column;
+        }else{
+            ColumnProperty column = new ColumnProperty<ExecutableElement>(method, mirror){
+                @Override
+                public String columnName(){
+                    String value = ModelUtil.getAnnotationValue(method, mirror, "expression");
+                    return replacePropertiesWithColumns(value); 
+                }
+
+                @Override
+                public String propertyName(){
+                    return "__value";
+                }
+
+                @Override
+                public TypeMirror propertyType(){
+                    TypeMirror returnType = method.getReturnType();
+                    String s = ModelUtil.toString(returnType, false);
+                    if(s.startsWith("java.util.List<"))
+                        return ((List<? extends TypeMirror>)((DeclaredType)returnType).getTypeArguments()).get(0);
+                    else if(s.equals("java.util.List"))
+                        throw new AnnotationError(method, "the type of elements in returning List must be specified using Generics.");
+                    return returnType;
+                }
+
+                @Override
+                public String getPropertyCode(String object){
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public String setPropertyCode(String object, String value){
+                    throw new UnsupportedOperationException();
+                }
+            };
+            column.validateType();
+            return column;
+        }
     }
 
     @Override
@@ -77,7 +118,7 @@ public class SelectColumnMethod extends WhereMethod{
                     MINUS,
                 "}",
                 MINUS,
-            String.format("}, %s);", sequences[1])
+            '}'+ (sequences[1].length()>0 ? String.format(", %s", sequences[1]) : "") + ");"
         );
 
         if(assertMinmumCount!=-1){
