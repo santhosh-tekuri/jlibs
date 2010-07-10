@@ -161,11 +161,15 @@ abstract class DMLMethod{
         return code += ')';
     }
 
+    protected void validateParamCount(){
+        if(method.getParameters().size()==0)
+            throw new AnnotationError(method, "method with "+mirror.getAnnotationType().asElement().getSimpleName()+" annotation should take atleast one argument");
+    }
+
     protected final CharSequence[] sql(){
         String userSQL = userSQL();
         if(userSQL.length()==0){
-            if(method.getParameters().size()==0)
-                throw new AnnotationError(method, "method with "+mirror.getAnnotationType().asElement().getSimpleName()+" annotation should take atleast one argument");
+            validateParamCount();
             return defaultSQL();
         }else
             return preparedSQL(userSQL);
@@ -173,12 +177,9 @@ abstract class DMLMethod{
 
     protected abstract CharSequence[] defaultSQL();
 
-    protected CharSequence[] preparedSQL(String value){
-        CharSequence query;
-        final StringBuilder params = new StringBuilder();
-
+    protected String replacePropertiesWithColumns(String sql){
         TemplateMatcher matcher = new TemplateMatcher("#{", "}");
-        value = matcher.replace(value, new TemplateMatcher.VariableResolver(){
+        return matcher.replace(sql, new TemplateMatcher.VariableResolver(){
             @Override
             public String resolve(String propertyName){
                 String columnName = columns.columnName(propertyName);
@@ -187,7 +188,14 @@ abstract class DMLMethod{
                 return columnName;
             }
         });
-        matcher = new TemplateMatcher("${", "}");
+    }
+
+    protected CharSequence[] preparedSQL(String value){
+        CharSequence query;
+        final StringBuilder params = new StringBuilder();
+
+        value = replacePropertiesWithColumns(value);
+        TemplateMatcher matcher = new TemplateMatcher("${", "}");
         query = matcher.replace(value, new TemplateMatcher.VariableResolver(){
             @Override
             public String resolve(String paramName){
