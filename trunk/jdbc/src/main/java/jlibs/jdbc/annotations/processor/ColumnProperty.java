@@ -26,6 +26,8 @@ import jlibs.jdbc.SQLType;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
+import java.lang.reflect.Method;
+import java.sql.ResultSet;
 
 /**
  * @author Santhosh Kumar T
@@ -92,7 +94,7 @@ abstract class ColumnProperty<E extends Element>{
             resultSetType = resultSetType.substring(dot+1);
 
         if(ModelUtil.isPrimitiveWrapper(propertyType())){
-            String name = columnName();
+            String name = propertyName();
             return new String[]{
                 resultSetType+' '+name+" = rs.get"+StringUtil.capitalize(resultSetType)+'('+index+");",
                 "rs.wasNull() ? null : "+name
@@ -109,5 +111,22 @@ abstract class ColumnProperty<E extends Element>{
     @Override
     public boolean equals(Object that){
         return that instanceof ColumnProperty && ((ColumnProperty)that).propertyName().equals(this.propertyName());
+    }
+
+    // ensure that propertyType is valid javaType that can be fetched from ResultSet
+    public void validateType(){
+        TypeMirror propertyType = propertyType();
+        if(!ModelUtil.isPrimitive(propertyType) && !ModelUtil.isPrimitiveWrapper(propertyType)){
+            String resultSetType = resultSetType();
+            int dot = resultSetType.lastIndexOf('.');
+            String simpleName = dot==-1 ? resultSetType : resultSetType.substring(dot+1);
+            try{
+                Method method = ResultSet.class.getMethod("get"+ StringUtil.capitalize(simpleName), int.class);
+                if(!method.getReturnType().getName().equals(resultSetType))
+                    throw new NoSuchMethodException();
+            }catch(NoSuchMethodException ex){
+                throw new AnnotationError(element, annotation, resultSetType+" has no mapping SQL Type");
+            }
+        }
     }
 }
