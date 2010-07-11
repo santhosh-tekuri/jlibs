@@ -29,5 +29,6 @@ public @interface Select{
     String value() default "";
     String column() default "";
     String expression() default "";
+    boolean ignoreNullConditions() default false;
     int assertMinmumCount() default -1;
 }

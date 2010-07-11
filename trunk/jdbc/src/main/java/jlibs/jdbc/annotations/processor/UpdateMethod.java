@@ -18,6 +18,7 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
+import jlibs.core.lang.model.ModelUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -29,16 +30,21 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-class UpdateMethod extends DMLMethod{
+class UpdateMethod extends WhereMethod{
     protected UpdateMethod(Printer printer, ExecutableElement method, AnnotationMirror mirror, Columns columns){
         super(printer, method, mirror, columns);
+
+        String returnType = ModelUtil.toString(method.getReturnType(), true);
+        if(!returnType.equals("void") && !returnType.equals(Integer.class.getName())){
+            throw new AnnotationError("method with @Update annotation should return void/int/Intger");
+        }
     }
 
     @Override
     protected CharSequence[] defaultSQL(){
         List<VariableElement> elements = new ArrayList<VariableElement>(method.getParameters());
 
-        List<String> params = new ArrayList<String>();
+        List<CharSequence> params = new ArrayList<CharSequence>();
 
         List<String> set = new ArrayList<String>();
         Iterator<VariableElement> iter=elements.iterator();
@@ -54,46 +60,27 @@ class UpdateMethod extends DMLMethod{
         }
         if(set.size()==0)
             throw new AnnotationError(method, "no columns to be set in query");
+        initialQuery = "SET "+StringUtil.join(set.iterator(), ", ");
 
-        List<String> where = new ArrayList<String>();
-
-        iter=elements.iterator();
-        while(iter.hasNext()){
-            final VariableElement param = iter.next();
-            final String paramName = param.getSimpleName().toString();
-            int underscore = paramName.indexOf('_');
-            String hint = paramName.substring(0, underscore);
-            String propertyName = paramName.substring(underscore+1);
-            ColumnProperty column = getColumn(param, propertyName);
-
-            String hintValue = HINTS.get(hint);
-            if(hintValue!=null){
-                where.add(column.columnName()+hintValue);
-                params.add(paramName);
-                iter.remove();
-            }else if("from".equals(hint)){
-                iter.remove();
-                final VariableElement nextParam = iter.next();
-                final String nextParamName = nextParam.getSimpleName().toString();
-                if(!nextParamName.equals("to_"+propertyName))
-                    throw new AnnotationError(method, "the next parameter of "+paramName+" must be to_"+propertyName);
-                if(param.asType()!=nextParam.asType())
-                    throw new AnnotationError(method, paramName+" and "+nextParamName+" must be of same type");
-                where.add(column.columnName()+" BETWEEN ? and ?");
-                params.add(paramName);
-                params.add(nextParamName);
-                iter.remove();
-            }else
-                throw new AnnotationError(param, "invalid hint: "+hint);
+        List<CharSequence> code = new ArrayList<CharSequence>();
+        CharSequence[] where = defaultSQL(elements.iterator());
+        boolean dynamicWhere = where.length>2;
+        if(dynamicWhere){
+            code.add(where[0]);
+            code.add(where[1]);
+            for(CharSequence param: params)
+                code.add("__params.add("+param+");");
+            params.clear();
+            for(int i=2; i<where.length-2; i++)
+                code.add(where[i].toString());
+            where = new CharSequence[]{ where[where.length-2], where[where.length-1] };
         }
 
-        StringBuilder query = new StringBuilder("SET ").append(StringUtil.join(set.iterator(), ", "));
-        if(where.size()>0)
-            query.append(" WHERE ").append(StringUtil.join(where.iterator(), " AND "));
+        code.add(where[0]);
+        if(where[1].length()>0)
+            params.add(where[1]);
+        code.add(StringUtil.join(params.iterator(), ", "));
 
-        return new CharSequence[]{
-            query,
-            StringUtil.join(params.iterator(), ", ")
-        };
+        return code.toArray(new CharSequence[code.size()]);
     }
 }

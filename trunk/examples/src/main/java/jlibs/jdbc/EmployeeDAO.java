@@ -28,10 +28,19 @@ public abstract class EmployeeDAO extends DAO<Employee>{
         super(dataSource, table);
     }
 
+    @Select(ignoreNullConditions=true)
+    public abstract List<Employee> search(String firstName, String lastName);
+
+    @Update(ignoreNullConditions=true)
+    public abstract int updateAgeAndExperience(String where_firstName, String where_lastName, int age, Integer experience);
+
+//    @Upsert(ignoreNullConditions=true)
+//    public abstract void upsertAgeAndExperience(String where_firstName, String where_lastName, int age, Integer experience);
+
     @Select(expression="count(*)")
     public abstract int total();
 
-    @Select(expression="sum(*)")
+    @Select(expression="sum(#{experience})")
     public abstract int experienceSum(int lt_age);
 
     @Select(expression="#{age}-#{experience}")
@@ -94,6 +103,6 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Delete
     public abstract int delete(String firstName, int age);
 
-    @Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
+    @Delete("WHERE #{age} BETWEEN ${fromAge} AND ${toAge} OR #{lastName}=${lastN}")
     public abstract int delete(int fromAge, int toAge, String lastN);
 }
