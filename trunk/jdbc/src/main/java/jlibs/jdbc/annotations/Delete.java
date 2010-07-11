@@ -27,4 +27,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface Delete{
     String value() default "";
+    boolean ignoreNullConditions() default false;
 }
