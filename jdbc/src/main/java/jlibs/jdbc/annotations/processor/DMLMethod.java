@@ -27,9 +27,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -140,11 +138,21 @@ abstract class DMLMethod{
     }
 
     protected String[] code(){
-        String code = queryMethod(sql())+';';
-        if(method.getReturnType().getKind()!= TypeKind.VOID)
-            code = "return "+code;
+        List<String> code = new ArrayList<String>();
 
-        return new String[]{ code };
+        CharSequence[] sql = sql();
+        if(sql.length>2){
+            for(int i=0; i<sql.length-2; i++)
+                code.add(sql[i].toString());
+            sql = new CharSequence[]{ sql[sql.length-2], sql[sql.length-1] };
+        }
+
+        String queryMethod = queryMethod(sql)+';';
+        if(method.getReturnType().getKind()!= TypeKind.VOID)
+            queryMethod = "return "+queryMethod;
+        code.add(queryMethod);
+
+        return code.toArray(new String[code.size()]);
     }
 
     protected String queryMethod(CharSequence sequences[]){
@@ -155,7 +163,8 @@ abstract class DMLMethod{
         CharSequence query = sequences[0];
         CharSequence params = sequences[1];
 
-        query = '"'+ StringUtil.toLiteral(query, false)+'"';
+        if(!query.toString().contains("__query"))
+            query = '"'+ StringUtil.toLiteral(query, false)+'"';
         String code = methodName+'('+query;
         if(params.length()>0)
             code += ", "+params;
