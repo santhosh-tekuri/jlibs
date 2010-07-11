@@ -28,6 +28,14 @@ import java.util.StringTokenizer;
  */
 public class StringUtil{
     /**
+     * if <code>obj</code> is null, returns empty string.
+     * otherwise returns <code>obj.toString()</code>
+     */
+    public static String toString(Object obj){
+        return obj==null ? "" : obj.toString();
+    }
+
+    /**
      * returns true if <code>str</code> is null or
      * its length is zero
      */
