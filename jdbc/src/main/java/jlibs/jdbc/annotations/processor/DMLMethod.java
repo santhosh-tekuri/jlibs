@@ -232,8 +232,8 @@ abstract class DMLMethod{
         ColumnProperty column = columns.findByProperty(propertyName);
         if(column==null)
             throw new AnnotationError(method, "invalid column property: "+propertyName);
-        if(column.propertyType()!=param.asType())
-            throw new AnnotationError(param, param.getSimpleName()+" must be of type "+ModelUtil.toString(column.propertyType(), true));
+        if(!ModelUtil.toString(column.propertyType(), true).equals(ModelUtil.toString(param.asType(), true)))
+            throw new AnnotationError(param, param.getSimpleName()+" must be of type "+ModelUtil.toString(column.propertyType(), true)+'/'+ModelUtil.toString(column.propertyType(), false));
         return column;
     }
 }
