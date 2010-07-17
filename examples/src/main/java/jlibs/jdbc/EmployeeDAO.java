@@ -29,7 +29,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     }
 
     @Select(ignoreNullConditions=true)
-    public abstract List<Employee> search(String firstName, String lastName);
+    public abstract List<Employee> search(String firstName, String lastName, Integer age, int experience);
 
     @Update(ignoreNullConditions=true)
     public abstract int updateAgeAndExperience(String where_firstName, String where_lastName, int age, Integer experience);
