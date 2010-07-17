@@ -20,11 +20,14 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
+import jlibs.jdbc.Order;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -153,6 +156,10 @@ public class WhereMethod extends DMLMethod{
         }
 
         if(ignoreNullConditions){
+            String orderByPhrase = orderByPhrase();
+            if(orderByPhrase.length()>0)
+                initialQuery = "";
+
             String queryInitialValue;
             if(initialQuery==null)
                 queryInitialValue = "null";
@@ -163,7 +170,17 @@ public class WhereMethod extends DMLMethod{
                 "if(__conditions.size()>0)",
                     PLUS,
                         "__query "+(initialQuery==null?"":"+")+"= \" WHERE \" + "+StringUtil.class.getName()+".join(__conditions.iterator(), \" AND \");",
-                    MINUS,
+                    MINUS
+            );
+
+
+            if(orderByPhrase.length()>0){
+                CollectionUtil.addAll(code,
+                    "__query += \""+StringUtil.toLiteral(orderByPhrase, false)+"\";"
+                );
+            }
+            
+            CollectionUtil.addAll(code,
                 "__query",
                 "__params.toArray()"
             );
@@ -174,11 +191,31 @@ public class WhereMethod extends DMLMethod{
                 query.append(initialQuery).append(' ');
             if(where.size()>0)
                 query.append("WHERE ").append(StringUtil.join(where.iterator(), " AND "));
-
+            query.append(orderByPhrase());
             return new CharSequence[]{
                 query,
                 StringUtil.join(params.iterator(), ", ")
             };
         }
+    }
+
+    private String orderByPhrase(){
+        List<String> orderByList = new ArrayList<String>();
+        try{
+            Collection<AnnotationValue> orderBys = ModelUtil.getAnnotationValue(method, mirror, "orderBy");
+            for(AnnotationValue orderByValue: orderBys){
+                AnnotationMirror orderByMirror = (AnnotationMirror)orderByValue.getValue();
+                String columnProperty = ModelUtil.getAnnotationValue(method, orderByMirror, "column");
+                ColumnProperty column = columns.findByProperty(columnProperty);
+                if(column==null)
+                    throw new AnnotationError(method, mirror, "invalid column property: "+columnProperty);
+                Order order = Order.valueOf(((VariableElement)ModelUtil.getAnnotationValue(method, orderByMirror, "order")).getSimpleName().toString());
+                orderByList.add(column.columnName()+' '+order.keyword);
+            }
+        }catch(AnnotationError ex){
+            // ignore
+        }
+        
+        return orderByList.size()>0 ? " ORDER BY "+StringUtil.join(orderByList.iterator(), ", ") : "";
     }
 }

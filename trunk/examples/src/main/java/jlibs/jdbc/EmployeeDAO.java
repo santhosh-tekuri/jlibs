@@ -28,6 +28,9 @@ public abstract class EmployeeDAO extends DAO<Employee>{
         super(dataSource, table);
     }
 
+    @Select(ignoreNullConditions=true, orderBy=@OrderBy(column="id", order=Order.DESCENDING))
+    public abstract List<Employee> searchOrderById(String firstName, String lastName, Integer age, int experience);
+
     @Select(ignoreNullConditions=true)
     public abstract List<Employee> search(String firstName, String lastName, Integer age, int experience);
 
@@ -69,6 +72,9 @@ public abstract class EmployeeDAO extends DAO<Employee>{
 
     @Select
     public abstract Employee findByID(long id);
+
+    @Select(orderBy=@OrderBy(column = "experience"))
+    public abstract List<Employee> findByAgeOrderByExperience(int age);
 
     @Select
     public abstract List<Employee> findByAge(int age);
