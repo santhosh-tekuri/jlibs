@@ -15,6 +15,8 @@
 
 package jlibs.jdbc.annotations;
 
+import jlibs.jdbc.Order;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -25,11 +27,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
-public @interface Select{
-    String value() default "";
-    String column() default "";
-    String expression() default "";
-    boolean ignoreNullConditions() default false;
-    int assertMinmumCount() default -1;
-    OrderBy[] orderBy() default {};
+public @interface OrderBy{
+    String column();
+    Order order() default Order.ASCENDING;
 }
