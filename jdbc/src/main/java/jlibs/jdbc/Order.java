@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.jdbc.paging;
+package jlibs.jdbc;
 
 /**
  * @author Santhosh Kumar T
