@@ -15,6 +15,8 @@
 
 package jlibs.jdbc.paging;
 
+import jlibs.jdbc.Order;
+
 /**
  * @author Santhosh Kumar T
  */

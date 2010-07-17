@@ -16,6 +16,7 @@
 package jlibs.jdbc.paging;
 
 import jlibs.jdbc.DAO;
+import jlibs.jdbc.Order;
 
 import java.util.ArrayList;
 
@@ -42,6 +43,10 @@ public class Paging<T>{
         orderBy.add(new PagingColumn(dao.table.getColumnIndex(propertyName), order));
     }
 
+    public Page<T> createPage(int pageSize){
+        return new Page<T>(this, pageSize);
+    }
+    
     String orderBy(boolean reverse){
         StringBuilder buff = new StringBuilder();
         for(PagingColumn col: orderBy){
