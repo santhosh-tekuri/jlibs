@@ -165,7 +165,9 @@ abstract class DMLMethod{
 
         if(!query.toString().contains("__query"))
             query = '"'+ StringUtil.toLiteral(query, false)+'"';
-        String code = methodName+'('+query;
+        if(methodName.indexOf('(')==-1)
+            methodName = methodName+'(';
+        String code = methodName+query;
         if(params.length()>0)
             code += ", "+params;
         return code += ')';

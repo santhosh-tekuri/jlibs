@@ -32,4 +32,5 @@ public @interface Select{
     boolean ignoreNullConditions() default false;
     int assertMinmumCount() default -1;
     OrderBy[] orderBy() default {};
+    OrderBy[] pageBy() default {};
 }
