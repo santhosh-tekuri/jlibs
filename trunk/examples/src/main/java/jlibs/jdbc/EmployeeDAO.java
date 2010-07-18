@@ -29,6 +29,21 @@ public abstract class EmployeeDAO extends DAO<Employee>{
         super(dataSource, table);
     }
 
+    @Select(column="grade")
+    public abstract Grade findGrade(long id);
+
+    @Select(column="grade", assertMinmumCount=1)
+    public abstract Grade findGrade1(long id);
+
+    @Select(column="grade")
+    public abstract List<Grade> findGrades(int lt_age);
+
+    @Select(expression="count(*)", value="WHERE #{grade}=${(grade)grade} AND #{age}<${age}")
+    public abstract int countByGradeAndAge(Grade grade, int age);
+
+    @Update
+    public abstract void updateGrade(long where_id, Grade grade);
+
     @Select(ignoreNullConditions=true, pageBy=@OrderBy(column="id", order=Order.DESCENDING))
     public abstract Paging<Employee> pageById(String firstName, String lastName, Integer age, int experience);
 
@@ -90,7 +105,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public abstract void insert1(long id, String firstName, String lastName);
 
     @Insert
-    public abstract Employee insert2(long id, String firstName, String lastName);
+    public abstract Employee insert2(long id, String firstName, String lastName, Grade grade);
 
     @Insert
     public abstract void insert(String firstName, int age);

@@ -22,17 +22,16 @@ import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.JavaType;
 import jlibs.jdbc.SQLType;
+import jlibs.jdbc.annotations.TypeMapper;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.lang.reflect.Method;
-import java.sql.ResultSet;
 
 /**
  * @author Santhosh Kumar T
  */
-// @todo ensure that column-property is accessible to the DAO generated
 abstract class ColumnProperty<E extends Element>{
     public E element;
     public AnnotationMirror annotation;
@@ -54,8 +53,21 @@ abstract class ColumnProperty<E extends Element>{
         return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "auto");
     }
 
+    protected AnnotationMirror typeMapperMirror(){
+        return ModelUtil.getAnnotationMirror(element, TypeMapper.class);
+    }
+    
+    public TypeMirror javaTypeMirror(){
+        AnnotationMirror typeMapperMirror = typeMapperMirror();
+
+        if(typeMapperMirror==null)
+            return propertyType();
+        else
+            return (DeclaredType)ModelUtil.getAnnotationValue(element, typeMapperMirror, "mapsTo");
+    }
+
     public String resultSetType(){
-        TypeMirror propertyType = propertyType();
+        TypeMirror propertyType = javaTypeMirror();
         boolean primitive = ModelUtil.isPrimitive(propertyType);
         boolean primitiveWrapper = ModelUtil.isPrimitiveWrapper(propertyType);
 
@@ -70,11 +82,11 @@ abstract class ColumnProperty<E extends Element>{
 
     public JavaType javaType(){
         try{
-            Class propertyType = Class.forName(ModelUtil.toString(propertyType(), true));
+            Class propertyType = Class.forName(ModelUtil.toString(javaTypeMirror(), true));
             propertyType = ClassUtil.unbox(propertyType);
             return JavaType.valueOf(propertyType);
         }catch(ClassNotFoundException ex){
-            throw new AnnotationError(ex.getClass().getName()+": "+ex.getMessage());
+            return null;
         }
     }
 
@@ -82,6 +94,11 @@ abstract class ColumnProperty<E extends Element>{
         return javaType().sqlTypes[0];
     }
 
+    public TypeMirror typeMapper(){
+        AnnotationMirror mirror = typeMapperMirror();
+        return mirror==null ? null : (DeclaredType)ModelUtil.getAnnotationValue(element, mirror, "mapper");
+    }
+    
     public abstract String propertyName();
     public abstract TypeMirror propertyType();
     public abstract String getPropertyCode(String object);
@@ -93,7 +110,7 @@ abstract class ColumnProperty<E extends Element>{
         if(dot!=-1)
             resultSetType = resultSetType.substring(dot+1);
 
-        if(ModelUtil.isPrimitiveWrapper(propertyType())){
+        if(ModelUtil.isPrimitive(javaTypeMirror()) || ModelUtil.isPrimitiveWrapper(javaTypeMirror())){
             String name = propertyName();
             return new String[]{
                 resultSetType+' '+name+" = rs.get"+StringUtil.capitalize(resultSetType)+'('+index+");",
@@ -115,18 +132,21 @@ abstract class ColumnProperty<E extends Element>{
 
     // ensure that propertyType is valid javaType that can be fetched from ResultSet
     public void validateType(){
-        TypeMirror propertyType = propertyType();
-        if(!ModelUtil.isPrimitive(propertyType) && !ModelUtil.isPrimitiveWrapper(propertyType)){
-            String resultSetType = resultSetType();
-            int dot = resultSetType.lastIndexOf('.');
-            String simpleName = dot==-1 ? resultSetType : resultSetType.substring(dot+1);
-            try{
-                Method method = ResultSet.class.getMethod("get"+ StringUtil.capitalize(simpleName), int.class);
-                if(!method.getReturnType().getName().equals(resultSetType))
-                    throw new NoSuchMethodException();
-            }catch(NoSuchMethodException ex){
-                throw new AnnotationError(element, annotation, resultSetType+" has no mapping SQL Type");
-            }
-        }
+        if(javaType()==null)
+            throw new AnnotationError(element, annotation, resultSetType()+" has no mapping SQL Type");
+    }
+
+    public String toNativeTypeCode(String value){
+        TypeMirror typeMirror = typeMapper();
+        if(typeMirror!=null)
+            value = "TYPE_MAPPER_"+StringUtil.underscore(propertyName()).toUpperCase()+".userToNative("+value+")";
+        return value;
+    }
+
+    public String toUserTypeCode(String value){
+        TypeMirror typeMirror = typeMapper();
+        if(typeMirror!=null)
+            value = "TYPE_MAPPER_"+StringUtil.underscore(propertyName()).toUpperCase()+".nativeToUser("+value+")";
+        return value;
     }
 }
