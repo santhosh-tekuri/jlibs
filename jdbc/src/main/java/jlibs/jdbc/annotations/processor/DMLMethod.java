@@ -98,7 +98,7 @@ abstract class DMLMethod{
 
     protected String userSQL(){
         try{
-            return ModelUtil.getAnnotationValue(method, mirror, "value");
+            return ModelUtil.getAnnotationValue(method, mirror, "sql");
         }catch(AnnotationError error){ // doesn't support user sql
             return "";
         }

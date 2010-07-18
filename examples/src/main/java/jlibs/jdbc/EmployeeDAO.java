@@ -38,7 +38,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Select(column="grade")
     public abstract List<Grade> findGrades(int lt_age);
 
-    @Select(expression="count(*)", value="WHERE #{grade}=${(grade)grade} AND #{age}<${age}")
+    @Select(expression="count(*)", sql="WHERE #{grade}=${(grade)grade} AND #{age}<${age}")
     public abstract int countByGradeAndAge(Grade grade, int age);
 
     @Update
@@ -128,6 +128,6 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Delete
     public abstract int delete(String firstName, int age);
 
-    @Delete("WHERE #{age} BETWEEN ${fromAge} AND ${toAge} OR #{lastName}=${lastN}")
+    @Delete(sql="WHERE #{age} BETWEEN ${fromAge} AND ${toAge} OR #{lastName}=${lastN}")
     public abstract int delete(int fromAge, int toAge, String lastN);
 }
