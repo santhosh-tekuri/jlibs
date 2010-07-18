@@ -16,6 +16,7 @@
 package jlibs.jdbc;
 
 import jlibs.jdbc.annotations.*;
+import jlibs.jdbc.paging.Paging;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -27,6 +28,9 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     public EmployeeDAO(DataSource dataSource, TableMetaData table){
         super(dataSource, table);
     }
+
+    @Select(ignoreNullConditions=true, pageBy=@OrderBy(column="id", order=Order.DESCENDING))
+    public abstract Paging<Employee> pageById(String firstName, String lastName, Integer age, int experience);
 
     @Select(ignoreNullConditions=true, orderBy=@OrderBy(column="id", order=Order.DESCENDING))
     public abstract List<Employee> searchOrderById(String firstName, String lastName, Integer age, int experience);

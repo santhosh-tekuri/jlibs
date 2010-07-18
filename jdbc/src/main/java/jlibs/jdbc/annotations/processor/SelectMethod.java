@@ -19,10 +19,14 @@ import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.IncorrectResultSizeException;
+import jlibs.jdbc.paging.Paging;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
+import java.util.Collection;
+import java.util.List;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -70,13 +74,19 @@ public class SelectMethod extends WhereMethod{
     protected String methodName(){
         String returnType = ModelUtil.toString(method.getReturnType(), true);
         String singleType = ModelUtil.toString(printer.clazz.asType(), true);
-        String listType = "java.util.List<"+singleType+">";
+        String listType = List.class.getName()+'<'+singleType+'>';
+        String pagingType = Paging.class.getName()+'<'+singleType+'>';
 
-        if(singleType.equals(returnType))
+        if(returnType.equals(singleType))
             return "first";
-        else if(listType.equals(returnType))
+        else if(returnType.equals(listType))
             return "all";
-        else
+        else if(returnType.equals(pagingType)){
+            Collection<AnnotationValue> pageBys = ModelUtil.getAnnotationValue(method, mirror, "pageBy");
+            if(pageBys.size()==0)
+                throw new AnnotationError(method, mirror, "method returning "+pagingType+" must specify @Select.pageBy attribute");
+            return "new "+pagingType+"(this, ";
+        }else
             throw new AnnotationError(method, "return value must be of type "+singleType+" or "+listType);
     }
 }
