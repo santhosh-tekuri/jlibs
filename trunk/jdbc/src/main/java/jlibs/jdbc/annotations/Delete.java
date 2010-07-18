@@ -26,6 +26,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
 public @interface Delete{
-    String value() default "";
+    String sql() default "";
     boolean ignoreNullConditions() default false;
 }
