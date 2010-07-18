@@ -26,5 +26,8 @@
             <outputDirectory>lib/external</outputDirectory>
             <destName>build.xml</destName>
     	</file>
+    	<file>
+            <source>readme.txt</source>
+    	</file>
     </files>
 </assembly>
