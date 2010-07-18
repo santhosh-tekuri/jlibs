@@ -17,6 +17,7 @@ package jlibs.jdbc;
 
 import jlibs.jdbc.annotations.Column;
 import jlibs.jdbc.annotations.Table;
+import jlibs.jdbc.annotations.TypeMapper;
 
 /**
  * @author Santhosh Kumar T
@@ -61,6 +62,10 @@ public class Employee{
     public void setExperience(Integer experience){
         this.experience = experience;
     }
+
+    @Column
+    @TypeMapper(mapper=GradeTypeMapper.class, mapsTo=Integer.class)
+    public Grade grade;
 
 //    @Column
 //    public java.util.Date creationDate;

@@ -65,7 +65,7 @@ public class WhereMethod extends DMLMethod{
             if(paramName.indexOf('_')==-1){
                 ColumnProperty column = getColumn(param);
                 where.add(column.columnName()+"=?");
-                params.add(paramName);
+                params.add(column.toNativeTypeCode(paramName));
                 if(!primitive)
                     CollectionUtil.addAll(code,
                         "if("+paramName+"!=null){",
@@ -73,7 +73,7 @@ public class WhereMethod extends DMLMethod{
                     );
                 CollectionUtil.addAll(code,
                     "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
-                    "__params.add("+paramName+");"
+                    "__params.add("+column.toNativeTypeCode(paramName)+");"
                 );
                 if(!primitive)
                     CollectionUtil.addAll(code,
@@ -90,7 +90,7 @@ public class WhereMethod extends DMLMethod{
                 String hintValue = HINTS.get(hint);
                 if(hintValue!=null){
                     where.add(column.columnName()+hintValue);
-                    params.add(paramName);
+                    params.add(column.toNativeTypeCode(paramName));
                     if(!primitive)
                         CollectionUtil.addAll(code,
                             "if("+paramName+"!=null){",
@@ -98,7 +98,7 @@ public class WhereMethod extends DMLMethod{
                         );
                     CollectionUtil.addAll(code,
                         "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
-                        "__params.add("+paramName+");"
+                        "__params.add("+column.toNativeTypeCode(paramName)+");"
                     );
                     if(!primitive)
                         CollectionUtil.addAll(code,
@@ -116,8 +116,8 @@ public class WhereMethod extends DMLMethod{
                     if(param.asType()!=nextParam.asType())
                         throw new AnnotationError(method, paramName+" and "+nextParamName+" must be of same type");
                     where.add(column.columnName()+" BETWEEN ? and ?");
-                    params.add(paramName);
-                    params.add(nextParamName);
+                    params.add(column.toNativeTypeCode(paramName));
+                    params.add(column.toNativeTypeCode(nextParamName));
                     if(!primitive || !nextPrimitive){
                         String condition = "";
                         if(!primitive)
@@ -134,8 +134,8 @@ public class WhereMethod extends DMLMethod{
                     }
                     CollectionUtil.addAll(code,
                         "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
-                        "__params.add("+paramName+");",
-                        "__params.add("+nextParamName+");"
+                        "__params.add("+column.toNativeTypeCode(paramName)+");",
+                        "__params.add("+column.toNativeTypeCode(nextParamName)+");"
                     );
                     if(!primitive || !nextPrimitive)
                         CollectionUtil.addAll(code,

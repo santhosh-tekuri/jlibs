@@ -17,8 +17,11 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.StringUtil;
+import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.SQLType;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -101,10 +104,11 @@ class Columns extends ArrayList<ColumnProperty>{
         );
         int i = 0;
         for(ColumnProperty column: this){
+            String propertyCode = column.toNativeTypeCode(column.getPropertyCode("record"));
             printer.printlns(
                 "case "+i+":",
                     PLUS,
-                    "value = "+column.getPropertyCode("record")+';',
+                    "value = "+propertyCode+';',
                     "return value==null ? "+SQLType.class.getSimpleName()+'.'+column.sqlType().name()+" : value;",
                     MINUS
             );
@@ -123,15 +127,30 @@ class Columns extends ArrayList<ColumnProperty>{
         );
         int i = 0;
         for(ColumnProperty column: this){
+            String value = "value";
+            if(column.typeMapper()!=null)
+                value = '('+ModelUtil.toString(column.javaTypeMirror(), true)+')'+value;
+            value = column.toUserTypeCode(value);            
             printer.printlns(
                 "case "+i+":",
                     PLUS,
-                    column.setPropertyCode("record", "value")+';',
+                    column.setPropertyCode("record", value)+';',
                     "break;",
                     MINUS
             );
             i++;
         }
         addDefaultCase(printer);
+    }
+
+    public void generateTypeMapperConstants(Printer printer){
+        for(ColumnProperty column: this){
+            TypeMirror typeMapper = column.typeMapper();
+            if(typeMapper!=null){
+                String typeMapperQName = ModelUtil.toString(typeMapper, false);
+                String constant = StringUtil.underscore(column.propertyName()).toUpperCase();
+                printer.println("public static final "+typeMapperQName+" TYPE_MAPPER_"+constant+" = new "+typeMapperQName+"();");
+            }
+        }
     }
 }

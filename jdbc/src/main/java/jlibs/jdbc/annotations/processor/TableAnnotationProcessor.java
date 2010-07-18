@@ -128,6 +128,8 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         printer.println("{");
         printer.indent++;
 
+        columns.generateTypeMapperConstants(printer);
+        printer.println();
         generateConstructor(printer);
         printer.println();
         generateNewRow(printer);

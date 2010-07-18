@@ -211,11 +211,21 @@ abstract class DMLMethod{
         query = matcher.replace(value, new TemplateMatcher.VariableResolver(){
             @Override
             public String resolve(String paramName){
+                String propertyName = null;
+                if(paramName.startsWith("(")){
+                    int close = paramName.indexOf(')');
+                    if(close==-1)
+                        throw new AnnotationError(method, mirror, "brace ) is missing in sql");
+                    propertyName = paramName.substring(1, close);
+                    paramName = paramName.substring(close+1);
+                }
                 VariableElement param = ModelUtil.getParameter(method, paramName);
                 if(param==null)
                     throw new AnnotationError(method, mirror, "unknown parameter: "+paramName);
                 if(params.length()>0)
                     params.append(", ");
+                if(propertyName!=null)
+                    paramName = getColumn(param, propertyName).toNativeTypeCode(paramName);
                 params.append(paramName);
                 return "?";
             }

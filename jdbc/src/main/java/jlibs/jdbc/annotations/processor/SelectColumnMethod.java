@@ -83,6 +83,11 @@ public class SelectColumnMethod extends WhereMethod{
                 public String setPropertyCode(String object, String value){
                     throw new UnsupportedOperationException();
                 }
+
+                @Override
+                protected AnnotationMirror typeMapperMirror(){
+                    return null;
+                }
             };
             column.validateType();
             return column;
@@ -112,7 +117,7 @@ public class SelectColumnMethod extends WhereMethod{
         String rowMapperCode[] = column.getValueFromResultSet(1);
         if(rowMapperCode.length>1)
             code.add(rowMapperCode[0]);
-        code.add("return "+rowMapperCode[rowMapperCode.length-1]+';');
+        code.add("return "+column.toUserTypeCode(rowMapperCode[rowMapperCode.length-1])+';');
         
         CollectionUtil.addAll(code,
                     MINUS,
