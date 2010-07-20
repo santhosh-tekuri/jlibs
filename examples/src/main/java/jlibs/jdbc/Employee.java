@@ -22,7 +22,7 @@ import jlibs.jdbc.annotations.TypeMapper;
 /**
  * @author Santhosh Kumar T
  */
-@Table(name="employees", extend= EmployeeDAO.class)
+@Table(extend= EmployeeDAO.class)
 public class Employee{
     @Column(name="id", primary=true, auto=true)
     public long id;
