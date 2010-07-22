@@ -50,10 +50,11 @@ public class WhereMethod extends DMLMethod{
 
     protected String initialQuery = null;
     protected CharSequence[] defaultSQL(Iterator<VariableElement> iter){
+        int paramCount = method.getParameters().size();
         List<String> code = new ArrayList<String>();
         CollectionUtil.addAll(code,
-            "java.util.List<String> __conditions = new java.util.ArrayList<String>();",
-            "java.util.List<Object> __params = new java.util.ArrayList<Object>();"
+            "java.util.List<String> __conditions = new java.util.ArrayList<String>("+paramCount+");",
+            "java.util.List<Object> __params = new java.util.ArrayList<Object>("+paramCount+");"
         );
 
         List<String> params = new ArrayList<String>();
