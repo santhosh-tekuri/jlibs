@@ -1,6 +1,11 @@
 #summary J2EE DAO Pattern made easier
 #labels JDBC,DAO,SQL,ORM
-<wiki:toc max_depth="1" />
+*Table of Contents*
+<wiki:toc max_depth="2" />
+
+----------------------
+==Annotating POJO==
+
 Create a POJO and map it to database using annotations
 {{{
 package sample;
