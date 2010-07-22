@@ -18,20 +18,20 @@ package jlibs.jdbc;
 /**
  * @author Santhosh Kumar T
  */
-public class GradeTypeMapper implements JDBCTypeMapper<Integer, Grade>{
+public class GradeTypeMapper implements JDBCTypeMapper<Grade, Integer>{
     @Override
-    public Grade nativeToUser(Integer value){
-        if(value==null)
+    public Grade nativeToUser(Integer nativeValue){
+        if(nativeValue==null)
             return null;
         else
-            return Grade.values()[value];
+            return Grade.values()[nativeValue];
     }
 
     @Override
-    public Integer userToNative(Grade value){
-        if(value==null)
+    public Integer userToNative(Grade userValue){
+        if(userValue==null)
             return null;
         else
-            return value.ordinal();
+            return userValue.ordinal();
     }
 }

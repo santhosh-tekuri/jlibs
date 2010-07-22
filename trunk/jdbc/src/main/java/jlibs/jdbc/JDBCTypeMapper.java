@@ -16,9 +16,15 @@
 package jlibs.jdbc;
 
 /**
+ * This class defines conversion user type to native type
+ * and vice versa.
+ *
+ * @param <U> User Type
+ * @param <N> Native Type (Java type which is supported by JDBC)
+ * 
  * @author Santhosh Kumar T
  */
-public interface JDBCTypeMapper<N, U>{
-    public U nativeToUser(N value);
-    public N userToNative(U value);
+public interface JDBCTypeMapper<U, N>{
+    public U nativeToUser(N nativeValue);
+    public N userToNative(U userValue);
 }
