@@ -17,6 +17,7 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.regex.TemplateMatcher;
@@ -244,8 +245,12 @@ abstract class DMLMethod{
         ColumnProperty column = columns.findByProperty(propertyName);
         if(column==null)
             throw new AnnotationError(method, "invalid column property: "+propertyName);
-        if(!ModelUtil.toString(column.propertyType(), true).equals(ModelUtil.toString(param.asType(), true)))
-            throw new AnnotationError(param, param.getSimpleName()+" must be of type "+ModelUtil.toString(column.propertyType(), true)+'/'+ModelUtil.toString(column.propertyType(), false));
+        if(!ModelUtil.toString(column.propertyType(), true).equals(ModelUtil.toString(param.asType(), true))){
+            String type = ModelUtil.toString(column.propertyType(), true);
+            if(ModelUtil.isPrimitive(column.propertyType()) || ModelUtil.isPrimitiveWrapper(column.propertyType()))
+                type = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)] + '/' + type;
+            throw new AnnotationError(param, param.getSimpleName()+" must be of type "+type);
+        }
         return column;
     }
 }
