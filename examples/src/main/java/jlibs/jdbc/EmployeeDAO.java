@@ -32,7 +32,7 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Select(column="grade")
     public abstract Grade findGrade(long id);
 
-    @Select(column="grade", assertMinmumCount=1)
+    @Select(column="grade", assertMinimumCount =1)
     public abstract Grade findGrade1(long id);
 
     @Select(column="grade")
@@ -80,13 +80,13 @@ public abstract class EmployeeDAO extends DAO<Employee>{
     @Select(column="experience")
     public abstract Integer findExperience1(long id);
 
-    @Select(column="experience", assertMinmumCount=1)
+    @Select(column="experience", assertMinimumCount =1)
     public abstract Integer findExperience2(long id);
 
     @Select(column="experience")
     public abstract List<Integer> findExperiences(long id);
 
-    @Select(column="experience", assertMinmumCount=5)
+    @Select(column="experience", assertMinimumCount =5)
     public abstract List<Integer> findExperiences1(long id);
 
     @Select

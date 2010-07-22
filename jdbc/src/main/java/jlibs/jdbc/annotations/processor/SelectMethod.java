@@ -43,7 +43,7 @@ public class SelectMethod extends WhereMethod{
     @Override
     protected String[] code() {
         String code[] = super.code();
-        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinmumCount");
+        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinimumCount");
         if(assertMinmumCount==-1)
             return code;
         else{

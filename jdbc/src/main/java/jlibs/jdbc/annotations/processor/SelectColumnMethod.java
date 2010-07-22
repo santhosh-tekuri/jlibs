@@ -98,7 +98,7 @@ public class SelectColumnMethod extends WhereMethod{
     protected String[] code(){
         ColumnProperty column = getColumn();
 
-        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinmumCount");
+        int assertMinmumCount = (Integer)ModelUtil.getAnnotationValue(method, mirror, "assertMinimumCount");
 
         String columnType = ModelUtil.toString(column.propertyType(), true);
         CharSequence[] sequences = sql();
