@@ -1,13 +1,13 @@
 #summary J2EE DAO Pattern made easier
 #labels JDBC,DAO,SQL,ORM
-
+<wiki:toc max_depth="1" />
 Create a POJO and map it to database using annotations
 {{{
 package sample;
 
 import jlibs.jdbc.annotations.*;
 
-@Table(name="employees")
+@Table
 public class Employee{
     @Column(primary=true)
     public int id;
@@ -15,6 +15,8 @@ public class Employee{
     @Column public String firstName;
     @Column public String lastName;
     @Column public int age;
+    @Column public int experience;
+    @Column public int salary;
 }
 }}}
 
@@ -22,11 +24,21 @@ public class Employee{
 ==@Table Annotation==
 
 {{{
+@Table
+public class Employee{
+}}}
+
+`@Table` annotation says that, the class `Employee` is mapped to `employees` table in database.
+
+The name of Table is derived from class name by joining words with <br>
+underscore and converting to lowercase and plural.
+
+You can also explicitly specify the table name as below:
+{{{
 @Table(name="employees")
 public class Employee{
 }}}
 
-Here we are mapping `Employee` class to `employees` table in database.
 ----------------------
 ==@Column Annotation==
 {{{
@@ -67,6 +79,10 @@ public void setFirstName(String firstName){
     this.firstName = firstName;
 }
 }}}
+
+A class with `@Table` annotation must have atleast one member with `@Column` annotation.<br>
+Otherwize you will get compilation error.
+
 -----------------------
 ==Invalid Column-Property Type==
 
@@ -75,6 +91,8 @@ Only the java types which have sql type mapping can be used for column-property.
 @Column Properties defautls;
 }}}
 gives compilation error `java.util.Properties has no mapping SQL Type`.
+
+Later will will know, how to use custom java types.
 -----------------------
 ==Duplicate Column-Property Type==
 
@@ -180,13 +198,21 @@ import static sample.DB.*;
 Employee emp = new Employee();
 emp.id = 1;
 emp.firstName = "Santhosh";
-emp.lastName = "Sumar";
+emp.lastName = "Kumar";
 emp.age = 26;
 
 EMPLOYEES.upsert(emp);
 }}}
 The above code updates the values of employee with id `1`.<br>
 If employee with id `1` doesn't exist, it inserts new record.
+
+to select only specified number of rows rather than all from database.<br>
+for example, to find first 10 employees whose age is less than specified:
+{{{
+int age = ...;
+List<Employee> employees = employeeDAO.top(10, "where age<?", age);
+}}}
+if first argument to `top(...)` is zero, then it fetches all rows.
 
 All `DAO` methods throw `jlibs.jdbc.DAOException`.<br>
 This is runtime exception wrapping SQLException.
@@ -202,7 +228,8 @@ Employee emp = EMPLOYEES.first("where id=?", 5);
 List<Employees> youngEmployees = EMPLOYEES.all("where age < ?", 21);
 }}}
 
-Rather than doing custom queries like this, you can use the following technique.
+Rather than doing custom queries like this, you can use the following technique, <br>
+which provides more compile time validations.
 ---------------------
 ==@Select Annotation==
 
@@ -302,10 +329,10 @@ public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastNam
 }}}
 here we are specifying the sql query in @Select annotation.<br>
 
-`#{column-property} in query will be replaced by its columnName<br>
+`#{column-property}` in query will be replaced by its columnName<br>
 i,e #{age} is replaced by `age` and #{lastName} is replaced by `last_name`
 
-`${parameter-name} in query will be replaced by its parameter value<br>
+`${parameter-name}` in query will be replaced by its parameter value<br>
 i,e ${fromAge} is replaced by the value of fromAge passed to the method.
 
 the generated implementation for the above method will be:
@@ -315,6 +342,32 @@ public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastNam
     return all("where age between ? and ? or last_name=?", fromAge, toAge, lastName);
 }
 }}}
+
+Let us say we did a mistake as below:
+{{{
+@Select("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
+public List<Employee> findByAgeOrLastName(int fromAge, String toAge, String lastName);
+}}}
+here the second parameter `toAge` is specified as `String`. But it is supposed to be `int`.<br>
+But when you compile above method, it generates the following implementation without any compile time error:
+{{{
+@Override
+public List<Employee> findByAgeOrLastName(int fromAge, String toAge, String lastName){
+    return all("where age between ? and ? or last_name=?", fromAge, toAge, lastName);
+}
+}}}
+to add compile time validations to verify that the types are matching with their column types:
+{{{
+@Select("where #{age} between ${fromAge} and ${(age)toAge} or #{lastName}=${lastName}")
+public List<Employee> findByAgeOrLastName(int fromAge, String toAge, int lastName);
+}}}
+Now on compiling the above method you get following compile time error:
+{{{
+toAge must be of type int/java.lang.Integer
+}}}
+Notice that, here rather than simply using `${toAge}` in query, we specified `${(age)toAge}`<br>
+i.e, `${(column-property)parameter-name}` will verify that the type of parameter matches with<br>
+the type of column property specified, during compile time.
 
 ---------------------------
 ==@Insert Annotation==
@@ -430,6 +483,299 @@ This is similar to `@Update` except that the method should return `void`.
 If the record is found in database it is updated, otherwise new record is inserted.
 
 ---------------------------
+==WHERE Condition==
+
+various sql operators can be specified by using prefixes for method parameters.<br>
+ 
+for example to find all employees whose age is less than specified age:
+{{{
+@Select
+public abstract List<Employee> findYoungEmployees(int lt_age);
+}}}
+here the prefix is `lt_` and column property is `age`.<br>
+the prefix `lt_` says to use the `<` sql operator on `age` column
+
+to delete all employees between specified ages:
+{{{
+@Delete
+public abstract int deleteEmployeesByAge(int from_age, int to_age);
+}}}
+
+to update experience of employees between specified ages:
+{{{
+@Update
+public abstract int updateEmployeesByAge(int from_age, int to_age, int experience);
+}}}
+ 
+The supported operators and the prefixes to use are:
+|| *Prefix*     || *Operator*        ||
+|| `where_`     || `= ?`             ||
+|| `eq_`        || `= ?`             ||
+|| `ne_`        || `<> ?`            ||
+|| `lt_`        || `< ?`             ||
+|| `le_`        || `<= ?`            ||
+|| `gt_`        || `> ?`             ||
+|| `ge_`        || `>= ?`            ||
+|| `like_`      || `LIKE ?`          ||
+|| `nlike_`     || `NOT LIKE ?`      ||
+|| `from_, to_` || `BETWEEN ? AND ?` ||
+
+This technique of using prefixes, will avoid writing custom queries to large extent.
+
+---------------------------
+==Selecting Single Column==
+
+Some times you might want value of a specific column rather than values of all columns.<br>
+
+to find first name of employee of given id:
+{{{
+@Select(column="firstName")
+public abstract String getFirstName(int id);
+}}}
+Notice that the value of `column` attribute is `firstName` (not `first_name`).<br>
+i.e value of `column` attribute is name of the column property to be selected.
+
+if there is no employee with the specified `id`, the above method returns `null`.<br>
+if the first name of employee with specified `id` is `NULL` in database, the above method returns `null`<br>
+
+in order to differentiate above to cases:
+{{{
+@Select(column="firstName", assertMinimumCount=1)
+public abstract String getFirstName(int id);
+}}}
+
+the attribute `assertMinimumCount` ensures that there are atleast specified number of records.<br>
+Now the above method throws `jlibs.jdbc.IncorrectResultSizeException`, if there is no employee with given `id`.<br>
+`jlibs.jdbc.IncorrectResultSizeException` is subclass of `jlibs.jdbc.DAOException`
+
+the `assertMinimumCount` can also be used when selecting entire records:
+{{{
+@Select(assertMinimumCount=5)
+public abstract List<Employee> findByAge(int from_age, int to_age);
+}}}
+
+if you want to find first names of employees:
+{{{
+@Select(column="firstName")
+public abstract List<String> findFirstNames(int from_age, int to_age);
+}}}
+
+---------------------------
+==Selecting Expression==
+
+to find number of employees with age greater than specified
+{{{
+@Select(expression="count(*)")
+public abstract int countOlderEmployees(int gt_age);
+}}}
+
+to find sum of salaries of all employees:
+{{{
+@Select(expression="sum(#{salary})")
+public abstract int totalSalary();
+}}}
+
+the method can also return `List`:
+{{{
+@Select(expression="#{age}-#{experience}")
+public abstract List<Integer> calculateEquation1();
+}}}
+
+---------------------------
+==Dynamic SQL==
+
+{{{
+@Select(ignoreNullConditions=true)
+public abstract List<Employee> search(String firstName, String lastName, Integer age, Integer experience);
+}}}
+
+`ignoreNullConditions=true` says that don't include the conditions whose values are null.<br>
+i.e
+{{{
+EMPLOYEES.search(null, null, 28, null); // search by age
+EMPLOYEES.search(null, null, 35, 5); // search by age and experience
+}}}
+
+the generated implementation will be as below:
+{{{
+@Override
+public List<Employee> search(String firstName, String lastName, Integer age, Integer experience){
+    java.util.List<String> __conditions = new java.util.ArrayList<String>(4);
+    java.util.List<Object> __params = new java.util.ArrayList<Object>(4);
+    if(firstName!=null){
+        __conditions.add("first_name=?");
+        __params.add(firstName);
+    }
+    if(lastName!=null){
+        __conditions.add("last_name=?");
+        __params.add(lastName);
+    }
+    if(age!=null){
+        __conditions.add("age=?");
+        __params.add(age);
+    }
+    if(experience!=null){
+        __conditions.add("experience=?");
+        __params.add(experience);
+    }
+    String __query = null;
+    if(__conditions.size()>0)
+        __query = " WHERE " + jlibs.core.lang.StringUtil.join(__conditions.iterator(), " AND ");
+    return all(__query, __params.toArray());
+}
+}}}
+
+`ignoreNullConditions` attribute is supported on `@Select`, `@Delete` and `@Update`
+
+----------------------
+==Custom Java Types==
+
+let us say `employees` table in database has column named `grade` of type number.<br>
+You don't want to use `int` for `grade` property in `Employee` class, rather you want<br>
+to use following `enum`.
+
+{{{
+public enum Grade{
+    JUNIOR, SENIOR, LEAD, MANAGER
+}
+}}}
+
+because `Grade` is not one of the java types supported by JDBC,<br>
+you need to create a mapping as below:
+{{{
+import jlibs.jdbc.JDBCTypeMapper;
+
+public class GradeTypeMapper implements JDBCTypeMapper<Grade, Integer>{
+    @Override
+    public Grade nativeToUser(Integer nativeValue){
+        if(nativeValue==null)
+            return null;
+        else
+            return Grade.values()[nativeValue];
+    }
+
+    @Override
+    public Integer userToNative(Grade userValue){
+        if(userValue==null)
+            return null;
+        else
+            return userValue.ordinal();
+    }
+}
+}}}
+Here we are mapping `Grade` with `Integer`.<br>
+`Grade` is called User Type.<br>
+`Integer` is called Native Type.<br>
+
+Now in `Employee` class you need to specify `grade` property to use above mapping:
+{{{
+@Table
+public class Employee{
+    ...
+    
+    @Column
+    @TypeMapper(mapper=GradeTypeMapper.class, mapsTo=Integer.class)
+    public Grade grade;
+}
+}}}
+
+if you are using custom queries, you must specify column-property for parameter which is non-native type:
+{{{
+@Select(expression="count(*)", sql="WHERE #{grade}=${(grade)grade} AND #{age}<${age}")
+public abstract int countByGradeAndAge(Grade grade, int age);
+}}}
+Notice that we used `${(grade)grade}` in query rather than "${grade}`.<br>
+otherwise, you will get following compilation error:
+{{{
+the column property must be specified for parameter grade in query.
+}}}
+
+---------------------------
+==Sorting by Column==
+
+to sort employees by experience:
+{{{
+@Select(orderBy=@OrderBy(column="experience", order=Order.DESCENDING))
+public abstract List<Employee> youngEmployees(int le_age);
+}}}
+the `order` attribute is optional and defaults to `Order.ASCENDING`.<br>
+
+to sort by multiple columns:
+{{{
+@Select(orderBy={
+    @OrderBy(column="experience", order=Order.DESCENDING),
+    @OrderBy(column="age", order=Order.DESCENDING)
+})
+public abstract List<Employee> youngEmployees(int le_age);
+}}}
+
+---------------------------
+==Paging==
+
+Suppose you are searching employees in databse, the number of employees maching your criteria might be large.<br>
+You don't want list all employees, but you want to page though the search results:
+{{{
+@Select(ignoreNullConditions=true, pageBy=@OrderBy(column="id", order=Order.DESCENDING))
+public abstract Paging<Employee> pageById(String firstName, String lastName, Integer age, int experience);
+}}}
+
+`pageBy` attribute specifies that you want to page through results.<br>
+when `pageBy` attribute specified the method return type should be `jlibs.jdbc.Paging`.<br>
+
+In order to page through the results, you need to sort the results by set of columns whose combination of<br>
+values is unique. In above method, we are paging by column property `id` and `id` is unique for each employee.
+
+Now you can do paging as follows:
+{{{
+Paging<Employee> paging = EMPLOYEES.pageById(null, null, 35, 5);
+Page<Employee> page = paging.createPage(10); // page size is 10
+
+int totalRowCount = page.getTotalRowCount();
+int totalPageCount = getTotalPageCount();
+}}}
+
+to Navigate the page:
+{{{
+List<Employee> firstPage = page.navigate(Page.Action.FIRST);
+List<Employee> secondPage = page.navigate(Page.Action.NEXT);
+List<Employee> lastPage = page.navigate(Page.Action.LAST);
+List<Employee> lastButOnePage = page.navigate(Page.Action.PREVIOUS);
+}}}
+`Page.Action` is an enum.<br>
+to find whether you can navigation in given direction:
+{{{
+boolean enableNextButton = page.canNavigate(Page.Action.NEXT);
+}}}
+Note that, if the total number of rows is zero, you can't navigate in any direction.<br>
+`page.navigate(...)` throws `IllegalArgumentException` if the specified navigation action is not possible.
+
+`page.getIndex()` returns the index of current page. The indexing starts from zero.<br>
+`page.getIndex()` returns `-1` if the page is created but not navigated yet.
+
+Note that you can't jump to a given page.
+
+---------------------------
+==Paging in Servlet/JSP==
+
+You can place the page object in session and use it. But if user is paging simultaniously<br>
+by different crieterias, you will end up multiple page objects in session and becomes impossible<br>
+to know which page object from session to use.
+
+In order to overcome this situation, you can pass the information required to create current page
+from request to request using POST.
+
+the information required to construct page at given index are:
+{{{
+page.getIndex();
+page.getTotalRowCount();
+page.getFirstRow(); // returns Employee
+page.getLastRow(); // returns Employee
+}}}
+all above methods have their corresponding set methods.<br>
+For first and last rows, it is enough to fill only properties of the `Employee` object which are used for paging.<br>
+i.e `Employee.id` for above example.
+
+---------------------------
 ==Transactions==
 
 To run multiple statements in a transaction:
@@ -475,63 +821,7 @@ What happens when transactions are nested as below:
 
 here both both `method1()` and `method1()` use transactions. Notice that `method1()` is calling `method2()`.<br>
 Here `method2()` will run in the same transaction that is started by `method1()`.
--------------------------
-==Updates===
 
- * r886 FIXED: Generated DAO has compilation errors, if there are no `@Column` in POJO
- * r887 FIXED: Invalid SQL is generated by `@Update`, if primary key is not present in method arguments
- * r889 
- `name` property of `@Table` is made optional. If not specified, it will be derived from class name
- by joining words with underscore and converting to lowercase
- {{{
- @Table
- public class EmployeeContacts{
-    ...
- }
- }}}
- here database table name will be considered as `employee_contacts`
- * r896
- more sql operators support in where conditions.<br>
- for example to find all employees whose age is less than specified age:
- {{{
- @Select
- public abstract List<Employee> findYoungEmployees(int lt_age);
- }}}
- the supported operators are:
-|| *Prefix*     || *Operator*        ||
-|| `where_`     || `= ?`             ||
-|| `eq_`        || `= ?`             ||
-|| `ne_`        || `<> ?`            ||
-|| `lt_`        || `< ?`             ||
-|| `le_`        || `<= ?`            ||
-|| `gt_`        || `> ?`             ||
-|| `ge_`        || `>= ?`            ||
-|| `like_`      || `LIKE ?`          ||
-|| `nlike_`     || `NOT LIKE ?`      ||
-|| `from_, to_` || `BETWEEN ? AND ?` ||
-
- * r899 methods in `JDBC` and `TransactionManager` now throw `DAOException` instead of `SQLException`
- * r902 
- support for selecting single column in `@Select`. For example:<br>
- to find first name of employee given id:
- {{{
- @Select(column="firstName")
- public abstract String findFirstName(int id);
- }}}
- to find first names of employees whose age is less than specified:
- {{{
- @Select(column="firstName")
- public abstract List<String> findFirstNamesOfYoungEmployees(int lt_age);
- }}}
- * r909 
- select only specified number of rows rather than all from database.<br>
- for example, to find first 10 employees whose age is less than specified:
- {{{
- int age = ...;
- List<Employee> employees = employeeDAO.top(10, "where age<?", age);
- }}}
- if first argument to `top(...)` is zero, then it fetches all rows.
- 
 -------------------------
 ==What Next==
 
@@ -541,6 +831,9 @@ If you have any suggestions or comments, they will be great help to me.
 just now found [https://eodsql.dev.java.net/ eodsql] project, which uses somewhat similar approach.<br>
 some advantages over eodsql are:
  * no reflection is used at runtime
- * for simple DAO methods, you don't need to write sql
- * columnnames are not hardcode in queries
+ * you need to write sql only in rare cases
+ * column names are not hardcode in queries
  * strict compile-time checks
+ * supports custom java types
+ * supports dynamic queries
+ * paging support
