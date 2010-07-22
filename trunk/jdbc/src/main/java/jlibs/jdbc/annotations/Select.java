@@ -30,7 +30,7 @@ public @interface Select{
     String column() default "";
     String expression() default "";
     boolean ignoreNullConditions() default false;
-    int assertMinmumCount() default -1;
+    int assertMinimumCount() default -1;
     OrderBy[] orderBy() default {};
     OrderBy[] pageBy() default {};
 }
