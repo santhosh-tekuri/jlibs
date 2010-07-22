@@ -21,6 +21,7 @@ import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.regex.TemplateMatcher;
+import jlibs.jdbc.JavaType;
 import jlibs.jdbc.annotations.*;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -227,6 +228,20 @@ abstract class DMLMethod{
                     params.append(", ");
                 if(propertyName!=null)
                     paramName = getColumn(param, propertyName).toNativeTypeCode(paramName);
+                else{
+                    String type = ModelUtil.toString(param.asType(), true);
+                    if(ModelUtil.isPrimitive(param.asType()) || ModelUtil.isPrimitiveWrapper(param.asType()))
+                        type = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
+                    boolean found = false;
+                    for(JavaType javaType: JavaType.values()){
+                        if(javaType.clazz.getName().equals(type)){
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found)
+                        throw new AnnotationError(method, mirror, "the column property must be specified for parameter "+param.getSimpleName()+" in query.");
+                }
                 params.append(paramName);
                 return "?";
             }
