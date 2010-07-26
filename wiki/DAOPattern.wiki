@@ -329,7 +329,7 @@ public java.util.List<jlibs.jdbc.Employee> findByLastNameAndAge(java.lang.String
 
 If you want to find all employees with complex conditions:
 {{{
-@Select("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
+@Select(sql="where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
 public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastName);
 }}}
 here we are specifying the sql query in @Select annotation.<br>
@@ -350,7 +350,7 @@ public List<Employee> findByAgeOrLastName(int fromAge, int toAge, String lastNam
 
 Let us say we did a mistake as below:
 {{{
-@Select("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
+@Select(sql="where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastName}")
 public List<Employee> findByAgeOrLastName(int fromAge, String toAge, String lastName);
 }}}
 here the second parameter `toAge` is specified as `String`. But it is supposed to be `int`.<br>
@@ -363,7 +363,7 @@ public List<Employee> findByAgeOrLastName(int fromAge, String toAge, String last
 }}}
 to add compile time validations to verify that the types are matching with their column types:
 {{{
-@Select("where #{age} between ${fromAge} and ${(age)toAge} or #{lastName}=${lastName}")
+@Select(sql="where #{age} between ${fromAge} and ${(age)toAge} or #{lastName}=${lastName}")
 public List<Employee> findByAgeOrLastName(int fromAge, String toAge, int lastName);
 }}}
 Now on compiling the above method you get following compile time error:
@@ -431,7 +431,7 @@ public int delete(java.lang.String firstName, java.lang.String lastName){
 
 If you want to use complex conditions:
 {{{
-@Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
+@Delete(sql="where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
 public abstract int delete(int fromAge, int toAge, String lastN);
 }}}
 
@@ -468,15 +468,15 @@ public int update(int age, java.lang.String where_firstName, java.lang.String wh
 
 If you want to use complex conditions:
 {{{
-@Delete("where #{age} between ${fromAge} and ${toAge} or #{lastName}=${lastN}")
-public abstract int delete(int fromAge, int toAge, String lastN);
+@Update(sql="set #{lastName}=${lastN} where #{age} between ${fromAge} and ${toAge}")
+public abstract int updateLastName(int fromAge, int toAge, String lastN);
 }}}
 
 the generated implementation will be:
 {{{
 @Override
-public int delete(int fromAge, int toAge, java.lang.String lastN){
-    return delete("where age between ? and ? or last_name=?", fromAge, toAge, lastN);
+public int updateLastName(int fromAge, int toAge, java.lang.String lastN){
+    return update("set last_name=? where age between ? and ?", lastN, fromAge, toAge);
 }
 }}}
 
