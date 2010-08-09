@@ -22,10 +22,14 @@ import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.JavaType;
 import jlibs.jdbc.SQLType;
+import jlibs.jdbc.annotations.References;
+import jlibs.jdbc.annotations.Table;
 import jlibs.jdbc.annotations.TypeMapper;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
@@ -148,5 +152,39 @@ abstract class ColumnProperty<E extends Element>{
         if(typeMirror!=null)
             value = "TYPE_MAPPER_"+StringUtil.underscore(propertyName()).toUpperCase()+".nativeToUser("+value+")";
         return value;
+    }
+
+    public Reference reference;
+}
+
+class Reference{
+    public final TypeElement tableClass;
+    public final String columnName;
+
+    Reference(TypeElement tableClass, String columnName){
+        this.tableClass = tableClass;
+        this.columnName = columnName;
+    }
+
+    public Columns table(){
+        return Columns.ALL.get(tableClass);
+    }
+
+    public ColumnProperty column(){
+        return table().findByProperty(columnName);
+    }
+
+    public static Reference find(Element element){
+        AnnotationMirror mirror = ModelUtil.getAnnotationMirror(element, References.class);
+        if(mirror!=null){
+            AnnotationValue tableAnnotationValue = ModelUtil.getRawAnnotationValue(element, mirror, "table");
+            TypeElement tableClass = (TypeElement)((DeclaredType)tableAnnotationValue.getValue()).asElement();
+            if(ModelUtil.getAnnotationMirror(tableClass, Table.class)==null)
+                throw new AnnotationError(element, mirror, tableAnnotationValue, "Reference class "+tableClass.getQualifiedName()+" doesn't has @Table annotation");
+
+            String columnName = ModelUtil.getAnnotationValue(element, mirror, "column");
+            return new Reference(tableClass, columnName);
+        }else
+            return null;
     }
 }

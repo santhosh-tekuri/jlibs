@@ -106,6 +106,8 @@ class Columns extends ArrayList<ColumnProperty>{
         }
 
         columnProperty.validateType();
+
+        columnProperty.reference = Reference.find(columnProperty.element);
         return super.add(columnProperty);
     }
 
