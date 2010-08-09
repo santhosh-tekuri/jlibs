@@ -16,6 +16,7 @@
 package jlibs.core.annotation.processing;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic;
 
 /**
  * @author Santhosh Kumar T
@@ -27,5 +28,9 @@ public final class Environment{
     }
     public static ProcessingEnvironment get(){
         return ENV.get();
+    }
+
+    public static void debug(String message){
+        get().getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
 }
