@@ -15,6 +15,8 @@
 
 package jlibs.jdbc;
 
+import jlibs.core.lang.ArrayUtil;
+
 import java.math.BigDecimal;
 import java.sql.*;
 
@@ -51,5 +53,37 @@ public enum JavaType{
                 return javaType;
         }
         return null;
+    }
+
+    public static JavaType valueOf(SQLType sqlType){
+        for(JavaType value: values()){
+            if(ArrayUtil.contains(value.sqlTypes, sqlType))
+                return value;
+        }
+        return null;
+    }
+
+    private static JavaType compatible[][]={
+        { BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BIG_DECIMAL },
+        { FLOAT, DOUBLE, BIG_DECIMAL },
+        { TIME, DATE },
+        { TIMESTAMP, DATE },
+    };
+
+    public static boolean isCompatible(JavaType javaType, SQLType sqlType){
+        if(ArrayUtil.contains(javaType.sqlTypes, sqlType))
+            return true;
+
+        JavaType candidate = valueOf(sqlType);
+        for(JavaType javaTypes[]: compatible){
+            int index = ArrayUtil.indexOf(javaTypes, candidate);
+            if(index!=-1){
+                for(;index<javaTypes.length; index++){
+                    if(javaTypes[index]==javaType)
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 }
