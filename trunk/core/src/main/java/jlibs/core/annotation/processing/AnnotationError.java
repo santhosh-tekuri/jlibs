@@ -15,6 +15,8 @@
 
 package jlibs.core.annotation.processing;
 
+import jlibs.core.lang.model.ModelUtil;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -29,34 +31,50 @@ public class AnnotationError extends Error{
     private AnnotationValue pos3;
 
     public AnnotationError(String message){
-        this(null, null, message);
+        super(message);
     }
 
     public AnnotationError(Element pos, String message){
-        this(pos, null, message);
+        this(message);
+        this.pos1 = pos;
+    }
+
+    public AnnotationError(Element elem, Class annotation, String message){
+        this(elem, ModelUtil.getAnnotationMirror(elem, annotation), message);
+    }
+
+    public AnnotationError(Element elem, Class annotation, String method, String message){
+        this(elem, ModelUtil.getAnnotationMirror(elem, annotation),
+                ModelUtil.getRawAnnotationValue(elem, ModelUtil.getAnnotationMirror(elem, annotation), method),
+                message);
     }
 
     public AnnotationError(Element pos1, AnnotationMirror pos2, String message){
-        super(message);
-        this.pos1 = pos1;
+        this(pos1, message);
         this.pos2 = pos2;
     }
 
     public AnnotationError(Element pos1, AnnotationMirror pos2, AnnotationValue pos3, String message){
-        super(message);
-        this.pos1 = pos1;
-        this.pos2 = pos2;
+        this(pos1, pos2, message);
         this.pos3 = pos3;
     }
 
-    public void report(){
+    public void printMessage(Diagnostic.Kind kind){
         if(pos1==null)
-            Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage());
+            Environment.get().getMessager().printMessage(kind, getMessage());
         else if(pos2==null)
-            Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1);
+            Environment.get().getMessager().printMessage(kind, getMessage(), pos1);
         else if(pos3==null)
-            Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2);
+            Environment.get().getMessager().printMessage(kind, getMessage(), pos1, pos2);
         else
-            Environment.get().getMessager().printMessage(Diagnostic.Kind.ERROR, getMessage(), pos1, pos2, pos3);
+            Environment.get().getMessager().printMessage(kind, getMessage(), pos1, pos2, pos3);
+    }
+
+    public void report(){
+        printMessage(Diagnostic.Kind.ERROR);
+    }
+
+    public void warn(){
+        printMessage(Diagnostic.Kind.WARNING);
     }
 }
