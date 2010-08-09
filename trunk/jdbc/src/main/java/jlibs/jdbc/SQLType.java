@@ -64,4 +64,12 @@ public enum SQLType{
     SQLType(int type){
         this.type = type;
     }
+
+    public static SQLType valueOf(int type){
+        for(SQLType value: values()){
+            if(value.type==type)
+                return value;
+        }
+        return null;
+    }
 }
