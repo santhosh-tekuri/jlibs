@@ -18,19 +18,21 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.jdbc.annotations.Table;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
  */
-@SupportedAnnotationTypes("jlibs.jdbc.annotations.Table")
+@SupportedAnnotationTypes({"jlibs.jdbc.annotations.Table", "jlibs.jdbc.annotations.Database"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class TableAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "DAO";
@@ -42,27 +44,35 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
         try{
             for(TypeElement annotation: annotations){
                 for(Element elem: roundEnv.getElementsAnnotatedWith(annotation)){
-                    TypeElement c = (TypeElement)elem;
-                    Columns columns = new Columns(c);
+                    if(ModelUtil.getAnnotationMirror(elem, Table.class)!=null){
+                        TypeElement c = (TypeElement)elem;
+                        Columns columns = new Columns(c);
 
-                    while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
-                        columns.process(c);
-                        c = ModelUtil.getSuper(c);
-                    }
-                    c = (TypeElement)elem;
+                        while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
+                            columns.process(c);
+                            c = ModelUtil.getSuper(c);
+                        }
+                        c = (TypeElement)elem;
 
-                    if(columns.size()==0)
-                        throw new AnnotationError(c, "Class with @Table must have atleast one column-property");
+                        if(columns.size()==0)
+                            throw new AnnotationError(c, "Class with @Table must have atleast one column-property");
+                    }else
+                        ConnectionInfo.add((PackageElement)elem);
                 }
             }
-            for(Columns columns: Columns.ALL.values())
+            for(Columns columns: Columns.ALL.values()){
+                ConnectionInfo conInfo = ConnectionInfo.get(columns);
+                if(conInfo!=null)
+                    conInfo.validate(columns);
                 columns.generateDAO();
+            }
         }catch(AnnotationError error){
             error.report();
         }catch(Exception ex){
             throw new RuntimeException(ex);
         }finally{
             Columns.ALL.clear();
+            ConnectionInfo.ALL.clear();
         }
         return true;
     }
