@@ -19,7 +19,6 @@ import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.ImpossibleException;
-import jlibs.core.lang.Noun;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.DAO;
@@ -60,11 +59,7 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
             for(Element elem: roundEnv.getElementsAnnotatedWith(annotation)){
                 try{
                     TypeElement c = (TypeElement)elem;
-                    columns = new Columns();
-
-                    columns.tableName = ModelUtil.getAnnotationValue(c, Table.class, "name");
-                    if(columns.tableName.length()==0)
-                        columns.tableName = Noun.pluralize(StringUtil.underscore(c.getSimpleName().toString()));
+                    columns = new Columns(c);
 
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
                         process(c);

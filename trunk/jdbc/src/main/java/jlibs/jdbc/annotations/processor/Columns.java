@@ -17,10 +17,13 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.Noun;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.SQLType;
+import jlibs.jdbc.annotations.Table;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 
@@ -31,7 +34,16 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  * @author Santhosh Kumar T
  */
 class Columns extends ArrayList<ColumnProperty>{
-    public String tableName;
+    public final String tableName;
+    public final TypeElement tableClass;
+
+    public Columns(TypeElement clazz){
+        tableClass = clazz;
+        String tableName = ModelUtil.getAnnotationValue(clazz, Table.class, "name");
+        if(tableName.length()==0)
+            tableName = Noun.pluralize(StringUtil.underscore(clazz.getSimpleName().toString()));
+        this.tableName = tableName;
+    }
     
     public ColumnProperty findByProperty(String propertyName){
         for(ColumnProperty prop: this){
