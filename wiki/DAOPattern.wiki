@@ -110,6 +110,44 @@ public String firstName;
 public String lastName;
 }}}
 gives compilation error. This can happen when you used copy/paste and forgot to change column name.
+
+------------------------
+==Validating POJOs with Database [r946 :r946]==
+
+Sometimes you might misspell table or column names in POJO definition.<br>
+To avoid such mistakes, during compilation time you can ask to validate POJO definitions<br>
+against database.
+
+First you define database in `package-info.java` as follows:
+{{{
+@Database(driver=com.mysql.jdbc.Driver.class , url="jdbc:mysql://localhost/test")
+package foo.model;
+
+import jlibs.jdbc.annotations.Database;
+}}}
+
+the `@Database` annotation gives all the information required to make database connection.<br>
+
+If your database requires authentication, then use:
+{{{
+@Database(driver=com.mysql.jdbc.Driver.class , url="jdbc:mysql://localhost/test", user="santhosh", password="notYetDecided")
+}}}
+
+here `@Database` annotation is defined on package `foo.model`. So this database is used to<br>
+validate all POJOs in package `foo.model` and its sub-packages.
+
+the following are validated in POJO definition:
+ * table name
+ * column names
+ * compatibility of column property tpe with the database column type
+ * check for new columns which are not defined in POJO.
+
+when new columns found in database which are not defined in POJO, it simply produces compilation warning.<br>
+If you want to fail compilation in such scenarios, specify `failOnMissingColumns` attribute as follows:
+{{{
+@Database(driver=com.mysql.jdbc.Driver.class , url="jdbc:mysql://localhost/test", failOnMissingColumns=true)
+}}}
+
 ------------------------
 ==`DataAccessObject`==
 
