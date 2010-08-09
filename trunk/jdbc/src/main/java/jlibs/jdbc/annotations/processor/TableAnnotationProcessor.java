@@ -18,15 +18,14 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.jdbc.annotations.References;
 import jlibs.jdbc.annotations.Table;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import java.util.Set;
 
 /**
@@ -64,6 +63,17 @@ public class TableAnnotationProcessor extends AnnotationProcessor{
                 ConnectionInfo conInfo = ConnectionInfo.get(columns);
                 if(conInfo!=null)
                     conInfo.validate(columns);
+
+                for(ColumnProperty column: columns){
+                    if(column.reference!=null){
+                        if(column.reference.column()==null){
+                            AnnotationMirror mirror = ModelUtil.getAnnotationMirror(column.element, References.class);
+                            AnnotationValue annotationValue = ModelUtil.getRawAnnotationValue(column.element, mirror, "column");
+                            throw new AnnotationError(column.element, mirror, annotationValue,
+                                    column.reference.tableClass.getSimpleName()+" doesn't has column property named "+column.reference.columnName);
+                        }
+                    }
+                }
                 columns.generateDAO();
             }
         }catch(AnnotationError error){
