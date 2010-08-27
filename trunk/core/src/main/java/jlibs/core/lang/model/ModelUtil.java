@@ -317,15 +317,19 @@ public class ModelUtil{
         }else{
             pakage = qname.substring(0, dot);
             clazzName = qname.substring(dot+1);
+            if(pakage.length()==0)
+                qname = clazzName;
         }
         return new String[]{ qname, pakage, clazzName };
     }
 
     public static Class findClass(Class clazz, String format) throws ClassNotFoundException{
         Map<String, String> vars = new HashMap<String, String>();
-        vars.put("package", clazz.getPackage().getName());
+        vars.put("package", clazz.getPackage()!=null?clazz.getPackage().getName():"");
         vars.put("class", clazz.getSimpleName());
         String qname = new TemplateMatcher("${", "}").replace(format, vars);
+        if(qname.startsWith(".")) // default package
+            qname = qname.substring(1);
         return clazz.getClassLoader().loadClass(qname);
     }
 
