@@ -129,7 +129,9 @@ public class Printer{
     }
 
     public void importPackage(Class clazz){
-        println("import "+ clazz.getPackage().getName()+".*;");
+        Package pakage = clazz.getPackage();
+        if(pakage!=null)
+            println("import "+ pakage.getName()+".*;");
     }
 
     public void printClassDoc(){
