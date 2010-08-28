@@ -122,6 +122,13 @@
         </pluginManagement>
     </build>
 
+    <pluginRepositories>
+        <pluginRepository>
+          <id>maven-annotation-plugin</id>
+          <url>http://maven-annotation-plugin.googlecode.com/svn/trunk/mavenrepo</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <distributionManagement>
         <snapshotRepository>
             <id>internal-repo</id>

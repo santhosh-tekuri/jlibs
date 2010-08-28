@@ -110,13 +110,6 @@
         </plugins>
     </build>
 
-    <pluginRepositories>
-        <pluginRepository>
-          <id>maven-annotation-plugin</id>
-          <url>http://maven-annotation-plugin.googlecode.com/svn/trunk/mavenrepo</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <repositories>
         <repository>
             <id>saxon</id>
