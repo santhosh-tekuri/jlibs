@@ -108,6 +108,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <strictCheck>true</strictCheck>
                 	<aggregate>true</aggregate>
                     <header>src/etc/header.txt</header>
                     <includes>
