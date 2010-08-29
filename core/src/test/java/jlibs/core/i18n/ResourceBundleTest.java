@@ -59,7 +59,7 @@ public class ResourceBundleTest{
         else{
             for(String error: searchFor){
                 if(errors.indexOf(error)==-1)
-                    Assert.fail("[Expected Error] "+error);
+                    Assert.fail("[Expected Error] "+error+"\n[Actual Error] "+errors);
             }
         }
     }
@@ -76,7 +76,8 @@ public class ResourceBundleTest{
     @Test(description="methods in interface must have @Message")
     public void missingMessageAnnotation(){
         assertErrors(compile("/i18n/MissingMessageAnnotationBundle.java"),
-            "i18n/MissingMessageAnnotationBundle.java:13: jlibs.core.util.i18n.Message annotation is missing on this method\n" +
+            "i18n/MissingMessageAnnotationBundle.java:",
+            ": jlibs.core.util.i18n.Message annotation is missing on this method\n" +
                     "    public String lastSucussfullLogin(Date date);\n" +
                     "                  ^"
         );
@@ -108,7 +109,8 @@ public class ResourceBundleTest{
     @Test(description="all method arguments must be used in message")
     public void missingArgument(){
         assertErrors(compile("/i18n/MissingArgumentBundle.java"),
-            "/i18n/MissingArgumentBundle.java:13: {1} is missing in message\n" +
+            "/i18n/MissingArgumentBundle.java:",
+            ": {1} is missing in message\n" +
                     "    @Message(\"SQL Execution completed in {0} seconds with {2} errors and {2} warnings\")\n" +
                     "    ^"
         );
