@@ -28,10 +28,7 @@ import jlibs.jdbc.annotations.Table;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,39 +45,54 @@ class ConnectionInfo{
         this.failOnMissingColumns = failOnMissingColumns;
     }
 
-    public void validate(Columns columns) throws SQLException{
-        ResultSet rs = con.getMetaData().getTables(null, null, columns.tableName, null);
-        if(!rs.next())
-            throw new AnnotationError(columns.tableClass, Table.class, "name", columns.tableName+" table doesn't exist in database");
-        rs.close();
-
-        List<String> columnNames = new ArrayList<String>();
-        rs = con.getMetaData().getColumns(null, null, columns.tableName, null);
-        while(rs.next())
-            columnNames.add(rs.getString(4));
-
-        for(ColumnProperty column: columns){
-            columnNames.remove(column.columnName());
-            rs = con.getMetaData().getColumns(null, null, columns.tableName, column.columnName());
-            if(!rs.next())
-                throw new AnnotationError(column.element, Column.class, "name", column.columnName()+" column doesn't exist in "+columns.tableName+" table");
-            int type = rs.getInt(5);
-            SQLType sqlType = SQLType.valueOf(type);
-            if(sqlType==null)
-                throw new NotImplementedException("SQLType is not defined for "+type);
-            if(!JavaType.isCompatible(column.javaType(), sqlType)){
-                Class suggested = JavaType.valueOf(sqlType).clazz;
-                throw new AnnotationError(column.element, Column.class, "name", column.columnName()+" has incompatible java type. "+suggested.getName()+" is suggested");
-            }
-            rs.close();
+    private String identifier(String identifier) throws SQLException{
+        DatabaseMetaData metadata = con.getMetaData();
+        if(!metadata.supportsMixedCaseIdentifiers()){
+            if(metadata.storesUpperCaseIdentifiers())
+                return identifier.toUpperCase();
+            else if(metadata.storesLowerCaseIdentifiers())
+                return identifier.toLowerCase();
         }
+        return identifier;
+    }
 
-        if(columnNames.size()>0){
-            AnnotationError error = new AnnotationError(columns.tableClass, "column properties are missing for columns " + StringUtil.join(columnNames.iterator(), ", "));
-            if(failOnMissingColumns)
-                throw error;
-            else
-                error.warn();
+    public void validate(Columns columns) throws SQLException{
+        try{
+            ResultSet rs = con.getMetaData().getTables(null, null, identifier(columns.tableName), null);
+            if(!rs.next())
+                throw new AnnotationError(columns.tableClass, Table.class, "name", columns.tableName+" table doesn't exist in database");
+            rs.close();
+
+            List<String> columnNames = new ArrayList<String>();
+            rs = con.getMetaData().getColumns(null, null, columns.tableName, null);
+            while(rs.next())
+                columnNames.add(rs.getString(4));
+
+            for(ColumnProperty column: columns){
+                columnNames.remove(column.columnName());
+                rs = con.getMetaData().getColumns(null, null, identifier(columns.tableName), identifier(column.columnName()));
+                if(!rs.next())
+                    throw new AnnotationError(column.element, Column.class, "name", column.columnName()+" column doesn't exist in "+columns.tableName+" table");
+                int type = rs.getInt(5);
+                SQLType sqlType = SQLType.valueOf(type);
+                if(sqlType==null)
+                    throw new NotImplementedException("SQLType is not defined for "+type);
+                if(!JavaType.isCompatible(column.javaType(), sqlType)){
+                    Class suggested = JavaType.valueOf(sqlType).clazz;
+                    throw new AnnotationError(column.element, Column.class, "name", column.columnName()+" has incompatible java type. "+suggested.getName()+" is suggested");
+                }
+                rs.close();
+            }
+
+            if(columnNames.size()>0){
+                AnnotationError error = new AnnotationError(columns.tableClass, "column properties are missing for columns " + StringUtil.join(columnNames.iterator(), ", "));
+                if(failOnMissingColumns)
+                    throw error;
+                else
+                    error.warn();
+            }
+        }finally{
+            con.close();
         }
     }
 
