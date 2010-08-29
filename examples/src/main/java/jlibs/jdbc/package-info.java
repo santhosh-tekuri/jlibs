@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-@Database(driver=com.mysql.jdbc.Driver.class, url="jdbc:mysql://localhost/test")
+@Database(driver=org.hsqldb.jdbc.JDBCDriver.class, url="jdbc:hsqldb:file:examples/db/demo;shutdown=true")
 package jlibs.jdbc;
 
 import jlibs.jdbc.annotations.Database;

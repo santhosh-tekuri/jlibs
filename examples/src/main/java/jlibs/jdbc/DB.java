@@ -30,7 +30,7 @@ public class DB{
 
     static{
         DATA_SOURCE = new BasicDataSource();
- 	    DATA_SOURCE.setUrl("jdbc:mysql://localhost/test");
+ 	    DATA_SOURCE.setUrl("jdbc:hsqldb:file:examples/db/demo");
         EMPLOYEES = (EmployeeDAO)DAO.create(Employee.class, DATA_SOURCE);
     }
 
@@ -85,10 +85,11 @@ public class DB{
 
         emp.setAge(10);
         EMPLOYEES.upsert(emp);
-        assert EMPLOYEES.first("where id=?", 1).getAge()==10;
-        emp.id = 4;
+        assert EMPLOYEES.first("where id=?", 0).getAge()==10;
+        emp.id = -1;
+        emp.setLastName("KUMAR");
         EMPLOYEES.upsert(emp);
-        assert EMPLOYEES.first("where id=?", 4)!=null;
+        assert EMPLOYEES.first("where last_name=?", "KUMAR")!=null;
         assert EMPLOYEES.all().size()==2;
 
 
