@@ -53,8 +53,13 @@ import static javax.xml.stream.XMLStreamConstants.*;
  */
 public class STAXXMLReader extends AbstractXMLReader{
     private XMLInputFactory factory;
+
     public STAXXMLReader(XMLInputFactory factory){
         this.factory = factory;
+    }
+
+    public STAXXMLReader(){
+        this(XMLInputFactory.newInstance());
     }
 
     @Override
