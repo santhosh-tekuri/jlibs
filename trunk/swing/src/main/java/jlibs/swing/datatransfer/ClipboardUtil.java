@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class ClipboardUtil{
     /** returns the system clipboard */
-    private static Clipboard clipboard(){
+    public static Clipboard clipboard(){
         return Toolkit.getDefaultToolkit().getSystemClipboard();
     }
 
