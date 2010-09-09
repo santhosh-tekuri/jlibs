@@ -15,7 +15,6 @@
 
 package jlibs.core.util.i18n;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -26,11 +25,15 @@ import java.lang.annotation.Target;
 @Target({})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Entry{
+    /** translated to comment in properties file */
     String value() default "";
 
+    /** key of the property */
     String lhs() default "";
+    
     String hintName() default "";
     Hint hint() default Hint.NONE;
 
+    /** value of the property */
     String rhs() default "";
 }
