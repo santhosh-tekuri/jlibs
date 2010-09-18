@@ -34,6 +34,7 @@
         <module>jdbc</module> 
         <module>xml</module>
         <module>xmldog</module>
+        <module>nblr</module>
         <module>swing</module>
         <module>examples</module>
     </modules> 
