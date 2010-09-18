@@ -240,6 +240,15 @@ public class StringUtil{
 
     /*-------------------------------------------------[ Literal ]---------------------------------------------------*/
 
+    public static String toLiteral(char ch, boolean useRaw){
+        if(ch=='\'')
+            return "\\'";
+        else if(ch=='"')
+            return "\"";
+        else
+            return StringUtil.toLiteral(String.valueOf(ch), useRaw);
+    }
+    
     public static String toLiteral(CharSequence str, boolean useRaw){
         StringBuffer buf = new StringBuffer(str.length()+25);
         for(int i=0,len=str.length(); i<len; i++){
