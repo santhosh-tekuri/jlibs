@@ -26,6 +26,7 @@ public interface NBParser{
     public void consume(char ch) throws ParseException;
     public void eof() throws ParseException;
 
+    public int getState();
     public ArrayDeque<Integer> getRuleStack();
     public ArrayDeque<Integer> getStateStack();
 }
