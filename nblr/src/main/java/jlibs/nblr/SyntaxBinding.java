@@ -23,6 +23,7 @@ import jlibs.nblr.matchers.*;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
+import jlibs.xml.sax.binding.*;
 import org.xml.sax.Attributes;
 
 import javax.xml.namespace.QName;
