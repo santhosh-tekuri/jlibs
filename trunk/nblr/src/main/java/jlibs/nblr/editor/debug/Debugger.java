@@ -30,6 +30,8 @@ import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.tools.JavaCompiler;
@@ -75,6 +77,15 @@ public class Debugger extends JPanel implements Observer{
         add(new JScrollPane(input), BorderLayout.CENTER);
 
         ruleStackList.setFont(Util.FIXED_WIDTH_FONT);
+        ruleStackList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent lse){
+                Rule rule = (Rule)ruleStackList.getSelectedValue();
+                RuleScene scene = Debugger.this.scene;
+                if(rule!=null && scene.getRule()!=rule)
+                    scene.setRule(scene.getSyntax(), rule);
+            }
+        });
         add(new JScrollPane(ruleStackList), BorderLayout.EAST);
 
         message.setFont(Util.FIXED_WIDTH_FONT);
@@ -273,14 +284,37 @@ public class Debugger extends JPanel implements Observer{
 
     @Override
     public void update(Observable o, Object rule){
+        if(rule==null)
+            return;
+        int ruleIndex = -1;
         ListModel model = ruleStackList.getModel();
-        for(int i= model.getSize()-1; i>=0; i--){
+        for(int i=model.getSize()-1; i>=0; i--){
             if(model.getElementAt(i)==rule){
-                ruleStackList.setSelectedIndex(i);
-                return;
+                ruleIndex = i;
+                break;
             }
         }
-        ruleStackList.clearSelection();
+        if(ruleIndex==-1)
+            ruleStackList.clearSelection();
+        else{
+            ruleStackList.setSelectedIndex(ruleIndex);
+            ArrayList<Integer> states = new ArrayList<Integer>();
+            states.add(0, parser.getState());
+            for(int state: parser.getStateStack())
+                states.add(0, state);
+            int state = states.get(ruleIndex);
+            Node node = ((Rule)rule).nodes().get(state);
+            if(ruleIndex==model.getSize()-1)
+                scene.executing(node);
+            else{
+                for(Edge edge: node.incoming()){
+                    if(edge.rule==model.getElementAt(ruleIndex+1)){
+                        scene.executing(edge);
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
