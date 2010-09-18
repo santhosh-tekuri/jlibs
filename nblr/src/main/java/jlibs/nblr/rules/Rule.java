@@ -31,6 +31,13 @@ public class Rule implements SAXProducer{
     public String name;
     public Node node;
 
+    public ArrayList<Node> nodes(){
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        ArrayList<Edge> edges = new ArrayList<Edge>();
+        computeIDS(nodes, edges, node);
+        return nodes;
+    }
+
     public void computeIDS(){
         ArrayList<Node> nodes = new ArrayList<Node>();
         ArrayList<Edge> edges = new ArrayList<Edge>();
