@@ -72,6 +72,7 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
                         c = ModelUtil.getSuper(c);
                     }
 
+                    binding.handleStar();
                     binding.initID(0);
                     
                     Printer pw = null;
@@ -161,7 +162,12 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
         pw.emptyLine(true);
 
         pw.print("private void init()");
-        generateInitMethod(binding, pw);
+        if(binding.registry.size()>0)
+            generateInitMethod(binding, pw);
+        else{
+            pw.println("{}");
+            pw.emptyLine(true);
+        }
 
         BINDING_START.printMethod(pw, binding);
         BINDING_TEXT.printMethod(pw, binding);

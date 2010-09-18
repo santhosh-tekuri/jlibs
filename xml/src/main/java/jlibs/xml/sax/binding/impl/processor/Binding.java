@@ -68,6 +68,19 @@ class Binding{
         return bindingRelation;
     }
 
+    public void handleStar(){
+        BindingRelation startBindingRelation = registry.get(Registry.ANY);
+        if(startBindingRelation!=null){
+            for(BindingRelation bindingRelation: registry.values()){
+                // what about binding???
+                if(bindingRelation.relation.startedMethod==null)
+                    bindingRelation.relation.startedMethod = startBindingRelation.relation.startedMethod;
+                if(bindingRelation.relation.finishedMethod==null)
+                    bindingRelation.relation.finishedMethod = startBindingRelation.relation.finishedMethod;
+            }
+        }
+    }
+
     public void initID(int id){
         initID(id, idMap, new Stack<QName>());
     }
@@ -85,6 +98,9 @@ class Binding{
     }
 
     static QName toQName(Element pos1, AnnotationMirror pos2, String token){
+        if(token.equals(Registry.STAR))
+            return Registry.ANY;
+        
         Properties nsContext = Namespaces.get(pos1);
 
         String prefix, localName;
