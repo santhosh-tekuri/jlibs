@@ -106,7 +106,13 @@ public class JavaCodeGenerator extends CodeGenerator{
                     PLUS,
                     "return stateStack;",
                     MINUS,
-                "}"
+                "}",
+                "",
+                "public int getState(){",
+                    PLUS,
+                    "return state;",
+                    MINUS,
+                 "}"
             );
         }
         printer.printlns(
