@@ -131,9 +131,9 @@
 
     <repositories>
         <repository>
-            <id>netbeans</id>
-            <name>Repository for hosting NetBeans API artifacts</name>
-            <url>http://deadlock.netbeans.org/maven2/</url>
+            <id>Jlibs</id>
+            <name>JLibs Repository</name>
+            <url>http://dl.dropbox.com/u/326301/repository</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
