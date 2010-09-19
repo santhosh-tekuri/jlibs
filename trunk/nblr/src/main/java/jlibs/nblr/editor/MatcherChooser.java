@@ -30,6 +30,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -97,7 +98,8 @@ public class MatcherChooser extends JDialog{
         centerPanel.add(newMatcherPanel, BorderLayout.SOUTH);
         
         JPanel buttons = new JPanel(new GridLayout(1, 0));
-        buttons.add(new JButton(okAction));
+        JButton okButton;
+        buttons.add(okButton=new JButton(okAction));
         buttons.add(new JButton(cancelAction));
 
         JPanel southPanel = new JPanel(new BorderLayout());
@@ -108,6 +110,9 @@ public class MatcherChooser extends JDialog{
         contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contents.add(centerPanel);
         getContentPane().add(southPanel, BorderLayout.SOUTH);
+
+        getRootPane().registerKeyboardAction(cancelAction, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JRootPane.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().setDefaultButton(okButton);
 
         pack();
         setLocationRelativeTo(null);
