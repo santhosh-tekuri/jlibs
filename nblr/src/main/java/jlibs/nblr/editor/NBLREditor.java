@@ -25,6 +25,7 @@ import jlibs.nblr.rules.Rule;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.sax.binding.BindingHandler;
 import org.netbeans.api.visual.action.EditProvider;
+import org.netbeans.api.visual.action.TwoStateHoverProvider;
 import org.netbeans.api.visual.widget.Widget;
 import org.xml.sax.InputSource;
 
@@ -50,6 +51,7 @@ public class NBLREditor extends JFrame{
     private Syntax syntax;
     private RuleScene scene;
     private JComboBox combo;
+    private JLabel message = new JLabel();
 
     public NBLREditor(Syntax syntax){
         super("NBLR Editor");
@@ -65,7 +67,21 @@ public class NBLREditor extends JFrame{
         setJMenuBar(menubar);
 
         combo = createRulesCombo();
-        scene = new RuleScene(null, new EditProvider(){
+        scene = new RuleScene(new TwoStateHoverProvider() {
+            @Override
+            public void unsetHovering(Widget widget){
+                message.setText("");
+            }
+
+            @Override
+            public void setHovering(Widget widget){
+                String msg = "";
+                Object model = Util.model(widget);
+                if(model instanceof Node)
+                    msg = ((Node)model).paths().toString();
+                message.setText(msg);
+            }
+        }, new EditProvider(){
             @Override
             public void edit(Widget widget){
                 Edge edge = Util.edge(widget);
@@ -95,7 +111,12 @@ public class NBLREditor extends JFrame{
         topPanel.add(Util.toolbar(upAction, newRuleAction), BorderLayout.EAST);
         upAction.setEnabled(false);
 
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(scene.createView()), new Debugger(scene));
+        message.setFont(Util.FIXED_WIDTH_FONT);
+        JPanel scenePanel = new JPanel(new BorderLayout());
+        scenePanel.add(new JScrollPane(scene.createView()), BorderLayout.CENTER);
+        scenePanel.add(message, BorderLayout.SOUTH);
+
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scenePanel, new Debugger(scene));
         split.setBorder(null);
         split.addAncestorListener(new AncestorListener(){
             public void ancestorAdded(AncestorEvent event){
