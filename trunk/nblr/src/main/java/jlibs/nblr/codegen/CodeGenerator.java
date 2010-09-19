@@ -25,7 +25,10 @@ import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -200,30 +203,6 @@ public abstract class CodeGenerator{
 
         public void add(ArrayDeque<Object> stack){
             matches.add(new Match(stack));
-        }
-
-        public Set<Node> nextNodes(Rule rule, List<Node> visited){
-            Set<Node> nextNodes = new LinkedHashSet<Node>();
-            for(Match match: matches){
-                if(match.rulesPath.length==0){
-                    if(match.matcher!=null){
-                        Node lastNode = match.nodesPath[match.nodesPath.length-1];
-                        if(rule.contains(lastNode) && !visited.contains(lastNode))
-                            nextNodes.add(lastNode);
-                    }
-                }else{
-                    for(Object obj: match.path){
-                        if(obj instanceof Edge){
-                            Edge edge = (Edge)obj;
-                            if(edge.rule!=null){
-                                if(rule.contains(edge.target) && !visited.contains(edge.target))
-                                    nextNodes.add(edge.target);
-                            }
-                        }
-                    }
-                }
-            }
-            return nextNodes;
         }
 
         public void printCase(int fromID){
