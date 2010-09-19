@@ -21,7 +21,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,7 +65,7 @@ public class Rule implements SAXProducer{
     }
 
     public Set<Node> states(){
-        Set<Node> states = new HashSet<Node>();
+        Set<Node> states = new LinkedHashSet<Node>();
         for(Node node: nodes()){
             if(node==this.node)
                 states.add(node);
