@@ -23,6 +23,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -57,12 +58,16 @@ public class RuleChooser extends JDialog implements ListSelectionListener{
         });
         
         JPanel buttons = new JPanel(new GridLayout(1, 0));
-        buttons.add(new JButton(okAction));
+        JButton okButton;
+        buttons.add(okButton=new JButton(okAction));
         buttons.add(new JButton(cancelAction));
 
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(buttons, BorderLayout.EAST);
         getContentPane().add(southPanel, BorderLayout.SOUTH);
+
+        getRootPane().registerKeyboardAction(cancelAction, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JRootPane.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().setDefaultButton(okButton);
 
         pack();
         setLocationRelativeTo(null);
