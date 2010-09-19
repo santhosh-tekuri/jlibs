@@ -41,6 +41,7 @@ import org.netbeans.api.visual.widget.LabelWidget;
 import org.netbeans.api.visual.widget.LayerWidget;
 import org.netbeans.api.visual.widget.Widget;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.Observable;
 
@@ -222,7 +223,13 @@ public class RuleScene extends GraphScene<Node, Edge>{
             if(widget!=null){
                 executionWidget = widget;
                 ((NBLRWidget)executionWidget).executing(true);
-                getView().scrollRectToVisible(Util.bounds(widget));
+                final Rectangle bounds = Util.bounds(widget);
+                SwingUtilities.invokeLater(new Runnable(){
+                    @Override
+                    public void run() {
+                        getView().scrollRectToVisible(bounds);
+                    }
+                });
             }
             validate();
         }
