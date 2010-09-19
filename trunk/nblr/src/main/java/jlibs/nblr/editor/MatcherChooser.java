@@ -19,6 +19,7 @@ import jlibs.core.lang.ImpossibleException;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
+import jlibs.nblr.matchers.Not;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -181,7 +182,11 @@ public class MatcherChooser extends JDialog{
             int row = chooser.table.getSelectedRow();
             if(row==-1){
                 String text = chooser.matcherSyntax.getText().trim();
-                return new Any(text.substring(1, text.length()-1));
+                text = text.substring(1, text.length() - 1);
+                if(text.startsWith("^"))
+                    return new Not(new Any(text.substring(1)));
+                else
+                    return new Any(text);
             }else
                 return chooser.getMatcher(row);
         }else
