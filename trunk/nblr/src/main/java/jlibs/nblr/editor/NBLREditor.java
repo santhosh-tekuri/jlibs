@@ -148,8 +148,10 @@ public class NBLREditor extends JFrame{
     private void showSyntax(Syntax syntax){
         this.syntax = syntax;
         combo.setModel(new DefaultComboBoxModel(syntax.rules.values().toArray()));
+        Rule rule = null;
         if(syntax.rules.size()>0)
-            scene.setRule(syntax, syntax.rules.values().iterator().next());
+            rule = syntax.rules.values().iterator().next();
+        scene.setRule(syntax, rule);
     }
 
     /*-------------------------------------------------[ Actions ]---------------------------------------------------*/
@@ -280,12 +282,17 @@ public class NBLREditor extends JFrame{
         Matcher Q               = syntax.add("Q",              ch('\''));
         Matcher DQ              = syntax.add("DQ",             ch('"'));
         Matcher DIGIT           = syntax.add("DIGIT",          range("0-9"));
+        Matcher HEX_DIGIT       = syntax.add("HEX_DIGIT",      or(DIGIT, range("a-f"), range("A-F")));
         Matcher WS              = syntax.add("WS",             any(" \t\n\r"));
         Matcher ENCODING_START  = syntax.add("ENCODING_START", or(range("A-Z"), range("a-z")));
         Matcher ENCODING_PART   = syntax.add("ENCODING_PART",  or(ENCODING_START, DIGIT, any("._-")));
         Matcher CHAR            = syntax.add("CHAR",           or(any("\t\n\r"), range(" -\uD7FF"), range("\uE000-\uFFFD")/*, range("\u10000-\u10FFFF")*/));
         Matcher DASH            = syntax.add("DASH",           ch('-'));
         Matcher NDASH           = syntax.add("NDASH",          minus(CHAR, ch('-')));
+        Matcher NAME_START      = syntax.add("NAME_START",     or(ch(':'), range("A-Z"), ch('_'), range("a-z"), range("\u00C0-\u00D6"), range("\u00D8-\u00F6"), range("\u00F8-\u02FF"), range("\u0370-\u037D"), range("\u037F-\u1FFF"), range("\u200C-\u200D"), range("\u2070-\u218F"), range("\u2C00-\u2FEF"), range("\u3001-\uD7FF"), range("\uF900-\uFDCF"), range("\uFDF0-\uFFFD")/*, range("\u10000-\uEFFFF")*/));
+        Matcher NAME_PART       = syntax.add("NAME_PART",      or(NAME_START, ch('-'), ch('.'), DIGIT,  ch('\u00B7'), range("\u0300-\u036F"), range("\u203F-\u2040")));
+        Matcher NCNAME_START    = syntax.add("NCNAME_START",   minus(NAME_START, ch(':')));
+        Matcher NCNAME_PART     = syntax.add("NCNAME_PART",    minus(NAME_PART, ch(':')));
 
 //        Rule rule = new Rule();
 //        rule.node = new Node();
