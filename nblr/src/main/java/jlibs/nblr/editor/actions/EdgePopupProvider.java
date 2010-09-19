@@ -51,6 +51,8 @@ public class EdgePopupProvider implements PopupMenuProvider{
         popup.add(setMatcherAction);
         popup.add(setRuleAction);
         popup.add(clearAction);
+        popup.addSeparator();
+        popup.add(deleteEdgeAction);
         return popup;
     }
 
@@ -118,6 +120,28 @@ public class EdgePopupProvider implements PopupMenuProvider{
             newNode.addEdgeFrom(source);
             edge.setSource(newNode);
             scene.refresh();
+        }
+    };
+
+    private Action deleteEdgeAction = new AbstractAction("Delete"){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            edge.setSource(null);
+            edge.setTarget(null);
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            if(edge.loop())
+                return true;
+            else{
+                for(Edge e: edge.target.incoming()){
+                    if(e!=edge && !e.loop())
+                        return true;
+                }
+            }
+            return false;
         }
     };
 }
