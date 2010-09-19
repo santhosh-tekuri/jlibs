@@ -21,7 +21,9 @@ import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
@@ -60,6 +62,23 @@ public class Rule implements SAXProducer{
         ArrayList<Edge> edges = new ArrayList<Edge>();
         computeIDS(nodes, edges, this.node);
         return nodes.contains(node);
+    }
+
+    public Set<Node> states(){
+        Set<Node> states = new HashSet<Node>();
+        for(Node node: nodes()){
+            if(node==this.node)
+                states.add(node);
+            else{
+                for(Edge edge: node.incoming()){
+                    if(edge.matcher!=null || edge.rule!=null){
+                        states.add(node);
+                        break;
+                    }
+                }
+            }
+        }
+        return states;
     }
 
     @Override
