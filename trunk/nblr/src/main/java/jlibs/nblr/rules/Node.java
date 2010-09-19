@@ -21,6 +21,7 @@ import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +57,37 @@ public class Node implements SAXProducer{
         return outgoing.toArray(new Edge[outgoing.size()]);
     }
 
+    /*-------------------------------------------------[ Paths ]---------------------------------------------------*/
+
+    public Paths paths(){
+        Paths paths = new Paths();
+        travel(new ArrayDeque<Object>(), paths);
+        return paths;
+    }
+    
+    private void travel(ArrayDeque<Object> stack, Paths paths){
+        if(stack.contains(this))
+            throw new IllegalStateException("infinite loop detected!!!");
+        else{
+            stack.push(this);
+            if(outgoing.size()>0){
+                for(Edge edge: outgoing()){
+                    stack.push(edge);
+                    if(edge.matcher!=null){
+                        stack.push(edge.target);
+                        paths.add(new Path(stack));
+                        stack.pop();
+                    }else if(edge.rule!=null)
+                        edge.rule.node.travel(stack, paths);
+                    else
+                        edge.target.travel(stack, paths);
+                    stack.pop();
+                }
+            }else
+                paths.add(new Path(stack));
+            stack.pop();
+        }
+    }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
 
