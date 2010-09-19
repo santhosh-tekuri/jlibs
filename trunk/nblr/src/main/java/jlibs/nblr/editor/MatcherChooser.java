@@ -15,13 +15,18 @@
 
 package jlibs.nblr.editor;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -30,24 +35,54 @@ import java.awt.event.MouseEvent;
 /**
  * @author Santhosh Kumar T
  */
-public class MatcherChooser extends JDialog implements ListSelectionListener{
+public class MatcherChooser extends JDialog{
     private Syntax syntax;
     private JTable table;
+    private JTextField matcherSyntax = new JTextField();
 
     public MatcherChooser(Window owner, Syntax syntax){
         super(owner, "Matcher Choser");
         setModal(true);
         this.syntax = syntax;
 
-        JPanel contents = (JPanel)getContentPane();
-        contents.setLayout(new BorderLayout(0, 10));
-        contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel newMatcherPanel = new JPanel(new BorderLayout());
+        newMatcherPanel.add(new JLabel("New Matcher"), BorderLayout.WEST);
+        matcherSyntax.setFont(Util.FIXED_WIDTH_FONT);
+        newMatcherPanel.add(matcherSyntax, BorderLayout.CENTER);
+        matcherSyntax.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent de){
+                textChanged(de);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent de){
+                textChanged(de);
+            }
+
+            private void textChanged(DocumentEvent de){
+                try{
+                    if(de.getDocument().getText(0, de.getDocument().getLength()).trim().length()>0)
+                        table.clearSelection();
+                    updateActions();
+                }catch(BadLocationException ex){
+                    throw new ImpossibleException(ex);
+                }
+            }
+            @Override
+            public void changedUpdate(DocumentEvent de){}
+        });
 
         table = new JTable(new MatcherTableModel());
         table.setFont(Util.FIXED_WIDTH_FONT);
-        contents.add(new JScrollPane(table));
-        table.getSelectionModel().addListSelectionListener(this);
-        valueChanged(null);
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent lse){
+                if(table.getSelectedRowCount()>0)
+                    matcherSyntax.setText("");
+                updateActions();
+            }
+        });
         table.addMouseListener(new MouseAdapter(){
             @Override
             public void mouseClicked(MouseEvent me){
@@ -55,6 +90,10 @@ public class MatcherChooser extends JDialog implements ListSelectionListener{
                     okAction.actionPerformed(null);
             }
         });
+
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.add(new JScrollPane(table), BorderLayout.CENTER);
+        centerPanel.add(newMatcherPanel, BorderLayout.SOUTH);
         
         JPanel buttons = new JPanel(new GridLayout(1, 0));
         buttons.add(new JButton(okAction));
@@ -62,15 +101,20 @@ public class MatcherChooser extends JDialog implements ListSelectionListener{
 
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(buttons, BorderLayout.EAST);
+
+        JPanel contents = (JPanel)getContentPane();
+        contents.setLayout(new BorderLayout(0, 10));
+        contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        contents.add(centerPanel);
         getContentPane().add(southPanel, BorderLayout.SOUTH);
 
         pack();
         setLocationRelativeTo(null);
+        updateActions();
     }
 
-    @Override
-    public void valueChanged(ListSelectionEvent lse){
-        okAction.setEnabled(table.getSelectedRowCount()>0);
+    private void updateActions(){
+        okAction.setEnabled(table.getSelectedRowCount()>0 || matcherSyntax.getText().trim().length()>0);
     }
 
     boolean ok = false;
@@ -133,9 +177,14 @@ public class MatcherChooser extends JDialog implements ListSelectionListener{
     public static Matcher prompt(Window owner, Syntax syntax){
         MatcherChooser chooser = new MatcherChooser(owner, syntax);
         chooser.setVisible(true);
-        if(chooser.ok)
-            return chooser.getMatcher(chooser.table.getSelectedRow());
-        else
+        if(chooser.ok){
+            int row = chooser.table.getSelectedRow();
+            if(row==-1){
+                String text = chooser.matcherSyntax.getText().trim();
+                return new Any(text.substring(1, text.length()-1));
+            }else
+                return chooser.getMatcher(row);
+        }else
             return null;
     }
 }
