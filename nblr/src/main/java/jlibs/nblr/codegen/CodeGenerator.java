@@ -18,17 +18,8 @@ package jlibs.nblr.codegen;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.rules.Edge;
-import jlibs.nblr.rules.Node;
-import jlibs.nblr.rules.Rule;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import jlibs.nblr.rules.*;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -70,7 +61,9 @@ public abstract class CodeGenerator{
                 addRuleID(rule.name, id++);
                 rule.computeIDS();
                 startRuleMethod(rule);
-                travel(rule);
+                for(Node state: rule.states())
+                    print(state.paths(), state.id);
+//                travel(rule);
                 finishRuleMethod(rule);
                 printer.emptyLine(true);
             }
@@ -111,175 +104,87 @@ public abstract class CodeGenerator{
         finishClassDeclaration();
     }
 
-    class Match{
-        Object[] path;
-        Node[] nodesPath;
-        Rule[] rulesPath;
-        Matcher matcher;
+    public void print(Paths paths, int caseID){
+        startCase(caseID);
 
-        Match(ArrayDeque<Object> stack){
-            ArrayList<Object> list = new ArrayList<Object>(stack);
-            Collections.reverse(list);
-            path = list.toArray();
-
-            ArrayList<Node> nodes = new ArrayList<Node>();
-            ArrayList<Rule> rules = new ArrayList<Rule>();
-            for(Object obj: list){
-                if(obj instanceof Node)
-                    nodes.add((Node)obj);
-                else if(obj instanceof Edge){
-                    Edge edge = (Edge)obj;
-                    if(edge.matcher!=null)
-                        matcher = edge.matcher;
-                    else if(edge.rule!=null)
-                        rules.add(edge.rule);
-                }
-            }
-            nodesPath = nodes.toArray(new Node[nodes.size()]);
-            rulesPath = rules.toArray(new Rule[rules.size()]);
-        }
-
-        public void printIF(String prefix){
-            String ifCondition = "";
-            if(matcher!=null){
-                if(matcher.name==null)
-                    ifCondition = "if(!eof && ("+matcher._javaCode()+"))";
-                else
-                    ifCondition = "if(!eof && "+matcher._javaCode()+")";
+        String prefix = "";
+        Path pathWithoutMatcher = null;
+        for(Path path: paths){
+            if(path.matcher()!=null){
+                printer.print(prefix);
+                print(path);
+                prefix = "else ";
             }else
-                prefix = prefix.trim();
+                pathWithoutMatcher = path;
 
-            if(prefix.length()+ifCondition.length()>0){
-                printer.printlns(
-                    prefix+ifCondition+"{",
-                        PLUS
-                );
-            }
-            printActions();
-
-            int nextID = -1;
-            if(matcher!=null)
-                nextID = nodesPath[nodesPath.length-1].id;
-            if(debuggable && matcher!=null)
-                printer.println("consumer.currentNode("+nodesPath[nodesPath.length-1].id+");");
-            printer.printlns("return "+ nextID +";");
-            if(prefix.length()+ifCondition.length()>0)
-                printer.printlns(MINUS);
         }
 
-        private void printActions(){
-            for(Object obj: path){
-                if(obj instanceof Node){
-                    Node pathNode = (Node)obj;
-                    if(debuggable){
-                        if(pathNode.action==BufferAction.INSTANCE){
-                            printer.println(pathNode.action.javaCode()+';');
-                            printer.println("consumer.hitNode("+pathNode.id+", null);");
-                        }else if(pathNode.action instanceof PublishAction){
-                            PublishAction publishAction = (PublishAction)pathNode.action;
-                            printer.println("consumer.hitNode("+pathNode.id+", data("+publishAction.begin+", "+publishAction.end+"));");
-                        }else
-                            printer.println("consumer.hitNode("+pathNode.id+", null);");
-                    }else if(pathNode.action!=null)
-                        printer.println(pathNode.action.javaCode()+';');
-                }else if(obj instanceof Edge){
-                    Edge edge = (Edge)obj;
-                    if(edge.rule!=null){
-                        if(debuggable)
-                            printer.println("consumer.currentRule(RULE_"+edge.rule.name+");");
-                        printer.printlns(
-                            "ruleStack.push(RULE_"+edge.rule.name+");",        
-                            "stateStack.push("+edge.target.id+");"
-                        );
-                    }else if(edge.matcher!=null)
-                        return;
-                }
-            }
-        }
-    }
-
-    class Matches{
-        private List<Match> matches = new ArrayList<Match>();
-
-        public void add(ArrayDeque<Object> stack){
-            matches.add(new Match(stack));
-        }
-
-        public void printCase(int fromID){
-            startCase(fromID);
-
-            Match matchWithoutMatcher = null;
-            String prefix = "";
-            for(Match match: matches){
-                if(match.matcher!=null){
-                    match.printIF(prefix);
-                    prefix = "}else ";
-                }else
-                    matchWithoutMatcher = match;
-            }
-            if(matchWithoutMatcher==null){
-                printer.printlns(
-                    "}else",
-                        PLUS,
-                        expected(),
-                        MINUS,
+        printer.print(prefix);
+        if(pathWithoutMatcher!=null){
+            print(pathWithoutMatcher);
+            printer.println();
+        }else{
+            printer.printlns(
+                "",
+                    PLUS,
+                    "expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");",
                     MINUS
-                );
-            }else{
-                matchWithoutMatcher.printIF(prefix);
-                if(prefix.length()>0)
-                    printer.printlns("}");
-                printer.printlns(MINUS);
-            }
+            );
         }
 
-        public String expected(){
-            StringBuilder buff = new StringBuilder();
-            for(Match match: matches){
-                if(buff.length()>0)
-                    buff.append(", ");
-                if(match.matcher==null)
-                    buff.append("\"EOF\"");
-                else{
-                    String str = match.matcher.name;
-                    if(str==null)
-                        str = StringUtil.toLiteral(match.matcher.toString(), false);
-                    buff.append('"').append(str).append('"');
-                }
-            }
-            return "expected(String.valueOf(ch), "+buff+");";
-        }
+        endCase();
     }
 
-    private void travel(Rule rule){
-        for(Node state: rule.states()){
-            Matches matches = new Matches();
-            travel(new ArrayList<Node>(), state, new ArrayDeque<Object>(), matches);
-            matches.printCase(state.id);
+    public void print(Path path){
+        Matcher matcher = path.matcher();
+        if(matcher!=null){
+            String condition = matcher._javaCode();
+            if(matcher.name==null)
+                condition = '('+condition+')';
+            condition = "!eof && "+condition;
+            printer.print("if("+condition+")");
         }
-    }
+        printer.printlns(
+            "{",
+                PLUS
+        );
 
-    private void travel(List<Node> visited, Node fromNode, ArrayDeque<Object> stack, Matches matches){
-        if(!visited.contains(fromNode)){
-            visited.add(fromNode);
-            stack.push(fromNode);
-            if(fromNode.outgoing.size()>0){
-                for(Edge edge: fromNode.outgoing()){
-                    stack.push(edge);
-                    if(edge.matcher!=null){
-                        stack.push(edge.target);
-                        matches.add(stack);
-                        stack.pop();
-                    }else if(edge.rule!=null)
-                        travel(visited, edge.rule.node, stack, matches);
+        // actions
+        for(Object obj: path){
+            if(obj instanceof Node){
+                Node node = (Node)obj;
+                if(node.action!=null){
+                    if(debuggable)
+                        printer.println("consumer.hitNode("+node.id+");");
                     else
-                        travel(visited, edge.target, stack, matches);
-                    stack.pop();
+                        printer.println(node.action.javaCode()+';');
                 }
-            }else
-                matches.add(stack);
-            stack.pop();
+            }else if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.rule!=null){
+                    if(debuggable)
+                        printer.println("consumer.currentRule(RULE_"+edge.rule.name+");");
+                    printer.printlns(
+                        "ruleStack.push(RULE_"+edge.rule.name+");",
+                        "stateStack.push("+edge.target.id+");"
+                    );
+                }else if(edge.matcher!=null)
+                    break;
+            }
         }
+
+        // returning
+        int nextID = ((Node)path.get(path.size()-1)).id;
+        if(debuggable && matcher!=null)
+            printer.println("consumer.currentNode("+nextID+");");
+        printer.printlns("return "+ (matcher==null ? -1 : nextID) +";");
+
+        printer.printlns(
+                MINUS
+        );
+        printer.print(
+            "}"
+        );
     }
 
     protected boolean debuggable;
