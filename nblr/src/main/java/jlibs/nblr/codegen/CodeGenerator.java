@@ -67,7 +67,7 @@ public abstract class CodeGenerator{
                 addRuleID(rule.name, id++);
                 rule.computeIDS();
                 startRuleMethod(rule);
-                travel(rule, new ArrayList<Node>(), Collections.singleton(rule.node));
+                travel(rule);
                 finishRuleMethod(rule);
                 printer.emptyLine(true);
             }
@@ -272,19 +272,11 @@ public abstract class CodeGenerator{
         }
     }
 
-    private void travel(Rule rule, List<Node> visited, Set<Node> fromNodes){
-        for(Node fromNode: fromNodes){
-            if(!visited.contains(fromNode)){
-                visited.add(fromNode);
-
-                Matches matches = new Matches();
-                travel(new ArrayList<Node>(), fromNode, new ArrayDeque<Object>(), matches);
-
-                matches.printCase(fromNode.id);
-//                printer.println("// "+System.identityHashCode(fromNode));
-                Set<Node> nextNodes = matches.nextNodes(rule, visited);
-                travel(rule, visited, nextNodes);
-            }
+    private void travel(Rule rule){
+        for(Node state: rule.states()){
+            Matches matches = new Matches();
+            travel(new ArrayList<Node>(), state, new ArrayDeque<Object>(), matches);
+            matches.printCase(state.id);
         }
     }
 
