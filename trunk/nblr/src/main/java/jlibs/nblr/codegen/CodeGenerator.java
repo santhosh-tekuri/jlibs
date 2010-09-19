@@ -288,6 +288,7 @@ public abstract class CodeGenerator{
     }
 
     protected abstract void startCase(int id);
+    protected abstract void endCase();
     protected abstract void addBreak();
     
     protected abstract void printTitleComment(String title);

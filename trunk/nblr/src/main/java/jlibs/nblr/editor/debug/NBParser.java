@@ -29,4 +29,7 @@ public interface NBParser{
     public int getState();
     public ArrayDeque<Integer> getRuleStack();
     public ArrayDeque<Integer> getStateStack();
+
+    public void buffer();
+    public String data(int begin, int end);
 }

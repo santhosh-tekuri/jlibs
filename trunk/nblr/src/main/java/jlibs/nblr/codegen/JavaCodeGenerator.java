@@ -156,6 +156,13 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
+    protected void endCase(){
+        printer.printlns(
+            MINUS
+        );
+    }
+
+    @Override
     protected void addBreak(){
         printer.println("break;");
     }
@@ -366,17 +373,18 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addBufferringSection(){
+        String modifier = debuggable ? "public" : "private";
         printer.printlns(
             "private final StringBuilder buffer = new StringBuilder();",
             "private final java.util.ArrayDeque<Integer> bufferStack = new java.util.ArrayDeque<Integer>();",
             "",
-            "private void buffer(){",
+            modifier+" void buffer(){",
                 PLUS,
                 "bufferStack.push(buffer.length());",
                 MINUS,
             "}",
             "",
-            "private String data(int begin, int end){",
+            modifier+" String data(int begin, int end){",
                 PLUS,
                 "String text = buffer.substring(begin+bufferStack.pop(), buffer.length()-end);",
                 "if(bufferStack.size()==0)",
