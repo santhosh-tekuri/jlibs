@@ -330,13 +330,15 @@ public class Debugger extends JPanel implements Observer{
         scene.setRule(scene.getSyntax(), rule);
     }
 
-    public void hitNode(int id, String data){
+    public void hitNode(int id){
 //        System.out.println("hitNode("+id+")");
         Node node = nodes.get(id);
-        if(node.action== BufferAction.INSTANCE)
+        if(node.action== BufferAction.INSTANCE){
             System.out.println("BUFFERRING");
-        else if(node.action instanceof PublishAction){
+            parser.buffer();
+        }else if(node.action instanceof PublishAction){
             PublishAction action = (PublishAction)node.action;
+            String data = parser.data(action.begin, action.end);
             System.out.println(action.name+"(\""+ StringUtil.toLiteral(data, false)+"\")");
         }else if(node.action instanceof EventAction){
             EventAction action = (EventAction)node.action;
