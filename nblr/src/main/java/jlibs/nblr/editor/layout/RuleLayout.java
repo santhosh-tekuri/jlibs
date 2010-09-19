@@ -40,9 +40,9 @@ import java.util.List;
 public class RuleLayout extends GraphLayout<Node, Edge>{
     private boolean animated;
     public static final int originX = 100;
-    public static final int originY = 100;
+    public static final int originY = 50;
     public static final int horizontalGap = 100;
-    public static final int verticalGap = 50;
+    public static final int verticalGap = 25;
 
     public RuleLayout(boolean animated){
         this.animated = animated;
@@ -111,21 +111,61 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
                 columns.set(col, Math.max(columns.get(col), width));
             }
         }
+
         for(int i=1; i<columns.size(); i++)
             columns.set(i, columns.get(i-1)+columns.get(i));
 
+        analyzeEdges(graph, columns.size());
+
+        int rowCount = coordinates.size();
+        int rows[] = new int[rowCount];
+        for(int row=0; row<rowCount; row++){
+            int top = 0;
+            for(Node node: coordinates.get(row)){
+                if(node!=null){
+                    top = Math.max(top, node.conLeftTop);
+                    top = Math.max(top, node.conRightTop);
+
+                    int loop = 0;
+                    for(Edge edge: node.outgoing){
+                        if(edge.loop())
+                            loop++;
+                    }
+                    top = Math.max(top, loop);
+                }
+            }
+            
+            int bottom = 0;
+            if(row>0){
+                for(Node node: coordinates.get(row-1)){
+                    if(node!=null){
+                        bottom = Math.max(bottom, node.conLeftBottom);
+                        bottom = Math.max(bottom, node.conRightBottom);
+                    }
+                }
+            }
+
+            int height = top+bottom;
+            rows[row] = 50*height;
+            if(row>0)
+                rows[row] += rows[row-1];
+            if(height==0)
+                rows[row] += originY;
+            else
+                rows[row] += verticalGap;
+        }
+
         for(Node node: graph.getNodes()){
             Widget widget = scene.findWidget(node);
-            Point location = new Point(columns.get(node.col), originY + node.row * verticalGap);
+            Point location = new Point(columns.get(node.col), rows[node.row]/*originY + node.row * verticalGap*/);
             if(animated)
                 scene.getSceneAnimator().animatePreferredLocation(widget, location);
             else
                 widget.setPreferredLocation(location);
         }
-        analyzeEdges(graph, columns);
     }
 
-    private void analyzeEdges(UniversalGraph<Node, Edge> graph, List<Integer> columns){
+    private void analyzeEdges(UniversalGraph<Node, Edge> graph, int colCount){
         for(Node node: graph.getNodes()){
             node.conLeft        = false;
             node.conRight       = false;
@@ -138,7 +178,6 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
         }
 
         int rowCount = coordinates.size();
-        int colCount = columns.size();
         ArrayList<Edge> edgesList = new ArrayList<Edge>(graph.getEdges());
         for(int row=0; row<rowCount; row++){
             for(int jump=0; jump<colCount-1; jump++){
