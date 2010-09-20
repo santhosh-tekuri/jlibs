@@ -18,8 +18,7 @@ package jlibs.core.annotation.processing;
 import jlibs.core.lang.model.ModelUtil;
 
 import javax.lang.model.element.TypeElement;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,6 +73,24 @@ public class Printer{
                 indent--;
             else
                 println(line);
+        }
+    }
+
+    public void printlns(InputStream is){
+        BufferedReader reader = null;
+        try{
+            reader = new BufferedReader(new InputStreamReader(is));
+            for(String line=reader.readLine(); line!=null; line=reader.readLine())
+                println(line);
+        }catch(IOException ex){
+            throw new RuntimeException(ex);
+        }finally{
+            if(reader!=null)
+                try{
+                    reader.close();
+                }catch(IOException ex){
+                    ex.printStackTrace();
+                }
         }
     }
 
