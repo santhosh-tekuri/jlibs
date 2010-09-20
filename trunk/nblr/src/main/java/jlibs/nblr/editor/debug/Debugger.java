@@ -22,7 +22,7 @@ import jlibs.core.lang.StringUtil;
 import jlibs.nblr.actions.BufferAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
-import jlibs.nblr.codegen.JavaCodeGenerator;
+import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
 import jlibs.nblr.editor.Util;
 import jlibs.nblr.rules.Edge;
@@ -113,6 +113,7 @@ public class Debugger extends JPanel implements Observer{
     private void start(){
         try{
             showMessage("");
+            clearGuardedBlock();
             
             File file = new File("temp/DebuggableNBParser.java").getAbsoluteFile();
             FileUtil.mkdirs(file.getParentFile());

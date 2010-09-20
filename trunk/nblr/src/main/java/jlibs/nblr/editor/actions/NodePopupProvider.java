@@ -60,12 +60,29 @@ public class NodePopupProvider implements PopupMenuProvider{
         popup.add(insertNodeMenu);
         popup.add(insertStringMenu);
         popup.add(actionMenu);
+        popup.add(lookAheadAction);
         popup.addSeparator();
         popup.add(new ChoiceAction("Delete", deleteSinkAction, deleteNodeWithEmptyOutgoingEdges, deleteNodeWithEmptyIncomingEdges));
 
         return popup;
     }
     
+    private Action lookAheadAction = new AbstractAction("Set LookAhead..."){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            String lookAhead = JOptionPane.showInputDialog(scene.getView(), "LookAhead", String.valueOf(node.lookAhead));
+            if(lookAhead!=null){
+                int la = Integer.parseInt(lookAhead);
+                if(la<1){
+                    JOptionPane.showMessageDialog(scene.getView(), "LookAhead must be greater than zero");
+                    return;
+                }
+                node.lookAhead = la;
+                scene.layout(node);
+            }
+        }
+    };
+
     private Action deleteSinkAction = new AbstractAction(){
         @Override
         public void actionPerformed(ActionEvent ae){

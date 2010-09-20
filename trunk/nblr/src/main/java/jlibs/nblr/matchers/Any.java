@@ -50,7 +50,7 @@ public final class Any extends Matcher{
     }
 
     @Override
-    public String javaCode(){
+    public String javaCode(String variable){
         if(chars==null)
             return "true";
 
@@ -59,7 +59,7 @@ public final class Any extends Matcher{
             if(buff.length()>0)
                 buff.append(" || ");
             
-            buff.append("ch=='");
+            buff.append(variable).append("=='");
             buff.append(StringUtil.toLiteral(ch, false));
             buff.append('\'');
         }

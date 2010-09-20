@@ -31,6 +31,7 @@ import java.util.List;
 public class Node implements SAXProducer{
     public int id;
     
+    public int lookAhead = 1;
     public Action action;
     
     public List<Edge> outgoing = new ArrayList<Edge>();
@@ -38,7 +39,15 @@ public class Node implements SAXProducer{
 
     @Override
     public String toString(){
-        return action==null ? "" : action.toString();
+        StringBuilder buff = new StringBuilder();
+        if(this.lookAhead >1)
+            buff.append("LA(").append(this.lookAhead).append(')');
+        if(action!=null){
+            if(buff.length()>0)
+                buff.append("; ");
+            buff.append(action);
+        }
+        return buff.toString();
     }
 
     public Edge addEdgeTo(Node target){
@@ -60,12 +69,12 @@ public class Node implements SAXProducer{
     /*-------------------------------------------------[ Paths ]---------------------------------------------------*/
 
     public Paths paths(){
-        Paths paths = new Paths();
-        travel(new ArrayDeque<Object>(), paths);
+        Paths paths = new Paths(0);
+        travel(new ArrayDeque<Object>(), paths, lookAhead);
         return paths;
     }
-    
-    private void travel(ArrayDeque<Object> stack, Paths paths){
+
+    private void travel(ArrayDeque<Object> stack, Paths paths, int charsToBeConsumed){
         if(stack.contains(this))
             throw new IllegalStateException("infinite loop detected!!!");
         else{
@@ -75,12 +84,17 @@ public class Node implements SAXProducer{
                     stack.push(edge);
                     if(edge.matcher!=null){
                         stack.push(edge.target);
-                        paths.add(new Path(stack));
+                        Path path = new Path(stack);
+                        paths.add(path);
+                        if(paths.charIndex<charsToBeConsumed-1){
+                            path.paths = new Paths(paths.charIndex+1);
+                            edge.target.travel(new ArrayDeque<Object>(), path.paths, charsToBeConsumed-1);
+                        }
                         stack.pop();
                     }else if(edge.rule!=null)
-                        edge.rule.node.travel(stack, paths);
+                        edge.rule.node.travel(stack, paths, charsToBeConsumed);
                     else
-                        edge.target.travel(stack, paths);
+                        edge.target.travel(stack, paths, charsToBeConsumed);
                     stack.pop();
                 }
             }else
@@ -94,6 +108,8 @@ public class Node implements SAXProducer{
     @Override
     public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
         xml.startElement("node");
+        if(lookAhead>1)
+            xml.addAttribute("look-ahead", String.valueOf(lookAhead));
         if(action!=null)
             xml.add(action);
         xml.endElement();

@@ -15,20 +15,28 @@
 
 package jlibs.nblr.rules;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Paths extends ArrayList<Path>{
+    public int charIndex;
+
+    public Paths(int charIndex){
+        this.charIndex = charIndex;
+    }
+
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(Path path: this){
-            if(buff.length()>0)
-                buff.append(" OR ");
-            buff.append(path);
-        }
+        toString(new ArrayDeque<Path>(), buff);
         return buff.toString();
+    }
+
+    void toString(ArrayDeque<Path> pathStack, StringBuilder buff){
+        for(Path path: this)
+            path.toString(pathStack, buff);
     }
 }

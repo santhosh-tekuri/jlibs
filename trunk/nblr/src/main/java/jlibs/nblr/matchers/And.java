@@ -38,12 +38,12 @@ public class And extends Matcher{
     }
 
     @Override
-    public String javaCode(){
+    public String javaCode(String variable){
         StringBuilder buff = new StringBuilder();
         for(Matcher operand: operands){
             if(buff.length()>0)
                 buff.append(" && ");
-            buff.append('(').append(operand._javaCode()).append(')');
+            buff.append('(').append(operand._javaCode(variable)).append(')');
         }
         return buff.toString();
     }

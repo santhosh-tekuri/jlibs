@@ -34,8 +34,8 @@ public final class Not extends Matcher{
     }
 
     @Override
-    public String javaCode(){
-        return "!("+delegate._javaCode()+")";
+    public String javaCode(String variable){
+        return "!("+delegate._javaCode(variable)+")";
     }
 
     @Override

@@ -16,7 +16,7 @@
 package jlibs.nblr;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.nblr.codegen.JavaCodeGenerator;
+import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Rule;
 import jlibs.xml.sax.SAXProducer;

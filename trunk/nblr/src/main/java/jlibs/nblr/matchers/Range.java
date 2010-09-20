@@ -36,13 +36,14 @@ public final class Range extends Matcher{
     }
 
     @Override
-    public String javaCode(){
-        StringBuilder buff = new StringBuilder("ch>='");
-        buff.append(StringUtil.toLiteral(from, false));
-        buff.append("' && ch<='");
-        buff.append(StringUtil.toLiteral(to, false));
-        buff.append('\'');
-        return buff.toString();
+    public String javaCode(String variable){
+        return String.format(
+            "%s>='%s' && %s<='%s'",
+            variable,
+            StringUtil.toLiteral(from, false),
+            variable,
+            StringUtil.toLiteral(to, false)
+        );
     }
 
     @Override
