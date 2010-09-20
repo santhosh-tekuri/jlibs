@@ -67,6 +67,8 @@ public class NBLREditor extends JFrame{
         setJMenuBar(menubar);
 
         combo = createRulesCombo();
+        combo.setPreferredSize(new Dimension(10, 5));
+        combo.setFont(Util.FIXED_WIDTH_FONT);
         scene = new RuleScene(new TwoStateHoverProvider() {
             @Override
             public void unsetHovering(Widget widget){
@@ -102,13 +104,12 @@ public class NBLREditor extends JFrame{
             }
         };
         
-        JPanel comboPanel = new JPanel(new BorderLayout());
-        comboPanel.add(new JLabel("Rules"), BorderLayout.WEST);
-        comboPanel.add(combo, BorderLayout.CENTER);
-
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(comboPanel, BorderLayout.CENTER);
-        topPanel.add(Util.toolbar(upAction, newRuleAction), BorderLayout.EAST);
+        JPanel topPanel = new JPanel(new BorderLayout(2, 0));
+        topPanel.add(new JLabel("Rules"), BorderLayout.WEST);
+        topPanel.add(combo, BorderLayout.CENTER);
+        JToolBar toolBar = Util.toolbar(upAction, newRuleAction);
+        toolBar.setBorder(BorderFactory.createEmptyBorder());
+        topPanel.add(toolBar, BorderLayout.EAST);
         upAction.setEnabled(false);
 
         message.setFont(Util.FIXED_WIDTH_FONT);
