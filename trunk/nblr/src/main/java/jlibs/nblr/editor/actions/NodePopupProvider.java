@@ -61,7 +61,7 @@ public class NodePopupProvider implements PopupMenuProvider{
         popup.add(insertStringMenu);
         popup.add(actionMenu);
         popup.addSeparator();
-        popup.add(new ChoiceAction("Delete", deleteSinkAction));
+        popup.add(new ChoiceAction("Delete", deleteSinkAction, deleteNodeWithEmptyOutgoingEdges, deleteNodeWithEmptyIncomingEdges));
 
         return popup;
     }
@@ -84,6 +84,82 @@ public class NodePopupProvider implements PopupMenuProvider{
             for(Edge edge: node.outgoing){
                 if(!edge.loop())
                     return false;
+            }
+            return true;
+        }
+    };
+    
+    private Action deleteNodeWithEmptyOutgoingEdges = new AbstractAction(){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            for(Edge incoming: node.incoming()){
+                if(!incoming.loop()){
+                    for(Edge outgoing: node.outgoing()){
+                        if(!outgoing.loop()){
+                            Edge newEdge = incoming.source.addEdgeTo(outgoing.target);
+                            newEdge.matcher = incoming.matcher;
+                            newEdge.rule = incoming.rule;
+                            incoming.setSource(null);
+                            incoming.setTarget(null);
+                        }
+                    }
+                }
+            }
+            for(Edge outgoing: node.outgoing()){
+                if(!outgoing.loop())
+                    outgoing.setTarget(null);
+            }
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            if(scene.getRule().node==node)
+                return false;
+            
+            for(Edge edge: node.outgoing){
+                if(!edge.loop()){
+                    if(edge.matcher!=null || edge.rule!=null)
+                        return false;
+                }
+            }
+            return true;
+        }
+    };
+    
+    private Action deleteNodeWithEmptyIncomingEdges = new AbstractAction(){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            for(Edge outgoing: node.outgoing()){
+                if(!outgoing.loop()){
+                    for(Edge incoming: node.incoming()){
+                        if(!incoming.loop()){
+                            Edge newEdge = outgoing.target.addEdgeFrom(incoming.source);
+                            newEdge.matcher = outgoing.matcher;
+                            newEdge.rule = outgoing.rule;
+                            outgoing.setSource(null);
+                            outgoing.setTarget(null);
+                        }
+                    }
+                }
+            }
+            for(Edge incoming: node.incoming()){
+                if(!incoming.loop())
+                    incoming.setSource(null);
+            }
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            if(scene.getRule().node==node)
+                return false;
+            
+            for(Edge edge: node.incoming){
+                if(!edge.loop()){
+                    if(edge.matcher!=null || edge.rule!=null)
+                        return false;
+                }
             }
             return true;
         }
