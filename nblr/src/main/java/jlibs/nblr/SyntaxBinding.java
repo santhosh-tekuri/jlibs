@@ -199,8 +199,11 @@ class RuleBinding{
 @Binding("node")
 class NodeBinding{
     @Binding.Start
-    public static Node onStart(){
-        return new Node();
+    public static Node onStart(@Attr("look-ahead") String lookAhead){
+        Node node = new Node();
+        if(lookAhead!=null)
+            node.lookAhead = Integer.parseInt(lookAhead);
+        return node;
     }
 
     @Binding.Start("buffer")

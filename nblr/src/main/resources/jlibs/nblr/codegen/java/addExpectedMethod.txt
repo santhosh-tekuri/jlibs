@@ -1,0 +1,11 @@
+private void expected(String found, String... matchers) throws java.text.ParseException{
+    if(eof)
+        found = "<EOF>";
+    StringBuilder buff = new StringBuilder();
+    for(String matcher: matchers){
+        if(buff.length()>0)
+            buff.append(" OR ");
+        buff.append(matcher);
+    }
+    throw new java.text.ParseException("Found: "+found+" Expected: "+buff.toString(), offset);
+}

@@ -13,10 +13,11 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nblr.codegen;
+package jlibs.nblr.codegen.java;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.codegen.CodeGenerator;
 import jlibs.nblr.editor.debug.Debugger;
 import jlibs.nblr.editor.debug.NBParser;
 import jlibs.nblr.matchers.Matcher;
@@ -80,16 +81,17 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addEOFMember(){
-        printer.printlns(
-            "private boolean eof;"
-        );
+        printer.printlns("private boolean eof;");
     }
 
     @Override
     protected void addStateMember(){
-        printer.printlns(
-            "private int state;"
-        );
+        printer.printlns("private int state;");
+    }
+
+    @Override
+    protected void addRequiredMember(){
+        printer.printlns("private int required;");
     }
 
     @Override
@@ -126,7 +128,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
             "private boolean "+matcher.name+"(char ch){",
                 PLUS,
-                "return "+matcher.javaCode()+';',
+                "return "+matcher.javaCode("ch")+';',
                 MINUS,
             "}"
         );
@@ -212,48 +214,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void startConsumeMethod(){
-        printer.printlns(
-            "private int line, col, offset;",
-            "public int getLineNumber(){ return line; }",
-            "public int getColumnNumber(){ return col; }",
-            "public int getCharacterOffset(){ return offset; }",
-            "",
-            "private boolean skipLF;",
-            "public void consume(char ch) throws java.text.ParseException{",
-                PLUS,
-                "offset++;",
-                "if(skipLF && ch=='\\n')",
-                    PLUS,
-                    "skipLF = false;",
-                    MINUS,
-                "else{",
-                    PLUS,
-                    "skipLF = false;",
-                    "switch(ch){",
-                        PLUS,
-                        "case '\\r':",
-                            PLUS,
-                            "skipLF = true;",
-                            MINUS,
-                        "case '\\n':",
-                            PLUS,
-                            "line++;",
-                            "col = 0;",
-                            "break;",
-                            MINUS,
-                        "default:",
-                            PLUS,
-                            "col++;",
-                            MINUS,
-                        MINUS,
-                    "}",
-                    MINUS,
-                "}",
-                "_consume(ch);",
-                MINUS,
-            "}",
-            ""
-        );
+        printer.printlns(getClass().getResourceAsStream("startConsumeMethod.txt"));
         printer.printlns(
             "private void _consume(char ch) throws java.text.ParseException{",
                 PLUS,
@@ -281,7 +242,6 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
         printer.printlns(
                         "_consume(ch);",
-                        "return;",
                         MINUS,
                     "}else",
                         PLUS,
@@ -289,10 +249,6 @@ public class JavaCodeGenerator extends CodeGenerator{
                         MINUS,
                     MINUS,
                 "}",
-                "if(!eof && !bufferStack.isEmpty())",
-                    PLUS,
-                    "buffer.append(ch);",
-                    MINUS,
                 MINUS,
             "}"
         );
@@ -305,70 +261,17 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addExpectedMethod(){
-        printer.printlns(
-            "private void expected(String found, String... matchers) throws java.text.ParseException{",
-                PLUS,
-                "if(eof)",
-                    PLUS,
-                    "found = \"<EOF>\";",
-                    MINUS,
-                "StringBuilder buff = new StringBuilder();",
-                "for(String matcher: matchers){",
-                    PLUS,
-                    "if(buff.length()>0)",
-                        PLUS,
-                        "buff.append(\" OR \");",
-                        MINUS,
-                    "buff.append(matcher);",
-                    MINUS,
-                "}",
-                "throw new java.text.ParseException(\"Found: \"+found+\" Expected: \"+buff.toString(), offset);",
-                MINUS,
-            "}"
-        );
+        printer.printlns(getClass().getResourceAsStream("addExpectedMethod.txt"));
     }
 
     @Override
     protected void addExpectEOFMethod(){
-        printer.printlns(
-            "private void expectEOF(char found) throws java.text.ParseException{",
-                PLUS,
-                "if(stateStack.isEmpty()){",
-                    PLUS,
-                    "if(eof)",
-                        PLUS,
-                        "return;",
-                        MINUS,
-                    "else",
-                        PLUS,
-                        "expected(String.valueOf(found), \"<EOF>\");",
-                        MINUS,
-                    MINUS,
-                "}",
-                MINUS,
-            "}"
-        );
+        printer.printlns(getClass().getResourceAsStream("addExpectEOFMethod.txt"));
     }
 
     @Override
     protected void addEOFMethod(){
-        printer.printlns(
-            "public void eof() throws java.text.ParseException{",
-                PLUS,
-                "if(state==-1)",
-                    PLUS,
-                    "expectEOF('\\0');",
-                    MINUS,
-                "else{",
-                    PLUS,
-                    "eof = true;",
-                    "_consume('\\0');",
-                    "expectEOF('\\0');",
-                    MINUS,
-                "}",
-                MINUS,
-            "}"
-        );
+        printer.printlns(getClass().getResourceAsStream("addEOFMethod.txt"));
     }
 
     @Override

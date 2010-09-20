@@ -16,7 +16,7 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.nblr.codegen.JavaCodeGenerator;
+import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
 
 import javax.swing.*;

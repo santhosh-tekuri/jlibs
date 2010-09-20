@@ -1,0 +1,36 @@
+private int line, col, offset;
+public int getLineNumber(){ return line; }
+public int getColumnNumber(){ return col; }
+public int getCharacterOffset(){ return offset; }
+
+private boolean skipLF;
+private void consumed(char ch){
+    offset++;
+    if(skipLF && ch=='\n')
+        skipLF = false;
+    else{
+        skipLF = false;
+        switch(ch){
+            case '\r':
+                skipLF = true;
+            case '\n':
+                line++;
+                col = 0;
+                break;
+            default:
+                col++;
+        }
+    }
+    if(!bufferStack.isEmpty())
+        buffer.append(ch);
+}
+
+private StringBuilder lookAheadBuffer = new StringBuilder();
+public void consume(char ch) throws java.text.ParseException{
+    try{
+        _consume(ch);
+    }finally{
+        if(lookAheadBuffer.length()==0)
+            consumed(ch);
+    }
+}

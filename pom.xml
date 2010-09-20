@@ -124,6 +124,7 @@
                     	<exclude>examples/bin/**</exclude>
                         <exclude>**/prettify.*</exclude>
                         <exclude>core/src/main/java/jlibs/core/lang/Noun.java</exclude>
+                        <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
                     </excludes>
                 </configuration>
             </plugin>

@@ -26,6 +26,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Path extends ArrayList<Object>{
+    public Paths paths;
+    
     public Path(ArrayDeque<Object> stack){
         super(stack);
         Collections.reverse(this);
@@ -56,5 +58,19 @@ public class Path extends ArrayList<Object>{
             return '<'+matcher.name+'>';
         else
             return matcher.toString();
+    }
+
+    void toString(ArrayDeque<Path> pathStack, StringBuilder buff){
+        pathStack.push(this);
+        if(paths==null){
+            List<Path> list = new ArrayList<Path>(pathStack);
+            Collections.reverse(list);
+            if(buff.length()>0)
+                buff.append(" OR ");
+            for(Path path: list)
+                buff.append(path);
+        }else
+            paths.toString(pathStack, buff);
+        pathStack.pop();
     }
 }

@@ -54,12 +54,12 @@ public abstract class Matcher implements SAXProducer{
         return buff.toString();
     }
 
-    public abstract String javaCode();
-    public final String _javaCode(){
+    public abstract String javaCode(String variable);
+    public final String _javaCode(String variable){
         if(name==null)
-            return javaCode();
+            return javaCode(variable);
         else
-            return name+"(ch)";
+            return name+'('+variable+')';
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
