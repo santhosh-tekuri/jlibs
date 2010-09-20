@@ -112,6 +112,8 @@ public class Debugger extends JPanel implements Observer{
     private int inputIndex;
     private void start(){
         try{
+            showMessage("");
+            
             File file = new File("temp/DebuggableNBParser.java").getAbsoluteFile();
             FileUtil.mkdirs(file.getParentFile());
             
@@ -131,6 +133,7 @@ public class Debugger extends JPanel implements Observer{
             Class clazz = classLoader.loadClass("DebuggableNBParser");
             parser = (NBParser)clazz.getConstructor(getClass()).newInstance(this);
             parser.startParsing(scene.getRule().id);
+            showMessage("Executing...");
         }catch(Exception ex){
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, ex.getMessage());
