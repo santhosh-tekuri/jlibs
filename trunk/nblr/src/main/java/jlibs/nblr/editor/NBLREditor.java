@@ -15,6 +15,7 @@
 
 package jlibs.nblr.editor;
 
+import jlibs.core.lang.OS;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.SyntaxBinding;
 import jlibs.nblr.editor.debug.Debugger;
@@ -67,7 +68,8 @@ public class NBLREditor extends JFrame{
         setJMenuBar(menubar);
 
         combo = createRulesCombo();
-        combo.setPreferredSize(new Dimension(10, 5));
+        if(OS.get()!=OS.MAC)
+            combo.setPreferredSize(new Dimension(10, 5));
         combo.setFont(Util.FIXED_WIDTH_FONT);
         scene = new RuleScene(new TwoStateHoverProvider() {
             @Override
