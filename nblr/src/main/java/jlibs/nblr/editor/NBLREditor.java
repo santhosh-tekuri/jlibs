@@ -109,7 +109,7 @@ public class NBLREditor extends JFrame{
         JPanel topPanel = new JPanel(new BorderLayout(2, 0));
         topPanel.add(new JLabel("Rules"), BorderLayout.WEST);
         topPanel.add(combo, BorderLayout.CENTER);
-        JToolBar toolBar = Util.toolbar(upAction, newRuleAction);
+        JToolBar toolBar = Util.toolbar(upAction, newRuleAction, deleteRuleAction);
         toolBar.setBorder(BorderFactory.createEmptyBorder());
         topPanel.add(toolBar, BorderLayout.EAST);
         upAction.setEnabled(false);
@@ -267,6 +267,21 @@ public class NBLREditor extends JFrame{
                     scene.setRule(syntax, rule);
                 else
                     combo.setSelectedIndex(combo.getItemCount()-1);
+            }
+        }
+    };
+
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private Action deleteRuleAction = new AbstractAction("Delete Rule...", icon("deleteRule.png")){
+        public void actionPerformed(ActionEvent ae){
+            Rule rule = (Rule)combo.getSelectedItem();
+            if(rule==null)
+                JOptionPane.showMessageDialog(NBLREditor.this, "No Rule to delete");
+            else if(JOptionPane.showConfirmDialog(NBLREditor.this, "Are you sure, you want to delete this rule?", "Confirm", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
+                syntax.delete(rule);
+                combo.setModel(new DefaultComboBoxModel(syntax.rules.values().toArray()));
+                if(combo.getItemCount()>1)
+                    scene.setRule(syntax, rule);
             }
         }
     };
