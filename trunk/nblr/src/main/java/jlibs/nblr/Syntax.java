@@ -38,9 +38,13 @@ public class Syntax implements SAXProducer{
 
     public final Map<String, Rule> rules = new LinkedHashMap<String, Rule>();
     public Rule add(String name, Rule rule){
-        rule.id = rules.size();
         rule.name = name;
         rules.put(name, rule);
+        
+        int id = 0;
+        for(Rule r: rules.values())
+            r.id = id++;
+        
         return rule;
     }
 

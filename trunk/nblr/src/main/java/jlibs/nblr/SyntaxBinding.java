@@ -169,8 +169,13 @@ class Matchers{
 class RuleBinding{
     @Binding.Start
     public static Rule onStart(@Attr String name){
-        Rule rule = new Rule();
-        rule.name = name;
+        Syntax syntax = SyntaxBinding.SYNTAX.get();
+        Rule rule = syntax.rules.get(name);
+        if(rule==null){
+            rule = new Rule();
+            rule.name = name;
+            syntax.add(name, rule);
+        }
         return rule;
     }
 
@@ -236,7 +241,14 @@ class EdgeBinding extends Matchers{
 
     @Binding.Start("rule")
     public static Rule onRule(@Attr String name){
-        return SyntaxBinding.SYNTAX.get().rules.get(name);
+        Syntax syntax = SyntaxBinding.SYNTAX.get();
+        Rule rule = syntax.rules.get(name);
+        if(rule==null){
+            rule = new Rule();
+            rule.name = name;
+            syntax.add(name, rule);
+        }
+        return rule;
     }
 
     @Relation.Finish("rule")
