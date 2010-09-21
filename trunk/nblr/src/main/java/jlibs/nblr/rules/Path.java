@@ -26,6 +26,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Path extends ArrayList<Object>{
+    public Paths parent;
     public Paths paths;
     
     public Path(ArrayDeque<Object> stack){
