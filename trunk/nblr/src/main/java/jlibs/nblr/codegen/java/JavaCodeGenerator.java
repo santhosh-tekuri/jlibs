@@ -276,7 +276,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void addBufferringSection(){
+    protected void addBufferingSection(){
         String modifier = debuggable ? "public" : "private";
         printer.printlns(
             "private final StringBuilder buffer = new StringBuilder();",

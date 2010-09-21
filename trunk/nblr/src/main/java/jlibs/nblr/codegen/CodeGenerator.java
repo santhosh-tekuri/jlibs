@@ -104,7 +104,7 @@ public abstract class CodeGenerator{
         printer.emptyLine(true);
         printTitleComment("Buffering");
         printer.emptyLine(true);
-        addBufferringSection();
+        addBufferingSection();
         printer.emptyLine(true);
 
         printer.emptyLine(false);
@@ -291,5 +291,5 @@ public abstract class CodeGenerator{
     protected abstract void addExpectedMethod();
     protected abstract void addExpectEOFMethod();
     protected abstract void addEOFMethod();
-    protected abstract void addBufferringSection();
+    protected abstract void addBufferingSection();
 }
