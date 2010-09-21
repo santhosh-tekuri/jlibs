@@ -112,50 +112,71 @@ public abstract class CodeGenerator{
     }
 
     public void println(Paths paths, ArrayDeque<Path> pathStack){
-        int lastDepth = 0;
         Path pathWithoutMatcher = null;
         for(Path path: paths){
-            int depth = path.depth();
-            if(depth>lastDepth && paths.charIndex==0){
-                if(lastDepth!=0){
-                    printer.printlns(
-                            MINUS,
-                        "}"
-                    );
-                }
-                printer.printlns(
-                    "if(lookAheadBuffer.length()<"+depth+"){",
-                    PLUS
-                );
-                if(depth>1){
-                    printer.printlns(
-                        "if(lookAheadBuffer.length()!="+(depth-1)+"){",
-                            PLUS,
-                            "lookAheadBuffer.append(ch);",
-                            "return "+((Node)path.get(0)).id+";",
-                            MINUS,
-                        "}"
-                    );
-                    for(int i=0; i<depth-1; i++)
-                        printer.println("char ch"+i+" = lookAheadBuffer.charAt("+i+");");
-                }
-            }
-            lastDepth = depth;
-            if(path.matcher()!=null){
-                println(path, pathStack);
-            }else
+            if(path.matcher()==null){
                 pathWithoutMatcher = path;
+                break;
+            }
         }
-
+        
+        if(pathWithoutMatcher==null || paths.size()>1){
+            if(paths.charIndex==0){
+                printer.printlns(
+                    "if(!eof){",
+                        PLUS
+                );
+            }
+            int lastDepth = 0;
+            for(Path path: paths){
+                int depth = path.depth();
+                if(depth>lastDepth && paths.charIndex==0){
+                    if(lastDepth!=0){
+                        printer.printlns(
+                                MINUS,
+                            "}"
+                        );
+                    }
+                    printer.printlns(
+                        "if(lookAheadBuffer.length()<"+depth+"){",
+                        PLUS
+                    );
+                    if(depth>1){
+                        printer.printlns(
+                            "if(lookAheadBuffer.length()!="+(depth-1)+"){",
+                                PLUS,
+                                "lookAheadBuffer.append(ch);",
+                                "return "+((Node)path.get(0)).id+";",
+                                MINUS,
+                            "}"
+                        );
+                        for(int i=0; i<depth-1; i++)
+                            printer.println("char ch"+i+" = lookAheadBuffer.charAt("+i+");");
+                    }
+                }
+                lastDepth = depth;
+                if(path.matcher()!=null){
+                    println(path, pathStack);
+                }else
+                    pathWithoutMatcher = path;
+            }
+        }
+        
+        if(pathWithoutMatcher==null || paths.size()>1){
+            if(paths.charIndex==0){
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
+            }
+        }
+        
         if(pathWithoutMatcher!=null)
             println(pathWithoutMatcher, pathStack);
-
-        if(paths.charIndex==0){
-            printer.printlns(
-                    MINUS,
-                "}"
-            );
-        }
 
         if(pathWithoutMatcher==null && paths.charIndex==0)
             printer.printlns("expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");");
@@ -169,11 +190,6 @@ public abstract class CodeGenerator{
             if(path.paths!=null)
                 variable += path.paths.charIndex-1;
             String condition = matcher._javaCode(variable);
-            if(path.paths==null){ // eof shouldn't be checked for char from lookAheadBuffer
-                if(matcher.name==null)
-                    condition = '('+condition+')';
-                condition = "!eof && "+condition;
-            }
             printer.printlns(
                 "if("+condition+"){",
                     PLUS
