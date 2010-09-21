@@ -117,7 +117,7 @@ public class TemplateMatcher{
     public static class MapVariableResolver implements VariableResolver{
         private Map<String, String> variables;
 
-        private MapVariableResolver(Map<String, String> variables){
+        public MapVariableResolver(Map<String, String> variables){
             this.variables = variables;
         }
 
