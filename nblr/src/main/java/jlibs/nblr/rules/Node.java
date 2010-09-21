@@ -71,6 +71,7 @@ public class Node implements SAXProducer{
     public Paths paths(){
         Paths paths = new Paths(0);
         travel(new ArrayDeque<Object>(), paths, lookAhead);
+        paths.sort();
         return paths;
     }
 
@@ -79,11 +80,13 @@ public class Node implements SAXProducer{
             throw new IllegalStateException("infinite loop detected!!!");
         else{
             stack.push(this);
+            charsToBeConsumed = Math.max(charsToBeConsumed, lookAhead);
             if(outgoing.size()>0){
                 for(Edge edge: outgoing()){
                     stack.push(edge);
                     if(edge.matcher!=null){
                         stack.push(edge.target);
+                        charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
                         Path path = new Path(stack);
                         paths.add(path);
                         if(paths.charIndex<charsToBeConsumed-1){
