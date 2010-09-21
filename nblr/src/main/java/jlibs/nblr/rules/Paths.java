@@ -24,10 +24,16 @@ import java.util.Comparator;
  * @author Santhosh Kumar T
  */
 public class Paths extends ArrayList<Path>{
+    public Path parent;
     public int charIndex;
 
     public Paths(int charIndex){
+        this(null, charIndex);
+    }
+
+    public Paths(Path parent, int charIndex){
         this.charIndex = charIndex;
+        this.parent = parent;
     }
 
     public void sort(){
@@ -37,6 +43,12 @@ public class Paths extends ArrayList<Path>{
                 return p1.depth()-p2.depth();
             }
         });
+    }
+
+    @Override
+    public boolean add(Path path){
+        path.parent = this;
+        return super.add(path);
     }
 
     @Override

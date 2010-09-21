@@ -76,11 +76,18 @@ public class Node implements SAXProducer{
     }
 
     private void travel(ArrayDeque<Object> stack, Paths paths, int charsToBeConsumed){
-        for(Object obj: stack){
-            if(obj==this)
-                throw new IllegalStateException("infinite loop detected!!!");
-            if(obj instanceof Edge && ((Edge)obj).matcher!=null)
-                break;
+        if(stack.contains(this))
+            throw new IllegalStateException("infinite loop detected!!!");
+        
+        
+        Path p = paths.parent;
+        while(p!=null){
+            if(p.get(0)==this){
+                if(paths.size()==0)
+                    paths.parent.paths = null;
+                return;
+            }
+            p = p.parent.parent;
         }
             
         stack.push(this);
@@ -90,11 +97,11 @@ public class Node implements SAXProducer{
                 stack.push(edge);
                 if(edge.matcher!=null){
                     stack.push(edge.target);
-                    charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
                     Path path = new Path(stack);
                     paths.add(path);
                     if(charsToBeConsumed>1){
-                        path.paths = new Paths(paths.charIndex+1);
+                        charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
+                        path.paths = new Paths(path, paths.charIndex+1);
                         edge.target.travel(new ArrayDeque<Object>(), path.paths, charsToBeConsumed-1);
                     }
                     stack.pop();
@@ -115,6 +122,22 @@ public class Node implements SAXProducer{
                     }
                 }
             }
+            
+            p = paths.parent;
+            while(p!=null && target==null){
+                for(int i=p.size()-1; i>=0; i--){
+                    Object obj = p.get(i);
+                    if(obj instanceof Edge){
+                        Edge edge = (Edge)obj;
+                        if(edge.rule!=null){
+                            target = edge.target;
+                            break;
+                        }
+                    }
+                }
+                p = p.parent.parent;
+            }
+            
             if(target==null)
                 paths.add(new Path(stack));
             else
