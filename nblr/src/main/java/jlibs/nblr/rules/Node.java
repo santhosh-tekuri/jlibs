@@ -76,34 +76,51 @@ public class Node implements SAXProducer{
     }
 
     private void travel(ArrayDeque<Object> stack, Paths paths, int charsToBeConsumed){
-        if(stack.contains(this))
-            throw new IllegalStateException("infinite loop detected!!!");
-        else{
-            stack.push(this);
-            charsToBeConsumed = Math.max(charsToBeConsumed, lookAhead);
-            if(outgoing.size()>0){
-                for(Edge edge: outgoing()){
-                    stack.push(edge);
-                    if(edge.matcher!=null){
-                        stack.push(edge.target);
-                        charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
-                        Path path = new Path(stack);
-                        paths.add(path);
-                        if(paths.charIndex<charsToBeConsumed-1){
-                            path.paths = new Paths(paths.charIndex+1);
-                            edge.target.travel(new ArrayDeque<Object>(), path.paths, charsToBeConsumed-1);
-                        }
-                        stack.pop();
-                    }else if(edge.rule!=null)
-                        edge.rule.node.travel(stack, paths, charsToBeConsumed);
-                    else
-                        edge.target.travel(stack, paths, charsToBeConsumed);
-                    stack.pop();
-                }
-            }else
-                paths.add(new Path(stack));
-            stack.pop();
+        for(Object obj: stack){
+            if(obj==this)
+                throw new IllegalStateException("infinite loop detected!!!");
+            if(obj instanceof Edge && ((Edge)obj).matcher!=null)
+                break;
         }
+            
+        stack.push(this);
+        charsToBeConsumed = Math.max(charsToBeConsumed, lookAhead);
+        if(outgoing.size()>0){
+            for(Edge edge: outgoing()){
+                stack.push(edge);
+                if(edge.matcher!=null){
+                    stack.push(edge.target);
+                    charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
+                    Path path = new Path(stack);
+                    paths.add(path);
+                    if(charsToBeConsumed>1){
+                        path.paths = new Paths(paths.charIndex+1);
+                        edge.target.travel(new ArrayDeque<Object>(), path.paths, charsToBeConsumed-1);
+                    }
+                    stack.pop();
+                }else if(edge.rule!=null)
+                    edge.rule.node.travel(stack, paths, charsToBeConsumed);
+                else
+                    edge.target.travel(stack, paths, charsToBeConsumed);
+                stack.pop();
+            }
+        }else{
+            Node target = null;
+            for(Object obj: stack){
+                if(obj instanceof Edge){
+                    Edge edge = (Edge)obj;
+                    if(edge.rule!=null){
+                        target = edge.target;
+                        break;
+                    }
+                }
+            }
+            if(target==null)
+                paths.add(new Path(stack));
+            else
+                target.travel(stack, paths, charsToBeConsumed);
+        }
+        stack.pop();
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
