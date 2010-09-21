@@ -169,9 +169,11 @@ public abstract class CodeGenerator{
             if(path.paths!=null)
                 variable += path.paths.charIndex-1;
             String condition = matcher._javaCode(variable);
-            if(matcher.name==null)
-                condition = '('+condition+')';
-            condition = "!eof && "+condition;
+            if(path.paths==null){ // eof shouldn't be checked for char from lookAheadBuffer
+                if(matcher.name==null)
+                    condition = '('+condition+')';
+                condition = "!eof && "+condition;
+            }
             printer.printlns(
                 "if("+condition+"){",
                     PLUS
