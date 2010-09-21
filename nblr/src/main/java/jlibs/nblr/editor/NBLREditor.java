@@ -109,7 +109,7 @@ public class NBLREditor extends JFrame{
         JPanel topPanel = new JPanel(new BorderLayout(2, 0));
         topPanel.add(new JLabel("Rules"), BorderLayout.WEST);
         topPanel.add(combo, BorderLayout.CENTER);
-        JToolBar toolBar = Util.toolbar(upAction, newRuleAction, deleteRuleAction);
+        JToolBar toolBar = Util.toolbar(upAction, newRuleAction, renameRuleAction, deleteRuleAction);
         toolBar.setBorder(BorderFactory.createEmptyBorder());
         topPanel.add(toolBar, BorderLayout.EAST);
         upAction.setEnabled(false);
@@ -267,6 +267,26 @@ public class NBLREditor extends JFrame{
                     scene.setRule(syntax, rule);
                 else
                     combo.setSelectedIndex(combo.getItemCount()-1);
+            }
+        }
+    };
+
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private Action renameRuleAction = new AbstractAction("Rename Rule...", icon("renameRule.png")){
+        public void actionPerformed(ActionEvent ae){
+            Rule rule = (Rule)combo.getSelectedItem();
+            if(rule==null)
+                JOptionPane.showMessageDialog(NBLREditor.this, "No Rule to rename");
+            else{
+                String newName = JOptionPane.showInputDialog("Rule Name", rule.name);
+                if(newName!=null){
+                    rule.name = newName;
+                    Rule rules[] = syntax.rules.values().toArray(new Rule[syntax.rules.size()]);
+                    syntax.rules.clear();
+                    for(Rule r: rules)
+                        syntax.add(r.name, r);
+                    combo.repaint();
+                }
             }
         }
     };
