@@ -149,8 +149,6 @@ public abstract class CodeGenerator{
 
         if(pathWithoutMatcher!=null)
             println(pathWithoutMatcher, pathStack);
-        else if(paths.charIndex==0)
-            printer.printlns("expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");");
 
         if(paths.charIndex==0){
             printer.printlns(
@@ -158,6 +156,9 @@ public abstract class CodeGenerator{
                 "}"
             );
         }
+
+        if(pathWithoutMatcher==null && paths.charIndex==0)
+            printer.printlns("expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");");
     }
 
     public void println(Path path, ArrayDeque<Path> pathStack){
