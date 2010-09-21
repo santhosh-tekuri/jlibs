@@ -16,6 +16,7 @@
 package jlibs.core.annotation.processing;
 
 import jlibs.core.lang.model.ModelUtil;
+import jlibs.core.util.regex.TemplateMatcher;
 
 import javax.lang.model.element.TypeElement;
 import java.io.*;
@@ -77,11 +78,18 @@ public class Printer{
     }
 
     public void printlns(InputStream is){
+        printlns(is, null, null);
+    }
+
+    public void printlns(InputStream is, TemplateMatcher matcher, TemplateMatcher.VariableResolver variableResolver){
         BufferedReader reader = null;
         try{
             reader = new BufferedReader(new InputStreamReader(is));
-            for(String line=reader.readLine(); line!=null; line=reader.readLine())
+            for(String line=reader.readLine(); line!=null; line=reader.readLine()){
+                if(matcher!=null)
+                    line = matcher.replace(line, variableResolver);
                 println(line);
+            }
         }catch(IOException ex){
             throw new RuntimeException(ex);
         }finally{
