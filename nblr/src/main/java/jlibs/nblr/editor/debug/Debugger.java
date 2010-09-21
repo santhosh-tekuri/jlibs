@@ -30,6 +30,8 @@ import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 
 import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -74,6 +76,12 @@ public class Debugger extends JPanel implements Observer{
         add(toolbar, BorderLayout.NORTH);
 
         input.setFont(Util.FIXED_WIDTH_FONT);
+        input.addCaretListener(new CaretListener(){
+            @Override
+            public void caretUpdate(CaretEvent ce){
+                updateActions();
+            }
+        });
         add(new JScrollPane(input), BorderLayout.CENTER);
 
         ruleStackList.setFont(Util.FIXED_WIDTH_FONT);
