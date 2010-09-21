@@ -1,0 +1,13 @@
+private final StringBuilder buffer = new StringBuilder();
+private final java.util.ArrayDeque<Integer> bufferStack = new java.util.ArrayDeque<Integer>();
+
+${MODIFIER} void buffer(){
+    bufferStack.push(buffer.length());
+}
+
+${MODIFIER} String data(int begin, int end){
+    String text = buffer.substring(begin+bufferStack.pop(), buffer.length()-end);
+    if(bufferStack.size()==0)
+        buffer.setLength(0);
+    return text;
+}

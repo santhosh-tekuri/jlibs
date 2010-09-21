@@ -16,12 +16,16 @@
 package jlibs.nblr.codegen.java;
 
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.util.regex.TemplateMatcher;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.CodeGenerator;
 import jlibs.nblr.editor.debug.Debugger;
 import jlibs.nblr.editor.debug.NBParser;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Rule;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -96,27 +100,8 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void finishClassDeclaration(){
-        if(debuggable){
-            printer.printlns(
-                "public java.util.ArrayDeque<Integer> getRuleStack(){",
-                    PLUS,
-                    "return ruleStack;",
-                    MINUS,
-                "}",
-                 "",
-                "public java.util.ArrayDeque<Integer> getStateStack(){",
-                    PLUS,
-                    "return stateStack;",
-                    MINUS,
-                "}",
-                "",
-                "public int getState(){",
-                    PLUS,
-                    "return state;",
-                    MINUS,
-                 "}"
-            );
-        }
+        if(debuggable)
+            printer.printlns(getClass().getResourceAsStream("finishClassDeclaration.txt"));
         printer.printlns(
                 MINUS,
             "}"
@@ -277,28 +262,9 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addBufferingSection(){
-        String modifier = debuggable ? "public" : "private";
-        printer.printlns(
-            "private final StringBuilder buffer = new StringBuilder();",
-            "private final java.util.ArrayDeque<Integer> bufferStack = new java.util.ArrayDeque<Integer>();",
-            "",
-            modifier+" void buffer(){",
-                PLUS,
-                "bufferStack.push(buffer.length());",
-                MINUS,
-            "}",
-            "",
-            modifier+" String data(int begin, int end){",
-                PLUS,
-                "String text = buffer.substring(begin+bufferStack.pop(), buffer.length()-end);",
-                "if(bufferStack.size()==0)",
-                    PLUS,
-                    "buffer.setLength(0);",
-                    MINUS,
-                "return text;",
-                MINUS,
-            "}"
-        );
+        Map<String, String> variables = new HashMap<String, String>();
+        variables.put("MODIFIER", debuggable ? "public" : "private");
+        printer.printlns(getClass().getResourceAsStream("addBufferingSection.txt"), new TemplateMatcher("${", "}"), new TemplateMatcher.MapVariableResolver(variables));
     }
     
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
