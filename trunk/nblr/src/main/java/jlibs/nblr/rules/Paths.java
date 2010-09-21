@@ -17,6 +17,8 @@ package jlibs.nblr.rules;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * @author Santhosh Kumar T
@@ -26,6 +28,15 @@ public class Paths extends ArrayList<Path>{
 
     public Paths(int charIndex){
         this.charIndex = charIndex;
+    }
+
+    public void sort(){
+        Collections.sort(this, new Comparator<Path>() {
+            @Override
+            public int compare(Path p1, Path p2){
+                return p1.depth()-p2.depth();
+            }
+        });
     }
 
     @Override

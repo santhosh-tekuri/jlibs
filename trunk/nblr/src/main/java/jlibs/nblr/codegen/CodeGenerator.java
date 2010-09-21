@@ -67,21 +67,6 @@ public abstract class CodeGenerator{
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     startCase(state.id);
-
-                    int lookAhead = state.lookAhead;
-                    if(lookAhead>1){
-                        printer.printlns(
-                            "if(lookAheadBuffer.length()!="+(lookAhead-1)+"){",
-                                PLUS,
-                                "lookAheadBuffer.append(ch);",
-                                "return "+state.id+";",
-                                MINUS,
-                            "}"
-                        );
-                    }
-                    for(int i=0; i<lookAhead-1; i++)
-                        printer.println("char ch"+i+" = lookAheadBuffer.charAt("+i+");");
-                    
                     println(state.paths(), new ArrayDeque<Path>());
                     endCase();
                 }
@@ -127,19 +112,52 @@ public abstract class CodeGenerator{
     }
 
     public void println(Paths paths, ArrayDeque<Path> pathStack){
+        int lastDepth = 0;
         Path pathWithoutMatcher = null;
         for(Path path: paths){
+            int depth = path.depth();
+            if(depth>lastDepth && paths.charIndex==0){
+                if(lastDepth!=0){
+                    printer.printlns(
+                            MINUS,
+                        "}"
+                    );
+                }
+                printer.printlns(
+                    "if(lookAheadBuffer.length()<"+depth+"){",
+                    PLUS
+                );
+                if(depth>1){
+                    printer.printlns(
+                        "if(lookAheadBuffer.length()!="+(depth-1)+"){",
+                            PLUS,
+                            "lookAheadBuffer.append(ch);",
+                            "return "+((Node)path.get(0)).id+";",
+                            MINUS,
+                        "}"
+                    );
+                    for(int i=0; i<depth-1; i++)
+                        printer.println("char ch"+i+" = lookAheadBuffer.charAt("+i+");");
+                }
+            }
+            lastDepth = depth;
             if(path.matcher()!=null){
                 println(path, pathStack);
             }else
                 pathWithoutMatcher = path;
-
         }
 
         if(pathWithoutMatcher!=null)
             println(pathWithoutMatcher, pathStack);
         else if(paths.charIndex==0)
             printer.printlns("expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");");
+
+        if(paths.charIndex==0){
+            printer.printlns(
+                    MINUS,
+                "}"
+            );
+        }
     }
 
     public void println(Path path, ArrayDeque<Path> pathStack){

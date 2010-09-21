@@ -49,6 +49,15 @@ public class Path extends ArrayList<Object>{
             return null;
     }
 
+    public int depth(){
+        int depth = 0;
+        if(paths!=null){
+            for(Path path: paths)
+                depth = Math.max(depth, path.depth());
+        }
+        return depth+1;
+    }
+
     @Override
     public String toString(){
         Matcher matcher = matcher();
