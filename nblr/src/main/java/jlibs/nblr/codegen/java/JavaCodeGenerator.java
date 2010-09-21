@@ -237,7 +237,8 @@ public class JavaCodeGenerator extends CodeGenerator{
         );
         if(debuggable){
             printer.printlns(
-                "consumer.currentRule(ruleStack.peek());"
+                "consumer.currentRule(ruleStack.peek());",
+                "consumer.currentNode(state);"
             );
         }
         printer.printlns(
