@@ -81,6 +81,29 @@ public class Rule implements SAXProducer{
         return states;
     }
 
+    public Rule copy(){
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        ArrayList<Edge> edges = new ArrayList<Edge>();
+        computeIDS(nodes, edges, node);
+
+        for(int i=0; i<nodes.size(); i++){
+            Node newNode = new Node();
+            newNode.id = i;
+            nodes.set(i, newNode);
+        }
+        for(Edge edge: edges){
+            Edge newEdge = nodes.get(edge.source.id).addEdgeTo(nodes.get(edge.target.id));
+            newEdge.matcher = edge.matcher;
+            newEdge.rule = edge.rule;
+        }
+
+        Rule newRule = new Rule();
+        newRule.id = id;
+        newRule.name = name;
+        newRule.node = nodes.get(0);
+        return newRule;
+    }
+
     @Override
     public String toString(){
         return name;
