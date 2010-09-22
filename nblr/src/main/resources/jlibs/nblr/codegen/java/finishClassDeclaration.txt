@@ -8,4 +8,4 @@ public java.util.ArrayDeque<Integer> getStateStack(){
 
 public int getState(){
     return state;
-}"
+}
