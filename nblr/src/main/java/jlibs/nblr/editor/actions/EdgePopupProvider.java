@@ -137,6 +137,10 @@ public class EdgePopupProvider implements PopupMenuProvider{
             if(edge.loop())
                 return true;
             else{
+                if(edge.target==scene.getRule().node)
+                    return true;
+
+                // if node has atleast one incoming edge which is not loop, then we can delete
                 for(Edge e: edge.target.incoming()){
                     if(e!=edge && !e.loop())
                         return true;
