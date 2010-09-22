@@ -50,6 +50,11 @@ public class Edge implements SAXProducer{
             target.incoming.add(this);
     }
 
+    public void delete(){
+        setSource(null);
+        setTarget(null);
+    }
+
     public Matcher matcher;
     public Rule rule;
 
