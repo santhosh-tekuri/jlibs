@@ -50,6 +50,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
         popup.add(insertMenu);
         popup.add(setMatcherAction);
         popup.add(setRuleAction);
+        popup.add(inlineRuleAction);
         popup.add(clearAction);
         popup.addSeparator();
         popup.add(deleteEdgeAction);
@@ -142,6 +143,32 @@ public class EdgePopupProvider implements PopupMenuProvider{
                 }
             }
             return false;
+        }
+    };
+
+    private Action inlineRuleAction = new AbstractAction("Inline Rule"){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            Rule rule = edge.rule.copy();
+            edge.source.addEdgeTo(rule.node);
+            for(Node node: rule.nodes()){
+                boolean sink = true;
+                for(Edge outgoing: node.outgoing){
+                    if(!outgoing.loop()){
+                        sink = false;
+                        break;
+                    }
+                }
+                if(sink)
+                    node.addEdgeTo(edge.target);
+            }
+            edge.delete();
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            return edge.rule!=null;
         }
     };
 }
