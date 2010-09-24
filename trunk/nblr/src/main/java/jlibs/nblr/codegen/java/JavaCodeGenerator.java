@@ -57,30 +57,15 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
             className = className.substring(dot+1);
         }
-
         String implementing = "";
         if(debuggable)
             implementing = " implements "+ NBParser.class.getName();
-        printer.printlns(
-            "public class "+className+implementing+"{",
-                PLUS,
-                "private final "+consumerName+" consumer;"
-        );
-    }
 
-    @Override
-    protected void addConstructor(){
-        String className = parserName;
-        int dot = className.lastIndexOf('.');
-        if(dot!=-1)
-            className = className.substring(dot+1);
-        printer.printlns(
-            "public "+className+"("+consumerName+" consumer){",
-                PLUS,
-                "this.consumer = consumer;",
-                MINUS,
-            "}"
-        );
+        Map<String, String> variables = new HashMap<String, String>();
+        variables.put("CONSUMER_TYPE", consumerName);
+        variables.put("CLASS_NAME", className);
+        variables.put("IMPLEMENTING", implementing);
+        printer.printlns(getClass().getResourceAsStream("startClassDeclaration.txt"), new TemplateMatcher("${", "}"), new TemplateMatcher.MapVariableResolver(variables));
     }
 
     @Override

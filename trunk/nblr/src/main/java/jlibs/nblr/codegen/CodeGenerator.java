@@ -42,7 +42,6 @@ public abstract class CodeGenerator{
 
     public final void generateCode(){
         startClassDeclaration();
-        addConstructor();
         printer.emptyLine(true);
         
         if(syntax.matchers.size()>0){
@@ -266,7 +265,6 @@ public abstract class CodeGenerator{
     
     protected abstract void printTitleComment(String title);
     protected abstract void startClassDeclaration();
-    protected abstract void addConstructor();
     protected abstract void finishClassDeclaration();
 
     protected abstract void printMatcherMethod(Matcher matcher);
