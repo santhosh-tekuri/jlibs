@@ -28,14 +28,14 @@ private void consumed(char ch){
 private LookAheadBuffer lookAheadBuffer = new LookAheadBuffer();
 private static class LookAheadBuffer{
     private StringBuilder buffer = new StringBuilder();
-    private java.util.BitSet eofs = new java.util.BitSet();
+    private boolean eof;
 
     public int length(){
         return buffer.length();
     }
 
     public void append(char ch, boolean eof){
-        eofs.set(buffer.length(), eof);
+        this.eof = eof;
         buffer.append(ch);
     }
 
@@ -44,12 +44,12 @@ private static class LookAheadBuffer{
     }
 
     public boolean isEOF(int i){
-        return eofs.get(i);
+        return i<length()-1 ? false : eof;
     }
 
     public void clear(){
         buffer.setLength(0);
-        eofs.clear();
+        eof = false;
     }
 }
 
