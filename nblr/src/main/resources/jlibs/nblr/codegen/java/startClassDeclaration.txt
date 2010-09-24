@@ -1,0 +1,6 @@
+public class ${CLASS_NAME} ${IMPLEMENTING}{
+    private final ${CONSUMER_TYPE} consumer;
+    public ${CLASS_NAME}(${CONSUMER_TYPE} consumer){
+        this.consumer = consumer;
+    }
+
