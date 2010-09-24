@@ -21,6 +21,7 @@ import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -38,7 +39,7 @@ public abstract class Matcher implements SAXProducer{
             return "[<"+name+">]";
     }
 
-    private static String SPECIALS = ".[]-^&\\";
+    private static String SPECIALS = ".[]-^&";
     protected static String encode(char... chars){
         if(chars==null || chars.length==0)
             return ".";
@@ -60,6 +61,14 @@ public abstract class Matcher implements SAXProducer{
             return javaCode(variable);
         else
             return name+'('+variable+')';
+    }
+
+    public abstract List<jlibs.core.util.Range> ranges();
+    public boolean clashesWith(Matcher that){
+        if(this.toString().equals("[.]") || that.toString().equals("[.]"))
+            return false;
+        else
+            return !jlibs.core.util.Range.intersection(this.ranges(), that.ranges()).isEmpty();
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
