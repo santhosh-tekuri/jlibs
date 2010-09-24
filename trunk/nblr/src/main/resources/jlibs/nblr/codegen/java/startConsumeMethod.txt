@@ -25,7 +25,34 @@ private void consumed(char ch){
         buffer.append(ch);
 }
 
-private StringBuilder lookAheadBuffer = new StringBuilder();
+private LookAheadBuffer lookAheadBuffer = new LookAheadBuffer();
+private static class LookAheadBuffer{
+    private StringBuilder buffer = new StringBuilder();
+    private java.util.BitSet eofs = new java.util.BitSet();
+
+    public int length(){
+        return buffer.length();
+    }
+
+    public void append(char ch, boolean eof){
+        eofs.set(buffer.length(), eof);
+        buffer.append(ch);
+    }
+
+    public char charAt(int i){
+        return buffer.charAt(i);
+    }
+
+    public boolean isEOF(int i){
+        return eofs.get(i);
+    }
+
+    public void clear(){
+        buffer.setLength(0);
+        eofs.clear();
+    }
+}
+
 public void consume(char ch) throws java.text.ParseException{
     try{
         _consume(ch);
