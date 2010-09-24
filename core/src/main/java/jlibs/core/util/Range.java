@@ -15,7 +15,10 @@
 
 package jlibs.core.util;
 
-import jlibs.core.lang.Flag;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * This class represents integer range.
@@ -23,66 +26,198 @@ import jlibs.core.lang.Flag;
  * @author Santhosh Kumar T
  */
 public class Range{
-    public int start;
-    public int end;
+    public final int min;
+    public final int max;
 
-    public Range(int start, int end){
-        this.start = start;
-        this.end = end;
+    /**
+     * Note that both min and max are inclusive
+     */
+    public Range(int min, int max){
+        if(min>max)
+            throw new IllegalArgumentException("invalid range: ["+min+", "+max+']');
+        this.min = min;
+        this.max = max;
     }
 
-    // bitwise flags used to represent positions
-    public static final int POSITION_BEFORE = 1;
-    public static final int POSITION_INSIDE = 2;
-    public static final int POSITION_AFTER  = 4;
-
-    public int position(Range range){
-        int flag = 0;
-
-        if(range.start<this.start)
-            flag = Flag.set(flag, POSITION_BEFORE);
-        if(range.end>this.end)
-            flag = Flag.set(flag, POSITION_BEFORE);
-        if((Flag.isSet(flag, POSITION_BEFORE) && Flag.isSet(flag, POSITION_AFTER))
-                || (range.start>=this.start && range.start<this.end)
-                || (range.end>this.start && range.end<this.end))
-            flag = Flag.set(flag, POSITION_INSIDE);
-
-        return flag;
+    @Override
+    public String toString(){
+        return "["+min+", "+max+']';
     }
 
-    public Range[] split(Range range){
-        int pos = position(range);
-        return new Range[]{ before(range, pos), inside(range, pos), after(range, pos)};
+    /**
+     * return true if this range is before given number
+     * <pre>
+     * ------------   o
+     * </pre>
+     */
+    public boolean before(int x){
+        return x>max;
     }
 
-    public Range before(Range range){
-        return before(range, position(range));
+    /**
+     * returns true if this range is after given number
+     * <pre>
+     *   o   --------------
+     * </pre>
+     */
+    public boolean after(int x){
+        return x<min;
     }
 
-    private Range before(Range range, int pos){
-        return Flag.isSet(pos, POSITION_BEFORE)
-                            ? new Range(range.start, Math.min(range.end, this.start))
-                            : null;
+    /**
+     * returns true if this range contains given number
+     * <pre>
+     *      ------o--------
+     * </pre>
+     */
+    public boolean contains(int x){
+        return !before(x) && !after(x);
     }
 
-    public Range inside(Range range){
-        return inside(range, position(range));
+    /**
+     * tells the position this range with respect to given range.
+     * <p><br>
+     * the return value is boolean array of size 3.<br>
+     * <blockquote>
+     *   1st boolean ==> true if some portion of this range is before given range<br>
+     *   2nd boolean ==> true if this range intersects with given range<br>
+     *   3rd boolean ==> true if some portion of this range is after given range
+     * </blockquote>
+     * ideally, you can remebers these boolean as { before, inside, after }
+     */
+    public boolean[] position(Range that){
+        boolean before = that.after(min);
+        boolean after = that.before(max);
+
+        boolean inside;
+        if(before && after)
+            inside = true;
+        else if(!before && !after)
+            inside = true;
+        else if(before)
+            inside = that.contains(max);
+        else
+            inside = that.contains(min);
+        return new boolean[]{ before, inside, after };
     }
 
-    private Range inside(Range range, int pos){
-        return Flag.isSet(pos, POSITION_INSIDE)
-                            ? new Range(Math.max(range.start, this.start), Math.min(range.end, this.end))
-                            : null;
+    /**
+     * this method splits this range into 3 regions with respect to given range
+     * <p><br>
+     * the return value is Range array of size 3.<br>
+     * <blockquote>
+     *  1st range ==> the portion of this range that is before given range<br>
+     *  2nd range ==> the portion of range that is common to this range and given range<br>
+     *  3rd range ==> the portion of this range that is after given range.
+     * </blockquote>
+     * Note that the values in returned array can be null, if there is no range satifying
+     * the requirement.
+     */
+    public Range[] split(Range that){
+        boolean position[] = position(that);
+
+        Range before = null;
+        if(position[0])
+            before = new Range(this.min,  Math.min(this.max, that.min-1));
+
+        Range after = null;
+        if(position[2])
+            after = new Range(Math.max(this.min, that.max+1), this.max);
+
+        Range inside = null;
+        if(position[1])
+            inside = new Range(Math.max(this.min, that.min), Math.min(this.max, that.max));
+
+        return new Range[]{ before, inside, after };
     }
 
-    public Range after(Range range){
-        return after(range, position(range));
+    /**
+     * return the portion of range that is common to this range and given range.<br>
+     * If there is nothing common, then null is returned.
+     */
+    public Range intersection(Range that){
+        return split(that)[1];
     }
 
-    private Range after(Range range, int pos){
-        return Flag.isSet(pos, POSITION_AFTER)
-                            ? new Range(Math.max(range.start, this.end), range.end)
-                            : null;
+    /**
+     * returns union of this range with given range.<br>
+     * if both ranges are adjacent/intersecting to each other, then the
+     * returned array will have only one range. otherwise the returned array
+     * will have two ranges in sorted order. 
+     */
+    public Range[] union(Range that){
+        if(this.min>that.min)
+            return that.union(this);
+
+        // this -------------
+        // that    --------------
+        // that    -------
+        if(contains(that.min))
+            return new Range[]{ new Range(this.min, Math.max(this.max, that.max)) };
+
+        // this -----------
+        // that                --------------
+        return new Range[]{ this, that };
+    }
+
+    /**
+     * returns the portion(s) of this range that are not present in given range.
+     * maximum size of returned array is 2. and the array is sorted.
+     */
+    public Range[] minus(Range that){
+        Range split[] = split(that);
+        if(split[0]==null && split[2]==null)
+            return new Range[0];
+        if(split[0]!=null && split[2]!=null)
+            return new Range[]{ split[0], split[2] };
+
+        return new Range[]{ split[0]!=null ? split[0] : split[2] };
+    }
+
+    /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
+    
+    public static List<Range> union(List<Range> ranges){
+        ranges = new ArrayList<Range>(ranges);
+        Collections.sort(ranges, new Comparator<Range>(){
+            @Override
+            public int compare(Range r1, Range r2){
+                return r1.min-r2.min;
+            }
+        });
+        List<Range> union = new ArrayList<Range>();
+        for(Range r: ranges){
+            if(union.isEmpty())
+                union.add(r);
+            else
+                CollectionUtil.addAll(union, union.remove(union.size() - 1).union(r));
+        }
+        return union;
+    }
+
+    public static List<Range> intersection(List<Range> list1, List<Range> list2){
+        list1 = union(list1);
+        list2 = union(list2);
+        List<Range> intersection = new ArrayList<Range>();
+        for(Range r1: list1){
+            for(Range r2: list2){
+                Range r = r1.intersection(r2);
+                if(r!=null)
+                    intersection.add(r);
+            }
+        }
+        return union(intersection);
+    }
+
+    public static List<Range> minus(List<Range> list1, List<Range> list2){
+        list1 = union(list1);
+        list2 = union(list2);
+
+        for(Range r2: list2){
+            List<Range> temp = new ArrayList<Range>();
+            for(Range r1: list1)
+                CollectionUtil.addAll(temp, r1.minus(r2));
+            list1 = temp;
+        }
+        return union(list1);
     }
 }
