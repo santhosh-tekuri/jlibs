@@ -294,9 +294,11 @@ public class Debugger extends JPanel implements Observer{
         }
     };
 
+    private boolean ignoreRuleChange = false;
+
     @Override
     public void update(Observable o, Object rule){
-        if(rule==null)
+        if(ignoreRuleChange || rule==null)
             return;
         int ruleIndex = -1;
         ListModel model = ruleStackList.getModel();
@@ -339,7 +341,12 @@ public class Debugger extends JPanel implements Observer{
         nodes.clear();
         edges.clear();
         rule.computeIDS(nodes, edges, rule.node);
-        scene.setRule(scene.getSyntax(), rule);
+        ignoreRuleChange = true;
+        try{
+            scene.setRule(scene.getSyntax(), rule);
+        }finally{
+            ignoreRuleChange = false;
+        }
     }
 
     public void hitNode(int id){
