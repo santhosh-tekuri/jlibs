@@ -15,8 +15,11 @@
 
 package jlibs.nblr.matchers;
 
+import jlibs.core.util.Range;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
+
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -46,6 +49,20 @@ public class And extends Matcher{
             buff.append('(').append(operand._javaCode(variable)).append(')');
         }
         return buff.toString();
+    }
+
+    @Override
+    public List<Range> ranges(){
+        List<Range> ranges = null;
+        for(Matcher operand: operands){
+            List<Range> operandRanges = operand.ranges();
+            if(ranges==null)
+                ranges = operandRanges;
+            else{
+                ranges = Range.intersection(ranges, operandRanges);
+            }
+        }
+        return ranges;
     }
 
     @Override

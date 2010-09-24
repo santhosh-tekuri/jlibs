@@ -19,6 +19,9 @@ import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -28,6 +31,8 @@ public final class Range extends Matcher{
     public Range(String chars){
         from = chars.charAt(0);
         to = chars.charAt(2);
+        if(from>to)
+            throw new IllegalArgumentException("invalid range: "+this);
     }
 
     @Override
@@ -44,6 +49,10 @@ public final class Range extends Matcher{
             variable,
             StringUtil.toLiteral(to, false)
         );
+    }
+
+    public List<jlibs.core.util.Range> ranges(){
+        return Collections.singletonList(new jlibs.core.util.Range(from, to)); 
     }
 
     @Override

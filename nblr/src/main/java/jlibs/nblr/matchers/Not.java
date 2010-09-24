@@ -15,8 +15,12 @@
 
 package jlibs.nblr.matchers;
 
+import jlibs.core.util.Range;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -36,6 +40,11 @@ public final class Not extends Matcher{
     @Override
     public String javaCode(String variable){
         return "!("+delegate._javaCode(variable)+")";
+    }
+
+    @Override
+    public List<Range> ranges(){
+        return Range.minus(Collections.singletonList(new Range(Character.MIN_VALUE, Character.MAX_VALUE)), delegate.ranges());
     }
 
     @Override

@@ -16,8 +16,13 @@
 package jlibs.nblr.matchers;
 
 import jlibs.core.lang.StringUtil;
+import jlibs.core.util.Range;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -64,6 +69,18 @@ public final class Any extends Matcher{
             buff.append('\'');
         }
         return buff.toString();
+    }
+
+    @Override
+    public List<Range> ranges(){
+        if(chars==null)
+            return Collections.singletonList(new Range(Character.MIN_VALUE, Character.MAX_VALUE));
+        else{
+            List<Range> ranges = new ArrayList<Range>(chars.length);
+            for(char ch: chars)
+                ranges.add(new Range(ch, ch));
+            return Range.union(ranges);
+        }
     }
 
     @Override
