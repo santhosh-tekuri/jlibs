@@ -28,6 +28,7 @@ import javax.xml.namespace.QName;
 public class Edge implements SAXProducer{
     public Node source;
     public Node target;
+    public boolean fallback;
 
     public Edge(Node source, Node target){
         setSource(source);
@@ -60,10 +61,11 @@ public class Edge implements SAXProducer{
 
     @Override
     public String toString(){
+        String prefix = fallback ? "#" : "";
         if(matcher!=null)
-            return matcher.name==null ? matcher.toString() : '<'+matcher.name+'>';
+            return prefix+(matcher.name==null ? matcher.toString() : '<'+matcher.name+'>');
         else
-            return rule==null ? "" : rule.name;
+            return rule==null ? "" : prefix+rule.name;
     }
 
 
@@ -74,6 +76,7 @@ public class Edge implements SAXProducer{
         xml.startElement("edge");
         xml.addAttribute("source", ""+source.id);
         xml.addAttribute("target", ""+target.id);
+        xml.addAttribute("fallback", ""+fallback);
         if(matcher!=null){
             if(matcher.name==null)
                 xml.add(matcher);

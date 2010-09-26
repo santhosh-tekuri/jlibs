@@ -15,51 +15,180 @@
 
 package jlibs.nblr.rules;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Paths extends ArrayList<Path>{
-    public Path parent;
-    public int charIndex;
+    public final Path owner;
+    public final int depth;
 
-    public Paths(int charIndex){
-        this(null, charIndex);
+    public Paths(Path owner){
+        this.owner = owner;
+        if(owner!=null){
+            owner.children = this;
+            depth = owner.depth+1;
+        }else
+            depth = 1;
     }
 
-    public Paths(Path parent, int charIndex){
-        this.charIndex = charIndex;
-        this.parent = parent;
-    }
-
-    public void sort(){
-        Collections.sort(this, new Comparator<Path>() {
-            @Override
-            public int compare(Path p1, Path p2){
-                return p1.depth()-p2.depth();
-            }
-        });
-    }
-
-    @Override
     public boolean add(Path path){
-        path.parent = this;
+        if(owner==null)
+            path.branch = size();
+        else
+            path.branch = owner.branch;
+
+        path.parent = owner;
+        path.depth = depth;
         return super.add(path);
     }
 
-    @Override
-    public String toString(){
-        StringBuilder buff = new StringBuilder();
-        toString(new ArrayDeque<Path>(), buff);
-        return buff.toString();
+    @SuppressWarnings({"SimplifiableIfStatement"})
+    private static boolean clashes(Path p1, Path p2){
+        if(p1.matcher()==null && p2.matcher()==null)
+            throw new IllegalStateException("Ambigous Routes");
+        if(p1.matcher()!=null && p2.matcher()!=null){
+            if(p1.matcherEdge().fallback || p2.matcherEdge().fallback)
+                return false;
+            else
+                return p1.clashesWith(p2);
+        }
+        return false;
     }
 
-    void toString(ArrayDeque<Path> pathStack, StringBuilder buff){
-        for(Path path: this)
-            path.toString(pathStack, buff);
+    public static Paths travel(Node fromNode, int maxLookAhead){
+        Paths rootPaths = new Paths(null);
+        List<Path> list = new ArrayList<Path>();
+
+        int depth = 0;
+        while(true){
+            depth++;
+            if(list.size()==0){
+                rootPaths.populate(fromNode, new ArrayDeque<Object>());
+                list.addAll(rootPaths);
+            }else{
+                List<Path> newList = new ArrayList<Path>();
+                for(Path path: list){
+                    if(path.matcher()!=null){
+                        Paths paths = new Paths(path);
+                        paths.populate((Node)path.get(path.size()-1));
+                        newList.addAll(paths);
+                    }
+                }
+                list = newList;
+            }
+
+//            System.out.println("[DEPTH:"+depth+"] "+rootPaths);
+
+            TreeSet<Integer> clashingIndexes = new TreeSet<Integer>();
+            for(int ibranch=0; ibranch<rootPaths.size()-1; ibranch++){
+                for(int jbranch=ibranch+1; jbranch<rootPaths.size(); jbranch++){
+                    int i = 0;
+                    for(Path ipath: list){
+                        if(ipath.branch==ibranch){
+                            int j = 0;
+                            for(Path jpath: list){
+                                if(jpath.branch==jbranch){
+                                    if(clashes(ipath, jpath)){
+                                        clashingIndexes.add(i);
+                                        clashingIndexes.add(j);
+                                    }
+                                }
+                                j++;
+                            }
+                        }
+                        i++;
+                    }
+                }
+            }
+
+            if(clashingIndexes.size()==0)
+                return rootPaths;
+
+            List<Path> clashingPaths = new ArrayList<Path>(clashingIndexes.size());
+            for(int id: clashingIndexes)
+                clashingPaths.add(list.get(id));
+            list = clashingPaths;
+
+            if(depth==maxLookAhead)
+                throw new IllegalStateException("lookahead exceeded "+maxLookAhead);
+        }
+    }
+
+    private void populate(Node fromNode){
+        populate(fromNode, new ArrayDeque<Object>());
+    }
+
+    private void populate(Node fromNode, Deque<Object> stack){
+        if(stack.contains(fromNode))
+            throw new IllegalStateException("infinite loop detected!!!");
+
+        stack.push(fromNode);
+        if(fromNode.outgoing.size()>0){
+            for(Edge edge: fromNode.outgoing){
+                stack.push(edge);
+                if(edge.matcher!=null){
+                    stack.push(edge.target);
+                    add(new Path(stack));
+                    stack.pop();
+                }else if(edge.rule!=null)
+                    populate(edge.rule.node, stack);
+                else
+                    populate(edge.target, stack);
+                stack.pop();
+            }
+        }else{
+            int rulesPopped = 0;
+            boolean wasNode = false;
+            Node target = null;
+            for(Object obj: stack){
+                if(obj instanceof Node){
+                    if(wasNode)
+                        rulesPopped++;
+                    wasNode = true;
+                }else if(obj instanceof Edge){
+                    wasNode = false;
+                    Edge edge = (Edge)obj;
+                    if(edge.rule!=null){
+                        if(rulesPopped==0){
+                            target = edge.target;
+                            break;
+                        }else
+                            rulesPopped--;
+                    }
+                }
+            }
+
+            Path p = this.owner;
+            while(p!=null && target==null){
+                wasNode = false;
+                for(int i=p.size()-1; i>=0; i--){
+                    Object obj = p.get(i);
+                    if(obj instanceof Node){
+                        if(wasNode)
+                            rulesPopped++;
+                        wasNode = true;
+                    }else if(obj instanceof Edge){
+                        wasNode = false;
+                        Edge edge = (Edge)obj;
+                        if(edge.rule!=null){
+                            if(rulesPopped==0){
+                                target = edge.target;
+                                break;
+                            }else
+                                rulesPopped--;
+                        }
+                    }
+                }
+                p = p.parent;
+            }
+
+            if(target==null){
+                add(new Path(stack));
+            }else
+                populate(target, stack);
+        }
+        stack.pop();
     }
 }

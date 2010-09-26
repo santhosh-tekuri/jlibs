@@ -21,7 +21,6 @@ import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,86 +63,6 @@ public class Node implements SAXProducer{
 
     public Edge[] outgoing(){
         return outgoing.toArray(new Edge[outgoing.size()]);
-    }
-
-    /*-------------------------------------------------[ Paths ]---------------------------------------------------*/
-
-    public Paths paths(){
-        Paths paths = new Paths(0);
-        travel(new ArrayDeque<Object>(), paths, lookAhead);
-        paths.sort();
-        return paths;
-    }
-
-    private void travel(ArrayDeque<Object> stack, Paths paths, int charsToBeConsumed){
-        if(stack.contains(this))
-            throw new IllegalStateException("infinite loop detected!!!");
-        
-        
-        Path p = paths.parent;
-        while(p!=null){
-            if(p.get(0)==this){
-                if(paths.size()==0)
-                    paths.parent.paths = null;
-                return;
-            }
-            p = p.parent.parent;
-        }
-            
-        stack.push(this);
-        charsToBeConsumed = Math.max(charsToBeConsumed, lookAhead);
-        if(outgoing.size()>0){
-            for(Edge edge: outgoing()){
-                stack.push(edge);
-                if(edge.matcher!=null){
-                    stack.push(edge.target);
-                    Path path = new Path(stack);
-                    paths.add(path);
-                    if(charsToBeConsumed>1){
-                        charsToBeConsumed = Math.max(charsToBeConsumed, edge.target.lookAhead);
-                        path.paths = new Paths(path, paths.charIndex+1);
-                        edge.target.travel(new ArrayDeque<Object>(), path.paths, charsToBeConsumed-1);
-                    }
-                    stack.pop();
-                }else if(edge.rule!=null)
-                    edge.rule.node.travel(stack, paths, charsToBeConsumed);
-                else
-                    edge.target.travel(stack, paths, charsToBeConsumed);
-                stack.pop();
-            }
-        }else{
-            Node target = null;
-            for(Object obj: stack){
-                if(obj instanceof Edge){
-                    Edge edge = (Edge)obj;
-                    if(edge.rule!=null){
-                        target = edge.target;
-                        break;
-                    }
-                }
-            }
-            
-            p = paths.parent;
-            while(p!=null && target==null){
-                for(int i=p.size()-1; i>=0; i--){
-                    Object obj = p.get(i);
-                    if(obj instanceof Edge){
-                        Edge edge = (Edge)obj;
-                        if(edge.rule!=null){
-                            target = edge.target;
-                            break;
-                        }
-                    }
-                }
-                p = p.parent.parent;
-            }
-            
-            if(target==null)
-                paths.add(new Path(stack));
-            else
-                target.travel(stack, paths, charsToBeConsumed);
-        }
-        stack.pop();
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
