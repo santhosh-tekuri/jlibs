@@ -62,7 +62,7 @@ public abstract class CodeGenerator{
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     startCase(state.id);
-                    Routes routes = new Routes(Paths.travel(state, 10));
+                    Routes routes = new Routes(state, 10);
                     maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                     addRoutes(routes);
                     endCase();
