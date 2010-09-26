@@ -1,7 +1,0 @@
-public void eof() throws java.text.ParseException{
-    if(state!=-1){
-        eof = true;
-        _consume('\0');
-    }
-    expectEOF('\0');
-}

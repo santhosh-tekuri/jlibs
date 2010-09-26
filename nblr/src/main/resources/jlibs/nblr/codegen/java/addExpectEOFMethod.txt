@@ -1,4 +1,0 @@
-private void expectEOF(char found) throws java.text.ParseException{
-    if(stateStack.isEmpty() && !eof)
-        expected(String.valueOf(found), "<EOF>");
-}
