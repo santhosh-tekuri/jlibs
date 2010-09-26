@@ -38,7 +38,7 @@ public abstract class CodeGenerator{
     }
 
     public final void generateCode(){
-        startClassDeclaration(10); // todo: compute maxLookAhead reqd
+        startClassDeclaration(); // todo: compute maxLookAhead reqd
         printer.emptyLine(true);
         
         if(syntax.matchers.size()>0){
@@ -50,6 +50,7 @@ public abstract class CodeGenerator{
             }
         }
 
+        int maxLookAhead = 0;
         if(syntax.rules.size()>0){
             printTitleComment("Rules");
             printer.emptyLine(true);
@@ -61,7 +62,9 @@ public abstract class CodeGenerator{
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     startCase(state.id);
-                    addRoutes(new Routes(Paths.travel(state, 10)));
+                    Routes routes = new Routes(Paths.travel(state, 10));
+                    maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
+                    addRoutes(routes);
                     endCase();
                 }
                 finishRuleMethod(rule);
@@ -79,7 +82,7 @@ public abstract class CodeGenerator{
         finishCallRuleMethod();
 
         printer.emptyLine(false);
-        finishClassDeclaration();
+        finishClassDeclaration(maxLookAhead);
     }
 
     protected boolean debuggable;
@@ -91,8 +94,8 @@ public abstract class CodeGenerator{
     protected abstract void endCase();
     
     protected abstract void printTitleComment(String title);
-    protected abstract void startClassDeclaration(int maxLookAhead);
-    protected abstract void finishClassDeclaration();
+    protected abstract void startClassDeclaration();
+    protected abstract void finishClassDeclaration(int maxLookAhead);
 
     protected abstract void printMatcherMethod(Matcher matcher);
     

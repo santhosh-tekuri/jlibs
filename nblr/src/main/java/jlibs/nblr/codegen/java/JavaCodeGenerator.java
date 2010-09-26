@@ -41,40 +41,50 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void startClassDeclaration(int maxLookAhead){
+    protected void startClassDeclaration(){
         printer.printClassDoc();
 
-        String className = parserName;
-        int dot = className.lastIndexOf('.');
-        if(dot!=-1){
-            String pakage = className.substring(0, dot);
+        String className[] = className();
+        if(className[0].length()>0){
             printer.printlns(
-                "package "+pakage+";",
+                "package "+className[0]+";",
                 ""
             );
-            className = className.substring(dot+1);
         }
+
+        String extend = (debuggable ? DebuggableNBParser.class : NBParser.class).getName();
+        printer.printlns(
+            "public class "+className[1]+" extends "+extend+"{",
+                PLUS
+        );
+    }
+
+    private String[] className(){
+        String pakage = "";
+        String simpleName = parserName;
+        int dot = simpleName.lastIndexOf('.');
+        if(dot!=-1){
+            pakage = simpleName.substring(0, dot);
+            simpleName = simpleName.substring(dot+1);
+        }
+        return new String[]{ pakage, simpleName };
+    }
+
+    @Override
+    protected void finishClassDeclaration(int maxLookAhead){
+        String className = className()[1];
         String debuggerArgs = "";
         if(debuggable)
             debuggerArgs = ", consumer";
 
-        String extend = (debuggable ? DebuggableNBParser.class : NBParser.class).getName();
         printer.printlns(
-            "public class "+className+" extends "+extend+"{",
-                PLUS,
                 "private final "+consumerName+" consumer;",
                 "public "+className+"("+consumerName+" consumer){",
                     PLUS,
                     "super("+maxLookAhead+debuggerArgs+");",
                     "this.consumer = consumer;",
                     MINUS,
-                "}"
-        );
-    }
-
-    @Override
-    protected void finishClassDeclaration(){
-        printer.printlns(
+                "}",
                 MINUS,
             "}"
         );
@@ -159,10 +169,35 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addRoutes(Routes routes){
+        String expected = "expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
+
         int lastDepth = 0;
         for(Path[] route: routes.determinateBranchRoutes){
             if(routes.maxLookAhead>1 && route.length>lastDepth){
                 if(lastDepth!=0){
+                    printer.printlns(
+                            "if(eof)",
+                                PLUS,
+                                expected,
+                                MINUS
+                    );
+                    if(lastDepth>1){
+                        printer.printlns(
+                                "else",
+                                    PLUS,
+                                    "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
+                                    MINUS
+                        );
+                    }else{
+                        printer.printlns(
+                                "else{",
+                                    PLUS,
+                                    "lookAhead.add(ch, eof);",
+                                    "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
+                                    MINUS,
+                                "}"
+                        );
+                    }
                     printer.printlns(
                             MINUS,
                         "}"
@@ -198,6 +233,14 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
         if(routes.maxLookAhead>1 && lastDepth!=0){
             printer.printlns(
+                    "if(eof)",
+                        PLUS,
+                        expected,
+                        MINUS,
+                    "else",
+                        PLUS,
+                        "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
+                        MINUS,
                     MINUS,
                 "}"
             );
@@ -214,7 +257,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(routes.routeStartingWithEOF!=null)
             print(routes.routeStartingWithEOF[0], false);
         else
-            printer.println("expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");");
+            printer.println(expected);
     }
 
     private boolean startIf(Path path, boolean lookAhead, int index){
