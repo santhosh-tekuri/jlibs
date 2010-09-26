@@ -41,8 +41,7 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import static jlibs.nblr.matchers.Matcher.any;
-import static jlibs.nblr.matchers.Matcher.not;
+import static jlibs.nblr.matchers.Matcher.*;
 
 /**
  * @author Santhosh Kumar T
@@ -106,7 +105,7 @@ public class NBLREditor extends JFrame{
             @Override
             public void setRule(Syntax syntax, Rule rule){
                 super.setRule(syntax, rule);
-                if(rule!=null)
+                if(rule!=null && rule.id<combo.getItemCount())
                     combo.setSelectedIndex(rule.id);
             }
         };
@@ -269,6 +268,11 @@ public class NBLREditor extends JFrame{
         public void actionPerformed(ActionEvent ae){
             String ruleName = JOptionPane.showInputDialog("Rule Name");
             if(ruleName!=null){
+                if(syntax.rules.get(ruleName)!=null){
+                    JOptionPane.showMessageDialog(NBLREditor.this, "Rule with name '"+ruleName+"' already exists");
+                    return;
+                }
+
                 Rule rule = new Rule();
                 rule.node = new Node();
                 syntax.add(ruleName, rule);
@@ -290,6 +294,13 @@ public class NBLREditor extends JFrame{
             else{
                 String newName = JOptionPane.showInputDialog("Rule Name", rule.name);
                 if(newName!=null){
+                    if(newName.equals(rule.name))
+                        return;
+
+                    if(syntax.rules.get(newName)!=null){
+                        JOptionPane.showMessageDialog(NBLREditor.this, "Rule with name '"+newName+"' already exists");
+                        return;
+                    }
                     rule.name = newName;
                     Rule rules[] = syntax.rules.values().toArray(new Rule[syntax.rules.size()]);
                     syntax.rules.clear();
@@ -358,15 +369,18 @@ public class NBLREditor extends JFrame{
     public static void main(String[] args){
         Syntax syntax = new Syntax();
 
+        Matcher Q               = syntax.add("Q",              ch('\''));
+        Matcher DIGIT           = syntax.add("DIGIT",          range("0-9"));
+        Matcher PUBID_CHAR     = syntax.add("PUBID_CHAR",   or(any(" \r\n"), range("A-Z"), range("a-z"), DIGIT, any("-'()+,./:=?;!*#@$_%")));
+        Matcher PUBID_CHAR_NQ     = syntax.add("PUBID_CHAR_NQ",   minus(PUBID_CHAR, Q));
         Matcher SPECIAL_CHAR     = syntax.add("SPECIAL_CHAR",   any("^[]-^&\\<"));
         Matcher NON_SPECIAL_CHAR = syntax.add("NON_SPECIAL_CHAR",   not(SPECIAL_CHAR));
 
 
 //        Matcher GT              = syntax.add("GT",             ch('>'));
 //        Matcher BRACKET_CLOSE   = syntax.add("BRACKET_CLOSE",  ch(']'));
-//        Matcher Q               = syntax.add("Q",              ch('\''));
 //        Matcher DQ              = syntax.add("DQ",             ch('"'));
-//        Matcher DIGIT           = syntax.add("DIGIT",          range("0-9"));
+
 //        Matcher HEX_DIGIT       = syntax.add("HEX_DIGIT",      or(DIGIT, range("a-f"), range("A-F")));
 //        Matcher WS              = syntax.add("WS",             any(" \t\n\r"));
 //        Matcher ENCODING_START  = syntax.add("ENCODING_START", or(range("A-Z"), range("a-z")));
@@ -383,7 +397,7 @@ public class NBLREditor extends JFrame{
 //        rule.node = new Node();
 //        syntax.add("Rule1", rule);
 
-        NBLREditor editor = new NBLREditor(null);
+        NBLREditor editor = new NBLREditor(syntax);
         editor.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         editor.setVisible(true);
     }
