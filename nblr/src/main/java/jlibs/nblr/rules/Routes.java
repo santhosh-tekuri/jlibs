@@ -25,8 +25,8 @@ import java.util.*;
 public class Routes{
     public final Paths paths;
     public final int maxLookAhead;
-    public final List<Path[]> determintateBranchRoutes;
-    public final List<Path[]> indetermintateBranchRoutes;
+    public final List<Path[]> determinateBranchRoutes;
+    public final List<Path[]> indeterminateBranchRoutes;
     public final Path[] routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
@@ -57,16 +57,16 @@ public class Routes{
         }
 
         if(branchWithMultiplePaths==-1)
-             indetermintateBranchRoutes = new ArrayList<Path[]>();
+             indeterminateBranchRoutes = new ArrayList<Path[]>();
         else
-            indetermintateBranchRoutes = branches[branchWithMultiplePaths];
+            indeterminateBranchRoutes = branches[branchWithMultiplePaths];
 
-        determintateBranchRoutes = new ArrayList<Path[]>();
+        determinateBranchRoutes = new ArrayList<Path[]>();
         for(int branch=0; branch<branches.length; branch++){
             if(branch!=branchWithMultiplePaths)
-                determintateBranchRoutes.addAll(branches[branch]);
+                determinateBranchRoutes.addAll(branches[branch]);
         }
-        Collections.sort(determintateBranchRoutes, new Comparator<Path[]>(){
+        Collections.sort(determinateBranchRoutes, new Comparator<Path[]>(){
             @Override
             public int compare(Path[] route1, Path[] route2){
                 return route1.length-route2.length;
@@ -74,7 +74,7 @@ public class Routes{
         });
 
         Path[] routeStartingWithEOF = null;
-        for(Path[] route: determintateBranchRoutes){
+        for(Path[] route: determinateBranchRoutes){
             if(route[0].matcher()==null){
                 if(routeStartingWithEOF!=null)
                     throw new ImpossibleException("found more that one route starting with <EOF>");
@@ -82,7 +82,7 @@ public class Routes{
             }
         }
         if(routeStartingWithEOF!=null)
-            determintateBranchRoutes.remove(routeStartingWithEOF);
+            determinateBranchRoutes.remove(routeStartingWithEOF);
         this.routeStartingWithEOF = routeStartingWithEOF;
     }
 
@@ -110,9 +110,9 @@ public class Routes{
 
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(Path[] route: determintateBranchRoutes)
+        for(Path[] route: determinateBranchRoutes)
             add(buff, route);
-        for(Path[] route: indetermintateBranchRoutes)
+        for(Path[] route: indeterminateBranchRoutes)
             add(buff, route);
         if(routeStartingWithEOF!=null)
             add(buff, routeStartingWithEOF);
