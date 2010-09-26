@@ -15,13 +15,10 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.core.lang.StringUtil;
-import jlibs.nblr.Parser;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
-import java.lang.reflect.Method;
 
 /**
  * @author Santhosh Kumar T
@@ -38,22 +35,8 @@ public class PublishAction implements Action{
     }
 
     @Override
-    public void execute(Parser parser){
-        String data = parser.data(begin, end);
-        System.out.println(name+"(\""+ StringUtil.toLiteral(data, false)+"\");");
-        if(parser.consumer!=null){
-            try{
-                Method method = parser.consumer.getClass().getMethod(name, String.class);
-                method.invoke(parser.consumer, data);
-            }catch(Exception ex){
-                throw new RuntimeException(ex);
-            }
-        }
-    }
-
-    @Override
     public String javaCode(){
-        return "consumer."+name+"(data("+begin+", "+end+"))";
+        return "consumer."+name+"(buffer.pop("+begin+", "+end+"))";
     }
 
     @Override

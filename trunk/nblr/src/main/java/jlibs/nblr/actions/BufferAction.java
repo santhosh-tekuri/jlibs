@@ -15,7 +15,6 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.nblr.Parser;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
@@ -30,13 +29,8 @@ public class BufferAction implements Action{
     private BufferAction(){}
 
     @Override
-    public void execute(Parser parser){
-        parser.buffer();
-    }
-
-    @Override
     public String javaCode(){
-        return "buffer()";
+        return "buffer.push()";
     }
 
     @Override
