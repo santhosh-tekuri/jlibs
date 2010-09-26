@@ -40,6 +40,13 @@ public class Rule implements SAXProducer{
         return nodes;
     }
 
+    public ArrayList<Edge> edges(){
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        ArrayList<Edge> edges = new ArrayList<Edge>();
+        computeIDS(nodes, edges, node);
+        return edges;
+    }
+
     public void computeIDS(){
         ArrayList<Node> nodes = new ArrayList<Node>();
         ArrayList<Edge> edges = new ArrayList<Edge>();

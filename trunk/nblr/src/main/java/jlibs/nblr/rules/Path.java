@@ -17,47 +17,45 @@ package jlibs.nblr.rules;
 
 import jlibs.nblr.matchers.Matcher;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Deque;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Path extends ArrayList<Object>{
-    public Paths parent;
-    public Paths paths;
-    
-    public Path(ArrayDeque<Object> stack){
+    public Path(Deque<Object> stack){
         super(stack);
         Collections.reverse(this);
     }
 
-    public List<Node> nodes(){
-        ArrayList<Node> nodes = new ArrayList<Node>();
-        for(Object obj: this){
-            if(obj instanceof Node)
-                nodes.add((Node)obj);
-        }
-        return nodes;
-    }
-
-    public Matcher matcher(){
-        if(size()>1)
-            return ((Edge)get(size()-2)).matcher;
+    public Edge matcherEdge(){
+        if(size()>1 && get(size()-2) instanceof Edge)
+            return (Edge)get(size()-2);
         else
             return null;
     }
 
-    public int depth(){
-        int depth = 0;
-        if(paths!=null){
-            for(Path path: paths)
-                depth = Math.max(depth, path.depth());
-        }
-        return depth+1;
+    public Matcher matcher(){
+        Edge matcherEdge = matcherEdge();
+        return matcherEdge!=null ? matcherEdge.matcher : null;
     }
+
+    public boolean clashesWith(Path that){
+        if(this.depth!=that.depth)
+            throw new IllegalArgumentException("depths are not same: "+this.depth+"!="+that.depth);
+        if(depth>1){
+            if(!this.parent.clashesWith(that.parent))
+                return false;
+        }
+        return this.matcher().clashesWith(that.matcher());
+    }
+
+    public Paths children;
+    public Path parent;
+    public int depth;
+    public int branch;
 
     @Override
     public String toString(){
@@ -68,19 +66,5 @@ public class Path extends ArrayList<Object>{
             return '<'+matcher.name+'>';
         else
             return matcher.toString();
-    }
-
-    void toString(ArrayDeque<Path> pathStack, StringBuilder buff){
-        pathStack.push(this);
-        if(paths==null){
-            List<Path> list = new ArrayList<Path>(pathStack);
-            Collections.reverse(list);
-            if(buff.length()>0)
-                buff.append(" OR ");
-            for(Path path: list)
-                buff.append(path);
-        }else
-            paths.toString(pathStack, buff);
-        pathStack.pop();
     }
 }
