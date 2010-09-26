@@ -194,10 +194,11 @@ class RuleBinding{
 
     @Relation.Finish("edge")
     @SuppressWarnings({"unchecked"})
-    public static void relateWithEdge(SAXContext parent, @Parent Rule rule, @Current Edge edge, @Temp String source, @Temp String target){
+    public static void relateWithEdge(SAXContext parent, @Parent Rule rule, @Current Edge edge, @Temp String source, @Temp String target, @Temp String fallback){
         List<Node> nodes = (List<Node>)parent.get("", "node");
         edge.setSource(nodes.get(Integer.parseInt(source)));
         edge.setTarget(nodes.get(Integer.parseInt(target)));
+        edge.fallback = Boolean.valueOf(fallback);
     }
 }
 
