@@ -17,6 +17,11 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
+            <artifactId>jlibs-nbp</artifactId>
+            <version>${project.version}</version>
+        </dependency> 
+        <dependency>
+            <groupId>jlibs</groupId>
             <artifactId>jlibs-swing</artifactId>
             <version>${project.version}</version>
         </dependency> 
