@@ -61,11 +61,15 @@ public abstract class CodeGenerator{
                 rule.computeIDS();
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
-                    startCase(state.id);
-                    Routes routes = new Routes(state, 10);
-                    maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
-                    addRoutes(routes);
-                    endCase();
+                    try{
+                        startCase(state.id);
+                        Routes routes = new Routes(state, 10);
+                        maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
+                        addRoutes(routes);
+                        endCase();
+                    }catch(IllegalStateException ex){
+                        throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
+                    }
                 }
                 finishRuleMethod(rule);
                 printer.emptyLine(true);

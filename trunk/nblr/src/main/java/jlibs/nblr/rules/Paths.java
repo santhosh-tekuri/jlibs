@@ -122,7 +122,7 @@ public class Paths extends ArrayList<Path>{
 
     private void populate(Node fromNode, Deque<Object> stack){
         if(stack.contains(fromNode))
-            throw new IllegalStateException("infinite loop detected!!!");
+            throw new IllegalStateException("infinite loop detected");
 
         stack.push(fromNode);
         if(fromNode.outgoing.size()>0){
