@@ -24,6 +24,8 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
+import java.util.ArrayList;
+
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
 
@@ -171,85 +173,74 @@ public class JavaCodeGenerator extends CodeGenerator{
     protected void addRoutes(Routes routes){
         String expected = "expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
+        boolean lookAheadBufferReqd = routes.maxLookAhead>1;
         int lastDepth = 0;
-        for(Path[] route: routes.determinateBranchRoutes){
-            if(routes.maxLookAhead>1 && route.length>lastDepth){
-                if(lastDepth!=0){
+        for(int iroute=0; iroute<routes.determinateBranchRoutes.size(); iroute++){
+            Path[] route = routes.determinateBranchRoutes.get(iroute);
+            int curDepth = route.length;
+            if(lookAheadBufferReqd && curDepth>lastDepth){
+                printer.printlns(
+                    "if(lookAhead.length()<"+curDepth+"){",
+                        PLUS
+                );
+                if(curDepth>1){
                     printer.printlns(
+                        "lookAhead.add(ch, eof);",
+                        "if(!eof && lookAhead.length()<"+curDepth+")",
+                            PLUS,
+                            "return "+routes.fromNode.id+";",
+                            MINUS
+                    );
+                }
+                
+            }
+
+            int ifCount = 0;
+            for(int ipath=0; ipath<route.length; ipath++){
+                if(startIf(route[ipath], curDepth>1, ipath))
+                    ifCount++;
+            }
+
+            print(route[0], curDepth>1);
+
+            endIf(ifCount);
+
+            if(lookAheadBufferReqd){
+                boolean lastRoute = iroute+1==routes.determinateBranchRoutes.size();
+                if(lastRoute || routes.determinateBranchRoutes.get(iroute+1).length>curDepth){
+                    if(!lastRoute){
+                        printer.printlns(
                             "if(eof)",
                                 PLUS,
                                 expected,
                                 MINUS
-                    );
-                    if(lastDepth>1){
-                        printer.printlns(
-                                "else",
-                                    PLUS,
-                                    "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
-                                    MINUS
                         );
-                    }else{
-                        printer.printlns(
-                                "else{",
-                                    PLUS,
-                                    "lookAhead.add(ch, eof);",
-                                    "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
-                                    MINUS,
-                                "}"
-                        );
+
+                        ArrayList<String> list = new ArrayList<String>();
+                        list.add(curDepth==1 ? "else{" : "else");
+                        list.add(PLUS);
+                        if(curDepth==1)
+                            list.add("lookAhead.add(ch, eof);");
+                        list.add("return "+routes.fromNode.id+';');
+                        list.add(MINUS);
+                        if(curDepth==1)
+                            list.add("}");
+                        printer.printlns(list.toArray(new String[list.size()]));
                     }
                     printer.printlns(
                             MINUS,
                         "}"
                     );
                 }
-                printer.printlns(
-                    "if(lookAhead.length()<"+route.length+"){",
-                        PLUS
-                );
-                if(route.length>1){
-                    printer.printlns(
-                            "lookAhead.add(ch, eof);",
-                            "if(!eof && lookAhead.length()<"+route.length+")",
-                                PLUS,
-                                "return "+((Node)route[0].get(0)).id+";",
-                                MINUS
-                    );
-                }
             }
 
-            int ipath = 0;
-            int ifCount = 0;
-            for(Path path: route){
-                if(startIf(path, route.length>1, ipath))
-                    ifCount++;
-                ipath++;
-            }
-
-            print(route[0], route.length>1);
-            
-            endIf(ifCount);
-            lastDepth = route.length;
-        }
-        if(routes.maxLookAhead>1 && lastDepth!=0){
-            printer.printlns(
-                    "if(eof)",
-                        PLUS,
-                        expected,
-                        MINUS,
-                    "else",
-                        PLUS,
-                        "return "+((Node)routes.determinateBranchRoutes.get(0)[0].get(0)).id+";",
-                        MINUS,
-                    MINUS,
-                "}"
-            );
+            lastDepth = curDepth;
         }
 
         if(routes.indeterminateBranchRoutes.size()>0){
             Path path = routes.indeterminateBranchRoutes.get(0)[0];
             if(startIf(path, true, 0)){
-                print(routes.indeterminateBranchRoutes.get(0)[0], true);
+                print(path, true);
                 endIf(1);
             }
         }
@@ -260,14 +251,14 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println(expected);
     }
 
-    private boolean startIf(Path path, boolean lookAhead, int index){
+    private boolean startIf(Path path, boolean useLookAheadBuffer, int lookAheadIndex){
         Matcher matcher = path.matcher();
         if(matcher!=null){
             String ch = "ch";
             String eof = "eof";
-            if(lookAhead){
-                ch = "lookAhead.charAt("+index+')';
-                eof = "lookAhead.isEOF("+index+')';
+            if(useLookAheadBuffer){
+                ch = "lookAhead.charAt("+lookAheadIndex+')';
+                eof = "lookAhead.isEOF("+lookAheadIndex+')';
             }
 
             String condition = matcher._javaCode(ch);
@@ -299,7 +290,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
         printer.println(line);
     }
-    private void print(Path path, boolean lookAhead){
+    private void print(Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
         
         int nextState = -1;
@@ -318,7 +309,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                     println("push(RULE_"+edge.rule.name+", "+edge.target.id+");");
                 else if(edge.matcher!=null){
                     nextState = edge.target.id;
-                    if(lookAhead)
+                    if(consumeLookAhead)
                         println("consumed();");
                     break;
                 }
