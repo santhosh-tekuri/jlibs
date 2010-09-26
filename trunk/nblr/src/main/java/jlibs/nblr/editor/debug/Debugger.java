@@ -204,7 +204,7 @@ public class Debugger extends JPanel implements Observer{
     private void updateGuardedBlock() throws BadLocationException{
         input.getHighlighter().removeAllHighlights();
         int consumed = parser.location.getCharacterOffset();
-        if(consumed>1)
+        if(consumed>0)
             input.getHighlighter().addHighlight(1, consumed-1, consumedHighlightPainter);
 
         if(inputIndex!=consumed)
