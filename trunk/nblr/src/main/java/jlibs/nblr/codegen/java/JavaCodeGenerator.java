@@ -160,7 +160,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void addRoutes(Routes routes){
         int lastDepth = 0;
-        for(Path[] route: routes.determintateBranchRoutes){
+        for(Path[] route: routes.determinateBranchRoutes){
             if(routes.maxLookAhead>1 && route.length>lastDepth){
                 if(lastDepth!=0){
                     printer.printlns(
@@ -203,10 +203,10 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        if(routes.indetermintateBranchRoutes.size()>0){
-            Path path = routes.indetermintateBranchRoutes.get(0)[0];
+        if(routes.indeterminateBranchRoutes.size()>0){
+            Path path = routes.indeterminateBranchRoutes.get(0)[0];
             if(startIf(path, true, 0)){
-                print(routes.indetermintateBranchRoutes.get(0)[0], true);
+                print(routes.indeterminateBranchRoutes.get(0)[0], true);
                 endIf(1);
             }
         }
