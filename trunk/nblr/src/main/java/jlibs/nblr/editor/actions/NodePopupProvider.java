@@ -24,6 +24,8 @@ import org.netbeans.api.visual.widget.Widget;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
@@ -98,22 +100,31 @@ public class NodePopupProvider implements PopupMenuProvider{
         }
 
         private Node newSource(){
-            Node newSource = null;
             if(scene.getRule().node==node){
+                Set<Node> targets = new HashSet<Node>();
                 for(Edge outgoing: node.outgoing){
-                    if(!outgoing.loop()){
-                        for(Edge incoming: outgoing.target.incoming){
-                            if(!incoming.loop()){
-                                break;
-                            }
+                    if(!outgoing.loop())
+                        targets.add(outgoing.target);
+                }
+
+                Node newSource = null;
+                for(Node target: targets){
+                    boolean canBeSource = true;
+                    for(Edge incoming: target.incoming){
+                        if(!incoming.loop() && incoming.source!=node){
+                            canBeSource = false;
+                            break;
                         }
-                        if(newSource!=null)
+                    }
+                    if(canBeSource){
+                        if(newSource!=null) // multiple sources
                             return null;
-                        newSource = outgoing.target;
+                        newSource = target;
                     }
                 }
-            }
-            return newSource;
+                return newSource;
+            }else
+                return null;
         }
 
         @Override
