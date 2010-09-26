@@ -16,16 +16,13 @@
 package jlibs.nblr.codegen.java;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.util.regex.TemplateMatcher;
+import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.CodeGenerator;
 import jlibs.nblr.editor.debug.Debugger;
-import jlibs.nblr.editor.debug.NBParser;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.rules.Rule;
-
-import java.util.HashMap;
-import java.util.Map;
+import jlibs.nblr.rules.*;
+import jlibs.nbp.NBParser;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -44,7 +41,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void startClassDeclaration(){
+    protected void startClassDeclaration(int maxLookAhead){
         printer.printClassDoc();
 
         String className = parserName;
@@ -57,36 +54,26 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
             className = className.substring(dot+1);
         }
-        String implementing = "";
+        String debuggerArgs = "";
         if(debuggable)
-            implementing = " implements "+ NBParser.class.getName();
+            debuggerArgs = ", consumer";
 
-        Map<String, String> variables = new HashMap<String, String>();
-        variables.put("CONSUMER_TYPE", consumerName);
-        variables.put("CLASS_NAME", className);
-        variables.put("IMPLEMENTING", implementing);
-        printer.printlns(getClass().getResourceAsStream("startClassDeclaration.txt"), new TemplateMatcher("${", "}"), new TemplateMatcher.MapVariableResolver(variables));
-    }
-
-    @Override
-    protected void addEOFMember(){
-        printer.printlns("private boolean eof;");
-    }
-
-    @Override
-    protected void addStateMember(){
-        printer.printlns("private int state;");
-    }
-
-    @Override
-    protected void addRequiredMember(){
-        printer.printlns("private int required;");
+        String extend = (debuggable ? DebuggableNBParser.class : NBParser.class).getName();
+        printer.printlns(
+            "public class "+className+" extends "+extend+"{",
+                PLUS,
+                "private final "+consumerName+" consumer;",
+                "public "+className+"("+consumerName+" consumer){",
+                    PLUS,
+                    "super("+maxLookAhead+debuggerArgs+");",
+                    "this.consumer = consumer;",
+                    MINUS,
+                "}"
+        );
     }
 
     @Override
     protected void finishClassDeclaration(){
-        if(debuggable)
-            printer.printlns(getClass().getResourceAsStream("finishClassDeclaration.txt"));
         printer.printlns(
                 MINUS,
             "}"
@@ -112,9 +99,9 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(char ch) throws java.text.ParseException{",
+            "private int "+rule.name+"(char ch, boolean eof) throws java.text.ParseException{",
                 PLUS,
-                "switch(state){",
+                "switch(stateStack.peek()){",
                     PLUS
         );
     }
@@ -135,11 +122,6 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void addBreak(){
-        printer.println("break;");
-    }
-
-    @Override
     protected void finishRuleMethod(Rule rule){
         printer.printlns(
                     "default:",
@@ -154,39 +136,11 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void addRuleStackMemeber(){
-        printer.println("private final java.util.ArrayDeque<Integer> ruleStack = new java.util.ArrayDeque<Integer>();");
-    }
-
-    @Override
-    protected void addStateStackMemeber(){
-        printer.println("private final java.util.ArrayDeque<Integer> stateStack = new java.util.ArrayDeque<Integer>();");
-    }
-
-    @Override
-    protected void addStartParsingMethod(){
+    protected void startCallRuleMethod(){
+        String prefix = debuggable ? "_" : "";
         printer.printlns(
-            "public void startParsing(int rule){",
-                PLUS,
-                "ruleStack.push(rule);"
-        );
-        if(debuggable){
-            printer.printlns(
-                "consumer.currentRule(rule);",
-                "consumer.currentNode(0);"
-            );
-        }
-        printer.printlns(
-                MINUS,
-             "}"
-        );
-    }
-
-    @Override
-    protected void startConsumeMethod(){
-        printer.printlns(getClass().getResourceAsStream("startConsumeMethod.txt"));
-        printer.printlns(
-            "private void _consume(char ch) throws java.text.ParseException{",
+            "@Override",
+            "protected int "+prefix+"callRule(char ch, boolean eof) throws java.text.ParseException{",
                 PLUS,
                 "switch(ruleStack.peek()){",
                     PLUS
@@ -194,67 +148,145 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void finishConsumeMethod(){
-        printer.printlns(
-                    MINUS,
-                "}",
-                "if(state==-1){",
-                    PLUS,
-                    "if(!stateStack.isEmpty()){",
-                        PLUS,
-                        "ruleStack.pop();",
-                        "state = stateStack.pop();"
-        );
-        if(debuggable){
+    protected void callRuleMethod(String ruleName){
+        printer.println("return "+ruleName+"(ch, eof);");
+    }
+
+    @Override
+    protected void finishCallRuleMethod(){
+        finishRuleMethod(null);
+    }
+
+    @Override
+    protected void addRoutes(Routes routes){
+        int lastDepth = 0;
+        for(Path[] route: routes.determintateBranchRoutes){
+            if(routes.maxLookAhead>1 && route.length>lastDepth){
+                if(lastDepth!=0){
+                    printer.printlns(
+                            MINUS,
+                        "}"
+                    );
+                }
+                printer.printlns(
+                    "if(lookAhead.length()<"+route.length+"){",
+                        PLUS
+                );
+                if(route.length>1){
+                    printer.printlns(
+                            "lookAhead.add(ch, eof);",
+                            "if(!eof && lookAhead.length()<"+route.length+")",
+                                PLUS,
+                                "return "+((Node)route[0].get(0)).id+";",
+                                MINUS
+                    );
+                }
+            }
+
+            int ipath = 0;
+            int ifCount = 0;
+            for(Path path: route){
+                if(startIf(path, route.length>1, ipath))
+                    ifCount++;
+                ipath++;
+            }
+
+            print(route[0], route.length>1);
+            
+            endIf(ifCount);
+            lastDepth = route.length;
+        }
+        if(routes.maxLookAhead>1 && lastDepth!=0){
             printer.printlns(
-                "consumer.currentRule(ruleStack.peek());",
-                "consumer.currentNode(state);"
+                    MINUS,
+                "}"
             );
         }
-        printer.printlns(
-                        "_consume(ch);",
-                        MINUS,
-                    "}else",
-                        PLUS,
-                        "expectEOF(ch);",
-                        MINUS,
+
+        if(routes.indetermintateBranchRoutes.size()>0){
+            Path path = routes.indetermintateBranchRoutes.get(0)[0];
+            if(startIf(path, true, 0)){
+                print(routes.indetermintateBranchRoutes.get(0)[0], true);
+                endIf(1);
+            }
+        }
+
+        if(routes.routeStartingWithEOF!=null)
+            print(routes.routeStartingWithEOF[0], false);
+        else
+            printer.println("expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");");
+    }
+
+    private boolean startIf(Path path, boolean lookAhead, int index){
+        Matcher matcher = path.matcher();
+        if(matcher!=null){
+            String ch = "ch";
+            String eof = "eof";
+            if(lookAhead){
+                ch = "lookAhead.charAt("+index+')';
+                eof = "lookAhead.isEOF("+index+')';
+            }
+
+            String condition = matcher._javaCode(ch);
+            if(matcher.name==null)
+                condition = '('+condition+')';
+            printer.printlns(
+                "if(!"+eof+" && "+condition+"){",
+                    PLUS
+            );
+            return true;
+        }else
+            return false;
+    }
+
+    private void endIf(int count){
+        while(count-->0){
+            printer.printlns(
                     MINUS,
-                "}",
-                MINUS,
-            "}"
-        );
+                "}"
+            );
+        }
     }
 
-    @Override
-    protected void callRuleMethod(String ruleName){
-        printer.println("state = "+ruleName+"(ch);");
+    private StringBuilder nodesToBeExecuted = new StringBuilder();
+    private void println(String line){
+        if(nodesToBeExecuted.length()>0){
+            printer.println("consumer.execute("+nodesToBeExecuted+");");
+            nodesToBeExecuted.setLength(0);
+        }
+        printer.println(line);
     }
-
-    @Override
-    protected void addExpectedMethod(){
-        printer.printlns(getClass().getResourceAsStream("addExpectedMethod.txt"));
-    }
-
-    @Override
-    protected void addExpectEOFMethod(){
-        printer.printlns(getClass().getResourceAsStream("addExpectEOFMethod.txt"));
-    }
-
-    @Override
-    protected void addEOFMethod(){
-        printer.printlns(getClass().getResourceAsStream("addEOFMethod.txt"));
-    }
-
-    @Override
-    protected void addBufferingSection(){
-        Map<String, String> variables = new HashMap<String, String>();
-        variables.put("MODIFIER", debuggable ? "public" : "private");
-        printer.printlns(getClass().getResourceAsStream("addBufferingSection.txt"), new TemplateMatcher("${", "}"), new TemplateMatcher.MapVariableResolver(variables));
+    private void print(Path path, boolean lookAhead){
+        nodesToBeExecuted.setLength(0);
+        
+        int nextState = -1;
+        for(Object obj: path){
+            if(obj instanceof Node){
+                Node node = (Node)obj;
+                if(debuggable){
+                    if(nodesToBeExecuted.length()>0)
+                        nodesToBeExecuted.append(", ");
+                    nodesToBeExecuted.append(node.id);
+                }else if(node.action!=null)
+                    printer.println(node.action.javaCode()+';');
+            }else if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.rule!=null)
+                    println("push(RULE_"+edge.rule.name+", "+edge.target.id+");");
+                else if(edge.matcher!=null){
+                    nextState = edge.target.id;
+                    if(lookAhead)
+                        println("consumed();");
+                    break;
+                }
+            }
+        }
+        println("return "+nextState+';');
     }
     
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
     
-    private String parserName = "NBParser";
+    private String parserName = "UntitledParser";
     public void setParserName(String parserName){
         this.parserName = parserName;
     }
@@ -267,7 +299,6 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     public void setDebuggable(){
         super.setDebuggable();
-        parserName = "DebuggableNBParser";
         consumerName = Debugger.class.getName();
     }
 }
