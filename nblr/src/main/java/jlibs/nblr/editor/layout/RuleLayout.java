@@ -214,8 +214,10 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
                 List<Node> nodes = coordinates.get(row);
                 for(int i=minNode.col+1; i<maxNode.col; i++){
                     Node node = nodes.get(i);
-                    topHeight = Math.max(topHeight, node.conRightTop);
-                    topHeight = Math.max(topHeight, node.conLeftTop);
+                    if(node!=null){
+                        topHeight = Math.max(topHeight, node.conRightTop);
+                        topHeight = Math.max(topHeight, node.conLeftTop);
+                    }
                 }
                 topHeight++;
 
@@ -223,7 +225,8 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
                 minNode.conRightTop = maxNode.conLeftTop = topHeight;
                 for(int i=minNode.col+1; i<maxNode.col; i++){
                     Node node = nodes.get(i);
-                    node.conTop = true;
+                    if(node!=null)
+                        node.conTop = true;
                 }
             }else{
                 //boolean bottomPossible = minNode.conBottom==0 && maxNode.conBottom==0;
@@ -232,8 +235,10 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
                 List<Node> nodes = coordinates.get(row);
                 for(int i=minNode.col+1; i<maxNode.col; i++){
                     Node node = nodes.get(i);
-                    bottomHeight = Math.max(bottomHeight, node.conRightBottom);
-                    bottomHeight = Math.max(bottomHeight, node.conLeftBottom);
+                    if(node!=null){
+                        bottomHeight = Math.max(bottomHeight, node.conRightBottom);
+                        bottomHeight = Math.max(bottomHeight, node.conLeftBottom);
+                    }
                 }
                 bottomHeight++;
 
@@ -241,7 +246,8 @@ public class RuleLayout extends GraphLayout<Node, Edge>{
                 minNode.conRightBottom = maxNode.conLeftBottom = bottomHeight;
                 for(int i=minNode.col+1; i<maxNode.col; i++){
                     Node node = nodes.get(i);
-                    node.conBottom = true;
+                    if(node!=null)
+                        node.conBottom = true;
                 }
             }
         }
