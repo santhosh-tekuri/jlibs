@@ -23,6 +23,7 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class Routes{
+    public final Node fromNode;
     public final Paths paths;
     public final int maxLookAhead;
     public final List<Path[]> determinateBranchRoutes;
@@ -30,12 +31,13 @@ public class Routes{
     public final Path[] routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
-    public Routes(Paths paths){
-        this.paths = paths;
+    public Routes(Node fromNode, int maxLookAhead){
+        this.fromNode = fromNode;
+        this.paths = Paths.travel(fromNode, maxLookAhead);
 
         List<Path[]> routes = flatten();
 
-        int maxLookAhead = 0;
+        maxLookAhead = 0;
         List<Path[]> branches[] = new List[paths.size()];
         for(Path[] route: routes){
             int branch = route[0].branch;
