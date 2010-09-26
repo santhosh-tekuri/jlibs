@@ -15,13 +15,11 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.nblr.Parser;
 import jlibs.xml.sax.SAXProducer;
 
 /**
  * @author Santhosh Kumar T
  */
 public interface Action extends SAXProducer{
-    public void execute(Parser parser);
     public String javaCode();
 }

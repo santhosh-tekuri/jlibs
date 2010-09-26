@@ -15,12 +15,10 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.nblr.Parser;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
 import javax.xml.namespace.QName;
-import java.lang.reflect.Method;
 
 /**
  * @author Santhosh Kumar T
@@ -30,19 +28,6 @@ public class EventAction implements Action{
 
     public EventAction(String name){
         this.name = name;
-    }
-
-    @Override
-    public void execute(Parser parser){
-        System.out.println(name+"();");
-        if(parser.consumer!=null){
-            try{
-                Method method = parser.consumer.getClass().getMethod(name);
-                method.invoke(parser.consumer);
-            }catch(Exception ex){
-                throw new RuntimeException(ex);
-            }
-        }
     }
 
     @Override
