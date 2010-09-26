@@ -47,6 +47,8 @@ import static jlibs.nblr.matchers.Matcher.*;
  * @author Santhosh Kumar T
  */
 public class NBLREditor extends JFrame{
+    public static final int MAX_LOOK_AHEAD = 5;
+
     private Syntax syntax;
     private RuleScene scene;
     private JComboBox combo;
@@ -82,7 +84,7 @@ public class NBLREditor extends JFrame{
                 if(model instanceof Node){
                     Node node = (Node)model;
                     try{
-                        msg = new Routes(node, 10).toString();
+                        msg = new Routes(node, MAX_LOOK_AHEAD).toString();
                     }catch(IllegalStateException ex){
                         msg = ex.getMessage();
                     }

@@ -79,8 +79,6 @@ public class Paths extends ArrayList<Path>{
                 list = newList;
             }
 
-//            System.out.println("[DEPTH:"+depth+"] "+rootPaths);
-
             TreeSet<Integer> clashingIndexes = new TreeSet<Integer>();
             for(int ibranch=0; ibranch<rootPaths.size()-1; ibranch++){
                 for(int jbranch=ibranch+1; jbranch<rootPaths.size(); jbranch++){
