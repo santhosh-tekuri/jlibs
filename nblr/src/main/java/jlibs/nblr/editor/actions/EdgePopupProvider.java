@@ -50,8 +50,21 @@ public class EdgePopupProvider implements PopupMenuProvider{
         popup.add(insertMenu);
         popup.add(setMatcherAction);
         popup.add(setRuleAction);
+        popup.add(toggleFallBackAction);
         popup.add(inlineRuleAction);
         popup.add(clearAction);
+        
+        int count = edge.source.outgoing.size();
+        for(Edge e: edge.source.outgoing){
+            if(e.loop())
+                count--;
+        }
+        if(count>1){
+            popup.addSeparator();
+            popup.add(moveUpAction);
+            popup.add(moveDownAction);
+        }
+
         popup.addSeparator();
         popup.add(deleteEdgeAction);
         return popup;
@@ -93,6 +106,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
         public void actionPerformed(ActionEvent ae){
             edge.matcher = null;
             edge.rule = null;
+            edge.fallback = false;
             scene.refresh();
         }
 
@@ -150,6 +164,20 @@ public class EdgePopupProvider implements PopupMenuProvider{
         }
     };
 
+    private Action toggleFallBackAction = new AbstractAction("Toggle Fallback"){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            if(!edge.fallback){
+                for(Edge e: edge.source.outgoing){
+                    if(e!=edge)
+                        e.fallback = false;
+                }
+            }
+            edge.fallback = !edge.fallback;
+            scene.refresh();
+        }
+    };
+
     private Action inlineRuleAction = new AbstractAction("Inline Rule"){
         @Override
         public void actionPerformed(ActionEvent ae){
@@ -173,6 +201,54 @@ public class EdgePopupProvider implements PopupMenuProvider{
         @Override
         public boolean isEnabled(){
             return edge.rule!=null;
+        }
+    };
+
+    public Action moveUpAction = new AbstractAction("Move Up"){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            int index = edge.source.outgoing.indexOf(edge);
+            int another = index;
+            do{
+                another--;
+            }while(edge.source.outgoing.get(another).loop());
+
+            edge.source.outgoing.set(index, edge.source.outgoing.get(another));
+            edge.source.outgoing.set(another, edge);
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            int another = edge.source.outgoing.indexOf(edge);
+            do{
+                another--;
+            }while(another>=0 && edge.source.outgoing.get(another).loop());
+            return another>=0;
+        }
+    };
+
+    public Action moveDownAction = new AbstractAction("Move Down"){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            int index = edge.source.outgoing.indexOf(edge);
+            int another = index;
+            do{
+                another++;
+            }while(edge.source.outgoing.get(another).loop());
+
+            edge.source.outgoing.set(index, edge.source.outgoing.get(another));
+            edge.source.outgoing.set(another, edge);
+            scene.refresh();
+        }
+
+        @Override
+        public boolean isEnabled(){
+            int another = edge.source.outgoing.indexOf(edge);
+            do{
+                another++;
+            }while(another<edge.source.outgoing.size() && edge.source.outgoing.get(another).loop());
+            return another<edge.source.outgoing.size();
         }
     };
 }

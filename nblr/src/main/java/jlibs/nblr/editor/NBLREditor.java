@@ -20,9 +20,7 @@ import jlibs.nblr.Syntax;
 import jlibs.nblr.SyntaxBinding;
 import jlibs.nblr.editor.debug.Debugger;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.rules.Edge;
-import jlibs.nblr.rules.Node;
-import jlibs.nblr.rules.Rule;
+import jlibs.nblr.rules.*;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.sax.binding.BindingHandler;
 import org.netbeans.api.visual.action.EditProvider;
@@ -43,7 +41,8 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import static jlibs.nblr.matchers.Matcher.*;
+import static jlibs.nblr.matchers.Matcher.any;
+import static jlibs.nblr.matchers.Matcher.not;
 
 /**
  * @author Santhosh Kumar T
@@ -81,8 +80,14 @@ public class NBLREditor extends JFrame{
             public void setHovering(Widget widget){
                 String msg = "";
                 Object model = Util.model(widget);
-                if(model instanceof Node)
-                    msg = ((Node)model).paths().toString();
+                if(model instanceof Node){
+                    Node node = (Node)model;
+                    try{
+                        msg = new Routes(Paths.travel(node, 10)).toString();
+                    }catch(IllegalStateException ex){
+                        msg = ex.getMessage();
+                    }
+                }
                 message.setText(msg);
             }
         }, new EditProvider(){
@@ -145,7 +150,11 @@ public class NBLREditor extends JFrame{
 
         setSize(800, 600);
         setLocationRelativeTo(null);
-        showSyntax(syntax);
+
+        if(syntax==null)
+            newAction.actionPerformed(null);
+        else
+            showSyntax(syntax);
     }
 
     private JComboBox createRulesCombo(){
@@ -191,6 +200,7 @@ public class NBLREditor extends JFrame{
         public void actionPerformed(ActionEvent ae){
             file = null;
             Syntax syntax = new Syntax();
+            syntax.add("ANY", any());
             Rule rule = new Rule();
             rule.node = new Node();
             syntax.add("RULE1", rule);
@@ -297,11 +307,23 @@ public class NBLREditor extends JFrame{
             Rule rule = (Rule)combo.getSelectedItem();
             if(rule==null)
                 JOptionPane.showMessageDialog(NBLREditor.this, "No Rule to delete");
-            else if(JOptionPane.showConfirmDialog(NBLREditor.this, "Are you sure, you want to delete this rule?", "Confirm", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
-                syntax.delete(rule);
-                combo.setModel(new DefaultComboBoxModel(syntax.rules.values().toArray()));
-                if(combo.getItemCount()>1)
-                    scene.setRule(syntax, rule);
+            else{
+                for(Rule r: syntax.rules.values()){
+                    if(r!=rule){
+                        for(Edge edge: r.edges()){
+                            if(edge.rule!=null && edge.rule==rule){
+                                JOptionPane.showMessageDialog(NBLREditor.this, "This rule is used by Rule '"+r.name+",");
+                                return;
+                            }
+                        }
+                    }
+                }
+                if(JOptionPane.showConfirmDialog(NBLREditor.this, "Are you sure, you want to delete this rule?", "Confirm", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
+                    syntax.delete(rule);
+                    combo.setModel(new DefaultComboBoxModel(syntax.rules.values().toArray()));
+                    if(combo.getItemCount()>1)
+                        scene.setRule(syntax, rule);
+                }
             }
         }
     };
@@ -336,28 +358,32 @@ public class NBLREditor extends JFrame{
     public static void main(String[] args){
         Syntax syntax = new Syntax();
 
-        Matcher GT              = syntax.add("GT",             ch('>'));
-        Matcher BRACKET_CLOSE   = syntax.add("BRACKET_CLOSE",  ch(']'));
-        Matcher Q               = syntax.add("Q",              ch('\''));
-        Matcher DQ              = syntax.add("DQ",             ch('"'));
-        Matcher DIGIT           = syntax.add("DIGIT",          range("0-9"));
-        Matcher HEX_DIGIT       = syntax.add("HEX_DIGIT",      or(DIGIT, range("a-f"), range("A-F")));
-        Matcher WS              = syntax.add("WS",             any(" \t\n\r"));
-        Matcher ENCODING_START  = syntax.add("ENCODING_START", or(range("A-Z"), range("a-z")));
-        Matcher ENCODING_PART   = syntax.add("ENCODING_PART",  or(ENCODING_START, DIGIT, any("._-")));
-        Matcher CHAR            = syntax.add("CHAR",           or(any("\t\n\r"), range(" -\uD7FF"), range("\uE000-\uFFFD")/*, range("\u10000-\u10FFFF")*/));
-        Matcher DASH            = syntax.add("DASH",           ch('-'));
-        Matcher NDASH           = syntax.add("NDASH",          minus(CHAR, ch('-')));
-        Matcher NAME_START      = syntax.add("NAME_START",     or(ch(':'), range("A-Z"), ch('_'), range("a-z"), range("\u00C0-\u00D6"), range("\u00D8-\u00F6"), range("\u00F8-\u02FF"), range("\u0370-\u037D"), range("\u037F-\u1FFF"), range("\u200C-\u200D"), range("\u2070-\u218F"), range("\u2C00-\u2FEF"), range("\u3001-\uD7FF"), range("\uF900-\uFDCF"), range("\uFDF0-\uFFFD")/*, range("\u10000-\uEFFFF")*/));
-        Matcher NAME_PART       = syntax.add("NAME_PART",      or(NAME_START, ch('-'), ch('.'), DIGIT,  ch('\u00B7'), range("\u0300-\u036F"), range("\u203F-\u2040")));
-        Matcher NCNAME_START    = syntax.add("NCNAME_START",   minus(NAME_START, ch(':')));
-        Matcher NCNAME_PART     = syntax.add("NCNAME_PART",    minus(NAME_PART, ch(':')));
+        Matcher SPECIAL_CHAR     = syntax.add("SPECIAL_CHAR",   any("^[]-^&\\<"));
+        Matcher NON_SPECIAL_CHAR = syntax.add("NON_SPECIAL_CHAR",   not(SPECIAL_CHAR));
+
+
+//        Matcher GT              = syntax.add("GT",             ch('>'));
+//        Matcher BRACKET_CLOSE   = syntax.add("BRACKET_CLOSE",  ch(']'));
+//        Matcher Q               = syntax.add("Q",              ch('\''));
+//        Matcher DQ              = syntax.add("DQ",             ch('"'));
+//        Matcher DIGIT           = syntax.add("DIGIT",          range("0-9"));
+//        Matcher HEX_DIGIT       = syntax.add("HEX_DIGIT",      or(DIGIT, range("a-f"), range("A-F")));
+//        Matcher WS              = syntax.add("WS",             any(" \t\n\r"));
+//        Matcher ENCODING_START  = syntax.add("ENCODING_START", or(range("A-Z"), range("a-z")));
+//        Matcher ENCODING_PART   = syntax.add("ENCODING_PART",  or(ENCODING_START, DIGIT, any("._-")));
+//        Matcher CHAR            = syntax.add("CHAR",           or(any("\t\n\r"), range(" -\uD7FF"), range("\uE000-\uFFFD")/*, range("\u10000-\u10FFFF")*/));
+//        Matcher DASH            = syntax.add("DASH",           ch('-'));
+//        Matcher NDASH           = syntax.add("NDASH",          minus(CHAR, ch('-')));
+//        Matcher NAME_START      = syntax.add("NAME_START",     or(ch(':'), range("A-Z"), ch('_'), range("a-z"), range("\u00C0-\u00D6"), range("\u00D8-\u00F6"), range("\u00F8-\u02FF"), range("\u0370-\u037D"), range("\u037F-\u1FFF"), range("\u200C-\u200D"), range("\u2070-\u218F"), range("\u2C00-\u2FEF"), range("\u3001-\uD7FF"), range("\uF900-\uFDCF"), range("\uFDF0-\uFFFD")/*, range("\u10000-\uEFFFF")*/));
+//        Matcher NAME_PART       = syntax.add("NAME_PART",      or(NAME_START, ch('-'), ch('.'), DIGIT,  ch('\u00B7'), range("\u0300-\u036F"), range("\u203F-\u2040")));
+//        Matcher NCNAME_START    = syntax.add("NCNAME_START",   minus(NAME_START, ch(':')));
+//        Matcher NCNAME_PART     = syntax.add("NCNAME_PART",    minus(NAME_PART, ch(':')));
 
 //        Rule rule = new Rule();
 //        rule.node = new Node();
 //        syntax.add("Rule1", rule);
 
-        NBLREditor editor = new NBLREditor(syntax);
+        NBLREditor editor = new NBLREditor(null);
         editor.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         editor.setVisible(true);
     }

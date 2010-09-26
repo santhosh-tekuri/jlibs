@@ -62,7 +62,12 @@ public class NodePopupProvider implements PopupMenuProvider{
         popup.add(actionMenu);
         popup.add(lookAheadAction);
         popup.addSeparator();
-        popup.add(new ChoiceAction("Delete", deleteSinkAction, deleteNodeWithEmptyOutgoingEdges, deleteNodeWithEmptyIncomingEdges));
+        popup.add(new ChoiceAction("Delete",
+            deleteSourceAction,
+            deleteSinkAction,
+            deleteNodeWithEmptyOutgoingEdges,
+            deleteNodeWithEmptyIncomingEdges
+        ));
 
         return popup;
     }
@@ -83,13 +88,45 @@ public class NodePopupProvider implements PopupMenuProvider{
         }
     };
 
+    private Action deleteSourceAction = new AbstractAction(){
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            scene.getRule().node = newSource();
+            for(Edge edge: node.outgoing())
+                edge.delete();
+            scene.refresh();
+        }
+
+        private Node newSource(){
+            Node newSource = null;
+            if(scene.getRule().node==node){
+                for(Edge outgoing: node.outgoing){
+                    if(!outgoing.loop()){
+                        for(Edge incoming: outgoing.target.incoming){
+                            if(!incoming.loop()){
+                                break;
+                            }
+                        }
+                        if(newSource!=null)
+                            return null;
+                        newSource = outgoing.target;
+                    }
+                }
+            }
+            return newSource;
+        }
+
+        @Override
+        public boolean isEnabled(){
+            return newSource()!=null;
+        }
+    };
+    
     private Action deleteSinkAction = new AbstractAction(){
         @Override
         public void actionPerformed(ActionEvent ae){
-            for(Edge edge: node.incoming()){
-                edge.setSource(null);
-                edge.setTarget(null);
-            }
+            for(Edge edge: node.incoming())
+                edge.delete();
             scene.refresh();
         }
 
@@ -97,7 +134,7 @@ public class NodePopupProvider implements PopupMenuProvider{
         public boolean isEnabled(){
             if(scene.getRule().node==node)
                 return false;
-            
+
             for(Edge edge: node.outgoing){
                 if(!edge.loop())
                     return false;
@@ -105,7 +142,7 @@ public class NodePopupProvider implements PopupMenuProvider{
             return true;
         }
     };
-    
+
     private Action deleteNodeWithEmptyOutgoingEdges = new AbstractAction(){
         @Override
         public void actionPerformed(ActionEvent ae){
@@ -116,8 +153,7 @@ public class NodePopupProvider implements PopupMenuProvider{
                             Edge newEdge = incoming.source.addEdgeTo(outgoing.target);
                             newEdge.matcher = incoming.matcher;
                             newEdge.rule = incoming.rule;
-                            incoming.setSource(null);
-                            incoming.setTarget(null);
+                            incoming.delete();
                         }
                     }
                 }
@@ -154,8 +190,7 @@ public class NodePopupProvider implements PopupMenuProvider{
                             Edge newEdge = outgoing.target.addEdgeFrom(incoming.source);
                             newEdge.matcher = outgoing.matcher;
                             newEdge.rule = outgoing.rule;
-                            outgoing.setSource(null);
-                            outgoing.setTarget(null);
+                            outgoing.delete();
                         }
                     }
                 }

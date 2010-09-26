@@ -22,6 +22,7 @@ import jlibs.core.lang.StringUtil;
 import jlibs.nblr.actions.BufferAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
+import jlibs.nblr.codegen.java.DebuggableNBParser;
 import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
 import jlibs.nblr.editor.Util;
@@ -116,14 +117,14 @@ public class Debugger extends JPanel implements Observer{
         return err.toString();
     }
 
-    private NBParser parser;
+    private DebuggableNBParser parser;
     private int inputIndex;
     private void start(){
         try{
             showMessage("");
             clearGuardedBlock();
             
-            File file = new File("temp/DebuggableNBParser.java").getAbsoluteFile();
+            File file = new File("temp/UntitledParser.java").getAbsoluteFile();
             FileUtil.mkdirs(file.getParentFile());
             
             Printer printer = new Printer(new PrintWriter(new FileWriter(file)));
@@ -139,8 +140,8 @@ public class Debugger extends JPanel implements Observer{
             }
 
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
-            Class clazz = classLoader.loadClass("DebuggableNBParser");
-            parser = (NBParser)clazz.getConstructor(getClass()).newInstance(this);
+            Class clazz = classLoader.loadClass("UntitledParser");
+            parser = (DebuggableNBParser)clazz.getConstructor(getClass()).newInstance(this);
             parser.startParsing(scene.getRule().id);
             showMessage("Executing...");
         }catch(Exception ex){
@@ -198,10 +199,17 @@ public class Debugger extends JPanel implements Observer{
 
     /*-------------------------------------------------[ GuardBlock ]---------------------------------------------------*/
     
-    private Highlighter.HighlightPainter highlightPainter = new GuardBlockHighlightPainter(Color.LIGHT_GRAY);
+    private Highlighter.HighlightPainter consumedHighlightPainter = new GuardBlockHighlightPainter(Color.LIGHT_GRAY);
+    private Highlighter.HighlightPainter lookAheadHighlightPainter = new GuardBlockHighlightPainter(Color.CYAN);
     private void updateGuardedBlock() throws BadLocationException{
         input.getHighlighter().removeAllHighlights();
-        input.getHighlighter().addHighlight(1, inputIndex-1, highlightPainter);
+        int consumed = parser.location.getCharacterOffset();
+        if(consumed>1)
+            input.getHighlighter().addHighlight(1, consumed-1, consumedHighlightPainter);
+
+        if(inputIndex!=consumed)
+            input.getHighlighter().addHighlight(consumed+1, inputIndex-1, lookAheadHighlightPainter);
+
         input.repaint();
     }
 
@@ -228,8 +236,8 @@ public class Debugger extends JPanel implements Observer{
         model.clear();
         if(parser!=null){
             Rule rules[] = scene.getSyntax().rules.values().toArray(new Rule[scene.getSyntax().rules.values().size()]);
-            for(int i: parser.getRuleStack())
-                model.insertElementAt(rules[i], 0);
+            for(int i=0; i<parser.getRuleStack().size(); i++)
+                model.insertElementAt(rules[parser.getRuleStack().peek(i)], 0);
             ruleStackList.setSelectedIndex(model.size()-1);
         }
         scroll.revalidate();
@@ -313,9 +321,8 @@ public class Debugger extends JPanel implements Observer{
         else{
             ruleStackList.setSelectedIndex(ruleIndex);
             ArrayList<Integer> states = new ArrayList<Integer>();
-            states.add(0, parser.getState());
-            for(int state: parser.getStateStack())
-                states.add(0, state);
+            for(int i=0; i<parser.getStateStack().size(); i++)
+                states.add(0, parser.getStateStack().peek(i));
             int state = states.get(ruleIndex);
             Node node = ((Rule)rule).nodes().get(state);
             if(ruleIndex==model.getSize()-1)
@@ -333,43 +340,43 @@ public class Debugger extends JPanel implements Observer{
 
     /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
 
-    private java.util.List<Node> nodes = new ArrayList<Node>();
-    private java.util.List<Edge> edges = new ArrayList<Edge>();
-    public void currentRule(int id){
-//        System.out.println("currentRule("+id+")");
-        Rule rule = (Rule)scene.getSyntax().rules.values().toArray()[id];
-        nodes.clear();
-        edges.clear();
-        rule.computeIDS(nodes, edges, rule.node);
-        ignoreRuleChange = true;
-        try{
-            scene.setRule(scene.getSyntax(), rule);
-        }finally{
-            ignoreRuleChange = false;
+    public void execute(int... ids){
+        for(int id: ids){
+//            System.out.println("hitNode("+id+")");
+            Node node = currentRule.nodes().get(id);
+            if(node.action== BufferAction.INSTANCE){
+                System.out.println("BUFFERRING");
+                parser.getBuffer().push();
+            }else if(node.action instanceof PublishAction){
+                PublishAction action = (PublishAction)node.action;
+                String data = parser.getBuffer().pop(action.begin, action.end);
+                System.out.println(action.name+"(\""+ StringUtil.toLiteral(data, false)+"\")");
+            }else if(node.action instanceof EventAction){
+                EventAction action = (EventAction)node.action;
+                System.out.println(action.name+"()");
+            }
+            scene.executing(node);
         }
-    }
-
-    public void hitNode(int id){
-//        System.out.println("hitNode("+id+")");
-        Node node = nodes.get(id);
-        if(node.action== BufferAction.INSTANCE){
-            System.out.println("BUFFERRING");
-            parser.buffer();
-        }else if(node.action instanceof PublishAction){
-            PublishAction action = (PublishAction)node.action;
-            String data = parser.data(action.begin, action.end);
-            System.out.println(action.name+"(\""+ StringUtil.toLiteral(data, false)+"\")");
-        }else if(node.action instanceof EventAction){
-            EventAction action = (EventAction)node.action;
-            System.out.println(action.name+"()");
-        }
-        scene.executing(node);
     }
 
     public void currentNode(int id){
 //        System.out.println("currentNode("+id+")");
 //        System.out.println("--------------------------");
-        Node node = nodes.get(id);
+        Node node = currentRule.nodes().get(id);
         scene.executing(node);
+    }
+
+    private Rule currentRule;
+    public void currentNode(int ruleID, int nodeID){
+        currentRule = (Rule)scene.getSyntax().rules.values().toArray()[ruleID];
+        if(scene.getRule()!=currentRule){
+            ignoreRuleChange = true;
+            try{
+                scene.setRule(scene.getSyntax(), currentRule);
+            }finally{
+                ignoreRuleChange = false;
+            }
+        }
+        currentNode(0);
     }
 }
