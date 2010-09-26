@@ -17,6 +17,7 @@ package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.editor.NBLREditor;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Paths;
@@ -63,7 +64,7 @@ public abstract class CodeGenerator{
                 for(Node state: rule.states()){
                     try{
                         startCase(state.id);
-                        Routes routes = new Routes(state, 10);
+                        Routes routes = new Routes(state, NBLREditor.MAX_LOOK_AHEAD);
                         maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                         addRoutes(routes);
                         endCase();
