@@ -16,17 +16,14 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.rules.*;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
+import jlibs.nblr.rules.Node;
+import jlibs.nblr.rules.Paths;
+import jlibs.nblr.rules.Routes;
+import jlibs.nblr.rules.Rule;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
-import static jlibs.core.annotation.processing.Printer.PLUS;
 
 /**
  * @author Santhosh Kumar T
@@ -41,7 +38,7 @@ public abstract class CodeGenerator{
     }
 
     public final void generateCode(){
-        startClassDeclaration();
+        startClassDeclaration(10); // todo: compute maxLookAhead reqd
         printer.emptyLine(true);
         
         if(syntax.matchers.size()>0){
@@ -56,8 +53,6 @@ public abstract class CodeGenerator{
         if(syntax.rules.size()>0){
             printTitleComment("Rules");
             printer.emptyLine(true);
-            addExpectedMethod();
-            printer.emptyLine(true);
             
             int id = 0;
             for(Rule rule: syntax.rules.values()){
@@ -66,7 +61,7 @@ public abstract class CodeGenerator{
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     startCase(state.id);
-                    println(state.paths(), new ArrayDeque<Path>());
+                    addRoutes(new Routes(Paths.travel(state, 10)));
                     endCase();
                 }
                 finishRuleMethod(rule);
@@ -74,184 +69,17 @@ public abstract class CodeGenerator{
             }
         }
 
-        printTitleComment("Consumer");
-        printer.emptyLine(true);
-        addEOFMember();
-        addStateMember();
-        addRequiredMember();
-        addRuleStackMemeber();
-        addStateStackMemeber();
-
-        printer.emptyLine(true);
-        addStartParsingMethod();
-        printer.emptyLine(true);
-        startConsumeMethod();
+        startCallRuleMethod();
         int id = 0;
         for(Rule rule: syntax.rules.values()){
             startCase(id++);
             callRuleMethod(rule.name);
-            addBreak();
             printer.printlns(MINUS);
         }
-        finishConsumeMethod();
-
-        printer.emptyLine(true);
-        addExpectEOFMethod();
-        printer.emptyLine(true);
-        addEOFMethod();
-
-        printer.emptyLine(true);
-        printTitleComment("Buffering");
-        printer.emptyLine(true);
-        addBufferingSection();
-        printer.emptyLine(true);
+        finishCallRuleMethod();
 
         printer.emptyLine(false);
         finishClassDeclaration();
-    }
-
-    public void println(Paths paths, ArrayDeque<Path> pathStack){
-        Path pathWithoutMatcher = null;
-        int lastDepth = 0;
-        for(Path path: paths){
-            int depth = path.depth();
-            if(depth>lastDepth && paths.charIndex==0){
-                if(lastDepth!=0){
-                    printer.printlns(
-                            "if(eof)",
-                                PLUS,
-                                "expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");",
-                                MINUS,
-                            MINUS,
-                        "}"
-                    );
-                }
-                printer.printlns(
-                    "if(lookAheadBuffer.length()<"+depth+"){",
-                    PLUS
-                );
-                if(depth>1){
-                    printer.printlns(
-                        "lookAheadBuffer.append(ch, eof);",
-                        "if(!eof && lookAheadBuffer.length()<"+depth+")",
-                            PLUS,
-                            "return "+((Node)path.get(0)).id+";",
-                            MINUS
-                    );
-                    for(int i=0; i<depth-1; i++){
-                        printer.println("char ch"+i+" = lookAheadBuffer.charAt("+i+");");
-                        printer.println("boolean eof"+i+" = lookAheadBuffer.isEOF("+i+");");
-                    }
-                }
-            }
-            lastDepth = depth;
-            if(path.matcher()!=null){
-                println(path, pathStack);
-            }else
-                pathWithoutMatcher = path;
-        }
-
-        if(paths.charIndex==0){
-            if(pathWithoutMatcher==null){
-                printer.printlns(
-                        "if(eof)",
-                            PLUS,
-                            "expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");",
-                            MINUS
-                );
-            }
-            printer.printlns(
-                    MINUS,
-                "}"
-            );
-        }
-        
-        if(pathWithoutMatcher!=null)
-            println(pathWithoutMatcher, pathStack);
-
-        if(pathWithoutMatcher==null && paths.charIndex==0)
-            printer.printlns("expected(String.valueOf(ch), \""+StringUtil.toLiteral(paths.toString(), false)+"\");");
-    }
-
-    public void println(Path path, ArrayDeque<Path> pathStack){
-        pathStack.push(path);
-        Matcher matcher = path.matcher();
-        if(matcher!=null){
-            String chVariable = "ch";
-            String eofVariable = "eof";
-            if(path.paths!=null){
-                chVariable += path.paths.charIndex-1;
-                eofVariable += path.paths.charIndex-1;
-            }
-            String condition = matcher._javaCode(chVariable);
-            if(matcher.name==null)
-                condition = '('+condition+')';
-            printer.printlns(
-                "if(!"+eofVariable+" && "+condition+"){",
-                    PLUS
-            );
-        }
-
-        if(path.paths==null)
-            printActions(pathStack);
-        else
-            println(path.paths, pathStack);
-        
-        if(matcher!=null){
-            printer.printlns(
-                    MINUS,
-                "}"
-            );
-        }
-        pathStack.pop();
-    }
-
-    private void printActions(ArrayDeque<Path> pathStack){
-        ArrayList<Path> paths = new ArrayList<Path>(pathStack);
-        Collections.reverse(paths);
-
-        int nextID = -1;
-        for(Path path: paths){
-            nextID = -1;
-            for(Object obj: path){
-                if(obj instanceof Node){
-                    Node node = (Node)obj;
-                    if(debuggable)
-                        printer.println("consumer.hitNode("+node.id+");");
-                    else if(node.action!=null)
-                        printer.println(node.action.javaCode()+';');
-                }else if(obj instanceof Edge){
-                    Edge edge = (Edge)obj;
-                    if(edge.rule!=null){
-                        if(debuggable)
-                            printer.println("consumer.currentRule(RULE_"+edge.rule.name+");");
-                        printer.printlns(
-                            "ruleStack.push(RULE_"+edge.rule.name+");",
-                            "stateStack.push("+edge.target.id+");"
-                        );
-                    }else if(edge.matcher!=null){
-                        nextID = ((Node)path.get(path.size()-1)).id;
-                        Matcher matcher = path.matcher();
-                        if(matcher!=null){
-                            if(debuggable)
-                                printer.println("consumer.currentNode("+nextID+");");
-                            if(path.paths!=null){
-                                String variable = "ch";
-                                if(path.paths!=null)
-                                    variable += path.paths.charIndex-1;
-                                printer.println("consumed("+variable+");");
-                            }
-                        }else
-                            nextID = -1;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if(pathStack.size()>1)
-            printer.println("lookAheadBuffer.clear();");
-        printer.printlns("return "+nextID+";");
     }
 
     protected boolean debuggable;
@@ -261,31 +89,19 @@ public abstract class CodeGenerator{
 
     protected abstract void startCase(int id);
     protected abstract void endCase();
-    protected abstract void addBreak();
     
     protected abstract void printTitleComment(String title);
-    protected abstract void startClassDeclaration();
+    protected abstract void startClassDeclaration(int maxLookAhead);
     protected abstract void finishClassDeclaration();
 
     protected abstract void printMatcherMethod(Matcher matcher);
     
     protected abstract void addRuleID(String name, int id);
     protected abstract void startRuleMethod(Rule rule);
-
+    protected abstract void addRoutes(Routes routes);
     protected abstract void finishRuleMethod(Rule rule);
 
-    protected abstract void addEOFMember();
-    protected abstract void addStateMember();
-    protected abstract void addRequiredMember();
-    protected abstract void addRuleStackMemeber();
-    protected abstract void addStateStackMemeber();
-    protected abstract void addStartParsingMethod();
-    protected abstract void startConsumeMethod();
+    protected abstract void startCallRuleMethod();
     protected abstract void callRuleMethod(String ruleName);
-    protected abstract void finishConsumeMethod();
-
-    protected abstract void addExpectedMethod();
-    protected abstract void addExpectEOFMethod();
-    protected abstract void addEOFMethod();
-    protected abstract void addBufferingSection();
+    protected abstract void finishCallRuleMethod();
 }
