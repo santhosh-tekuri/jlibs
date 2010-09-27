@@ -26,7 +26,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 
 /**
  * @author Santhosh Kumar T
@@ -34,17 +33,15 @@ import java.util.ArrayList;
 public class RuleChooser extends JDialog implements ListSelectionListener{
     private JList list;
 
-    public RuleChooser(Window owner, Syntax syntax, Rule ruleToBeExcluded){
-        super(owner, "Rule Choser");
+    public RuleChooser(Window owner, Syntax syntax){
+        super(owner, "Rule Chooser");
         setModal(true);
 
         JPanel contents = (JPanel)getContentPane();
         contents.setLayout(new BorderLayout(0, 10));
         contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        ArrayList<Rule> rules = new ArrayList<Rule>(syntax.rules.values());
-        rules.remove(ruleToBeExcluded);
-        list = new JList(rules.toArray());
+        list = new JList(syntax.rules.values().toArray());
         list.setFont(Util.FIXED_WIDTH_FONT);
         contents.add(new JScrollPane(list));
         list.addListSelectionListener(this);
@@ -99,8 +96,8 @@ public class RuleChooser extends JDialog implements ListSelectionListener{
         }
     };
 
-    public static Rule prompt(Window owner, Syntax syntax, Rule ruleToBeExcluded){
-        RuleChooser chooser = new RuleChooser(owner, syntax, ruleToBeExcluded);
+    public static Rule prompt(Window owner, Syntax syntax){
+        RuleChooser chooser = new RuleChooser(owner, syntax);
         chooser.setVisible(true);
         if(chooser.ok)
             return (Rule)chooser.list.getSelectedValue();

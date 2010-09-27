@@ -87,7 +87,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
         @Override
         public void actionPerformed(ActionEvent ae){
             Window owner = SwingUtilities.getWindowAncestor(scene.getView());
-            Rule rule = RuleChooser.prompt(owner, scene.getSyntax(), scene.getRule());
+            Rule rule = RuleChooser.prompt(owner, scene.getSyntax());
             if(rule!=null){
                 edge.rule = rule;
                 edge.matcher = null;
