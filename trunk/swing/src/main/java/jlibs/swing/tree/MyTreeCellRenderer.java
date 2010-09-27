@@ -54,6 +54,7 @@ public class MyTreeCellRenderer extends JLabel implements TreeCellRenderer{
         this.row = row;
         this.hasFocus = hasFocus;
 
+        setFont(tree.getFont());
         setText(getText(value));
         setForeground(selected ? selectionForeground : foreground);
         setBackground(selected ? selectionBackground : background);
