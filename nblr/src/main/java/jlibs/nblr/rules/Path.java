@@ -59,7 +59,7 @@ public class Path extends ArrayList<Object>{
 
     public boolean hasLoop(){
         Node lastNode = (Node)get(size()-1);
-        if(subList(0, size()).contains(lastNode))
+        if(subList(0, size()-1).contains(lastNode))
             return true;
         Path path = parent;
         while(path!=null){
