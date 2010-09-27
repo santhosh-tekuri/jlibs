@@ -65,10 +65,7 @@ public abstract class Matcher implements SAXProducer{
 
     public abstract List<jlibs.core.util.Range> ranges();
     public boolean clashesWith(Matcher that){
-        if(this.toString().equals("[.]") || that.toString().equals("[.]"))
-            return false;
-        else
-            return !jlibs.core.util.Range.intersection(this.ranges(), that.ranges()).isEmpty();
+        return !jlibs.core.util.Range.intersection(this.ranges(), that.ranges()).isEmpty();
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/

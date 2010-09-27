@@ -221,15 +221,8 @@ public class Debugger extends JPanel implements Observer{
     /*-------------------------------------------------[ Actions ]---------------------------------------------------*/
 
     private void updateActions(){
-        if(scene.getSyntax()!=null){
-            String lengthyRuleName = "XXXXXXXXX";
-            for(Rule rule: scene.getSyntax().rules.values()){
-                if(rule.name.length()>lengthyRuleName.length())
-                    lengthyRuleName = rule.name;
-
-            }
-            ruleStackList.setPrototypeCellValue(lengthyRuleName);
-        }
+        if(scene.getSyntax()!=null)
+            ruleStackList.setPrototypeCellValue(scene.getSyntax().ruleProtypeWidth());
         JScrollPane scroll = (JScrollPane)ruleStackList.getParent().getParent();
         scroll.setVisible(parser!=null);
         DefaultListModel model = (DefaultListModel)ruleStackList.getModel();
@@ -329,7 +322,7 @@ public class Debugger extends JPanel implements Observer{
                 scene.executing(node);
             else{
                 for(Edge edge: node.incoming()){
-                    if(edge.rule==model.getElementAt(ruleIndex+1)){
+                    if(edge.ruleTarget.rule==model.getElementAt(ruleIndex+1)){
                         scene.executing(edge);
                         return;
                     }

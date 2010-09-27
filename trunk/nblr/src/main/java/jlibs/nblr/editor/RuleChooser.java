@@ -15,24 +15,37 @@
 
 package jlibs.nblr.editor;
 
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.Sequence;
+import jlibs.core.graph.Visitor;
+import jlibs.core.graph.sequences.EmptySequence;
+import jlibs.core.graph.sequences.IterableSequence;
+import jlibs.core.lang.ImpossibleException;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
+import jlibs.nblr.rules.RuleTarget;
+import jlibs.swing.tree.MyTreeCellRenderer;
+import jlibs.swing.tree.NavigatorTreeModel;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
  */
-public class RuleChooser extends JDialog implements ListSelectionListener{
-    private JList list;
+public class RuleChooser extends JDialog implements TreeSelectionListener{
+    private JTree tree;
 
+    @SuppressWarnings({"unchecked"})
     public RuleChooser(Window owner, Syntax syntax){
         super(owner, "Rule Chooser");
         setModal(true);
@@ -41,12 +54,25 @@ public class RuleChooser extends JDialog implements ListSelectionListener{
         contents.setLayout(new BorderLayout(0, 10));
         contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        list = new JList(syntax.rules.values().toArray());
-        list.setFont(Util.FIXED_WIDTH_FONT);
-        contents.add(new JScrollPane(list));
-        list.addListSelectionListener(this);
+        tree = new JTree(new NavigatorTreeModel(syntax, new RuleNavigator()));
+        MyTreeCellRenderer cellRenderer = new MyTreeCellRenderer();
+        cellRenderer.setTextConvertor(new Visitor<Object, String>(){
+            @Override
+            public String visit(Object elem){
+                if(elem instanceof Rule)
+                    return ((Rule)elem).name;
+                else
+                    return ((Node)elem).name;
+            }
+        });
+        tree.setCellRenderer(cellRenderer);
+        tree.setRootVisible(false);
+        tree.setShowsRootHandles(true);
+        tree.setFont(Util.FIXED_WIDTH_FONT);
+        contents.add(new JScrollPane(tree));
+        tree.addTreeSelectionListener(this);
         valueChanged(null);
-        list.addMouseListener(new MouseAdapter(){
+        tree.addMouseListener(new MouseAdapter(){
             @Override
             public void mouseClicked(MouseEvent me){
                 if(me.getClickCount()>1)
@@ -66,13 +92,14 @@ public class RuleChooser extends JDialog implements ListSelectionListener{
         getRootPane().registerKeyboardAction(cancelAction, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JRootPane.WHEN_IN_FOCUSED_WINDOW);
         getRootPane().setDefaultButton(okButton);
 
+        tree.setVisibleRowCount(15);
         pack();
         setLocationRelativeTo(null);
     }
 
     @Override
-    public void valueChanged(ListSelectionEvent lse){
-        okAction.setEnabled(list.getSelectedIndex()!=-1);
+    public void valueChanged(TreeSelectionEvent tse){
+        okAction.setEnabled(tree.getSelectionPath()!=null);
     }
 
     boolean ok = false;
@@ -96,12 +123,40 @@ public class RuleChooser extends JDialog implements ListSelectionListener{
         }
     };
 
-    public static Rule prompt(Window owner, Syntax syntax){
+    public static RuleTarget prompt(Window owner, Syntax syntax){
         RuleChooser chooser = new RuleChooser(owner, syntax);
         chooser.setVisible(true);
-        if(chooser.ok)
-            return (Rule)chooser.list.getSelectedValue();
-        else
+        if(chooser.ok){
+            RuleTarget ruleTarget = new RuleTarget();
+            Object path[] = chooser.tree.getSelectionPath().getPath();
+            ruleTarget.rule = (Rule)path[1];
+            if(path.length==3)
+                ruleTarget.name = ((Node)path[2]).name;
+            return ruleTarget;
+        }else
             return null;
+    }
+}
+
+class RuleNavigator implements Navigator{
+    @Override
+    public Sequence children(Object elem){
+        if(elem instanceof Syntax){
+            Syntax syntax = (Syntax)elem;
+            return new IterableSequence<Rule>(syntax.rules.values());
+        }else if(elem instanceof Rule){
+            Rule rule = (Rule)elem;
+            ArrayList<Node> nodes = rule.nodes();
+            Iterator<Node> iter = nodes.iterator();
+            while(iter.hasNext()){
+                Node node = iter.next();
+                if(node.name==null)
+                    iter.remove();
+            }
+            return new IterableSequence<Node>(nodes);
+        }else if(elem instanceof Node)
+            return EmptySequence.getInstance();
+        else
+            throw new ImpossibleException(elem.getClass().getName());
     }
 }

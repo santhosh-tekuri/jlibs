@@ -96,11 +96,11 @@ public class NBLREditor extends JFrame{
             @Override
             public void edit(Widget widget){
                 Edge edge = Util.edge(widget);
-                if(edge.rule!=null){
+                if(edge.ruleTarget!=null){
                     history.push(new SceneState(scene));
                     upAction.setEnabled(true);
                     userRuleSelection = false;
-                    combo.setSelectedItem(edge.rule);
+                    combo.setSelectedItem(edge.ruleTarget.rule);
                     userRuleSelection = true;
                 }
             }
@@ -325,7 +325,7 @@ public class NBLREditor extends JFrame{
                 for(Rule r: syntax.rules.values()){
                     if(r!=rule){
                         for(Edge edge: r.edges()){
-                            if(edge.rule!=null && edge.rule==rule){
+                            if(edge.ruleTarget!=null && edge.ruleTarget.rule==rule){
                                 JOptionPane.showMessageDialog(NBLREditor.this, "This rule is used by Rule '"+r.name+",");
                                 return;
                             }

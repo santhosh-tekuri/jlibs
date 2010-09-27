@@ -305,8 +305,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                     printer.println(node.action.javaCode()+';');
             }else if(obj instanceof Edge){
                 Edge edge = (Edge)obj;
-                if(edge.rule!=null)
-                    println("push(RULE_"+edge.rule.name+", "+edge.target.id+");");
+                if(edge.ruleTarget!=null)
+                    println("push(RULE_"+edge.ruleTarget.rule.name+", "+edge.target.id+", "+edge.ruleTarget.node().id+");");
                 else if(edge.matcher!=null){
                     nextState = edge.target.id;
                     if(consumeLookAhead)

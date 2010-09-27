@@ -62,7 +62,7 @@ public class NodePopupProvider implements PopupMenuProvider{
         popup.add(insertNodeMenu);
         popup.add(insertStringMenu);
         popup.add(actionMenu);
-        popup.add(lookAheadAction);
+        popup.add(setNameAction);
         popup.addSeparator();
         popup.add(new ChoiceAction("Delete",
             deleteSourceAction,
@@ -74,17 +74,17 @@ public class NodePopupProvider implements PopupMenuProvider{
         return popup;
     }
     
-    private Action lookAheadAction = new AbstractAction("Set LookAhead..."){
+    private Action setNameAction = new AbstractAction("Set Name..."){
         @Override
         public void actionPerformed(ActionEvent ae){
-            String lookAhead = JOptionPane.showInputDialog(scene.getView(), "LookAhead", String.valueOf(node.lookAhead));
-            if(lookAhead!=null){
-                int la = Integer.parseInt(lookAhead);
-                if(la<1){
-                    JOptionPane.showMessageDialog(scene.getView(), "LookAhead must be greater than zero");
+            String name = JOptionPane.showInputDialog(scene.getView(), "Name", node.name);
+            if(name!=null){
+                Node clashingNode = scene.getRule().nodeWithName(name);
+                if(clashingNode!=null && clashingNode!=node){
+                    JOptionPane.showMessageDialog(scene.getView(), "Node with name '"+name+"' already exists");
                     return;
                 }
-                node.lookAhead = la;
+                node.name = name;
                 scene.layout(node);
             }
         }
@@ -163,7 +163,7 @@ public class NodePopupProvider implements PopupMenuProvider{
                         if(!outgoing.loop()){
                             Edge newEdge = incoming.source.addEdgeTo(outgoing.target);
                             newEdge.matcher = incoming.matcher;
-                            newEdge.rule = incoming.rule;
+                            newEdge.ruleTarget = incoming.ruleTarget;
                             incoming.delete();
                         }
                     }
@@ -183,7 +183,7 @@ public class NodePopupProvider implements PopupMenuProvider{
             
             for(Edge edge: node.outgoing){
                 if(!edge.loop()){
-                    if(edge.matcher!=null || edge.rule!=null)
+                    if(edge.matcher!=null || edge.ruleTarget!=null)
                         return false;
                 }
             }
@@ -200,7 +200,7 @@ public class NodePopupProvider implements PopupMenuProvider{
                         if(!incoming.loop()){
                             Edge newEdge = outgoing.target.addEdgeFrom(incoming.source);
                             newEdge.matcher = outgoing.matcher;
-                            newEdge.rule = outgoing.rule;
+                            newEdge.ruleTarget = outgoing.ruleTarget;
                             outgoing.delete();
                         }
                     }
@@ -220,7 +220,7 @@ public class NodePopupProvider implements PopupMenuProvider{
             
             for(Edge edge: node.incoming){
                 if(!edge.loop()){
-                    if(edge.matcher!=null || edge.rule!=null)
+                    if(edge.matcher!=null || edge.ruleTarget!=null)
                         return false;
                 }
             }

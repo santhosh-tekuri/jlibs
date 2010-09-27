@@ -28,9 +28,9 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Node implements SAXProducer{
+    public String name;
     public int id;
     
-    public int lookAhead = 1;
     public Action action;
     
     public List<Edge> outgoing = new ArrayList<Edge>();
@@ -39,8 +39,8 @@ public class Node implements SAXProducer{
     @Override
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        if(this.lookAhead >1)
-            buff.append("LA(").append(this.lookAhead).append(')');
+        if(name!=null)
+            buff.append('[').append(name).append(']');
         if(action!=null){
             if(buff.length()>0)
                 buff.append("; ");
@@ -70,8 +70,8 @@ public class Node implements SAXProducer{
     @Override
     public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
         xml.startElement("node");
-        if(lookAhead>1)
-            xml.addAttribute("look-ahead", String.valueOf(lookAhead));
+        if(name!=null)
+            xml.addAttribute("name", String.valueOf(name));
         if(action!=null)
             xml.add(action);
         xml.endElement();

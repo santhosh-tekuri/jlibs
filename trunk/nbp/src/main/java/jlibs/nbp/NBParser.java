@@ -39,7 +39,7 @@ public abstract class NBParser{
 
     public void startParsing(int rule){
         reset();
-        push(rule, -1);
+        push(rule, -1, 0);
     }
 
     public void consume(char ch) throws java.text.ParseException{
@@ -118,11 +118,11 @@ public abstract class NBParser{
     protected final IntStack ruleStack = new IntStack();
     protected final IntStack stateStack = new IntStack();
 
-    protected void push(int toRule, int nextState){
+    protected void push(int toRule, int stateAfterRule, int stateInsideRule){
         if(!stateStack.isEmpty())
-            stateStack.setPeek(nextState);
+            stateStack.setPeek(stateAfterRule);
         ruleStack.push(toRule);
-        stateStack.push(0);
+        stateStack.push(stateInsideRule);
     }
 
     protected void pop(){
