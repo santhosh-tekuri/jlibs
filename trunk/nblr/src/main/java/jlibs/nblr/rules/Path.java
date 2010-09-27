@@ -17,9 +17,7 @@ package jlibs.nblr.rules;
 
 import jlibs.nblr.matchers.Matcher;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -82,14 +80,26 @@ public class Path extends ArrayList<Object>{
         return false;
     }
 
+    public Path[] route(){
+        List<Path> route = new LinkedList<Path>();
+        Path p = this;
+        while(p!=null){
+            route.add(0, p);
+            p = p.parent;
+        }
+        return route.toArray(new Path[route.size()]);
+    }
+
     @Override
     public String toString(){
+        String str;
         Matcher matcher = matcher();
         if(matcher==null)
-            return "<EOF>";
+            str = "<EOF>";
         else if(matcher.name!=null)
-            return '<'+matcher.name+'>';
+            str = '<'+matcher.name+'>';
         else
-            return matcher.toString();
+            str = matcher.toString();
+        return parent!=null ? parent+str : str;
     }
 }

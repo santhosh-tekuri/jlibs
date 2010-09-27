@@ -176,7 +176,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
         int lastDepth = 0;
         for(int iroute=0; iroute<routes.determinateBranchRoutes.size(); iroute++){
-            Path[] route = routes.determinateBranchRoutes.get(iroute);
+            Path[] route = routes.determinateBranchRoutes.get(iroute).route();
             int curDepth = route.length;
             if(lookAheadBufferReqd && curDepth>lastDepth){
                 printer.printlns(
@@ -207,7 +207,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
             if(lookAheadBufferReqd){
                 boolean lastRoute = iroute+1==routes.determinateBranchRoutes.size();
-                if(lastRoute || routes.determinateBranchRoutes.get(iroute+1).length>curDepth){
+                if(lastRoute || routes.determinateBranchRoutes.get(iroute+1).depth>curDepth){
                     if(!lastRoute){
                         printer.printlns(
                             "if(eof)",
@@ -238,7 +238,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
 
         if(routes.indeterminateBranchRoutes.size()>0){
-            Path path = routes.indeterminateBranchRoutes.get(0)[0];
+            Path path = routes.indeterminateBranchRoutes.get(0).route()[0];
             if(startIf(path, true, 0)){
                 print(path, true);
                 endIf(1);
@@ -246,7 +246,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
 
         if(routes.routeStartingWithEOF!=null)
-            print(routes.routeStartingWithEOF[0], false);
+            print(routes.routeStartingWithEOF, false);
         else
             printer.println(expected);
     }
