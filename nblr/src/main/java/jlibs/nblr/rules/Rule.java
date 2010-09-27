@@ -40,6 +40,16 @@ public class Rule implements SAXProducer{
         return nodes;
     }
 
+    public Node nodeWithName(String name){
+        if(name==null)
+            return node;
+        for(Node node: nodes()){
+            if(name.equals(node.name))
+                return node;
+        }
+        return null;
+    }
+    
     public ArrayList<Edge> edges(){
         ArrayList<Node> nodes = new ArrayList<Node>();
         ArrayList<Edge> edges = new ArrayList<Edge>();
@@ -74,11 +84,11 @@ public class Rule implements SAXProducer{
     public Set<Node> states(){
         Set<Node> states = new LinkedHashSet<Node>();
         for(Node node: nodes()){
-            if(node==this.node)
+            if(node==this.node || node.name!=null)
                 states.add(node);
             else{
                 for(Edge edge: node.incoming()){
-                    if(edge.matcher!=null || edge.rule!=null){
+                    if(edge.matcher!=null || edge.ruleTarget!=null){
                         states.add(node);
                         break;
                     }
@@ -93,21 +103,29 @@ public class Rule implements SAXProducer{
         ArrayList<Edge> edges = new ArrayList<Edge>();
         computeIDS(nodes, edges, node);
 
-        for(int i=0; i<nodes.size(); i++){
-            Node newNode = new Node();
-            newNode.id = i;
-            nodes.set(i, newNode);
-        }
-        for(Edge edge: edges){
-            Edge newEdge = nodes.get(edge.source.id).addEdgeTo(nodes.get(edge.target.id));
-            newEdge.matcher = edge.matcher;
-            newEdge.rule = edge.rule;
-        }
-
         Rule newRule = new Rule();
         newRule.id = id;
         newRule.name = name;
+
+        for(int i=0; i<nodes.size(); i++){
+            Node newNode = new Node();
+            newNode.id = i;
+            newNode.name = nodes.get(i).name;
+            nodes.set(i, newNode);
+        }
         newRule.node = nodes.get(0);
+        
+        for(Edge edge: edges){
+            Edge newEdge = nodes.get(edge.source.id).addEdgeTo(nodes.get(edge.target.id));
+            newEdge.matcher = edge.matcher;
+            if(edge.ruleTarget!=null){
+                RuleTarget ruleTarget = edge.ruleTarget;
+                RuleTarget newRuleTarget = newEdge.ruleTarget = new RuleTarget();
+                newRuleTarget.rule = ruleTarget.rule==this ? newRule : ruleTarget.rule;
+                newRuleTarget.name = ruleTarget.name;
+            }
+        }
+
         return newRule;
     }
 

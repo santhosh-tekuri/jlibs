@@ -22,6 +22,7 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
+import jlibs.nblr.rules.RuleTarget;
 import org.netbeans.api.visual.action.PopupMenuProvider;
 import org.netbeans.api.visual.widget.Widget;
 
@@ -77,7 +78,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
             Matcher matcher = MatcherChooser.prompt(owner, scene.getSyntax());
             if(matcher!=null){
                 edge.matcher = matcher;
-                edge.rule = null;
+                edge.ruleTarget = null;
                 scene.refresh();
             }
         }
@@ -87,9 +88,9 @@ public class EdgePopupProvider implements PopupMenuProvider{
         @Override
         public void actionPerformed(ActionEvent ae){
             Window owner = SwingUtilities.getWindowAncestor(scene.getView());
-            Rule rule = RuleChooser.prompt(owner, scene.getSyntax());
-            if(rule!=null){
-                edge.rule = rule;
+            RuleTarget ruleTarget = RuleChooser.prompt(owner, scene.getSyntax());
+            if(ruleTarget!=null){
+                edge.ruleTarget = ruleTarget;
                 edge.matcher = null;
                 scene.refresh();
             }
@@ -105,14 +106,14 @@ public class EdgePopupProvider implements PopupMenuProvider{
         @Override
         public void actionPerformed(ActionEvent ae){
             edge.matcher = null;
-            edge.rule = null;
+            edge.ruleTarget = null;
             edge.fallback = false;
             scene.refresh();
         }
 
         @Override
         public boolean isEnabled(){
-            return edge.matcher!=null || edge.rule!=null;
+            return edge.matcher!=null || edge.ruleTarget!=null;
         }
     };
 
@@ -176,12 +177,17 @@ public class EdgePopupProvider implements PopupMenuProvider{
             edge.fallback = !edge.fallback;
             scene.refresh();
         }
+
+        @Override
+        public boolean isEnabled(){
+            return edge.matcher!=null || edge.ruleTarget!=null;
+        }
     };
 
     private Action inlineRuleAction = new AbstractAction("Inline Rule"){
         @Override
         public void actionPerformed(ActionEvent ae){
-            Rule rule = edge.rule.copy();
+            Rule rule = edge.ruleTarget.rule.copy();
             edge.source.addEdgeTo(rule.node);
             for(Node node: rule.nodes()){
                 boolean sink = true;
@@ -200,7 +206,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
 
         @Override
         public boolean isEnabled(){
-            return edge.rule!=null;
+            return edge.ruleTarget!=null && edge.ruleTarget.name==null;
         }
     };
 

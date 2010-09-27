@@ -56,6 +56,15 @@ public class Syntax implements SAXProducer{
             r.id = id++;
     }
 
+    public String ruleProtypeWidth(){
+        String lengthyRuleName = "XXXXXXXXX";
+        for(Rule rule: rules.values()){
+            if(rule.name.length()>lengthyRuleName.length())
+                lengthyRuleName = rule.name;
+        }
+        return lengthyRuleName;
+    }
+
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
     
     @Override

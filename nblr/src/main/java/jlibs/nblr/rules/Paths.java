@@ -127,8 +127,8 @@ public class Paths extends ArrayList<Path>{
                     stack.push(edge.target);
                     add(new Path(stack));
                     stack.pop();
-                }else if(edge.rule!=null)
-                    populate(edge.rule.node, stack);
+                }else if(edge.ruleTarget!=null)
+                    populate(edge.ruleTarget.node(), stack);
                 else
                     populate(edge.target, stack);
                 stack.pop();
@@ -145,7 +145,7 @@ public class Paths extends ArrayList<Path>{
                 }else if(obj instanceof Edge){
                     wasNode = false;
                     Edge edge = (Edge)obj;
-                    if(edge.rule!=null){
+                    if(edge.ruleTarget!=null){
                         if(rulesPopped==0){
                             target = edge.target;
                             break;
@@ -167,7 +167,7 @@ public class Paths extends ArrayList<Path>{
                     }else if(obj instanceof Edge){
                         wasNode = false;
                         Edge edge = (Edge)obj;
-                        if(edge.rule!=null){
+                        if(edge.ruleTarget!=null){
                             if(rulesPopped==0){
                                 target = edge.target;
                                 break;

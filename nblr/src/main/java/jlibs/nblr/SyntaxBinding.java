@@ -23,6 +23,7 @@ import jlibs.nblr.matchers.*;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
+import jlibs.nblr.rules.RuleTarget;
 import jlibs.xml.sax.binding.*;
 import org.xml.sax.Attributes;
 
@@ -205,10 +206,9 @@ class RuleBinding{
 @Binding("node")
 class NodeBinding{
     @Binding.Start
-    public static Node onStart(@Attr("look-ahead") String lookAhead){
+    public static Node onStart(@Attr String name){
         Node node = new Node();
-        if(lookAhead!=null)
-            node.lookAhead = Integer.parseInt(lookAhead);
+        node.name = name;
         return node;
     }
 
@@ -241,7 +241,7 @@ class EdgeBinding extends Matchers{
     }
 
     @Binding.Start("rule")
-    public static Rule onRule(@Attr String name){
+    public static RuleTarget onRuleTarget(@Attr String name, @Attr String node){
         Syntax syntax = SyntaxBinding.SYNTAX.get();
         Rule rule = syntax.rules.get(name);
         if(rule==null){
@@ -249,12 +249,15 @@ class EdgeBinding extends Matchers{
             rule.name = name;
             syntax.add(name, rule);
         }
-        return rule;
+        RuleTarget ruleTarget = new RuleTarget();
+        ruleTarget.rule = rule;
+        ruleTarget.name = node;
+        return ruleTarget;
     }
 
     @Relation.Finish("rule")
-    public static Rule relateWithRule(Rule rule){
-        return rule;
+    public static RuleTarget relateWithRuleTarget(RuleTarget ruleTarget){
+        return ruleTarget;
     }
 
     @Relation.Finish("*")
@@ -263,9 +266,9 @@ class EdgeBinding extends Matchers{
     }
 
     @Binding.Finish
-    public static Edge onFinish(@Temp Rule rule, @Temp Matcher matcher){
+    public static Edge onFinish(@Temp("rule") RuleTarget ruleTarget, @Temp Matcher matcher){
         Edge edge = new Edge(null, null);
-        edge.rule = rule;
+        edge.ruleTarget = ruleTarget;
         edge.matcher = matcher;
         return edge;
     }

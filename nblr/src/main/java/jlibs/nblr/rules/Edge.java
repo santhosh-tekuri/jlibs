@@ -57,15 +57,19 @@ public class Edge implements SAXProducer{
     }
 
     public Matcher matcher;
-    public Rule rule;
+    public RuleTarget ruleTarget;
+//    public Rule rule;
+//    public String name;
 
     @Override
     public String toString(){
         String prefix = fallback ? "#" : "";
         if(matcher!=null)
             return prefix+(matcher.name==null ? matcher.toString() : '<'+matcher.name+'>');
+        else if(ruleTarget!=null)
+            return prefix+ruleTarget;
         else
-            return rule==null ? "" : prefix+rule.name;
+            return "";
     }
 
 
@@ -85,9 +89,10 @@ public class Edge implements SAXProducer{
                 xml.addAttribute("name", matcher.name);
                 xml.endElement();
             }
-        }else if(rule!=null){
+        }else if(ruleTarget!=null){
             xml.startElement("rule");
-            xml.addAttribute("name", rule.name);
+            xml.addAttribute("name", ruleTarget.rule.name);
+            xml.addAttribute("node", ruleTarget.name);
             xml.endElement();
         }
         xml.endElement();
