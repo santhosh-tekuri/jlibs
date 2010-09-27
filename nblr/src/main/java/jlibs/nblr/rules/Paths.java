@@ -44,10 +44,25 @@ public class Paths extends ArrayList<Path>{
         return super.add(path);
     }
 
+    public List<Path> leafs(){
+        List<Path> list = new ArrayList<Path>();
+        leafs(list);
+        return list;
+    }
+    
+    private void leafs(List<Path> list){
+        for(Path path: this){
+            if(path.children==null)
+                list.add(path);
+            else
+                path.children.leafs(list);
+        }
+    }
+
     @SuppressWarnings({"SimplifiableIfStatement"})
     private static boolean clashes(Path p1, Path p2){
         if(p1.matcher()==null && p2.matcher()==null)
-            throw new IllegalStateException("Ambiguous Routes");
+            throw new IllegalStateException("Ambiguous Routes: "+p1+" AND "+p2);
         if(p1.matcher()!=null && p2.matcher()!=null){
             if(p1.fallback() || p2.fallback())
                 return false;

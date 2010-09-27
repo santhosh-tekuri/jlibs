@@ -17,7 +17,10 @@ package jlibs.nblr.rules;
 
 import jlibs.core.lang.ImpossibleException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -26,26 +29,26 @@ public class Routes{
     public final Node fromNode;
     public final Paths paths;
     public final int maxLookAhead;
-    public final List<Path[]> determinateBranchRoutes;
-    public final List<Path[]> indeterminateBranchRoutes;
-    public final Path[] routeStartingWithEOF;
+    public final List<Path> determinateBranchRoutes;
+    public final List<Path> indeterminateBranchRoutes;
+    public final Path routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
     public Routes(Node fromNode){
         this.fromNode = fromNode;
         this.paths = Paths.travel(fromNode);
 
-        List<Path[]> routes = flatten();
+        List<Path> routes = paths.leafs();
 
         // split paths into branches and find maxLookAhead required
         int maxLookAhead = 0;
-        List<Path[]> branches[] = new List[paths.size()];
-        for(Path[] route: routes){
-            int branch = route[0].branch;
+        List<Path> branches[] = new List[paths.size()];
+        for(Path route: routes){
+            int branch = route.branch;
             if(branches[branch]==null)
-                branches[branch] = new ArrayList<Path[]>();
+                branches[branch] = new ArrayList<Path>();
             branches[branch].add(route);
-            maxLookAhead = Math.max(maxLookAhead, route.length);
+            maxLookAhead = Math.max(maxLookAhead, route.depth);
         }
         this.maxLookAhead = maxLookAhead;
 
@@ -61,23 +64,23 @@ public class Routes{
         }
 
         if(branchWithMultiplePaths==-1)
-             indeterminateBranchRoutes = new ArrayList<Path[]>();
+            indeterminateBranchRoutes = new ArrayList<Path>();
         else
             indeterminateBranchRoutes = branches[branchWithMultiplePaths];
 
-        determinateBranchRoutes = new ArrayList<Path[]>();
+        determinateBranchRoutes = new ArrayList<Path>();
         for(int branch=0; branch<branches.length; branch++){
             if(branch!=branchWithMultiplePaths)
                 determinateBranchRoutes.addAll(branches[branch]);
         }
-        Collections.sort(determinateBranchRoutes, new Comparator<Path[]>(){
+        Collections.sort(determinateBranchRoutes, new Comparator<Path>(){
             @Override
-            public int compare(Path[] route1, Path[] route2){
-                int diff = route1.length - route2.length;
+            public int compare(Path route1, Path route2){
+                int diff = route1.depth - route2.depth;
                 if(diff==0){
-                    if(route1[route1.length-1].fallback())
+                    if(route1.fallback())
                         return +1;
-                    else if(route2[route2.length-1].fallback())
+                    else if(route2.fallback())
                         return -1;
                     else
                         return 0;
@@ -86,9 +89,9 @@ public class Routes{
             }
         });
 
-        Path[] routeStartingWithEOF = null;
-        for(Path[] route: determinateBranchRoutes){
-            if(route[0].matcher()==null){
+        Path routeStartingWithEOF = null;
+        for(Path route: determinateBranchRoutes){
+            if(route.parent==null && route.matcher()==null){
                 if(routeStartingWithEOF!=null)
                     throw new ImpossibleException("found more that one route starting with <EOF>");
                 routeStartingWithEOF = route;
@@ -99,33 +102,11 @@ public class Routes{
         this.routeStartingWithEOF = routeStartingWithEOF;
     }
 
-    private List<Path[]> flatten(){
-        List<Path[]> routes = new ArrayList<Path[]>();
-        flatten(paths, new ArrayDeque<Path>(), routes);
-        return routes;
-    }
-
-    private void flatten(Paths paths, Deque<Path> pathStack, List<Path[]> routes){
-        for(Path path: paths)
-            flatten(path, pathStack, routes);
-    }
-
-    private void flatten(Path path, Deque<Path> pathStack, List<Path[]> routes){
-        pathStack.push(path);
-        if(path.children==null){
-            List<Path> route = new ArrayList<Path>(pathStack);
-            Collections.reverse(route);
-            routes.add(route.toArray(new Path[route.size()]));
-        }else
-            flatten(path.children, pathStack, routes);
-        pathStack.pop();
-    }
-
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(Path[] route: determinateBranchRoutes)
+        for(Path route: determinateBranchRoutes)
             add(buff, route);
-        for(Path[] route: indeterminateBranchRoutes)
+        for(Path route: indeterminateBranchRoutes)
             add(buff, route);
         if(routeStartingWithEOF!=null)
             add(buff, routeStartingWithEOF);
@@ -133,10 +114,9 @@ public class Routes{
         return buff.toString();
     }
 
-    private void add(StringBuilder buff, Path[] route){
+    private void add(StringBuilder buff, Path route){
         if(buff.length()>0)
             buff.append(" OR ");
-        for(Path path: route)
-            buff.append(path);
+        buff.append(route);
     }
 }
