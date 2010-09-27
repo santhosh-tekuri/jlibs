@@ -37,6 +37,7 @@ public class Routes{
 
         List<Path[]> routes = flatten();
 
+        // split paths into branches and find maxLookAhead required
         int maxLookAhead = 0;
         List<Path[]> branches[] = new List[paths.size()];
         for(Path[] route: routes){
@@ -48,6 +49,7 @@ public class Routes{
         }
         this.maxLookAhead = maxLookAhead;
 
+        // find branch with multiple paths
         int branchWithMultiplePaths = -1;
         for(int branch=0; branch<branches.length; branch++){
             if(branches[branch].size()>1){
@@ -71,7 +73,16 @@ public class Routes{
         Collections.sort(determinateBranchRoutes, new Comparator<Path[]>(){
             @Override
             public int compare(Path[] route1, Path[] route2){
-                return route1.length-route2.length;
+                int diff = route1.length - route2.length;
+                if(diff==0){
+                    if(route1[route1.length-1].fallback())
+                        return +1;
+                    else if(route2[route2.length-1].fallback())
+                        return -1;
+                    else
+                        return 0;
+                }else
+                    return diff;
             }
         });
 

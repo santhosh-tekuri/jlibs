@@ -37,6 +37,18 @@ public class Path extends ArrayList<Object>{
             return null;
     }
 
+    @SuppressWarnings({"SimplifiableConditionalExpression"})
+    public boolean fallback(){
+        for(Object obj: this){
+            if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if((edge.matcher!=null || edge.ruleTarget!=null) && edge.fallback)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     public Matcher matcher(){
         Edge matcherEdge = matcherEdge();
         return matcherEdge!=null ? matcherEdge.matcher : null;

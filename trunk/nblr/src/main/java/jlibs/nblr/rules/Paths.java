@@ -49,7 +49,7 @@ public class Paths extends ArrayList<Path>{
         if(p1.matcher()==null && p2.matcher()==null)
             throw new IllegalStateException("Ambiguous Routes");
         if(p1.matcher()!=null && p2.matcher()!=null){
-            if(p1.matcherEdge().fallback || p2.matcherEdge().fallback)
+            if(p1.fallback() || p2.fallback())
                 return false;
             else
                 return p1.clashesWith(p2);
