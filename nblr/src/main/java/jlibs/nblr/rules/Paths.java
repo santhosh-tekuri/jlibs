@@ -57,13 +57,11 @@ public class Paths extends ArrayList<Path>{
         return false;
     }
 
-    public static Paths travel(Node fromNode, int maxLookAhead){
+    public static Paths travel(Node fromNode){
         Paths rootPaths = new Paths(null);
         List<Path> list = new ArrayList<Path>();
 
-        int depth = 0;
         while(true){
-            depth++;
             if(list.size()==0){
                 rootPaths.populate(fromNode, new ArrayDeque<Object>());
                 list.addAll(rootPaths);
@@ -89,6 +87,8 @@ public class Paths extends ArrayList<Path>{
                             for(Path jpath: list){
                                 if(jpath.branch==jbranch){
                                     if(clashes(ipath, jpath)){
+                                        if(ipath.hasLoop() && jpath.hasLoop())
+                                            throw new IllegalStateException("Infinite lookAhead needed");
                                         clashingIndexes.add(i);
                                         clashingIndexes.add(j);
                                     }
@@ -108,9 +108,6 @@ public class Paths extends ArrayList<Path>{
             for(int id: clashingIndexes)
                 clashingPaths.add(list.get(id));
             list = clashingPaths;
-
-            if(depth==maxLookAhead)
-                throw new IllegalStateException("lookahead exceeded "+maxLookAhead);
         }
     }
 

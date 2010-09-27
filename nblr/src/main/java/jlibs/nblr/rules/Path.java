@@ -57,6 +57,19 @@ public class Path extends ArrayList<Object>{
     public int depth;
     public int branch;
 
+    public boolean hasLoop(){
+        Node lastNode = (Node)get(size()-1);
+        if(subList(0, size()).contains(lastNode))
+            return true;
+        Path path = parent;
+        while(path!=null){
+            if(path.contains(lastNode))
+                return true;
+            path = path.parent;
+        }
+        return false;
+    }
+
     @Override
     public String toString(){
         Matcher matcher = matcher();

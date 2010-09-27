@@ -31,13 +31,13 @@ public class Routes{
     public final Path[] routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
-    public Routes(Node fromNode, int maxLookAhead){
+    public Routes(Node fromNode){
         this.fromNode = fromNode;
-        this.paths = Paths.travel(fromNode, maxLookAhead);
+        this.paths = Paths.travel(fromNode);
 
         List<Path[]> routes = flatten();
 
-        maxLookAhead = 0;
+        int maxLookAhead = 0;
         List<Path[]> branches[] = new List[paths.size()];
         for(Path[] route: routes){
             int branch = route[0].branch;
