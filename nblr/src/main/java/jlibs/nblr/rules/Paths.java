@@ -47,7 +47,7 @@ public class Paths extends ArrayList<Path>{
     @SuppressWarnings({"SimplifiableIfStatement"})
     private static boolean clashes(Path p1, Path p2){
         if(p1.matcher()==null && p2.matcher()==null)
-            throw new IllegalStateException("Ambigous Routes");
+            throw new IllegalStateException("Ambiguous Routes");
         if(p1.matcher()!=null && p2.matcher()!=null){
             if(p1.matcherEdge().fallback || p2.matcherEdge().fallback)
                 return false;
