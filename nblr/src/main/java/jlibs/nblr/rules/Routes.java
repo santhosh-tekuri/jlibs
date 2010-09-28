@@ -58,8 +58,10 @@ public class Routes{
             if(branches[branch].size()>1){
                 if(branchWithMultiplePaths==-1)
                     branchWithMultiplePaths = branch;
-                else
-                    throw new ImpossibleException("branches "+branch+" and "+branchWithMultiplePaths+" have multiple paths");
+                else{
+                    if(branches[branch].size()>branches[branchWithMultiplePaths].size())
+                        branchWithMultiplePaths = branch;
+                }
             }
         }
 
@@ -106,8 +108,8 @@ public class Routes{
         StringBuilder buff = new StringBuilder();
         for(Path route: determinateBranchRoutes)
             add(buff, route);
-        for(Path route: indeterminateBranchRoutes)
-            add(buff, route);
+        if(indeterminateBranchRoutes.size()>0)
+            add(buff, indeterminateBranchRoutes.get(0).route()[0]);
         if(routeStartingWithEOF!=null)
             add(buff, routeStartingWithEOF);
 
