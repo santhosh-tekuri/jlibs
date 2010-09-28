@@ -54,10 +54,13 @@ public abstract class CodeGenerator{
             printTitleComment("Rules");
             printer.emptyLine(true);
             
+            // NOTE: ids of all rules should be computed before calculating Routes
+            for(Rule rule: syntax.rules.values())
+                rule.computeIDS();
+
             int id = 0;
             for(Rule rule: syntax.rules.values()){
                 addRuleID(rule.name, id++);
-                rule.computeIDS();
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     try{
