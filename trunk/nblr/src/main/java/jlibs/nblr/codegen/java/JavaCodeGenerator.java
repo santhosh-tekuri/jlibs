@@ -24,8 +24,6 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
-import java.util.ArrayList;
-
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
 
@@ -174,25 +172,22 @@ public class JavaCodeGenerator extends CodeGenerator{
         String expected = "expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
+        if(lookAheadBufferReqd)
+            printer.printlns("lookAhead.add(ch, eof);");
+
         int lastDepth = 0;
         for(int iroute=0; iroute<routes.determinateBranchRoutes.size(); iroute++){
             Path[] route = routes.determinateBranchRoutes.get(iroute).route();
             int curDepth = route.length;
             if(lookAheadBufferReqd && curDepth>lastDepth){
                 printer.printlns(
-                    "if(lookAhead.length()<"+curDepth+"){",
+                    "if(lookAhead.length()<"+curDepth+" && !eof)",
+                        PLUS,
+                        "return "+routes.fromNode.id+";",
+                        MINUS,
+                     "if(lookAhead.length()=="+curDepth+"){",
                         PLUS
                 );
-                if(curDepth>1){
-                    printer.printlns(
-                        "lookAhead.add(ch, eof);",
-                        "if(!eof && lookAhead.length()<"+curDepth+")",
-                            PLUS,
-                            "return "+routes.fromNode.id+";",
-                            MINUS
-                    );
-                }
-                
             }
 
             int ifCount = 0;
@@ -201,32 +196,13 @@ public class JavaCodeGenerator extends CodeGenerator{
                     ifCount++;
             }
 
-            print(route[0], curDepth>1);
+            print(route[0], lookAheadBufferReqd);
 
             endIf(ifCount);
 
             if(lookAheadBufferReqd){
                 boolean lastRoute = iroute+1==routes.determinateBranchRoutes.size();
                 if(lastRoute || routes.determinateBranchRoutes.get(iroute+1).depth>curDepth){
-                    if(!lastRoute){
-                        printer.printlns(
-                            "if(eof)",
-                                PLUS,
-                                expected,
-                                MINUS
-                        );
-
-                        ArrayList<String> list = new ArrayList<String>();
-                        list.add(curDepth==1 ? "else{" : "else");
-                        list.add(PLUS);
-                        if(curDepth==1)
-                            list.add("lookAhead.add(ch, eof);");
-                        list.add("return "+routes.fromNode.id+';');
-                        list.add(MINUS);
-                        if(curDepth==1)
-                            list.add("}");
-                        printer.printlns(list.toArray(new String[list.size()]));
-                    }
                     printer.printlns(
                             MINUS,
                         "}"
