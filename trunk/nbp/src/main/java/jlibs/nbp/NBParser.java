@@ -58,8 +58,9 @@ public abstract class NBParser{
             consumed(ch);
 
         while(stream.lookAhead.hasNext()){
+            consumed = false;
             _eat(stream.lookAhead.getNext(), stream.lookAhead.isNextEOF());
-            if(stream.lookAhead.length()==0)
+            if(stream.lookAhead.length()==0 && !consumed)
                 consumed();
         }
     }
