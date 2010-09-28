@@ -204,6 +204,8 @@ public class Debugger extends JPanel implements Observer{
     private void updateGuardedBlock() throws BadLocationException{
         input.getHighlighter().removeAllHighlights();
         int consumed = parser.location.getCharacterOffset();
+        if(consumed>inputIndex)
+            throw new ImpossibleException("consumed="+consumed+" inputIndex="+inputIndex);
         if(consumed>0)
             input.getHighlighter().addHighlight(1, consumed-1, consumedHighlightPainter);
 
@@ -322,7 +324,7 @@ public class Debugger extends JPanel implements Observer{
                 scene.executing(node);
             else{
                 for(Edge edge: node.incoming()){
-                    if(edge.ruleTarget.rule==model.getElementAt(ruleIndex+1)){
+                    if(edge.ruleTarget!=null && edge.ruleTarget.rule==model.getElementAt(ruleIndex+1)){
                         scene.executing(edge);
                         return;
                     }
