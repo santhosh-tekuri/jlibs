@@ -103,7 +103,7 @@ public class Paths extends ArrayList<Path>{
                                 if(jpath.branch==jbranch){
                                     if(clashes(ipath, jpath)){
                                         if(ipath.hasLoop() && jpath.hasLoop())
-                                            throw new IllegalStateException("Infinite lookAhead needed");
+                                            throw new IllegalStateException("Infinite lookAhead needed: "+ipath+" and "+jpath);
                                         clashingIndexes.add(i);
                                         clashingIndexes.add(j);
                                     }
