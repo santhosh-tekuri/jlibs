@@ -56,7 +56,7 @@ public class NBLREditor extends JFrame{
     private JLabel message = new JLabel();
 
     public NBLREditor(Syntax syntax){
-        super("NBLR Editor");
+        super("Untitled");
         
         JMenuBar menubar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
@@ -148,11 +148,25 @@ public class NBLREditor extends JFrame{
             }
         });
 
+        /*
+        JToolBar westPanel = new JToolBar(JToolBar.VERTICAL);
+        westPanel.setFloatable(false);
+        JButton button = new JButton();
+        button.setFont(Util.FIXED_WIDTH_FONT);
+        button.setIcon(new VerticalTextIcon(button, " Rules ", false));
+        westPanel.add(button);
+        button = new JButton();
+        button.setFont(Util.FIXED_WIDTH_FONT);
+        button.setIcon(new VerticalTextIcon(button, " Matchers ", false));
+        westPanel.add(button);
+        */
+
         JPanel contents = (JPanel)getContentPane();
         ((BorderLayout)contents.getLayout()).setVgap(5);
         contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contents.add(topPanel, BorderLayout.NORTH);
         contents.add(split, BorderLayout.CENTER);
+        //contents.add(westPanel, BorderLayout.WEST);
 
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -211,6 +225,8 @@ public class NBLREditor extends JFrame{
             rule.node = new Node();
             syntax.add("RULE1", rule);
             showSyntax(syntax);
+            getRootPane().putClientProperty("Window.documentFile", null);
+            setTitle("Untitled");
         }
     };
 
@@ -226,6 +242,8 @@ public class NBLREditor extends JFrame{
                 try{
                     showSyntax((Syntax)handler.parse(new InputSource(selected.getPath())));
                     file = selected;
+                    getRootPane().putClientProperty("Window.documentFile", file);
+                    setTitle(file.getName());
                 }catch(Exception ex){
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(NBLREditor.this, ex.getMessage(), ex.getClass().getSimpleName(), JOptionPane.ERROR_MESSAGE);
