@@ -89,6 +89,10 @@ public class NBLREditor extends JFrame{
                     }catch(IllegalStateException ex){
                         msg = ex.getMessage();
                     }
+                }else if(model instanceof Edge){
+                    Edge edge = (Edge)model;
+                    if(edge.matcher!=null)
+                        msg = edge.matcher.toString();
                 }
                 message.setText(msg);
             }
