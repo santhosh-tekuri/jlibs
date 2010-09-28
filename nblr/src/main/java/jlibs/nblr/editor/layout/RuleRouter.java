@@ -42,7 +42,7 @@ public class RuleRouter extends DirectRouter{
         }else if(edge.sameRow() && edge.con!=0){
             Point p0 = rightCenter(bounds(scene.findWidget(edge.min())));
             Point p3 = leftCenter(bounds(scene.findWidget(edge.max())));
-            int y = 20 + sourceBounds(connection).height;
+            int y = 30 + sourceBounds(connection).height;
             Point p1 = point(p0, +10, +edge.con*y);
             Point p2 = point(p3, -10, +edge.con*y);
             java.util.List<Point> points = points(p0, p1, p2, p3);
