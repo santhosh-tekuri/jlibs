@@ -335,8 +335,7 @@ public class NBLREditor extends JFrame{
                 if(JOptionPane.showConfirmDialog(NBLREditor.this, "Are you sure, you want to delete this rule?", "Confirm", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
                     syntax.delete(rule);
                     combo.setModel(new DefaultComboBoxModel(syntax.rules.values().toArray()));
-                    if(combo.getItemCount()>1)
-                        scene.setRule(syntax, rule);
+                    scene.setRule(syntax, (Rule)combo.getSelectedItem());
                 }
             }
         }
