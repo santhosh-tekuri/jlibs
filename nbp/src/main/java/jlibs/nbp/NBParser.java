@@ -51,9 +51,10 @@ public abstract class NBParser{
     }
 
     private void eat(char ch, boolean eof) throws java.text.ParseException{
+        consumed = false;
         _eat(ch, eof);
 
-        if(stream.length()==0)
+        if(stream.length()==0 && !consumed)
             consumed(ch);
 
         while(stream.lookAhead.hasNext()){
@@ -73,8 +74,13 @@ public abstract class NBParser{
             }
             int state = callRule(ch, eof);
             if(state==-1){
-                if(!stateStack.isEmpty())
+                if(!stateStack.isEmpty()){
                     pop();
+                    if(lookAhead.length()>0){
+                        lookAhead.reset();
+                        return;
+                    }
+                }
             }else{
                 stateStack.setPeek(state);
                 break;
@@ -107,7 +113,9 @@ public abstract class NBParser{
         lookAhead.reset();
     }
 
+    boolean consumed = false;
     protected void consumed(char ch){
+        consumed = true;
         location.consume(ch);
         if(buffer.isBufferring())
             buffer.append(ch);
