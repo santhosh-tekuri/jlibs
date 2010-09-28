@@ -270,8 +270,13 @@ public class JavaCodeGenerator extends CodeGenerator{
         nodesToBeExecuted.setLength(0);
         
         int nextState = -1;
+        boolean wasNode = false;
         for(Object obj: path){
             if(obj instanceof Node){
+                if(wasNode)
+                    println("pop();");
+                wasNode = true;
+
                 Node node = (Node)obj;
                 if(debuggable){
                     if(nodesToBeExecuted.length()>0)
@@ -280,6 +285,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 }else if(node.action!=null)
                     printer.println(node.action.javaCode()+';');
             }else if(obj instanceof Edge){
+                wasNode = false;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null)
                     println("push(RULE_"+edge.ruleTarget.rule.name+", "+edge.target.id+", "+edge.ruleTarget.node().id+");");
