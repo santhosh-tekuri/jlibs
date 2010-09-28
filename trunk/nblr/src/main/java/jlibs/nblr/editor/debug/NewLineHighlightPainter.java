@@ -25,22 +25,18 @@ import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 
-public class GuardBlockHighlightPainter implements Highlighter.HighlightPainter{
+public class NewLineHighlightPainter implements Highlighter.HighlightPainter{
     private Color color;
 
-    public GuardBlockHighlightPainter(Color color){
+    public NewLineHighlightPainter(Color color){
         this.color = color;
     }
 
-    public GuardBlockHighlightPainter(){
+    public NewLineHighlightPainter(){
         this(new Color(225, 236, 247));
     }
 
-    public void paint(Graphics g, int p0, int p1, Shape bounds, JTextComponent c){
-        _paint(g, p0-1, p1+1, bounds, c);
-    }
-
-    public void _paint(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c){
+    public void paint(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c){
         Rectangle alloc = bounds.getBounds();
         try{
             // --- determine locations ---
