@@ -61,8 +61,10 @@ public class RuleChooser extends JDialog implements TreeSelectionListener{
             public String visit(Object elem){
                 if(elem instanceof Rule)
                     return ((Rule)elem).name;
-                else
+                else if(elem instanceof Node)
                     return ((Node)elem).name;
+                else
+                    return elem.getClass().getName();
             }
         });
         tree.setCellRenderer(cellRenderer);
