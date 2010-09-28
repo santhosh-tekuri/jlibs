@@ -199,18 +199,18 @@ public class Debugger extends JPanel implements Observer{
 
     /*-------------------------------------------------[ GuardBlock ]---------------------------------------------------*/
     
-    private Highlighter.HighlightPainter consumedHighlightPainter = new GuardBlockHighlightPainter(Color.LIGHT_GRAY);
-    private Highlighter.HighlightPainter lookAheadHighlightPainter = new GuardBlockHighlightPainter(Color.CYAN);
+    private Highlighter.HighlightPainter consumedHighlightPainter = new NewLineHighlightPainter(Color.LIGHT_GRAY);
+    private Highlighter.HighlightPainter lookAheadHighlightPainter = new NewLineHighlightPainter(Color.CYAN);
     private void updateGuardedBlock() throws BadLocationException{
         input.getHighlighter().removeAllHighlights();
         int consumed = parser.location.getCharacterOffset();
         if(consumed>inputIndex)
             throw new ImpossibleException("consumed="+consumed+" inputIndex="+inputIndex);
         if(consumed>0)
-            input.getHighlighter().addHighlight(1, consumed-1, consumedHighlightPainter);
+            input.getHighlighter().addHighlight(0, consumed, consumedHighlightPainter);
 
         if(inputIndex!=consumed)
-            input.getHighlighter().addHighlight(consumed+1, inputIndex-1, lookAheadHighlightPainter);
+            input.getHighlighter().addHighlight(consumed, inputIndex, lookAheadHighlightPainter);
 
         input.repaint();
     }
