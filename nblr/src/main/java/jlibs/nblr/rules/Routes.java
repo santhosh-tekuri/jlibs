@@ -26,8 +26,8 @@ public class Routes{
     public final Node fromNode;
     public final Paths paths;
     public final int maxLookAhead;
-    public final List<Path> determinateBranchRoutes;
-    public final List<Path> indeterminateBranchRoutes;
+    public final List<Path> determinateRoutes;
+    public final Path indeterminateRoute;
     public final Path routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
@@ -63,16 +63,16 @@ public class Routes{
         }
 
         if(branchWithMultiplePaths==-1)
-            indeterminateBranchRoutes = new ArrayList<Path>();
+            indeterminateRoute = null;
         else
-            indeterminateBranchRoutes = branches[branchWithMultiplePaths];
+            indeterminateRoute = branches[branchWithMultiplePaths].get(0);
 
-        determinateBranchRoutes = new ArrayList<Path>();
+        determinateRoutes = new ArrayList<Path>();
         for(int branch=0; branch<branches.length; branch++){
             if(branch!=branchWithMultiplePaths)
-                determinateBranchRoutes.addAll(branches[branch]);
+                determinateRoutes.addAll(branches[branch]);
         }
-        Collections.sort(determinateBranchRoutes, new Comparator<Path>(){
+        Collections.sort(determinateRoutes, new Comparator<Path>(){
             @Override
             public int compare(Path route1, Path route2){
                 int diff = route1.depth - route2.depth;
@@ -89,7 +89,7 @@ public class Routes{
         });
 
         Path routeStartingWithEOF = null;
-        for(Path route: determinateBranchRoutes){
+        for(Path route: determinateRoutes){
             if(route.parent==null && route.matcher()==null){
                 if(routeStartingWithEOF!=null)
                     throw new ImpossibleException("found more that one route starting with <EOF>");
@@ -97,13 +97,13 @@ public class Routes{
             }
         }
         if(routeStartingWithEOF!=null)
-            determinateBranchRoutes.remove(routeStartingWithEOF);
+            determinateRoutes.remove(routeStartingWithEOF);
         this.routeStartingWithEOF = routeStartingWithEOF;
     }
 
     public Integer[] lookAheads(){
         TreeSet<Integer> set = new TreeSet<Integer>();
-        for(Path route: determinateBranchRoutes){
+        for(Path route: determinateRoutes){
             set.add(route.depth);
         }
         return set.toArray(new Integer[set.size()]);
@@ -111,7 +111,7 @@ public class Routes{
 
     public List<Path> determinateRoutes(int lookAhead){
         List<Path> routes = new ArrayList<Path>();
-        for(Path route: determinateBranchRoutes){
+        for(Path route: determinateRoutes){
             if(route.depth==lookAhead)
                 routes.add(route);
         }
@@ -120,10 +120,10 @@ public class Routes{
     
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        for(Path route: determinateBranchRoutes)
+        for(Path route: determinateRoutes)
             add(buff, route);
-        if(indeterminateBranchRoutes.size()>0)
-            add(buff, indeterminateBranchRoutes.get(0).route()[0]);
+        if(indeterminateRoute !=null)
+            add(buff, indeterminateRoute.route()[0]);
         if(routeStartingWithEOF!=null)
             add(buff, routeStartingWithEOF);
 

@@ -200,12 +200,12 @@ public class JavaCodeGenerator extends CodeGenerator{
             }
         }
 
-        if(routes.indeterminateBranchRoutes.size()>0){
-            Path path = routes.indeterminateBranchRoutes.get(0).route()[0];
-            if(startIf(path, true, 0)){
-                print(path, true);
-                endIf(1);
-            }
+        if(routes.indeterminateRoute !=null){
+            Path path = routes.indeterminateRoute.route()[0];
+            Matcher matcher = path.matcher();
+            startIf(matcher, true, 0);
+            print(path, true);
+            endIf(1);
         }
 
         if(routes.routeStartingWithEOF!=null)
@@ -219,34 +219,32 @@ public class JavaCodeGenerator extends CodeGenerator{
             int ifCount = 0;
             Path[] paths = route.route();
             for(int ipath=0; ipath<paths.length; ipath++){
-                if(startIf(paths[ipath], route.depth>1, ipath))
+                Matcher matcher = paths[ipath].matcher();
+                if(matcher!=null){
+                    startIf(matcher, route.depth>1, ipath);
                     ifCount++;
+                }
             }
             print(paths[0], consumeLookAhead);
             endIf(ifCount);
         }
     }
     
-    private boolean startIf(Path path, boolean useLookAheadBuffer, int lookAheadIndex){
-        Matcher matcher = path.matcher();
-        if(matcher!=null){
-            String ch = "ch";
-            String eof = "eof";
-            if(useLookAheadBuffer){
-                ch = "lookAhead.charAt("+lookAheadIndex+')';
-                eof = "lookAhead.isEOF("+lookAheadIndex+')';
-            }
+    private void startIf(Matcher matcher, boolean useLookAheadBuffer, int lookAheadIndex){
+        String ch = "ch";
+        String eof = "eof";
+        if(useLookAheadBuffer){
+            ch = "lookAhead.charAt("+lookAheadIndex+')';
+            eof = "lookAhead.isEOF("+lookAheadIndex+')';
+        }
 
-            String condition = matcher._javaCode(ch);
-            if(matcher.name==null)
-                condition = '('+condition+')';
-            printer.printlns(
-                "if(!"+eof+" && "+condition+"){",
-                    PLUS
-            );
-            return true;
-        }else
-            return false;
+        String condition = matcher._javaCode(ch);
+        if(matcher.name==null)
+            condition = '('+condition+')';
+        printer.printlns(
+            "if(!"+eof+" && "+condition+"){",
+                PLUS
+        );
     }
 
     private void endIf(int count){
