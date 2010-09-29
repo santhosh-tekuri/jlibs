@@ -33,15 +33,6 @@ public class Or extends Matcher{
     }
 
     @Override
-    public boolean matches(char ch){
-        for(Matcher operand: operands){
-            if(operand.matches(ch))
-                return true;
-        }
-        return false;
-    }
-
-    @Override
     public String javaCode(String variable){
         StringBuilder buff = new StringBuilder();
         for(Matcher operand: operands){

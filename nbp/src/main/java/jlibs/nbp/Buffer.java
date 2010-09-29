@@ -30,8 +30,8 @@ public class Buffer{
         stack.push(buff.length());
     }
 
-    public void append(char ch){
-        buff.append(ch);
+    public void append(int codePoint){
+        buff.appendCodePoint(codePoint);
     }
 
     public String pop(int begin, int end){

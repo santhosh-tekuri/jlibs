@@ -157,9 +157,6 @@ public abstract class CodeGenerator{
 
     protected static Matcher eofMatcher = new Matcher(){
         @Override
-        public boolean matches(char ch){ return false; }
-
-        @Override
         public String toString(){ throw new UnsupportedOperationException(); }
 
         @Override

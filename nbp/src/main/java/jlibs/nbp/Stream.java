@@ -19,13 +19,13 @@ package jlibs.nbp;
  * @author Santhosh Kumar T
  */
 public class Stream{
-    private char chars[];
+    private int chars[];
     private int begin = 0;
     private int end = 0;
     private boolean eof;
 
     public Stream(int capacity){
-        chars = new char[capacity+1];
+        chars = new int[capacity+1];
     }
 
     private int capacity(){
@@ -37,7 +37,7 @@ public class Stream{
         return len<0 ? len+chars.length : len;
     }
 
-    public char charAt(int index){
+    public int charAt(int index){
         if(index<0 && index>=length())
             throw new IndexOutOfBoundsException("index: "+index+" length: "+length());
         return chars[(begin+index)%chars.length];
@@ -61,7 +61,7 @@ public class Stream{
             return len<0 ? len+chars.length : len;
         }
 
-        public char charAt(int index){
+        public int charAt(int index){
             if(index>=0 && index<length())
                 return Stream.this.charAt(index);
             else
@@ -72,7 +72,7 @@ public class Stream{
             return Stream.this.isEOF(index);
         }
 
-        public void add(char ch, boolean eof){
+        public void add(int ch, boolean eof){
             if(hasNext()){
                 if(isNextEOF()!=eof)
                     throw new IllegalArgumentException("expected eof: "+!eof);
@@ -106,7 +106,7 @@ public class Stream{
             return this.end!=Stream.this.end;
         }
 
-        public char getNext(){
+        public int getNext(){
             return Stream.this.charAt(length());
         }
 

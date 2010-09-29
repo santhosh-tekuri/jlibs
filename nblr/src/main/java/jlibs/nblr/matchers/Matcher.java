@@ -29,8 +29,6 @@ import java.util.List;
 public abstract class Matcher implements SAXProducer{
     public String name;
 
-    public abstract boolean matches(char ch);
-
     public abstract String toString();
     protected final String _toString(){
         if(name==null)
@@ -39,18 +37,33 @@ public abstract class Matcher implements SAXProducer{
             return "[<"+name+">]";
     }
 
-    private static String SPECIALS = ".[]-^&";
-    protected static String encode(char... chars){
+    protected String toJava(int codePoint){
+        char ch[] = Character.toChars(codePoint);
+        if(ch.length==1){
+            return '\''+StringUtil.toLiteral((char)codePoint, false)+'\'';
+        }else
+            return "0x"+Integer.toHexString(codePoint);
+    }
+    
+    private static String SPECIALS = "\\#.[]-^&";
+    protected static String encode(int... chars){
         if(chars==null || chars.length==0)
             return ".";
         StringBuilder buff = new StringBuilder();
-        for(char ch: chars){
+        for(int ch: chars){
             if(SPECIALS.indexOf(ch)!=-1)
-                buff.append('\\');
-            if(ch=='"')
-                buff.append(ch);
-            else
-                buff.append(StringUtil.toLiteral(""+ch, false));
+                buff.append('\\').append(ch);
+            else{
+                if(ch=='"')
+                    buff.append(ch);
+                else{
+                    char arr[] = Character.toChars(ch);
+                    if(arr.length==1)
+                        buff.append(StringUtil.toLiteral(""+(char)ch, false));
+                    else
+                        buff.append("#0x").append(Integer.toHexString(ch)).append(';');
+                }
+            }
         }
         return buff.toString();
     }

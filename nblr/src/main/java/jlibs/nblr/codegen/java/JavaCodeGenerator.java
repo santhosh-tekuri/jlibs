@@ -95,7 +95,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void printMatcherMethod(Matcher matcher){
         printer.printlns(
-            "private boolean "+matcher.name+"(char ch){",
+            "private boolean "+matcher.name+"(int ch){",
                 PLUS,
                 "return "+matcher.javaCode("ch")+';',
                 MINUS,
@@ -105,13 +105,13 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addRuleID(String name, int id){
-        printer.println("public static final int RULE_"+name+" = "+id+';');
+        printer.println("public static final int RULE_"+name.toUpperCase()+" = "+id+';');
     }
 
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(char ch, boolean eof) throws java.text.ParseException{",
+            "private int "+rule.name+"(int ch, boolean eof) throws java.text.ParseException{",
                 PLUS,
                 "switch(stateStack.peek()){",
                     PLUS
@@ -152,7 +152,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String prefix = debuggable ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected int "+prefix+"callRule(char ch, boolean eof) throws java.text.ParseException{",
+            "protected int "+prefix+"callRule(int ch, boolean eof) throws java.text.ParseException{",
                 PLUS,
                 "switch(ruleStack.peek()){",
                     PLUS
@@ -329,7 +329,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 wasNode = false;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null)
-                    println("push(RULE_"+edge.ruleTarget.rule.name+", "+edge.target.id+", "+edge.ruleTarget.node().id+");");
+                    println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+edge.target.id+", "+edge.ruleTarget.node().id+");");
                 else if(edge.matcher!=null){
                     nextState = edge.target.id;
                     if(consumeLookAhead)
