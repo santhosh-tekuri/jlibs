@@ -24,6 +24,8 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
+import java.util.List;
+
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
 
@@ -175,42 +177,27 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(lookAheadBufferReqd)
             printer.printlns("lookAhead.add(ch, eof);");
 
-        int lastDepth = 0;
-        for(int iroute=0; iroute<routes.determinateBranchRoutes.size(); iroute++){
-            Path[] route = routes.determinateBranchRoutes.get(iroute).route();
-            int curDepth = route.length;
-            if(lookAheadBufferReqd && curDepth>lastDepth){
+        for(int lookAhead: routes.lookAheads()){
+            if(lookAheadBufferReqd){
                 printer.printlns(
-                    "if(lookAhead.length()<"+curDepth+" && !eof)",
+                    "if(!eof && lookAhead.length()<"+lookAhead+")",
                         PLUS,
                         "return "+routes.fromNode.id+";",
-                        MINUS,
-                     "if(lookAhead.length()=="+curDepth+"){",
+                        MINUS
+                );
+
+                printer.printlns(
+                    "if(lookAhead.length()=="+lookAhead+"){",
                         PLUS
                 );
             }
-
-            int ifCount = 0;
-            for(int ipath=0; ipath<route.length; ipath++){
-                if(startIf(route[ipath], curDepth>1, ipath))
-                    ifCount++;
-            }
-
-            print(route[0], lookAheadBufferReqd);
-
-            endIf(ifCount);
-
+            print(routes.determinateRoutes(lookAhead), lookAheadBufferReqd);
             if(lookAheadBufferReqd){
-                boolean lastRoute = iroute+1==routes.determinateBranchRoutes.size();
-                if(lastRoute || routes.determinateBranchRoutes.get(iroute+1).depth>curDepth){
-                    printer.printlns(
-                            MINUS,
-                        "}"
-                    );
-                }
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
             }
-
-            lastDepth = curDepth;
         }
 
         if(routes.indeterminateBranchRoutes.size()>0){
@@ -227,6 +214,19 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println(expected);
     }
 
+    private void print(List<Path> routes, boolean consumeLookAhead){
+        for(Path route: routes){
+            int ifCount = 0;
+            Path[] paths = route.route();
+            for(int ipath=0; ipath<paths.length; ipath++){
+                if(startIf(paths[ipath], route.depth>1, ipath))
+                    ifCount++;
+            }
+            print(paths[0], consumeLookAhead);
+            endIf(ifCount);
+        }
+    }
+    
     private boolean startIf(Path path, boolean useLookAheadBuffer, int lookAheadIndex){
         Matcher matcher = path.matcher();
         if(matcher!=null){
