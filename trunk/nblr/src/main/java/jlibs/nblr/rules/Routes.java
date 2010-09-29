@@ -17,10 +17,7 @@ package jlibs.nblr.rules;
 
 import jlibs.core.lang.ImpossibleException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -104,6 +101,23 @@ public class Routes{
         this.routeStartingWithEOF = routeStartingWithEOF;
     }
 
+    public Integer[] lookAheads(){
+        TreeSet<Integer> set = new TreeSet<Integer>();
+        for(Path route: determinateBranchRoutes){
+            set.add(route.depth);
+        }
+        return set.toArray(new Integer[set.size()]);
+    }
+
+    public List<Path> determinateRoutes(int lookAhead){
+        List<Path> routes = new ArrayList<Path>();
+        for(Path route: determinateBranchRoutes){
+            if(route.depth==lookAhead)
+                routes.add(route);
+        }
+        return routes;
+    }
+    
     public String toString(){
         StringBuilder buff = new StringBuilder();
         for(Path route: determinateBranchRoutes)
