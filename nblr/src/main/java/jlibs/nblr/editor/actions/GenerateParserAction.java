@@ -26,22 +26,22 @@ import java.io.PrintWriter;
 /**
  * @author Santhosh Kumar T
  */
-public class GenerateJavaAction extends AbstractAction{
+public class GenerateParserAction extends AbstractAction{
     private RuleScene scene;
-    public GenerateJavaAction(RuleScene scene){
-        super("Generate Java...");
+    public GenerateParserAction(RuleScene scene){
+        super("Generate Parser...");
         this.scene = scene;
     }
 
     @Override
     public void actionPerformed(ActionEvent ae){
-        Printer printer = new Printer(new PrintWriter(System.out, true));
-        JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax(), printer);
+        JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Debuggable Parser ?");
         if(response==JOptionPane.YES_OPTION)
             codeGenerator.setDebuggable();
         else if(response==JOptionPane.CANCEL_OPTION)
             return;
-        codeGenerator.generateCode();
+        Printer printer = new Printer(new PrintWriter(System.out, true));
+        codeGenerator.generateParser(printer);
     }
 }

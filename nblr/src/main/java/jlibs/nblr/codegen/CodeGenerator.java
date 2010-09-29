@@ -22,6 +22,8 @@ import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
 
+import java.util.Set;
+
 import static jlibs.core.annotation.processing.Printer.MINUS;
 
 /**
@@ -29,15 +31,16 @@ import static jlibs.core.annotation.processing.Printer.MINUS;
  */
 public abstract class CodeGenerator{
     protected final Syntax syntax;
-    protected final Printer printer;
+    protected Printer printer;
 
-    public CodeGenerator(Syntax syntax, Printer printer){
+    public CodeGenerator(Syntax syntax){
         this.syntax = syntax;
-        this.printer = printer;
     }
 
-    public final void generateCode(){
-        startClassDeclaration(); // todo: compute maxLookAhead reqd
+    public final void generateParser(Printer printer){
+        this.printer = printer;
+        
+        startParser();
         printer.emptyLine(true);
         
         if(syntax.matchers.size()>0){
@@ -88,7 +91,7 @@ public abstract class CodeGenerator{
         finishCallRuleMethod();
 
         printer.emptyLine(false);
-        finishClassDeclaration(maxLookAhead);
+        finishParser(maxLookAhead);
     }
 
     protected boolean debuggable;
@@ -100,8 +103,8 @@ public abstract class CodeGenerator{
     protected abstract void endCase();
     
     protected abstract void printTitleComment(String title);
-    protected abstract void startClassDeclaration();
-    protected abstract void finishClassDeclaration(int maxLookAhead);
+    protected abstract void startParser();
+    protected abstract void finishParser(int maxLookAhead);
 
     protected abstract void printMatcherMethod(Matcher matcher);
     
@@ -113,4 +116,38 @@ public abstract class CodeGenerator{
     protected abstract void startCallRuleMethod();
     protected abstract void callRuleMethod(String ruleName);
     protected abstract void finishCallRuleMethod();
+
+    public final void generateConsumer(Printer printer){
+        this.printer = printer;
+
+        startConsumer();
+
+        Set<String> set = syntax.publishMethods();
+        if(set.size()>0){
+            printTitleComment("Publishers");
+            printer.emptyLine(true);
+            for(String publisher: set){
+                addPublishMethod(publisher);
+                printer.emptyLine(true);
+            }
+        }
+
+        set = syntax.eventMethods();
+        if(set.size()>0){
+            printTitleComment("Events");
+            printer.emptyLine(true);
+            for(String event: set){
+                addEventMethod(event);
+                printer.emptyLine(true);
+            }
+        }
+
+        printer.emptyLine(false);
+        finishConsumer();
+    }
+
+    protected abstract void startConsumer();
+    protected abstract void addPublishMethod(String name);
+    protected abstract void addEventMethod(String name);
+    protected abstract void finishConsumer();
 }
