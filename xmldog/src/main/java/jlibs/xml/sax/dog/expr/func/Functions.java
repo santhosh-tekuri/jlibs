@@ -179,25 +179,7 @@ public class Functions{
         @Override
         public Object evaluate(Object... args){
             String str = (String)args[0];
-
-            int length = 0;
-            for(int i=0; i<str.length(); i++){
-                char c = str.charAt(i);
-                length++;
-                // if this is a high surrogate; assume the next character is
-                // is a low surrogate and skip it
-                if(c>=0xD800){
-                    try{
-                        char low = str.charAt(i+1);
-                        if (low < 0xDC00 || low > 0xDFFF)
-                            throw new IllegalArgumentException("Bad surrogate pair in string " + str);
-                        i++; // increment past low surrogate
-                    }catch(StringIndexOutOfBoundsException ex){
-                        throw new IllegalArgumentException("Bad surrogate pair in string " + str);
-                    }
-                }
-            }
-            return (double)length;
+            return (double)str.codePointCount(0, str.length());
         }
     };
 
