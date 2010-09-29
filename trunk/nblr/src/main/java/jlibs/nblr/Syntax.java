@@ -15,7 +15,10 @@
 
 package jlibs.nblr;
 
+import jlibs.nblr.actions.EventAction;
+import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.matchers.Matcher;
+import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 import jlibs.xml.sax.SAXProducer;
 import jlibs.xml.sax.XMLDocument;
@@ -24,6 +27,8 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Santhosh Kumar T
@@ -65,8 +70,32 @@ public class Syntax implements SAXProducer{
         return lengthyRuleName;
     }
 
+    /*-------------------------------------------------[ Actions ]---------------------------------------------------*/
+
+    public Set<String> publishMethods(){
+        Set<String> methods = new TreeSet<String>();
+        for(Rule rule: rules.values()){
+            for(Node node: rule.nodes()){
+                if(node.action instanceof PublishAction)
+                    methods.add(((PublishAction)node.action).name);
+            }
+        }
+        return methods;
+    }
+
+    public Set<String> eventMethods(){
+        Set<String> methods = new TreeSet<String>();
+        for(Rule rule: rules.values()){
+            for(Node node: rule.nodes()){
+                if(node.action instanceof EventAction)
+                    methods.add(((EventAction)node.action).name);
+            }
+        }
+        return methods;
+    }
+
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-    
+
     @Override
     public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
         xml.startElement("syntax");

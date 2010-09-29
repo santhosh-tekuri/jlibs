@@ -15,7 +15,6 @@
 
 package jlibs.nblr.codegen.java;
 
-import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.CodeGenerator;
@@ -33,8 +32,8 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  * @author Santhosh Kumar T
  */
 public class JavaCodeGenerator extends CodeGenerator{
-    public JavaCodeGenerator(Syntax syntax, Printer printer){
-        super(syntax, printer);
+    public JavaCodeGenerator(Syntax syntax){
+        super(syntax);
     }
 
     @Override
@@ -43,10 +42,10 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void startClassDeclaration(){
+    protected void startParser(){
         printer.printClassDoc();
 
-        String className[] = className();
+        String className[] = className(parserName);
         if(className[0].length()>0){
             printer.printlns(
                 "package "+className[0]+";",
@@ -61,9 +60,9 @@ public class JavaCodeGenerator extends CodeGenerator{
         );
     }
 
-    private String[] className(){
+    private String[] className(String className){
         String pakage = "";
-        String simpleName = parserName;
+        String simpleName = className;
         int dot = simpleName.lastIndexOf('.');
         if(dot!=-1){
             pakage = simpleName.substring(0, dot);
@@ -73,8 +72,8 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     @Override
-    protected void finishClassDeclaration(int maxLookAhead){
-        String className = className()[1];
+    protected void finishParser(int maxLookAhead){
+        String className = className(parserName)[1];
         String debuggerArgs = "";
         if(debuggable)
             debuggerArgs = ", consumer";
@@ -298,21 +297,77 @@ public class JavaCodeGenerator extends CodeGenerator{
         println("return "+nextState+';');
     }
     
+    /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
+
+    protected void startConsumer(){
+        printer.printClassDoc();
+
+        String className[] = className(consumerName);
+        if(className[0].length()>0){
+            printer.printlns(
+                "package "+className[0]+";",
+                ""
+            );
+        }
+
+        String keyWord = consumerClass ? "class" : "interface";
+        printer.printlns(
+            "public "+keyWord+" "+className[1]+"{",
+                PLUS
+        );
+    }
+
+    protected void addPublishMethod(String name){
+        if(consumerClass){
+            printer.printlns(
+                "public void "+name+"(String data){",
+                    PLUS,
+                        "System.out.println(\""+name+"(\\\"\"+data+\"\\\")\");",
+                    MINUS,
+                "}"
+            );
+        }else
+            printer.println("public void "+name+"(String data);");
+    }
+
+    protected void addEventMethod(String name){
+        if(consumerClass){
+            printer.printlns(
+                "public void "+name+"(){",
+                    PLUS,
+                        "System.out.println(\""+name+"\");",
+                    MINUS,
+                "}"
+            );
+        }else
+            printer.println("public void "+name+"();");
+    }
+
+    protected void finishConsumer(){
+        printer.printlns(
+                MINUS,
+            "}"
+        );
+    }
+
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
-    
+
     private String parserName = "UntitledParser";
     public void setParserName(String parserName){
         this.parserName = parserName;
     }
 
     private String consumerName = "Consumer";
-    public void setConsumerName(String consumerName){
+    private boolean consumerClass = false;
+    public void setConsumerName(String consumerName, boolean isClass){
         this.consumerName = consumerName;
+        this.consumerClass = isClass;
     }
 
     @Override
     public void setDebuggable(){
         super.setDebuggable();
         consumerName = Debugger.class.getName();
+        consumerClass = true;
     }
 }

@@ -34,7 +34,8 @@ public class ScenePopupProvider implements PopupMenuProvider{
 
     public JPopupMenu getPopupMenu(Widget widget, Point localLocation){
         JPopupMenu popup = new JPopupMenu();
-        popup.add(new GenerateJavaAction(scene));
+        popup.add(new GenerateParserAction(scene));
+        popup.add(new GenerateConsumerAction(scene));
         popup.add(new GenerateXMLAction(scene));
 
         return popup;

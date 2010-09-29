@@ -127,10 +127,11 @@ public class Debugger extends JPanel implements Observer{
             File file = new File("temp/UntitledParser.java").getAbsoluteFile();
             FileUtil.mkdirs(file.getParentFile());
             
-            Printer printer = new Printer(new PrintWriter(new FileWriter(file)));
-            JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax(), printer);
+            JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
             codeGenerator.setDebuggable();
-            codeGenerator.generateCode();
+
+            Printer printer = new Printer(new PrintWriter(new FileWriter(file)));
+            codeGenerator.generateParser(printer);
             printer.close();
             
             String error = compile(file);
