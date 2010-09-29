@@ -23,6 +23,7 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -190,7 +191,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                         PLUS
                 );
             }
-            print(routes.determinateRoutes(lookAhead), lookAheadBufferReqd);
+            print(routes.determinateRoutes(lookAhead), 1 ,lookAheadBufferReqd);
             if(lookAheadBufferReqd){
                 printer.printlns(
                         MINUS,
@@ -213,38 +214,53 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println(expected);
     }
 
-    private void print(List<Path> routes, boolean consumeLookAhead){
+    private void print(List<Path> routes, int depth, boolean consumeLookAhead){
+        List<List<Path>> groups = new ArrayList<List<Path>>();
+        Matcher matcher = null;
         for(Path route: routes){
-            int ifCount = 0;
-            Path[] paths = route.route();
-            for(int ipath=0; ipath<paths.length; ipath++){
-                Matcher matcher = paths[ipath].matcher();
-                if(matcher!=null){
-                    int lookAheadIndex;
-                    boolean checkEOF;
-                    if(route.depth>1){
-                        if(ipath==route.depth-1){
-                            lookAheadIndex = -1;
-                            checkEOF = true;
-                        }else{
-                            lookAheadIndex = ipath;
-                            checkEOF = false;
-                        }
-                    }else{
+            Path path = route.route()[depth-1];
+            Matcher curMatcher = path.matcher();
+            if(curMatcher==null)
+                curMatcher = eofMatcher;
+
+            if(matcher==null || !curMatcher.same(matcher)){
+                groups.add(new ArrayList<Path>());
+                matcher = curMatcher;
+            }
+            groups.get(groups.size()-1).add(route);
+        }
+
+        for(List<Path> group: groups){
+            Path route = group.get(0);
+            matcher = route.route()[depth-1].matcher();
+            boolean endIf = false;
+            if(matcher!=null){
+                int lookAheadIndex;
+                boolean checkEOF;
+                if(route.depth>1){
+                    if(depth==route.depth){
                         lookAheadIndex = -1;
                         checkEOF = true;
+                    }else{
+                        lookAheadIndex = depth-1;
+                        checkEOF = false;
                     }
-
-
-                    startIf(matcher, lookAheadIndex, checkEOF);
-                    ifCount++;
+                }else{
+                    lookAheadIndex = -1;
+                    checkEOF = true;
                 }
+                startIf(matcher, lookAheadIndex, checkEOF);
+                endIf = true;
             }
-            print(paths[0], consumeLookAhead);
-            endIf(ifCount);
+            if(depth<routes.get(0).depth)
+                print(group, depth+1, consumeLookAhead);
+            if(depth==route.depth)
+                print(route.route()[0], consumeLookAhead);
+            if(endIf)
+                endIf(1);
         }
     }
-    
+
     private void startIf(Matcher matcher, int lookAheadIndex, boolean checkEOF){
         String ch = lookAheadIndex==-1 ? "ch" : "lookAhead.charAt("+lookAheadIndex+')';
         String condition = matcher._javaCode(ch);
