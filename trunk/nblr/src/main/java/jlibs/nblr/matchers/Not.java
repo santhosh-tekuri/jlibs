@@ -33,11 +33,6 @@ public final class Not extends Matcher{
     }
 
     @Override
-    public boolean matches(char ch){
-        return !delegate.matches(ch);
-    }
-
-    @Override
     public String javaCode(String variable){
         return "!("+delegate._javaCode(variable)+")";
     }

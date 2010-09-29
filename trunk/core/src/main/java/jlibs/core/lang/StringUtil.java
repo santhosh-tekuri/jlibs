@@ -185,6 +185,17 @@ public class StringUtil{
         }
     }
 
+    public static int[] toCodePoints(String str){
+        int count = str.codePointCount(0, str.length());
+        int[] codePoints = new int[count];
+        for(int cpIndex=0, charIndex=0; cpIndex<count; cpIndex++){
+            int cp = str.codePointAt(charIndex);
+            codePoints[cpIndex] = cp;
+            charIndex += Character.charCount(cp);
+        }
+        return codePoints;
+    }
+
     /*-------------------------------------------------[ Array Join ]---------------------------------------------------*/
     
     public static <T> String join(T[] array){

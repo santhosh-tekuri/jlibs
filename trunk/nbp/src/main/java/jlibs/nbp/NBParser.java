@@ -30,6 +30,7 @@ public abstract class NBParser{
     }
 
     public void reset(){
+        wasHighSurrogate = false;
         stream.clear();
         location.reset();
         buffer.clear();
@@ -42,15 +43,32 @@ public abstract class NBParser{
         push(rule, -1, 0);
     }
 
+    private char highSurrogate;
+    private boolean wasHighSurrogate;
     public void consume(char ch) throws java.text.ParseException{
-        eat(ch, false);
+        if(Character.isHighSurrogate(ch)){
+            highSurrogate = ch;
+            wasHighSurrogate = true;
+        }else{
+            int codePoint;
+            if(wasHighSurrogate){
+                codePoint = Character.toCodePoint(highSurrogate, ch);
+                wasHighSurrogate = false;
+            }else
+                codePoint = ch;
+            eat(codePoint, false);
+        }
+    }
+
+    public void consume(int codePoint) throws java.text.ParseException{
+        eat(codePoint, false);
     }
 
     public void eof() throws java.text.ParseException{
         eat('\0', true);
     }
 
-    private void eat(char ch, boolean eof) throws java.text.ParseException{
+    private void eat(int ch, boolean eof) throws java.text.ParseException{
         consumed = false;
         _eat(ch, eof);
 
@@ -65,7 +83,7 @@ public abstract class NBParser{
         }
     }
 
-    private void _eat(char ch, boolean eof) throws java.text.ParseException{
+    private void _eat(int ch, boolean eof) throws java.text.ParseException{
         while(true){
             if(stateStack.isEmpty()){
                 if(eof)
@@ -89,14 +107,14 @@ public abstract class NBParser{
         }
     }
 
-    protected abstract int callRule(char ch, boolean eof) throws java.text.ParseException;
+    protected abstract int callRule(int ch, boolean eof) throws java.text.ParseException;
 
-    protected void expected(char ch, boolean eof, String... matchers) throws java.text.ParseException{
+    protected void expected(int ch, boolean eof, String... matchers) throws java.text.ParseException{
         String found;
         if(eof)
             found = "<EOF>";
         else
-            found = String.valueOf(ch);
+            found = new String(Character.toChars(ch));
         
         StringBuilder buff = new StringBuilder();
         for(String matcher: matchers){
@@ -114,7 +132,7 @@ public abstract class NBParser{
     }
 
     boolean consumed = false;
-    protected void consumed(char ch){
+    protected void consumed(int ch){
         consumed = true;
         location.consume(ch);
         if(buffer.isBufferring())

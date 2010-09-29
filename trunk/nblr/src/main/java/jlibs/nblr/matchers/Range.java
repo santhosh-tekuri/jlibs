@@ -15,7 +15,6 @@
 
 package jlibs.nblr.matchers;
 
-import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
@@ -26,7 +25,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Range extends Matcher{
-    private char from, to;
+    private int from, to;
 
     public Range(String chars){
         from = chars.charAt(0);
@@ -35,20 +34,14 @@ public final class Range extends Matcher{
             throw new IllegalArgumentException("invalid range: "+this);
     }
 
-    @Override
-    public boolean matches(char ch){
-        return ch>=from && ch<=to;
+    public Range(int from, int to){
+        this.from = from;
+        this.to = to;
     }
 
     @Override
     public String javaCode(String variable){
-        return String.format(
-            "%s>='%s' && %s<='%s'",
-            variable,
-            StringUtil.toLiteral(from, false),
-            variable,
-            StringUtil.toLiteral(to, false)
-        );
+        return String.format("%s>=%s && %s<=%s", variable, toJava(from), variable, toJava(to));
     }
 
     public List<jlibs.core.util.Range> ranges(){

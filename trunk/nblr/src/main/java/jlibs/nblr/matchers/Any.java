@@ -28,30 +28,19 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Any extends Matcher{
-    private char chars[];
+    private int chars[];
 
-    public Any(String chars){
-        if(chars!=null && chars.length()>0)
-            this.chars = chars.toCharArray();
+    public Any(String str){
+        if(str!=null && str.length()>0)
+            chars = StringUtil.toCodePoints(str);
     }
 
     public Any(char ch){
-        chars = new char[]{ ch };
+        chars = new int[]{ ch };
     }
 
     public Any(){
         // match any char
-    }
-
-    @Override
-    public boolean matches(char ch){
-        if(chars==null)
-            return true;
-        for(char c: chars){
-            if(c==ch)
-                return true;
-        }
-        return false;
     }
 
     @Override
@@ -60,13 +49,10 @@ public final class Any extends Matcher{
             return "true";
 
         StringBuilder buff = new StringBuilder();
-        for(char ch: chars){
+        for(int ch: chars){
             if(buff.length()>0)
                 buff.append(" || ");
-            
-            buff.append(variable).append("=='");
-            buff.append(StringUtil.toLiteral(ch, false));
-            buff.append('\'');
+            buff.append(variable).append("==").append(toJava(ch));
         }
         return buff.toString();
     }
@@ -77,7 +63,7 @@ public final class Any extends Matcher{
             return Collections.singletonList(new Range(Character.MIN_VALUE, Character.MAX_VALUE));
         else{
             List<Range> ranges = new ArrayList<Range>(chars.length);
-            for(char ch: chars)
+            for(int ch: chars)
                 ranges.add(new Range(ch, ch));
             return Range.union(ranges);
         }
@@ -93,6 +79,6 @@ public final class Any extends Matcher{
     @Override
     protected void addBody(XMLDocument xml) throws SAXException{
         if(chars!=null)
-            xml.addAttribute("chars", new String(chars));
+            xml.addAttribute("chars", new String(chars, 0, chars.length));
     }
 }

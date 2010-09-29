@@ -29,7 +29,7 @@ public class Location{
     public int getCharacterOffset(){ return offset; }
 
     private boolean skipLF;
-    public void consume(char ch){
+    public void consume(int ch){
         offset++;
         if(skipLF && ch=='\n')
             skipLF = false;

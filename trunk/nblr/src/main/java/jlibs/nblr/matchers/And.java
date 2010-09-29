@@ -32,15 +32,6 @@ public class And extends Matcher{
     }
 
     @Override
-    public boolean matches(char ch){
-        for(Matcher operand: operands){
-            if(!operand.matches(ch))
-                return false;
-        }
-        return true;
-    }
-
-    @Override
     public String javaCode(String variable){
         StringBuilder buff = new StringBuilder();
         for(Matcher operand: operands){
