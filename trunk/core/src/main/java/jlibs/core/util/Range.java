@@ -40,6 +40,20 @@ public class Range{
     }
 
     @Override
+    public int hashCode(){
+        return min+max;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        if(obj instanceof Range){
+            Range that = (Range)obj;
+            return this.min==that.min && this.max==that.max;
+        }else
+            return false;
+    }
+
+    @Override
     public String toString(){
         return "["+min+", "+max+']';
     }
@@ -219,5 +233,11 @@ public class Range{
             list1 = temp;
         }
         return union(list1);
+    }
+
+    public static boolean same(List<Range> list1, List<Range> list2){
+        list1 = union(list1);
+        list2 = union(list2);
+        return list1.equals(list2);
     }
 }

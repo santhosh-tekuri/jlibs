@@ -63,9 +63,16 @@ public abstract class Matcher implements SAXProducer{
             return name+'('+variable+')';
     }
 
+    /*-------------------------------------------------[ Ranges ]---------------------------------------------------*/
+
     public abstract List<jlibs.core.util.Range> ranges();
+
     public boolean clashesWith(Matcher that){
         return !jlibs.core.util.Range.intersection(this.ranges(), that.ranges()).isEmpty();
+    }
+
+    public boolean same(Matcher that){
+        return jlibs.core.util.Range.same(this.ranges(), that.ranges());
     }
 
     /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/

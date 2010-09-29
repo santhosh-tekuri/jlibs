@@ -16,12 +16,16 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.util.Range;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
+import jlibs.xml.sax.XMLDocument;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -150,4 +154,23 @@ public abstract class CodeGenerator{
     protected abstract void addPublishMethod(String name);
     protected abstract void addEventMethod(String name);
     protected abstract void finishConsumer();
+
+    protected static Matcher eofMatcher = new Matcher(){
+        @Override
+        public boolean matches(char ch){ return false; }
+
+        @Override
+        public String toString(){ throw new UnsupportedOperationException(); }
+
+        @Override
+        public String javaCode(String variable){ throw new UnsupportedOperationException(); }
+
+        @Override
+        public List<Range> ranges(){
+            return Collections.emptyList();
+        }
+
+        @Override
+        protected void addBody(XMLDocument xml){ throw new UnsupportedOperationException(); }
+    };
 }
