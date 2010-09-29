@@ -204,12 +204,12 @@ public class JavaCodeGenerator extends CodeGenerator{
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
             startIf(matcher, 0, true);
-            print(path, true);
+            travelPath(path, true);
             endIf(1);
         }
 
         if(routes.routeStartingWithEOF!=null)
-            print(routes.routeStartingWithEOF, false);
+            travelPath(routes.routeStartingWithEOF, false);
         else
             printer.println(expected);
     }
@@ -255,7 +255,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             if(depth<routes.get(0).depth)
                 print(group, depth+1, consumeLookAhead);
             if(depth==route.depth)
-                print(route.route()[0], consumeLookAhead);
+                travelRoute(route, consumeLookAhead);
             if(endIf)
                 endIf(1);
         }
@@ -294,7 +294,20 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
         printer.println(line);
     }
-    private void print(Path path, boolean consumeLookAhead){
+
+    private void travelRoute(Path route, boolean consumeLookAhead){
+        int state = -1;
+        for(Path path: route.route())
+            state = _travelPath(path, consumeLookAhead);
+        println("return "+ state +';');
+    }
+
+    private void travelPath(Path path, boolean consumeLookAhead){
+        int state = _travelPath(path, consumeLookAhead);
+        println("return "+ state +';');
+    }
+
+    private int _travelPath(Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
         
         int nextState = -1;
@@ -325,7 +338,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 }
             }
         }
-        println("return "+nextState+';');
+        return nextState;
     }
     
     /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/

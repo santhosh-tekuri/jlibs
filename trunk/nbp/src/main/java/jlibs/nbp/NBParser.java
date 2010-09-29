@@ -111,7 +111,6 @@ public abstract class NBParser{
         if(!stream.isEOF(0))
             consumed(stream.charAt(0));
         lookAhead.consumed();
-        lookAhead.reset();
     }
 
     boolean consumed = false;
