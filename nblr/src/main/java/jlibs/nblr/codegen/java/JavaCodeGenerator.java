@@ -202,7 +202,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(routes.indeterminateRoute !=null){
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
-            startIf(matcher, true, 0);
+            startIf(matcher, 0, true);
             print(path, true);
             endIf(1);
         }
@@ -220,7 +220,23 @@ public class JavaCodeGenerator extends CodeGenerator{
             for(int ipath=0; ipath<paths.length; ipath++){
                 Matcher matcher = paths[ipath].matcher();
                 if(matcher!=null){
-                    startIf(matcher, route.depth>1, ipath);
+                    int lookAheadIndex;
+                    boolean checkEOF;
+                    if(route.depth>1){
+                        if(ipath==route.depth-1){
+                            lookAheadIndex = -1;
+                            checkEOF = true;
+                        }else{
+                            lookAheadIndex = ipath;
+                            checkEOF = false;
+                        }
+                    }else{
+                        lookAheadIndex = -1;
+                        checkEOF = true;
+                    }
+
+
+                    startIf(matcher, lookAheadIndex, checkEOF);
                     ifCount++;
                 }
             }
@@ -229,19 +245,18 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
     }
     
-    private void startIf(Matcher matcher, boolean useLookAheadBuffer, int lookAheadIndex){
-        String ch = "ch";
-        String eof = "eof";
-        if(useLookAheadBuffer){
-            ch = "lookAhead.charAt("+lookAheadIndex+')';
-            eof = "lookAhead.isEOF("+lookAheadIndex+')';
-        }
-
+    private void startIf(Matcher matcher, int lookAheadIndex, boolean checkEOF){
+        String ch = lookAheadIndex==-1 ? "ch" : "lookAhead.charAt("+lookAheadIndex+')';
         String condition = matcher._javaCode(ch);
-        if(matcher.name==null)
-            condition = '('+condition+')';
+
+        if(checkEOF){
+            if(matcher.name==null)
+                condition = '('+condition+')';
+            String eof = lookAheadIndex==-1 ? "eof" : "lookAhead.isEOF("+lookAheadIndex+')';
+            condition = "!"+eof+" && "+condition;
+        }
         printer.printlns(
-            "if(!"+eof+" && "+condition+"){",
+            "if("+condition+"){",
                 PLUS
         );
     }
