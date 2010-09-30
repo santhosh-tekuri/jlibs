@@ -15,34 +15,64 @@
 
 package jlibs.nbp;
 
+import java.util.Arrays;
+
 /**
  * @author Santhosh Kumar T
  */
 public class Buffer{
-    private StringBuilder buff = new StringBuilder();
+    private char chars[] = new char[25];
+    private final Chars data = new Chars(chars, 0, 0);
+    private int count;
+
     private final IntStack stack = new IntStack();
 
     public boolean isBufferring(){
         return stack.size()>0;
     }
-    
+
     public void push(){
-        stack.push(buff.length());
+        stack.push(count);
+    }
+
+    private void expandCapacity(int minimumCapacity){
+        int newCapacity = (chars.length+1)*2;
+        if(newCapacity<0)
+            newCapacity = Integer.MAX_VALUE;
+        else if(minimumCapacity>newCapacity)
+            newCapacity = minimumCapacity;
+        chars = Arrays.copyOf(chars, newCapacity);
     }
 
     public void append(int codePoint){
-        buff.appendCodePoint(codePoint);
+        int newCount;
+        if(codePoint<Character.MIN_SUPPLEMENTARY_CODE_POINT){
+            newCount = count+1;
+            if(newCount >chars.length)
+                expandCapacity(newCount);
+            chars[count] = (char)codePoint;
+        }else{
+            newCount = count+2;
+            if(newCount >chars.length)
+                expandCapacity(newCount);
+            int offset = codePoint - Character.MIN_SUPPLEMENTARY_CODE_POINT;
+            chars[count] = (char)((offset >>> 10) + Character.MIN_HIGH_SURROGATE);
+            chars[newCount] = (char)((offset & 0x3ff) + Character.MIN_LOW_SURROGATE);
+        }
+        count = newCount;
     }
 
-    public String pop(int begin, int end){
-        String text = buff.substring(begin+ stack.pop(), buff.length()-end);
+    public Chars pop(int begin, int end){
+        begin += stack.pop();
+        end = count-end;
+        data.set(chars, begin, end-begin);
         if(stack.size()==0)
-            buff.setLength(0);
-        return text;
+            count = 0;
+        return data;
     }
 
     public void clear(){
-        buff.setLength(0);
+        count = 0;
         stack.clear();
     }
 }

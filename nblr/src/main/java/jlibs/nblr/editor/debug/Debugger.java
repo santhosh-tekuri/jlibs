@@ -29,6 +29,7 @@ import jlibs.nblr.editor.Util;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
+import jlibs.nbp.Chars;
 
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
@@ -345,7 +346,7 @@ public class Debugger extends JPanel implements Observer{
                 parser.getBuffer().push();
             }else if(node.action instanceof PublishAction){
                 PublishAction action = (PublishAction)node.action;
-                String data = parser.getBuffer().pop(action.begin, action.end);
+                Chars data = parser.getBuffer().pop(action.begin, action.end);
                 System.out.println(action.name+"(\""+ StringUtil.toLiteral(data, false)+"\")");
             }else if(node.action instanceof EventAction){
                 EventAction action = (EventAction)node.action;
