@@ -51,10 +51,10 @@ public abstract class Matcher implements SAXProducer{
         StringBuilder buff = new StringBuilder();
         for(int ch: chars){
             if(SPECIALS.indexOf(ch)!=-1)
-                buff.append('\\').append(ch);
+                buff.append('\\').append((char)ch);
             else{
                 if(ch=='"')
-                    buff.append(ch);
+                    buff.append((char)ch);
                 else{
                     if(ch>0x0020 && ch<0x007f) // visible character in ascii)
                         buff.append(StringUtil.toLiteral(""+(char)ch, false));
