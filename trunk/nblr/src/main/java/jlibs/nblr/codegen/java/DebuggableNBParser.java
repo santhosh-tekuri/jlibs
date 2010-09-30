@@ -29,14 +29,14 @@ public abstract class DebuggableNBParser extends NBParser{
     }
 
     @Override
-    protected final int callRule(int ch, boolean eof) throws java.text.ParseException{
-        int newState = _callRule(ch, eof);
+    protected final int callRule(int ch) throws java.text.ParseException{
+        int newState = _callRule(ch);
         if(newState!=-1)
             debugger.currentNode(newState);
         return newState;
     }
 
-    protected abstract int _callRule(int ch, boolean eof) throws java.text.ParseException;
+    protected abstract int _callRule(int ch) throws java.text.ParseException;
 
     @Override
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){

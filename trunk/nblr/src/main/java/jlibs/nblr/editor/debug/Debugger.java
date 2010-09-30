@@ -159,7 +159,7 @@ public class Debugger extends JPanel implements Observer{
                 inputIndex++;
                 updateGuardedBlock();
             }else{
-                parser.eof();
+                parser.consume(-1);
                 stop(null, "Input Matched");
             }
         }catch(BadLocationException ex){

@@ -56,42 +56,34 @@ public abstract class NBParser{
                 wasHighSurrogate = false;
             }else
                 codePoint = ch;
-            eat(codePoint, false);
+            consume(codePoint);
         }
     }
 
     public void consume(int codePoint) throws java.text.ParseException{
-        eat(codePoint, false);
-    }
-
-    public void eof() throws java.text.ParseException{
-        eat('\0', true);
-    }
-
-    private void eat(int ch, boolean eof) throws java.text.ParseException{
         consumed = false;
-        _eat(ch, eof);
+        _eat(codePoint);
 
         if(stream.length()==0 && !consumed)
-            consumed(ch);
+            consumed(codePoint);
 
         while(stream.lookAhead.hasNext()){
             consumed = false;
-            _eat(stream.lookAhead.getNext(), stream.lookAhead.isNextEOF());
+            _eat(stream.lookAhead.getNext());
             if(stream.lookAhead.length()==0 && !consumed)
                 consumed();
         }
     }
 
-    private void _eat(int ch, boolean eof) throws java.text.ParseException{
+    private void _eat(int ch) throws java.text.ParseException{
         while(true){
             if(stateStack.isEmpty()){
-                if(eof)
+                if(ch==-1)
                     return;
                 else
-                    expected(ch, eof, "<EOF>");
+                    expected(ch, "<EOF>");
             }
-            int state = callRule(ch, eof);
+            int state = callRule(ch);
             if(state==-1){
                 if(!stateStack.isEmpty()){
                     pop();
@@ -107,11 +99,11 @@ public abstract class NBParser{
         }
     }
 
-    protected abstract int callRule(int ch, boolean eof) throws java.text.ParseException;
+    protected abstract int callRule(int ch) throws java.text.ParseException;
 
-    protected void expected(int ch, boolean eof, String... matchers) throws java.text.ParseException{
+    protected void expected(int ch, String... matchers) throws java.text.ParseException{
         String found;
-        if(eof)
+        if(ch==-1)
             found = "<EOF>";
         else
             found = new String(Character.toChars(ch));
@@ -126,8 +118,9 @@ public abstract class NBParser{
     }
 
     protected void consumed(){
-        if(!stream.isEOF(0))
-            consumed(stream.charAt(0));
+        int ch = stream.charAt(0);
+        if(ch!=-1)
+            consumed(ch);
         lookAhead.consumed();
     }
 

@@ -111,7 +111,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(int ch, boolean eof) throws java.text.ParseException{",
+            "private int "+rule.name+"(int ch) throws java.text.ParseException{",
                 PLUS,
                 "switch(stateStack.peek()){",
                     PLUS
@@ -152,7 +152,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String prefix = debuggable ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected int "+prefix+"callRule(int ch, boolean eof) throws java.text.ParseException{",
+            "protected int "+prefix+"callRule(int ch) throws java.text.ParseException{",
                 PLUS,
                 "switch(ruleStack.peek()){",
                     PLUS
@@ -161,7 +161,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void callRuleMethod(String ruleName){
-        printer.println("return "+ruleName+"(ch, eof);");
+        printer.println("return "+ruleName+"(ch);");
     }
 
     @Override
@@ -171,16 +171,16 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addRoutes(Routes routes){
-        String expected = "expected(ch, eof, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
+        String expected = "expected(ch, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
         if(lookAheadBufferReqd)
-            printer.printlns("lookAhead.add(ch, eof);");
+            printer.printlns("lookAhead.add(ch);");
 
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 printer.printlns(
-                    "if(!eof && lookAhead.length()<"+lookAhead+")",
+                    "if(ch!=-1 && lookAhead.length()<"+lookAhead+")",
                         PLUS,
                         "return "+routes.fromNode.id+";",
                         MINUS
@@ -203,7 +203,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(routes.indeterminateRoute !=null){
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
-            startIf(matcher, 0, true);
+            startIf(matcher, 0);
             travelPath(path, true);
             endIf(1);
         }
@@ -235,21 +235,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             matcher = route.route()[depth-1].matcher();
             boolean endIf = false;
             if(matcher!=null){
-                int lookAheadIndex;
-                boolean checkEOF;
-                if(route.depth>1){
-                    if(depth==route.depth){
-                        lookAheadIndex = -1;
-                        checkEOF = true;
-                    }else{
-                        lookAheadIndex = depth-1;
-                        checkEOF = false;
-                    }
-                }else{
-                    lookAheadIndex = -1;
-                    checkEOF = true;
-                }
-                startIf(matcher, lookAheadIndex, checkEOF);
+                int lookAheadIndex = route.depth>1 && depth!=route.depth ? depth-1 : -1;
+                startIf(matcher, lookAheadIndex);
                 endIf = true;
             }
             if(depth<routes.get(0).depth)
@@ -261,18 +248,10 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
     }
 
-    private void startIf(Matcher matcher, int lookAheadIndex, boolean checkEOF){
+    private void startIf(Matcher matcher, int lookAheadIndex){
         String ch = lookAheadIndex==-1 ? "ch" : "lookAhead.charAt("+lookAheadIndex+')';
-        String condition = matcher._javaCode(ch);
-
-        if(checkEOF){
-            if(matcher.name==null)
-                condition = '('+condition+')';
-            String eof = lookAheadIndex==-1 ? "eof" : "lookAhead.isEOF("+lookAheadIndex+')';
-            condition = "!"+eof+" && "+condition;
-        }
         printer.printlns(
-            "if("+condition+"){",
+            "if("+matcher._javaCode(ch)+"){",
                 PLUS
         );
     }
