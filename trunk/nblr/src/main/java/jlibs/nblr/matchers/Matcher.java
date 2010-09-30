@@ -38,10 +38,9 @@ public abstract class Matcher implements SAXProducer{
     }
 
     protected String toJava(int codePoint){
-        char ch[] = Character.toChars(codePoint);
-        if(ch.length==1){
+        if(codePoint>0x0020 && codePoint<0x007f) // visible character in ascii)
             return '\''+StringUtil.toLiteral((char)codePoint, false)+'\'';
-        }else
+        else
             return "0x"+Integer.toHexString(codePoint);
     }
     
@@ -57,11 +56,10 @@ public abstract class Matcher implements SAXProducer{
                 if(ch=='"')
                     buff.append(ch);
                 else{
-                    char arr[] = Character.toChars(ch);
-                    if(arr.length==1)
+                    if(ch>0x0020 && ch<0x007f) // visible character in ascii)
                         buff.append(StringUtil.toLiteral(""+(char)ch, false));
                     else
-                        buff.append("#0x").append(Integer.toHexString(ch)).append(';');
+                        buff.append("#x").append(Integer.toHexString(ch)).append(';');
                 }
             }
         }

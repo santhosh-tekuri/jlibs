@@ -15,6 +15,7 @@
 
 package jlibs.nblr.matchers;
 
+import jlibs.core.lang.StringUtil;
 import jlibs.xml.sax.XMLDocument;
 import org.xml.sax.SAXException;
 
@@ -28,15 +29,16 @@ public final class Range extends Matcher{
     private int from, to;
 
     public Range(String chars){
-        from = chars.charAt(0);
-        to = chars.charAt(2);
-        if(from>to)
-            throw new IllegalArgumentException("invalid range: "+this);
+        int codePoints[] = StringUtil.toCodePoints(chars);
+        from = codePoints[0];
+        to = codePoints[2];
     }
 
     public Range(int from, int to){
         this.from = from;
         this.to = to;
+        if(from>to)
+            throw new IllegalArgumentException("invalid range: "+this);
     }
 
     @Override

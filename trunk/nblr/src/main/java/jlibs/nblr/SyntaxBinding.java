@@ -80,7 +80,7 @@ class AnyBinding{
 class RangeBinding{
     @Binding.Start
     public static Matcher onStart(@Attr String name, @Attr String from, @Attr String to){
-        Range range = new Range(from+'-'+to);
+        Range range = new Range(from.codePointAt(0), to.codePointAt(0));
         range.name = name;
         return range;
     }
@@ -195,7 +195,7 @@ class RuleBinding{
 
     @Relation.Finish("edge")
     @SuppressWarnings({"unchecked"})
-    public static void relateWithEdge(SAXContext parent, @Parent Rule rule, @Current Edge edge, @Temp String source, @Temp String target, @Temp String fallback){
+    public static void relateWithEdge(SAXContext parent, @Current Edge edge, @Temp String source, @Temp String target, @Temp String fallback){
         List<Node> nodes = (List<Node>)parent.get("", "node");
         edge.setSource(nodes.get(Integer.parseInt(source)));
         edge.setTarget(nodes.get(Integer.parseInt(target)));
