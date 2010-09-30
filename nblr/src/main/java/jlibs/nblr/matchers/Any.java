@@ -46,7 +46,7 @@ public final class Any extends Matcher{
     @Override
     public String javaCode(String variable){
         if(chars==null)
-            return "true";
+            return variable+"!=-1";
 
         StringBuilder buff = new StringBuilder();
         for(int ch: chars){

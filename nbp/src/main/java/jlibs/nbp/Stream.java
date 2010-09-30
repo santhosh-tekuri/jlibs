@@ -22,7 +22,6 @@ public class Stream{
     private int chars[];
     private int begin = 0;
     private int end = 0;
-    private boolean eof;
 
     public Stream(int capacity){
         chars = new int[capacity+1];
@@ -43,13 +42,8 @@ public class Stream{
         return chars[(begin+index)%chars.length];
     }
 
-    public boolean isEOF(int index){
-        return index==Stream.this.length()-1 && eof;
-    }
-
     public void clear(){
         begin = end = lookAhead.end = 0;
-        eof = false;
     }
 
     public LookAhead lookAhead = new LookAhead();
@@ -68,22 +62,15 @@ public class Stream{
                 throw new IndexOutOfBoundsException("index: "+index+" length: "+length());            
         }
 
-        public boolean isEOF(int index){
-            return Stream.this.isEOF(index);
-        }
-
-        public void add(int ch, boolean eof){
+        public void add(int ch){
             if(hasNext()){
-                if(isNextEOF()!=eof)
-                    throw new IllegalArgumentException("expected eof: "+!eof);
-                if(!eof && getNext()!=ch)
+                if(getNext()!=ch)
                     throw new IllegalArgumentException("expected char: "+ch);
                 end = (end+1)%chars.length;
             }else{
                 if(capacity()==Stream.this.length())
                     throw new RuntimeException("Stream is Full");
                 chars[end] = ch;
-                Stream.this.eof = eof;
                 this.end = Stream.this.end = (end+1)%chars.length;
             }
         }
@@ -108,10 +95,6 @@ public class Stream{
 
         public int getNext(){
             return Stream.this.charAt(length());
-        }
-
-        public boolean isNextEOF(){
-            return Stream.this.isEOF(length());
         }
     }
 }
