@@ -343,14 +343,14 @@ public class JavaCodeGenerator extends CodeGenerator{
     protected void addPublishMethod(String name){
         if(consumerClass){
             printer.printlns(
-                "public void "+name+"(String data){",
+                "public void "+name+"(Chars data){",
                     PLUS,
                         "System.out.println(\""+name+"(\\\"\"+data+\"\\\")\");",
                     MINUS,
                 "}"
             );
         }else
-            printer.println("public void "+name+"(String data);");
+            printer.println("public void "+name+"(Chars data);");
     }
 
     protected void addEventMethod(String name){
