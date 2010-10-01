@@ -18,7 +18,6 @@ package jlibs.nblr.codegen.java;
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.CodeGenerator;
-import jlibs.nblr.editor.debug.Debugger;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
@@ -54,9 +53,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        String extend = (debuggable ? DebuggableNBParser.class : NBParser.class).getName();
         printer.printlns(
-            "public class "+className[1]+" extends "+extend+"{",
+            "public class "+className[1]+" extends "+superClass.getName()+"{",
                 PLUS
         );
     }
@@ -393,21 +391,22 @@ public class JavaCodeGenerator extends CodeGenerator{
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
 
     private String parserName = "UntitledParser";
+    private Class superClass = NBParser.class;
     public void setParserName(String parserName){
         this.parserName = parserName;
     }
 
     private String handlerName = "UntitledHandler";
     private boolean handlerClass = false;
-    public void setConsumerName(String handlerName, boolean isClass){
+    public void setHandlerName(String handlerName, boolean isClass){
         this.handlerName = handlerName;
         this.handlerClass = isClass;
     }
 
-    @Override
-    public void setDebuggable(){
-        super.setDebuggable();
-        handlerName = Debugger.class.getName();
-        handlerClass = true;
+    private boolean debuggable;
+    public void setDebuggable(Class superClass, Class handler){
+        debuggable = true;
+        this.superClass = superClass;
+        this.handlerName = handler.getName();
     }
 }

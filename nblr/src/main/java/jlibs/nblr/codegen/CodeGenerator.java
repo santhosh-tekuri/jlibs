@@ -98,11 +98,6 @@ public abstract class CodeGenerator{
         finishParser(maxLookAhead);
     }
 
-    protected boolean debuggable;
-    public void setDebuggable(){
-        this.debuggable = true;
-    }
-
     protected abstract void startCase(int id);
     protected abstract void endCase();
     
