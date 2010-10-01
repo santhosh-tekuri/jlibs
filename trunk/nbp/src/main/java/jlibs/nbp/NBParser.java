@@ -15,10 +15,13 @@
 
 package jlibs.nbp;
 
+import java.io.IOException;
+import java.io.Writer;
+
 /**
  * @author Santhosh Kumar T
  */
-public abstract class NBParser{
+public abstract class NBParser extends Writer{
     private final Stream stream;
     protected final Stream.LookAhead lookAhead;
     public final Location location = new Location();
@@ -29,23 +32,22 @@ public abstract class NBParser{
         lookAhead = stream.lookAhead;
     }
 
-    public void reset(){
+    private int startingRule;
+    public void setRule(int rule){
+        eofOnClose = true;
         wasHighSurrogate = false;
         stream.clear();
         location.reset();
         buffer.clear();
         ruleStack.clear();
         stateStack.clear();
-    }
 
-    public void startParsing(int rule){
-        reset();
-        push(rule, -1, 0);
+        push(startingRule = rule, -1, 0);
     }
 
     private char highSurrogate;
     private boolean wasHighSurrogate;
-    public void consume(char ch) throws java.text.ParseException{
+    private void consume(char ch) throws IOException{
         if(Character.isHighSurrogate(ch)){
             highSurrogate = ch;
             wasHighSurrogate = true;
@@ -60,7 +62,7 @@ public abstract class NBParser{
         }
     }
 
-    public void consume(int codePoint) throws java.text.ParseException{
+    private void consume(int codePoint) throws IOException{
         consumed = false;
         _eat(codePoint);
 
@@ -75,7 +77,7 @@ public abstract class NBParser{
         }
     }
 
-    private void _eat(int ch) throws java.text.ParseException{
+    private void _eat(int ch) throws IOException{
         while(true){
             if(stateStack.isEmpty()){
                 if(ch==-1)
@@ -99,9 +101,9 @@ public abstract class NBParser{
         }
     }
 
-    protected abstract int callRule(int ch) throws java.text.ParseException;
+    protected abstract int callRule(int ch) throws IOException;
 
-    protected void expected(int ch, String... matchers) throws java.text.ParseException{
+    protected void expected(int ch, String... matchers) throws IOException{
         String found;
         if(ch==-1)
             found = "<EOF>";
@@ -114,8 +116,20 @@ public abstract class NBParser{
                 buff.append(" OR ");
             buff.append(matcher);
         }
-        throw new java.text.ParseException("Found: "+found+" Expected: "+buff.toString(), location.getCharacterOffset());
+
+        String message = "Found: "+found+" Expected: "+buff.toString();
+        try{
+            fatalError(message);
+        }catch(IOException ex){
+            throw ex;
+        }catch(Exception ex){
+            throw new IOException(ex);
+        }
+        eofOnClose = false;
+        throw new IOException(message);
     }
+
+    protected abstract void fatalError(String message) throws Exception;
 
     protected void consumed(){
         int ch = stream.charAt(0);
@@ -125,7 +139,7 @@ public abstract class NBParser{
     }
 
     boolean consumed = false;
-    protected void consumed(int ch){
+    private void consumed(int ch){
         consumed = true;
         location.consume(ch);
         if(buffer.isBufferring())
@@ -148,4 +162,56 @@ public abstract class NBParser{
         ruleStack.pop();
         stateStack.pop();
     }
+
+    /*-------------------------------------------------[ writer ]---------------------------------------------------*/
+
+    @Override
+    public void write(int c) throws IOException{
+        consume((char)c);
+    }
+
+    @Override
+    public void write(char[] chars, int offset, int length) throws IOException{
+        while(length>0){
+            consume(chars[offset]);
+            offset++;
+            length--;
+        }
+    }
+
+    @Override
+    public Writer append(char ch) throws IOException{
+        consume(ch);
+        return this;
+    }
+
+    @Override
+    public void write(String str, int offset, int length) throws IOException{
+        while(length>0){
+            consume(str.charAt(offset));
+            offset++;
+            length--;
+        }
+    }
+
+    @Override
+    public Writer append(CharSequence csq, int start, int end) throws IOException{
+        while(start<end){
+            consume(csq.charAt(start));
+            start++;
+        }
+        return this;
+    }
+
+    private boolean eofOnClose = true;
+    
+    @Override
+    public void close() throws IOException{
+        if(eofOnClose)
+            consume(-1);
+        setRule(startingRule);
+    }
+
+    @Override
+    public void flush() throws IOException{}
 }

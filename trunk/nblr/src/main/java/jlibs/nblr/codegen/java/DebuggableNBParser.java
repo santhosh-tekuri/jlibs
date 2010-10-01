@@ -20,23 +20,25 @@ import jlibs.nbp.Buffer;
 import jlibs.nbp.IntStack;
 import jlibs.nbp.NBParser;
 
+import java.io.IOException;
+
 public abstract class DebuggableNBParser extends NBParser{
     private Debugger debugger;
 
-    protected DebuggableNBParser(int maxLookAhead, Debugger debugger){
+    protected DebuggableNBParser(Debugger debugger, int maxLookAhead){
         super(maxLookAhead);
         this.debugger = debugger;
     }
 
     @Override
-    protected final int callRule(int ch) throws java.text.ParseException{
+    protected final int callRule(int ch) throws IOException{
         int newState = _callRule(ch);
         if(newState!=-1)
             debugger.currentNode(newState);
         return newState;
     }
 
-    protected abstract int _callRule(int ch) throws java.text.ParseException;
+    protected abstract int _callRule(int ch) throws IOException;
 
     @Override
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){

@@ -30,6 +30,7 @@ import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 import jlibs.nbp.Chars;
+import jlibs.nbp.NBHandler;
 
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
@@ -42,10 +43,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.ParseException;
@@ -56,7 +54,7 @@ import java.util.Observer;
 /**
  * @author Santhosh Kumar T
  */
-public class Debugger extends JPanel implements Observer{
+public class Debugger extends JPanel implements NBHandler, Observer{
     private RuleScene scene;
     private JTextArea input = new JTextArea();
     private JList ruleStackList = new JList(new DefaultListModel());
@@ -144,7 +142,7 @@ public class Debugger extends JPanel implements Observer{
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
             Class clazz = classLoader.loadClass("UntitledParser");
             parser = (DebuggableNBParser)clazz.getConstructor(getClass()).newInstance(this);
-            parser.startParsing(scene.getRule().id);
+            parser.setRule(scene.getRule().id);
             showMessage("Executing...");
         }catch(Exception ex){
             ex.printStackTrace();
@@ -156,11 +154,11 @@ public class Debugger extends JPanel implements Observer{
         try{
             if(inputIndex<input.getDocument().getLength()){
                 char ch = input.getDocument().getText(inputIndex, 1).charAt(0);
-                parser.consume(ch);
+                parser.write(ch);
                 inputIndex++;
                 updateGuardedBlock();
             }else{
-                parser.consume(-1);
+                parser.close();
                 stop(null, "Input Matched");
             }
         }catch(BadLocationException ex){
@@ -175,6 +173,7 @@ public class Debugger extends JPanel implements Observer{
         inputIndex = 0;
         if(ex==null){
             clearGuardedBlock();
+            scene.executing((Node)null);
             showMessage(message);
         }else
             showError(ex);
@@ -374,6 +373,11 @@ public class Debugger extends JPanel implements Observer{
                 ignoreRuleChange = false;
             }
         }
-        currentNode(0);
+        currentNode(nodeID);
+    }
+
+    @Override
+    public void fatalError(String message) throws Exception{
+        throw new IOException(message);
     }
 }

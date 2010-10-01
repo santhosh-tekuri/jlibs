@@ -32,7 +32,7 @@ public class EventAction implements Action{
 
     @Override
     public String javaCode(){
-        return "consumer."+name+"()";
+        return "handler."+name+"()";
     }
 
     @Override
