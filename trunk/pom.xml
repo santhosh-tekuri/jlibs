@@ -32,12 +32,11 @@
         <module>parent</module>
         <module>core</module> 
         <module>nbp</module>
-        <module>nblr</module>
         <module>jdbc</module> 
         <module>xml</module>
         <module>xmldog</module>
         <module>swing</module>
-        <module>nblr-editor</module>
+        <module>nblr</module>
         <module>examples</module>
     </modules> 
   
