@@ -16,8 +16,6 @@
 package jlibs.nblr.matchers;
 
 import jlibs.core.util.Range;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +24,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class Or extends Matcher{
-    private Matcher operands[];
+    public final Matcher operands[];
 
     public Or(Matcher... operands){
         this.operands = operands;
@@ -61,13 +59,5 @@ public class Or extends Matcher{
             buff.append(msg);
         }
         return '['+buff.toString()+']';
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    protected void addBody(XMLDocument xml) throws SAXException{
-        for(Matcher operand: operands)
-            operand.serializeTo(xml);
     }
 }

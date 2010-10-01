@@ -22,7 +22,6 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
-import jlibs.xml.sax.XMLDocument;
 
 import java.util.Collections;
 import java.util.List;
@@ -161,8 +160,5 @@ public abstract class CodeGenerator{
         public List<Range> ranges(){
             return Collections.emptyList();
         }
-
-        @Override
-        protected void addBody(XMLDocument xml){ throw new UnsupportedOperationException(); }
     };
 }

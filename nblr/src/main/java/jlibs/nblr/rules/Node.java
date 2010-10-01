@@ -16,18 +16,14 @@
 package jlibs.nblr.rules;
 
 import jlibs.nblr.actions.Action;
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
-import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Node implements SAXProducer{
+public class Node{
     public String name;
     public int id;
     
@@ -63,18 +59,6 @@ public class Node implements SAXProducer{
 
     public Edge[] outgoing(){
         return outgoing.toArray(new Edge[outgoing.size()]);
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("node");
-        if(name!=null)
-            xml.addAttribute("name", String.valueOf(name));
-        if(action!=null)
-            xml.add(action);
-        xml.endElement();
     }
 
     /*-------------------------------------------------[ Layout ]---------------------------------------------------*/

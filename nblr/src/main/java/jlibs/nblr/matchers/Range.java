@@ -16,8 +16,6 @@
 package jlibs.nblr.matchers;
 
 import jlibs.core.lang.StringUtil;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +24,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Range extends Matcher{
-    private int from, to;
+    public final int from, to;
 
     public Range(String chars){
         int codePoints[] = StringUtil.toCodePoints(chars);
@@ -53,13 +51,5 @@ public final class Range extends Matcher{
     @Override
     public String toString(){
         return '['+encode(from)+'-'+encode(to)+']';
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    protected void addBody(XMLDocument xml) throws SAXException{
-        xml.addAttribute("from", ""+from);
-        xml.addAttribute("to", ""+to);
     }
 }

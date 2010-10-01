@@ -15,11 +15,6 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -38,14 +33,5 @@ public class EventAction implements Action{
     @Override
     public String toString(){
         return name+"()";
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("event");
-        xml.addAttribute("name", name);
-        xml.endElement();
     }
 }

@@ -17,14 +17,14 @@ package jlibs.nblr.editor;
 
 import jlibs.core.lang.OS;
 import jlibs.nblr.Syntax;
-import jlibs.nblr.SyntaxBinding;
 import jlibs.nblr.editor.debug.Debugger;
+import jlibs.nblr.editor.serialize.SyntaxBinding;
+import jlibs.nblr.editor.serialize.SyntaxDocument;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
-import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.sax.binding.BindingHandler;
 import org.netbeans.api.visual.action.EditProvider;
 import org.netbeans.api.visual.action.TwoStateHoverProvider;
@@ -263,7 +263,7 @@ public class NBLREditor extends JFrame{
                 return;
         }
         try{
-            XMLDocument xml = new XMLDocument(new StreamResult(file.getPath()), true, 4, null);
+            SyntaxDocument xml = new SyntaxDocument(new StreamResult(file.getPath()));
             xml.startDocument();
             xml.add(scene.getSyntax());
             xml.endDocument();

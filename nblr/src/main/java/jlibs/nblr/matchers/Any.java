@@ -17,8 +17,6 @@ package jlibs.nblr.matchers;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.core.util.Range;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,11 +26,13 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Any extends Matcher{
-    private int chars[];
+    public final int chars[];
 
     public Any(String str){
         if(str!=null && str.length()>0)
             chars = StringUtil.toCodePoints(str);
+        else
+            chars = null;
     }
 
     public Any(char ch){
@@ -40,7 +40,7 @@ public final class Any extends Matcher{
     }
 
     public Any(){
-        // match any char
+        chars = null;
     }
 
     @Override
@@ -72,13 +72,5 @@ public final class Any extends Matcher{
     @Override
     public String toString(){
         return '['+encode(chars)+']';
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-    
-    @Override
-    protected void addBody(XMLDocument xml) throws SAXException{
-        if(chars!=null)
-            xml.addAttribute("chars", new String(chars, 0, chars.length));
     }
 }

@@ -20,11 +20,7 @@ import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
-import javax.xml.namespace.QName;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +29,7 @@ import java.util.TreeSet;
 /**
  * @author Santhosh Kumar T
  */
-public class Syntax implements SAXProducer{
+public class Syntax{
     public final Map<String, Matcher> matchers = new LinkedHashMap<String, Matcher>();
     public Matcher add(String name, Matcher matcher){
         matcher.name = name;
@@ -92,17 +88,5 @@ public class Syntax implements SAXProducer{
             }
         }
         return methods;
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("syntax");
-        for(Matcher matcher: matchers.values())
-            xml.add(matcher);
-        for(Rule rule: rules.values())
-            xml.add(rule);
-        xml.endElement();
     }
 }

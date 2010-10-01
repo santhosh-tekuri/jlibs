@@ -15,11 +15,6 @@
 
 package jlibs.nblr.rules;
 
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,7 +23,7 @@ import java.util.Set;
 /**
  * @author Santhosh Kumar T
  */
-public class Rule implements SAXProducer{
+public class Rule{
     public int id;
     public String name;
     public Node node;
@@ -132,22 +127,5 @@ public class Rule implements SAXProducer{
     @Override
     public String toString(){
         return name;
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("rule");
-        xml.addAttribute("name", name);
-
-        ArrayList<Node> nodes = new ArrayList<Node>();
-        ArrayList<Edge> edges = new ArrayList<Edge>();
-        computeIDS(nodes, edges, node);
-        for(Node node: nodes)
-            xml.add(node);
-        for(Edge edge: edges)
-            xml.add(edge);
-        xml.endElement();
     }
 }

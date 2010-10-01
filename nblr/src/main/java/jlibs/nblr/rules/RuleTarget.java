@@ -15,16 +15,10 @@
 
 package jlibs.nblr.rules;
 
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
-
 /**
  * @author Santhosh Kumar t
  */
-public class RuleTarget implements SAXProducer{
+public class RuleTarget{
     public Rule rule;
     public String name;
 
@@ -34,15 +28,5 @@ public class RuleTarget implements SAXProducer{
     
     public String toString(){
         return name==null ? rule.name : rule.name+':'+name;
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-    
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("rule");
-        xml.addAttribute("name", rule.name);
-        xml.addAttribute("node", name);
-        xml.endElement();
     }
 }

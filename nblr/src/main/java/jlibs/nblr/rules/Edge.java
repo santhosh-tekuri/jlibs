@@ -16,16 +16,11 @@
 package jlibs.nblr.rules;
 
 import jlibs.nblr.matchers.Matcher;
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
 
 /**
  * @author Santhosh Kumar T
  */
-public class Edge implements SAXProducer{
+public class Edge{
     public Node source;
     public Node target;
     public boolean fallback;
@@ -70,32 +65,6 @@ public class Edge implements SAXProducer{
             return prefix+ruleTarget;
         else
             return "";
-    }
-
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("edge");
-        xml.addAttribute("source", ""+source.id);
-        xml.addAttribute("target", ""+target.id);
-        xml.addAttribute("fallback", ""+fallback);
-        if(matcher!=null){
-            if(matcher.name==null)
-                xml.add(matcher);
-            else{
-                xml.startElement("matcher");
-                xml.addAttribute("name", matcher.name);
-                xml.endElement();
-            }
-        }else if(ruleTarget!=null){
-            xml.startElement("rule");
-            xml.addAttribute("name", ruleTarget.rule.name);
-            xml.addAttribute("node", ruleTarget.name);
-            xml.endElement();
-        }
-        xml.endElement();
     }
 
     /*-------------------------------------------------[ Layout ]---------------------------------------------------*/
