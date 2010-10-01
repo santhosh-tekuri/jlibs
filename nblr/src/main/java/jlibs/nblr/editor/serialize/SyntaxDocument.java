@@ -59,24 +59,34 @@ public class SyntaxDocument extends XMLDocument{
                 addAttribute("chars", new String(any.chars, 0, any.chars.length));
         }else if(matcher instanceof Range){
             Range range = (Range)matcher;
-            addAttribute("from", ""+range.from);
-            addAttribute("to", ""+range.to);
+            addAttribute("from", new String(Character.toChars(range.from)));
+            addAttribute("to", new String(Character.toChars(range.to)));
         }else if(matcher instanceof Not){
-            Not not = (Not)matcher;
-            add(not.delegate);
+            Not not = (Not)matcher;            
+            addNestedMatcher(not.delegate);
         }else if(matcher instanceof And){
             And and = (And)matcher;
             for(Matcher operand: and.operands)
-                add(operand);
+                addNestedMatcher(operand);
         }else if(matcher instanceof Or){
             Or or = (Or)matcher;
             for(Matcher operand: or.operands)
-                add(operand);
+                addNestedMatcher(operand);
         }else
             throw new NotImplementedException(matcher.getClass().getName());
 
         endElement();
     }
+    
+    private void addNestedMatcher(Matcher matcher) throws SAXException{
+        if(matcher.name==null)
+            add(matcher);
+        else{
+            startElement("matcher");
+            addAttribute("name", matcher.name);
+            endElement();
+        }
+    }        
 
     public void add(Rule rule) throws SAXException{
         startElement("rule");
@@ -105,15 +115,9 @@ public class SyntaxDocument extends XMLDocument{
         addAttribute("source", ""+edge.source.id);
         addAttribute("target", ""+edge.target.id);
         addAttribute("fallback", ""+edge.fallback);
-        if(edge.matcher!=null){
-            if(edge.matcher.name==null)
-                add(edge.matcher);
-            else{
-                startElement("matcher");
-                addAttribute("name", edge.matcher.name);
-                endElement();
-            }
-        }else if(edge.ruleTarget!=null){
+        if(edge.matcher!=null)
+            addNestedMatcher(edge.matcher);
+        else if(edge.ruleTarget!=null){
             startElement("rule");
             addAttribute("name", edge.ruleTarget.rule.name);
             addAttribute("node", edge.ruleTarget.name);
@@ -138,6 +142,6 @@ public class SyntaxDocument extends XMLDocument{
             addAttribute("name", eventAction.name);
             endElement();
         }else
-            throw new NotImplementedException(((Object)action).getClass().getName());
+            throw new NotImplementedException(action.getClass().getName());
     }
 }
