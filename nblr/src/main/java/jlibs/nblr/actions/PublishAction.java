@@ -36,7 +36,7 @@ public class PublishAction implements Action{
 
     @Override
     public String javaCode(){
-        return "consumer."+name+"(buffer.pop("+begin+", "+end+"))";
+        return "handler."+name+"(buffer.pop("+begin+", "+end+"))";
     }
 
     @Override

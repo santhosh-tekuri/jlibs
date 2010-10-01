@@ -124,7 +124,7 @@ public abstract class CodeGenerator{
     public final void generateConsumer(Printer printer){
         this.printer = printer;
 
-        startConsumer();
+        startHandler();
 
         Set<String> set = syntax.publishMethods();
         if(set.size()>0){
@@ -147,13 +147,13 @@ public abstract class CodeGenerator{
         }
 
         printer.emptyLine(false);
-        finishConsumer();
+        finishHandler();
     }
 
-    protected abstract void startConsumer();
+    protected abstract void startHandler();
     protected abstract void addPublishMethod(String name);
     protected abstract void addEventMethod(String name);
-    protected abstract void finishConsumer();
+    protected abstract void finishHandler();
 
     protected static Matcher eofMatcher = new Matcher(){
         @Override

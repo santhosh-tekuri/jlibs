@@ -75,16 +75,20 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void finishParser(int maxLookAhead){
         String className = className(parserName)[1];
-        String debuggerArgs = "";
-        if(debuggable)
-            debuggerArgs = ", consumer";
 
         printer.printlns(
-                "private final "+consumerName+" consumer;",
-                "public "+className+"("+consumerName+" consumer){",
+                "@Override",
+                "public void fatalError(String message) throws Exception{",
                     PLUS,
-                    "super("+maxLookAhead+debuggerArgs+");",
-                    "this.consumer = consumer;",
+                    "handler.fatalError(message);",
+                    MINUS,
+                "}",
+                "",
+                "private final "+ handlerName +" handler;",
+                "public "+className+"("+ handlerName +" handler){",
+                    PLUS,
+                    "super(handler, "+maxLookAhead+");",
+                    "this.handler = handler;",
                     MINUS,
                 "}",
                 MINUS,
@@ -111,7 +115,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(int ch) throws java.text.ParseException{",
+            "private int "+rule.name+"(int ch) throws java.io.IOException{",
                 PLUS,
                 "switch(stateStack.peek()){",
                     PLUS
@@ -152,7 +156,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String prefix = debuggable ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected int "+prefix+"callRule(int ch) throws java.text.ParseException{",
+            "protected int "+prefix+"callRule(int ch) throws java.io.IOException{",
                 PLUS,
                 "switch(ruleStack.peek()){",
                     PLUS
@@ -268,7 +272,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     private StringBuilder nodesToBeExecuted = new StringBuilder();
     private void println(String line){
         if(nodesToBeExecuted.length()>0){
-            printer.println("consumer.execute("+nodesToBeExecuted+");");
+            printer.println("handler.execute("+nodesToBeExecuted+");");
             nodesToBeExecuted.setLength(0);
         }
         printer.println(line);
@@ -320,12 +324,12 @@ public class JavaCodeGenerator extends CodeGenerator{
         return nextState;
     }
     
-    /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
+    /*-------------------------------------------------[ Handler ]---------------------------------------------------*/
 
-    protected void startConsumer(){
+    protected void startHandler(){
         printer.printClassDoc();
 
-        String className[] = className(consumerName);
+        String className[] = className(handlerName);
         if(className[0].length()>0){
             printer.printlns(
                 "package "+className[0]+";",
@@ -333,15 +337,16 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        String keyWord = consumerClass ? "class" : "interface";
+        String keyWord = handlerClass ? "class" : "interface";
+        String suffix = handlerClass ? " implements " : " extends ";
         printer.printlns(
-            "public "+keyWord+" "+className[1]+"{",
+            "public "+keyWord+" "+className[1]+"<E extends Exception>"+suffix+"<E>{",
                 PLUS
         );
     }
 
     protected void addPublishMethod(String name){
-        if(consumerClass){
+        if(handlerClass){
             printer.printlns(
                 "public void "+name+"(Chars data){",
                     PLUS,
@@ -354,7 +359,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     protected void addEventMethod(String name){
-        if(consumerClass){
+        if(handlerClass){
             printer.printlns(
                 "public void "+name+"(){",
                     PLUS,
@@ -366,7 +371,19 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println("public void "+name+"();");
     }
 
-    protected void finishConsumer(){
+    protected void finishHandler(){
+        if(handlerClass){
+            printer.printlns(
+                    "@Override",
+                    "public void fatalError(String message) throws E{",
+                        PLUS,
+                        "throw new Exception(message);",
+                        MINUS,
+                    "}",
+                    MINUS,
+                "}"
+            );
+        }
         printer.printlns(
                 MINUS,
             "}"
@@ -380,17 +397,17 @@ public class JavaCodeGenerator extends CodeGenerator{
         this.parserName = parserName;
     }
 
-    private String consumerName = "Consumer";
-    private boolean consumerClass = false;
-    public void setConsumerName(String consumerName, boolean isClass){
-        this.consumerName = consumerName;
-        this.consumerClass = isClass;
+    private String handlerName = "UntitledHandler";
+    private boolean handlerClass = false;
+    public void setConsumerName(String handlerName, boolean isClass){
+        this.handlerName = handlerName;
+        this.handlerClass = isClass;
     }
 
     @Override
     public void setDebuggable(){
         super.setDebuggable();
-        consumerName = Debugger.class.getName();
-        consumerClass = true;
+        handlerName = Debugger.class.getName();
+        handlerClass = true;
     }
 }
