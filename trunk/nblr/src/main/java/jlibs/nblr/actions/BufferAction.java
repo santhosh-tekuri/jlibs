@@ -15,11 +15,6 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -36,13 +31,5 @@ public class BufferAction implements Action{
     @Override
     public String toString(){
         return "BUFFER";
-    }
-
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.addElement("buffer", "");
     }
 }

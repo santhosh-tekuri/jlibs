@@ -16,9 +16,9 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.nblr.Syntax;
-import jlibs.nblr.SyntaxBinding;
 import jlibs.nblr.editor.RuleScene;
-import jlibs.xml.sax.XMLDocument;
+import jlibs.nblr.editor.serialize.SyntaxBinding;
+import jlibs.nblr.editor.serialize.SyntaxDocument;
 import jlibs.xml.sax.binding.BindingHandler;
 import org.xml.sax.InputSource;
 
@@ -65,9 +65,9 @@ public class GenerateXMLAction extends AbstractAction{
     }
 
     private void serialize(Syntax syntax, Writer writer) throws Exception{
-        XMLDocument xml = new XMLDocument(new StreamResult(writer), true, 4, null);
+        SyntaxDocument xml = new SyntaxDocument(new StreamResult(writer));
         xml.startDocument();
-        xml.add(scene.getSyntax());
+        xml.add(syntax);
         xml.endDocument();
     }
 }

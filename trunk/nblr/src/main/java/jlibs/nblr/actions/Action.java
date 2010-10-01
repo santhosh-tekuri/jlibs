@@ -15,11 +15,9 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.xml.sax.SAXProducer;
-
 /**
  * @author Santhosh Kumar T
  */
-public interface Action extends SAXProducer{
+public interface Action{
     public String javaCode();
 }

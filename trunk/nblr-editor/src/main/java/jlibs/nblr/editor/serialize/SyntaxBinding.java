@@ -13,8 +13,9 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nblr;
+package jlibs.nblr.editor.serialize;
 
+import jlibs.nblr.Syntax;
 import jlibs.nblr.actions.Action;
 import jlibs.nblr.actions.BufferAction;
 import jlibs.nblr.actions.EventAction;

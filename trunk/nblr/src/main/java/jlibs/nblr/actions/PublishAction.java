@@ -15,11 +15,6 @@
 
 package jlibs.nblr.actions;
 
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
-
-import javax.xml.namespace.QName;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -45,16 +40,5 @@ public class PublishAction implements Action{
             return name+"(data)";
         else
             return name+"(data["+begin+", "+-end+"])";
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement("publish");
-        xml.addAttribute("name", name);
-        xml.addAttribute("begin", ""+begin);
-        xml.addAttribute("end", ""+end);
-        xml.endElement();
     }
 }

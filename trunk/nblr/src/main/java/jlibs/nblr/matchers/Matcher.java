@@ -16,17 +16,13 @@
 package jlibs.nblr.matchers;
 
 import jlibs.core.lang.StringUtil;
-import jlibs.xml.sax.SAXProducer;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
-import javax.xml.namespace.QName;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class Matcher implements SAXProducer{
+public abstract class Matcher{
     public String name;
 
     public abstract String toString();
@@ -85,29 +81,6 @@ public abstract class Matcher implements SAXProducer{
     public boolean same(Matcher that){
         return jlibs.core.util.Range.same(this.ranges(), that.ranges());
     }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    protected final void serializeTo(XMLDocument xml) throws SAXException{
-        if(name==null)
-            serializeTo(null, xml);
-        else{
-            xml.startElement("matcher");
-            xml.addAttribute("name", name);
-            xml.endElement();
-        }
-    }
-
-    @Override
-    public void serializeTo(QName rootElement, XMLDocument xml) throws SAXException{
-        xml.startElement(getClass().getSimpleName().toLowerCase());
-        if(name!=null)
-            xml.addAttribute("name", name);
-        addBody(xml);
-        xml.endElement();
-    }
-
-    protected abstract void addBody(XMLDocument xml) throws SAXException;
 
     /*-------------------------------------------------[ Factory ]---------------------------------------------------*/
 

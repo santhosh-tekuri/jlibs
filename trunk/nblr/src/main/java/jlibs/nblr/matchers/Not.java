@@ -16,8 +16,6 @@
 package jlibs.nblr.matchers;
 
 import jlibs.core.util.Range;
-import jlibs.xml.sax.XMLDocument;
-import org.xml.sax.SAXException;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +24,7 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Not extends Matcher{
-    private Matcher delegate;
+    public final Matcher delegate;
 
     public Not(Matcher delegate){
         this.delegate = delegate;
@@ -47,12 +45,5 @@ public final class Not extends Matcher{
         String msg = delegate._toString();
         msg = msg.substring(1, msg.length()-1);
         return "[^"+msg+"]";
-    }
-
-    /*-------------------------------------------------[ SAXProducer ]---------------------------------------------------*/
-
-    @Override
-    protected void addBody(XMLDocument xml) throws SAXException{
-        delegate.serializeTo(xml);
     }
 }
