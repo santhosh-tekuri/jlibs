@@ -17,10 +17,7 @@ package jlibs.nblr.editor.serialize;
 
 import jlibs.core.lang.NotImplementedException;
 import jlibs.nblr.Syntax;
-import jlibs.nblr.actions.Action;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.EventAction;
-import jlibs.nblr.actions.PublishAction;
+import jlibs.nblr.actions.*;
 import jlibs.nblr.matchers.*;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
@@ -140,6 +137,11 @@ public class SyntaxDocument extends XMLDocument{
             EventAction eventAction = (EventAction)action;
             startElement("event");
             addAttribute("name", eventAction.name);
+            endElement();
+        }else if(action instanceof ErrorAction){
+            ErrorAction errorAction = (ErrorAction)action;
+            startElement("error");
+            addAttribute("message", errorAction.errorMessage);
             endElement();
         }else
             throw new NotImplementedException(action.getClass().getName());

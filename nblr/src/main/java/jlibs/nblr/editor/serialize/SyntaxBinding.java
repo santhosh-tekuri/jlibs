@@ -16,10 +16,7 @@
 package jlibs.nblr.editor.serialize;
 
 import jlibs.nblr.Syntax;
-import jlibs.nblr.actions.Action;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.EventAction;
-import jlibs.nblr.actions.PublishAction;
+import jlibs.nblr.actions.*;
 import jlibs.nblr.matchers.*;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
@@ -226,6 +223,11 @@ class NodeBinding{
     @Binding.Start("event")
     public static EventAction onEvent(@Attr String name){
         return new EventAction(name);
+    }
+
+    @Binding.Start("error")
+    public static ErrorAction onError(@Attr String message){
+        return new ErrorAction(message);
     }
 
     @Relation.Start("*")

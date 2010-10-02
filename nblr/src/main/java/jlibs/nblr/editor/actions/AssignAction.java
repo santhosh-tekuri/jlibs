@@ -16,9 +16,7 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.nblr.actions.Action;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.EventAction;
-import jlibs.nblr.actions.PublishAction;
+import jlibs.nblr.actions.*;
 import jlibs.nblr.editor.RuleScene;
 import jlibs.nblr.rules.Node;
 
@@ -113,6 +111,18 @@ class AssignEventAction extends AssignAction{
     protected Action action(){
         String name = JOptionPane.showInputDialog("Name");
         return name==null ? null : new EventAction(name);
+    }
+}
+
+class AssignErrorAction extends AssignAction{
+    AssignErrorAction(RuleScene scene, Node node){
+        super(scene, node, "Error...");
+    }
+
+    @Override
+    protected Action action(){
+        String errorMessage = JOptionPane.showInputDialog("Error Message");
+        return errorMessage==null ? null : new ErrorAction(errorMessage);
     }
 }
 

@@ -78,6 +78,13 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.emptyLine(true);
         printer.printlns(
                 "@Override",
+                "public void onSuccessful() throws Exception{",
+                    PLUS,
+                    "handler.onSuccessful();",
+                    MINUS,
+                "}",
+                "",
+                "@Override",
                 "public void fatalError(String message) throws Exception{",
                     PLUS,
                     "handler.fatalError(message);",

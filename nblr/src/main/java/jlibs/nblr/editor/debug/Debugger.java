@@ -20,6 +20,7 @@ import jlibs.core.io.FileUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.actions.BufferAction;
+import jlibs.nblr.actions.ErrorAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.codegen.java.JavaCodeGenerator;
@@ -335,7 +336,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
 
     /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
 
-    public void execute(int... ids){
+    public void execute(int... ids) throws Exception{
         for(int id: ids){
 //            System.out.println("hitNode("+id+")");
             Node node = currentRule.nodes().get(id);
@@ -349,6 +350,10 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             }else if(node.action instanceof EventAction){
                 EventAction action = (EventAction)node.action;
                 System.out.println(action.name+"()");
+            }else if(node.action instanceof ErrorAction){
+                ErrorAction action = (ErrorAction)node.action;
+                System.out.println("error(\""+StringUtil.toLiteral(action.errorMessage, false)+"\")");
+                fatalError(action.errorMessage);
             }
             scene.executing(node);
         }
@@ -379,4 +384,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
     public void fatalError(String message) throws Exception{
         throw new IOException(message);
     }
+
+    @Override
+    public void onSuccessful() throws Exception{}
 }
