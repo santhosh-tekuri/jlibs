@@ -36,6 +36,7 @@ public class NamespaceMap extends ContextMap<String, String> implements Namespac
     public NamespaceMap(ContextMap<String, String> parent){
         super(parent);
         if(parent==null){
+            put(XMLConstants.DEFAULT_NS_PREFIX, XMLConstants.NULL_NS_URI);
             put(XMLConstants.XML_NS_PREFIX, XMLConstants.XML_NS_URI);
             put(XMLConstants.XMLNS_ATTRIBUTE, XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
         }
