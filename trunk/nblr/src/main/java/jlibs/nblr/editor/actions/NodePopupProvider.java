@@ -55,6 +55,7 @@ public class NodePopupProvider implements PopupMenuProvider{
         actionMenu.add(new AssignBufferAction(scene, node));
         actionMenu.add(new AssignPublishAction(scene, node));
         actionMenu.add(new AssignEventAction(scene, node));
+        actionMenu.add(new AssignErrorAction(scene, node));
         actionMenu.addSeparator();
         actionMenu.add(new ClearAction(scene, node));
 
