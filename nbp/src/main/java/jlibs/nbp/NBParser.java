@@ -63,21 +63,28 @@ public abstract class NBParser extends Writer{
     }
 
     private void consume(int codePoint) throws IOException{
-        consumed = false;
-        _eat(codePoint);
-
-        if(stream.length()==0 && !consumed)
-            consumed(codePoint);
-
-        while(stream.lookAhead.hasNext()){
+        try{
             consumed = false;
-            _eat(stream.lookAhead.getNext());
-            if(stream.lookAhead.length()==0 && !consumed)
-                consumed();
+            _eat(codePoint);
+
+            if(stream.length()==0 && !consumed)
+                consumed(codePoint);
+
+            while(stream.lookAhead.hasNext()){
+                consumed = false;
+                _eat(stream.lookAhead.getNext());
+                if(stream.lookAhead.length()==0 && !consumed)
+                    consumed();
+            }
+
+        }catch(IOException ex){
+            throw ex;
+        }catch(Exception ex){
+            throw new IOException(ex);
         }
     }
 
-    private void _eat(int ch) throws IOException{
+    private void _eat(int ch) throws Exception{
         while(true){
             if(stateStack.isEmpty()){
                 if(ch==-1)
@@ -101,9 +108,9 @@ public abstract class NBParser extends Writer{
         }
     }
 
-    protected abstract int callRule(int ch) throws IOException;
+    protected abstract int callRule(int ch) throws Exception;
 
-    protected void expected(int ch, String... matchers) throws IOException{
+    protected void expected(int ch, String... matchers) throws Exception{
         String found;
         if(ch==-1)
             found = "<EOF>";
@@ -118,14 +125,8 @@ public abstract class NBParser extends Writer{
         }
 
         String message = "Found: "+found+" Expected: "+buff.toString();
-        try{
-            fatalError(message);
-        }catch(IOException ex){
-            throw ex;
-        }catch(Exception ex){
-            throw new IOException(ex);
-        }
         eofOnClose = false;
+        fatalError(message);
         throw new IOException(message);
     }
 
