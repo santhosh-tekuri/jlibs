@@ -39,17 +39,19 @@ public abstract class BaseXMLReader implements XMLReader{
 
     protected boolean _setProperty(String name, Object value) throws SAXNotSupportedException{
         if(LEXICAL_HANDLER.equals(name) || LEXICAL_HANDLER_ALT.equals(name)){
-            if(value==null || value instanceof LexicalHandler)
+            if(value==null || value instanceof LexicalHandler){
                 handler.setLexicalHandler((LexicalHandler)value);
-            else
+                return true;
+            }else
                 throw new SAXNotSupportedException("value must implement "+LexicalHandler.class);
         }else if(DECL_HANDLER.equals(name) || DECL_HANDLER_ALT.equals(name)){
-            if(value==null || value instanceof DeclHandler)
+            if(value==null || value instanceof DeclHandler){
                 handler.setDeclHandler((DeclHandler)value);
-            else
+                return true;
+            }else
                 throw new SAXNotSupportedException("value must implement "+DeclHandler.class);
-        }
-        return false;
+        }else
+            return false;
     }
 
     protected Object _getProperty(String name){
