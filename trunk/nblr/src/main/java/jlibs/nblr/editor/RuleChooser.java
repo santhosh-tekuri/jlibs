@@ -25,38 +25,33 @@ import jlibs.nblr.Syntax;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 import jlibs.nblr.rules.RuleTarget;
-import jlibs.swing.tree.MyTreeCellRenderer;
 import jlibs.swing.tree.NavigatorTreeModel;
 
-import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
  * @author Santhosh Kumar T
  */
-public class RuleChooser extends JDialog implements TreeSelectionListener{
-    private JTree tree;
+public class RuleChooser extends TreeSelectionDialog{
+    private Syntax syntax;
 
-    @SuppressWarnings({"unchecked"})
     public RuleChooser(Window owner, Syntax syntax){
         super(owner, "Rule Chooser");
-        setModal(true);
+        this.syntax = syntax;
+        createContents();
+    }
 
-        JPanel contents = (JPanel)getContentPane();
-        contents.setLayout(new BorderLayout(0, 10));
-        contents.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    @Override
+    @SuppressWarnings({"unchecked"})
+    protected NavigatorTreeModel treeModel(){
+        return new NavigatorTreeModel(syntax, new RuleNavigator());
+    }
 
-        tree = new JTree(new NavigatorTreeModel(syntax, new RuleNavigator()));
-        MyTreeCellRenderer cellRenderer = new MyTreeCellRenderer();
-        cellRenderer.setTextConvertor(new Visitor<Object, String>(){
+    @Override
+    protected Visitor<Object, String> displayVisitor(){
+        return new Visitor<Object, String>(){
             @Override
             public String visit(Object elem){
                 if(elem instanceof Rule)
@@ -66,64 +61,12 @@ public class RuleChooser extends JDialog implements TreeSelectionListener{
                 else
                     return elem.getClass().getName();
             }
-        });
-        tree.setCellRenderer(cellRenderer);
-        tree.setRootVisible(false);
-        tree.setShowsRootHandles(true);
-        tree.setFont(Util.FIXED_WIDTH_FONT);
-        contents.add(new JScrollPane(tree));
-        tree.addTreeSelectionListener(this);
-        valueChanged(null);
-        tree.addMouseListener(new MouseAdapter(){
-            @Override
-            public void mouseClicked(MouseEvent me){
-                if(me.getClickCount()>1)
-                    okAction.actionPerformed(null);
-            }
-        });
-        
-        JPanel buttons = new JPanel(new GridLayout(1, 0));
-        JButton okButton;
-        buttons.add(okButton=new JButton(okAction));
-        buttons.add(new JButton(cancelAction));
-
-        JPanel southPanel = new JPanel(new BorderLayout());
-        southPanel.add(buttons, BorderLayout.EAST);
-        getContentPane().add(southPanel, BorderLayout.SOUTH);
-
-        getRootPane().registerKeyboardAction(cancelAction, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JRootPane.WHEN_IN_FOCUSED_WINDOW);
-        getRootPane().setDefaultButton(okButton);
-
-        tree.setVisibleRowCount(15);
-        pack();
-        setLocationRelativeTo(null);
+        };
     }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent tse){
-        okAction.setEnabled(tree.getSelectionPath()!=null);
+    protected boolean showRoot(){
+        return false;
     }
-
-    boolean ok = false;
-    private void onOK(){
-        ok = true;
-    }
-
-    private Action okAction = new AbstractAction("Ok"){
-        @Override
-        public void actionPerformed(ActionEvent ae){
-            onOK();
-            RuleChooser.this.setVisible(false);
-        }
-    };
-
-    @SuppressWarnings({"FieldCanBeLocal"})
-    private Action cancelAction = new AbstractAction("Cancel"){
-        @Override
-        public void actionPerformed(ActionEvent ae){
-            RuleChooser.this.setVisible(false);
-        }
-    };
 
     public static RuleTarget prompt(Window owner, Syntax syntax){
         RuleChooser chooser = new RuleChooser(owner, syntax);

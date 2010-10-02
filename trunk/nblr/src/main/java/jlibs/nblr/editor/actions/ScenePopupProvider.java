@@ -16,11 +16,13 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.nblr.editor.RuleScene;
+import jlibs.nblr.editor.UsagesDialog;
 import org.netbeans.api.visual.action.PopupMenuProvider;
 import org.netbeans.api.visual.widget.Widget;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 /**
  * @author Santhosh Kumar T
@@ -37,6 +39,12 @@ public class ScenePopupProvider implements PopupMenuProvider{
         popup.add(new GenerateParserAction(scene));
         popup.add(new GenerateHandlerAction(scene));
         popup.add(new GenerateXMLAction(scene));
+        popup.add(new AbstractAction("Usages..."){
+            @Override
+            public void actionPerformed(ActionEvent ae){
+                new UsagesDialog(SwingUtilities.getWindowAncestor(scene.getView()), scene).setVisible(true);
+            }
+        });
 
         return popup;
     }
