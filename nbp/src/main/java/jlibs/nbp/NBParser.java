@@ -139,8 +139,8 @@ public abstract class NBParser extends Writer{
         lookAhead.consumed();
     }
 
-    boolean consumed = false;
-    private void consumed(int ch){
+    protected boolean consumed = false;
+    protected void consumed(int ch){
         consumed = true;
         location.consume(ch);
         if(buffer.isBufferring())
