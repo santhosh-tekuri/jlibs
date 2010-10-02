@@ -29,11 +29,20 @@ public class Location{
     public int getCharacterOffset(){ return offset; }
 
     private boolean skipLF;
-    public void consume(int ch){
+
+    /**
+     * return value tells whether the given character
+     * has been included in location or not
+     *
+     * for example in sequence "\r\n", the character
+     * '\n' is not included in location.
+     */
+    public boolean consume(int ch){
         offset++;
-        if(skipLF && ch=='\n')
+        if(skipLF && ch=='\n'){
             skipLF = false;
-        else{
+            return false;
+        }else{
             skipLF = false;
             switch(ch){
                 case '\r':
@@ -45,6 +54,7 @@ public class Location{
                 default:
                     col++;
             }
+            return true;
         }
     }
 
