@@ -74,6 +74,8 @@ public class JavaCodeGenerator extends CodeGenerator{
     protected void finishParser(int maxLookAhead){
         String className = className(parserName)[1];
 
+        String debuggerArgs = debuggable ? "handler, " : "";
+        printer.emptyLine(true);
         printer.printlns(
                 "@Override",
                 "public void fatalError(String message) throws Exception{",
@@ -85,7 +87,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 "private final "+ handlerName +" handler;",
                 "public "+className+"("+ handlerName +" handler){",
                     PLUS,
-                    "super(handler, "+maxLookAhead+");",
+                    "super("+debuggerArgs+maxLookAhead+");",
                     "this.handler = handler;",
                     MINUS,
                 "}",
@@ -113,7 +115,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(int ch) throws java.io.IOException{",
+            "private int "+rule.name+"(int ch) throws Exception{",
                 PLUS,
                 "switch(stateStack.peek()){",
                     PLUS
@@ -154,7 +156,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String prefix = debuggable ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected int "+prefix+"callRule(int ch) throws java.io.IOException{",
+            "protected int "+prefix+"callRule(int ch) throws Exception{",
                 PLUS,
                 "switch(ruleStack.peek()){",
                     PLUS
