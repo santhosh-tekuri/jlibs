@@ -1,0 +1,2569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<syntax>
+    <any name="ANY"/>
+    <any name="GT" chars="&gt;"/>
+    <any name="BRACKET_CLOSE" chars="]"/>
+    <any name="Q" chars="'"/>
+    <any name="DQ" chars="&quot;"/>
+    <range name="DIGIT" from="0" to="9"/>
+    <or name="HEX_DIGIT">
+        <matcher name="DIGIT"/>
+        <range from="a" to="f"/>
+        <range from="A" to="F"/>
+    </or>
+    <any name="WS" chars=" &#9;&#10;&#13;"/>
+    <or name="ENCODING_START">
+        <range from="A" to="Z"/>
+        <range from="a" to="z"/>
+    </or>
+    <or name="ENCODING_PART">
+        <matcher name="ENCODING_START"/>
+        <matcher name="DIGIT"/>
+        <any chars="._-"/>
+    </or>
+    <or name="CHAR">
+        <any chars="&#9;&#10;&#13;"/>
+        <range from=" " to="퟿"/>
+        <range from="" to="�"/>
+        <range from="&#65536;" to="&#1114111;"/>
+    </or>
+    <any name="DASH" chars="-"/>
+    <and name="NDASH">
+        <matcher name="CHAR"/>
+        <not>
+            <any chars="-"/>
+        </not>
+    </and>
+    <and name="ELEM_CONTENT_CHAR">
+        <matcher name="CHAR"/>
+        <not>
+            <any chars="&lt;&amp;"/>
+        </not>
+    </and>
+    <or name="NAME_START">
+        <any chars=":"/>
+        <range from="A" to="Z"/>
+        <any chars="_"/>
+        <range from="a" to="z"/>
+        <range from="À" to="Ö"/>
+        <range from="Ø" to="ö"/>
+        <range from="ø" to="˿"/>
+        <range from="Ͱ" to="ͽ"/>
+        <range from="Ϳ" to="῿"/>
+        <range from="‌" to="‍"/>
+        <range from="⁰" to="↏"/>
+        <range from="Ⰰ" to="⿯"/>
+        <range from="、" to="퟿"/>
+        <range from="豈" to="﷏"/>
+        <range from="ﷰ" to="�"/>
+        <range from="&#65536;" to="&#983039;"/>
+    </or>
+    <or name="NAME_PART">
+        <matcher name="NAME_START"/>
+        <any chars="-"/>
+        <any chars="."/>
+        <matcher name="DIGIT"/>
+        <any chars="·"/>
+        <range from="̀" to="ͯ"/>
+        <range from="‿" to="⁀"/>
+    </or>
+    <and name="NCNAME_START">
+        <matcher name="NAME_START"/>
+        <not>
+            <any chars=":"/>
+        </not>
+    </and>
+    <and name="NCNAME_PART">
+        <matcher name="NAME_PART"/>
+        <not>
+            <any chars=":"/>
+        </not>
+    </and>
+    <or name="PUBID_CHAR">
+        <any chars=" &#13;&#10;"/>
+        <range from="A" to="Z"/>
+        <range from="a" to="z"/>
+        <matcher name="DIGIT"/>
+        <any chars="-'()+,./:=?;!*#@$_%"/>
+    </or>
+    <and name="PUBID_CHAR_NQ">
+        <matcher name="PUBID_CHAR"/>
+        <not>
+            <matcher name="Q"/>
+        </not>
+    </and>
+    <rule name="eq">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="="/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="0" target="0" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="yes_no">
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="standalone" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="y"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="e"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="s"/>
+        </edge>
+        <edge source="0" target="4" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="4" target="3" fallback="false">
+            <any chars="o"/>
+        </edge>
+    </rule>
+    <rule name="sd_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="s"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="t"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="a"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="d"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="a"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="l"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="o"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="e"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <rule name="eq"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <rule name="yes_no"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="11" target="15" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="15" target="16" fallback="false">
+            <rule name="yes_no"/>
+        </edge>
+        <edge source="16" target="14" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+    </rule>
+    <rule name="enc_name">
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="encoding" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="ENCODING_START"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="ENCODING_PART"/>
+        </edge>
+    </rule>
+    <rule name="enc_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="e"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="c"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="o"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="d"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="i"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="g"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <rule name="eq"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <rule name="enc_name"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="9" target="13" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="enc_name"/>
+        </edge>
+        <edge source="14" target="12" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+    </rule>
+    <rule name="version_num">
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <publish name="version" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="1"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="."/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+    </rule>
+    <rule name="version_info">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="v"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="e"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="r"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="s"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="i"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="o"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="n"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="eq"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <rule name="version_num"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="8" target="12" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <rule name="version_num"/>
+        </edge>
+        <edge source="13" target="11" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+    </rule>
+    <rule name="comment">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <publish name="comment" begin="0" end="3"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="-"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="-"/>
+        </edge>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="false">
+            <matcher name="DASH"/>
+        </edge>
+        <edge source="6" target="5" fallback="false">
+            <matcher name="NDASH"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="DASH"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="5" target="5" fallback="false">
+            <matcher name="NDASH"/>
+        </edge>
+    </rule>
+    <rule name="cdata_end">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="BRACKET_CLOSE"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <matcher name="BRACKET_CLOSE"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="0" fallback="true">
+            <matcher name="ANY"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="GT"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="BRACKET_CLOSE"/>
+        </edge>
+        <edge source="1" target="0" fallback="true">
+            <matcher name="ANY"/>
+        </edge>
+        <edge source="0" target="0" fallback="true">
+            <matcher name="ANY"/>
+        </edge>
+    </rule>
+    <rule name="cdata">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="cdata" begin="0" end="3"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <rule name="cdata_end"/>
+        </edge>
+    </rule>
+    <rule name="name">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="NAME_START"/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+    </rule>
+    <rule name="pi_target">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="x"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="m"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="l"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="4" target="4" fallback="true">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="2" target="4" fallback="false"/>
+        <edge source="1" target="4" fallback="false"/>
+        <edge source="0" target="6" fallback="true">
+            <matcher name="NAME_START"/>
+        </edge>
+        <edge source="6" target="4" fallback="false"/>
+    </rule>
+    <rule name="pi">
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="piTarget" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="piData" begin="0" end="1"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="pi_target"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="7" target="6" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="8" target="9" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="6" target="6" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+    </rule>
+    <rule name="ncname">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="NCNAME_START"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="NCNAME_PART"/>
+        </edge>
+    </rule>
+    <rule name="qname">
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="prefix" begin="0" end="0"/>
+        </node>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="localName" begin="0" end="0"/>
+        </node>
+        <node>
+            <publish name="qname" begin="0" end="0"/>
+        </node>
+        <node>
+            <publish name="localName" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <rule name="ncname"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <any chars=":"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <rule name="ncname"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="2" target="7" fallback="false"/>
+        <edge source="7" target="6" fallback="false"/>
+    </rule>
+    <rule name="char_ref">
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="hexCode" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="asciiCode" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&amp;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="#"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="x"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <any chars=";"/>
+        </edge>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="2" target="8" fallback="false"/>
+        <edge source="8" target="9" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="10" target="6" fallback="false"/>
+        <edge source="9" target="9" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+    </rule>
+    <rule name="entity_ref">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="entityReference" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&amp;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars=";"/>
+        </edge>
+    </rule>
+    <rule name="reference">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="char_ref"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="entity_ref"/>
+        </edge>
+    </rule>
+    <rule name="attr">
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="attributeEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <rule name="qname"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="eq"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="value"/>
+        </edge>
+    </rule>
+    <rule name="value">
+        <node>
+            <event name="valueStart"/>
+        </node>
+        <node/>
+        <node>
+            <event name="valueEnd"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&quot;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="&quot;"/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <rule name="dq_value"/>
+        </edge>
+        <edge source="0" target="3" fallback="false">
+            <any chars="'"/>
+        </edge>
+        <edge source="3" target="2" fallback="false">
+            <any chars="'"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <rule name="q_value"/>
+        </edge>
+    </rule>
+    <rule name="dq_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <not>
+                <any chars="&lt;&amp;&quot;"/>
+            </not>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+    </rule>
+    <rule name="q_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <not>
+                <any chars="&lt;&amp;'"/>
+            </not>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+    </rule>
+    <rule name="elem_attrs">
+        <node/>
+        <node/>
+        <node>
+            <event name="attributesStart"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="qname"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <rule name="attr"/>
+        </edge>
+        <edge source="5" target="3" fallback="false"/>
+        <edge source="4" target="6" fallback="false"/>
+        <edge source="3" target="6" fallback="false"/>
+    </rule>
+    <rule name="elem_end">
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="elementEnd"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="/"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="qname"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+    </rule>
+    <rule name="elem_content">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <publish name="characters" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <error message="Text may not contain a literal ']]&gt;' sequence"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="true">
+            <matcher name="ELEM_CONTENT_CHAR"/>
+        </edge>
+        <edge source="6" target="2" fallback="false"/>
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="2" target="8" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="10" target="11" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="10" target="5" fallback="false"/>
+        <edge source="9" target="9" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="8" target="3" fallback="false"/>
+        <edge source="0" target="12" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="13" fallback="false"/>
+        <edge source="13" target="14" fallback="false">
+            <rule name="elem"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="pi"/>
+        </edge>
+        <edge source="13" target="15" fallback="false"/>
+        <edge source="15" target="16" fallback="false">
+            <rule name="comment"/>
+        </edge>
+        <edge source="15" target="16" fallback="false">
+            <rule name="cdata"/>
+        </edge>
+    </rule>
+    <rule name="elem">
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="attributesEnd"/>
+        </node>
+        <node>
+            <event name="emptyElementEnd"/>
+        </node>
+        <node>
+            <event name="attributesEnd"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="elem_attrs"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="/"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="1" target="5" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <rule name="elem_end"/>
+        </edge>
+        <edge source="6" target="6" fallback="false">
+            <rule name="elem_content"/>
+        </edge>
+    </rule>
+    <rule name="xdecl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="x"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="m"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="l"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="6" target="6" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <rule name="version_info"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="8" target="8" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <rule name="enc_decl"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <rule name="sd_decl"/>
+        </edge>
+        <edge source="12" target="12" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="12" target="13" fallback="false"/>
+        <edge source="13" target="14" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="10" target="13" fallback="false"/>
+        <edge source="9" target="13" fallback="false"/>
+        <edge source="8" target="13" fallback="false"/>
+        <edge source="8" target="11" fallback="false"/>
+        <edge source="7" target="13" fallback="false"/>
+    </rule>
+    <rule name="misc">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="0" target="2" fallback="false">
+            <rule name="comment"/>
+        </edge>
+        <edge source="0" target="2" fallback="false">
+            <rule name="pi"/>
+        </edge>
+    </rule>
+    <rule name="sytem_literal">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="systemID" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="systemID" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <not>
+                <any chars="'"/>
+            </not>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="0" target="5" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="6" fallback="false">
+            <not>
+                <any chars="&quot;"/>
+            </not>
+        </edge>
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="4" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+    </rule>
+    <rule name="pubid_literal">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="publicID" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="publicID" begin="0" end="0"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="PUBID_CHAR"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="0" target="5" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="6" fallback="false">
+            <matcher name="PUBID_CHAR_NQ"/>
+        </edge>
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="4" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+    </rule>
+    <rule name="system_id">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="S"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="S"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="sytem_literal"/>
+        </edge>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="public_id">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="U"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="B"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="L"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="pubid_literal"/>
+        </edge>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="notation_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="public_id"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="15" target="15" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="15" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false">
+            <rule name="system_id"/>
+        </edge>
+        <edge source="17" target="17" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="17" target="18" fallback="false"/>
+        <edge source="18" target="19" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="15" target="18" fallback="false"/>
+        <edge source="14" target="18" fallback="false"/>
+        <edge source="13" target="16" fallback="false"/>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="external_id">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="public_id"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <rule name="system_id"/>
+        </edge>
+        <edge source="0" target="3" fallback="false"/>
+    </rule>
+    <rule name="pe_reference">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="%"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars=";"/>
+        </edge>
+    </rule>
+    <rule name="entity_value">
+        <node>
+            <event name="valueStart"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="valueEnd"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <not>
+                <any chars="%&amp;'"/>
+            </not>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="5" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+        <edge source="1" target="4" fallback="false"/>
+        <edge source="0" target="6" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="8" fallback="false">
+            <not>
+                <any chars="%&amp;&quot;"/>
+            </not>
+        </edge>
+        <edge source="8" target="7" fallback="false"/>
+        <edge source="8" target="9" fallback="false"/>
+        <edge source="9" target="5" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="6" target="9" fallback="false"/>
+    </rule>
+    <rule name="ndata_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="pe_def">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="external_id"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="entity_value"/>
+        </edge>
+    </rule>
+    <rule name="entity_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="%"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="pe_def"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="14" target="14" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="16" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="16" target="17" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="17" target="14" fallback="false">
+            <rule name="entity_def"/>
+        </edge>
+        <edge source="17" target="17" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="entity_def">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="external_id"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <rule name="ndata_decl"/>
+        </edge>
+        <edge source="0" target="2" fallback="false">
+            <rule name="entity_value"/>
+        </edge>
+    </rule>
+    <rule name="string_type">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="A"/>
+        </edge>
+    </rule>
+    <rule name="tokenized_type">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="S"/>
+        </edge>
+        <edge source="5" target="8" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="0" target="9" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <any chars="K"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="15" target="7" fallback="false"/>
+        <edge source="15" target="8" fallback="false"/>
+        <edge source="0" target="16" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="16" target="17" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="17" target="18" fallback="false">
+            <any chars="R"/>
+        </edge>
+        <edge source="18" target="19" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="19" target="20" fallback="false">
+            <any chars="F"/>
+        </edge>
+        <edge source="20" target="15" fallback="false"/>
+        <edge source="17" target="21" fallback="false"/>
+    </rule>
+    <rule name="nmtoken">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="NAME_PART"/>
+        </edge>
+    </rule>
+    <rule name="nmtokens">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="nmtoken"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars=" "/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="nmtoken"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="1" fallback="false"/>
+    </rule>
+    <rule name="names">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars=" "/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="1" fallback="false"/>
+    </rule>
+    <rule name="enumeration">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="("/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="nmtoken"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <any chars="|"/>
+        </edge>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <rule name="nmtoken"/>
+        </edge>
+        <edge source="5" target="5" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <any chars=")"/>
+        </edge>
+        <edge source="6" target="3" fallback="false"/>
+    </rule>
+    <rule name="mixed">
+        <node/>
+        <node/>
+        <node name="B"/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="("/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <any chars="#"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="10" target="11" fallback="false">
+            <any chars="|"/>
+        </edge>
+        <edge source="11" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="12" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="12" target="13" fallback="false"/>
+        <edge source="13" target="10" fallback="false"/>
+        <edge source="13" target="14" fallback="false"/>
+        <edge source="14" target="15" fallback="false">
+            <any chars=")"/>
+        </edge>
+        <edge source="9" target="14" fallback="false"/>
+        <edge source="9" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="notation_type">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="8" target="8" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="("/>
+        </edge>
+        <edge source="9" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <any chars="|"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="14" fallback="false"/>
+        <edge source="14" target="15" fallback="false">
+            <any chars=")"/>
+        </edge>
+        <edge source="14" target="11" fallback="false"/>
+        <edge source="12" target="12" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="enumerated_type">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="notation_type"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="enumeration"/>
+        </edge>
+    </rule>
+    <rule name="att_type">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="enumerated_type"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="tokenized_type"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="string_type"/>
+        </edge>
+    </rule>
+    <rule name="default_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="#"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="R"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="Q"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="U"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="R"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="1" target="10" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <any chars="L"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="15" target="16" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="1" target="17" fallback="false">
+            <any chars="F"/>
+        </edge>
+        <edge source="17" target="18" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="18" target="19" fallback="false">
+            <any chars="X"/>
+        </edge>
+        <edge source="19" target="20" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="20" target="21" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="21" target="22" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="22" target="22" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="22" target="23" fallback="false"/>
+        <edge source="23" target="24" fallback="false">
+            <rule name="value"/>
+        </edge>
+        <edge source="1" target="25" fallback="false"/>
+        <edge source="25" target="23" fallback="false"/>
+    </rule>
+    <rule name="att_def">
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="dtdAttribute" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <rule name="att_type"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="4" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <rule name="default_decl"/>
+        </edge>
+    </rule>
+    <rule name="att_list_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="dtdAttributesStart" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="dtdAttributesEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="L"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="S"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="13" fallback="false"/>
+        <edge source="13" target="14" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <rule name="att_def"/>
+        </edge>
+        <edge source="15" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="15" target="13" fallback="false"/>
+        <edge source="14" target="14" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="14" target="16" fallback="false"/>
+        <edge source="12" target="16" fallback="false"/>
+    </rule>
+    <rule name="children">
+        <node/>
+        <node/>
+        <node name="A"/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node name="C"/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="("/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <rule name="children"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="false">
+            <any chars="|"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <rule name="children"/>
+        </edge>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="8" target="5" fallback="false"/>
+        <edge source="8" target="9" fallback="false"/>
+        <edge source="9" target="10" fallback="false">
+            <any chars=")"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="10" target="11" fallback="false">
+            <any chars="?+*"/>
+        </edge>
+        <edge source="6" target="6" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="12" fallback="false"/>
+        <edge source="12" target="13" fallback="false">
+            <any chars=","/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="children"/>
+        </edge>
+        <edge source="14" target="14" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="14" target="15" fallback="false"/>
+        <edge source="15" target="12" fallback="false"/>
+        <edge source="15" target="9" fallback="false"/>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="4" target="16" fallback="false"/>
+        <edge source="16" target="9" fallback="false"/>
+        <edge source="0" target="10" fallback="false">
+            <rule name="name"/>
+        </edge>
+    </rule>
+    <rule name="decl_sep">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+        <edge source="0" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+    </rule>
+    <rule name="markup_decl">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="element_decl"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="att_list_decl"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="entity_decl"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="notation_decl"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="pi"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="comment"/>
+        </edge>
+    </rule>
+    <rule name="element_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="dtdElement" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="L"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="14" fallback="false"/>
+        <edge source="14" target="15" fallback="false"/>
+        <edge source="15" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false"/>
+        <edge source="17" target="18" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="18" target="19" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="19" target="20" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="20" target="21" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="21" target="22" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="22" target="23" fallback="true">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="23" target="24" fallback="false"/>
+        <edge source="24" target="25" fallback="false">
+            <rule name="children" node="C"/>
+        </edge>
+        <edge source="25" target="26" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="25" target="25" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="24" target="24" fallback="true">
+            <matcher name="NAME_PART"/>
+        </edge>
+        <edge source="22" target="25" fallback="false"/>
+        <edge source="21" target="23" fallback="false"/>
+        <edge source="20" target="23" fallback="false"/>
+        <edge source="19" target="23" fallback="false"/>
+        <edge source="18" target="23" fallback="false"/>
+        <edge source="14" target="27" fallback="false"/>
+        <edge source="27" target="28" fallback="false"/>
+        <edge source="28" target="29" fallback="false"/>
+        <edge source="29" target="30" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="30" target="31" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="31" target="32" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="32" target="33" fallback="false"/>
+        <edge source="33" target="22" fallback="false"/>
+        <edge source="31" target="34" fallback="false"/>
+        <edge source="34" target="23" fallback="false"/>
+        <edge source="30" target="34" fallback="false"/>
+        <edge source="14" target="35" fallback="false"/>
+        <edge source="35" target="36" fallback="false">
+            <any chars="("/>
+        </edge>
+        <edge source="36" target="36" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="36" target="37" fallback="false">
+            <rule name="children" node="A"/>
+        </edge>
+        <edge source="37" target="25" fallback="false"/>
+        <edge source="36" target="37" fallback="false">
+            <rule name="mixed" node="B"/>
+        </edge>
+        <edge source="14" target="23" fallback="true">
+            <matcher name="NAME_START"/>
+        </edge>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="int_subset">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="markup_decl"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="1" target="0" fallback="false"/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="decl_sep"/>
+        </edge>
+    </rule>
+    <rule name="doctype_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="dtdRoot" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <event name="dtdStart"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="dtdEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="12" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="13" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="external_id"/>
+        </edge>
+        <edge source="14" target="15" fallback="false"/>
+        <edge source="15" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="17" target="18" fallback="false">
+            <rule name="int_subset"/>
+        </edge>
+        <edge source="18" target="19" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="19" target="20" fallback="false"/>
+        <edge source="20" target="21" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="19" target="19" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="16" target="20" fallback="false"/>
+        <edge source="14" target="14" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="13" target="15" fallback="false"/>
+        <edge source="12" target="15" fallback="false"/>
+    </rule>
+    <rule name="prolog">
+        <node/>
+        <node>
+            <event name="xdeclEnd"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
+            <rule name="doctype_decl"/>
+        </edge>
+        <edge source="4" target="5" fallback="false"/>
+        <edge source="4" target="4" fallback="false">
+            <rule name="misc"/>
+        </edge>
+        <edge source="3" target="5" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <rule name="misc"/>
+        </edge>
+        <edge source="0" target="1" fallback="false">
+            <rule name="xdecl"/>
+        </edge>
+    </rule>
+    <rule name="document">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="prolog"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="elem"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <rule name="misc"/>
+        </edge>
+    </rule>
+</syntax>
