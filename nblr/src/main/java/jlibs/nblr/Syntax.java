@@ -18,13 +18,11 @@ package jlibs.nblr;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.matchers.Matcher;
+import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -64,6 +62,21 @@ public class Syntax{
                 lengthyRuleName = rule.name;
         }
         return lengthyRuleName;
+    }
+
+    public List<Rule> usages(Rule rule){
+        List<Rule> usages = new ArrayList<Rule>();
+        for(Rule r: rules.values()){
+            if(r!=rule){
+                for(Edge edge: r.edges()){
+                    if(edge.ruleTarget!=null){
+                        if(edge.ruleTarget.rule==rule && !usages.contains(r))
+                            usages.add(r);
+                    }
+                }
+            }
+        }
+        return usages;
     }
 
     /*-------------------------------------------------[ Actions ]---------------------------------------------------*/
