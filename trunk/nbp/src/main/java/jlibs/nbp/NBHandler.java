@@ -19,5 +19,6 @@ package jlibs.nbp;
  * @author Santhosh Kumar T
  */
 public interface NBHandler<E extends Exception>{
+    public void onSuccessful() throws E;
     public void fatalError(String message) throws E;
 }

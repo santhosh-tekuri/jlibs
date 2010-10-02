@@ -87,9 +87,10 @@ public abstract class NBParser extends Writer{
     private void _eat(int ch) throws Exception{
         while(true){
             if(stateStack.isEmpty()){
-                if(ch==-1)
+                if(ch==-1){
+                    onSuccessful();
                     return;
-                else
+                }else
                     expected(ch, "<EOF>");
             }
             int state = callRule(ch);
@@ -131,6 +132,7 @@ public abstract class NBParser extends Writer{
     }
 
     protected abstract void fatalError(String message) throws Exception;
+    protected abstract void onSuccessful() throws Exception;
 
     protected void consumed(){
         int ch = stream.charAt(0);
