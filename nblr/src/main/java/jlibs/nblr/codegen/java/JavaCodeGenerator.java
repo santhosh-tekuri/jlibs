@@ -43,8 +43,6 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void startParser(){
-        printer.printClassDoc();
-
         String className[] = className(parserName);
         if(className[0].length()>0){
             printer.printlns(
@@ -52,6 +50,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                 ""
             );
         }
+
+        printer.printClassDoc();
 
         printer.printlns(
             "public class "+className[1]+" extends "+superClass.getName()+"{",
