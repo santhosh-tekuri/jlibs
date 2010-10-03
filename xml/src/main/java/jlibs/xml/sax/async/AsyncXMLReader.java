@@ -158,7 +158,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     void version(Chars data) throws SAXException{
         if(!"1.0".contentEquals(data))
-            throw new SAXException("Unsupported XML Version: "+data);
+            fatalError("Unsupported XML Version: "+data);
     }
 
     private String encoding;
@@ -211,8 +211,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         value.append(data);
     }
 
+    private boolean isValid(int ch){
+        return (ch==0x9 || ch==0xa || ch==0xd) || (ch>=0x20 && ch<=0xd7ff) || (ch>=0xe000 && ch<=0xfffd) || (ch>=0x10000 && ch<=0x10ffff);
+    }
+    
     void hexCode(Chars data) throws SAXException{
         int codePoint = Integer.parseInt(data.toString(), 16);
+        if(!isValid(codePoint))
+            fatalError("invalid xml character");
         if(valueStarted)
             value.appendCodePoint(codePoint);
         else{
@@ -223,6 +229,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     void asciiCode(Chars data) throws SAXException{
         int codePoint = Integer.parseInt(data.toString(), 10);
+        if(!isValid(codePoint))
+            fatalError("invalid xml character");
         if(valueStarted)
             value.appendCodePoint(codePoint);
         else{
@@ -235,7 +243,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         String entity = data.toString();
         char[] entityValue = entities.get(entity);
         if(entityValue==null)
-            throw new SAXException("Undefined entityReference: "+entity);
+            fatalError("Undefined entityReference: "+entity);
         if(valueStarted)
             value.append(entityValue);
         else
@@ -288,7 +296,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             attributes.setURI(i, uri);
             String clarkName = ClarkName.valueOf(uri, attributes.getLocalName(i));
             if(!attrClarkNames.add(clarkName))
-                throw new SAXException("Attribute "+clarkName+" appears more than once in element");
+                fatalError("Attribute "+clarkName+" appears more than once in element");
         }
 
         handler.startElement(namespaces.getNamespaceURI(elementsPrefixes.peek()), elementsLocalNames.peek(), elementsQNames.peek(), attributes);
@@ -301,7 +309,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void elementEnd() throws SAXException{
         String startQName = elementsQNames.pop();
         if(!startQName.equals(qname))
-            throw new SAXException("expected </"+startQName+">");
+            fatalError("expected </"+startQName+">");
         elementEnd(qname);
     }
 
@@ -414,7 +422,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/not-wf/sa/001.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/not-wf/sa/179.xml";
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
