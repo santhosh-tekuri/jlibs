@@ -65,6 +65,22 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         return (CHAR(ch)) && (!(ch=='<' || ch=='&'));
     }
 
+    private boolean ATTR_Q_CONTENT(int ch){
+        return (CHAR(ch)) && (!(ch=='<' || ch=='&' || ch=='\''));
+    }
+
+    private boolean ATTR_DQ_CONTENT(int ch){
+        return (CHAR(ch)) && (!(ch=='<' || ch=='&' || ch=='"'));
+    }
+
+    private boolean ENTITY_Q_CONTENT(int ch){
+        return (CHAR(ch)) && (!(ch=='%' || ch=='&' || ch=='\''));
+    }
+
+    private boolean ENTITY_DQ_CONTENT(int ch){
+        return (CHAR(ch)) && (!(ch=='%' || ch=='&' || ch=='"'));
+    }
+
     private boolean NAME_START(int ch){
         return (ch==':') || (ch>='A' && ch<='Z') || (ch=='_') || (ch>='a' && ch<='z') || (ch>=0xc0 && ch<=0xd6) || (ch>=0xd8 && ch<=0xf6) || (ch>=0xf8 && ch<=0x2ff) || (ch>=0x370 && ch<=0x37d) || (ch>=0x37f && ch<=0x1fff) || (ch>=0x200c && ch<=0x200d) || (ch>=0x2070 && ch<=0x218f) || (ch>=0x2c00 && ch<=0x2fef) || (ch>=0x3001 && ch<=0xd7ff) || (ch>=0xf900 && ch<=0xfdcf) || (ch>=0xfdf0 && ch<=0xfffd) || (ch>=0x10000 && ch<=0xeffff);
     }
@@ -558,18 +574,18 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(BRACKET_CLOSE(ch)){
                     return 1;
                 }
-                if(ANY(ch)){
+                if(CHAR(ch)){
                     return 0;
                 }
-                expected(ch, "<BRACKET_CLOSE> OR <ANY>");
+                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
             case 1:
                 if(BRACKET_CLOSE(ch)){
                     return 2;
                 }
-                if(ANY(ch)){
+                if(CHAR(ch)){
                     return 0;
                 }
-                expected(ch, "<BRACKET_CLOSE> OR <ANY>");
+                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
             case 2:
                 if(GT(ch)){
                     return 4;
@@ -577,10 +593,10 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(BRACKET_CLOSE(ch)){
                     return 2;
                 }
-                if(ANY(ch)){
+                if(CHAR(ch)){
                     return 0;
                 }
-                expected(ch, "<GT> OR <BRACKET_CLOSE> OR <ANY>");
+                expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
             case 4:
                 return -1;
             default:
@@ -642,12 +658,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CDATA_END, 10, 0);
                     return 1;
                 }
-                if(ANY(ch)){
+                if(CHAR(ch)){
                     buffer.push();
                     push(RULE_CDATA_END, 10, 0);
                     return 0;
                 }
-                expected(ch, "<BRACKET_CLOSE> OR <ANY>");
+                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
             case 10:
                 handler.cdata(buffer.pop(0, 3));
                 return -1;
@@ -751,7 +767,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     handler.piTarget(buffer.pop(0, 0));
                     return 5;
                 }
-                expected(ch, "<WS>");
+                if(ch=='?'){
+                    handler.piTarget(buffer.pop(0, 0));
+                    handler.piData();
+                    return 12;
+                }
+                expected(ch, "<WS> OR [?]");
             case 5:
                 if(WS(ch)){
                     return 5;
@@ -786,6 +807,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[>] OR [?] OR <CHAR>");
             case 10:
+                return -1;
+            case 12:
+                if(ch=='>'){
+                    return 13;
+                }
+                expected(ch, "[>]");
+            case 13:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -1023,7 +1051,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         consumed();
                         return 2;
                     }
-                    if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='"'))){
+                    if(ATTR_DQ_CONTENT(ch)){
                         push(RULE_DQ_VALUE, 1, 0);
                         buffer.push();
                         consumed();
@@ -1054,7 +1082,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[\"] OR [^<\\&\"] OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 2:
                 handler.valueEnd();
                 return -1;
@@ -1067,7 +1095,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         consumed();
                         return 2;
                     }
-                    if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='\''))){
+                    if(ATTR_Q_CONTENT(ch)){
                         push(RULE_Q_VALUE, 3, 0);
                         buffer.push();
                         consumed();
@@ -1098,7 +1126,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "['] OR [^<\\&'] OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "['] OR <ATTR_Q_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
             default:
                 throw new Error("impossible");
         }
@@ -1112,7 +1140,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<1)
                     return 0;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='"'))){
+                    if(ATTR_DQ_CONTENT(ch)){
                         buffer.push();
                         consumed();
                         return 3;
@@ -1140,9 +1168,9 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[^<\\&\"] OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<ATTR_DQ_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 3:
-                if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='"'))){
+                if(ATTR_DQ_CONTENT(ch)){
                     return 3;
                 }
                 handler.rawValue(buffer.pop(0, 0));
@@ -1162,7 +1190,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<1)
                     return 0;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='\''))){
+                    if(ATTR_Q_CONTENT(ch)){
                         buffer.push();
                         consumed();
                         return 3;
@@ -1190,9 +1218,9 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[^<\\&'] OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<ATTR_Q_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 3:
-                if(ch!=-1 && (!(ch=='<' || ch=='&' || ch=='\''))){
+                if(ATTR_Q_CONTENT(ch)){
                     return 3;
                 }
                 handler.rawValue(buffer.pop(0, 0));
@@ -2239,7 +2267,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<1)
                     return 1;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && (!(ch=='%' || ch=='&' || ch=='\''))){
+                    if(ENTITY_Q_CONTENT(ch)){
                         consumed();
                         return 3;
                     }
@@ -2275,7 +2303,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[^%\\&'] OR [%] OR <Q> OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<ENTITY_Q_CONTENT> OR [%] OR <Q> OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 3:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
@@ -2285,7 +2313,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         consumed();
                         return 5;
                     }
-                    if(ch!=-1 && (!(ch=='%' || ch=='&' || ch=='\''))){
+                    if(ENTITY_Q_CONTENT(ch)){
                         consumed();
                         return 3;
                     }
@@ -2317,7 +2345,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "<Q> OR [^%\\&'] OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<Q> OR <ENTITY_Q_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 5:
                 handler.valueEnd();
                 return -1;
@@ -2326,7 +2354,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<1)
                     return 6;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && (!(ch=='%' || ch=='&' || ch=='"'))){
+                    if(ENTITY_DQ_CONTENT(ch)){
                         consumed();
                         return 8;
                     }
@@ -2362,13 +2390,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[^%\\&\"] OR [%] OR <DQ> OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<ENTITY_DQ_CONTENT> OR [%] OR <DQ> OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 8:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
                     return 8;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && (!(ch=='%' || ch=='&' || ch=='"'))){
+                    if(ENTITY_DQ_CONTENT(ch)){
                         consumed();
                         return 8;
                     }
@@ -2404,7 +2432,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                expected(ch, "[^%\\&\"] OR [%] OR <DQ> OR [\\&][\\#] OR [\\&]<NAME_START>");
+                expected(ch, "<ENTITY_DQ_CONTENT> OR [%] OR <DQ> OR [\\&][\\#] OR [\\&]<NAME_START>");
             default:
                 throw new Error("impossible");
         }
