@@ -239,6 +239,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
     }
 
+    @SuppressWarnings({"ConstantConditions"})
     void entityReference(Chars data) throws SAXException{
         String entity = data.toString();
         char[] entityValue = entities.get(entity);
@@ -282,7 +283,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             namespaces.put(localName, value);
             handler.startPrefixMapping(localName, value);
         }else
-            attributes.addAttribute("", localName, qname, "CDATA", value);
+            attributes.addAttribute(prefix, localName, qname, "CDATA", value);
 
         clearQName();
     }
@@ -292,14 +293,21 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         attrClarkNames.clear();
         int attrCount = attributes.getLength();
         for(int i=0; i<attrCount; i++){
-            String uri = namespaces.getPrefix(attributes.getURI(i));
+            String prefix = attributes.getURI(i);
+            String uri = namespaces.getPrefix(prefix);
+            if(uri==null)
+                fatalError("Unbound prefix: "+prefix);
             attributes.setURI(i, uri);
             String clarkName = ClarkName.valueOf(uri, attributes.getLocalName(i));
             if(!attrClarkNames.add(clarkName))
                 fatalError("Attribute "+clarkName+" appears more than once in element");
         }
 
-        handler.startElement(namespaces.getNamespaceURI(elementsPrefixes.peek()), elementsLocalNames.peek(), elementsQNames.peek(), attributes);
+        String prefix = elementsPrefixes.peek();
+        String namespaceURI = namespaces.getNamespaceURI(prefix);
+        if(namespaceURI==null)
+            fatalError("Unbound prefix: "+prefix);
+        handler.startElement(namespaceURI, elementsLocalNames.peek(), elementsQNames.peek(), attributes);
     }
 
     void emptyElementEnd() throws SAXException{
@@ -314,7 +322,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private void elementEnd(String qname) throws SAXException{
-        String namespaceURI = namespaces.getNamespaceURI(elementsPrefixes.pop());
+        String prefix = elementsPrefixes.pop();
+        String namespaceURI = namespaces.getNamespaceURI(prefix);
+        if(namespaceURI==null)
+            fatalError("Unbound prefix: "+prefix);
         handler.endElement(namespaceURI, elementsLocalNames.pop(), qname);
 
         if(namespaces.map()!=null){
@@ -422,7 +433,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/not-wf/sa/179.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/025.xml";
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
