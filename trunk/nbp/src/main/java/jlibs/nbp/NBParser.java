@@ -82,8 +82,10 @@ public abstract class NBParser extends Writer{
             }
 
         }catch(IOException ex){
+            eofOnClose = false;
             throw ex;
         }catch(Exception ex){
+            eofOnClose = false;
             throw new IOException(ex);
         }
     }
@@ -130,7 +132,6 @@ public abstract class NBParser extends Writer{
         }
 
         String message = "Found: "+found+" Expected: "+buff.toString();
-        eofOnClose = false;
         fatalError(message);
         throw new IOException(message);
     }
