@@ -363,7 +363,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void piData(Chars piData) throws SAXException{
-        handler.processingInstruction(piTarget, piData.toString());
+        handler.processingInstruction(piTarget, piData.length()>0 ? piData.toString() : "");
+    }
+
+    void piData() throws SAXException{
+        handler.processingInstruction(piTarget, "");
     }
 
     /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
@@ -452,7 +456,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/027.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/016.xml";
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
