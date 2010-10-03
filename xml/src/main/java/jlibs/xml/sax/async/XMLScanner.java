@@ -749,50 +749,43 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 3:
                 if(WS(ch)){
                     handler.piTarget(buffer.pop(0, 0));
-                    return 4;
+                    return 5;
                 }
-                if(ch=='?'){
-                    handler.piTarget(buffer.pop(0, 0));
-                    buffer.push();
-                    return 7;
-                }
-                if(CHAR(ch)){
-                    handler.piTarget(buffer.pop(0, 0));
-                    buffer.push();
-                    return 6;
-                }
-                expected(ch, "<WS> OR [?] OR <CHAR>");
-            case 4:
+                expected(ch, "<WS>");
+            case 5:
                 if(WS(ch)){
-                    return 4;
+                    return 5;
                 }
                 if(ch=='?'){
                     buffer.push();
-                    return 7;
+                    return 8;
                 }
                 if(CHAR(ch)){
                     buffer.push();
-                    return 6;
+                    return 7;
                 }
                 expected(ch, "<WS> OR [?] OR <CHAR>");
-            case 6:
+            case 7:
                 if(ch=='?'){
-                    return 7;
+                    return 8;
                 }
                 if(CHAR(ch)){
-                    return 6;
+                    return 7;
                 }
                 expected(ch, "[?] OR <CHAR>");
-            case 7:
+            case 8:
                 if(ch=='>'){
                     handler.piData(buffer.pop(0, 1));
-                    return 9;
+                    return 10;
+                }
+                if(ch=='?'){
+                    return 8;
                 }
                 if(CHAR(ch)){
-                    return 6;
+                    return 7;
                 }
-                expected(ch, "[>] OR <CHAR>");
-            case 9:
+                expected(ch, "[>] OR [?] OR <CHAR>");
+            case 10:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -1329,14 +1322,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
                             consumed();
                             return 2;
                         }
                         if(NAME_START(ch)){
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
                             buffer.push();
@@ -1347,7 +1340,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(lookAhead.charAt(0)=='<'){
                         if(NCNAME_START(ch)){
-                            push(RULE_ELEM, 14, 0);
+                            push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
                             push(RULE_QNAME, 2, 0);
@@ -1358,7 +1351,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 1;
                         }
                         if(ch=='?'){
-                            push(RULE_PI, 14, 0);
+                            push(RULE_PI, 15, 0);
                             consumed();
                             consumed();
                             return 2;
@@ -1371,14 +1364,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='-'){
-                                push(RULE_COMMENT, 16, 0);
+                                push(RULE_COMMENT, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
                                 return 3;
                             }
                             if(ch=='['){
-                                push(RULE_CDATA, 16, 0);
+                                push(RULE_CDATA, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
@@ -1404,7 +1397,8 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ELEM_CONTENT_CHAR(ch)){
                     return 6;
                 }
-                expected(ch, "[\\]] OR <ELEM_CONTENT_CHAR>");
+                handler.characters(buffer.pop(0, 0));
+                return -1;
             case 9:
                 if(ch=='>'){
                     return 11;
@@ -1415,15 +1409,16 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ELEM_CONTENT_CHAR(ch)){
                     return 6;
                 }
-                expected(ch, "[>] OR [\\]] OR <ELEM_CONTENT_CHAR>");
+                handler.characters(buffer.pop(0, 0));
+                return -1;
             case 11:
                 handler.fatalError("Text may not contain a literal ']]>' sequence");
                 return -1;
-            case 12:
+            case 13:
                 return -1;
-            case 14:
+            case 15:
                 return -1;
-            case 16:
+            case 17:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -1492,7 +1487,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(ch=='#'){
                             handler.attributesEnd();
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
                             consumed();
@@ -1501,7 +1496,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(NAME_START(ch)){
                             handler.attributesEnd();
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
                             buffer.push();
@@ -1514,7 +1509,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(NCNAME_START(ch)){
                             handler.attributesEnd();
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_ELEM, 14, 0);
+                            push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
                             push(RULE_QNAME, 2, 0);
@@ -1527,7 +1522,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(ch=='?'){
                             handler.attributesEnd();
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_PI, 14, 0);
+                            push(RULE_PI, 15, 0);
                             consumed();
                             consumed();
                             return 2;
@@ -1542,7 +1537,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             if(ch=='-'){
                                 handler.attributesEnd();
                                 push(RULE_ELEM_CONTENT, 6, 0);
-                                push(RULE_COMMENT, 16, 0);
+                                push(RULE_COMMENT, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
@@ -1551,7 +1546,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             if(ch=='['){
                                 handler.attributesEnd();
                                 push(RULE_ELEM_CONTENT, 6, 0);
-                                push(RULE_CDATA, 16, 0);
+                                push(RULE_CDATA, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
@@ -1593,7 +1588,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
                             consumed();
@@ -1601,7 +1596,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                         if(NAME_START(ch)){
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_REFERENCE, 12, 0);
+                            push(RULE_REFERENCE, 13, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
                             buffer.push();
@@ -1613,7 +1608,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(NCNAME_START(ch)){
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_ELEM, 14, 0);
+                            push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
                             push(RULE_QNAME, 2, 0);
@@ -1625,7 +1620,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                         if(ch=='?'){
                             push(RULE_ELEM_CONTENT, 6, 0);
-                            push(RULE_PI, 14, 0);
+                            push(RULE_PI, 15, 0);
                             consumed();
                             consumed();
                             return 2;
@@ -1639,7 +1634,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='-'){
                                 push(RULE_ELEM_CONTENT, 6, 0);
-                                push(RULE_COMMENT, 16, 0);
+                                push(RULE_COMMENT, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
@@ -1647,7 +1642,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='['){
                                 push(RULE_ELEM_CONTENT, 6, 0);
-                                push(RULE_CDATA, 16, 0);
+                                push(RULE_CDATA, 17, 0);
                                 consumed();
                                 consumed();
                                 consumed();
@@ -4478,6 +4473,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_MISC, 2, 0);
                     push(RULE_PI, 2, 0);
                     consumed();
+                    lookAhead.reset();
                     return 1;
                 }
                 handler.xdeclEnd();
@@ -4714,6 +4710,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_MISC, 2, 0);
                     push(RULE_PI, 2, 0);
                     consumed();
+                    lookAhead.reset();
                     return 1;
                 }
                 expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][!][D] OR [<][!][\\-] OR [<][?][x][m][l]<WS> OR [<]");
