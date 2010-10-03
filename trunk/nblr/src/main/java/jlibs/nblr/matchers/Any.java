@@ -43,6 +43,13 @@ public final class Any extends Matcher{
         chars = null;
     }
 
+    public Any(int... codePoints){
+        if(codePoints.length==0)
+            chars = null;
+        else
+            chars = codePoints;
+    }
+
     @Override
     public String javaCode(String variable){
         if(chars==null)
