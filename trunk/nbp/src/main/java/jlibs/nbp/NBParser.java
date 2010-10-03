@@ -52,13 +52,17 @@ public abstract class NBParser extends Writer{
             highSurrogate = ch;
             wasHighSurrogate = true;
         }else{
-            int codePoint;
             if(wasHighSurrogate){
-                codePoint = Character.toCodePoint(highSurrogate, ch);
                 wasHighSurrogate = false;
+                if(Character.isLowSurrogate(ch)){
+                    int codePoint = Character.toCodePoint(highSurrogate, ch);
+                    consume(codePoint);
+                }else{
+                    consume((int)highSurrogate);
+                    consume((int)ch);
+                }
             }else
-                codePoint = ch;
-            consume(codePoint);
+                consume((int)ch);
         }
     }
 
