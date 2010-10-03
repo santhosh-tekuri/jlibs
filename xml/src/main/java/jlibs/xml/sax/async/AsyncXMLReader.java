@@ -31,6 +31,7 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
@@ -280,8 +281,26 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             namespaces.put("", value);
             handler.startPrefixMapping("", value);
         }else if(prefix.equals("xmlns")){
-            namespaces.put(localName, value);
-            handler.startPrefixMapping(localName, value);
+            if(localName.equals(XMLConstants.XML_NS_PREFIX)){
+                if(!value.equals(XMLConstants.XML_NS_URI)){
+                    clearQName();
+                    fatalError("prefix "+XMLConstants.XML_NS_PREFIX+" must refer to "+XMLConstants.XML_NS_URI);
+                }
+            }else if(localName.equals(XMLConstants.XMLNS_ATTRIBUTE)){
+                clearQName();
+                fatalError("prefix "+XMLConstants.XMLNS_ATTRIBUTE+" must not be declared");
+            }else{
+                if(value.equals(XMLConstants.XML_NS_URI)){
+                    clearQName();
+                    fatalError(XMLConstants.XML_NS_URI+" must be bound to "+XMLConstants.XML_NS_PREFIX);
+                }else if(value.equals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI)){
+                    clearQName();
+                    fatalError(XMLConstants.XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+XMLConstants.XMLNS_ATTRIBUTE);
+                }else{
+                    namespaces.put(localName, value);
+                    handler.startPrefixMapping(localName, value);
+                }
+            }
         }else
             attributes.addAttribute(prefix, localName, qname, "CDATA", value);
 
