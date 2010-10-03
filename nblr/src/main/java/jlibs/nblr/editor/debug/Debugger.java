@@ -122,11 +122,14 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         try{
             showMessage("");
             clearGuardedBlock();
-            
-            File file = new File("temp/UntitledParser.java").getAbsoluteFile();
+
+            String parserName = "UntitledParser";
+
+            File file = new File("temp/"+parserName+".java").getAbsoluteFile();
             FileUtil.mkdirs(file.getParentFile());
             
             JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
+            codeGenerator.setParserName(parserName);
             codeGenerator.setDebuggable(DebuggableNBParser.class, getClass());
 
             Printer printer = new Printer(new PrintWriter(new FileWriter(file)));
@@ -140,7 +143,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             }
 
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
-            Class clazz = classLoader.loadClass("UntitledParser");
+            Class clazz = classLoader.loadClass(parserName);
             parser = (DebuggableNBParser)clazz.getConstructor(getClass()).newInstance(this);
             parser.setRule(scene.getRule().id);
             showMessage("Executing...");
