@@ -537,6 +537,7 @@
             <publish name="piTarget" begin="0" end="0"/>
         </node>
         <node/>
+        <node/>
         <node>
             <buffer/>
         </node>
@@ -556,22 +557,28 @@
             <rule name="pi_target"/>
         </edge>
         <edge source="3" target="4" fallback="false"/>
-        <edge source="4" target="4" fallback="false">
+        <edge source="4" target="5" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="4" target="5" fallback="false"/>
+        <edge source="5" target="5" fallback="false">
+            <matcher name="WS"/>
+        </edge>
         <edge source="5" target="6" fallback="false"/>
-        <edge source="6" target="7" fallback="false">
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="8" fallback="false">
             <any chars="?"/>
         </edge>
-        <edge source="7" target="6" fallback="true">
+        <edge source="8" target="7" fallback="true">
             <matcher name="CHAR"/>
         </edge>
-        <edge source="7" target="8" fallback="false"/>
-        <edge source="8" target="9" fallback="false">
+        <edge source="8" target="9" fallback="false"/>
+        <edge source="9" target="10" fallback="false">
             <any chars="&gt;"/>
         </edge>
-        <edge source="6" target="6" fallback="true">
+        <edge source="8" target="8" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="7" target="7" fallback="true">
             <matcher name="CHAR"/>
         </edge>
     </rule>
@@ -872,6 +879,9 @@
         <node>
             <error message="Text may not contain a literal ']]&gt;' sequence"/>
         </node>
+        <node>
+            <publish name="characters" begin="0" end="0"/>
+        </node>
         <node/>
         <node/>
         <node/>
@@ -898,25 +908,27 @@
             <any chars="&gt;"/>
         </edge>
         <edge source="10" target="5" fallback="false"/>
+        <edge source="10" target="12" fallback="false"/>
         <edge source="9" target="9" fallback="false">
             <any chars="]"/>
         </edge>
         <edge source="8" target="3" fallback="false"/>
-        <edge source="0" target="12" fallback="false">
+        <edge source="8" target="12" fallback="false"/>
+        <edge source="0" target="13" fallback="false">
             <rule name="reference"/>
         </edge>
-        <edge source="0" target="13" fallback="false"/>
-        <edge source="13" target="14" fallback="false">
+        <edge source="0" target="14" fallback="false"/>
+        <edge source="14" target="15" fallback="false">
             <rule name="elem"/>
         </edge>
-        <edge source="13" target="14" fallback="false">
+        <edge source="14" target="15" fallback="false">
             <rule name="pi"/>
         </edge>
-        <edge source="13" target="15" fallback="false"/>
-        <edge source="15" target="16" fallback="false">
+        <edge source="14" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false">
             <rule name="comment"/>
         </edge>
-        <edge source="15" target="16" fallback="false">
+        <edge source="16" target="17" fallback="false">
             <rule name="cdata"/>
         </edge>
     </rule>
