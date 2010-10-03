@@ -502,14 +502,15 @@
         <node/>
         <node/>
         <node/>
+        <node/>
         <edge source="0" target="1" fallback="false">
-            <any chars="x"/>
+            <any chars="xX"/>
         </edge>
         <edge source="1" target="2" fallback="false">
-            <any chars="m"/>
+            <any chars="mM"/>
         </edge>
         <edge source="2" target="3" fallback="false">
-            <any chars="l"/>
+            <any chars="lL"/>
         </edge>
         <edge source="3" target="4" fallback="false">
             <matcher name="NAME_PART"/>
@@ -520,10 +521,11 @@
         <edge source="4" target="5" fallback="false"/>
         <edge source="2" target="4" fallback="false"/>
         <edge source="1" target="4" fallback="false"/>
-        <edge source="0" target="6" fallback="true">
+        <edge source="0" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="true">
             <matcher name="NAME_START"/>
         </edge>
-        <edge source="6" target="4" fallback="false"/>
+        <edge source="7" target="4" fallback="false"/>
     </rule>
     <rule name="pi">
         <node/>
@@ -2187,12 +2189,15 @@
         <edge source="6" target="6" fallback="false">
             <matcher name="WS"/>
         </edge>
+        <edge source="6" target="7" fallback="false">
+            <rule name="name_cardinality"/>
+        </edge>
         <edge source="4" target="12" fallback="false"/>
         <edge source="12" target="13" fallback="false">
             <any chars=","/>
         </edge>
         <edge source="13" target="14" fallback="false">
-            <rule name="children"/>
+            <rule name="name_cardinality"/>
         </edge>
         <edge source="14" target="14" fallback="false">
             <matcher name="WS"/>
@@ -2203,11 +2208,26 @@
         <edge source="13" target="13" fallback="false">
             <matcher name="WS"/>
         </edge>
+        <edge source="13" target="14" fallback="false">
+            <rule name="children"/>
+        </edge>
         <edge source="4" target="16" fallback="false"/>
         <edge source="16" target="9" fallback="false"/>
-        <edge source="0" target="10" fallback="false">
+        <edge source="2" target="3" fallback="false">
+            <rule name="name_cardinality"/>
+        </edge>
+    </rule>
+    <rule name="name_cardinality">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
             <rule name="name"/>
         </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="?*+"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
     </rule>
     <rule name="decl_sep">
         <node/>
@@ -2280,16 +2300,6 @@
         <node/>
         <node/>
         <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="&lt;"/>
         </edge>
@@ -2331,79 +2341,52 @@
             <matcher name="WS"/>
         </edge>
         <edge source="13" target="14" fallback="false"/>
-        <edge source="14" target="15" fallback="false"/>
-        <edge source="15" target="16" fallback="false"/>
-        <edge source="16" target="17" fallback="false"/>
-        <edge source="17" target="18" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="18" target="19" fallback="false">
-            <any chars="M"/>
-        </edge>
-        <edge source="19" target="20" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="20" target="21" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="21" target="22" fallback="false">
-            <any chars="Y"/>
-        </edge>
-        <edge source="22" target="23" fallback="true">
-            <matcher name="NAME_PART"/>
-        </edge>
-        <edge source="23" target="24" fallback="false"/>
-        <edge source="24" target="25" fallback="false">
-            <rule name="children" node="C"/>
-        </edge>
-        <edge source="25" target="26" fallback="false">
-            <any chars="&gt;"/>
-        </edge>
-        <edge source="25" target="25" fallback="false">
-            <matcher name="WS"/>
-        </edge>
-        <edge source="24" target="24" fallback="true">
-            <matcher name="NAME_PART"/>
-        </edge>
-        <edge source="22" target="25" fallback="false"/>
-        <edge source="21" target="23" fallback="false"/>
-        <edge source="20" target="23" fallback="false"/>
-        <edge source="19" target="23" fallback="false"/>
-        <edge source="18" target="23" fallback="false"/>
-        <edge source="14" target="27" fallback="false"/>
-        <edge source="27" target="28" fallback="false"/>
-        <edge source="28" target="29" fallback="false"/>
-        <edge source="29" target="30" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="30" target="31" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="31" target="32" fallback="false">
-            <any chars="Y"/>
-        </edge>
-        <edge source="32" target="33" fallback="false"/>
-        <edge source="33" target="22" fallback="false"/>
-        <edge source="31" target="34" fallback="false"/>
-        <edge source="34" target="23" fallback="false"/>
-        <edge source="30" target="34" fallback="false"/>
-        <edge source="14" target="35" fallback="false"/>
-        <edge source="35" target="36" fallback="false">
+        <edge source="14" target="15" fallback="false">
             <any chars="("/>
         </edge>
-        <edge source="36" target="36" fallback="false">
+        <edge source="15" target="15" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="36" target="37" fallback="false">
+        <edge source="15" target="16" fallback="false">
             <rule name="children" node="A"/>
         </edge>
-        <edge source="37" target="25" fallback="false"/>
-        <edge source="36" target="37" fallback="false">
+        <edge source="16" target="17" fallback="false"/>
+        <edge source="17" target="18" fallback="false"/>
+        <edge source="18" target="19" fallback="false"/>
+        <edge source="19" target="20" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="19" target="19" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="15" target="16" fallback="false">
             <rule name="mixed" node="B"/>
         </edge>
-        <edge source="14" target="23" fallback="true">
-            <matcher name="NAME_START"/>
+        <edge source="14" target="21" fallback="false">
+            <any chars="E"/>
         </edge>
+        <edge source="21" target="22" fallback="false">
+            <any chars="M"/>
+        </edge>
+        <edge source="22" target="23" fallback="false">
+            <any chars="P"/>
+        </edge>
+        <edge source="23" target="24" fallback="false">
+            <any chars="T"/>
+        </edge>
+        <edge source="24" target="19" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="14" target="25" fallback="false">
+            <any chars="A"/>
+        </edge>
+        <edge source="25" target="26" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="26" target="27" fallback="false">
+            <any chars="Y"/>
+        </edge>
+        <edge source="27" target="19" fallback="false"/>
         <edge source="13" target="13" fallback="false">
             <matcher name="WS"/>
         </edge>
