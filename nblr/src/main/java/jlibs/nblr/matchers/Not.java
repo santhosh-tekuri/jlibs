@@ -35,9 +35,10 @@ public final class Not extends Matcher{
         return "!("+delegate._javaCode(variable)+")";
     }
 
+    public static int minValue = Character.MIN_VALUE;
     @Override
     public List<Range> ranges(){
-        return Range.minus(Collections.singletonList(new Range(Character.MIN_VALUE, Character.MAX_VALUE)), delegate.ranges());
+        return Range.minus(Collections.singletonList(new Range(minValue, Character.MAX_VALUE)), delegate.ranges());
     }
 
     @Override

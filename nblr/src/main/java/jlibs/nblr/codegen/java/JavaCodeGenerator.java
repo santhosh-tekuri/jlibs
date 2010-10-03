@@ -18,7 +18,9 @@ package jlibs.nblr.codegen.java;
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.CodeGenerator;
+import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
+import jlibs.nblr.matchers.Not;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
@@ -261,8 +263,20 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private void startIf(Matcher matcher, int lookAheadIndex){
         String ch = lookAheadIndex==-1 ? "ch" : "lookAhead.charAt("+lookAheadIndex+')';
+
+        String condition = matcher._javaCode(ch);
+        Not.minValue = -1;
+        try{
+            if(lookAheadIndex==-1 && matcher.clashesWith(new Any(-1))){
+                if(matcher.name==null)
+                    condition = '('+condition+')';
+                condition = "ch!=-1 && "+condition;
+            }
+        }finally{
+            Not.minValue = Character.MIN_VALUE;
+        }
         printer.printlns(
-            "if("+matcher._javaCode(ch)+"){",
+            "if("+condition+"){",
                 PLUS
         );
     }
@@ -299,7 +313,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private int _travelPath(Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
-        
+
         int nextState = -1;
         boolean wasNode = false;
         for(Object obj: path){
@@ -330,7 +344,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
         return nextState;
     }
-    
+
     /*-------------------------------------------------[ Handler ]---------------------------------------------------*/
 
     protected void startHandler(){
@@ -399,13 +413,13 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
 
-    private String parserName = "UntitledParser";
+    private String parserName = "jlibs.xml.sax.async.XMLScanner";
     private Class superClass = NBParser.class;
     public void setParserName(String parserName){
         this.parserName = parserName;
     }
 
-    private String handlerName = "UntitledHandler";
+    private String handlerName = "jlibs.xml.sax.async.AsyncXMLReader";
     private boolean handlerClass = false;
     public void setHandlerName(String handlerName, boolean isClass){
         this.handlerName = handlerName;
