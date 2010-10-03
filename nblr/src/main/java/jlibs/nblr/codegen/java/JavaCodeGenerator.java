@@ -217,7 +217,11 @@ public class JavaCodeGenerator extends CodeGenerator{
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
             startIf(matcher, 0);
-            travelPath(path, true);
+
+            int state = _travelPath(path, true);
+            println("lookAhead.reset();");
+            println("return "+ state +';');
+
             endIf(1);
         }
 
