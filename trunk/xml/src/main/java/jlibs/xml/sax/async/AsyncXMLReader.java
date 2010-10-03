@@ -294,7 +294,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         int attrCount = attributes.getLength();
         for(int i=0; i<attrCount; i++){
             String prefix = attributes.getURI(i);
-            String uri = namespaces.getPrefix(prefix);
+            String uri = namespaces.getNamespaceURI(prefix);
             if(uri==null)
                 fatalError("Unbound prefix: "+prefix);
             attributes.setURI(i, uri);
@@ -433,7 +433,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/025.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/027.xml";
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
