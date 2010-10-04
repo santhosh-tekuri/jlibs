@@ -2237,7 +2237,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 }
                 if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 expected(ch, "[P] OR [S]");
@@ -2250,12 +2250,18 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 2;
                 }
-                if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 4, 0);
+                if(Q(ch)){
+                    push(RULE_SYTEM_LITERAL, 4, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR [S]");
+                if(DQ(ch)){
+                    push(RULE_SYTEM_LITERAL, 4, 0);
+                    return 5;
+                }
+                expected(ch, "<WS> OR <Q> OR <DQ>");
             case 4:
+                return -1;
+            case 5:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -2356,7 +2362,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch=='S'){
                     push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(DQ(ch)){
@@ -2754,7 +2760,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='S'){
                     push(RULE_PE_DEF, 14, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(DQ(ch)){
@@ -2801,7 +2807,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='S'){
                     push(RULE_ENTITY_DEF, 19, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(DQ(ch)){
@@ -2849,7 +2855,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch=='S'){
                     push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(DQ(ch)){
@@ -4457,7 +4463,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch=='S'){
                     push(RULE_EXTERNAL_ID, 14, 0);
-                    push(RULE_SYSTEM_ID, 4, 0);
+                    push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(ch=='['){
