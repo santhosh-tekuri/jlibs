@@ -152,6 +152,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         dtdRoot = null;
         systemID = null;
         publicID = null;
+        notationName = null;
 
         entityName = null;
         entities.clear();
@@ -485,8 +486,18 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         publicID = data.toString();
     }
 
-    public void dtdStart() throws SAXException{
+    void dtdStart() throws SAXException{
         handler.startDTD(dtdRoot, publicID, systemID);
+        publicID = systemID = null;
+    }
+
+    private String notationName;
+    void notationName(Chars data){
+        notationName = data.toString();
+    }
+
+    void notationEnd() throws SAXException{
+        handler.notationDecl(notationName, publicID, systemID);
     }
 
     void dtdElement(Chars data){

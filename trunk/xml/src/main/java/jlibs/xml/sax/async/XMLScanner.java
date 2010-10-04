@@ -2168,57 +2168,60 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 11;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME, 12, 0);
+                    buffer.push();
+                    push(RULE_NAME, 13, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_START>");
-            case 12:
+            case 13:
                 if(WS(ch)){
-                    return 13;
+                    handler.notationName(buffer.pop(0, 0));
+                    return 14;
                 }
                 expected(ch, "<WS>");
-            case 13:
+            case 14:
                 if(ch=='P'){
-                    push(RULE_PUBLIC_ID, 14, 0);
+                    push(RULE_PUBLIC_ID, 15, 0);
                     return 1;
                 }
                 if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 17, 0);
+                    push(RULE_SYSTEM_ID, 18, 0);
                     return 1;
                 }
                 if(WS(ch)){
-                    return 13;
+                    return 14;
                 }
                 expected(ch, "[P] OR [S] OR <WS>");
-            case 14:
-                if(WS(ch)){
-                    return 15;
-                }
-                if(ch=='>'){
-                    return 19;
-                }
-                expected(ch, "<WS> OR [>]");
             case 15:
                 if(WS(ch)){
-                    return 15;
+                    return 16;
+                }
+                if(ch=='>'){
+                    return 20;
+                }
+                expected(ch, "<WS> OR [>]");
+            case 16:
+                if(WS(ch)){
+                    return 16;
                 }
                 if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 17, 0);
+                    push(RULE_SYSTEM_ID, 18, 0);
                     return 1;
                 }
                 if(ch=='>'){
-                    return 19;
+                    return 20;
                 }
                 expected(ch, "<WS> OR [S] OR [>]");
-            case 17:
+            case 18:
                 if(WS(ch)){
-                    return 17;
+                    return 18;
                 }
                 if(ch=='>'){
-                    return 19;
+                    return 20;
                 }
                 expected(ch, "<WS> OR [>]");
-            case 19:
+            case 20:
+                handler.notationEnd();
                 return -1;
             default:
                 throw new Error("impossible");
