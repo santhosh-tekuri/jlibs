@@ -16,6 +16,7 @@
 package jlibs.xml.sax.async;
 
 import jlibs.core.io.IOUtil;
+import jlibs.core.io.UnicodeInputStream;
 import jlibs.core.net.URLUtil;
 import jlibs.nbp.Chars;
 import jlibs.nbp.NBHandler;
@@ -97,7 +98,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private void parse(InputStream in) throws IOException, SAXException{
-        IOUtil.pump(new InputStreamReader(in, IOUtil.UTF_8), getWriter(), true, true);
+        UnicodeInputStream input = new UnicodeInputStream(in);
+        String encoding = input.bom!=null ? input.bom.encoding() : IOUtil.UTF_8.name();
+        IOUtil.pump(new InputStreamReader(input, encoding), getWriter(), true, true);
     }
 
     /*-------------------------------------------------[ Locator ]---------------------------------------------------*/
@@ -546,8 +549,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/114.xml";
-        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml";
+//        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
