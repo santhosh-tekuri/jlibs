@@ -57,7 +57,7 @@ public class Buffer{
                 expandCapacity(newCount);
             int offset = codePoint - Character.MIN_SUPPLEMENTARY_CODE_POINT;
             chars[count] = (char)((offset >>> 10) + Character.MIN_HIGH_SURROGATE);
-            chars[newCount] = (char)((offset & 0x3ff) + Character.MIN_LOW_SURROGATE);
+            chars[count+1] = (char)((offset & 0x3ff) + Character.MIN_LOW_SURROGATE);
         }
         count = newCount;
     }
