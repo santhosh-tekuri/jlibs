@@ -74,8 +74,9 @@ public abstract class NBParser extends Writer{
 
             while(stream.lookAhead.hasNext()){
                 consumed = false;
+                int lookAheadLen = stream.lookAhead.length();
                 _eat(stream.lookAhead.getNext());
-                if(stream.lookAhead.length()==0 && !consumed)
+                if(stream.lookAhead.length()==lookAheadLen && !consumed)
                     consumed();
             }
 
