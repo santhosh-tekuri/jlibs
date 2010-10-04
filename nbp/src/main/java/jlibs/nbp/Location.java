@@ -62,4 +62,9 @@ public class Location{
         line = col = offset = 0;
         skipLF = false;
     }
+
+    @Override
+    public String toString(){
+        return line+":"+col;
+    }
 }

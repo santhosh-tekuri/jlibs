@@ -46,6 +46,11 @@ public class Stream{
         begin = end = lookAhead.end = 0;
     }
 
+    @Override
+    public String toString(){
+        return new String(chars, begin, length());
+    }
+
     public LookAhead lookAhead = new LookAhead();
     public class LookAhead{
         private int end;
@@ -95,6 +100,11 @@ public class Stream{
 
         public int getNext(){
             return Stream.this.charAt(length());
+        }
+
+        @Override
+        public String toString(){
+            return new String(chars, begin, length());
         }
     }
 }
