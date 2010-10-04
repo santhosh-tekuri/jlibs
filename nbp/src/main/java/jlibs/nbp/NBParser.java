@@ -86,7 +86,10 @@ public abstract class NBParser extends Writer{
             throw ex;
         }catch(Exception ex){
             eofOnClose = false;
-            throw new IOException(ex);
+            if(ex.getCause() instanceof IOException)
+                throw (IOException)ex.getCause();
+            else
+                throw new IOException(ex);
         }
     }
 
