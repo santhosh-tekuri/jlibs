@@ -723,10 +723,10 @@
         <node>
             <buffer/>
         </node>
-        <node>
-            <publish name="entityReference" begin="0" end="0"/>
-        </node>
         <node/>
+        <node>
+            <publish name="entityReference" begin="0" end="1"/>
+        </node>
         <edge source="0" target="1" fallback="false">
             <any chars="&amp;"/>
         </edge>
@@ -870,9 +870,6 @@
         <node/>
         <node/>
         <node/>
-        <node>
-            <event name="elementEnd"/>
-        </node>
         <node/>
         <node/>
         <edge source="0" target="1" fallback="false">
@@ -884,11 +881,10 @@
         <edge source="2" target="3" fallback="false">
             <rule name="qname"/>
         </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="4" target="4" fallback="false">
+        <edge source="3" target="3" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="4" target="5" fallback="false">
+        <edge source="3" target="4" fallback="false">
             <any chars="&gt;"/>
         </edge>
     </rule>
@@ -978,7 +974,9 @@
             <event name="attributesEnd"/>
         </node>
         <node/>
-        <node/>
+        <node>
+            <event name="elementEnd"/>
+        </node>
         <edge source="0" target="1" fallback="false">
             <rule name="elem_attrs"/>
         </edge>
@@ -1380,60 +1378,6 @@
             <any chars=";"/>
         </edge>
     </rule>
-    <rule name="entity_value">
-        <node>
-            <event name="valueStart"/>
-        </node>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node>
-            <event name="valueEnd"/>
-        </node>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <matcher name="Q"/>
-        </edge>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ENTITY_Q_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="4" target="5" fallback="false">
-            <matcher name="Q"/>
-        </edge>
-        <edge source="3" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <rule name="pe_reference"/>
-        </edge>
-        <edge source="1" target="4" fallback="false"/>
-        <edge source="0" target="6" fallback="false">
-            <matcher name="DQ"/>
-        </edge>
-        <edge source="6" target="7" fallback="false"/>
-        <edge source="7" target="8" fallback="false">
-            <matcher name="ENTITY_DQ_CONTENT"/>
-        </edge>
-        <edge source="8" target="7" fallback="false"/>
-        <edge source="8" target="9" fallback="false"/>
-        <edge source="9" target="5" fallback="false">
-            <matcher name="DQ"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <rule name="pe_reference"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="6" target="9" fallback="false"/>
-    </rule>
     <rule name="ndata_decl">
         <node/>
         <node/>
@@ -1485,6 +1429,34 @@
             <rule name="entity_value"/>
         </edge>
     </rule>
+    <rule name="entity_value">
+        <node>
+            <event name="valueStart"/>
+        </node>
+        <node/>
+        <node>
+            <event name="valueEnd"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <matcher name="Q"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <rule name="q_entity_value"/>
+        </edge>
+        <edge source="0" target="3" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="3" target="2" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <rule name="dq_entity_value"/>
+        </edge>
+    </rule>
     <rule name="entity_decl">
         <node/>
         <node/>
@@ -1502,8 +1474,17 @@
         <node/>
         <node/>
         <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="entityName" begin="0" end="0"/>
+        </node>
         <node/>
         <node/>
+        <node>
+            <event name="entityEnd"/>
+        </node>
         <edge source="0" target="1" fallback="false">
             <any chars="&lt;"/>
         </edge>
@@ -1561,16 +1542,23 @@
         <edge source="11" target="11" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="9" target="16" fallback="false">
+        <edge source="9" target="16" fallback="false"/>
+        <edge source="16" target="17" fallback="false">
             <rule name="name"/>
         </edge>
-        <edge source="16" target="17" fallback="false">
+        <edge source="17" target="18" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="17" target="14" fallback="false">
+        <edge source="18" target="19" fallback="false">
             <rule name="entity_def"/>
         </edge>
-        <edge source="17" target="17" fallback="false">
+        <edge source="19" target="19" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="19" target="20" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="18" target="18" fallback="false">
             <matcher name="WS"/>
         </edge>
     </rule>
@@ -1587,6 +1575,58 @@
         </edge>
         <edge source="0" target="2" fallback="false">
             <rule name="entity_value"/>
+        </edge>
+    </rule>
+    <rule name="q_entity_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_Q_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+    </rule>
+    <rule name="dq_entity_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_DQ_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
         </edge>
     </rule>
     <rule name="string_type">
