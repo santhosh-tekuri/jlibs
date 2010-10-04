@@ -266,7 +266,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 entityScannerCount++;
                 try{
                     XMLScanner entityValueScanner = new XMLScanner(this);
-                    entityValueScanner.setRule(XMLScanner.RULE_ELEM_CONTENT);
+                    entityValueScanner.setRule(XMLScanner.RULE_ELEM_ENTITY);
                     entityValueScanner.write(entityValue);
                     entityValueScanner.close();
                 }catch(IOException ex){
@@ -502,8 +502,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
-        
-
         
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/114.xml";
         String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";

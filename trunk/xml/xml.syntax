@@ -1457,6 +1457,58 @@
             <rule name="dq_entity_value"/>
         </edge>
     </rule>
+    <rule name="q_entity_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_Q_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+    </rule>
+    <rule name="dq_entity_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_DQ_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+    </rule>
     <rule name="entity_decl">
         <node/>
         <node/>
@@ -1575,58 +1627,6 @@
         </edge>
         <edge source="0" target="2" fallback="false">
             <rule name="entity_value"/>
-        </edge>
-    </rule>
-    <rule name="q_entity_value">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ENTITY_Q_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="2" fallback="false"/>
-        <edge source="0" target="5" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="0" target="6" fallback="false">
-            <rule name="pe_reference"/>
-        </edge>
-    </rule>
-    <rule name="dq_entity_value">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ENTITY_DQ_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="2" fallback="false"/>
-        <edge source="0" target="5" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="0" target="6" fallback="false">
-            <rule name="pe_reference"/>
         </edge>
     </rule>
     <rule name="string_type">
@@ -2627,6 +2627,14 @@
         <edge source="2" target="3" fallback="false"/>
         <edge source="2" target="2" fallback="false">
             <rule name="misc"/>
+        </edge>
+    </rule>
+    <rule name="elem_entity">
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="0" target="0" fallback="false">
+            <rule name="elem_content"/>
         </edge>
     </rule>
 </syntax>
