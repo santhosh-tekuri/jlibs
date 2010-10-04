@@ -57,10 +57,8 @@ public abstract class NBParser extends Writer{
                 if(Character.isLowSurrogate(ch)){
                     int codePoint = Character.toCodePoint(highSurrogate, ch);
                     consume(codePoint);
-                }else{
-                    consume((int)highSurrogate);
-                    consume((int)ch);
-                }
+                }else
+                    throw new IOException("bad surrogate pair");
             }else
                 consume((int)ch);
         }
