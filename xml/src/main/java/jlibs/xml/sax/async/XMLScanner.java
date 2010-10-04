@@ -3424,128 +3424,130 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int default_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch=='#'){
-                    return 1;
-                }
-                expected(ch, "[\\#]");
-            case 1:
-                if(ch=='R'){
-                    return 2;
-                }
-                if(ch=='I'){
-                    return 10;
-                }
-                if(ch=='F'){
-                    return 17;
-                }
                 if(ch=='"'){
-                    push(RULE_VALUE, 24, 0);
+                    push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 1;
                 }
                 if(ch=='\''){
-                    push(RULE_VALUE, 24, 0);
+                    push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 4;
                 }
-                expected(ch, "[R] OR [I] OR [F] OR [\"] OR [']");
+                if(ch=='#'){
+                    return 2;
+                }
+                expected(ch, "[\"] OR ['] OR [\\#]");
+            case 1:
+                return -1;
             case 2:
-                if(ch=='E'){
+                if(ch=='R'){
                     return 3;
                 }
-                expected(ch, "[E]");
-            case 3:
-                if(ch=='Q'){
-                    return 4;
-                }
-                expected(ch, "[Q]");
-            case 4:
-                if(ch=='U'){
-                    return 5;
-                }
-                expected(ch, "[U]");
-            case 5:
                 if(ch=='I'){
-                    return 6;
-                }
-                expected(ch, "[I]");
-            case 6:
-                if(ch=='R'){
-                    return 7;
-                }
-                expected(ch, "[R]");
-            case 7:
-                if(ch=='E'){
-                    return 8;
-                }
-                expected(ch, "[E]");
-            case 8:
-                if(ch=='D'){
-                    return 9;
-                }
-                expected(ch, "[D]");
-            case 9:
-                return -1;
-            case 10:
-                if(ch=='M'){
                     return 11;
                 }
-                expected(ch, "[M]");
-            case 11:
-                if(ch=='P'){
-                    return 12;
-                }
-                expected(ch, "[P]");
-            case 12:
-                if(ch=='L'){
-                    return 13;
-                }
-                expected(ch, "[L]");
-            case 13:
-                if(ch=='I'){
-                    return 14;
-                }
-                expected(ch, "[I]");
-            case 14:
-                if(ch=='E'){
-                    return 15;
-                }
-                expected(ch, "[E]");
-            case 15:
-                if(ch=='D'){
-                    return 16;
-                }
-                expected(ch, "[D]");
-            case 16:
-                return -1;
-            case 17:
-                if(ch=='I'){
+                if(ch=='F'){
                     return 18;
                 }
-                expected(ch, "[I]");
-            case 18:
-                if(ch=='X'){
-                    return 19;
-                }
-                expected(ch, "[X]");
-            case 19:
+                expected(ch, "[R] OR [I] OR [F]");
+            case 3:
                 if(ch=='E'){
-                    return 20;
+                    return 4;
                 }
                 expected(ch, "[E]");
-            case 20:
+            case 4:
+                if(ch=='Q'){
+                    return 5;
+                }
+                expected(ch, "[Q]");
+            case 5:
+                if(ch=='U'){
+                    return 6;
+                }
+                expected(ch, "[U]");
+            case 6:
+                if(ch=='I'){
+                    return 7;
+                }
+                expected(ch, "[I]");
+            case 7:
+                if(ch=='R'){
+                    return 8;
+                }
+                expected(ch, "[R]");
+            case 8:
+                if(ch=='E'){
+                    return 9;
+                }
+                expected(ch, "[E]");
+            case 9:
                 if(ch=='D'){
-                    return 21;
+                    return 10;
                 }
                 expected(ch, "[D]");
+            case 10:
+                return -1;
+            case 11:
+                if(ch=='M'){
+                    return 12;
+                }
+                expected(ch, "[M]");
+            case 12:
+                if(ch=='P'){
+                    return 13;
+                }
+                expected(ch, "[P]");
+            case 13:
+                if(ch=='L'){
+                    return 14;
+                }
+                expected(ch, "[L]");
+            case 14:
+                if(ch=='I'){
+                    return 15;
+                }
+                expected(ch, "[I]");
+            case 15:
+                if(ch=='E'){
+                    return 16;
+                }
+                expected(ch, "[E]");
+            case 16:
+                if(ch=='D'){
+                    return 17;
+                }
+                expected(ch, "[D]");
+            case 17:
+                return -1;
+            case 18:
+                if(ch=='I'){
+                    return 19;
+                }
+                expected(ch, "[I]");
+            case 19:
+                if(ch=='X'){
+                    return 20;
+                }
+                expected(ch, "[X]");
+            case 20:
+                if(ch=='E'){
+                    return 21;
+                }
+                expected(ch, "[E]");
             case 21:
-                if(WS(ch)){
+                if(ch=='D'){
                     return 22;
                 }
-                expected(ch, "<WS>");
+                expected(ch, "[D]");
             case 22:
                 if(WS(ch)){
-                    return 22;
+                    return 23;
+                }
+                expected(ch, "<WS>");
+            case 23:
+                if(WS(ch)){
+                    return 23;
                 }
                 if(ch=='"'){
                     push(RULE_VALUE, 24, 0);
@@ -3647,11 +3649,23 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 4;
                 }
-                if(ch=='#'){
+                if(ch=='"'){
                     push(RULE_DEFAULT_DECL, 5, 0);
+                    push(RULE_VALUE, 1, 0);
+                    handler.valueStart();
                     return 1;
                 }
-                expected(ch, "<WS> OR [\\#]");
+                if(ch=='\''){
+                    push(RULE_DEFAULT_DECL, 5, 0);
+                    push(RULE_VALUE, 1, 0);
+                    handler.valueStart();
+                    return 4;
+                }
+                if(ch=='#'){
+                    push(RULE_DEFAULT_DECL, 5, 0);
+                    return 2;
+                }
+                expected(ch, "<WS> OR [\"] OR ['] OR [\\#]");
             case 5:
                 return -1;
             default:
