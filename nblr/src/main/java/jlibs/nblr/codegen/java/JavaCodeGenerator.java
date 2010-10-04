@@ -108,7 +108,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void printMatcherMethod(Matcher matcher){
         printer.printlns(
-            "private boolean "+matcher.name+"(int ch){",
+            "private static boolean "+matcher.name+"(int ch){",
                 PLUS,
                 "return "+matcher.javaCode("ch")+';',
                 MINUS,
@@ -271,7 +271,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String condition = matcher._javaCode(ch);
         Not.minValue = -1;
         try{
-            if(lookAheadIndex==-1 && matcher.clashesWith(new Any(-1))){
+            if(lookAheadIndex==-1 && (matcher.hasCustomJavaCode() || matcher.clashesWith(new Any(-1)))){
                 if(matcher.name==null)
                     condition = '('+condition+')';
                 condition = "ch!=-1 && "+condition;

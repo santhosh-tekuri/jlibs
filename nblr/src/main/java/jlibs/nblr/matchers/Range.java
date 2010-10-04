@@ -40,7 +40,7 @@ public final class Range extends Matcher{
     }
 
     @Override
-    public String javaCode(String variable){
+    protected String __javaCode(String variable){
         return String.format("%s>=%s && %s<=%s", variable, toJava(from), variable, toJava(to));
     }
 

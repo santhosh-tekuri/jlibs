@@ -227,7 +227,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void rawValue(Chars data){
-        value.append(data);
+        char[] chars = data.array();
+        int end = data.offset() + data.length();
+        for(int i=data.offset(); i<end; i++){
+            char ch = chars[i];
+            if(ch=='\n' || ch=='\r' || ch=='\t')
+                ch = ' ';
+            value.append(ch);
+        }
     }
 
     private boolean isValid(int ch){
@@ -278,8 +285,18 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(valueStarted){
                 if(AsyncXMLReader.this.entityValue)
                     rule = singleQuote ? XMLScanner.RULE_Q_ENTITY_VALUE_ENTITY : XMLScanner.RULE_DQ_ENTITY_VALUE_ENTITY;
-                else
+                else{
+                    char chars[] = new char[entityValue.length];
+                    for(int i=chars.length-1; i>=0; i--){
+                        char ch = entityValue[i];
+                        if(ch=='\n' || ch=='\r' || ch=='\t')
+                            ch = ' ';
+                        chars[i] = ch;
+                    }
+                    entityValue = chars;
+
                     rule = singleQuote ? XMLScanner.RULE_Q_VALUE_ENTITY : XMLScanner.RULE_DQ_VALUE_ENTITY;
+                }
             }else
                  rule = XMLScanner.RULE_ELEM_ENTITY;
 

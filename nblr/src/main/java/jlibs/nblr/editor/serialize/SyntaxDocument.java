@@ -49,6 +49,7 @@ public class SyntaxDocument extends XMLDocument{
     public void add(Matcher matcher) throws SAXException{
         startElement(matcher.getClass().getSimpleName().toLowerCase());
         addAttribute("name", matcher.name);
+        addAttribute("javaCode", matcher.javaCode);
 
         if(matcher instanceof Any){
             Any any = (Any)matcher;
