@@ -67,9 +67,10 @@ class MatcherBinding{
 @Binding("any")
 class AnyBinding{
     @Binding.Start
-    public static Matcher onStart(@Attr String name, @Attr String chars){
+    public static Matcher onStart(@Attr String name, @Attr String javaCode, @Attr String chars){
         Any any = new Any(chars);
         any.name = name;
+        any.javaCode = javaCode;
         return any;
     }
 }
@@ -77,9 +78,10 @@ class AnyBinding{
 @Binding("range")
 class RangeBinding{
     @Binding.Start
-    public static Matcher onStart(@Attr String name, @Attr String from, @Attr String to){
+    public static Matcher onStart(@Attr String name, @Attr String javaCode, @Attr String from, @Attr String to){
         Range range = new Range(from.codePointAt(0), to.codePointAt(0));
         range.name = name;
+        range.javaCode = javaCode;
         return range;
     }
 }
@@ -97,9 +99,10 @@ class NotBinding extends Matchers{
     }
 
     @Binding.Finish
-    public static Not onFinish(@Temp String name, @Temp Matcher matcher){
+    public static Not onFinish(@Temp String name, @Temp String javaCode, @Temp Matcher matcher){
         Not not = new Not(matcher);
         not.name = name;
+        not.javaCode = javaCode;
         return not;
     }
 }
@@ -117,9 +120,10 @@ class AndBinding extends Matchers{
     }
 
     @Binding.Finish
-    public static And onFinish(@Temp String name, @Temp List<Matcher> matchers){
+    public static And onFinish(@Temp String name, @Temp String javaCode, @Temp List<Matcher> matchers){
         And and = new And(matchers.toArray(new Matcher[matchers.size()]));
         and.name = name;
+        and.javaCode = javaCode;
         return and;
     }
 }
@@ -137,9 +141,10 @@ class OrBinding extends Matchers{
     }
 
     @Binding.Finish
-    public static Or onFinish(@Temp String name, @Temp List<Matcher> matchers){
+    public static Or onFinish(@Temp String name, @Temp String javaCode, @Temp List<Matcher> matchers){
         Or or = new Or(matchers.toArray(new Matcher[matchers.size()]));
         or.name = name;
+        or.javaCode = javaCode;
         return or;
     }
 }

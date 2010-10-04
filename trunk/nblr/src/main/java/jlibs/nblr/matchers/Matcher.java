@@ -24,6 +24,7 @@ import java.util.List;
  */
 public abstract class Matcher{
     public String name;
+    public String javaCode;
 
     public abstract String toString();
     protected final String _toString(){
@@ -62,7 +63,17 @@ public abstract class Matcher{
         return buff.toString();
     }
 
-    public abstract String javaCode(String variable);
+    public boolean hasCustomJavaCode(){
+        return javaCode!=null;
+    }
+    
+    protected abstract String __javaCode(String variable);
+    public final String javaCode(String variable){
+        if(javaCode==null)
+            return __javaCode(variable);
+        else
+            return javaCode.replace("$codePoint", variable);
+    }
     public final String _javaCode(String variable){
         if(name==null)
             return javaCode(variable);

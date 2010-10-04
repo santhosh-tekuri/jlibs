@@ -31,7 +31,12 @@ public final class Not extends Matcher{
     }
 
     @Override
-    public String javaCode(String variable){
+    public boolean hasCustomJavaCode(){
+        return super.hasCustomJavaCode() || delegate.hasCustomJavaCode();
+    }
+
+    @Override
+    protected String __javaCode(String variable){
         return "!("+delegate._javaCode(variable)+")";
     }
 

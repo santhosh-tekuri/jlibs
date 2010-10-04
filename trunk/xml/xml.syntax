@@ -21,7 +21,7 @@
         <matcher name="DIGIT"/>
         <any chars="._-"/>
     </or>
-    <or name="CHAR">
+    <or name="CHAR" javaCode="org.apache.xerces.util.XMLChar.isValid($codePoint)">
         <any chars="&#9;&#10;&#13;"/>
         <range from=" " to="퟿"/>
         <range from="" to="�"/>
@@ -64,7 +64,7 @@
             <any chars="%&amp;&quot;"/>
         </not>
     </and>
-    <or name="NAME_START">
+    <or name="NAME_START" javaCode="org.apache.xerces.util.XMLChar.isNameStart($codePoint)">
         <any chars=":"/>
         <range from="A" to="Z"/>
         <any chars="_"/>
@@ -82,7 +82,7 @@
         <range from="ﷰ" to="�"/>
         <range from="&#65536;" to="&#983039;"/>
     </or>
-    <or name="NAME_PART">
+    <or name="NAME_PART" javaCode="org.apache.xerces.util.XMLChar.isName($codePoint)">
         <matcher name="NAME_START"/>
         <any chars="-"/>
         <any chars="."/>
@@ -91,19 +91,19 @@
         <range from="̀" to="ͯ"/>
         <range from="‿" to="⁀"/>
     </or>
-    <and name="NCNAME_START">
+    <and name="NCNAME_START" javaCode="org.apache.xerces.util.XMLChar.isNCNameStart($codePoint)">
         <matcher name="NAME_START"/>
         <not>
             <any chars=":"/>
         </not>
     </and>
-    <and name="NCNAME_PART">
+    <and name="NCNAME_PART" javaCode="org.apache.xerces.util.XMLChar.isNCName($codePoint)">
         <matcher name="NAME_PART"/>
         <not>
             <any chars=":"/>
         </not>
     </and>
-    <or name="PUBID_CHAR">
+    <or name="PUBID_CHAR" javaCode="org.apache.xerces.util.XMLChar.isPubid($codePoint)">
         <any chars=" &#13;&#10;"/>
         <range from="A" to="Z"/>
         <range from="a" to="z"/>
@@ -1469,32 +1469,6 @@
             <rule name="q_entity_value"/>
         </edge>
     </rule>
-    <rule name="q_entity_value">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ENTITY_Q_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="2" fallback="false"/>
-        <edge source="0" target="5" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="0" target="6" fallback="false">
-            <rule name="pe_reference"/>
-        </edge>
-    </rule>
     <rule name="dq_entity_value">
         <node/>
         <node>
@@ -1511,6 +1485,32 @@
         <edge source="1" target="2" fallback="false"/>
         <edge source="2" target="3" fallback="false">
             <matcher name="ENTITY_DQ_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+    </rule>
+    <rule name="q_entity_value">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_Q_CONTENT"/>
         </edge>
         <edge source="3" target="4" fallback="false"/>
         <edge source="3" target="2" fallback="false"/>

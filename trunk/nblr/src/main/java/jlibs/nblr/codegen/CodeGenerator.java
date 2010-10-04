@@ -154,7 +154,7 @@ public abstract class CodeGenerator{
         public String toString(){ throw new UnsupportedOperationException(); }
 
         @Override
-        public String javaCode(String variable){ throw new UnsupportedOperationException(); }
+        protected String __javaCode(String variable){ throw new UnsupportedOperationException(); }
 
         @Override
         public List<Range> ranges(){

@@ -30,7 +30,18 @@ public class And extends Matcher{
     }
 
     @Override
-    public String javaCode(String variable){
+    public boolean hasCustomJavaCode(){
+        if(super.hasCustomJavaCode())
+            return true;
+        for(Matcher operand: operands){
+            if(operand.hasCustomJavaCode())
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    protected String __javaCode(String variable){
         StringBuilder buff = new StringBuilder();
         for(Matcher operand: operands){
             if(buff.length()>0)
