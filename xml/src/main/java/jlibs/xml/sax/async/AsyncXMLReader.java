@@ -75,7 +75,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         documentStart();
         return scanner;
     }
-    
+
     @Override
     public void parse(InputSource input) throws IOException, SAXException{
         Reader charStream = input.getCharacterStream();
@@ -99,7 +99,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private void parse(InputStream in) throws IOException, SAXException{
         IOUtil.pump(new InputStreamReader(in, IOUtil.UTF_8), getWriter(), true, true);
     }
-    
+
     /*-------------------------------------------------[ Locator ]---------------------------------------------------*/
 
     @Override
@@ -138,6 +138,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         encoding = "UTF-8";
         clearQName();
         value.setLength(0);
+        singleQuote = true;
         valueStarted = false;
 
         namespaces = new NamespaceMap();
@@ -206,11 +207,23 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ Value ]---------------------------------------------------*/
 
     private StringBuilder value = new StringBuilder();
+    private boolean singleQuote = true;
+    private boolean valueStarted = true;
+    private boolean entityValue = false;
 
-    boolean valueStarted = true;
     void valueStart(){
         value.setLength(0);
+        singleQuote = true;
         valueStarted = true;
+        entityValue = false;
+    }
+
+    void entityValue(){
+        entityValue = true;
+    }
+
+    void doubleQuoteValue(){
+        singleQuote = false;
     }
 
     void rawValue(Chars data){
@@ -220,7 +233,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private boolean isValid(int ch){
         return (ch==0x9 || ch==0xa || ch==0xd) || (ch>=0x20 && ch<=0xd7ff) || (ch>=0xe000 && ch<=0xfffd) || (ch>=0x10000 && ch<=0x10ffff);
     }
-    
+
     void hexCode(Chars data) throws SAXException{
         int codePoint = Integer.parseInt(data.toString(), 16);
         if(!isValid(codePoint))
@@ -260,24 +273,26 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             entityValue = entities.get(entity);
             if(entityValue==null)
                 fatalError("Undefined entityReference: "+entity);
-            if(valueStarted)
-                value.append(entityValue);
-            else{
-                entityScannerCount++;
-                try{
-                    XMLScanner entityValueScanner = new XMLScanner(this);
-                    entityValueScanner.setRule(XMLScanner.RULE_ELEM_ENTITY);
-                    entityValueScanner.write(entityValue);
-                    entityValueScanner.close();
-                }catch(IOException ex){
-                    throw new RuntimeException(ex);
-//                    if(ex.getCause() instanceof SAXParseException)
-//                        fatalError((SAXParseException)ex.getCause());
-//                    else
-//                        fatalError(new SAXParseException(ex.getMessage(), this, ex));
-                }finally{
-                    entityScannerCount--;
-                }
+
+            int rule;
+            if(valueStarted){
+                if(AsyncXMLReader.this.entityValue)
+                    rule = singleQuote ? XMLScanner.RULE_Q_ENTITY_VALUE_ENTITY : XMLScanner.RULE_DQ_ENTITY_VALUE_ENTITY;
+                else
+                    rule = singleQuote ? XMLScanner.RULE_Q_VALUE_ENTITY : XMLScanner.RULE_DQ_VALUE_ENTITY;
+            }else
+                 rule = XMLScanner.RULE_ELEM_ENTITY;
+
+            entityScannerCount++;
+            try{
+                XMLScanner entityValueScanner = new XMLScanner(this);
+                entityValueScanner.setRule(rule);
+                entityValueScanner.write(entityValue);
+                entityValueScanner.close();
+            }catch(IOException ex){
+                throw new RuntimeException(ex);
+            }finally{
+                entityScannerCount--;
             }
         }
     }
@@ -300,7 +315,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         elementsLocalNames.push(localName);
         elementsQNames.push(qname);
         clearQName();
-        
+
         namespaces = new NamespaceMap(namespaces);
         attributes.clear();
     }
@@ -362,7 +377,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void emptyElementEnd() throws SAXException{
         elementEnd(elementsQNames.pop());
     }
-    
+
     void elementEnd() throws SAXException{
         String startQName = elementsQNames.pop();
         if(!startQName.equals(qname))
@@ -415,7 +430,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void comment(Chars data) throws SAXException{
         handler.comment(data.array(), data.offset(), data.length());
     }
-    
+
     @Override
     public void fatalError(String message) throws SAXException{
         fatalError(new SAXParseException(message, this));
@@ -502,7 +517,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
-        
+
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/114.xml";
         String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         parser.parse(new InputSource(file));
