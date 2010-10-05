@@ -1871,6 +1871,8 @@
         <node/>
         <node/>
         <node/>
+        <node/>
+        <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="("/>
         </edge>
@@ -1918,9 +1920,15 @@
         <edge source="14" target="15" fallback="false">
             <any chars=")"/>
         </edge>
+        <edge source="15" target="16" fallback="false">
+            <any chars="*"/>
+        </edge>
         <edge source="9" target="14" fallback="false"/>
         <edge source="9" target="9" fallback="false">
             <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="17" fallback="false">
+            <any chars=")"/>
         </edge>
     </rule>
     <rule name="notation_type">

@@ -3220,16 +3220,33 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[A]");
             case 9:
-                if(ch=='|'){
-                    return 11;
-                }
-                if(ch==')'){
-                    return 15;
-                }
-                if(WS(ch)){
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
                     return 9;
+                if(lookAhead.length()==1){
+                    if(ch=='|'){
+                        consumed();
+                        return 11;
+                    }
+                    if(WS(ch)){
+                        consumed();
+                        return 9;
+                    }
                 }
-                expected(ch, "[|] OR [)] OR <WS>");
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 9;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)==')'){
+                        if(ch=='*'){
+                            consumed();
+                            consumed();
+                            return 16;
+                        }
+                        consumed();
+                        return -1;
+                    }
+                }
+                expected(ch, "[|] OR <WS> OR [)][*] OR [)]<EOF>");
             case 11:
                 if(WS(ch)){
                     return 11;
@@ -3251,6 +3268,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [|] OR [)]");
             case 15:
+                if(ch=='*'){
+                    return 16;
+                }
+                expected(ch, "[*]");
+            case 16:
+                return -1;
+            case 17:
                 return -1;
             default:
                 throw new Error("impossible");
