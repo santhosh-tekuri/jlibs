@@ -31,8 +31,10 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.XMLConstants;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
@@ -143,6 +145,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         value.setLength(0);
         singleQuote = true;
         valueStarted = false;
+        entityValue = false;
 
         namespaces = new NamespaceMap();
         attributes.clear();
@@ -159,7 +162,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
         entityName = null;
         entities.clear();
-        entityScannerCount = 0;
+        entityStack.clear();
 
         handler.setDocumentLocator(this);
         handler.startDocument();
@@ -269,9 +272,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
     }
 
-    private int entityScannerCount = 0;
+    private ArrayDeque<String> entityStack = new ArrayDeque<String>();
     @SuppressWarnings({"ConstantConditions"})
     void entityReference(Chars data) throws SAXException{
+        if(entityValue){
+            value.append('&').append(data).append(';');
+            return;
+        }
+        
         String entity = data.toString();
 
         char[] entityValue = defaultEntities.get(entity);
@@ -304,7 +312,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }else
                  rule = XMLScanner.RULE_ELEM_ENTITY;
 
-            entityScannerCount++;
+            if(entityStack.contains(entity))
+                fatalError("found recursion in entity expansion :"+entity);
+            entityStack.push(entity);
             try{
                 XMLScanner entityValueScanner = new XMLScanner(this);
                 entityValueScanner.setRule(rule);
@@ -313,13 +323,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }catch(IOException ex){
                 throw new RuntimeException(ex);
             }finally{
-                entityScannerCount--;
+                entityStack.pop();
             }
         }
     }
 
     void valueEnd(){
         valueStarted = false;
+        entityValue = false;
     }
 
     /*-------------------------------------------------[ Start Element ]---------------------------------------------------*/
@@ -468,7 +479,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public void onSuccessful() throws SAXException{
-        if(entityScannerCount ==0)
+        if(entityStack.isEmpty())
             handler.endDocument();
     }
 
@@ -549,8 +560,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        String xml = "<root attr1='value1'/>";
 //        parser.parse(new InputSource(new StringReader(xml)));
 
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml";
+//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/el06.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
+        SAXParserFactory.newInstance().newSAXParser().parse(file, new DefaultHandler(){
+            @Override
+            public void characters(char[] ch, int start, int length) throws SAXException{
+                super.characters(ch, start, length);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+        });
+
         parser.parse(new InputSource(file));
 
 //        parser.scanner.write("<root attr1='value1'/>");
