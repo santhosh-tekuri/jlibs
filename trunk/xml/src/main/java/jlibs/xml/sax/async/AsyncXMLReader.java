@@ -143,7 +143,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         encoding = "UTF-8";
         clearQName();
         value.setLength(0);
-        singleQuote = true;
         valueStarted = false;
         entityValue = false;
 
@@ -219,23 +218,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ Value ]---------------------------------------------------*/
 
     private StringBuilder value = new StringBuilder();
-    private boolean singleQuote = true;
     private boolean valueStarted = true;
     private boolean entityValue = false;
 
     void valueStart(){
         value.setLength(0);
-        singleQuote = true;
         valueStarted = true;
         entityValue = false;
     }
 
     void entityValue(){
         entityValue = true;
-    }
-
-    void doubleQuoteValue(){
-        singleQuote = false;
     }
 
     void rawValue(Chars data){
@@ -300,20 +293,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
             int rule;
             if(valueStarted){
-                if(AsyncXMLReader.this.entityValue)
-                    rule = singleQuote ? XMLScanner.RULE_Q_ENTITY_VALUE_ENTITY : XMLScanner.RULE_DQ_ENTITY_VALUE_ENTITY;
-                else{
-                    char chars[] = new char[entityValue.length];
-                    for(int i=chars.length-1; i>=0; i--){
-                        char ch = entityValue[i];
-                        if(ch=='\n' || ch=='\r' || ch=='\t')
-                            ch = ' ';
-                        chars[i] = ch;
-                    }
-                    entityValue = chars;
-
-                    rule = singleQuote ? XMLScanner.RULE_Q_VALUE_ENTITY : XMLScanner.RULE_DQ_VALUE_ENTITY;
+                char chars[] = new char[entityValue.length];
+                for(int i=chars.length-1; i>=0; i--){
+                    char ch = entityValue[i];
+                    if(ch=='\n' || ch=='\r' || ch=='\t')
+                        ch = ' ';
+                    chars[i] = ch;
                 }
+                entityValue = chars;
+
+                rule = XMLScanner.RULE_VALUE_ENTITY;
             }else
                  rule = XMLScanner.RULE_ELEM_ENTITY;
 
@@ -359,10 +348,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     void attributeEnd() throws SAXException{
         String type = "CDATA";
-        DTDAttribute dtdAttr = null;
         Map<String, DTDAttribute> attrList = dtdAttributes.get(elementsQNames.peek());
         if(attrList!=null){
-            dtdAttr = attrList.get(qname);
+            DTDAttribute dtdAttr = attrList.get(qname);
             if(dtdAttr!=null){
                 if(dtdAttr.type==AttributeType.ENUMERATION)
                     type = "NMTOKEN";
@@ -374,6 +362,38 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         String value = this.value.toString();
         if(type.equals("NMTOKEN"))
             value = value.trim();
+        else if(type.equals("NMTOKENS")){
+            char[] buffer = value.toCharArray();
+            int write = 0;
+            int lastWrite = 0;
+            boolean wroteOne = false;
+
+            int read = 0;
+            while(read<buffer.length && buffer[read]==' '){
+                read++;
+            }
+
+            int len = buffer.length;
+            while(len<read && buffer[len-1]==' ')
+                len--;
+
+            while(read<len){
+                if (buffer[read]==' '){
+                    if (wroteOne)
+                        buffer[write++] = ' ';
+
+                    do{
+                        read++;
+                    }while(read<len && buffer[read]==' ');
+                }else{
+                    buffer[write++] = buffer[read++];
+                    wroteOne = true;
+                    lastWrite = write;
+                }
+            }
+
+            value = new String(buffer, 0, lastWrite);
+        }
 
         if(qname.equals("xmlns")){
             namespaces.put("", value);
