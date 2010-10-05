@@ -2913,6 +2913,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[A]");
             case 5:
+                handler.cdataAttribute();
                 return -1;
             default:
                 throw new Error("impossible");
@@ -2924,114 +2925,127 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         switch(stateStack.peek()){
             case 0:
                 if(ch=='E'){
-                    return 1;
-                }
-                if(ch=='N'){
-                    return 9;
-                }
-                if(ch=='I'){
-                    return 16;
-                }
-                expected(ch, "[E] OR [N] OR [I]");
-            case 1:
-                if(ch=='N'){
-                    return 2;
-                }
-                expected(ch, "[N]");
-            case 2:
-                if(ch=='T'){
-                    return 3;
-                }
-                expected(ch, "[T]");
-            case 3:
-                if(ch=='I'){
-                    return 4;
-                }
-                expected(ch, "[I]");
-            case 4:
-                if(ch=='T'){
                     return 5;
                 }
-                expected(ch, "[T]");
-            case 5:
-                if(ch=='I'){
-                    return 6;
-                }
-                if(ch=='Y'){
-                    return 8;
-                }
-                expected(ch, "[I] OR [Y]");
-            case 6:
-                if(ch=='E'){
-                    return 7;
-                }
-                expected(ch, "[E]");
-            case 7:
-                if(ch=='S'){
-                    return 8;
-                }
-                expected(ch, "[S]");
-            case 8:
-                return -1;
-            case 9:
-                if(ch=='M'){
-                    return 10;
-                }
-                expected(ch, "[M]");
-            case 10:
-                if(ch=='T'){
-                    return 11;
-                }
-                expected(ch, "[T]");
-            case 11:
-                if(ch=='O'){
-                    return 12;
-                }
-                expected(ch, "[O]");
-            case 12:
-                if(ch=='K'){
-                    return 13;
-                }
-                expected(ch, "[K]");
-            case 13:
-                if(ch=='E'){
+                if(ch=='N'){
                     return 14;
                 }
-                expected(ch, "[E]");
-            case 14:
+                if(ch=='I'){
+                    return 23;
+                }
+                expected(ch, "[E] OR [N] OR [I]");
+            case 5:
                 if(ch=='N'){
-                    return 15;
+                    return 6;
                 }
                 expected(ch, "[N]");
-            case 15:
-                if(ch=='S'){
+            case 6:
+                if(ch=='T'){
+                    return 7;
+                }
+                expected(ch, "[T]");
+            case 7:
+                if(ch=='I'){
                     return 8;
                 }
+                expected(ch, "[I]");
+            case 8:
+                if(ch=='T'){
+                    return 9;
+                }
+                expected(ch, "[T]");
+            case 9:
+                if(ch=='Y'){
+                    return 10;
+                }
+                if(ch=='I'){
+                    return 11;
+                }
+                expected(ch, "[Y] OR [I]");
+            case 10:
+                handler.entityAttribute();
                 return -1;
+            case 11:
+                if(ch=='E'){
+                    return 12;
+                }
+                expected(ch, "[E]");
+            case 12:
+                if(ch=='S'){
+                    return 13;
+                }
+                expected(ch, "[S]");
+            case 13:
+                handler.entitiesAttribute();
+                return -1;
+            case 14:
+                if(ch=='M'){
+                    return 15;
+                }
+                expected(ch, "[M]");
+            case 15:
+                if(ch=='T'){
+                    return 16;
+                }
+                expected(ch, "[T]");
             case 16:
-                if(ch=='D'){
+                if(ch=='O'){
                     return 17;
                 }
-                expected(ch, "[D]");
+                expected(ch, "[O]");
             case 17:
-                if(ch=='R'){
+                if(ch=='K'){
                     return 18;
                 }
-                return -1;
+                expected(ch, "[K]");
             case 18:
                 if(ch=='E'){
                     return 19;
                 }
                 expected(ch, "[E]");
             case 19:
-                if(ch=='F'){
+                if(ch=='N'){
                     return 20;
                 }
-                expected(ch, "[F]");
+                expected(ch, "[N]");
             case 20:
                 if(ch=='S'){
-                    return 8;
+                    return 22;
                 }
+                handler.nmtokenAttribute();
+                return -1;
+            case 22:
+                handler.nmtokensAttribute();
+                return -1;
+            case 23:
+                if(ch=='D'){
+                    return 24;
+                }
+                expected(ch, "[D]");
+            case 24:
+                if(ch=='R'){
+                    return 25;
+                }
+                handler.idAttribute();
+                return -1;
+            case 25:
+                if(ch=='E'){
+                    return 26;
+                }
+                expected(ch, "[E]");
+            case 26:
+                if(ch=='F'){
+                    return 27;
+                }
+                expected(ch, "[F]");
+            case 27:
+                if(ch=='S'){
+                    return 28;
+                }
+                handler.idRefAttribute();
+                return -1;
+            case 28:
+                handler.idRefsAttribute();
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3121,6 +3135,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         switch(stateStack.peek()){
             case 0:
                 if(ch=='('){
+                    handler.enumerationAttribute();
                     return 1;
                 }
                 expected(ch, "[(]");
@@ -3129,39 +3144,65 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 }
                 if(ch!=-1 && NAME_PART(ch)){
-                    push(RULE_NMTOKEN, 2, 0);
+                    buffer.push();
+                    push(RULE_NMTOKEN, 3, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_PART>");
-            case 2:
+            case 3:
                 if(WS(ch)){
-                    return 2;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 4;
                 }
                 if(ch=='|'){
-                    return 4;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 6;
                 }
                 expected(ch, "<WS> OR [|]");
             case 4:
                 if(WS(ch)){
                     return 4;
                 }
+                if(ch=='|'){
+                    return 6;
+                }
+                expected(ch, "<WS> OR [|]");
+            case 6:
+                if(WS(ch)){
+                    return 6;
+                }
                 if(ch!=-1 && NAME_PART(ch)){
-                    push(RULE_NMTOKEN, 5, 0);
+                    buffer.push();
+                    push(RULE_NMTOKEN, 8, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_PART>");
-            case 5:
+            case 8:
                 if(WS(ch)){
-                    return 5;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 9;
                 }
                 if(ch==')'){
-                    return 7;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 11;
                 }
                 if(ch=='|'){
-                    return 4;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 6;
                 }
                 expected(ch, "<WS> OR [)] OR [|]");
-            case 7:
+            case 9:
+                if(WS(ch)){
+                    return 9;
+                }
+                if(ch==')'){
+                    return 11;
+                }
+                if(ch=='|'){
+                    return 6;
+                }
+                expected(ch, "<WS> OR [)] OR [|]");
+            case 11:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3286,6 +3327,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         switch(stateStack.peek()){
             case 0:
                 if(ch=='N'){
+                    handler.notationAttribute();
                     return 1;
                 }
                 expected(ch, "[N]");
@@ -3337,39 +3379,65 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 9;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME, 10, 0);
+                    buffer.push();
+                    push(RULE_NAME, 11, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_START>");
-            case 10:
+            case 11:
                 if(WS(ch)){
-                    return 10;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 12;
                 }
                 if(ch=='|'){
-                    return 12;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 14;
                 }
                 expected(ch, "<WS> OR [|]");
             case 12:
-                if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME, 13, 0);
-                    return 1;
-                }
                 if(WS(ch)){
                     return 12;
-                }
-                expected(ch, "<NAME_START> OR <WS>");
-            case 13:
-                if(WS(ch)){
-                    return 13;
-                }
-                if(ch==')'){
-                    return 15;
                 }
                 if(ch=='|'){
-                    return 12;
+                    return 14;
+                }
+                expected(ch, "<WS> OR [|]");
+            case 14:
+                if(WS(ch)){
+                    return 14;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    buffer.push();
+                    push(RULE_NAME, 16, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START>");
+            case 16:
+                if(WS(ch)){
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 17;
+                }
+                if(ch==')'){
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 19;
+                }
+                if(ch=='|'){
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 14;
                 }
                 expected(ch, "<WS> OR [)] OR [|]");
-            case 15:
+            case 17:
+                if(WS(ch)){
+                    return 17;
+                }
+                if(ch==')'){
+                    return 19;
+                }
+                if(ch=='|'){
+                    return 14;
+                }
+                expected(ch, "<WS> OR [)] OR [|]");
+            case 19:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3382,10 +3450,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 0:
                 if(ch=='N'){
                     push(RULE_NOTATION_TYPE, 1, 0);
+                    handler.notationAttribute();
                     return 1;
                 }
                 if(ch=='('){
                     push(RULE_ENUMERATION, 1, 0);
+                    handler.enumerationAttribute();
                     return 1;
                 }
                 expected(ch, "[N] OR [(]");
@@ -3407,18 +3477,19 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='('){
                         push(RULE_ENUMERATED_TYPE, 1, 0);
                         push(RULE_ENUMERATION, 1, 0);
+                        handler.enumerationAttribute();
                         consumed();
                         return 1;
                     }
                     if(ch=='E'){
                         push(RULE_TOKENIZED_TYPE, 1, 0);
                         consumed();
-                        return 1;
+                        return 5;
                     }
                     if(ch=='I'){
                         push(RULE_TOKENIZED_TYPE, 1, 0);
                         consumed();
-                        return 16;
+                        return 23;
                     }
                     if(ch=='C'){
                         push(RULE_STRING_TYPE, 1, 0);
@@ -3433,6 +3504,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(ch=='O'){
                             push(RULE_ENUMERATED_TYPE, 1, 0);
                             push(RULE_NOTATION_TYPE, 1, 0);
+                            handler.notationAttribute();
                             consumed();
                             consumed();
                             return 2;
@@ -3441,7 +3513,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_TOKENIZED_TYPE, 1, 0);
                             consumed();
                             consumed();
-                            return 10;
+                            return 15;
                         }
                     }
                 }
@@ -3472,6 +3544,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[\"] OR ['] OR [\\#]");
             case 1:
+                handler.attributeDefaultValue();
                 return -1;
             case 2:
                 if(ch=='R'){
@@ -3520,6 +3593,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[D]");
             case 10:
+                handler.attributeRequired();
                 return -1;
             case 11:
                 if(ch=='M'){
@@ -3552,6 +3626,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[D]");
             case 17:
+                handler.attributeImplied();
                 return -1;
             case 18:
                 if(ch=='I'){
@@ -3594,6 +3669,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [\"] OR [']");
             case 24:
+                handler.attributeFixedValue();
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3629,6 +3705,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_ATT_TYPE, 3, 0);
                         push(RULE_ENUMERATED_TYPE, 1, 0);
                         push(RULE_ENUMERATION, 1, 0);
+                        handler.enumerationAttribute();
                         consumed();
                         return 1;
                     }
@@ -3636,13 +3713,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_ATT_TYPE, 3, 0);
                         push(RULE_TOKENIZED_TYPE, 1, 0);
                         consumed();
-                        return 1;
+                        return 5;
                     }
                     if(ch=='I'){
                         push(RULE_ATT_TYPE, 3, 0);
                         push(RULE_TOKENIZED_TYPE, 1, 0);
                         consumed();
-                        return 16;
+                        return 23;
                     }
                     if(ch=='C'){
                         push(RULE_ATT_TYPE, 3, 0);
@@ -3659,6 +3736,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_ATT_TYPE, 3, 0);
                             push(RULE_ENUMERATED_TYPE, 1, 0);
                             push(RULE_NOTATION_TYPE, 1, 0);
+                            handler.notationAttribute();
                             consumed();
                             consumed();
                             return 2;
@@ -3668,7 +3746,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_TOKENIZED_TYPE, 1, 0);
                             consumed();
                             consumed();
-                            return 10;
+                            return 15;
                         }
                     }
                 }

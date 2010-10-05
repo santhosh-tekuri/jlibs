@@ -164,6 +164,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         entities.clear();
         entityStack.clear();
 
+        dtdAttributes.clear();
+        dtdElementName = null;
+        attributeList = null;
+        dtdAttribute = null;
+
         handler.setDocumentLocator(this);
         handler.startDocument();
     }
@@ -411,6 +416,18 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }
         }
 
+        String elemQName = elementsQNames.peek();
+        Map<String, DTDAttribute> attList = dtdAttributes.get(elemQName);
+        if(attList!=null){
+            for(DTDAttribute dtdAttr: attList.values()){
+                if(dtdAttr.valueType== AttributeValueType.DEFAULT){
+                    int index = attributes.getIndex(dtdAttr.name);
+                    if(index==-1)
+                        attributes.addAttribute("", dtdAttr.name, dtdAttr.name, dtdAttr.type.name(), dtdAttr.value);
+                }
+            }
+        }
+
         String prefix = elementsPrefixes.peek();
         String namespaceURI = namespaces.getNamespaceURI(prefix);
         if(namespaceURI==null)
@@ -530,18 +547,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         System.out.println("dtdElement: "+data);
     }
 
-    void dtdAttributesStart(Chars data){
-        System.out.println("dtdAttributesOf: "+data);
-    }
-
-    void dtdAttribute(Chars data){
-        System.out.println("dtdAttribute: "+data);
-    }
-
-    void dtdAttributesEnd(){
-        System.out.println("dtdAttributesEnd");
-    }
-
     private String entityName;
     void entityName(Chars data){
         entityName = data.toString();
@@ -558,6 +563,134 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     public void dtdEnd() throws SAXException{
         handler.endDTD();
         dtdRoot = null;
+    }
+
+    /*-------------------------------------------------[ DTD Attributes ]---------------------------------------------------*/
+
+    private Map<String, Map<String, DTDAttribute>> dtdAttributes = new HashMap<String, Map<String, DTDAttribute>>();
+    private String dtdElementName;
+    private Map<String, DTDAttribute> attributeList;
+    private DTDAttribute dtdAttribute;
+
+    void dtdAttributesStart(Chars data){
+        dtdElementName = data.toString();
+        attributeList = dtdAttributes.get(dtdElementName);
+        if(attributeList==null)
+            dtdAttributes.put(dtdElementName, attributeList=new HashMap<String, DTDAttribute>());
+    }
+
+    void dtdAttribute(Chars data){
+        String attributeName = data.toString();
+        if(attributeList.get(attributeName)==null){
+            dtdAttribute = new DTDAttribute();
+            dtdAttribute.name = attributeName;
+            attributeList.put(attributeName, dtdAttribute);
+        }else
+            dtdAttribute = null;
+    }
+
+    void cdataAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.CDATA;
+    }
+
+    void idAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.ID;
+    }
+
+    void idRefAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.IDREF;
+    }
+
+    void idRefsAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.IDREFS;
+    }
+
+    void nmtokenAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.NMTOKEN;
+    }
+
+    void nmtokensAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.NMTOKENS;
+    }
+
+    void entityAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.ENTITY;
+    }
+
+    void entitiesAttribute(){
+        if(dtdAttribute!=null)
+            dtdAttribute.type = AttributeType.ENTITIES;
+    }
+
+    void enumerationAttribute(){
+        if(dtdAttribute!=null){
+            dtdAttribute.type = AttributeType.ENUMERATION;
+            dtdAttribute.validValues = new ArrayList<String>();
+        }
+    }
+
+    void notationAttribute(){
+        if(dtdAttribute!=null){
+            dtdAttribute.type = AttributeType.NOTATION;
+            dtdAttribute.validValues = new ArrayList<String>();
+        }
+    }
+
+    void attributeEnumValue(Chars data){
+        if(dtdAttribute!=null)
+            dtdAttribute.validValues.add(data.toString());
+    }
+
+    void attributeNotationValue(Chars data){
+        if(dtdAttribute!=null)
+            dtdAttribute.validValues.add(data.toString());
+    }
+
+    void attributeDefaultValue() throws SAXException{
+        if(dtdAttribute!=null){
+            dtdAttribute.valueType = AttributeValueType.DEFAULT;
+            dtdAttribute.value = value.toString();
+            fireDTDAttributeEvent();
+        }
+        value.setLength(0);
+    }
+
+    void attributeRequired() throws SAXException{
+        if(dtdAttribute!=null){
+            dtdAttribute.valueType = AttributeValueType.REQUIRED;
+            fireDTDAttributeEvent();
+        }
+    }
+
+    void attributeImplied() throws SAXException{
+        if(dtdAttribute!=null){
+            dtdAttribute.valueType = AttributeValueType.IMPLIED;
+            fireDTDAttributeEvent();
+        }
+    }
+
+    void attributeFixedValue() throws SAXException{
+        if(dtdAttribute!=null){
+            dtdAttribute.valueType = AttributeValueType.FIXED;
+            dtdAttribute.value = value.toString();
+            fireDTDAttributeEvent();
+        }
+        value.setLength(0);
+    }
+
+    private void fireDTDAttributeEvent() throws SAXException{
+        handler.attributeDecl(dtdElementName, dtdAttribute.name, dtdAttribute.type.toString(dtdAttribute.validValues), dtdAttribute.valueType.mode, dtdAttribute.value);
+    }
+
+    void dtdAttributesEnd(){
+        System.out.println("dtdAttributesEnd");
     }
 
     /*-------------------------------------------------[ Test ]---------------------------------------------------*/
