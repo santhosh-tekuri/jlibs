@@ -384,9 +384,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         clearQName();
     }
 
-    private Set<String> attrClarkNames = new HashSet<String>();
+    private Set<String> prefixedAttrs = new HashSet<String>();
+    private Set<String> unprefixedAttrs = new HashSet<String>();
     void attributesEnd() throws SAXException{
-        attrClarkNames.clear();
+        prefixedAttrs.clear();
+        unprefixedAttrs.clear();
         int attrCount = attributes.getLength();
         for(int i=0; i<attrCount; i++){
             String prefix = attributes.getURI(i);
@@ -394,9 +396,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(uri==null)
                 fatalError("Unbound prefix: "+prefix);
             attributes.setURI(i, uri);
-            String clarkName = ClarkName.valueOf(uri, attributes.getLocalName(i));
-            if(!attrClarkNames.add(clarkName))
-                fatalError("Attribute "+clarkName+" appears more than once in element");
+
+
+            String localName = attributes.getLocalName(i);
+            if(prefix.length()==0){
+                if(!unprefixedAttrs.add(localName))
+                    fatalError("Attribute "+localName+" appears more than once in element");
+            }else{
+                String clarkName = ClarkName.valueOf(uri, localName);
+                if(!prefixedAttrs.add(clarkName))
+                    fatalError("Attribute "+clarkName+" appears more than once in element");
+            }
         }
 
         String prefix = elementsPrefixes.peek();
@@ -561,9 +571,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/el06.xml";
-//        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
-        SAXParserFactory.newInstance().newSAXParser().parse(file, new DefaultHandler(){
+//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/el06.xml";
+        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.newSAXParser().parse(file, new DefaultHandler(){
             @Override
             public void characters(char[] ch, int start, int length) throws SAXException{
                 super.characters(ch, start, length);    //To change body of overridden methods use File | Settings | File Templates.

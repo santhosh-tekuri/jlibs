@@ -697,15 +697,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='x' || ch=='X'){
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && NCNAME_START(ch)){
                     return 7;
                 }
-                expected(ch, "[xX] OR <NAME_START>");
+                expected(ch, "[xX] OR <NCNAME_START>");
             case 1:
                 if(ch=='m' || ch=='M'){
                     return 2;
                 }
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && NCNAME_PART(ch)){
                     return 4;
                 }
                 return -1;
@@ -713,22 +713,22 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='l' || ch=='L'){
                     return 3;
                 }
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && NCNAME_PART(ch)){
                     return 4;
                 }
                 return -1;
             case 3:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && NCNAME_PART(ch)){
                     return 4;
                 }
-                expected(ch, "<NAME_PART>");
+                expected(ch, "<NCNAME_PART>");
             case 4:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && NCNAME_PART(ch)){
                     return 4;
                 }
                 return -1;
             case 7:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && NCNAME_PART(ch)){
                     return 4;
                 }
                 return -1;
@@ -756,12 +756,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_PI_TARGET, 3, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && NCNAME_START(ch)){
                     buffer.push();
                     push(RULE_PI_TARGET, 3, 0);
                     return 7;
                 }
-                expected(ch, "[xX] OR <NAME_START>");
+                expected(ch, "[xX] OR <NCNAME_START>");
             case 3:
                 if(WS(ch)){
                     handler.piTarget(buffer.pop(0, 0));
@@ -2167,12 +2167,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && NCNAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 13, 0);
+                    push(RULE_NCNAME, 13, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR <NAME_START>");
+                expected(ch, "<WS> OR <NCNAME_START>");
             case 13:
                 if(WS(ch)){
                     handler.notationName(buffer.pop(0, 0));
@@ -2725,26 +2725,26 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='%'){
                     return 10;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && NCNAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 17, 0);
+                    push(RULE_NCNAME, 17, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR [%] OR <NAME_START>");
+                expected(ch, "<WS> OR [%] OR <NCNAME_START>");
             case 10:
                 if(WS(ch)){
                     return 11;
                 }
                 expected(ch, "<WS>");
             case 11:
-                if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME, 12, 0);
+                if(ch!=-1 && NCNAME_START(ch)){
+                    push(RULE_NCNAME, 12, 0);
                     return 1;
                 }
                 if(WS(ch)){
                     return 11;
                 }
-                expected(ch, "<NAME_START> OR <WS>");
+                expected(ch, "<NCNAME_START> OR <WS>");
             case 12:
                 if(WS(ch)){
                     return 13;
