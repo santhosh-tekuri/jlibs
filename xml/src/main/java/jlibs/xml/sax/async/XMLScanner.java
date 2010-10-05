@@ -1010,17 +1010,17 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[=] OR <WS>");
             case 2:
-                if(ch=='"'){
+                if(ch=='\''){
                     push(RULE_VALUE, 3, 0);
                     handler.valueStart();
                     return 1;
                 }
-                if(ch=='\''){
+                if(ch=='"'){
                     push(RULE_VALUE, 3, 0);
                     handler.valueStart();
-                    return 4;
+                    return 3;
                 }
-                expected(ch, "[\"] OR [']");
+                expected(ch, "['] OR [\"]");
             case 3:
                 handler.attributeEnd();
                 return -1;
@@ -1033,28 +1033,26 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int value(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch=='"'){
+                if(ch=='\''){
                     handler.valueStart();
                     return 1;
                 }
-                if(ch=='\''){
+                if(ch=='"'){
                     handler.valueStart();
-                    return 4;
+                    return 3;
                 }
-                expected(ch, "[\"] OR [']");
+                expected(ch, "['] OR [\"]");
             case 1:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
                     return 1;
                 if(lookAhead.length()==1){
-                    if(ch=='"'){
-                        handler.doubleQuoteValue();
+                    if(ch=='\''){
                         consumed();
-                        return 3;
+                        return 2;
                     }
-                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                        handler.doubleQuoteValue();
-                        push(RULE_DQ_VALUE, 2, 0);
+                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
+                        push(RULE_Q_VALUE, 1, 0);
                         buffer.push();
                         consumed();
                         return 3;
@@ -1065,8 +1063,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            handler.doubleQuoteValue();
-                            push(RULE_DQ_VALUE, 2, 0);
+                            push(RULE_Q_VALUE, 1, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -1074,93 +1071,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 2;
                         }
                         if(ch!=-1 && NAME_START(ch)){
-                            handler.doubleQuoteValue();
-                            push(RULE_DQ_VALUE, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(ch=='"'){
-                        consumed();
-                        return 3;
-                    }
-                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                        push(RULE_DQ_VALUE, 2, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_DQ_VALUE, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_DQ_VALUE, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
-            case 3:
-                handler.valueEnd();
-                return -1;
-            case 4:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 4;
-                if(lookAhead.length()==1){
-                    if(ch=='\''){
-                        consumed();
-                        return 3;
-                    }
-                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
-                        push(RULE_Q_VALUE, 4, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 4;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_Q_VALUE, 4, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_Q_VALUE, 4, 0);
+                            push(RULE_Q_VALUE, 1, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -1172,6 +1083,50 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                 }
                 expected(ch, "['] OR <ATTR_Q_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
+            case 2:
+                handler.valueEnd();
+                return -1;
+            case 3:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 3;
+                if(lookAhead.length()==1){
+                    if(ch=='"'){
+                        consumed();
+                        return 2;
+                    }
+                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
+                        push(RULE_DQ_VALUE, 3, 0);
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 3;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_DQ_VALUE, 3, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_DQ_VALUE, 3, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&][\\#] OR [\\&]<NAME_START>");
             default:
                 throw new Error("impossible");
         }
@@ -2365,19 +2320,19 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
-                if(DQ(ch)){
+                if(Q(ch)){
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
-                if(Q(ch)){
+                if(DQ(ch)){
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
-                    return 5;
+                    return 4;
                 }
-                expected(ch, "[P] OR [S] OR <DQ> OR <Q>");
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
             case 1:
                 return -1;
             default:
@@ -2389,37 +2344,24 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int entity_value(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(DQ(ch)){
+                if(Q(ch)){
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
-                if(Q(ch)){
+                if(DQ(ch)){
                     handler.valueStart();
                     handler.entityValue();
-                    return 5;
+                    return 4;
                 }
-                expected(ch, "<DQ> OR <Q>");
+                expected(ch, "<Q> OR <DQ>");
             case 2:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
                     return 2;
                 if(lookAhead.length()==1){
-                    if(DQ(ch)){
-                        handler.doubleQuoteValue();
-                        consumed();
-                        return 4;
-                    }
-                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                        handler.doubleQuoteValue();
-                        push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
                     if(ch=='%'){
-                        handler.doubleQuoteValue();
-                        push(RULE_DQ_ENTITY_VALUE, 3, 0);
+                        push(RULE_Q_ENTITY_VALUE, 2, 0);
                         push(RULE_PE_REFERENCE, 6, 0);
                         consumed();
                         return 1;
@@ -2427,95 +2369,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch!=-1 && lookAhead.length()<2)
                     return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            handler.doubleQuoteValue();
-                            push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            handler.doubleQuoteValue();
-                            push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
-            case 3:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 3;
-                if(lookAhead.length()==1){
-                    if(DQ(ch)){
-                        consumed();
-                        return 4;
-                    }
-                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                        push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                    if(ch=='%'){
-                        push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 3;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_DQ_ENTITY_VALUE, 3, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
-            case 4:
-                handler.valueEnd();
-                return -1;
-            case 5:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 5;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_Q_ENTITY_VALUE, 5, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 5;
                 if(lookAhead.length()==2){
                     if(DQ(lookAhead.charAt(0))){
                         consumed();
@@ -2524,7 +2377,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            push(RULE_Q_ENTITY_VALUE, 5, 0);
+                            push(RULE_Q_ENTITY_VALUE, 2, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -2532,7 +2385,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 2;
                         }
                         if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_Q_ENTITY_VALUE, 5, 0);
+                            push(RULE_Q_ENTITY_VALUE, 2, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -2544,13 +2397,63 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                 }
                 if(ENTITY_Q_CONTENT(lookAhead.charAt(0))){
-                    push(RULE_Q_ENTITY_VALUE, 5, 0);
+                    push(RULE_Q_ENTITY_VALUE, 2, 0);
                     buffer.push();
                     consumed();
                     lookAhead.reset();
                     return 3;
                 }
                 expected(ch, "[%] OR <DQ><EOF> OR [\\&][\\#] OR [\\&]<NAME_START> OR <ENTITY_Q_CONTENT>");
+            case 3:
+                handler.valueEnd();
+                return -1;
+            case 4:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 4;
+                if(lookAhead.length()==1){
+                    if(DQ(ch)){
+                        consumed();
+                        return 3;
+                    }
+                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
+                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                    if(ch=='%'){
+                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                        push(RULE_PE_REFERENCE, 6, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 4;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
             default:
                 throw new Error("impossible");
         }
@@ -2763,24 +2666,24 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
-                if(DQ(ch)){
+                if(Q(ch)){
                     push(RULE_PE_DEF, 14, 0);
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
-                if(Q(ch)){
+                if(DQ(ch)){
                     push(RULE_PE_DEF, 14, 0);
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
-                    return 5;
+                    return 4;
                 }
                 if(WS(ch)){
                     return 13;
                 }
-                expected(ch, "[P] OR [S] OR <DQ> OR <Q> OR <WS>");
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
             case 14:
                 if(ch=='>'){
                     return 15;
@@ -2810,24 +2713,24 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
-                if(DQ(ch)){
+                if(Q(ch)){
                     push(RULE_ENTITY_DEF, 19, 0);
                     push(RULE_ENTITY_VALUE, 2, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
-                if(Q(ch)){
+                if(DQ(ch)){
                     push(RULE_ENTITY_DEF, 19, 0);
                     push(RULE_ENTITY_VALUE, 2, 0);
                     handler.valueStart();
                     handler.entityValue();
-                    return 5;
+                    return 4;
                 }
                 if(WS(ch)){
                     return 18;
                 }
-                expected(ch, "[P] OR [S] OR <DQ> OR <Q> OR <WS>");
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
             case 19:
                 if(WS(ch)){
                     return 19;
@@ -2858,19 +2761,19 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
-                if(DQ(ch)){
+                if(Q(ch)){
                     push(RULE_ENTITY_VALUE, 2, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
-                if(Q(ch)){
+                if(DQ(ch)){
                     push(RULE_ENTITY_VALUE, 2, 0);
                     handler.valueStart();
                     handler.entityValue();
-                    return 5;
+                    return 4;
                 }
-                expected(ch, "[P] OR [S] OR <DQ> OR <Q>");
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
             case 1:
                 if(WS(ch)){
                     push(RULE_NDATA_DECL, 2, 0);
@@ -3529,20 +3432,20 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int default_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch=='"'){
+                if(ch=='\''){
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 1;
                 }
-                if(ch=='\''){
+                if(ch=='"'){
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
-                    return 4;
+                    return 3;
                 }
                 if(ch=='#'){
                     return 2;
                 }
-                expected(ch, "[\"] OR ['] OR [\\#]");
+                expected(ch, "['] OR [\"] OR [\\#]");
             case 1:
                 handler.attributeDefaultValue();
                 return -1;
@@ -3657,17 +3560,17 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 23;
                 }
-                if(ch=='"'){
+                if(ch=='\''){
                     push(RULE_VALUE, 24, 0);
                     handler.valueStart();
                     return 1;
                 }
-                if(ch=='\''){
+                if(ch=='"'){
                     push(RULE_VALUE, 24, 0);
                     handler.valueStart();
-                    return 4;
+                    return 3;
                 }
-                expected(ch, "<WS> OR [\"] OR [']");
+                expected(ch, "<WS> OR ['] OR [\"]");
             case 24:
                 handler.attributeFixedValue();
                 return -1;
@@ -3760,23 +3663,23 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 4;
                 }
-                if(ch=='"'){
+                if(ch=='\''){
                     push(RULE_DEFAULT_DECL, 5, 0);
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 1;
                 }
-                if(ch=='\''){
+                if(ch=='"'){
                     push(RULE_DEFAULT_DECL, 5, 0);
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
-                    return 4;
+                    return 3;
                 }
                 if(ch=='#'){
                     push(RULE_DEFAULT_DECL, 5, 0);
                     return 2;
                 }
-                expected(ch, "<WS> OR [\"] OR ['] OR [\\#]");
+                expected(ch, "<WS> OR ['] OR [\"] OR [\\#]");
             case 5:
                 return -1;
             default:
@@ -5160,16 +5063,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_Q_VALUE_ENTITY = 65;
-    private int q_value_entity(int ch) throws Exception{
+    public static final int RULE_VALUE_CONTENT = 65;
+    private int value_content(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
                     return 0;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
-                        push(RULE_Q_VALUE, 0, 0);
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
                         buffer.push();
                         consumed();
                         return 3;
@@ -5180,7 +5082,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            push(RULE_Q_VALUE, 0, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -5188,7 +5089,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 2;
                         }
                         if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_Q_VALUE, 0, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -5199,22 +5099,30 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
+                expected(ch, "<ELEM_CONTENT_CHAR> OR [\\&][\\#] OR [\\&]<NAME_START>");
+            case 3:
+                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                    return 3;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return -1;
+            case 5:
                 return -1;
             default:
                 throw new Error("impossible");
         }
     }
 
-    public static final int RULE_DQ_VALUE_ENTITY = 66;
-    private int dq_value_entity(int ch) throws Exception{
+    public static final int RULE_VALUE_ENTITY = 66;
+    private int value_entity(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
                     return 0;
                 if(lookAhead.length()==1){
-                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                        push(RULE_DQ_VALUE, 0, 0);
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        push(RULE_VALUE_CONTENT, 0, 0);
                         buffer.push();
                         consumed();
                         return 3;
@@ -5225,7 +5133,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            push(RULE_DQ_VALUE, 0, 0);
+                            push(RULE_VALUE_CONTENT, 0, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -5233,109 +5141,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 2;
                         }
                         if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_DQ_VALUE, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                return -1;
-            default:
-                throw new Error("impossible");
-        }
-    }
-
-    public static final int RULE_Q_ENTITY_VALUE_ENTITY = 67;
-    private int q_entity_value_entity(int ch) throws Exception{
-        switch(stateStack.peek()){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
-                        push(RULE_Q_ENTITY_VALUE, 0, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                    if(ch=='%'){
-                        push(RULE_Q_ENTITY_VALUE, 0, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_Q_ENTITY_VALUE, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_Q_ENTITY_VALUE, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                return -1;
-            default:
-                throw new Error("impossible");
-        }
-    }
-
-    public static final int RULE_DQ_ENTITY_VALUE_ENTITY = 68;
-    private int dq_entity_value_entity(int ch) throws Exception{
-        switch(stateStack.peek()){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                        push(RULE_DQ_ENTITY_VALUE, 0, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                    if(ch=='%'){
-                        push(RULE_DQ_ENTITY_VALUE, 0, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_DQ_ENTITY_VALUE, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_DQ_ENTITY_VALUE, 0, 0);
+                            push(RULE_VALUE_CONTENT, 0, 0);
                             push(RULE_REFERENCE, 5, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -5486,13 +5292,9 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 64:
                 return elem_entity(ch);
             case 65:
-                return q_value_entity(ch);
+                return value_content(ch);
             case 66:
-                return dq_value_entity(ch);
-            case 67:
-                return q_entity_value_entity(ch);
-            case 68:
-                return dq_entity_value_entity(ch);
+                return value_entity(ch);
             default:
                 throw new Error("impossible");
         }
