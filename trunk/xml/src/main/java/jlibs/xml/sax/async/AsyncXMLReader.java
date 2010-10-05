@@ -358,7 +358,23 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void attributeEnd() throws SAXException{
+        String type = "CDATA";
+        DTDAttribute dtdAttr = null;
+        Map<String, DTDAttribute> attrList = dtdAttributes.get(elementsQNames.peek());
+        if(attrList!=null){
+            dtdAttr = attrList.get(qname);
+            if(dtdAttr!=null){
+                if(dtdAttr.type==AttributeType.ENUMERATION)
+                    type = "NMTOKEN";
+                else
+                    type = dtdAttr.type.name();
+            }
+        }
+
         String value = this.value.toString();
+        if(type.equals("NMTOKEN"))
+            value = value.trim();
+
         if(qname.equals("xmlns")){
             namespaces.put("", value);
             handler.startPrefixMapping("", value);
@@ -379,12 +395,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     clearQName();
                     fatalError(XMLConstants.XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+XMLConstants.XMLNS_ATTRIBUTE);
                 }else{
+                    if(value.length()==0)
+                        fatalError("No Prefix Undeclaring: "+localName);
                     namespaces.put(localName, value);
                     handler.startPrefixMapping(localName, value);
                 }
             }
-        }else
-            attributes.addAttribute(prefix, localName, qname, "CDATA", value);
+        }else{
+            attributes.addAttribute(prefix, localName, qname, type, value);
+        }
 
         clearQName();
     }
