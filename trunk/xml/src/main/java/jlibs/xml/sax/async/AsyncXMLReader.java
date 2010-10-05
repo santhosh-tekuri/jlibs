@@ -392,11 +392,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         int attrCount = attributes.getLength();
         for(int i=0; i<attrCount; i++){
             String prefix = attributes.getURI(i);
-            String uri = namespaces.getNamespaceURI(prefix);
-            if(uri==null)
-                fatalError("Unbound prefix: "+prefix);
-            attributes.setURI(i, uri);
-
+            String uri = "";
+            if(prefix.length()>0){
+                uri = namespaces.getNamespaceURI(prefix);
+                if(uri==null)
+                    fatalError("Unbound prefix: "+prefix);
+                attributes.setURI(i, uri);
+            }
 
             String localName = attributes.getLocalName(i);
             if(prefix.length()==0){
