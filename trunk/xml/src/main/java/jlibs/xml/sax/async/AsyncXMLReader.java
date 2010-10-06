@@ -428,11 +428,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         clearQName();
     }
 
-    private Set<String> prefixedAttrs = new HashSet<String>();
-    private Set<String> unprefixedAttrs = new HashSet<String>();
+    private Set<String> attributeNames = new HashSet<String>();
     void attributesEnd() throws SAXException{
-        prefixedAttrs.clear();
-        unprefixedAttrs.clear();
+        attributeNames.clear();
         int attrCount = attributes.getLength();
         for(int i=0; i<attrCount; i++){
             String prefix = attributes.getURI(i);
@@ -444,15 +442,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 attributes.setURI(i, uri);
             }
 
-            String localName = attributes.getLocalName(i);
-            if(prefix.length()==0){
-                if(!unprefixedAttrs.add(localName))
-                    fatalError("Attribute "+localName+" appears more than once in element");
-            }else{
-                String clarkName = ClarkName.valueOf(uri, localName);
-                if(!prefixedAttrs.add(clarkName))
-                    fatalError("Attribute "+clarkName+" appears more than once in element");
-            }
+            String clarkName = ClarkName.valueOf(uri, attributes.getLocalName(i));
+            if(!attributeNames.add(clarkName))
+                fatalError("Attribute "+clarkName+" appears more than once in element");
         }
 
         String elemQName = elementsQNames.peek();
