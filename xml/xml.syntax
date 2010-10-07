@@ -2780,4 +2780,275 @@
             <rule name="value_content"/>
         </edge>
     </rule>
+    <rule name="text_decl">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="x"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="m"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="l"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="version_info"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="9" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="10" target="11" fallback="false">
+            <rule name="enc_decl"/>
+        </edge>
+        <edge source="11" target="11" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="11" target="12" fallback="false"/>
+        <edge source="12" target="13" fallback="false">
+            <any chars="?"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="9" target="12" fallback="false"/>
+        <edge source="8" target="12" fallback="false"/>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="12" fallback="false"/>
+        <edge source="7" target="10" fallback="false"/>
+        <edge source="6" target="12" fallback="false"/>
+    </rule>
+    <rule name="ignore_sect_contents">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <publish name="ignoreStart" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="ignoreEnd" begin="0" end="0"/>
+        </node>
+        <node>
+            <publish name="ignoreSectContents" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="7" target="0" fallback="false"/>
+        <edge source="6" target="2" fallback="false"/>
+        <edge source="5" target="2" fallback="false"/>
+        <edge source="4" target="4" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="4" target="8" fallback="false"/>
+        <edge source="8" target="9" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="9" target="9" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="10" target="0" fallback="false"/>
+        <edge source="9" target="2" fallback="false"/>
+        <edge source="8" target="2" fallback="false"/>
+        <edge source="4" target="11" fallback="false"/>
+        <edge source="0" target="12" fallback="false"/>
+    </rule>
+    <rule name="ignore_sect">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="G"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="O"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="R"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="6" target="6" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="ignore_sect_contents"/>
+        </edge>
+    </rule>
+    <rule name="ext_subset_decl">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="markup_decl"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="conditional_sect"/>
+        </edge>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="decl_sep"/>
+        </edge>
+    </rule>
+    <rule name="conditional_sect">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <rule name="ignore_sect"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <rule name="include_set"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="include_set">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="I"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <any chars="N"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="C"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="L"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="U"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="D"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="E"/>
+        </edge>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <rule name="ext_subset_decl"/>
+        </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="11" target="12" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+    </rule>
+    <rule name="ext_subset">
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="text_decl"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="ext_subset_decl"/>
+        </edge>
+        <edge source="0" target="1" fallback="false"/>
+    </rule>
 </syntax>
