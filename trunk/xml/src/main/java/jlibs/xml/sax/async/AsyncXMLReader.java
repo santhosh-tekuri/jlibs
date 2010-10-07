@@ -593,10 +593,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         Map<String, DTDAttribute> attList = dtdAttributes.get(elemQName);
         if(attList!=null){
             for(DTDAttribute dtdAttr: attList.values()){
-                if(dtdAttr.valueType== AttributeValueType.DEFAULT){
+                if(dtdAttr.valueType==AttributeValueType.DEFAULT || dtdAttr.valueType==AttributeValueType.FIXED){
                     int index = attributes.getIndex(dtdAttr.name);
-                    if(index==-1)
-                        attributes.addAttribute("", dtdAttr.name, dtdAttr.name, dtdAttr.type.name(), dtdAttr.value);
+                    if(index==-1){
+                        if(!dtdAttr.name.equals("xmlns") && !dtdAttr.name.startsWith("xmlns:"))
+                            attributes.addAttribute("", dtdAttr.name, dtdAttr.name, dtdAttr.type.name(), dtdAttr.value);
+                    }
                 }
             }
         }
@@ -879,8 +881,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/errata-2e/E27.xml";
-//        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
+//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P59/ibm59v01.xml";
+        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         try{
