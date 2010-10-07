@@ -144,8 +144,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
 
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
             Class clazz = classLoader.loadClass(parserName);
-            parser = (DebuggableNBParser)clazz.getConstructor(getClass()).newInstance(this);
-            parser.reset(scene.getRule().id);
+            parser = (DebuggableNBParser)clazz.getConstructor(getClass(), int.class).newInstance(this, scene.getRule().id);
             showMessage("Executing...");
         }catch(Exception ex){
             ex.printStackTrace();

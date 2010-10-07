@@ -25,6 +25,7 @@ public abstract class DebuggableNBParser extends NBParser{
     protected DebuggableNBParser(Debugger debugger, int maxLookAhead, int startingRule){
         super(maxLookAhead, startingRule);
         this.debugger = debugger;
+        debugger.currentNode(ruleStack.peek(), stateStack.peek());
     }
 
     @Override
@@ -40,7 +41,8 @@ public abstract class DebuggableNBParser extends NBParser{
     @Override
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
         super.push(toRule, stateAfterRule, stateInsideRule);
-        debugger.currentNode(ruleStack.peek(), stateStack.peek());
+        if(debugger!=null)
+            debugger.currentNode(ruleStack.peek(), stateStack.peek());
     }
 
     @Override
