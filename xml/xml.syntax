@@ -1852,12 +1852,14 @@
         <node/>
         <node/>
         <node/>
+        <node/>
         <node>
             <buffer/>
         </node>
         <node>
             <publish name="attributeEnumValue" begin="0" end="0"/>
         </node>
+        <node/>
         <node/>
         <node/>
         <node/>
@@ -1876,25 +1878,28 @@
             <matcher name="WS"/>
         </edge>
         <edge source="4" target="5" fallback="false"/>
-        <edge source="5" target="6" fallback="false">
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
             <any chars="|"/>
         </edge>
-        <edge source="6" target="6" fallback="false">
+        <edge source="7" target="7" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="6" target="7" fallback="false"/>
-        <edge source="7" target="8" fallback="false">
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="8" target="9" fallback="false">
             <rule name="nmtoken"/>
         </edge>
-        <edge source="8" target="9" fallback="false"/>
-        <edge source="9" target="9" fallback="false">
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="10" target="10" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="9" target="10" fallback="false"/>
-        <edge source="10" target="11" fallback="false">
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="6" fallback="false"/>
+        <edge source="11" target="12" fallback="false"/>
+        <edge source="12" target="13" fallback="false">
             <any chars=")"/>
         </edge>
-        <edge source="10" target="5" fallback="false"/>
+        <edge source="5" target="12" fallback="false"/>
     </rule>
     <rule name="mixed">
         <node/>
@@ -1986,14 +1991,6 @@
         <node/>
         <node/>
         <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node>
-            <publish name="attributeNotationValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <node/>
         <node/>
         <node>
             <buffer/>
@@ -2001,6 +1998,17 @@
         <node>
             <publish name="attributeNotationValue" begin="0" end="0"/>
         </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="attributeNotationValue" begin="0" end="0"/>
+        </node>
+        <node/>
         <node/>
         <node/>
         <node/>
@@ -2028,43 +2036,49 @@
         <edge source="7" target="8" fallback="false">
             <any chars="N"/>
         </edge>
-        <edge source="8" target="8" fallback="false">
-            <matcher name="WS"/>
-        </edge>
         <edge source="8" target="9" fallback="false">
-            <any chars="("/>
+            <matcher name="WS"/>
         </edge>
         <edge source="9" target="9" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="9" target="10" fallback="false"/>
-        <edge source="10" target="11" fallback="false">
-            <rule name="name"/>
+        <edge source="9" target="10" fallback="false">
+            <any chars="("/>
         </edge>
-        <edge source="11" target="12" fallback="false"/>
-        <edge source="12" target="12" fallback="false">
+        <edge source="10" target="10" fallback="false">
             <matcher name="WS"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false">
+            <rule name="name"/>
         </edge>
         <edge source="12" target="13" fallback="false"/>
-        <edge source="13" target="14" fallback="false">
-            <any chars="|"/>
-        </edge>
-        <edge source="14" target="14" fallback="false">
+        <edge source="13" target="13" fallback="false">
             <matcher name="WS"/>
         </edge>
+        <edge source="13" target="14" fallback="false"/>
         <edge source="14" target="15" fallback="false"/>
         <edge source="15" target="16" fallback="false">
-            <rule name="name"/>
+            <any chars="|"/>
         </edge>
-        <edge source="16" target="17" fallback="false"/>
-        <edge source="17" target="17" fallback="false">
+        <edge source="16" target="16" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="17" target="18" fallback="false"/>
-        <edge source="18" target="19" fallback="false">
+        <edge source="16" target="17" fallback="false"/>
+        <edge source="17" target="18" fallback="false">
+            <rule name="name"/>
+        </edge>
+        <edge source="18" target="19" fallback="false"/>
+        <edge source="19" target="19" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="19" target="20" fallback="false"/>
+        <edge source="20" target="15" fallback="false"/>
+        <edge source="20" target="21" fallback="false"/>
+        <edge source="21" target="22" fallback="false">
             <any chars=")"/>
         </edge>
-        <edge source="18" target="13" fallback="false"/>
+        <edge source="14" target="21" fallback="false"/>
     </rule>
     <rule name="enumerated_type">
         <node/>
