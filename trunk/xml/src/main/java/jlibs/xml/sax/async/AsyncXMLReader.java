@@ -730,7 +730,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private Map<String, char[]> entities = new HashMap<String, char[]>();
     void entityEnd(){
         if(value!=null){
-            entities.put(entityName, value.toString().toCharArray());
+            // entities may be declared more than once, with the first declaration being the binding one
+            if(!entities.containsKey(entityName))
+                entities.put(entityName, value.toString().toCharArray());
             value.setLength(0);
         }
     }
