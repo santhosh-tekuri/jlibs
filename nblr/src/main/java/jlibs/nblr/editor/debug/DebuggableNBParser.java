@@ -19,13 +19,11 @@ import jlibs.nbp.Buffer;
 import jlibs.nbp.IntStack;
 import jlibs.nbp.NBParser;
 
-import java.io.IOException;
-
 public abstract class DebuggableNBParser extends NBParser{
     private Debugger debugger;
 
-    protected DebuggableNBParser(Debugger debugger, int maxLookAhead){
-        super(maxLookAhead);
+    protected DebuggableNBParser(Debugger debugger, int maxLookAhead, int startingRule){
+        super(maxLookAhead, startingRule);
         this.debugger = debugger;
     }
 

@@ -17,24 +17,31 @@ package jlibs.nbp;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 
 /**
  * @author Santhosh Kumar T
  */
-public abstract class NBParser extends Writer{
+public abstract class NBParser{
     private final Stream stream;
     protected final Stream.LookAhead lookAhead;
     public final Location location = new Location();
     protected final Buffer buffer = new Buffer();
 
-    public NBParser(int maxLookAhead){
+    private int startingRule;
+    public NBParser(int maxLookAhead, int startingRule){
         stream = new Stream(maxLookAhead);
         lookAhead = stream.lookAhead;
+        reset(startingRule);
     }
 
-    private int startingRule;
-    public void setRule(int rule){
-        eofOnClose = true;
+    private boolean inProgress = true;
+    public void reset(int rule){
+        inProgress = true;
         wasHighSurrogate = false;
         stream.clear();
         location.reset();
@@ -42,12 +49,16 @@ public abstract class NBParser extends Writer{
         ruleStack.clear();
         stateStack.clear();
 
-        push(startingRule = rule, -1, 0);
+        push(startingRule=rule, -1, 0);
+    }
+
+    public void reset(){
+        reset(startingRule);
     }
 
     private char highSurrogate;
     private boolean wasHighSurrogate;
-    private void consume(char ch) throws IOException{
+    protected void consume(char ch) throws IOException{
         if(Character.isHighSurrogate(ch)){
             highSurrogate = ch;
             wasHighSurrogate = true;
@@ -57,14 +68,16 @@ public abstract class NBParser extends Writer{
                 if(Character.isLowSurrogate(ch)){
                     int codePoint = Character.toCodePoint(highSurrogate, ch);
                     consume(codePoint);
-                }else
-                    throw new IOException("bad surrogate pair");
+                }else{
+                    inProgress = false;
+                    ioError("bad surrogate pair");
+                }
             }else
                 consume((int)ch);
         }
     }
 
-    private void consume(int codePoint) throws IOException{
+    protected void consume(int codePoint) throws IOException{
         try{
             consumed = false;
             _eat(codePoint);
@@ -81,10 +94,10 @@ public abstract class NBParser extends Writer{
             }
 
         }catch(IOException ex){
-            eofOnClose = false;
+            inProgress = false;
             throw ex;
         }catch(Exception ex){
-            eofOnClose = false;
+            inProgress = false;
             if(ex.getCause() instanceof IOException)
                 throw (IOException)ex.getCause();
             else
@@ -173,55 +186,108 @@ public abstract class NBParser extends Writer{
         stateStack.pop();
     }
 
-    /*-------------------------------------------------[ writer ]---------------------------------------------------*/
+    /*-------------------------------------------------[ Input ]---------------------------------------------------*/
 
-    @Override
-    public void write(int c) throws IOException{
-        consume((char)c);
-    }
+    public final Writer writer = new Writer(){
+        @Override
+        public void write(int c) throws IOException{
+            consume((char)c);
+        }
 
-    @Override
-    public void write(char[] chars, int offset, int length) throws IOException{
-        while(length>0){
-            consume(chars[offset]);
-            offset++;
-            length--;
+        @Override
+        public void write(char[] chars, int offset, int length) throws IOException{
+            while(length>0){
+                consume(chars[offset]);
+                offset++;
+                length--;
+            }
+        }
+
+        @Override
+        public Writer append(char ch) throws IOException{
+            consume(ch);
+            return this;
+        }
+
+        @Override
+        public void write(String str, int offset, int length) throws IOException{
+            while(length>0){
+                consume(str.charAt(offset));
+                offset++;
+                length--;
+            }
+        }
+
+        @Override
+        public Writer append(CharSequence csq, int start, int end) throws IOException{
+            while(start<end){
+                consume(csq.charAt(start));
+                start++;
+            }
+            return this;
+        }
+
+        @Override
+        public void close() throws IOException{
+            if(inProgress)
+                consume(-1);
+            reset(startingRule);
+        }
+
+        @Override
+        public void flush() throws IOException{}
+    };
+
+    public void write(CharBuffer in, boolean eof) throws IOException{
+        char chars[] = in.array();
+        for(int i=in.position(); i<in.limit(); i++)
+            consume(chars[i]);
+        if(eof){
+            if(inProgress)
+                consume(-1);
+            reset(startingRule);
         }
     }
 
-    @Override
-    public Writer append(char ch) throws IOException{
-        consume(ch);
-        return this;
+    protected CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
+    CharBuffer out = CharBuffer.allocate(1000);
+    public void setCharset(Charset charset){
+        decoder = charset.newDecoder();
     }
 
-    @Override
-    public void write(String str, int offset, int length) throws IOException{
-        while(length>0){
-            consume(str.charAt(offset));
-            offset++;
-            length--;
+    public void write(ByteBuffer in, boolean eof) throws IOException{
+        out.clear();
+        while(true){
+            CoderResult cr = in.hasRemaining() ? decoder.decode(in, out, eof) : CoderResult.UNDERFLOW;
+            if(cr.isUnderflow()){
+                out.flip();
+                write(out, eof);
+                return;
+            }else if(cr.isOverflow()){
+                out.flip();
+                write(out, false);
+                out.clear();
+                continue;
+            }
+            out.flip();
+            write(out, false);
+            out.clear();
+            encodingError(cr);
         }
     }
 
-    @Override
-    public Writer append(CharSequence csq, int start, int end) throws IOException{
-        while(start<end){
-            consume(csq.charAt(start));
-            start++;
+    protected void encodingError(CoderResult coderResult) throws IOException{
+        ioError(coderResult.isMalformed() ? "Malformed Input" : "Unmappable Character");
+    }
+
+    protected void ioError(String message) throws IOException{
+        try{
+            inProgress = false;
+            fatalError(message);
+            throw new IOException(message);
+        }catch(Exception ex){
+            throw new IOException(message);
         }
-        return this;
     }
 
-    private boolean eofOnClose = true;
-    
-    @Override
-    public void close() throws IOException{
-        if(eofOnClose)
-            consume(-1);
-        setRule(startingRule);
-    }
-
-    @Override
-    public void flush() throws IOException{}
 }

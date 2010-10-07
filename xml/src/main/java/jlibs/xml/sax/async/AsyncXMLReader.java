@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.async;
 
+import jlibs.core.io.BOM;
 import jlibs.core.io.IOUtil;
 import jlibs.core.io.UnicodeInputStream;
 import jlibs.core.net.URLUtil;
@@ -38,6 +39,14 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 import java.util.*;
 
 /**
@@ -54,13 +63,126 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         defaultEntities.put("quot", new char[]{ '"' });
     }
 
-    private XMLScanner scanner = new XMLScanner(this){
+    private int iProlog = -1;    
+    private XMLScanner scanner = new XMLScanner(this, XMLScanner.RULE_DOCUMENT){
         protected void consumed(int ch){
             consumed = true;
             int line = location.getLineNumber();
             boolean addToBuffer = location.consume(ch);
             if(addToBuffer && buffer.isBufferring())
                 buffer.append(location.getLineNumber()>line ? '\n' : ch);
+        }
+
+        @Override
+        public void write(ByteBuffer in, boolean eof) throws IOException{
+            if(iProlog==-1){
+                if(in.remaining()>=4){
+                    byte marker[] = new byte[]{ in.get(0), in.get(1), in.get(2), in.get(3) };
+                    BOM bom = BOM.get(marker, true);
+                    String encoding;
+                    if(bom!=null){
+                        in.position(bom.with().length);
+                        encoding = bom.encoding();
+                    }else{
+                        bom = BOM.get(marker, false);
+                        encoding = bom!=null ? bom.encoding() : "UTF-8";
+                    }
+                    decoder = Charset.forName(encoding).newDecoder();
+                    if(!encoding.equals("UTF-8")){
+                        decoder.onMalformedInput(CodingErrorAction.REPLACE)
+                               .onMalformedInput(CodingErrorAction.REPLACE);
+                    }
+                    iProlog = 0;
+                }else{
+                    if(eof)
+                        super.write(in, true);
+                    return;
+                }
+            }
+            while(iProlog<6){
+                if(eof){
+                    String str = "<?xml ";
+                    for(int i=0; i<iProlog; i++)
+                        consume(str.charAt(i));
+                    super.write(in, true);
+                    return;
+                }
+                CharBuffer charBuffer = CharBuffer.allocate(1);
+                CoderResult coderResult = decoder.decode(in, charBuffer, eof);
+                if(coderResult.isUnderflow() || coderResult.isOverflow()){
+                    char ch = charBuffer.array()[0];
+                    if(isPrologStart(ch)){
+                        iProlog++;
+                        if(iProlog==6){
+                            consume('<');
+                            consume('?');
+                            consume('x');
+                            consume('m');
+                            consume('l');
+                            consume(' ');
+                        }
+                        if(coderResult.isOverflow())
+                            continue;
+                        else
+                            return;
+                    }else{
+                        String str = "<?xml ";
+                        for(int i=0; i<iProlog; i++)
+                            consume(str.charAt(i));
+                        consume(ch);
+                        iProlog = 7;
+                    }
+                }else
+                    encodingError(coderResult);
+            }
+            if(iProlog==6 && !eof){
+                while(!xdeclEnd){
+                    CharBuffer charBuffer = CharBuffer.allocate(1);
+                    CoderResult coderResult = decoder.decode(in, charBuffer, eof);
+                    if(coderResult.isUnderflow() || coderResult.isOverflow()){
+                        char ch = charBuffer.array()[0];
+                        consume(ch);
+                        if(coderResult.isUnderflow())
+                            return;
+                    }else
+                        encodingError(coderResult);
+                }
+
+                String detectedEncoding = decoder.charset().name().toUpperCase(Locale.ENGLISH);
+                String declaredEncoding = encoding.toUpperCase(Locale.ENGLISH);
+                if(!detectedEncoding.equals(declaredEncoding)){
+                    if(detectedEncoding.startsWith("UTF-16") && declaredEncoding.equals("UTF-16"))
+                        ; //donothing
+                    else if(!detectedEncoding.equals(encoding)){
+                        decoder = Charset.forName(encoding).newDecoder();
+                        if(!encoding.equals("UTF-8")){
+                            decoder.onMalformedInput(CodingErrorAction.REPLACE)
+                                   .onMalformedInput(CodingErrorAction.REPLACE);
+                        }
+                    }
+                }
+                iProlog = 7;
+            }
+            super.write(in, eof);
+        }
+
+        private boolean isPrologStart(char ch){
+            switch(iProlog){
+                case 0:
+                    return ch=='<';
+                case 1:
+                    return ch=='?';
+                case 2:
+                    return ch=='x';
+                case 3:
+                    return ch=='m';
+                case 4:
+                    return ch=='l';
+                case 5:
+                    return ch==0x20 || ch==0x9 || ch==0xa || ch==0xd;
+                default:
+                    throw new Error("impossible");
+            }
         }
     };
 
@@ -74,9 +196,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     public Writer getWriter() throws SAXException{
-        scanner.setRule(XMLScanner.RULE_DOCUMENT);
+        scanner.reset();
         documentStart();
-        return scanner;
+        return scanner.writer;
     }
 
     @Override
@@ -96,7 +218,25 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     @Override
     public void parse(String systemId) throws IOException, SAXException{
         // special handling for http url's like redirect, get encoding information from http headers
-        parse(URLUtil.toURL(systemId).openStream());
+        URL url = URLUtil.toURL(systemId);
+        if(url.getProtocol().equals("file")){
+            scanner.reset();
+            documentStart();
+            try{
+                FileChannel channel = new FileInputStream(new File(url.toURI())).getChannel();
+                ByteBuffer buffer = ByteBuffer.allocate(100);
+                while(channel.read(buffer)!=-1){
+                    buffer.flip();
+                    scanner.write(buffer, false);
+                    buffer.compact();
+                }
+                buffer.flip();
+                scanner.write(buffer, true);
+            }catch(URISyntaxException ex){
+                throw new IOException(ex);
+            }
+        }else
+            parse(url.openStream());
     }
 
     private void parse(InputStream in) throws IOException, SAXException{
@@ -140,7 +280,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ Document ]---------------------------------------------------*/
 
     private void documentStart() throws SAXException{
+        iProlog = -1;
         encoding = "UTF-8";
+        xdeclEnd = false;
         clearQName();
         value.setLength(0);
         valueStarted = false;
@@ -188,8 +330,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         System.out.println("standalone: "+data);
     }
 
+    private boolean xdeclEnd;
     void xdeclEnd(){
-        System.out.println("xdeclEnd");
+        xdeclEnd = true;
     }
 
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
@@ -310,10 +453,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 fatalError("found recursion in entity expansion :"+entity);
             entityStack.push(entity);
             try{
-                XMLScanner entityValueScanner = new XMLScanner(this);
-                entityValueScanner.setRule(rule);
-                entityValueScanner.write(entityValue);
-                entityValueScanner.close();
+                XMLScanner entityValueScanner = new XMLScanner(this, rule);
+                entityValueScanner.writer.write(entityValue);
+                entityValueScanner.writer.close();
             }catch(IOException ex){
                 throw new RuntimeException(ex);
             }finally{
@@ -737,16 +879,25 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/el06.xml";
-        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/errata-2e/E27.xml";
+//        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
-        factory.newSAXParser().parse(file, new DefaultHandler(){
-            @Override
-            public void characters(char[] ch, int start, int length) throws SAXException{
-                super.characters(ch, start, length);    //To change body of overridden methods use File | Settings | File Templates.
-            }
-        });
+        try{
+            factory.newSAXParser().parse(file, new DefaultHandler(){
+                @Override
+                public void characters(char[] ch, int start, int length) throws SAXException{
+                    super.characters(ch, start, length);    //To change body of overridden methods use File | Settings | File Templates.
+                }
+            });
+        }catch(Exception ex){
+            ex.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            System.out.println("==========================");
+        }
+
+        IOUtil.pump(new InputStreamReader(new FileInputStream(file), "UTF-8"), new StringWriter(), true, true);
+//        IOUtil.pump(new UTF8Reader(new FileInputStream(file)), new StringWriter(), true, true);
+
 
         parser.parse(new InputSource(file));
 

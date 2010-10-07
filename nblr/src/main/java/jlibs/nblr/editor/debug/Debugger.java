@@ -145,7 +145,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
             Class clazz = classLoader.loadClass(parserName);
             parser = (DebuggableNBParser)clazz.getConstructor(getClass()).newInstance(this);
-            parser.setRule(scene.getRule().id);
+            parser.reset(scene.getRule().id);
             showMessage("Executing...");
         }catch(Exception ex){
             ex.printStackTrace();
@@ -157,11 +157,11 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         try{
             if(inputIndex<input.getDocument().getLength()){
                 char ch = input.getDocument().getText(inputIndex, 1).charAt(0);
-                parser.write(ch);
+                parser.writer.write(ch);
                 inputIndex++;
                 updateGuardedBlock();
             }else{
-                parser.close();
+                parser.writer.close();
                 stop(null, "Input Matched");
             }
         }catch(BadLocationException ex){
