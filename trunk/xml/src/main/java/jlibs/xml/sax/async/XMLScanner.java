@@ -2955,53 +2955,60 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch=='|'){
                     handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 6;
+                    return 7;
                 }
-                expected(ch, "<WS> OR [|]");
+                if(ch==')'){
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 13;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
             case 4:
                 if(WS(ch)){
                     return 4;
                 }
                 if(ch=='|'){
-                    return 6;
+                    return 7;
                 }
-                expected(ch, "<WS> OR [|]");
-            case 6:
+                if(ch==')'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 7:
                 if(WS(ch)){
-                    return 6;
+                    return 7;
                 }
                 if(ch!=-1 && NAME_PART(ch)){
                     buffer.push();
-                    push(RULE_NMTOKEN, 8, 0);
+                    push(RULE_NMTOKEN, 9, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_PART>");
-            case 8:
-                if(WS(ch)){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 9;
-                }
-                if(ch==')'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 11;
-                }
-                if(ch=='|'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 6;
-                }
-                expected(ch, "<WS> OR [)] OR [|]");
             case 9:
                 if(WS(ch)){
-                    return 9;
-                }
-                if(ch==')'){
-                    return 11;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 10;
                 }
                 if(ch=='|'){
-                    return 6;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 7;
                 }
-                expected(ch, "<WS> OR [)] OR [|]");
-            case 11:
+                if(ch==')'){
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    return 13;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 10:
+                if(WS(ch)){
+                    return 10;
+                }
+                if(ch=='|'){
+                    return 7;
+                }
+                if(ch==')'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 13:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3167,76 +3174,88 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[N]");
             case 8:
                 if(WS(ch)){
-                    return 8;
-                }
-                if(ch=='('){
                     return 9;
                 }
-                expected(ch, "<WS> OR [(]");
+                expected(ch, "<WS>");
             case 9:
                 if(WS(ch)){
                     return 9;
                 }
+                if(ch=='('){
+                    return 10;
+                }
+                expected(ch, "<WS> OR [(]");
+            case 10:
+                if(WS(ch)){
+                    return 10;
+                }
                 if(ch!=-1 && NAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 11, 0);
+                    push(RULE_NAME, 12, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_START>");
-            case 11:
-                if(WS(ch)){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 12;
-                }
-                if(ch=='|'){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 14;
-                }
-                expected(ch, "<WS> OR [|]");
             case 12:
                 if(WS(ch)){
-                    return 12;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 13;
                 }
                 if(ch=='|'){
-                    return 14;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 16;
                 }
-                expected(ch, "<WS> OR [|]");
-            case 14:
+                if(ch==')'){
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 22;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 13:
                 if(WS(ch)){
-                    return 14;
+                    return 13;
+                }
+                if(ch=='|'){
+                    return 16;
+                }
+                if(ch==')'){
+                    return 22;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 16:
+                if(WS(ch)){
+                    return 16;
                 }
                 if(ch!=-1 && NAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 16, 0);
+                    push(RULE_NAME, 18, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR <NAME_START>");
-            case 16:
+            case 18:
                 if(WS(ch)){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 17;
-                }
-                if(ch==')'){
                     handler.attributeNotationValue(buffer.pop(0, 0));
                     return 19;
                 }
                 if(ch=='|'){
                     handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 14;
-                }
-                expected(ch, "<WS> OR [)] OR [|]");
-            case 17:
-                if(WS(ch)){
-                    return 17;
+                    return 16;
                 }
                 if(ch==')'){
-                    return 19;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    return 22;
                 }
-                if(ch=='|'){
-                    return 14;
-                }
-                expected(ch, "<WS> OR [)] OR [|]");
+                expected(ch, "<WS> OR [|] OR [)]");
             case 19:
+                if(WS(ch)){
+                    return 19;
+                }
+                if(ch=='|'){
+                    return 16;
+                }
+                if(ch==')'){
+                    return 22;
+                }
+                expected(ch, "<WS> OR [|] OR [)]");
+            case 22:
                 return -1;
             default:
                 throw new Error("impossible");
