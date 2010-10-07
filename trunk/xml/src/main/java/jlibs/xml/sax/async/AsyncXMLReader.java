@@ -504,38 +504,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         String value = this.value.toString();
         if(type.equals("NMTOKEN"))
             value = value.trim();
-        else if(type.equals("NMTOKENS")){
-            char[] buffer = value.toCharArray();
-            int write = 0;
-            int lastWrite = 0;
-            boolean wroteOne = false;
-
-            int read = 0;
-            while(read<buffer.length && buffer[read]==' '){
-                read++;
-            }
-
-            int len = buffer.length;
-            while(len<read && buffer[len-1]==' ')
-                len--;
-
-            while(read<len){
-                if (buffer[read]==' '){
-                    if (wroteOne)
-                        buffer[write++] = ' ';
-
-                    do{
-                        read++;
-                    }while(read<len && buffer[read]==' ');
-                }else{
-                    buffer[write++] = buffer[read++];
-                    wroteOne = true;
-                    lastWrite = write;
-                }
-            }
-
-            value = new String(buffer, 0, lastWrite);
-        }
+        else if(type.equals("NMTOKENS"))
+            value = toNMTOKENS(value);
 
         if(qname.equals("xmlns")){
             namespaces.put("", value);
@@ -568,6 +538,40 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
 
         clearQName();
+    }
+
+    private String toNMTOKENS(String value){
+        char[] buffer = value.toCharArray();
+        int write = 0;
+        int lastWrite = 0;
+        boolean wroteOne = false;
+
+        int read = 0;
+        while(read<buffer.length && buffer[read]==' '){
+            read++;
+        }
+
+        int len = buffer.length;
+        while(len<read && buffer[len-1]==' ')
+            len--;
+
+        while(read<len){
+            if (buffer[read]==' '){
+                if (wroteOne)
+                    buffer[write++] = ' ';
+
+                do{
+                    read++;
+                }while(read<len && buffer[read]==' ');
+            }else{
+                buffer[write++] = buffer[read++];
+                wroteOne = true;
+                lastWrite = write;
+            }
+        }
+
+        value = new String(buffer, 0, lastWrite);
+        return value;
     }
 
     private Set<String> attributeNames = new HashSet<String>();
@@ -834,6 +838,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.DEFAULT;
             dtdAttribute.value = value.toString();
+            if(dtdAttribute.type==AttributeType.NMTOKEN)
+                dtdAttribute.value = dtdAttribute.value.trim();
+            else if(dtdAttribute.type==AttributeType.NMTOKENS)
+                dtdAttribute.value = toNMTOKENS(dtdAttribute.value);
             fireDTDAttributeEvent();
         }
         value.setLength(0);
@@ -857,6 +865,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.FIXED;
             dtdAttribute.value = value.toString();
+            if(dtdAttribute.type==AttributeType.NMTOKEN)
+                dtdAttribute.value = dtdAttribute.value.trim();
+            else if(dtdAttribute.type==AttributeType.NMTOKENS)
+                dtdAttribute.value = toNMTOKENS(dtdAttribute.value);
             fireDTDAttributeEvent();
         }
         value.setLength(0);
