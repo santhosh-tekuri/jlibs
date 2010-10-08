@@ -46,9 +46,21 @@ public class Stream{
         begin = end = lookAhead.end = 0;
     }
 
+    private String toString(int length){
+        StringBuilder buff = new StringBuilder();
+        for(int i=0; i<length; i++){
+            int data = charAt(i);
+            if(data==-1)
+                buff.append("<EOF>");
+            else
+                buff.appendCodePoint(data);
+        }
+        return buff.toString();
+    }
+
     @Override
     public String toString(){
-        return new String(chars, begin, length());
+        return toString(length());
     }
 
     public LookAhead lookAhead = new LookAhead();
@@ -104,7 +116,7 @@ public class Stream{
 
         @Override
         public String toString(){
-            return new String(chars, begin, length());
+            return Stream.this.toString(length());
         }
     }
 }
