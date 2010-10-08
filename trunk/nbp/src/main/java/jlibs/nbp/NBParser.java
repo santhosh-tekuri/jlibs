@@ -134,11 +134,14 @@ public abstract class NBParser{
 
     protected void expected(int ch, String... matchers) throws Exception{
         String found;
-        if(ch==-1)
-            found = "<EOF>";
-        else
-            found = new String(Character.toChars(ch));
-        
+        if(lookAhead.length()>0)
+            found = lookAhead.toString();
+        else{
+            if(ch==-1)
+                found = "<EOF>";
+            else
+                found = new String(Character.toChars(ch));
+        }        
         StringBuilder buff = new StringBuilder();
         for(String matcher: matchers){
             if(buff.length()>0)
