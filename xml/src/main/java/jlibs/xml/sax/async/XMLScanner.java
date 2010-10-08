@@ -2129,6 +2129,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[%]");
             case 1:
                 if(ch!=-1 && NAME_START(ch)){
+                    buffer.push();
                     push(RULE_NAME, 2, 0);
                     return 1;
                 }
@@ -2139,6 +2140,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[;]");
             case 3:
+                handler.peReference(buffer.pop(0, 1));
                 return -1;
             default:
                 throw new Error("impossible");
@@ -2149,53 +2151,47 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int ndata_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(WS(ch)){
+                if(ch=='N'){
                     return 1;
                 }
-                expected(ch, "<WS>");
+                expected(ch, "[N]");
             case 1:
-                if(ch=='N'){
+                if(ch=='D'){
                     return 2;
                 }
-                if(WS(ch)){
-                    return 1;
-                }
-                expected(ch, "[N] OR <WS>");
+                expected(ch, "[D]");
             case 2:
-                if(ch=='D'){
+                if(ch=='A'){
                     return 3;
                 }
-                expected(ch, "[D]");
+                expected(ch, "[A]");
             case 3:
-                if(ch=='A'){
+                if(ch=='T'){
                     return 4;
                 }
-                expected(ch, "[A]");
+                expected(ch, "[T]");
             case 4:
-                if(ch=='T'){
+                if(ch=='A'){
                     return 5;
                 }
-                expected(ch, "[T]");
+                expected(ch, "[A]");
             case 5:
-                if(ch=='A'){
+                if(WS(ch)){
                     return 6;
                 }
-                expected(ch, "[A]");
+                expected(ch, "<WS>");
             case 6:
                 if(WS(ch)){
-                    return 7;
+                    return 6;
                 }
-                expected(ch, "<WS>");
-            case 7:
                 if(ch!=-1 && NAME_START(ch)){
+                    buffer.push();
                     push(RULE_NAME, 8, 0);
                     return 1;
                 }
-                if(WS(ch)){
-                    return 7;
-                }
-                expected(ch, "<NAME_START> OR <WS>");
+                expected(ch, "<WS> OR <NAME_START>");
             case 8:
+                handler.notationReference(buffer.pop(0, 0));
                 return -1;
             default:
                 throw new Error("impossible");
@@ -2256,6 +2252,16 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<1)
                     return 2;
                 if(lookAhead.length()==1){
+                    if(Q(ch)){
+                        consumed();
+                        return 3;
+                    }
+                    if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
+                        push(RULE_Q_ENTITY_VALUE, 2, 0);
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
                     if(ch=='%'){
                         push(RULE_Q_ENTITY_VALUE, 2, 0);
                         push(RULE_PE_REFERENCE, 6, 0);
@@ -2266,11 +2272,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=-1 && lookAhead.length()<2)
                     return 2;
                 if(lookAhead.length()==2){
-                    if(DQ(lookAhead.charAt(0))){
-                        consumed();
-                        handler.valueEnd();
-                        return -1;
-                    }
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
                             push(RULE_Q_ENTITY_VALUE, 2, 0);
@@ -2292,14 +2293,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                if(ENTITY_Q_CONTENT(lookAhead.charAt(0))){
-                    push(RULE_Q_ENTITY_VALUE, 2, 0);
-                    buffer.push();
-                    consumed();
-                    lookAhead.reset();
-                    return 3;
-                }
-                expected(ch, "[%] OR <DQ><EOF> OR [\\&][\\#] OR [\\&]<NAME_START> OR <ENTITY_Q_CONTENT>");
+                expected(ch, "<Q> OR <ENTITY_Q_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
             case 3:
                 handler.valueEnd();
                 return -1;
@@ -2526,7 +2520,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch!=-1 && NCNAME_START(ch)){
                     buffer.push();
-                    push(RULE_NCNAME, 17, 0);
+                    push(RULE_NCNAME, 18, 0);
                     return 1;
                 }
                 expected(ch, "<WS> OR [%] OR <NCNAME_START>");
@@ -2536,106 +2530,109 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS>");
             case 11:
-                if(ch!=-1 && NCNAME_START(ch)){
-                    push(RULE_NCNAME, 12, 0);
-                    return 1;
-                }
                 if(WS(ch)){
                     return 11;
                 }
-                expected(ch, "<NCNAME_START> OR <WS>");
-            case 12:
+                if(ch!=-1 && NCNAME_START(ch)){
+                    buffer.push();
+                    push(RULE_NCNAME, 13, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NCNAME_START>");
+            case 13:
                 if(WS(ch)){
-                    return 13;
+                    handler.paramEntityName(buffer.pop(0, 0));
+                    return 14;
                 }
                 expected(ch, "<WS>");
-            case 13:
+            case 14:
                 if(ch=='P'){
-                    push(RULE_PE_DEF, 14, 0);
+                    push(RULE_PE_DEF, 15, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
                     push(RULE_PUBLIC_ID, 1, 0);
                     return 1;
                 }
                 if(ch=='S'){
-                    push(RULE_PE_DEF, 14, 0);
+                    push(RULE_PE_DEF, 15, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(Q(ch)){
-                    push(RULE_PE_DEF, 14, 0);
+                    push(RULE_PE_DEF, 15, 0);
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
                 if(DQ(ch)){
-                    push(RULE_PE_DEF, 14, 0);
+                    push(RULE_PE_DEF, 15, 0);
                     push(RULE_ENTITY_VALUE, 1, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 4;
-                }
-                if(WS(ch)){
-                    return 13;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
-            case 14:
-                if(ch=='>'){
-                    return 15;
                 }
                 if(WS(ch)){
                     return 14;
                 }
-                expected(ch, "[>] OR <WS>");
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
             case 15:
+                if(ch=='>'){
+                    return 16;
+                }
+                if(WS(ch)){
+                    return 15;
+                }
+                expected(ch, "[>] OR <WS>");
+            case 16:
+                handler.paramEntityEnd();
                 return -1;
-            case 17:
+            case 18:
                 if(WS(ch)){
                     handler.entityName(buffer.pop(0, 0));
-                    return 18;
+                    return 19;
                 }
                 expected(ch, "<WS>");
-            case 18:
+            case 19:
                 if(ch=='P'){
-                    push(RULE_ENTITY_DEF, 19, 0);
+                    push(RULE_ENTITY_DEF, 20, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
                     push(RULE_PUBLIC_ID, 1, 0);
                     return 1;
                 }
                 if(ch=='S'){
-                    push(RULE_ENTITY_DEF, 19, 0);
+                    push(RULE_ENTITY_DEF, 20, 0);
                     push(RULE_EXTERNAL_ID, 1, 0);
                     push(RULE_SYSTEM_ID, 5, 0);
                     return 1;
                 }
                 if(Q(ch)){
-                    push(RULE_ENTITY_DEF, 19, 0);
-                    push(RULE_ENTITY_VALUE, 2, 0);
+                    push(RULE_ENTITY_DEF, 20, 0);
+                    push(RULE_ENTITY_VALUE, 4, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
                 if(DQ(ch)){
-                    push(RULE_ENTITY_DEF, 19, 0);
-                    push(RULE_ENTITY_VALUE, 2, 0);
+                    push(RULE_ENTITY_DEF, 20, 0);
+                    push(RULE_ENTITY_VALUE, 4, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 4;
                 }
                 if(WS(ch)){
-                    return 18;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
-            case 19:
-                if(WS(ch)){
                     return 19;
                 }
-                if(ch=='>'){
+                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
+            case 20:
+                if(WS(ch)){
                     return 20;
                 }
+                if(ch=='>'){
+                    return 21;
+                }
                 expected(ch, "<WS> OR [>]");
-            case 20:
+            case 21:
                 handler.entityEnd();
                 return -1;
             default:
@@ -2658,13 +2655,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 }
                 if(Q(ch)){
-                    push(RULE_ENTITY_VALUE, 2, 0);
+                    push(RULE_ENTITY_VALUE, 4, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 2;
                 }
                 if(DQ(ch)){
-                    push(RULE_ENTITY_VALUE, 2, 0);
+                    push(RULE_ENTITY_VALUE, 4, 0);
                     handler.valueStart();
                     handler.entityValue();
                     return 4;
@@ -2672,11 +2669,28 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
             case 1:
                 if(WS(ch)){
-                    push(RULE_NDATA_DECL, 2, 0);
-                    return 1;
+                    return 2;
                 }
                 return -1;
             case 2:
+                if(ch=='N'){
+                    push(RULE_NDATA_DECL, 4, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 3;
+                }
+                return -1;
+            case 3:
+                if(ch=='N'){
+                    push(RULE_NDATA_DECL, 4, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 3;
+                }
+                expected(ch, "[N] OR <WS>");
+            case 4:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -5073,6 +5087,933 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
+    public static final int RULE_TEXT_DECL = 67;
+    private int text_decl(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                if(ch=='<'){
+                    return 1;
+                }
+                expected(ch, "[<]");
+            case 1:
+                if(ch=='?'){
+                    return 2;
+                }
+                expected(ch, "[?]");
+            case 2:
+                if(ch=='x'){
+                    return 3;
+                }
+                expected(ch, "[x]");
+            case 3:
+                if(ch=='m'){
+                    return 4;
+                }
+                expected(ch, "[m]");
+            case 4:
+                if(ch=='l'){
+                    return 5;
+                }
+                expected(ch, "[l]");
+            case 5:
+                if(WS(ch)){
+                    return 7;
+                }
+                if(ch=='?'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [?]");
+            case 7:
+                if(ch=='v'){
+                    push(RULE_VERSION_INFO, 8, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 7;
+                }
+                if(ch=='?'){
+                    return 13;
+                }
+                if(ch=='e'){
+                    push(RULE_ENC_DECL, 11, 0);
+                    return 1;
+                }
+                expected(ch, "[v] OR <WS> OR [?] OR [e]");
+            case 8:
+                if(WS(ch)){
+                    return 9;
+                }
+                if(ch=='?'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [?]");
+            case 9:
+                if(WS(ch)){
+                    return 9;
+                }
+                if(ch=='e'){
+                    push(RULE_ENC_DECL, 11, 0);
+                    return 1;
+                }
+                if(ch=='?'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [e] OR [?]");
+            case 11:
+                if(WS(ch)){
+                    return 11;
+                }
+                if(ch=='?'){
+                    return 13;
+                }
+                expected(ch, "<WS> OR [?]");
+            case 13:
+                if(ch=='>'){
+                    return 14;
+                }
+                expected(ch, "[>]");
+            case 14:
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_IGNORE_SECT_CONTENTS = 68;
+    private int ignore_sect_contents(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                if(ch!=-1 && CHAR(ch)){
+                    buffer.push();
+                    return 4;
+                }
+                return -1;
+            case 4:
+                if(ch=='<'){
+                    return 5;
+                }
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 4;
+                }
+                handler.ignoreSectContents(buffer.pop(0, 0));
+                return -1;
+            case 5:
+                if(ch=='!'){
+                    return 6;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 4;
+                }
+                expected(ch, "[!] OR <CHAR>");
+            case 6:
+                if(ch=='['){
+                    return 7;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 4;
+                }
+                expected(ch, "[\\[] OR <CHAR>");
+            case 7:
+                if(ch!=-1 && CHAR(ch)){
+                    handler.ignoreStart(buffer.pop(0, 0));
+                    buffer.push();
+                    return 4;
+                }
+                handler.ignoreStart(buffer.pop(0, 0));
+                return -1;
+            case 9:
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch=='>'){
+                    return 10;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 4;
+                }
+                expected(ch, "[\\]] OR [>] OR <CHAR>");
+            case 10:
+                if(ch!=-1 && CHAR(ch)){
+                    handler.ignoreEnd(buffer.pop(0, 0));
+                    buffer.push();
+                    return 4;
+                }
+                handler.ignoreEnd(buffer.pop(0, 0));
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_IGNORE_SECT = 69;
+    private int ignore_sect(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                if(ch=='I'){
+                    return 1;
+                }
+                expected(ch, "[I]");
+            case 1:
+                if(ch=='G'){
+                    return 2;
+                }
+                expected(ch, "[G]");
+            case 2:
+                if(ch=='N'){
+                    return 3;
+                }
+                expected(ch, "[N]");
+            case 3:
+                if(ch=='O'){
+                    return 4;
+                }
+                expected(ch, "[O]");
+            case 4:
+                if(ch=='R'){
+                    return 5;
+                }
+                expected(ch, "[R]");
+            case 5:
+                if(ch=='E'){
+                    return 6;
+                }
+                expected(ch, "[E]");
+            case 6:
+                if(WS(ch)){
+                    return 6;
+                }
+                if(ch=='['){
+                    return 7;
+                }
+                expected(ch, "<WS> OR [\\[]");
+            case 7:
+                if(ch!=-1 && CHAR(ch)){
+                    handler.ignoreSect();
+                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
+                    buffer.push();
+                    return 4;
+                }
+                handler.ignoreSect();
+                push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
+                pop();
+                return -1;
+            case 8:
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_EXT_SUBSET_DECL = 70;
+    private int ext_subset_decl(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 0;
+                if(lookAhead.length()==1){
+                    if(ch=='%'){
+                        push(RULE_DECL_SEP, 2, 0);
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consumed();
+                        return 1;
+                    }
+                    if(WS(ch)){
+                        push(RULE_DECL_SEP, 2, 0);
+                        consumed();
+                        return 2;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 0;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch=='?'){
+                            push(RULE_MARKUP_DECL, 2, 0);
+                            push(RULE_PI, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 0;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_ATT_LIST_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='N'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_NOTATION_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='-'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_COMMENT, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                push(RULE_CONDITIONAL_SECT, 2, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<4)
+                    return 0;
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ELEMENT_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                                if(ch=='N'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ENTITY_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+                return -1;
+            case 2:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 2;
+                if(lookAhead.length()==1){
+                    if(ch=='%'){
+                        push(RULE_DECL_SEP, 2, 0);
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consumed();
+                        return 1;
+                    }
+                    if(WS(ch)){
+                        push(RULE_DECL_SEP, 2, 0);
+                        consumed();
+                        return 2;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 2;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch=='?'){
+                            push(RULE_MARKUP_DECL, 2, 0);
+                            push(RULE_PI, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 2;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_ATT_LIST_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='N'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_NOTATION_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='-'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_COMMENT, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                push(RULE_CONDITIONAL_SECT, 2, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<4)
+                    return 2;
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ELEMENT_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                                if(ch=='N'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ENTITY_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_CONDITIONAL_SECT = 71;
+    private int conditional_sect(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                if(ch=='<'){
+                    return 1;
+                }
+                expected(ch, "[<]");
+            case 1:
+                if(ch=='!'){
+                    return 2;
+                }
+                expected(ch, "[!]");
+            case 2:
+                if(ch=='['){
+                    return 3;
+                }
+                expected(ch, "[\\[]");
+            case 3:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 3;
+                if(lookAhead.length()==1){
+                    if(WS(ch)){
+                        consumed();
+                        return 3;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 3;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='I'){
+                        if(ch=='G'){
+                            push(RULE_IGNORE_SECT, 4, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch=='N'){
+                            push(RULE_INCLUDE_SECT, 4, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                expected(ch, "<WS> OR [I][G] OR [I][N]");
+            case 4:
+                handler.sectEnd();
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_INCLUDE_SECT = 72;
+    private int include_sect(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                if(ch=='I'){
+                    return 1;
+                }
+                expected(ch, "[I]");
+            case 1:
+                if(ch=='N'){
+                    return 2;
+                }
+                expected(ch, "[N]");
+            case 2:
+                if(ch=='C'){
+                    return 3;
+                }
+                expected(ch, "[C]");
+            case 3:
+                if(ch=='L'){
+                    return 4;
+                }
+                expected(ch, "[L]");
+            case 4:
+                if(ch=='U'){
+                    return 5;
+                }
+                expected(ch, "[U]");
+            case 5:
+                if(ch=='D'){
+                    return 6;
+                }
+                expected(ch, "[D]");
+            case 6:
+                if(ch=='E'){
+                    return 7;
+                }
+                expected(ch, "[E]");
+            case 7:
+                if(WS(ch)){
+                    return 7;
+                }
+                if(ch=='['){
+                    return 8;
+                }
+                expected(ch, "<WS> OR [\\[]");
+            case 8:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 8;
+                if(lookAhead.length()==1){
+                    if(ch=='%'){
+                        handler.includeSect();
+                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consumed();
+                        return 1;
+                    }
+                    if(WS(ch)){
+                        handler.includeSect();
+                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        consumed();
+                        return 2;
+                    }
+                    if(ch==']'){
+                        handler.includeSect();
+                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                        pop();
+                        consumed();
+                        return 10;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 8;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch=='?'){
+                            handler.includeSect();
+                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            push(RULE_MARKUP_DECL, 2, 0);
+                            push(RULE_PI, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 8;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                handler.includeSect();
+                                push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_ATT_LIST_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='N'){
+                                handler.includeSect();
+                                push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_NOTATION_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='-'){
+                                handler.includeSect();
+                                push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_COMMENT, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                handler.includeSect();
+                                push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                push(RULE_CONDITIONAL_SECT, 2, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<4)
+                    return 8;
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    handler.includeSect();
+                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ELEMENT_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                                if(ch=='N'){
+                                    handler.includeSect();
+                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ENTITY_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+                expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
+            case 9:
+                if(ch==']'){
+                    return 10;
+                }
+                expected(ch, "[\\]]");
+            case 10:
+                if(ch==']'){
+                    return 11;
+                }
+                expected(ch, "[\\]]");
+            case 11:
+                if(ch=='>'){
+                    return 12;
+                }
+                expected(ch, "[>]");
+            case 12:
+                handler.ignoreEnd();
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_EXT_SUBSET = 73;
+    private int ext_subset(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 0;
+                if(lookAhead.length()==1){
+                    if(ch=='%'){
+                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consumed();
+                        return 1;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        consumed();
+                        return 2;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 0;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_ATT_LIST_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='N'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_NOTATION_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='-'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_COMMENT, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_CONDITIONAL_SECT, 2, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<4)
+                    return 0;
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ELEMENT_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                                if(ch=='N'){
+                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ENTITY_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<6)
+                    return 0;
+                if(lookAhead.length()==6){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='?'){
+                            if(lookAhead.charAt(2)=='x'){
+                                if(lookAhead.charAt(3)=='m'){
+                                    if(lookAhead.charAt(4)=='l'){
+                                        if(WS(ch)){
+                                            push(RULE_TEXT_DECL, 1, 0);
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            return 7;
+                                        }
+                                        if(ch=='?'){
+                                            push(RULE_TEXT_DECL, 1, 0);
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            consumed();
+                                            return 13;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if(lookAhead.charAt(0)=='<'){
+                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                    push(RULE_MARKUP_DECL, 2, 0);
+                    push(RULE_PI, 1, 0);
+                    consumed();
+                    lookAhead.reset();
+                    return 1;
+                }
+                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                pop();
+                return -1;
+            case 1:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 1;
+                if(lookAhead.length()==1){
+                    if(ch=='%'){
+                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consumed();
+                        return 1;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_DECL_SEP, 2, 0);
+                        consumed();
+                        return 2;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 1;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch=='?'){
+                            push(RULE_EXT_SUBSET_DECL, 2, 0);
+                            push(RULE_MARKUP_DECL, 2, 0);
+                            push(RULE_PI, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 1;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_ATT_LIST_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='N'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_NOTATION_DECL, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='-'){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_COMMENT, 1, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_CONDITIONAL_SECT, 2, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<4)
+                    return 1;
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ELEMENT_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                                if(ch=='N'){
+                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_ENTITY_DECL, 1, 0);
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    consumed();
+                                    return 4;
+                                }
+                            }
+                        }
+                    }
+                }
+                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                pop();
+                return -1;
+            case 2:
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
     @Override
     protected int callRule(int ch) throws Exception{
         switch(ruleStack.peek()){
@@ -5210,6 +6151,20 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 return value_content(ch);
             case 66:
                 return value_entity(ch);
+            case 67:
+                return text_decl(ch);
+            case 68:
+                return ignore_sect_contents(ch);
+            case 69:
+                return ignore_sect(ch);
+            case 70:
+                return ext_subset_decl(ch);
+            case 71:
+                return conditional_sect(ch);
+            case 72:
+                return include_sect(ch);
+            case 73:
+                return ext_subset(ch);
             default:
                 throw new Error("impossible");
         }
@@ -5225,7 +6180,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         handler.fatalError(message);
     }
 
-    private final jlibs.xml.sax.async.AsyncXMLReader handler;
+    protected final jlibs.xml.sax.async.AsyncXMLReader handler;
     public XMLScanner(jlibs.xml.sax.async.AsyncXMLReader handler, int startingRule){
         super(6, startingRule);
         this.handler = handler;

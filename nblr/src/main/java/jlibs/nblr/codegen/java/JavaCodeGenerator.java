@@ -93,7 +93,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                     MINUS,
                 "}",
                 "",
-                "private final "+ handlerName +" handler;",
+                "protected final "+ handlerName +" handler;",
                 "public "+className+"("+ handlerName +" handler, int startingRule){",
                     PLUS,
                     "super("+debuggerArgs+maxLookAhead+", startingRule);",
