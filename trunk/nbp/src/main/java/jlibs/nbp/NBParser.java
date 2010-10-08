@@ -134,8 +134,8 @@ public abstract class NBParser{
 
     protected void expected(int ch, String... matchers) throws Exception{
         String found;
-        if(lookAhead.length()>0)
-            found = lookAhead.toString();
+        if(stream.length()>0)
+            found = stream.toString();
         else{
             if(ch==-1)
                 found = "<EOF>";
@@ -149,7 +149,7 @@ public abstract class NBParser{
             buff.append(matcher);
         }
 
-        String message = "Found: "+found+" Expected: "+buff.toString();
+        String message = "Found: '"+found+"' Expected: "+buff.toString();
         fatalError(message);
         throw new IOException(message);
     }
