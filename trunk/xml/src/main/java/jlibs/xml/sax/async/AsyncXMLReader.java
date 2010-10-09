@@ -156,11 +156,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         paramEntityName = null;
         paramEntities.clear();
         externalParamEntities.clear();
+        entitiesWithExternalEntityValue.clear();
+        unparsedEntities.clear();
 
         dtdAttributes.clear();
         dtdElementName = null;
         attributeList = null;
         dtdAttribute = null;
+        open = 0;
 
         handler.setDocumentLocator(this);
         handler.startDocument();
@@ -287,11 +290,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(entityValue==null)
                 fatalError("The entity \""+entity+"\" was referenced, but not declared.");
 
-            if(externalEntities.contains(entity))
+            if(unparsedEntities.contains(entity))
+                fatalError("The unparsed entity reference \"&"+entity+";\" is not permitted");
+            
+            if(standalone==Boolean.TRUE && externalEntities.contains(entity))
                 fatalError("The external entity reference \"&"+entity+";\" is not permitted in standalone document");
 
             int rule;
             if(valueStarted){
+                if(entitiesWithExternalEntityValue.contains(entity))
+                    fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
+
                 char chars[] = new char[entityValue.length];
                 for(int i=chars.length-1; i>=0; i--){
                     char ch = entityValue[i];
@@ -618,6 +627,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
         handler.notationDecl(notationName, publicID, systemID);
         notationName = null;
+        publicID = this.systemID = null;
     }
 
     void dtdElement(Chars data){
@@ -645,29 +655,33 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         entityName = data.toString();
     }
 
+    private Set<String> unparsedEntities = new HashSet<String>();
     void notationReference(Chars data) throws IOException, SAXException{
         String systemID = this.systemID;
         if(systemID!=null && curScanner.sourceURL!=null)
             systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
         handler.unparsedEntityDecl(entityName, publicID, systemID, data.toString());
+        unparsedEntities.add(entityName);
     }
 
     private Map<String, char[]> entities = new HashMap<String, char[]>();
     private Set<String> externalEntities = new HashSet<String>();
+    private Set<String> entitiesWithExternalEntityValue = new HashSet<String>();
     void entityEnd() throws SAXException{
+        if(curScanner!=xmlScanner)
+            externalEntities.add(entityName);
+
         if(systemID==null && publicID==null){
             // entities may be declared more than once, with the first declaration being the binding one
             if(!entities.containsKey(entityName))
                 entities.put(entityName, value.toString().toCharArray());
             value.setLength(0);
-            if(curScanner!=xmlScanner)
-                externalEntities.add(entityName);
         }else{
             if(standalone==Boolean.TRUE)
                 fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
             if(!entities.containsKey(entityName))
                 entities.put(entityName, "external-entity".toCharArray()); //todo
-            externalEntities.add(entityName);
+            entitiesWithExternalEntityValue.add(entityName);
             publicID = systemID = null; 
         }
     }
@@ -866,10 +880,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void ignoreEnd(Chars data) throws SAXException{
-        ignoreEnd();
+        if(open==0)
+            fatalError("']]>' is unexpected here");
+        open--;
     }
 
-    void ignoreEnd() throws SAXException{
+    void includeEnd() throws SAXException{
         if(open==0)
             fatalError("']]>' is unexpected here");
         open--;
@@ -897,7 +913,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P10/ibm10v08.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P32/ibm32v02.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);

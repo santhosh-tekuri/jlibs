@@ -5751,7 +5751,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[>]");
             case 12:
-                handler.ignoreEnd();
+                handler.includeEnd();
                 return -1;
             default:
                 throw new Error("impossible");
