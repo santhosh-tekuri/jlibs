@@ -27,6 +27,11 @@ import java.util.Map;
 public class DTD{
     public String root;
     public Map<String, Map<String, DTDAttribute>> attributes = new HashMap<String, Map<String, DTDAttribute>>();
+    private Namespaces namespaces;
+
+    public DTD(Namespaces namespaces){
+        this.namespaces = namespaces;
+    }
 
     public void reset(){
         root = null;
@@ -54,8 +59,18 @@ public class DTD{
                 case FIXED:
                     if(attributes.getIndex(dtdAttr.name)==-1 && !dtdAttr.isNamespace()){
                         AttributeType type = dtdAttr.type==AttributeType.ENUMERATION ? AttributeType.NMTOKEN : dtdAttr.type;
-                        // todo: what about if dtdAttr.name has ':'
-                        attributes.addAttribute("", dtdAttr.name, dtdAttr.name, type.name(), dtdAttr.value);
+
+                        String namespaceURI = "";
+                        String localName = dtdAttr.name;
+                        String qname = localName;
+                        int colon = qname.indexOf(':');
+                        if(colon!=-1){
+                            localName = qname.substring(colon+1);
+                            String prefix = qname.substring(0, colon);
+                            if(prefix.length()>0)
+                                namespaceURI = namespaces.getNamespaceURI(prefix);
+                        }
+                        attributes.addAttribute(namespaceURI, localName, qname, type.name(), dtdAttr.value);
                     }
             }
         }
