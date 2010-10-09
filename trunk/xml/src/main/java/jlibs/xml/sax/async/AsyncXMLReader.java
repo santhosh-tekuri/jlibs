@@ -629,20 +629,32 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private Set<String> externalEntities = new HashSet<String>();
     private Set<String> entitiesWithExternalEntityValue = new HashSet<String>();
     void entityEnd() throws SAXException{
+        // entities may be declared more than once, with the first declaration being the binding one        
         if(!entities.containsKey(entityName)){
             if(curScanner!=xmlScanner)
                 externalEntities.add(entityName);
 
             if(systemID==null && publicID==null){
-                // entities may be declared more than once, with the first declaration being the binding one
-                if(!entities.containsKey(entityName))
-                    entities.put(entityName, value.toString().toCharArray());
+                entities.put(entityName, value.toString().toCharArray());
 
             }else{
                 if(standalone==Boolean.TRUE && curScanner==xmlScanner)
                     fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
-                if(!entities.containsKey(entityName))
-                    entities.put(entityName, "external-entity".toCharArray()); //todo
+                try{
+                    String systemID = this.systemID;
+                    if(systemID!=null && curScanner.sourceURL!=null)
+                        systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
+                    InputSource is = handler.resolveEntity(publicID, systemID);
+
+                    XMLEntityScanner externalEntityValueScanner = new XMLEntityScanner(this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
+                    externalEntityValueScanner.parent = curScanner;
+                    curScanner = externalEntityValueScanner;
+                    externalEntityValueScanner.parse(is);
+                    curScanner = curScanner.parent;
+                    entities.put(entityName, value.toString().toCharArray());
+                }catch(IOException ex){
+                    throw new RuntimeException(ex);
+                }
                 entitiesWithExternalEntityValue.add(entityName);
 
             }
@@ -660,19 +672,34 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private Map<String, char[]> paramEntities = new HashMap<String,char[]>();
     private Set<String> externalParamEntities = new HashSet<String>();
-    void paramEntityEnd(){
-        if(systemID==null && publicID==null){
-            // entities may be declared more than once, with the first declaration being the binding one
-            if(!paramEntities.containsKey(paramEntityName))
+    void paramEntityEnd() throws SAXException{
+        if(!paramEntities.containsKey(paramEntityName)){
+            if(systemID==null && publicID==null){
                 paramEntities.put(paramEntityName, value.toString().toCharArray());
-            value.setLength(0);
-            if(curScanner!=xmlScanner)
-                externalEntities.add(paramEntityName);
-        }else{
-            if(!paramEntities.containsKey(paramEntityName))
-                paramEntities.put(paramEntityName, "external-param-entity".toCharArray()); //todo
-            externalParamEntities.add(paramEntityName);
+                if(curScanner!=xmlScanner)
+                    externalEntities.add(paramEntityName);
+            }else{
+                try{
+                    String systemID = this.systemID;
+                    if(systemID!=null && curScanner.sourceURL!=null)
+                        systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
+                    InputSource is = handler.resolveEntity(publicID, systemID);
+                    if(is==null)
+                        is = new InputSource(systemID);
+                    XMLEntityScanner externalEntityValueScanner = new XMLEntityScanner(this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
+                    externalEntityValueScanner.parent = curScanner;
+                    curScanner = externalEntityValueScanner;
+                    externalEntityValueScanner.parse(is);
+                    curScanner = curScanner.parent;
+                    paramEntities.put(paramEntityName, value.toString().toCharArray());
+                }catch(IOException ex){
+                    throw new RuntimeException(ex);
+                }
+                externalParamEntities.add(paramEntityName);
+            }
         }
+        value.setLength(0);
+        publicID = systemID = null;
     }
 
     /*-------------------------------------------------[ DTD Attributes ]---------------------------------------------------*/
@@ -870,7 +897,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/not-sa02.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/020.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -897,7 +924,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
         parser.parse(new InputSource(file));
 
-        
 //        parser.scanner.write("<root attr1='value1'/>");        
 //        parser.scanner.close();
     }

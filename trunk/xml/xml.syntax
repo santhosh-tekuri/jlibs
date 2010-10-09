@@ -52,6 +52,12 @@
             <any chars="&lt;&amp;&quot;"/>
         </not>
     </and>
+    <and name="ENTITY_CONTENT">
+        <matcher name="CHAR"/>
+        <not>
+            <any chars="%&amp;"/>
+        </not>
+    </and>
     <and name="ENTITY_Q_CONTENT">
         <matcher name="CHAR"/>
         <not>
@@ -3086,5 +3092,49 @@
             <rule name="ext_subset_decl"/>
         </edge>
         <edge source="0" target="1" fallback="false"/>
+    </rule>
+    <rule name="entity_value_content">
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="ENTITY_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="0" target="5" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="0" target="6" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+    </rule>
+    <rule name="entity_value_entity">
+        <node>
+            <event name="valueStart"/>
+        </node>
+        <node>
+            <event name="entityValue"/>
+        </node>
+        <node/>
+        <node>
+            <event name="valueEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <rule name="entity_value_content"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
     </rule>
 </syntax>
