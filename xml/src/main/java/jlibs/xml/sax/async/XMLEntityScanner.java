@@ -19,11 +19,11 @@ import jlibs.core.io.BOM;
 import jlibs.core.io.IOUtil;
 import jlibs.core.io.UnicodeInputStream;
 import jlibs.core.net.URLUtil;
+import org.apache.xerces.impl.XMLEntityManager;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -235,7 +235,15 @@ public class XMLEntityScanner extends XMLScanner{
         }
     }
 
-    public URL resolve(String relativePath) throws MalformedURLException{
-        return new URL(sourceURL, relativePath);
+    public InputSource resolve(String publicID, String systemID) throws IOException{
+        InputSource inputSource = new InputSource(resolve(systemID));
+        inputSource.setPublicId(publicID);
+        return inputSource;
+    }
+
+    public String resolve(String systemID) throws IOException{
+        if(systemID!=null && sourceURL!=null)
+            systemID = XMLEntityManager.expandSystemId(systemID, sourceURL.toString(), false);
+        return systemID;
     }
 }

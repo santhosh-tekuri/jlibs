@@ -15,28 +15,21 @@
 
 package jlibs.xml.sax.async;
 
-import jlibs.xml.sax.SAXDelegate;
-import org.xml.sax.SAXException;
-
-import java.util.List;
-
 /**
  * @author Santhosh Kumar T
  */
-public class DTDAttribute{
-    public String element;
-    
+public class QName{
+    public String prefix;
+    public String localName;
     public String name;
-    public AttributeType type;
-    public AttributeValueType valueType;
-    public String value;
-    public List<String> validValues;
 
-    boolean isNamespace(){
-        return name.equals("xmlns") || name.startsWith("xmlns:");
+    public QName(){
+        reset();
     }
-    
-    void fire(SAXDelegate handler) throws SAXException{
-        handler.attributeDecl(element, name, type.toString(validValues), valueType.mode, value);
+
+    public void reset(){
+        prefix = "";
+        localName = null;
+        name = null;
     }
 }

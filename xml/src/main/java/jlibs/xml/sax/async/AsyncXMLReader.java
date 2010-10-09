@@ -19,26 +19,21 @@ import jlibs.core.io.IOUtil;
 import jlibs.core.net.URLUtil;
 import jlibs.nbp.Chars;
 import jlibs.nbp.NBHandler;
-import jlibs.xml.ClarkName;
-import jlibs.xml.NamespaceMap;
 import jlibs.xml.sax.AbstractXMLReader;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.xsl.TransformerUtil;
-import org.apache.xerces.impl.XMLEntityManager;
+import org.apache.xerces.util.XMLChar;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.Locator2;
-import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -128,38 +123,31 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         encoding = "UTF-8";
         standalone = null;
         xdeclEnd = false;
-        clearQName();
+        curQName.reset();
         value.setLength(0);
         valueStarted = false;
         entityValue = false;
 
-        namespaces = new NamespaceMap();
-        attributes.clear();
-
-        elementsPrefixes.clear();
-        elementsLocalNames.clear();
-        elementsQNames.clear();
+        namespaces.reset();
+        attributes.reset();
+        elements.reset();
 
         externalDTDPublicID = null;
         externalDTDSystemID = null;
         piTarget = null;
-        dtdRoot = null;
         systemID = null;
         publicID = null;
         notationName = null;
 
         entityName = null;
         entities.clear();
-        externalEntities.clear();
         entityStack.clear();
 
         paramEntityName = null;
         paramEntities.clear();
         externalParamEntities.clear();
-        entitiesWithExternalEntityValue.clear();
-        unparsedEntities.clear();
 
-        dtdAttributes.clear();
+        dtd.reset();
         dtdElementName = null;
         attributeList = null;
         dtdAttribute = null;
@@ -193,25 +181,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
 
-    private String prefix = "";
+    private QName curQName = new QName();
     void prefix(Chars data){
-        prefix = data.toString();
+        curQName.prefix = data.toString();
     }
 
-    private String localName;
     void localName(Chars data){
-        localName = data.toString();
+        curQName.localName = data.toString();
     }
 
-    private String qname;
     void qname(Chars data){
-        qname = data.toString();
-    }
-
-    private void clearQName(){
-        prefix = "";
-        localName = null;
-        qname = null;
+        curQName.name = data.toString();
     }
 
     /*-------------------------------------------------[ Value ]---------------------------------------------------*/
@@ -241,37 +221,29 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
     }
 
-    private boolean isValid(int ch){
-        return (ch==0x9 || ch==0xa || ch==0xd) || (ch>=0x20 && ch<=0xd7ff) || (ch>=0xe000 && ch<=0xfffd) || (ch>=0x10000 && ch<=0x10ffff);
-    }
-
     void hexCode(Chars data) throws SAXException{
-        int codePoint = Integer.parseInt(data.toString(), 16);
-        if(!isValid(codePoint))
-            fatalError("invalid xml character");
-        if(valueStarted)
-            value.appendCodePoint(codePoint);
-        else{
-            char chars[] = Character.toChars(codePoint);
-            handler.characters(chars, 0, chars.length);
-        }
+        codePoint(Integer.parseInt(data.toString(), 16));
     }
 
     void asciiCode(Chars data) throws SAXException{
-        int codePoint = Integer.parseInt(data.toString(), 10);
-        if(!isValid(codePoint))
+        codePoint(Integer.parseInt(data.toString(), 10));
+    }
+
+    private void codePoint(int cp) throws SAXException{
+        if(XMLChar.isValid(cp)){
+            if(valueStarted)
+                value.appendCodePoint(cp);
+            else{
+                char chars[] = Character.toChars(cp);
+                handler.characters(chars, 0, chars.length);
+            }
+        }else
             fatalError("invalid xml character");
-        if(valueStarted)
-            value.appendCodePoint(codePoint);
-        else{
-            char chars[] = Character.toChars(codePoint);
-            handler.characters(chars, 0, chars.length);
-        }
     }
 
     private ArrayDeque<String> entityStack = new ArrayDeque<String>();
     @SuppressWarnings({"ConstantConditions"})
-    void entityReference(Chars data) throws SAXException{
+    void entityReference(Chars data) throws SAXException, IOException{
         if(entityValue){
             value.append('&').append(data).append(';');
             return;
@@ -279,40 +251,22 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         
         String entity = data.toString();
 
-        char[] entityValue = defaultEntities.get(entity);
-        if(entityValue!=null){
+        char[] entityContent = defaultEntities.get(entity);
+        if(entityContent!=null){
             if(valueStarted)
-                value.append(entityValue);
+                value.append(entityContent);
             else
-                handler.characters(entityValue, 0, entityValue.length);
+                handler.characters(entityContent, 0, entityContent.length);
         }else{
-            entityValue = entities.get(entity);
+            EntityValue entityValue = entities.get(entity);
             if(entityValue==null)
                 fatalError("The entity \""+entity+"\" was referenced, but not declared.");
 
-            if(unparsedEntities.contains(entity))
+            if(entityValue.unparsed)
                 fatalError("The unparsed entity reference \"&"+entity+";\" is not permitted");
             
-            if(standalone==Boolean.TRUE && externalEntities.contains(entity))
+            if(standalone==Boolean.TRUE && entityValue.externalDefinition)
                 fatalError("The external entity reference \"&"+entity+";\" is not permitted in standalone document");
-
-            int rule;
-            if(valueStarted){
-                if(entitiesWithExternalEntityValue.contains(entity))
-                    fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
-
-                char chars[] = new char[entityValue.length];
-                for(int i=chars.length-1; i>=0; i--){
-                    char ch = entityValue[i];
-                    if(ch=='\n' || ch=='\r' || ch=='\t')
-                        ch = ' ';
-                    chars[i] = ch;
-                }
-                entityValue = chars;
-
-                rule = XMLScanner.RULE_VALUE_ENTITY;
-            }else
-                 rule = XMLScanner.RULE_ELEM_ENTITY;
 
             if(entityStack.contains(entity)){
                 StringBuilder message = new StringBuilder("Recursive entity reference ");
@@ -330,10 +284,32 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 message.append(')');
                 fatalError(message.toString());
             }
+
+            int rule;
+            if(valueStarted){
+                if(entityValue.externalValue)
+                    fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
+
+                entityContent = entityValue.getContent();
+                char chars[] = new char[entityContent.length];
+                for(int i=chars.length-1; i>=0; i--){
+                    char ch = entityContent[i];
+                    if(ch=='\n' || ch=='\r' || ch=='\t')
+                        ch = ' ';
+                    chars[i] = ch;
+                }
+                entityContent = chars;
+
+                rule = XMLScanner.RULE_VALUE_ENTITY;
+            }else{
+                entityContent = entityValue.getContent();
+                rule = XMLScanner.RULE_ELEM_ENTITY;
+            }
+
             entityStack.push(entity);
             try{
                 XMLScanner entityValueScanner = new XMLScanner(this, rule);
-                entityValueScanner.writer.write(entityValue);
+                entityValueScanner.writer.write(entityContent);
                 entityValueScanner.writer.close();
             }catch(IOException ex){
                 throw new RuntimeException(ex);
@@ -372,134 +348,37 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ Start Element ]---------------------------------------------------*/
 
-    private NamespaceMap namespaces = new NamespaceMap();
-    private AttributesImpl attributes = new AttributesImpl();
-
-    private Deque<String> elementsPrefixes = new ArrayDeque<String>();
-    private Deque<String> elementsLocalNames = new ArrayDeque<String>();
-    private Deque<String> elementsQNames = new ArrayDeque<String>();
+    private final Namespaces namespaces = new Namespaces(handler);
+    private final DTD dtd = new DTD();
+    private final Attributes attributes = new Attributes(namespaces, dtd);
+    private final Elements elements = new Elements(handler, namespaces, attributes);
 
     void attributesStart(){
-        elementsPrefixes.push(prefix);
-        elementsLocalNames.push(localName);
-        elementsQNames.push(qname);
-        clearQName();
-
-        namespaces = new NamespaceMap(namespaces);
-        attributes.clear();
+        elements.push1(curQName);
     }
 
     void attributeEnd() throws SAXException{
-        AttributeType type = AttributeType.CDATA;
-        Map<String, DTDAttribute> attrList = dtdAttributes.get(elementsQNames.peek());
-        if(attrList!=null){
-            DTDAttribute dtdAttr = attrList.get(qname);
-            if(dtdAttr!=null)
-                type = dtdAttr.type==AttributeType.ENUMERATION ? AttributeType.NMTOKEN : dtdAttr.type;
-        }
-
-        String value = this.value.toString();
-        value = type.normalize(value);
-
-        if(qname.equals("xmlns")){
-            namespaces.put("", value);
-            handler.startPrefixMapping("", value);
-        }else if(prefix.equals("xmlns")){
-            if(localName.equals(XMLConstants.XML_NS_PREFIX)){
-                if(!value.equals(XMLConstants.XML_NS_URI)){
-                    clearQName();
-                    fatalError("prefix "+XMLConstants.XML_NS_PREFIX+" must refer to "+XMLConstants.XML_NS_URI);
-                }
-            }else if(localName.equals(XMLConstants.XMLNS_ATTRIBUTE)){
-                clearQName();
-                fatalError("prefix "+XMLConstants.XMLNS_ATTRIBUTE+" must not be declared");
-            }else{
-                if(value.equals(XMLConstants.XML_NS_URI)){
-                    clearQName();
-                    fatalError(XMLConstants.XML_NS_URI+" must be bound to "+XMLConstants.XML_NS_PREFIX);
-                }else if(value.equals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI)){
-                    clearQName();
-                    fatalError(XMLConstants.XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+XMLConstants.XMLNS_ATTRIBUTE);
-                }else{
-                    if(value.length()==0)
-                        fatalError("No Prefix Undeclaring: "+localName);
-                    namespaces.put(localName, value);
-                    handler.startPrefixMapping(localName, value);
-                }
-            }
-        }else{
-            attributes.addAttribute(prefix, localName, qname, type.name(), value);
-        }
-
-        clearQName();
+        String error = attributes.addAttribute(elements.currentElementName(), curQName, value);
+        if(error!=null)
+            fatalError(error);
+        curQName.reset();
     }
 
-    private Set<String> attributeNames = new HashSet<String>();
     void attributesEnd() throws SAXException{
-        attributeNames.clear();
-        int attrCount = attributes.getLength();
-        for(int i=0; i<attrCount; i++){
-            String prefix = attributes.getURI(i);
-            String uri = "";
-            if(prefix.length()>0){
-                uri = namespaces.getNamespaceURI(prefix);
-                if(uri==null)
-                    fatalError("Unbound prefix: "+prefix);
-                attributes.setURI(i, uri);
-            }
-
-            String clarkName = ClarkName.valueOf(uri, attributes.getLocalName(i));
-            if(!attributeNames.add(clarkName))
-                fatalError("Attribute \""+clarkName+"\" was already specified for element \""+elementsQNames.peek()+"\"");
-        }
-
-        String elemQName = elementsQNames.peek();
-        Map<String, DTDAttribute> attList = dtdAttributes.get(elemQName);
-        if(attList!=null){
-            for(DTDAttribute dtdAttr: attList.values()){
-                if(dtdAttr.valueType==AttributeValueType.DEFAULT || dtdAttr.valueType==AttributeValueType.FIXED){
-                    int index = attributes.getIndex(dtdAttr.name);
-                    if(index==-1){
-                        if(!dtdAttr.name.equals("xmlns") && !dtdAttr.name.startsWith("xmlns:")){
-                            AttributeType type = dtdAttr.type==AttributeType.ENUMERATION ? AttributeType.NMTOKEN : dtdAttr.type;
-                            attributes.addAttribute("", dtdAttr.name, dtdAttr.name, type.name(), dtdAttr.value);
-                        }
-                    }
-                }
-            }
-        }
-
-        String prefix = elementsPrefixes.peek();
-        String namespaceURI = namespaces.getNamespaceURI(prefix);
-        if(namespaceURI==null)
-            fatalError("Unbound prefix: "+prefix);
-        handler.startElement(namespaceURI, elementsLocalNames.peek(), elementsQNames.peek(), attributes);
+        String error = elements.push2();
+        if(error!=null)
+            fatalError(error);
     }
 
     void emptyElementEnd() throws SAXException{
-        elementEnd(elementsQNames.pop());
+        elements.pop();
     }
 
     void elementEnd() throws SAXException{
-        String startQName = elementsQNames.pop();
-        if(!startQName.equals(qname))
-            fatalError("expected </"+startQName+">");
-        elementEnd(qname);
-    }
-
-    private void elementEnd(String qname) throws SAXException{
-        String prefix = elementsPrefixes.pop();
-        String namespaceURI = namespaces.getNamespaceURI(prefix);
-        if(namespaceURI==null)
-            fatalError("Unbound prefix: "+prefix);
-        handler.endElement(namespaceURI, elementsLocalNames.pop(), qname);
-
-        if(namespaces.map()!=null){
-            for(String nsPrefix: namespaces.map().keySet())
-                handler.endPrefixMapping(nsPrefix);
-        }
-        namespaces = namespaces.parent();
-        clearQName();
+        String error = elements.pop(curQName.name);
+        if(error!=null)
+            fatalError(error);
+        curQName.reset();
     }
 
     /*-------------------------------------------------[ PI ]---------------------------------------------------*/
@@ -555,9 +434,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ DTD ]---------------------------------------------------*/
 
-    private String dtdRoot;
     void dtdRoot(Chars data){
-        dtdRoot = data.toString();
+        dtd.root = data.toString();
     }
 
     private String systemID;
@@ -571,7 +449,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void dtdStart() throws SAXException{
-        handler.startDTD(dtdRoot, publicID, systemID);
+        handler.startDTD(dtd.root, publicID, systemID);
         externalDTDPublicID = publicID;
         externalDTDSystemID = systemID;
         publicID = systemID = null;
@@ -583,9 +461,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void notationEnd() throws SAXException, IOException{
-        String systemID = this.systemID;
-        if(systemID!=null && curScanner.sourceURL!=null)
-            systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
+        systemID = curScanner.resolve(systemID);
         handler.notationDecl(notationName, publicID, systemID);
         notationName = null;
         publicID = this.systemID = null;
@@ -597,16 +473,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     public void dtdEnd() throws SAXException, IOException{
         if(externalDTDPublicID!=null || externalDTDSystemID!=null){
-            try{
-                if(externalDTDSystemID!=null)
-                    externalDTDSystemID = curScanner.resolve(externalDTDSystemID).toURI().toString();
-            }catch(URISyntaxException ex){
-                throw new SAXException(ex);
-            }
+            externalDTDSystemID = curScanner.resolve(externalDTDSystemID);
             resolveExternalDTD();
         }
         handler.endDTD();
-        dtdRoot = null;
     }
 
     /*-------------------------------------------------[ Entity Definition ]---------------------------------------------------*/
@@ -616,50 +486,70 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         entityName = data.toString();
     }
 
-    private Set<String> unparsedEntities = new HashSet<String>();
+    private boolean unparsedEntity;
     void notationReference(Chars data) throws IOException, SAXException{
-        String systemID = this.systemID;
-        if(systemID!=null && curScanner.sourceURL!=null)
-            systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
-        handler.unparsedEntityDecl(entityName, publicID, systemID, data.toString());
-        unparsedEntities.add(entityName);
+        handler.unparsedEntityDecl(entityName, publicID, curScanner.resolve(systemID) , data.toString());
+        unparsedEntity = true;
     }
 
-    private Map<String, char[]> entities = new HashMap<String, char[]>();
-    private Set<String> externalEntities = new HashSet<String>();
-    private Set<String> entitiesWithExternalEntityValue = new HashSet<String>();
-    void entityEnd() throws SAXException{
+    private Map<String, EntityValue> entities = new HashMap<String, EntityValue>();
+    void entityEnd() throws SAXException, IOException{
         // entities may be declared more than once, with the first declaration being the binding one        
-        if(!entities.containsKey(entityName)){
-            if(curScanner!=xmlScanner)
-                externalEntities.add(entityName);
+        if(!entities.containsKey(entityName))
+            entities.put(entityName, new EntityValue());
+        unparsedEntity = false;
+        value.setLength(0);
+        publicID = systemID = null;
+    }
 
-            if(systemID==null && publicID==null){
-                entities.put(entityName, value.toString().toCharArray());
+    class EntityValue{
+        String entityName;
+        char[] content;
+        boolean externalDefinition;
+        boolean unparsed;
+        boolean externalValue;
+        InputSource inputSource;
 
-            }else{
-                if(standalone==Boolean.TRUE && curScanner==xmlScanner)
+        public EntityValue() throws IOException, SAXException{
+            entityName = AsyncXMLReader.this.entityName;
+            externalDefinition = curScanner!=xmlScanner;
+            unparsed = unparsedEntity;
+
+            if(systemID==null && publicID==null)
+                content = value.toString().toCharArray();
+            else{
+                externalValue = true;
+
+                if(standalone==Boolean.TRUE && !externalDefinition)
                     fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
-                try{
-                    String systemID = this.systemID;
-                    if(systemID!=null && curScanner.sourceURL!=null)
-                        systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
-                    InputSource is = handler.resolveEntity(publicID, systemID);
 
-                    XMLEntityScanner externalEntityValueScanner = new XMLEntityScanner(this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
-                    externalEntityValueScanner.parent = curScanner;
-                    curScanner = externalEntityValueScanner;
-                    externalEntityValueScanner.parse(is);
-                    curScanner = curScanner.parent;
-                    entities.put(entityName, value.toString().toCharArray());
-                }catch(IOException ex){
-                    throw new RuntimeException(ex);
-                }
-                entitiesWithExternalEntityValue.add(entityName);
-
+                inputSource = curScanner.resolve(publicID, systemID);
             }
-            value.setLength(0);
-            publicID = systemID = null;
+        }
+
+        public char[] getContent() throws IOException, SAXException{
+            if(content==null){
+                InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+                if(is==null)
+                    is = inputSource;
+                inputSource = null;
+
+                int oldValueLen = value.length();
+                boolean valueWasStarted = valueStarted;
+                boolean wasEntityValue = entityValue;
+
+                XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
+                scanner.parent = curScanner;
+                curScanner = scanner;
+                scanner.parse(is);
+                curScanner = curScanner.parent;
+                content = value.substring(oldValueLen).toCharArray();
+
+                value.setLength(oldValueLen);
+                valueStarted = valueWasStarted;
+                entityValue = wasEntityValue;
+            }
+            return content;
         }
     }
 
@@ -677,12 +567,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(systemID==null && publicID==null){
                 paramEntities.put(paramEntityName, value.toString().toCharArray());
                 if(curScanner!=xmlScanner)
-                    externalEntities.add(paramEntityName);
+                    externalParamEntities.add(paramEntityName);
             }else{
                 try{
-                    String systemID = this.systemID;
-                    if(systemID!=null && curScanner.sourceURL!=null)
-                        systemID = XMLEntityManager.expandSystemId(systemID, curScanner.sourceURL.toString(), false);
+                    systemID = curScanner.resolve(systemID);
                     InputSource is = handler.resolveEntity(publicID, systemID);
                     if(is==null)
                         is = new InputSource(systemID);
@@ -704,16 +592,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ DTD Attributes ]---------------------------------------------------*/
 
-    private Map<String, Map<String, DTDAttribute>> dtdAttributes = new HashMap<String, Map<String, DTDAttribute>>();
     private String dtdElementName;
     private Map<String, DTDAttribute> attributeList;
     private DTDAttribute dtdAttribute;
 
     void dtdAttributesStart(Chars data){
         dtdElementName = data.toString();
-        attributeList = dtdAttributes.get(dtdElementName);
+        attributeList = dtd.attributes.get(dtdElementName);
         if(attributeList==null)
-            dtdAttributes.put(dtdElementName, attributeList=new HashMap<String, DTDAttribute>());
+            dtd.attributes.put(dtdElementName, attributeList=new HashMap<String, DTDAttribute>());
     }
 
     void dtdAttribute(Chars data){
@@ -794,7 +681,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.DEFAULT;
             dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
-            fireDTDAttributeEvent();
+            dtdAttribute.fire(handler);
         }
         value.setLength(0);
     }
@@ -802,14 +689,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void attributeRequired() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.REQUIRED;
-            fireDTDAttributeEvent();
+            dtdAttribute.fire(handler);
         }
     }
 
     void attributeImplied() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.IMPLIED;
-            fireDTDAttributeEvent();
+            dtdAttribute.fire(handler);
         }
     }
 
@@ -817,13 +704,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.FIXED;
             dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
-            fireDTDAttributeEvent();
+            dtdAttribute.fire(handler);
         }
         value.setLength(0);
-    }
-
-    private void fireDTDAttributeEvent() throws SAXException{
-        handler.attributeDecl(dtdElementName, dtdAttribute.name, dtdAttribute.type.toString(dtdAttribute.validValues), dtdAttribute.valueType.mode, dtdAttribute.value);
     }
 
     void dtdAttributesEnd(){
@@ -897,7 +780,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/020.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/005.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
