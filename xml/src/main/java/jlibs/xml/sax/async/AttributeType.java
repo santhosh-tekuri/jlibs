@@ -76,22 +76,22 @@ public enum AttributeType{
         boolean wroteOne = false;
 
         int read = 0;
-        while(read<buffer.length && buffer[read]==' '){
+        while(read<buffer.length && Character.isWhitespace(buffer[read])){
             read++;
         }
 
         int len = buffer.length;
-        while(len<read && buffer[len-1]==' ')
+        while(len<read && Character.isWhitespace(buffer[read]))
             len--;
 
         while(read<len){
-            if (buffer[read]==' '){
-                if (wroteOne)
+            if(Character.isWhitespace(buffer[read])){
+                if(wroteOne)
                     buffer[write++] = ' ';
 
                 do{
                     read++;
-                }while(read<len && buffer[read]==' ');
+                }while(read<len && Character.isWhitespace(buffer[read]));
             }else{
                 buffer[write++] = buffer[read++];
                 wroteOne = true;
