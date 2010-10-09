@@ -73,6 +73,10 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         return (CHAR(ch)) && (!(ch=='<' || ch=='&' || ch=='"'));
     }
 
+    private static boolean ENTITY_CONTENT(int ch){
+        return (CHAR(ch)) && (!(ch=='%' || ch=='&'));
+    }
+
     private static boolean ENTITY_Q_CONTENT(int ch){
         return (CHAR(ch)) && (!(ch=='%' || ch=='&' || ch=='\''));
     }
@@ -6018,6 +6022,169 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
+    public static final int RULE_ENTITY_VALUE_CONTENT = 74;
+    private int entity_value_content(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 0;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ENTITY_CONTENT(ch)){
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 6, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 0;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                expected(ch, "<ENTITY_CONTENT> OR [%] OR [\\&][\\#] OR [\\&]<NAME_START>");
+            case 3:
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    return 3;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return -1;
+            case 5:
+                return -1;
+            case 6:
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_ENTITY_VALUE_ENTITY = 75;
+    private int entity_value_entity(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 0;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ENTITY_CONTENT(ch)){
+                        handler.valueStart();
+                        handler.entityValue();
+                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                    if(ch=='%'){
+                        handler.valueStart();
+                        handler.entityValue();
+                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                        push(RULE_PE_REFERENCE, 6, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 0;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            handler.valueStart();
+                            handler.entityValue();
+                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            handler.valueStart();
+                            handler.entityValue();
+                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                handler.valueStart();
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 2:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 2;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ENTITY_CONTENT(ch)){
+                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                    if(ch=='%'){
+                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                        push(RULE_PE_REFERENCE, 6, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 2;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
+                            push(RULE_REFERENCE, 5, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                handler.valueEnd();
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
     @Override
     protected int callRule(int ch) throws Exception{
         switch(ruleStack.peek()){
@@ -6169,6 +6336,10 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 return include_sect(ch);
             case 73:
                 return ext_subset(ch);
+            case 74:
+                return entity_value_content(ch);
+            case 75:
+                return entity_value_entity(ch);
             default:
                 throw new Error("impossible");
         }
