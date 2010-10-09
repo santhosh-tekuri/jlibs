@@ -69,7 +69,41 @@ public enum AttributeType{
         }
     }
 
-    private String toNMTOKENS(String value){
+    private static String toNMTOKENS(String value){
+        char[] buffer = value.toCharArray();
+        int write = 0;
+        int lastWrite = 0;
+        boolean wroteOne = false;
+
+        int read = 0;
+        while(read<buffer.length && buffer[read]==' '){
+            read++;
+        }
+
+        int len = buffer.length;
+        while(len<read && buffer[read]==' ')
+            len--;
+
+        while(read<len){
+            if(buffer[read]==' '){
+                if(wroteOne)
+                    buffer[write++] = ' ';
+
+                do{
+                    read++;
+                }while(read<len && buffer[read]==' ');
+            }else{
+                buffer[write++] = buffer[read++];
+                wroteOne = true;
+                lastWrite = write;
+            }
+        }
+
+        value = new String(buffer, 0, lastWrite);
+        return value;
+    }
+
+    public static String toPublicID(String value){
         char[] buffer = value.toCharArray();
         int write = 0;
         int lastWrite = 0;

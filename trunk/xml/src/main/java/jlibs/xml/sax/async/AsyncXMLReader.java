@@ -275,6 +275,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(standalone==Boolean.TRUE && entityValue.externalDefinition)
                 fatalError("The external entity reference \"&"+entity+";\" is not permitted in standalone document");
 
+            if(standalone==Boolean.TRUE && entityValue.externalValue)
+                fatalError("The reference to entity \""+entity+"\" declared in an external parsed entity is not permitted in a standalone document");
+
             if(entityStack.contains(entity)){
                 StringBuilder message = new StringBuilder("Recursive entity reference ");
                 message.append('"').append(entity).append('"').append(". (Reference path: ");
@@ -331,20 +334,21 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private ArrayDeque<String> paramEntityStack = new ArrayDeque<String>();
     @SuppressWarnings({"ConstantConditions"})
     void peReference(Chars data) throws Exception{
+        String param = data.toString();
+        EntityValue entityValue = paramEntities.get(param);
+
+        if(entityValue==null)
+            fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+
+        if(standalone==Boolean.TRUE && entityValue.externalValue)
+            fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
+
         if(valueStarted){
             if(curScanner==xmlScanner)
                 fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
-            String param = data.toString();
-            EntityValue entityValue = paramEntities.get(param);
-            if(entityValue==null)
-                fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+
             value.append(entityValue.getContent());
         }else{
-            String param = data.toString();
-            EntityValue entityValue = paramEntities.get(param);
-            if(entityValue==null)
-                fatalError("The param entity \""+param+"\" was referenced, but not declared.");
-
             paramEntityStack.push(param);
             try{
                 XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_INT_SUBSET);
@@ -462,7 +466,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private String publicID;
     void publicID(Chars data){
-        publicID = AttributeType.NMTOKENS.normalize(data.toString());
+        publicID = AttributeType.toPublicID(data.toString());
     }
 
     void dtdStart() throws SAXException{
@@ -536,10 +540,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 content = value.toString().toCharArray();
             else{
                 externalValue = true;
-
-                if(standalone==Boolean.TRUE && !externalDefinition)
-                    fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
-
                 inputSource = curScanner.resolve(publicID, systemID);
             }
         }
@@ -781,7 +781,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/031.xml"; // #284
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/valid/notation01.xml"; // #284
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
