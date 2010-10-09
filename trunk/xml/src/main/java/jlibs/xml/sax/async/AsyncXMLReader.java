@@ -146,7 +146,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
         paramEntityName = null;
         paramEntities.clear();
-        externalParamEntities.clear();
+        paramEntityStack.clear();
 
         dtd.reset();
         dtdElementName = null;
@@ -329,18 +329,26 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private ArrayDeque<String> paramEntityStack = new ArrayDeque<String>();
+    @SuppressWarnings({"ConstantConditions"})
     void peReference(Chars data) throws Exception{
-        if(valueStarted && curScanner==xmlScanner)
-            fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
-        else{
+        if(valueStarted){
+            if(curScanner==xmlScanner)
+                fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
             String param = data.toString();
-            char[] paramValue = paramEntities.get(param);
-            if(paramValue==null)
+            EntityValue entityValue = paramEntities.get(param);
+            if(entityValue==null)
                 fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+            value.append(entityValue.getContent());
+        }else{
+            String param = data.toString();
+            EntityValue entityValue = paramEntities.get(param);
+            if(entityValue==null)
+                fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+
             paramEntityStack.push(param);
             try{
                 XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_INT_SUBSET);
-                paramValueScanner.writer.write(paramValue);
+                paramValueScanner.writer.write(entityValue.getContent());
                 paramValueScanner.writer.close();
             }catch(IOException ex){
                 throw new RuntimeException(ex);
@@ -543,23 +551,25 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     is = inputSource;
                 inputSource = null;
 
-                int oldValueLen = value.length();
+                String oldValue = value.length()>0 ? value.toString() : null;
                 boolean valueWasStarted = valueStarted;
                 boolean wasEntityValue = entityValue;
-
                 boolean wasNormalizeValue = normalizeValue;
+
                 normalizeValue = false;
                 XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
                 scanner.parent = curScanner;
                 curScanner = scanner;
                 scanner.parse(is);
                 curScanner = curScanner.parent;
-                content = value.substring(oldValueLen).toCharArray();
-                normalizeValue = wasNormalizeValue;
+                content = value.toString().toCharArray();
 
-                value.setLength(oldValueLen);
+                value.setLength(0);
+                if(oldValue!=null)
+                    value.append(oldValue);
                 valueStarted = valueWasStarted;
                 entityValue = wasEntityValue;
+                normalizeValue = wasNormalizeValue;
             }
             return content;
         }
@@ -572,32 +582,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         paramEntityName = data.toString();
     }
 
-    private Map<String, char[]> paramEntities = new HashMap<String,char[]>();
-    private Set<String> externalParamEntities = new HashSet<String>();
-    void paramEntityEnd() throws SAXException{
-        if(!paramEntities.containsKey(paramEntityName)){
-            if(systemID==null && publicID==null){
-                paramEntities.put(paramEntityName, value.toString().toCharArray());
-                if(curScanner!=xmlScanner)
-                    externalParamEntities.add(paramEntityName);
-            }else{
-                try{
-                    systemID = curScanner.resolve(systemID);
-                    InputSource is = handler.resolveEntity(publicID, systemID);
-                    if(is==null)
-                        is = new InputSource(systemID);
-                    XMLEntityScanner externalEntityValueScanner = new XMLEntityScanner(this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
-                    externalEntityValueScanner.parent = curScanner;
-                    curScanner = externalEntityValueScanner;
-                    externalEntityValueScanner.parse(is);
-                    curScanner = curScanner.parent;
-                    paramEntities.put(paramEntityName, value.toString().toCharArray());
-                }catch(IOException ex){
-                    throw new RuntimeException(ex);
-                }
-                externalParamEntities.add(paramEntityName);
-            }
-        }
+    private Map<String, EntityValue> paramEntities = new HashMap<String, EntityValue>();
+    void paramEntityEnd() throws SAXException, IOException{
+        if(!paramEntities.containsKey(paramEntityName))
+            paramEntities.put(paramEntityName, new EntityValue());
+        unparsedEntity = false;
         value.setLength(0);
         publicID = systemID = null;
     }
@@ -792,7 +781,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P78/ibm78v01.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/031.xml"; // #284
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
