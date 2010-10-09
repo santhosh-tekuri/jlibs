@@ -349,7 +349,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ Start Element ]---------------------------------------------------*/
 
     private final Namespaces namespaces = new Namespaces(handler);
-    private final DTD dtd = new DTD();
+    private final DTD dtd = new DTD(namespaces);
     private final Attributes attributes = new Attributes(namespaces, dtd);
     private final Elements elements = new Elements(handler, namespaces, attributes);
 
@@ -780,7 +780,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/005.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P32/ibm32v04.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
