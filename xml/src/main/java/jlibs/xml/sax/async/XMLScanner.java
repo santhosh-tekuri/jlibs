@@ -5125,62 +5125,50 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[l]");
             case 5:
                 if(WS(ch)){
-                    return 7;
+                    return 6;
                 }
-                if(ch=='?'){
-                    return 13;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 7:
+                expected(ch, "<WS>");
+            case 6:
                 if(ch=='v'){
-                    push(RULE_VERSION_INFO, 8, 0);
+                    push(RULE_VERSION_INFO, 7, 0);
+                    return 1;
+                }
+                if(ch=='e'){
+                    push(RULE_ENC_DECL, 10, 0);
                     return 1;
                 }
                 if(WS(ch)){
-                    return 7;
+                    return 6;
                 }
-                if(ch=='?'){
-                    return 13;
+                expected(ch, "[v] OR [e] OR <WS>");
+            case 7:
+                if(WS(ch)){
+                    return 8;
                 }
-                if(ch=='e'){
-                    push(RULE_ENC_DECL, 11, 0);
-                    return 1;
-                }
-                expected(ch, "[v] OR <WS> OR [?] OR [e]");
+                expected(ch, "<WS>");
             case 8:
                 if(WS(ch)){
-                    return 9;
-                }
-                if(ch=='?'){
-                    return 13;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 9:
-                if(WS(ch)){
-                    return 9;
+                    return 8;
                 }
                 if(ch=='e'){
-                    push(RULE_ENC_DECL, 11, 0);
+                    push(RULE_ENC_DECL, 10, 0);
                     return 1;
                 }
-                if(ch=='?'){
-                    return 13;
-                }
-                expected(ch, "<WS> OR [e] OR [?]");
-            case 11:
+                expected(ch, "<WS> OR [e]");
+            case 10:
                 if(WS(ch)){
+                    return 10;
+                }
+                if(ch=='?'){
                     return 11;
                 }
-                if(ch=='?'){
-                    return 13;
-                }
                 expected(ch, "<WS> OR [?]");
-            case 13:
+            case 11:
                 if(ch=='>'){
-                    return 14;
+                    return 12;
                 }
                 expected(ch, "[>]");
-            case 14:
+            case 12:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -5775,6 +5763,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 0;
                 if(lookAhead.length()==1){
                     if(ch=='%'){
+                        handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         push(RULE_PE_REFERENCE, 1, 0);
@@ -5782,6 +5771,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         return 1;
                     }
                     if(WS(ch)){
+                        handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
@@ -5794,6 +5784,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='A'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_ATT_LIST_DECL, 1, 0);
@@ -5803,6 +5794,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='N'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_NOTATION_DECL, 1, 0);
@@ -5812,6 +5804,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='-'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_COMMENT, 1, 0);
@@ -5821,6 +5814,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='['){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_CONDITIONAL_SECT, 2, 0);
                                 consumed();
@@ -5838,6 +5832,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(lookAhead.charAt(2)=='E'){
                                 if(ch=='L'){
+                                    handler.xdeclEnd();
                                     push(RULE_EXT_SUBSET_DECL, 2, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ELEMENT_DECL, 1, 0);
@@ -5848,6 +5843,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                     return 4;
                                 }
                                 if(ch=='N'){
+                                    handler.xdeclEnd();
                                     push(RULE_EXT_SUBSET_DECL, 2, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ENTITY_DECL, 1, 0);
@@ -5877,17 +5873,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                             consumed();
                                             consumed();
                                             consumed();
-                                            return 7;
-                                        }
-                                        if(ch=='?'){
-                                            push(RULE_TEXT_DECL, 1, 0);
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            return 13;
+                                            return 6;
                                         }
                                     }
                                 }
@@ -5896,6 +5882,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                 }
                 if(lookAhead.charAt(0)=='<'){
+                    handler.xdeclEnd();
                     push(RULE_EXT_SUBSET_DECL, 2, 0);
                     push(RULE_MARKUP_DECL, 2, 0);
                     push(RULE_PI, 1, 0);
@@ -5903,6 +5890,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     lookAhead.reset();
                     return 1;
                 }
+                handler.xdeclEnd();
                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                 pop();
                 return -1;
@@ -5912,6 +5900,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 if(lookAhead.length()==1){
                     if(ch=='%'){
+                        handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         push(RULE_PE_REFERENCE, 1, 0);
@@ -5919,6 +5908,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         return 1;
                     }
                     if(WS(ch)){
+                        handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
@@ -5930,6 +5920,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
                         if(ch=='?'){
+                            handler.xdeclEnd();
                             push(RULE_EXT_SUBSET_DECL, 2, 0);
                             push(RULE_MARKUP_DECL, 2, 0);
                             push(RULE_PI, 1, 0);
@@ -5945,6 +5936,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='A'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_ATT_LIST_DECL, 1, 0);
@@ -5954,6 +5946,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='N'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_NOTATION_DECL, 1, 0);
@@ -5963,6 +5956,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='-'){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_COMMENT, 1, 0);
@@ -5972,6 +5966,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='['){
+                                handler.xdeclEnd();
                                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                                 push(RULE_CONDITIONAL_SECT, 2, 0);
                                 consumed();
@@ -5989,6 +5984,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(lookAhead.charAt(2)=='E'){
                                 if(ch=='L'){
+                                    handler.xdeclEnd();
                                     push(RULE_EXT_SUBSET_DECL, 2, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ELEMENT_DECL, 1, 0);
@@ -5999,6 +5995,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                     return 4;
                                 }
                                 if(ch=='N'){
+                                    handler.xdeclEnd();
                                     push(RULE_EXT_SUBSET_DECL, 2, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ENTITY_DECL, 1, 0);
@@ -6012,6 +6009,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
+                handler.xdeclEnd();
                 push(RULE_EXT_SUBSET_DECL, 2, 0);
                 pop();
                 return -1;
@@ -6083,101 +6081,279 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int entity_value_entity(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ENTITY_CONTENT(ch)){
-                        handler.valueStart();
-                        handler.entityValue();
-                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                    if(ch=='%'){
-                        handler.valueStart();
-                        handler.entityValue();
-                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
+                if(ch=='<'){
+                    buffer.push();
+                    return 1;
                 }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            handler.valueStart();
-                            handler.entityValue();
-                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            handler.valueStart();
-                            handler.entityValue();
-                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
+                if(ch=='%'){
+                    buffer.push();
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    buffer.push();
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    buffer.push();
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                buffer.push();
+                handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 1:
+                if(ch=='?'){
+                    return 2;
+                }
+                if(ch=='%'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
                 }
                 handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
                 handler.entityValue();
                 handler.valueEnd();
                 return -1;
             case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ENTITY_CONTENT(ch)){
-                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                    if(ch=='%'){
-                        push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                        push(RULE_PE_REFERENCE, 6, 0);
-                        consumed();
-                        return 1;
-                    }
+                if(ch=='x'){
+                    return 3;
                 }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_ENTITY_VALUE_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
+                if(ch=='%'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
                 }
+                if(ch=='&'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 3:
+                if(ch=='m'){
+                    return 4;
+                }
+                if(ch=='%'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 4:
+                if(ch=='l'){
+                    return 5;
+                }
+                if(ch=='%'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 5:
+                if(WS(ch)){
+                    handler.discard(buffer.pop(0, 0));
+                    return 13;
+                }
+                if(ch=='%'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.valueStart();
+                    handler.rawValue(buffer.pop(0, 0));
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.valueStart();
+                handler.rawValue(buffer.pop(0, 0));
+                handler.entityValue();
+                handler.valueEnd();
+                return -1;
+            case 10:
+                if(ch=='%'){
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.valueEnd();
+                return -1;
+            case 13:
+                if(ch=='v'){
+                    push(RULE_TEXT_DECL, 14, 6);
+                    push(RULE_VERSION_INFO, 7, 0);
+                    return 1;
+                }
+                if(ch=='e'){
+                    push(RULE_TEXT_DECL, 14, 6);
+                    push(RULE_ENC_DECL, 10, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    push(RULE_TEXT_DECL, 14, 6);
+                    return 6;
+                }
+                expected(ch, "[v] OR [e] OR <WS>");
+            case 14:
+                if(ch=='%'){
+                    handler.xdeclEnd();
+                    handler.valueStart();
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_PE_REFERENCE, 6, 0);
+                    return 1;
+                }
+                if(ch=='&'){
+                    handler.xdeclEnd();
+                    handler.valueStart();
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    push(RULE_REFERENCE, 5, 0);
+                    push(RULE_ENTITY_REF, 1, 0);
+                    return 1;
+                }
+                if(ch!=-1 && ENTITY_CONTENT(ch)){
+                    handler.xdeclEnd();
+                    handler.valueStart();
+                    handler.entityValue();
+                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
+                    buffer.push();
+                    return 3;
+                }
+                handler.xdeclEnd();
+                handler.valueStart();
+                handler.entityValue();
                 handler.valueEnd();
                 return -1;
             default:

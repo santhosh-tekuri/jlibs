@@ -42,6 +42,7 @@ public class XMLEntityScanner extends XMLScanner{
     
     public XMLEntityScanner(AsyncXMLReader handler, int startingRule){
         super(handler, startingRule);
+        handler.xdeclEnd = false;
     }
 
     protected void consumed(int ch){

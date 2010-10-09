@@ -127,6 +127,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         value.setLength(0);
         valueStarted = false;
         entityValue = false;
+        normalizeValue = true;
 
         namespaces.reset();
         attributes.reset();
@@ -199,6 +200,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private StringBuilder value = new StringBuilder();
     private boolean valueStarted = true;
     private boolean entityValue = false;
+    private boolean normalizeValue = true;
 
     void valueStart(){
         value.setLength(0);
@@ -210,15 +212,20 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         entityValue = true;
     }
 
+    void discard(Chars data){}
+    
     void rawValue(Chars data){
-        char[] chars = data.array();
-        int end = data.offset() + data.length();
-        for(int i=data.offset(); i<end; i++){
-            char ch = chars[i];
-            if(ch=='\n' || ch=='\r' || ch=='\t')
-                ch = ' ';
-            value.append(ch);
-        }
+        if(normalizeValue){
+            char[] chars = data.array();
+            int end = data.offset() + data.length();
+            for(int i=data.offset(); i<end; i++){
+                char ch = chars[i];
+                if(ch=='\n' || ch=='\r' || ch=='\t')
+                    ch = ' ';
+                value.append(ch);
+            }
+        }else
+            value.append(data);
     }
 
     void hexCode(Chars data) throws SAXException{
@@ -291,14 +298,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
 
                 entityContent = entityValue.getContent();
-                char chars[] = new char[entityContent.length];
-                for(int i=chars.length-1; i>=0; i--){
-                    char ch = entityContent[i];
-                    if(ch=='\n' || ch=='\r' || ch=='\t')
-                        ch = ' ';
-                    chars[i] = ch;
+                if(normalizeValue){
+                    char chars[] = new char[entityContent.length];
+                    for(int i=chars.length-1; i>=0; i--){
+                        char ch = entityContent[i];
+                        if(ch=='\n' || ch=='\r' || ch=='\t')
+                            ch = ' ';
+                        chars[i] = ch;
+                    }
+                    entityContent = chars;
                 }
-                entityContent = chars;
 
                 rule = XMLScanner.RULE_VALUE_ENTITY;
             }else{
@@ -538,12 +547,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 boolean valueWasStarted = valueStarted;
                 boolean wasEntityValue = entityValue;
 
+                boolean wasNormalizeValue = normalizeValue;
+                normalizeValue = false;
                 XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_ENTITY_VALUE_ENTITY);
                 scanner.parent = curScanner;
                 curScanner = scanner;
                 scanner.parse(is);
                 curScanner = curScanner.parent;
                 content = value.substring(oldValueLen).toCharArray();
+                normalizeValue = wasNormalizeValue;
 
                 value.setLength(oldValueLen);
                 valueStarted = valueWasStarted;
@@ -780,7 +792,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P32/ibm32v04.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P78/ibm78v01.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
