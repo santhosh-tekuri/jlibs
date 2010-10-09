@@ -390,23 +390,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void attributeEnd() throws SAXException{
-        String type = "CDATA";
+        AttributeType type = AttributeType.CDATA;
         Map<String, DTDAttribute> attrList = dtdAttributes.get(elementsQNames.peek());
         if(attrList!=null){
             DTDAttribute dtdAttr = attrList.get(qname);
-            if(dtdAttr!=null){
-                if(dtdAttr.type==AttributeType.ENUMERATION)
-                    type = "NMTOKEN";
-                else
-                    type = dtdAttr.type.name();
-            }
+            if(dtdAttr!=null)
+                type = dtdAttr.type==AttributeType.ENUMERATION ? AttributeType.NMTOKEN : dtdAttr.type;
         }
 
         String value = this.value.toString();
-        if(type.equals("NMTOKEN"))
-            value = value.trim();
-        else if(type.equals("NMTOKENS"))
-            value = toNMTOKENS(value);
+        value = type.normalize(value);
 
         if(qname.equals("xmlns")){
             namespaces.put("", value);
@@ -435,44 +428,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 }
             }
         }else{
-            attributes.addAttribute(prefix, localName, qname, type, value);
+            attributes.addAttribute(prefix, localName, qname, type.name(), value);
         }
 
         clearQName();
-    }
-
-    private String toNMTOKENS(String value){
-        char[] buffer = value.toCharArray();
-        int write = 0;
-        int lastWrite = 0;
-        boolean wroteOne = false;
-
-        int read = 0;
-        while(read<buffer.length && buffer[read]==' '){
-            read++;
-        }
-
-        int len = buffer.length;
-        while(len<read && buffer[len-1]==' ')
-            len--;
-
-        while(read<len){
-            if (buffer[read]==' '){
-                if (wroteOne)
-                    buffer[write++] = ' ';
-
-                do{
-                    read++;
-                }while(read<len && buffer[read]==' ');
-            }else{
-                buffer[write++] = buffer[read++];
-                wroteOne = true;
-                lastWrite = write;
-            }
-        }
-
-        value = new String(buffer, 0, lastWrite);
-        return value;
     }
 
     private Set<String> attributeNames = new HashSet<String>();
@@ -501,8 +460,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 if(dtdAttr.valueType==AttributeValueType.DEFAULT || dtdAttr.valueType==AttributeValueType.FIXED){
                     int index = attributes.getIndex(dtdAttr.name);
                     if(index==-1){
-                        if(!dtdAttr.name.equals("xmlns") && !dtdAttr.name.startsWith("xmlns:"))
-                            attributes.addAttribute("", dtdAttr.name, dtdAttr.name, dtdAttr.type.name(), dtdAttr.value);
+                        if(!dtdAttr.name.equals("xmlns") && !dtdAttr.name.startsWith("xmlns:")){
+                            AttributeType type = dtdAttr.type==AttributeType.ENUMERATION ? AttributeType.NMTOKEN : dtdAttr.type;
+                            attributes.addAttribute("", dtdAttr.name, dtdAttr.name, type.name(), dtdAttr.value);
+                        }
                     }
                 }
             }
@@ -606,7 +567,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private String publicID;
     void publicID(Chars data){
-        publicID = toNMTOKENS(data.toString());
+        publicID = AttributeType.NMTOKENS.normalize(data.toString());
     }
 
     void dtdStart() throws SAXException{
@@ -668,21 +629,25 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private Set<String> externalEntities = new HashSet<String>();
     private Set<String> entitiesWithExternalEntityValue = new HashSet<String>();
     void entityEnd() throws SAXException{
-        if(curScanner!=xmlScanner)
-            externalEntities.add(entityName);
+        if(!entities.containsKey(entityName)){
+            if(curScanner!=xmlScanner)
+                externalEntities.add(entityName);
 
-        if(systemID==null && publicID==null){
-            // entities may be declared more than once, with the first declaration being the binding one
-            if(!entities.containsKey(entityName))
-                entities.put(entityName, value.toString().toCharArray());
+            if(systemID==null && publicID==null){
+                // entities may be declared more than once, with the first declaration being the binding one
+                if(!entities.containsKey(entityName))
+                    entities.put(entityName, value.toString().toCharArray());
+
+            }else{
+                if(standalone==Boolean.TRUE && curScanner==xmlScanner)
+                    fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
+                if(!entities.containsKey(entityName))
+                    entities.put(entityName, "external-entity".toCharArray()); //todo
+                entitiesWithExternalEntityValue.add(entityName);
+
+            }
             value.setLength(0);
-        }else{
-            if(standalone==Boolean.TRUE)
-                fatalError("The reference to entity \""+entityName+"\" declared in an external parsed entity is not permitted in a standalone document");
-            if(!entities.containsKey(entityName))
-                entities.put(entityName, "external-entity".toCharArray()); //todo
-            entitiesWithExternalEntityValue.add(entityName);
-            publicID = systemID = null; 
+            publicID = systemID = null;
         }
     }
 
@@ -801,11 +766,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void attributeDefaultValue() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.DEFAULT;
-            dtdAttribute.value = value.toString();
-            if(dtdAttribute.type==AttributeType.NMTOKEN)
-                dtdAttribute.value = dtdAttribute.value.trim();
-            else if(dtdAttribute.type==AttributeType.NMTOKENS)
-                dtdAttribute.value = toNMTOKENS(dtdAttribute.value);
+            dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
             fireDTDAttributeEvent();
         }
         value.setLength(0);
@@ -828,11 +789,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void attributeFixedValue() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.FIXED;
-            dtdAttribute.value = value.toString();
-            if(dtdAttribute.type==AttributeType.NMTOKEN)
-                dtdAttribute.value = dtdAttribute.value.trim();
-            else if(dtdAttribute.type==AttributeType.NMTOKENS)
-                dtdAttribute.value = toNMTOKENS(dtdAttribute.value);
+            dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
             fireDTDAttributeEvent();
         }
         value.setLength(0);
@@ -913,7 +870,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/valid/P32/ibm32v02.xml";
+        String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/invalid/not-sa02.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
