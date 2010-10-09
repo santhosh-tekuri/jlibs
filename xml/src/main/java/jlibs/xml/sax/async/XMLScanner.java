@@ -2035,14 +2035,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_PUBLIC_ID, 15, 0);
                     return 1;
                 }
+                if(WS(ch)){
+                    return 14;
+                }
                 if(ch=='S'){
                     push(RULE_SYSTEM_ID, 18, 0);
                     return 1;
                 }
-                if(WS(ch)){
-                    return 14;
-                }
-                expected(ch, "[P] OR [S] OR <WS>");
+                expected(ch, "[P] OR <WS> OR [S]");
             case 15:
                 if(WS(ch)){
                     return 16;
@@ -2055,14 +2055,18 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 16;
                 }
-                if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 18, 0);
+                if(Q(ch)){
+                    push(RULE_SYTEM_LITERAL, 18, 0);
                     return 1;
+                }
+                if(DQ(ch)){
+                    push(RULE_SYTEM_LITERAL, 18, 0);
+                    return 5;
                 }
                 if(ch=='>'){
                     return 20;
                 }
-                expected(ch, "<WS> OR [S] OR [>]");
+                expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
             case 18:
                 if(WS(ch)){
                     return 18;

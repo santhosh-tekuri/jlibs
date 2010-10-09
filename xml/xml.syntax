@@ -1332,7 +1332,7 @@
         </edge>
         <edge source="16" target="17" fallback="false"/>
         <edge source="17" target="18" fallback="false">
-            <rule name="system_id"/>
+            <rule name="sytem_literal"/>
         </edge>
         <edge source="18" target="18" fallback="false">
             <matcher name="WS"/>
@@ -1343,9 +1343,11 @@
         </edge>
         <edge source="16" target="19" fallback="false"/>
         <edge source="15" target="19" fallback="false"/>
-        <edge source="14" target="17" fallback="false"/>
         <edge source="14" target="14" fallback="false">
             <matcher name="WS"/>
+        </edge>
+        <edge source="14" target="18" fallback="false">
+            <rule name="system_id"/>
         </edge>
     </rule>
     <rule name="external_id">
