@@ -3031,7 +3031,7 @@
         <node/>
         <node/>
         <node>
-            <event name="ignoreEnd"/>
+            <event name="includeEnd"/>
         </node>
         <edge source="0" target="1" fallback="false">
             <any chars="I"/>
