@@ -3113,7 +3113,7 @@
             <rule name="pe_reference"/>
         </edge>
     </rule>
-    <rule name="entity_value_entity">
+    <rule name="external_entity_value">
         <node>
             <buffer/>
         </node>
@@ -3123,18 +3123,14 @@
         <node/>
         <node/>
         <node>
-            <event name="valueStart"/>
-        </node>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
+            <event name="xdeclEnd"/>
         </node>
         <node/>
-        <node>
-            <event name="entityValue"/>
-        </node>
+        <node/>
+        <node/>
         <node/>
         <node>
-            <event name="valueEnd"/>
+            <publish name="externalEntityValue" begin="0" end="0"/>
         </node>
         <node>
             <publish name="discard" begin="0" end="0"/>
@@ -3144,7 +3140,7 @@
             <event name="xdeclEnd"/>
         </node>
         <node>
-            <event name="valueStart"/>
+            <buffer/>
         </node>
         <edge source="0" target="1" fallback="false">
             <any chars="&lt;"/>
@@ -3167,7 +3163,7 @@
         <edge source="8" target="9" fallback="false"/>
         <edge source="9" target="10" fallback="false"/>
         <edge source="10" target="10" fallback="true">
-            <rule name="entity_value_content"/>
+            <matcher name="CHAR"/>
         </edge>
         <edge source="10" target="11" fallback="false"/>
         <edge source="5" target="12" fallback="false"/>
