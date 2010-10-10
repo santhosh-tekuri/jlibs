@@ -6077,237 +6077,84 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_ENTITY_VALUE_ENTITY = 75;
-    private int entity_value_entity(int ch) throws Exception{
+    public static final int RULE_EXTERNAL_ENTITY_VALUE = 75;
+    private int external_entity_value(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
                 if(ch=='<'){
                     buffer.push();
                     return 1;
                 }
-                if(ch=='%'){
+                if(ch!=-1 && CHAR(ch)){
                     buffer.push();
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
-                }
-                if(ch=='&'){
-                    buffer.push();
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    buffer.push();
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
+                    handler.xdeclEnd();
+                    return 10;
                 }
                 buffer.push();
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 1:
                 if(ch=='?'){
                     return 2;
                 }
-                if(ch=='%'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    handler.xdeclEnd();
+                    return 10;
                 }
-                if(ch=='&'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 2:
                 if(ch=='x'){
                     return 3;
                 }
-                if(ch=='%'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    handler.xdeclEnd();
+                    return 10;
                 }
-                if(ch=='&'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 3:
                 if(ch=='m'){
                     return 4;
                 }
-                if(ch=='%'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    handler.xdeclEnd();
+                    return 10;
                 }
-                if(ch=='&'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 4:
                 if(ch=='l'){
                     return 5;
                 }
-                if(ch=='%'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    handler.xdeclEnd();
+                    return 10;
                 }
-                if(ch=='&'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 5:
                 if(WS(ch)){
                     handler.discard(buffer.pop(0, 0));
                     return 13;
                 }
-                if(ch=='%'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    handler.xdeclEnd();
+                    return 10;
                 }
-                if(ch=='&'){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.valueStart();
-                    handler.rawValue(buffer.pop(0, 0));
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueStart();
-                handler.rawValue(buffer.pop(0, 0));
-                handler.entityValue();
-                handler.valueEnd();
+                handler.xdeclEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 10:
-                if(ch=='%'){
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
+                if(ch!=-1 && CHAR(ch)){
+                    return 10;
                 }
-                if(ch=='&'){
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    buffer.push();
-                    return 3;
-                }
-                handler.valueEnd();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 13:
                 if(ch=='v'){
@@ -6326,35 +6173,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[v] OR [e] OR <WS>");
             case 14:
-                if(ch=='%'){
+                if(ch!=-1 && CHAR(ch)){
                     handler.xdeclEnd();
-                    handler.valueStart();
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_PE_REFERENCE, 6, 0);
-                    return 1;
-                }
-                if(ch=='&'){
-                    handler.xdeclEnd();
-                    handler.valueStart();
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
-                    push(RULE_REFERENCE, 5, 0);
-                    push(RULE_ENTITY_REF, 1, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    handler.xdeclEnd();
-                    handler.valueStart();
-                    handler.entityValue();
-                    push(RULE_ENTITY_VALUE_CONTENT, 10, 0);
                     buffer.push();
-                    return 3;
+                    return 10;
                 }
                 handler.xdeclEnd();
-                handler.valueStart();
-                handler.entityValue();
-                handler.valueEnd();
+                buffer.push();
+                handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             default:
                 throw new Error("impossible");
@@ -6515,7 +6341,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 74:
                 return entity_value_content(ch);
             case 75:
-                return entity_value_entity(ch);
+                return external_entity_value(ch);
             default:
                 throw new Error("impossible");
         }
