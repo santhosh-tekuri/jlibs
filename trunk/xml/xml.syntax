@@ -2992,75 +2992,6 @@
             <matcher name="WS"/>
         </edge>
     </rule>
-    <rule name="ignore_sect_contents">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node>
-            <event name="ignoreStart"/>
-        </node>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node>
-            <event name="ignoreEnd"/>
-        </node>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="1" fallback="true">
-            <matcher name="CHAR"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="&lt;"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="!"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="["/>
-        </edge>
-        <edge source="4" target="0" fallback="false"/>
-        <edge source="3" target="0" fallback="false"/>
-        <edge source="2" target="0" fallback="false"/>
-        <edge source="1" target="5" fallback="false"/>
-        <edge source="5" target="6" fallback="false">
-            <any chars="]"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="]"/>
-        </edge>
-        <edge source="7" target="7" fallback="false">
-            <any chars="]"/>
-        </edge>
-        <edge source="7" target="1" fallback="true">
-            <matcher name="CHAR"/>
-        </edge>
-        <edge source="7" target="2" fallback="false">
-            <any chars="&lt;"/>
-        </edge>
-        <edge source="7" target="8" fallback="false"/>
-        <edge source="8" target="9" fallback="false">
-            <any chars="&gt;"/>
-        </edge>
-        <edge source="9" target="10" fallback="false"/>
-        <edge source="10" target="11" fallback="false"/>
-        <edge source="11" target="1" fallback="false"/>
-        <edge source="8" target="12" fallback="false"/>
-        <edge source="6" target="1" fallback="true">
-            <matcher name="CHAR"/>
-        </edge>
-        <edge source="6" target="2" fallback="false">
-            <any chars="&lt;"/>
-        </edge>
-        <edge source="6" target="13" fallback="false"/>
-        <edge source="5" target="14" fallback="false"/>
-    </rule>
     <rule name="ignore_sect">
         <node/>
         <node/>
@@ -3069,9 +3000,15 @@
         <node/>
         <node/>
         <node/>
-        <node>
-            <event name="ignoreSect"/>
-        </node>
+        <node name="A"/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
         <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="I"/>
@@ -3097,9 +3034,46 @@
         <edge source="6" target="7" fallback="false">
             <any chars="["/>
         </edge>
-        <edge source="7" target="8" fallback="false">
-            <rule name="ignore_sect_contents"/>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="8" target="9" fallback="false">
+            <any chars="]"/>
         </edge>
+        <edge source="9" target="10" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="10" target="11" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="10" target="8" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="10" target="10" fallback="false">
+            <any chars="]"/>
+        </edge>
+        <edge source="10" target="12" fallback="false"/>
+        <edge source="12" target="13" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="13" target="14" fallback="false">
+            <any chars="!"/>
+        </edge>
+        <edge source="14" target="15" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="15" target="16" fallback="false">
+            <rule name="ignore_sect" node="A"/>
+        </edge>
+        <edge source="16" target="8" fallback="false"/>
+        <edge source="14" target="8" fallback="false"/>
+        <edge source="13" target="8" fallback="false"/>
+        <edge source="9" target="8" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="9" target="12" fallback="false"/>
+        <edge source="8" target="8" fallback="true">
+            <matcher name="CHAR"/>
+        </edge>
+        <edge source="8" target="12" fallback="false"/>
     </rule>
     <rule name="ext_subset_decl">
         <node/>
@@ -3128,9 +3102,7 @@
         <node/>
         <node/>
         <node/>
-        <node>
-            <event name="sectEnd"/>
-        </node>
+        <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="&lt;"/>
         </edge>
@@ -3163,15 +3135,11 @@
         <node/>
         <node/>
         <node/>
-        <node>
-            <event name="includeSect"/>
-        </node>
         <node/>
         <node/>
         <node/>
-        <node>
-            <event name="includeEnd"/>
-        </node>
+        <node/>
+        <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="I"/>
         </edge>

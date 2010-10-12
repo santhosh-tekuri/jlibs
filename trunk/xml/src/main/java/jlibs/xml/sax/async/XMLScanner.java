@@ -5604,120 +5604,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_IGNORE_SECT_CONTENTS = 68;
-    private int ignore_sect_contents(int ch) throws Exception{
-        switch(stateStack.peek()){
-            case 0:
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch==']'){
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 1:
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch==']'){
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 2:
-                if(ch=='!'){
-                    return 3;
-                }
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch==']'){
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 3:
-                if(ch=='['){
-                    return 4;
-                }
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch==']'){
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 4:
-                if(ch=='<'){
-                    handler.ignoreStart();
-                    return 2;
-                }
-                if(ch==']'){
-                    handler.ignoreStart();
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    handler.ignoreStart();
-                    return 1;
-                }
-                handler.ignoreStart();
-                return -1;
-            case 6:
-                if(ch==']'){
-                    return 7;
-                }
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 7:
-                if(ch==']'){
-                    return 7;
-                }
-                if(ch=='<'){
-                    return 2;
-                }
-                if(ch=='>'){
-                    return 9;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 1;
-                }
-                return -1;
-            case 9:
-                if(ch=='<'){
-                    handler.ignoreEnd();
-                    return 2;
-                }
-                if(ch==']'){
-                    handler.ignoreEnd();
-                    return 6;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    handler.ignoreEnd();
-                    return 1;
-                }
-                handler.ignoreEnd();
-                return -1;
-            default:
-                throw new Error("impossible");
-        }
-    }
-
-    public static final int RULE_IGNORE_SECT = 69;
+    public static final int RULE_IGNORE_SECT = 68;
     private int ignore_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -5759,33 +5646,113 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [\\[]");
             case 7:
-                if(ch=='<'){
-                    handler.ignoreSect();
-                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
-                    return 2;
-                }
                 if(ch==']'){
-                    handler.ignoreSect();
-                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
-                    return 6;
+                    return 9;
+                }
+                if(ch=='<'){
+                    return 13;
                 }
                 if(ch!=-1 && CHAR(ch)){
-                    handler.ignoreSect();
-                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
-                    return 1;
+                    return 8;
                 }
-                handler.ignoreSect();
-                push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
-                pop();
-                return -1;
+                expected(ch, "[\\]] OR [<] OR <CHAR>");
             case 8:
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[\\]] OR [<] OR <CHAR>");
+            case 9:
+                if(ch==']'){
+                    return 10;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[\\]] OR [<] OR <CHAR>");
+            case 10:
+                if(ch=='>'){
+                    return 11;
+                }
+                if(ch==']'){
+                    return 10;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
+            case 11:
                 return -1;
+            case 13:
+                if(ch=='!'){
+                    return 14;
+                }
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
+            case 14:
+                if(ch=='['){
+                    return 15;
+                }
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
+            case 15:
+                if(ch==']'){
+                    push(RULE_IGNORE_SECT, 16, 7);
+                    return 9;
+                }
+                if(ch=='<'){
+                    push(RULE_IGNORE_SECT, 16, 7);
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    push(RULE_IGNORE_SECT, 16, 7);
+                    return 8;
+                }
+                expected(ch, "[\\]] OR [<] OR <CHAR>");
+            case 16:
+                if(ch==']'){
+                    return 9;
+                }
+                if(ch=='<'){
+                    return 13;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 8;
+                }
+                expected(ch, "[\\]] OR [<] OR <CHAR>");
             default:
                 throw new Error("impossible");
         }
     }
 
-    public static final int RULE_EXT_SUBSET_DECL = 70;
+    public static final int RULE_EXT_SUBSET_DECL = 69;
     private int ext_subset_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -5991,7 +5958,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_CONDITIONAL_SECT = 71;
+    public static final int RULE_CONDITIONAL_SECT = 70;
     private int conditional_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6078,14 +6045,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
             case 5:
-                handler.sectEnd();
                 return -1;
             default:
                 throw new Error("impossible");
         }
     }
 
-    public static final int RULE_INCLUDE_SECT = 72;
+    public static final int RULE_INCLUDE_SECT = 71;
     private int include_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6137,7 +6103,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 8;
                 if(lookAhead.length()==1){
                     if(ch=='%'){
-                        handler.includeSect();
                         push(RULE_EXT_SUBSET_DECL, 9, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         handler.peReferenceOutsideMarkup();
@@ -6146,14 +6111,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         return 1;
                     }
                     if(WS(ch)){
-                        handler.includeSect();
                         push(RULE_EXT_SUBSET_DECL, 9, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
                         return 3;
                     }
                     if(ch==']'){
-                        handler.includeSect();
                         push(RULE_EXT_SUBSET_DECL, 9, 0);
                         pop();
                         consumed();
@@ -6165,7 +6128,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
                         if(ch=='?'){
-                            handler.includeSect();
                             push(RULE_EXT_SUBSET_DECL, 9, 0);
                             push(RULE_MARKUP_DECL, 2, 0);
                             push(RULE_PI, 1, 0);
@@ -6181,7 +6143,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='A'){
-                                handler.includeSect();
                                 push(RULE_EXT_SUBSET_DECL, 9, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_ATT_LIST_DECL, 1, 0);
@@ -6191,7 +6152,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='N'){
-                                handler.includeSect();
                                 push(RULE_EXT_SUBSET_DECL, 9, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_NOTATION_DECL, 1, 0);
@@ -6201,7 +6161,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='-'){
-                                handler.includeSect();
                                 push(RULE_EXT_SUBSET_DECL, 9, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_COMMENT, 1, 0);
@@ -6211,7 +6170,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='['){
-                                handler.includeSect();
                                 push(RULE_EXT_SUBSET_DECL, 9, 0);
                                 push(RULE_CONDITIONAL_SECT, 2, 0);
                                 consumed();
@@ -6229,7 +6187,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(lookAhead.charAt(2)=='E'){
                                 if(ch=='L'){
-                                    handler.includeSect();
                                     push(RULE_EXT_SUBSET_DECL, 9, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ELEMENT_DECL, 1, 0);
@@ -6240,7 +6197,6 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                     return 4;
                                 }
                                 if(ch=='N'){
-                                    handler.includeSect();
                                     push(RULE_EXT_SUBSET_DECL, 9, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ENTITY_DECL, 1, 0);
@@ -6271,14 +6227,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[>]");
             case 12:
-                handler.includeEnd();
                 return -1;
             default:
                 throw new Error("impossible");
         }
     }
 
-    public static final int RULE_EXT_SUBSET = 73;
+    public static final int RULE_EXT_SUBSET = 72;
     private int ext_subset(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6546,7 +6501,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_ENTITY_VALUE_CONTENT = 74;
+    public static final int RULE_ENTITY_VALUE_CONTENT = 73;
     private int entity_value_content(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6603,7 +6558,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_EXTERNAL_ENTITY_VALUE = 75;
+    public static final int RULE_EXTERNAL_ENTITY_VALUE = 74;
     private int external_entity_value(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6853,20 +6808,18 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 67:
                 return text_decl(ch);
             case 68:
-                return ignore_sect_contents(ch);
-            case 69:
                 return ignore_sect(ch);
-            case 70:
+            case 69:
                 return ext_subset_decl(ch);
-            case 71:
+            case 70:
                 return conditional_sect(ch);
-            case 72:
+            case 71:
                 return include_sect(ch);
-            case 73:
+            case 72:
                 return ext_subset(ch);
-            case 74:
+            case 73:
                 return entity_value_content(ch);
-            case 75:
+            case 74:
                 return external_entity_value(ch);
             default:
                 throw new Error("impossible");
