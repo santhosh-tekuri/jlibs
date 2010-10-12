@@ -349,7 +349,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
 
         if(valueStarted){
-            if(curScanner==xmlScanner)
+            if(curScanner==xmlScanner && curScanner.peStack.size()==0)
                 fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
             value.append(entityValue.getContent());
@@ -368,8 +368,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 }finally{
                     paramEntityStack.pop();
                 }
-            }else
+            }else{
+                if(curScanner==xmlScanner && curScanner.peStack.size()==0)
+                    fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
                 curScanner.peStack.push(new XMLEntityScanner.CharReader(content));
+            }
         }
     }
 
