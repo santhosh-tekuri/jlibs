@@ -153,7 +153,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         dtdElement = null;
         attributeList = null;
         dtdAttribute = null;
-        open = 0;
 
         handler.setDocumentLocator(this);
         handler.startDocument();
@@ -758,32 +757,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         curScanner = curScanner.parent;
     }
 
-    private int open = 0;
-    void ignoreSect(){
-        open++;
-    }
-
-    void includeSect(){
-    }
-
-    void ignoreStart(){
-        open++;
-    }
-
-    void ignoreEnd() throws SAXException{
-        open--;
-        if(open==0)
-            curScanner.doPop = true;
-    }
-
-    void includeEnd() throws SAXException{
-    }
-    
-    void sectEnd() throws SAXException{
-        if(open!=0)
-            fatalError("The included conditional section must end with \"]]>\"");
-    }
-    
     /*-------------------------------------------------[ Test ]---------------------------------------------------*/
 
     public static void main(String[] args) throws Exception{

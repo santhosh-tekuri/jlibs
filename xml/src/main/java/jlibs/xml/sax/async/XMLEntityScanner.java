@@ -56,15 +56,9 @@ public class XMLEntityScanner extends XMLScanner{
         }
     }
     
-    boolean doPop = false;
     Deque<CharReader> peStack = new ArrayDeque<CharReader>();
     @Override
     protected void consume(char ch) throws IOException{
-        if(doPop){
-            pop();
-            doPop = false;
-        }
-
         super.consume(ch);
         if(!peStack.isEmpty()){
             CharReader reader = peStack.peek();
@@ -89,7 +83,6 @@ public class XMLEntityScanner extends XMLScanner{
     public void reset(int rule){
         super.reset(rule);
         iProlog = -1;
-        doPop = false;
         if(peStack!=null)
             peStack.clear();
     }
