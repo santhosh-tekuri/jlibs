@@ -355,15 +355,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             value.append(entityValue.getContent());
         }else{
             char[] content = entityValue.getContent();
-            if(content.length==0)
-                return;
 
             if(peReferenceOutsideMarkup){
                 peReferenceOutsideMarkup = false;
                 paramEntityStack.push(param);
                 try{
                     XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET_DECL);
-                    paramValueScanner.writer.write(entityValue.getContent());
+                    paramValueScanner.writer.write(content);
                     paramValueScanner.writer.close();
                 }catch(IOException ex){
                     throw new RuntimeException(ex);
@@ -796,7 +794,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-         String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/007.xml";
+         String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/invalid/002.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
