@@ -61,6 +61,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         return (CHAR(ch)) && (!(ch=='-'));
     }
 
+    private static boolean NBRACKET(int ch){
+        return (CHAR(ch)) && (!(ch=='['));
+    }
+
+    private static boolean NGT(int ch){
+        return (CHAR(ch)) && (!(ch=='>'));
+    }
+
     private static boolean ELEM_CONTENT_CHAR(int ch){
         return (CHAR(ch)) && (!(ch=='<' || ch=='&'));
     }
@@ -2144,11 +2152,11 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "<NAME_START>");
             case 2:
                 if(ch==';'){
+                    handler.peReference(buffer.pop(0, 0));
                     return 3;
                 }
                 expected(ch, "[;]");
             case 3:
-                handler.peReference(buffer.pop(0, 1));
                 return -1;
             default:
                 throw new Error("impossible");
@@ -2686,18 +2694,9 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 }
                 if(WS(ch)){
-                    return 3;
+                    return 2;
                 }
                 return -1;
-            case 3:
-                if(ch=='N'){
-                    push(RULE_NDATA_DECL, 4, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 3;
-                }
-                expected(ch, "[N] OR <WS>");
             case 4:
                 return -1;
             default:
@@ -3047,103 +3046,193 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[(]");
             case 1:
                 if(WS(ch)){
-                    return 1;
+                    return 2;
                 }
                 if(ch=='#'){
-                    return 3;
-                }
-                expected(ch, "<WS> OR [\\#]");
-            case 2:
-                if(ch=='#'){
-                    return 3;
-                }
-                expected(ch, "[\\#]");
-            case 3:
-                if(ch=='P'){
                     return 4;
                 }
-                expected(ch, "[P]");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 1, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [\\#] OR [%]");
+            case 2:
+                if(WS(ch)){
+                    return 2;
+                }
+                if(ch=='#'){
+                    return 4;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 1, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [\\#] OR [%]");
+            case 3:
+                if(ch=='#'){
+                    return 4;
+                }
+                expected(ch, "[\\#]");
             case 4:
-                if(ch=='C'){
+                if(ch=='P'){
                     return 5;
                 }
-                expected(ch, "[C]");
+                expected(ch, "[P]");
             case 5:
-                if(ch=='D'){
+                if(ch=='C'){
                     return 6;
                 }
-                expected(ch, "[D]");
+                expected(ch, "[C]");
             case 6:
-                if(ch=='A'){
+                if(ch=='D'){
                     return 7;
                 }
-                expected(ch, "[A]");
+                expected(ch, "[D]");
             case 7:
-                if(ch=='T'){
+                if(ch=='A'){
                     return 8;
                 }
-                expected(ch, "[T]");
+                expected(ch, "[A]");
             case 8:
-                if(ch=='A'){
+                if(ch=='T'){
                     return 9;
                 }
-                expected(ch, "[A]");
+                expected(ch, "[T]");
             case 9:
+                if(ch=='A'){
+                    return 10;
+                }
+                expected(ch, "[A]");
+            case 10:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
-                    return 9;
+                    return 10;
                 if(lookAhead.length()==1){
                     if(ch=='|'){
                         consumed();
-                        return 11;
+                        return 13;
                     }
                     if(WS(ch)){
                         consumed();
-                        return 9;
+                        return 11;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consumed();
+                        return 1;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
-                    return 9;
+                    return 10;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)==')'){
                         if(ch=='*'){
                             consumed();
                             consumed();
-                            return 16;
+                            return 20;
                         }
                         consumed();
                         return -1;
                     }
                 }
-                expected(ch, "[|] OR <WS> OR [)][*] OR [)]<EOF>");
+                expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
             case 11:
-                if(WS(ch)){
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
                     return 11;
+                if(lookAhead.length()==1){
+                    if(ch=='|'){
+                        consumed();
+                        return 13;
+                    }
+                    if(WS(ch)){
+                        consumed();
+                        return 11;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 11;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)==')'){
+                        if(ch=='*'){
+                            consumed();
+                            consumed();
+                            return 20;
+                        }
+                        consumed();
+                        return -1;
+                    }
+                }
+                expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
+            case 13:
+                if(WS(ch)){
+                    return 14;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME, 12, 0);
+                    push(RULE_NAME, 15, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 12:
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 13, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
+            case 14:
                 if(WS(ch)){
-                    return 12;
+                    return 14;
                 }
-                if(ch=='|'){
-                    return 11;
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME, 15, 0);
+                    return 1;
                 }
-                if(ch==')'){
-                    return 15;
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 13, 0);
+                    return 1;
                 }
-                expected(ch, "<WS> OR [|] OR [)]");
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
             case 15:
-                if(ch=='*'){
+                if(WS(ch)){
                     return 16;
                 }
-                expected(ch, "[*]");
+                if(ch=='|'){
+                    return 13;
+                }
+                if(ch==')'){
+                    return 19;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [|] OR [)] OR [%]");
             case 16:
+                if(WS(ch)){
+                    return 16;
+                }
+                if(ch=='|'){
+                    return 13;
+                }
+                if(ch==')'){
+                    return 19;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [|] OR [)] OR [%]");
+            case 19:
+                if(ch=='*'){
+                    return 20;
+                }
+                expected(ch, "[*]");
+            case 20:
                 return -1;
-            case 17:
+            case 21:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3595,29 +3684,62 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 4;
                 }
-                expected(ch, "<WS>");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 3, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
             case 4:
                 if(WS(ch)){
-                    return 4;
+                    return 5;
                 }
                 if(ch=='\''){
-                    push(RULE_DEFAULT_DECL, 5, 0);
+                    push(RULE_DEFAULT_DECL, 6, 0);
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 1;
                 }
                 if(ch=='"'){
-                    push(RULE_DEFAULT_DECL, 5, 0);
+                    push(RULE_DEFAULT_DECL, 6, 0);
                     push(RULE_VALUE, 1, 0);
                     handler.valueStart();
                     return 3;
                 }
                 if(ch=='#'){
-                    push(RULE_DEFAULT_DECL, 5, 0);
+                    push(RULE_DEFAULT_DECL, 6, 0);
                     return 2;
                 }
-                expected(ch, "<WS> OR ['] OR [\"] OR [\\#]");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 4, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
             case 5:
+                if(WS(ch)){
+                    return 5;
+                }
+                if(ch=='\''){
+                    push(RULE_DEFAULT_DECL, 6, 0);
+                    push(RULE_VALUE, 1, 0);
+                    handler.valueStart();
+                    return 1;
+                }
+                if(ch=='"'){
+                    push(RULE_DEFAULT_DECL, 6, 0);
+                    push(RULE_VALUE, 1, 0);
+                    handler.valueStart();
+                    return 3;
+                }
+                if(ch=='#'){
+                    push(RULE_DEFAULT_DECL, 6, 0);
+                    return 2;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 4, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
+            case 6:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -3676,50 +3798,112 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 10;
                 }
-                expected(ch, "<WS>");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 9, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
             case 10:
                 if(WS(ch)){
-                    return 10;
+                    return 11;
                 }
                 if(ch!=-1 && NAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 12, 0);
+                    push(RULE_NAME, 13, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 12:
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
+            case 11:
+                if(WS(ch)){
+                    return 11;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    buffer.push();
+                    push(RULE_NAME, 13, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
+            case 13:
                 if(WS(ch)){
                     handler.dtdAttributesStart(buffer.pop(0, 0));
-                    return 14;
+                    return 15;
+                }
+                if(ch=='%'){
+                    handler.dtdAttributesStart(buffer.pop(0, 0));
+                    push(RULE_PE_REFERENCE, 14, 0);
+                    return 1;
                 }
                 if(ch=='>'){
                     handler.dtdAttributesStart(buffer.pop(0, 0));
-                    return 17;
+                    return 19;
                 }
-                expected(ch, "<WS> OR [>]");
+                expected(ch, "<WS> OR [%] OR [>]");
             case 14:
+                if(WS(ch)){
+                    return 15;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 14, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
+            case 15:
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_ATT_DEF, 15, 0);
+                    push(RULE_ATT_DEF, 17, 0);
                     buffer.push();
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
                 if(WS(ch)){
-                    return 14;
+                    return 16;
                 }
                 if(ch=='>'){
-                    return 17;
+                    return 19;
                 }
-                expected(ch, "<NAME_START> OR <WS> OR [>]");
-            case 15:
-                if(ch=='>'){
-                    return 17;
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
+            case 16:
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_ATT_DEF, 17, 0);
+                    buffer.push();
+                    push(RULE_NAME, 1, 0);
+                    return 1;
                 }
                 if(WS(ch)){
-                    return 14;
+                    return 16;
                 }
-                expected(ch, "[>] OR <WS>");
+                if(ch=='>'){
+                    return 19;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
             case 17:
+                if(ch=='>'){
+                    return 19;
+                }
+                if(WS(ch)){
+                    return 15;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 14, 0);
+                    return 1;
+                }
+                expected(ch, "[>] OR <WS> OR [%]");
+            case 19:
                 handler.dtdAttributesEnd();
                 return -1;
             default:
@@ -3737,100 +3921,226 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[(]");
             case 1:
                 if(WS(ch)){
-                    return 1;
+                    return 2;
                 }
                 if(ch=='('){
-                    push(RULE_CHILDREN, 3, 0);
+                    push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME_CARDINALITY, 3, 0);
+                    push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR [(] OR <NAME_START>");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 1, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
             case 2:
+                if(WS(ch)){
+                    return 2;
+                }
                 if(ch=='('){
-                    push(RULE_CHILDREN, 3, 0);
+                    push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME_CARDINALITY, 3, 0);
+                    push(RULE_NAME_CARDINALITY, 4, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 1, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
+            case 3:
+                if(ch=='('){
+                    push(RULE_CHILDREN, 4, 0);
+                    return 1;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
                 expected(ch, "[(] OR <NAME_START>");
-            case 3:
-                if(WS(ch)){
-                    return 3;
-                }
+            case 4:
                 if(ch=='|'){
-                    return 6;
+                    return 8;
                 }
                 if(ch==','){
-                    return 13;
+                    return 17;
                 }
                 if(ch==')'){
-                    return 10;
-                }
-                expected(ch, "<WS> OR [|] OR [,] OR [)]");
-            case 6:
-                if(ch=='('){
-                    push(RULE_CHILDREN, 7, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 6;
-                }
-                if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME_CARDINALITY, 7, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR <WS> OR <NAME_START>");
-            case 7:
-                if(WS(ch)){
-                    return 7;
-                }
-                if(ch=='|'){
-                    return 6;
-                }
-                if(ch==')'){
-                    return 10;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 10:
-                if(ch=='?' || ch=='+' || ch=='*'){
-                    return 11;
-                }
-                return -1;
-            case 11:
-                return -1;
-            case 13:
-                if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_NAME_CARDINALITY, 14, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 13;
-                }
-                if(ch=='('){
-                    push(RULE_CHILDREN, 14, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START> OR <WS> OR [(]");
-            case 14:
-                if(WS(ch)){
                     return 14;
                 }
+                if(WS(ch)){
+                    return 5;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 4, 0);
+                    return 1;
+                }
+                expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
+            case 5:
+                if(ch=='|'){
+                    return 8;
+                }
                 if(ch==','){
-                    return 13;
+                    return 17;
                 }
                 if(ch==')'){
-                    return 10;
+                    return 14;
                 }
-                expected(ch, "<WS> OR [,] OR [)]");
+                if(WS(ch)){
+                    return 5;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 4, 0);
+                    return 1;
+                }
+                expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
+            case 8:
+                if(ch=='('){
+                    push(RULE_CHILDREN, 10, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 9;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME_CARDINALITY, 10, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 8, 0);
+                    return 1;
+                }
+                expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
+            case 9:
+                if(ch=='('){
+                    push(RULE_CHILDREN, 10, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 9;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME_CARDINALITY, 10, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 8, 0);
+                    return 1;
+                }
+                expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
+            case 10:
+                if(ch=='|'){
+                    return 8;
+                }
+                if(ch==')'){
+                    return 14;
+                }
+                if(WS(ch)){
+                    return 11;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "[|] OR [)] OR <WS> OR [%]");
+            case 11:
+                if(ch=='|'){
+                    return 8;
+                }
+                if(ch==')'){
+                    return 14;
+                }
+                if(WS(ch)){
+                    return 11;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "[|] OR [)] OR <WS> OR [%]");
+            case 14:
+                if(ch=='?' || ch=='+' || ch=='*'){
+                    return 15;
+                }
+                return -1;
+            case 15:
+                return -1;
+            case 17:
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME_CARDINALITY, 19, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 18;
+                }
+                if(ch=='('){
+                    push(RULE_CHILDREN, 19, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 17, 0);
+                    return 1;
+                }
+                expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
+            case 18:
+                if(ch!=-1 && NAME_START(ch)){
+                    push(RULE_NAME_CARDINALITY, 19, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(WS(ch)){
+                    return 18;
+                }
+                if(ch=='('){
+                    push(RULE_CHILDREN, 19, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 17, 0);
+                    return 1;
+                }
+                expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
+            case 19:
+                if(ch==','){
+                    return 17;
+                }
+                if(ch==')'){
+                    return 14;
+                }
+                if(WS(ch)){
+                    return 20;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 19, 0);
+                    return 1;
+                }
+                expected(ch, "[,] OR [)] OR <WS> OR [%]");
+            case 20:
+                if(ch==','){
+                    return 17;
+                }
+                if(ch==')'){
+                    return 14;
+                }
+                if(WS(ch)){
+                    return 20;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 19, 0);
+                    return 1;
+                }
+                expected(ch, "[,] OR [)] OR <WS> OR [%]");
             default:
                 throw new Error("impossible");
         }
@@ -3862,18 +4172,19 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         switch(stateStack.peek()){
             case 0:
                 if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 1, 0);
+                    handler.peReferenceOutsideMarkup();
+                    push(RULE_PE_REFERENCE, 2, 0);
                     return 1;
                 }
                 if(WS(ch)){
-                    return 2;
+                    return 3;
                 }
                 expected(ch, "[%] OR <WS>");
-            case 1:
-                return -1;
             case 2:
+                return -1;
+            case 3:
                 if(WS(ch)){
-                    return 2;
+                    return 3;
                 }
                 return -1;
             default:
@@ -4013,113 +4324,228 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 10;
                 }
-                expected(ch, "<WS>");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 9, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
             case 10:
                 if(WS(ch)){
-                    return 10;
+                    return 11;
                 }
                 if(ch!=-1 && NAME_START(ch)){
                     buffer.push();
-                    push(RULE_NAME, 12, 0);
+                    push(RULE_NAME, 13, 0);
                     return 1;
                 }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 12:
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
+            case 11:
+                if(WS(ch)){
+                    return 11;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    buffer.push();
+                    push(RULE_NAME, 13, 0);
+                    return 1;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 10, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR <NAME_START> OR [%]");
+            case 13:
                 if(WS(ch)){
                     handler.dtdElement(buffer.pop(0, 0));
-                    return 13;
-                }
-                expected(ch, "<WS>");
-            case 13:
-                if(ch=='('){
                     return 15;
+                }
+                if(ch=='%'){
+                    handler.dtdElement(buffer.pop(0, 0));
+                    push(RULE_PE_REFERENCE, 14, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
+            case 14:
+                if(WS(ch)){
+                    return 15;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 14, 0);
+                    return 1;
+                }
+                expected(ch, "<WS> OR [%]");
+            case 15:
+                if(ch=='('){
+                    return 18;
                 }
                 if(ch=='E'){
-                    return 21;
+                    return 27;
                 }
                 if(ch=='A'){
-                    return 25;
+                    return 31;
                 }
                 if(WS(ch)){
-                    return 13;
+                    return 16;
                 }
-                expected(ch, "[(] OR [E] OR [A] OR <WS>");
-            case 15:
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
+            case 16:
+                if(ch=='('){
+                    return 18;
+                }
+                if(ch=='E'){
+                    return 27;
+                }
+                if(ch=='A'){
+                    return 31;
+                }
                 if(WS(ch)){
-                    return 15;
+                    return 16;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 15, 0);
+                    return 1;
+                }
+                expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
+            case 18:
+                if(WS(ch)){
+                    return 19;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 18, 0);
+                    return 1;
                 }
                 if(ch=='('){
-                    push(RULE_CHILDREN, 16, 2);
-                    push(RULE_CHILDREN, 3, 0);
+                    handler.notMixed();
+                    push(RULE_CHILDREN, 21, 3);
+                    push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
                 if(ch!=-1 && NAME_START(ch)){
-                    push(RULE_CHILDREN, 16, 2);
-                    push(RULE_NAME_CARDINALITY, 3, 0);
+                    handler.notMixed();
+                    push(RULE_CHILDREN, 21, 3);
+                    push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
                 if(ch=='#'){
-                    push(RULE_MIXED, 16, 2);
-                    return 3;
+                    push(RULE_MIXED, 21, 3);
+                    return 4;
                 }
-                expected(ch, "<WS> OR [(] OR <NAME_START> OR [\\#]");
-            case 16:
-                if(ch=='>'){
-                    return 20;
-                }
-                if(WS(ch)){
-                    return 19;
-                }
-                expected(ch, "[>] OR <WS>");
+                expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
             case 19:
-                if(ch=='>'){
-                    return 20;
-                }
                 if(WS(ch)){
                     return 19;
                 }
-                expected(ch, "[>] OR <WS>");
-            case 20:
-                return -1;
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 18, 0);
+                    return 1;
+                }
+                if(ch=='('){
+                    handler.notMixed();
+                    push(RULE_CHILDREN, 21, 3);
+                    push(RULE_CHILDREN, 4, 0);
+                    return 1;
+                }
+                if(ch!=-1 && NAME_START(ch)){
+                    handler.notMixed();
+                    push(RULE_CHILDREN, 21, 3);
+                    push(RULE_NAME_CARDINALITY, 4, 0);
+                    push(RULE_NAME, 1, 0);
+                    return 1;
+                }
+                if(ch=='#'){
+                    push(RULE_MIXED, 21, 3);
+                    return 4;
+                }
+                expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
             case 21:
-                if(ch=='M'){
-                    return 22;
-                }
-                expected(ch, "[M]");
-            case 22:
-                if(ch=='P'){
-                    return 23;
-                }
-                expected(ch, "[P]");
-            case 23:
-                if(ch=='T'){
-                    return 24;
-                }
-                expected(ch, "[T]");
-            case 24:
-                if(ch=='Y'){
-                    return 19;
-                }
-                expected(ch, "[Y]");
-            case 25:
-                if(ch=='N'){
+                if(ch=='>'){
                     return 26;
                 }
-                expected(ch, "[N]");
-            case 26:
-                if(ch=='Y'){
-                    return 27;
+                if(WS(ch)){
+                    return 25;
                 }
-                expected(ch, "[Y]");
-            case 27:
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 24, 0);
+                    return 1;
+                }
+                expected(ch, "[>] OR <WS> OR [%]");
+            case 24:
                 if(ch=='>'){
-                    return 20;
+                    return 26;
                 }
                 if(WS(ch)){
-                    return 19;
+                    return 25;
                 }
-                expected(ch, "[>] OR <WS>");
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 24, 0);
+                    return 1;
+                }
+                expected(ch, "[>] OR <WS> OR [%]");
+            case 25:
+                if(ch=='>'){
+                    return 26;
+                }
+                if(WS(ch)){
+                    return 25;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 24, 0);
+                    return 1;
+                }
+                expected(ch, "[>] OR <WS> OR [%]");
+            case 26:
+                return -1;
+            case 27:
+                if(ch=='M'){
+                    handler.notMixed();
+                    return 28;
+                }
+                expected(ch, "[M]");
+            case 28:
+                if(ch=='P'){
+                    return 29;
+                }
+                expected(ch, "[P]");
+            case 29:
+                if(ch=='T'){
+                    return 30;
+                }
+                expected(ch, "[T]");
+            case 30:
+                if(ch=='Y'){
+                    return 24;
+                }
+                expected(ch, "[Y]");
+            case 31:
+                if(ch=='N'){
+                    return 32;
+                }
+                expected(ch, "[N]");
+            case 32:
+                if(ch=='Y'){
+                    return 33;
+                }
+                expected(ch, "[Y]");
+            case 33:
+                if(ch=='>'){
+                    return 26;
+                }
+                if(WS(ch)){
+                    return 25;
+                }
+                if(ch=='%'){
+                    push(RULE_PE_REFERENCE, 24, 0);
+                    return 1;
+                }
+                expected(ch, "[>] OR <WS> OR [%]");
             default:
                 throw new Error("impossible");
         }
@@ -4135,14 +4561,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch=='%'){
                         push(RULE_DECL_SEP, 1, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
                     if(WS(ch)){
                         push(RULE_DECL_SEP, 1, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -4226,14 +4653,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch=='%'){
                         push(RULE_DECL_SEP, 1, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
                     if(WS(ch)){
                         push(RULE_DECL_SEP, 1, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -4438,7 +4866,8 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='%'){
                         push(RULE_INT_SUBSET, 18, 0);
                         push(RULE_DECL_SEP, 1, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
@@ -4446,7 +4875,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_INT_SUBSET, 18, 0);
                         push(RULE_DECL_SEP, 1, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -5179,65 +5608,109 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int ignore_sect_contents(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
+                if(ch=='<'){
+                    return 2;
+                }
+                if(ch==']'){
+                    return 6;
+                }
                 if(ch!=-1 && CHAR(ch)){
-                    buffer.push();
+                    return 1;
+                }
+                return -1;
+            case 1:
+                if(ch=='<'){
+                    return 2;
+                }
+                if(ch==']'){
+                    return 6;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 1;
+                }
+                return -1;
+            case 2:
+                if(ch=='!'){
+                    return 3;
+                }
+                if(ch=='<'){
+                    return 2;
+                }
+                if(ch==']'){
+                    return 6;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 1;
+                }
+                return -1;
+            case 3:
+                if(ch=='['){
                     return 4;
+                }
+                if(ch=='<'){
+                    return 2;
+                }
+                if(ch==']'){
+                    return 6;
+                }
+                if(ch!=-1 && CHAR(ch)){
+                    return 1;
                 }
                 return -1;
             case 4:
                 if(ch=='<'){
-                    return 5;
+                    handler.ignoreStart();
+                    return 2;
                 }
                 if(ch==']'){
-                    return 9;
-                }
-                if(ch!=-1 && CHAR(ch)){
-                    return 4;
-                }
-                handler.ignoreSectContents(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                if(ch=='!'){
+                    handler.ignoreStart();
                     return 6;
                 }
                 if(ch!=-1 && CHAR(ch)){
-                    return 4;
+                    handler.ignoreStart();
+                    return 1;
                 }
-                expected(ch, "[!] OR <CHAR>");
+                handler.ignoreStart();
+                return -1;
             case 6:
-                if(ch=='['){
+                if(ch==']'){
                     return 7;
                 }
-                if(ch!=-1 && CHAR(ch)){
-                    return 4;
+                if(ch=='<'){
+                    return 2;
                 }
-                expected(ch, "[\\[] OR <CHAR>");
-            case 7:
                 if(ch!=-1 && CHAR(ch)){
-                    handler.ignoreStart(buffer.pop(0, 0));
-                    buffer.push();
-                    return 4;
+                    return 1;
                 }
-                handler.ignoreStart(buffer.pop(0, 0));
                 return -1;
-            case 9:
+            case 7:
                 if(ch==']'){
-                    return 9;
+                    return 7;
+                }
+                if(ch=='<'){
+                    return 2;
                 }
                 if(ch=='>'){
-                    return 10;
+                    return 9;
                 }
                 if(ch!=-1 && CHAR(ch)){
-                    return 4;
+                    return 1;
                 }
-                expected(ch, "[\\]] OR [>] OR <CHAR>");
-            case 10:
+                return -1;
+            case 9:
+                if(ch=='<'){
+                    handler.ignoreEnd();
+                    return 2;
+                }
+                if(ch==']'){
+                    handler.ignoreEnd();
+                    return 6;
+                }
                 if(ch!=-1 && CHAR(ch)){
-                    handler.ignoreEnd(buffer.pop(0, 0));
-                    buffer.push();
-                    return 4;
+                    handler.ignoreEnd();
+                    return 1;
                 }
-                handler.ignoreEnd(buffer.pop(0, 0));
+                handler.ignoreEnd();
                 return -1;
             default:
                 throw new Error("impossible");
@@ -5286,11 +5759,20 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [\\[]");
             case 7:
+                if(ch=='<'){
+                    handler.ignoreSect();
+                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
+                    return 2;
+                }
+                if(ch==']'){
+                    handler.ignoreSect();
+                    push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
+                    return 6;
+                }
                 if(ch!=-1 && CHAR(ch)){
                     handler.ignoreSect();
                     push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
-                    buffer.push();
-                    return 4;
+                    return 1;
                 }
                 handler.ignoreSect();
                 push(RULE_IGNORE_SECT_CONTENTS, 8, 0);
@@ -5313,14 +5795,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch=='%'){
                         push(RULE_DECL_SEP, 2, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
                     if(WS(ch)){
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -5411,14 +5894,15 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch=='%'){
                         push(RULE_DECL_SEP, 2, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
                     if(WS(ch)){
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -5532,7 +6016,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(WS(ch)){
                         consumed();
-                        return 3;
+                        return 4;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 3, 0);
+                        consumed();
+                        return 1;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
@@ -5540,21 +6029,55 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='I'){
                         if(ch=='G'){
-                            push(RULE_IGNORE_SECT, 4, 0);
+                            push(RULE_IGNORE_SECT, 5, 0);
                             consumed();
                             consumed();
                             return 2;
                         }
                         if(ch=='N'){
-                            push(RULE_INCLUDE_SECT, 4, 0);
+                            push(RULE_INCLUDE_SECT, 5, 0);
                             consumed();
                             consumed();
                             return 2;
                         }
                     }
                 }
-                expected(ch, "<WS> OR [I][G] OR [I][N]");
+                expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
             case 4:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 4;
+                if(lookAhead.length()==1){
+                    if(WS(ch)){
+                        consumed();
+                        return 4;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 3, 0);
+                        consumed();
+                        return 1;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 4;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='I'){
+                        if(ch=='G'){
+                            push(RULE_IGNORE_SECT, 5, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch=='N'){
+                            push(RULE_INCLUDE_SECT, 5, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
+            case 5:
                 handler.sectEnd();
                 return -1;
             default:
@@ -5617,7 +6140,8 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         handler.includeSect();
                         push(RULE_EXT_SUBSET_DECL, 9, 0);
                         push(RULE_DECL_SEP, 2, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
@@ -5626,7 +6150,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_EXT_SUBSET_DECL, 9, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                     if(ch==']'){
                         handler.includeSect();
@@ -5766,7 +6290,8 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
@@ -5775,7 +6300,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<3)
@@ -5903,7 +6428,8 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         handler.xdeclEnd();
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
-                        push(RULE_PE_REFERENCE, 1, 0);
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, 2, 0);
                         consumed();
                         return 1;
                     }
@@ -5912,7 +6438,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         push(RULE_EXT_SUBSET_DECL, 2, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
-                        return 2;
+                        return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
