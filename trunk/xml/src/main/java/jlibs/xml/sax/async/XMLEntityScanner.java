@@ -49,7 +49,7 @@ public class XMLEntityScanner extends XMLScanner{
 
     static class CharReader{
         char chars[];
-        int index;
+        int index = -1;
 
         CharReader(char[] chars){
             this.chars = chars;
@@ -68,9 +68,10 @@ public class XMLEntityScanner extends XMLScanner{
         super.consume(ch);
         if(!peStack.isEmpty()){
             CharReader reader = peStack.peek();
-            ch = reader.chars[reader.index];
+            int index = reader.index;
+            ch = index==-1 || index==reader.chars.length ? ' ' : reader.chars[index];
             reader.index++;
-            if(reader.index==reader.chars.length)
+            if(reader.index==reader.chars.length+1)
                 peStack.pop();
             consume(ch);
         }
