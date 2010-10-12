@@ -19,7 +19,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.helpers.AttributesImpl;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Santhosh Kumar T
@@ -28,6 +30,7 @@ public class DTD{
     public String root;
     public Map<String, Map<String, DTDAttribute>> attributes = new HashMap<String, Map<String, DTDAttribute>>();
     private Namespaces namespaces;
+    public Set<String> nonMixedElements = new HashSet<String>();
 
     public DTD(Namespaces namespaces){
         this.namespaces = namespaces;
@@ -36,6 +39,7 @@ public class DTD{
     public void reset(){
         root = null;
         attributes.clear();
+        nonMixedElements.clear();
     }
 
     public AttributeType attributeType(String element, String attribute){

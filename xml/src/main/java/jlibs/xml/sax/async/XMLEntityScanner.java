@@ -32,6 +32,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Locale;
 
 /**
@@ -43,6 +45,35 @@ public class XMLEntityScanner extends XMLScanner{
     public XMLEntityScanner(AsyncXMLReader handler, int startingRule){
         super(handler, startingRule);
         handler.xdeclEnd = false;
+    }
+
+    static class CharReader{
+        char chars[];
+        int index;
+
+        CharReader(char[] chars){
+            this.chars = chars;
+        }
+    }
+    
+    boolean doPop = false;
+    Deque<CharReader> peStack = new ArrayDeque<CharReader>();
+    @Override
+    protected void consume(char ch) throws IOException{
+        if(doPop){
+            pop();
+            doPop = false;
+        }
+
+        super.consume(ch);
+        if(!peStack.isEmpty()){
+            CharReader reader = peStack.peek();
+            ch = reader.chars[reader.index];
+            reader.index++;
+            if(reader.index==reader.chars.length)
+                peStack.pop();
+            consume(ch);
+        }
     }
 
     protected void consumed(int ch){
@@ -57,6 +88,9 @@ public class XMLEntityScanner extends XMLScanner{
     public void reset(int rule){
         super.reset(rule);
         iProlog = -1;
+        doPop = false;
+        if(peStack!=null)
+            peStack.clear();
     }
 
     private int iProlog = -1;
@@ -74,6 +108,7 @@ public class XMLEntityScanner extends XMLScanner{
                     bom = BOM.get(marker, false);
                     encoding = bom!=null ? bom.encoding() : "UTF-8";
                 }
+                handler.encoding = encoding;
                 decoder = Charset.forName(encoding).newDecoder();
                 if(!encoding.equals("UTF-8")){
                     decoder.onMalformedInput(CodingErrorAction.REPLACE)

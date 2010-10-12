@@ -146,9 +146,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         paramEntityName = null;
         paramEntities.clear();
         paramEntityStack.clear();
+        peReferenceOutsideMarkup = false;
 
         dtd.reset();
         dtdElementName = null;
+        dtdElement = null;
         attributeList = null;
         dtdAttribute = null;
         open = 0;
@@ -213,13 +215,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void discard(Chars data){}
     
     void rawValue(Chars data){
-        char[] chars = data.array();
-        int end = data.offset() + data.length();
-        for(int i=data.offset(); i<end; i++){
-            char ch = chars[i];
-            if(ch=='\n' || ch=='\r' || ch=='\t')
-                ch = ' ';
-            value.append(ch);
+        if(entityValue)
+            value.append(data);
+        else{
+            char[] chars = data.array();
+            int end = data.offset() + data.length();
+            for(int i=data.offset(); i<end; i++){
+                char ch = chars[i];
+                if(ch=='\n' || ch=='\r' || ch=='\t')
+                    ch = ' ';
+                value.append(ch);
+            }
         }
     }
 
@@ -325,6 +331,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private ArrayDeque<String> paramEntityStack = new ArrayDeque<String>();
+
+    private boolean peReferenceOutsideMarkup = false;
+    void peReferenceOutsideMarkup(){
+        peReferenceOutsideMarkup = true;
+    }
+
     @SuppressWarnings({"ConstantConditions"})
     void peReference(Chars data) throws Exception{
         String param = data.toString();
@@ -342,16 +354,24 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
             value.append(entityValue.getContent());
         }else{
-            paramEntityStack.push(param);
-            try{
-                XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_INT_SUBSET);
-                paramValueScanner.writer.write(entityValue.getContent());
-                paramValueScanner.writer.close();
-            }catch(IOException ex){
-                throw new RuntimeException(ex);
-            }finally{
-                paramEntityStack.pop();
-            }
+            char[] content = entityValue.getContent();
+            if(content.length==0)
+                return;
+
+            if(peReferenceOutsideMarkup){
+                peReferenceOutsideMarkup = false;
+                paramEntityStack.push(param);
+                try{
+                    XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET_DECL);
+                    paramValueScanner.writer.write(entityValue.getContent());
+                    paramValueScanner.writer.close();
+                }catch(IOException ex){
+                    throw new RuntimeException(ex);
+                }finally{
+                    paramEntityStack.pop();
+                }
+            }else
+                curScanner.peStack.push(new XMLEntityScanner.CharReader(content));
         }
     }
 
@@ -412,8 +432,21 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
 
+    private boolean isWhitespace(Chars data){
+        char chars[] = data.array();
+        int end = data.offset()+data.length();
+        for(int i=data.offset(); i<end; i++){
+            if(!XMLChar.isSpace(chars[i]))
+                return false;
+        }
+        return true;
+    }
+    
     void characters(Chars data) throws SAXException{
-        handler.characters(data.array(), data.offset(), data.length());
+        if(dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
+            handler.ignorableWhitespace(data.array(), data.offset(), data.length());
+        else
+            handler.characters(data.array(), data.offset(), data.length());
     }
 
     void cdata(Chars data) throws SAXException{
@@ -481,8 +514,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         publicID = this.systemID = null;
     }
 
+    private String dtdElement;
     void dtdElement(Chars data){
-        System.out.println("dtdElement: "+data);
+        dtdElement = data.toString();
+    }
+
+    void notMixed(){
+        dtd.nonMixedElements.add(dtdElement);
     }
 
     public void dtdEnd() throws SAXException, IOException{
@@ -725,32 +763,24 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void includeSect(){
+    }
+
+    void ignoreStart(){
         open++;
     }
 
-    void ignoreStart(Chars data){
-        open++;
-    }
-
-    void ignoreEnd(Chars data) throws SAXException{
-        if(open==0)
-            fatalError("']]>' is unexpected here");
+    void ignoreEnd() throws SAXException{
         open--;
+        if(open==0)
+            curScanner.doPop = true;
     }
 
     void includeEnd() throws SAXException{
-        if(open==0)
-            fatalError("']]>' is unexpected here");
-        open--;
     }
-
-    void ignoreSectContents(Chars data){
-
-    }
-
+    
     void sectEnd() throws SAXException{
         if(open!=0)
-            fatalError("']]>' expected "+open+" times");
+            fatalError("The included conditional section must end with \"]]>\"");
     }
     
     /*-------------------------------------------------[ Test ]---------------------------------------------------*/
@@ -766,7 +796,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-        String file = "/Users/santhosh/projects/SAXTest/xmlconf/ibm/invalid/P69/ibm69i03.xml"; // 929
+         String file = "/Users/santhosh/projects/SAXTest/xmlconf/eduni/namespaces/1.0/007.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -790,9 +820,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         IOUtil.pump(new InputStreamReader(new FileInputStream(file), "UTF-8"), new StringWriter(), true, true);
 //        IOUtil.pump(new UTF8Reader(new FileInputStream(file)), new StringWriter(), true, true);
 
-
         parser.parse(new InputSource(file));
-
 //        parser.scanner.write("<root attr1='value1'/>");        
 //        parser.scanner.close();
     }

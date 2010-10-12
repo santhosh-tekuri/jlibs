@@ -47,7 +47,7 @@ class Attributes{
 
         if(attrQName.name.equals("xmlns")){
             namespaces.add("", attrValue);
-        }else if(attrQName.name.equals("xmlns")){
+        }else if(attrQName.prefix.equals("xmlns")){
             if(attrQName.localName.equals(XML_NS_PREFIX)){
                 if(!attrValue.equals(XML_NS_URI)){
                     return "prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI;
