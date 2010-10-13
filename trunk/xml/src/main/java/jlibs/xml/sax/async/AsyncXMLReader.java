@@ -568,7 +568,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
                 if(is==null)
                     is = inputSource;
-                inputSource = null;
 
                 XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_EXTERNAL_ENTITY_VALUE);
                 scanner.parent = curScanner;
@@ -581,7 +580,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
 
         public void parse(int rule) throws IOException, SAXException{
-            if(content!=null){
+            if(inputSource==null){
                 XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
                 scanner.writer.write(content);
                 scanner.writer.close();
