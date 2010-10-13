@@ -106,6 +106,7 @@ public class Rule{
             Node newNode = new Node();
             newNode.id = i;
             newNode.name = nodes.get(i).name;
+            newNode.action = nodes.get(i).action;
             nodes.set(i, newNode);
         }
         newRule.node = nodes.get(0);
