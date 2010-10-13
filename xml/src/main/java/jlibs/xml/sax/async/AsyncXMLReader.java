@@ -278,22 +278,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(standalone==Boolean.TRUE && entityValue.externalValue)
                 fatalError("The reference to entity \""+entity+"\" declared in an external parsed entity is not permitted in a standalone document");
 
-            if(entityStack.contains(entity)){
-                StringBuilder message = new StringBuilder("Recursive entity reference ");
-                message.append('"').append(entity).append('"').append(". (Reference path: ");
-                boolean first = true;
-                Iterator<String> iter = entityStack.descendingIterator();
-                while(iter.hasNext()){
-                    if(first)
-                        first = false;
-                    else
-                        message.append(" -> ");
-                    message.append(iter.next());
-                }
-                message.append(" -> ").append(entity);
-                message.append(')');
-                fatalError(message.toString());
-            }
+            checkRecursion(entityStack, entity, "entity");
 
             int rule;
             if(valueStarted){
@@ -347,21 +332,19 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(standalone==Boolean.TRUE && entityValue.externalValue)
             fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
 
+        checkRecursion(paramEntityStack, param, "parameter entity");
+
         if(valueStarted){
             if(curScanner==xmlScanner && curScanner.peStack.size()==0)
                 fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
             value.append(entityValue.getContent());
         }else{
-            char[] content = entityValue.getContent();
-
             if(peReferenceOutsideMarkup){
                 peReferenceOutsideMarkup = false;
                 paramEntityStack.push(param);
                 try{
-                    XMLScanner paramValueScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET_DECL);
-                    paramValueScanner.writer.write(content);
-                    paramValueScanner.writer.close();
+                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL);
                 }catch(IOException ex){
                     throw new RuntimeException(ex);
                 }finally{
@@ -370,7 +353,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }else{
                 if(curScanner==xmlScanner && curScanner.peStack.size()==0)
                     fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
-                curScanner.peStack.push(new XMLEntityScanner.CharReader(content));
+                curScanner.peStack.push(new XMLEntityScanner.CharReader(entityValue.getContent()));
             }
         }
     }
@@ -596,6 +579,40 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }
             return content;
         }
+
+        public void parse(int rule) throws IOException, SAXException{
+            if(content!=null){
+                XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
+                scanner.writer.write(content);
+                scanner.writer.close();
+            }else{
+                InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+                XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, rule);
+                scanner.parent = curScanner;
+                curScanner = scanner;
+                scanner.parse(is==null ? inputSource : is);
+                curScanner = curScanner.parent;
+            }
+        }
+    }
+
+    public void checkRecursion(Deque<String> stack, String current, String type) throws SAXException{
+        if(stack.contains(current)){
+            StringBuilder message = new StringBuilder("Recursive ").append(type).append(" reference ");
+            message.append('"').append(current).append('"').append(". (Reference path: ");
+            boolean first = true;
+            Iterator<String> iter = stack.descendingIterator();
+            while(iter.hasNext()){
+                if(first)
+                    first = false;
+                else
+                    message.append(" -> ");
+                message.append(iter.next());
+            }
+            message.append(" -> ").append(current);
+            message.append(')');
+            fatalError(message.toString());
+        }
     }
 
     /*-------------------------------------------------[ Param Entity Definition ]---------------------------------------------------*/
@@ -770,7 +787,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 //        parser.parse(new InputSource(new StringReader(xml)));
 
 //        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-         String file = "/Users/santhosh/projects/SAXTest/xmlconf/sun/valid/not-sa03.xml";
+         String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/097.xml";
 //        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
 //        String file = "test.xml";
         SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -789,7 +806,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             });
         }catch(Exception ex){
             ex.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            System.out.println("==========================");
+            System.err.println("==================================================================================================================================");
         }
 
         IOUtil.pump(new InputStreamReader(new FileInputStream(file), "UTF-8"), new StringWriter(), true, true);
