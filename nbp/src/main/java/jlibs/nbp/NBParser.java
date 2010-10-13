@@ -58,7 +58,7 @@ public abstract class NBParser{
 
     private char highSurrogate;
     private boolean wasHighSurrogate;
-    protected void consume(char ch) throws IOException{
+    public void consume(char ch) throws IOException{
         if(Character.isHighSurrogate(ch)){
             highSurrogate = ch;
             wasHighSurrogate = true;
@@ -77,7 +77,7 @@ public abstract class NBParser{
         }
     }
 
-    protected void consume(int codePoint) throws IOException{
+    public void consume(int codePoint) throws IOException{
         try{
             consumed = false;
             _eat(codePoint);
