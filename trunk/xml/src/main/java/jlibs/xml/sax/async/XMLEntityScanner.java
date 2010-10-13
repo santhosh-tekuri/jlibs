@@ -44,6 +44,7 @@ public class XMLEntityScanner extends XMLScanner{
     
     public XMLEntityScanner(AsyncXMLReader handler, int startingRule){
         super(handler, startingRule);
+        handler.encoding = null;
         handler.xdeclEnd = false;
     }
 
@@ -58,7 +59,7 @@ public class XMLEntityScanner extends XMLScanner{
     
     Deque<CharReader> peStack = new ArrayDeque<CharReader>();
     @Override
-    protected void consume(char ch) throws IOException{
+    public void consume(char ch) throws IOException{
         super.consume(ch);
         if(!peStack.isEmpty()){
             CharReader reader = peStack.peek();
