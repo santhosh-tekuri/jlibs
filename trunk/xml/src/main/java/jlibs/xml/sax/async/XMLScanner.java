@@ -5429,102 +5429,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_VALUE_CONTENT = 65;
-    private int value_content(int ch) throws Exception{
-        switch(stateStack.peek()){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                expected(ch, "<ELEM_CONTENT_CHAR> OR [\\&][\\#] OR [\\&]<NAME_START>");
-            case 3:
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                return -1;
-            default:
-                throw new Error("impossible");
-        }
-    }
-
-    public static final int RULE_VALUE_ENTITY = 66;
-    private int value_entity(int ch) throws Exception{
-        switch(stateStack.peek()){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_VALUE_CONTENT, 0, 0);
-                        buffer.push();
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            push(RULE_VALUE_CONTENT, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_VALUE_CONTENT, 0, 0);
-                            push(RULE_REFERENCE, 5, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                }
-                return -1;
-            default:
-                throw new Error("impossible");
-        }
-    }
-
-    public static final int RULE_TEXT_DECL = 67;
+    public static final int RULE_TEXT_DECL = 65;
     private int text_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -5604,7 +5509,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_IGNORE_SECT = 68;
+    public static final int RULE_IGNORE_SECT = 66;
     private int ignore_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -5752,7 +5657,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_EXT_SUBSET_DECL = 69;
+    public static final int RULE_EXT_SUBSET_DECL = 67;
     private int ext_subset_decl(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -5958,7 +5863,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_CONDITIONAL_SECT = 70;
+    public static final int RULE_CONDITIONAL_SECT = 68;
     private int conditional_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6051,7 +5956,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_INCLUDE_SECT = 71;
+    public static final int RULE_INCLUDE_SECT = 69;
     private int include_sect(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6233,7 +6138,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_EXT_SUBSET = 72;
+    public static final int RULE_EXT_SUBSET = 70;
     private int ext_subset(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6501,7 +6406,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_ENTITY_VALUE_CONTENT = 73;
+    public static final int RULE_ENTITY_VALUE_CONTENT = 71;
     private int entity_value_content(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6558,7 +6463,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_EXTERNAL_ENTITY_VALUE = 74;
+    public static final int RULE_EXTERNAL_ENTITY_VALUE = 72;
     private int external_entity_value(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
@@ -6662,6 +6567,118 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 handler.xdeclEnd();
                 buffer.push();
                 handler.externalEntityValue(buffer.pop(0, 0));
+                return -1;
+            default:
+                throw new Error("impossible");
+        }
+    }
+
+    public static final int RULE_INT_VALUE = 73;
+    private int int_value(int ch) throws Exception{
+        switch(stateStack.peek()){
+            case 0:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 0;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 0;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                return -1;
+            case 3:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 3;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        consumed();
+                        return 3;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 3;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            handler.rawValue(buffer.pop(0, 0));
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            handler.rawValue(buffer.pop(0, 0));
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return -1;
+            case 6:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 6;
+                if(lookAhead.length()==1){
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        buffer.push();
+                        consumed();
+                        return 3;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 6;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_REFERENCE, 6, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                }
                 return -1;
             default:
                 throw new Error("impossible");
@@ -6802,25 +6819,23 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 64:
                 return elem_entity(ch);
             case 65:
-                return value_content(ch);
-            case 66:
-                return value_entity(ch);
-            case 67:
                 return text_decl(ch);
-            case 68:
+            case 66:
                 return ignore_sect(ch);
-            case 69:
+            case 67:
                 return ext_subset_decl(ch);
-            case 70:
+            case 68:
                 return conditional_sect(ch);
-            case 71:
+            case 69:
                 return include_sect(ch);
-            case 72:
+            case 70:
                 return ext_subset(ch);
-            case 73:
+            case 71:
                 return entity_value_content(ch);
-            case 74:
+            case 72:
                 return external_entity_value(ch);
+            case 73:
+                return int_value(ch);
             default:
                 throw new Error("impossible");
         }
