@@ -2894,7 +2894,7 @@
             <rule name="misc"/>
         </edge>
     </rule>
-    <rule name="elem_entity">
+    <rule name="int_elem_content">
         <node/>
         <node/>
         <edge source="0" target="1" fallback="false"/>
@@ -3291,5 +3291,22 @@
         <edge source="3" target="2" fallback="false"/>
         <edge source="0" target="10" fallback="false"/>
         <edge source="0" target="5" fallback="false"/>
+    </rule>
+    <rule name="ext_elem_content">
+        <node/>
+        <node>
+            <event name="xdeclEnd"/>
+        </node>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="text_decl"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <rule name="elem_content"/>
+        </edge>
+        <edge source="0" target="1" fallback="false"/>
     </rule>
 </syntax>

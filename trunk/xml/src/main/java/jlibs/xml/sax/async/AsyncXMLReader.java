@@ -284,28 +284,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(valueStarted){
                 if(entityValue.externalValue)
                     fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
-
-                entityContent = entityValue.getContent();
-                char chars[] = new char[entityContent.length];
-                for(int i=chars.length-1; i>=0; i--){
-                    char ch = entityContent[i];
-                    if(ch=='\n' || ch=='\r' || ch=='\t')
-                        ch = ' ';
-                    chars[i] = ch;
-                }
-                entityContent = chars;
-
                 rule = XMLScanner.RULE_INT_VALUE;
             }else{
-                entityContent = entityValue.getContent();
-                rule = XMLScanner.RULE_ELEM_ENTITY;
+                rule = entityValue.externalValue ? XMLScanner.RULE_EXT_ELEM_CONTENT : XMLScanner.RULE_INT_ELEM_CONTENT;
             }
 
             entityStack.push(entity);
             try{
-                XMLScanner entityValueScanner = new XMLScanner(this, rule);
-                entityValueScanner.writer.write(entityContent);
-                entityValueScanner.writer.close();
+                entityValue.parse(rule, valueStarted);
             }catch(IOException ex){
                 throw new RuntimeException(ex);
             }finally{
@@ -344,7 +330,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 peReferenceOutsideMarkup = false;
                 paramEntityStack.push(param);
                 try{
-                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL);
+                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL, false);
                 }catch(IOException ex){
                     throw new RuntimeException(ex);
                 }finally{
@@ -579,11 +565,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             return content;
         }
 
-        public void parse(int rule) throws IOException, SAXException{
+        public void parse(int rule, boolean attributeValue) throws IOException, SAXException{
             if(inputSource==null){
                 XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
-                scanner.writer.write(content);
-                scanner.writer.close();
+                for(char ch: content){
+                    if(attributeValue && (ch=='\n' || ch=='\r' || ch=='\t'))
+                        ch = ' ';
+                    scanner.consume(ch);
+                }
+                scanner.consume(-1);
             }else{
                 InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
                 XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, rule);
