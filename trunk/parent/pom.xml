@@ -114,7 +114,7 @@
                         <finalName>distribution</finalName>
                         <appendAssemblyId>false</appendAssemblyId>
                         <descriptors>
-                            <descriptor>src/main/assembly/default.xml</descriptor>
+                            <descriptor>${project.parent.basedir}/../src/main/assembly/default.xml</descriptor>
                         </descriptors>
                     </configuration>
                 </plugin>
