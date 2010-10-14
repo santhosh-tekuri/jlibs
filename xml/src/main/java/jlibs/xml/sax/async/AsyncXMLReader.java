@@ -27,7 +27,6 @@ import org.xml.sax.ext.Locator2;
 
 import java.io.CharArrayReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
 
 /**
@@ -354,19 +353,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 if(feeder.parser==xmlScanner && feeder.getParent()==null)
                     fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
-                final InputSource is = new InputSource(feeder.systemID);
-                is.setPublicId(feeder.publicID);
                 if(entityValue.content!=null){
-                    is.setCharacterStream(new StringReader(new StringBuilder(" ").append(entityValue.content).append(" ").toString())); // todo: create special reader
-                    feeder.setChild(new XMLFeeder(this, feeder.parser, is));
+                    feeder.setChild(new XMLFeeder(this, feeder.parser, new CharReader(feeder, entityValue.content)));
                 }else{
                     entityValue.getContent().postAction = new Runnable(){
                         @Override
                         public void run(){
                             entityValue.content = externalEntityValue;
-                            is.setCharacterStream(new StringReader(new StringBuilder(" ").append(externalEntityValue).append(" ").toString())); // todo: create special reader
                             try{
-                                feeder.setChild(new XMLFeeder(AsyncXMLReader.this, feeder.parser, is));
+                                feeder.setChild(new XMLFeeder(AsyncXMLReader.this, feeder.parser, new CharReader((XMLFeeder)feeder.getParent(), externalEntityValue)));
                             } catch(Exception ex){
                                 throw new RuntimeException(ex);
                             }

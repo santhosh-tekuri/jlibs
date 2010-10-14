@@ -76,12 +76,42 @@ public class XMLFeeder extends Feeder{
                     }
                 }
             }
-        }
+        }else if(source instanceof CharReader){
+            this.source = source;
+            publicID = ((CharReader)source).feeder.publicID;
+            systemID = ((CharReader)source).feeder.systemID;
+        }else
+            setSource(source);
     }
 
     protected Feeder feed(Feeder current) throws IOException{
         xmlReader.setFeeder((XMLFeeder)current);
-        return super.feed(current);
+        if(source instanceof CharReader)
+            return feed((CharReader)source);
+        else
+            return super.feed(current);
+    }
+
+    private Feeder feed(CharReader reader) throws IOException{
+        char chars[] = reader.chars;
+        int index = reader.index;
+        int len = chars.length;
+        try{
+            if(!eofSent){
+                while(index<=len){
+                    char ch = index==-1||index==len ? ' ' : chars[index];
+                    index++;
+                    parser.consume(ch);
+                    if(child!=null)
+                        return child;
+                }
+                eofSent = true;
+                parser.consume(-1);
+            }
+            return child!=null ? child : parent();
+        }finally{
+            reader.index = index;
+        }
     }
 
     // == -1 detectBOM
@@ -209,5 +239,16 @@ public class XMLFeeder extends Feeder{
 
     public String resolve(String systemID) throws IOException{
         return XMLEntityManager.expandSystemId(systemID, this.systemID, false);
+    }
+}
+
+class CharReader{
+    XMLFeeder feeder;
+    char chars[];
+    int index = -1;
+
+    CharReader(XMLFeeder feeder, char[] chars){
+        this.feeder = feeder;
+        this.chars = chars;
     }
 }
