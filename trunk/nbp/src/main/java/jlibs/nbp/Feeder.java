@@ -30,7 +30,7 @@ import java.nio.charset.CoderResult;
  */
 public class Feeder{
     public final NBParser parser;
-    private Object source;
+    protected Object source;
 
     public Feeder(NBParser parser, Object source){
         this(parser);
@@ -43,6 +43,7 @@ public class Feeder{
 
     protected void setSource(Object source){
         this.source = source;
+        charBuffer = CharBuffer.allocate(100);
         if(!(source instanceof Reader))
             byteBuffer = ByteBuffer.allocate(500);
     }
@@ -51,7 +52,7 @@ public class Feeder{
         return source;
     }
 
-    private Feeder child;
+    protected Feeder child;
     private Feeder parent;
     public void setChild(Feeder child){
         this.child = child;
@@ -68,7 +69,7 @@ public class Feeder{
 
     /*-------------------------------------------------[ CharBuffer ]---------------------------------------------------*/
     
-    private CharBuffer charBuffer = CharBuffer.allocate(100);
+    private CharBuffer charBuffer;
     private void feedCharBuffer() throws IOException{
         char chars[] = charBuffer.array();
         int position = charBuffer.position();
@@ -112,7 +113,7 @@ public class Feeder{
 
     /*-------------------------------------------------[ Eating ]---------------------------------------------------*/
 
-    private Feeder parent(){
+    protected Feeder parent(){
         if(parent!=null)
             parent.child = null;
         return parent;
@@ -142,7 +143,7 @@ public class Feeder{
             throw new IOException("Invalid Source: "+current.source.getClass());
     }
     
-    private boolean eofSent;
+    protected boolean eofSent;
     private Feeder feed(Reader reader) throws IOException{
         if(charBuffer.position()>0){
             charBuffer.flip();
