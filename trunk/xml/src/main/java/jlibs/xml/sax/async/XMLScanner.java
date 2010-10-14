@@ -5499,6 +5499,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "<WS> OR [?]");
             case 11:
                 if(ch=='>'){
+                    handler.xdeclEnd();
                     return 12;
                 }
                 expected(ch, "[>]");
@@ -6148,7 +6149,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch=='%'){
                         handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         handler.peReferenceOutsideMarkup();
                         push(RULE_PE_REFERENCE, 2, 0);
@@ -6157,7 +6158,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(WS(ch)){
                         handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
                         return 3;
@@ -6170,7 +6171,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='A'){
                                 handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_ATT_LIST_DECL, 1, 0);
                                 consumed();
@@ -6180,7 +6181,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='N'){
                                 handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_NOTATION_DECL, 1, 0);
                                 consumed();
@@ -6190,7 +6191,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='-'){
                                 handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_COMMENT, 1, 0);
                                 consumed();
@@ -6200,7 +6201,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='['){
                                 handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_CONDITIONAL_SECT, 2, 0);
                                 consumed();
                                 consumed();
@@ -6218,7 +6219,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(2)=='E'){
                                 if(ch=='L'){
                                     handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ELEMENT_DECL, 1, 0);
                                     consumed();
@@ -6229,7 +6230,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 }
                                 if(ch=='N'){
                                     handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ENTITY_DECL, 1, 0);
                                     consumed();
@@ -6251,7 +6252,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 if(lookAhead.charAt(3)=='m'){
                                     if(lookAhead.charAt(4)=='l'){
                                         if(WS(ch)){
-                                            push(RULE_TEXT_DECL, 1, 0);
+                                            push(RULE_TEXT_DECL, 2, 0);
                                             consumed();
                                             consumed();
                                             consumed();
@@ -6268,7 +6269,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(lookAhead.charAt(0)=='<'){
                     handler.xdeclEnd();
-                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                     push(RULE_MARKUP_DECL, 2, 0);
                     push(RULE_PI, 1, 0);
                     consumed();
@@ -6276,17 +6277,16 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 1;
                 }
                 handler.xdeclEnd();
-                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                push(RULE_EXT_SUBSET_DECL, 3, 0);
                 pop();
                 return -1;
-            case 1:
+            case 2:
                 lookAhead.add(ch);
                 if(ch!=-1 && lookAhead.length()<1)
-                    return 1;
+                    return 2;
                 if(lookAhead.length()==1){
                     if(ch=='%'){
-                        handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         handler.peReferenceOutsideMarkup();
                         push(RULE_PE_REFERENCE, 2, 0);
@@ -6294,20 +6294,18 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         return 1;
                     }
                     if(WS(ch)){
-                        handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, 2, 0);
+                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                         push(RULE_DECL_SEP, 2, 0);
                         consumed();
                         return 3;
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<2)
-                    return 1;
+                    return 2;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
                         if(ch=='?'){
-                            handler.xdeclEnd();
-                            push(RULE_EXT_SUBSET_DECL, 2, 0);
+                            push(RULE_EXT_SUBSET_DECL, 3, 0);
                             push(RULE_MARKUP_DECL, 2, 0);
                             push(RULE_PI, 1, 0);
                             consumed();
@@ -6317,13 +6315,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<3)
-                    return 1;
+                    return 2;
                 if(lookAhead.length()==3){
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='A'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_ATT_LIST_DECL, 1, 0);
                                 consumed();
@@ -6332,8 +6329,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='N'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_NOTATION_DECL, 1, 0);
                                 consumed();
@@ -6342,8 +6338,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='-'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_COMMENT, 1, 0);
                                 consumed();
@@ -6352,8 +6347,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='['){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_CONDITIONAL_SECT, 2, 0);
                                 consumed();
                                 consumed();
@@ -6364,14 +6358,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                 }
                 if(ch!=-1 && lookAhead.length()<4)
-                    return 1;
+                    return 2;
                 if(lookAhead.length()==4){
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(lookAhead.charAt(2)=='E'){
                                 if(ch=='L'){
-                                    handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ELEMENT_DECL, 1, 0);
                                     consumed();
@@ -6381,8 +6374,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                     return 4;
                                 }
                                 if(ch=='N'){
-                                    handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, 2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ENTITY_DECL, 1, 0);
                                     consumed();
@@ -6395,11 +6387,10 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                handler.xdeclEnd();
-                push(RULE_EXT_SUBSET_DECL, 2, 0);
+                push(RULE_EXT_SUBSET_DECL, 3, 0);
                 pop();
                 return -1;
-            case 2:
+            case 3:
                 return -1;
             default:
                 throw new Error("impossible");
@@ -6560,11 +6551,9 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 expected(ch, "[v] OR [e] OR <WS>");
             case 14:
                 if(ch!=-1 && CHAR(ch)){
-                    handler.xdeclEnd();
                     buffer.push();
                     return 10;
                 }
-                handler.xdeclEnd();
                 buffer.push();
                 handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
@@ -6695,14 +6684,14 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==1){
                     if(ch==']'){
                         handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 2, 0);
+                        push(RULE_ELEM_CONTENT, 3, 0);
                         buffer.push();
                         consumed();
                         return 8;
                     }
                     if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
                         handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 2, 0);
+                        push(RULE_ELEM_CONTENT, 3, 0);
                         buffer.push();
                         consumed();
                         return 6;
@@ -6714,7 +6703,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
                             handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_REFERENCE, 13, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -6723,7 +6712,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         }
                         if(ch!=-1 && NAME_START(ch)){
                             handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_REFERENCE, 13, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -6736,7 +6725,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(ch!=-1 && NCNAME_START(ch)){
                             handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
@@ -6756,7 +6745,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='-'){
                                 handler.xdeclEnd();
-                                push(RULE_ELEM_CONTENT, 2, 0);
+                                push(RULE_ELEM_CONTENT, 3, 0);
                                 push(RULE_COMMENT, 17, 0);
                                 consumed();
                                 consumed();
@@ -6765,7 +6754,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='['){
                                 handler.xdeclEnd();
-                                push(RULE_ELEM_CONTENT, 2, 0);
+                                push(RULE_ELEM_CONTENT, 3, 0);
                                 push(RULE_CDATA, 17, 0);
                                 consumed();
                                 consumed();
@@ -6784,7 +6773,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 if(lookAhead.charAt(3)=='m'){
                                     if(lookAhead.charAt(4)=='l'){
                                         if(WS(ch)){
-                                            push(RULE_TEXT_DECL, 1, 0);
+                                            push(RULE_TEXT_DECL, 2, 0);
                                             consumed();
                                             consumed();
                                             consumed();
@@ -6801,108 +6790,11 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(lookAhead.charAt(0)=='<'){
                     handler.xdeclEnd();
-                    push(RULE_ELEM_CONTENT, 2, 0);
+                    push(RULE_ELEM_CONTENT, 3, 0);
                     push(RULE_PI, 15, 0);
                     consumed();
                     lookAhead.reset();
                     return 1;
-                }
-                handler.xdeclEnd();
-                return -1;
-            case 1:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 1;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 2, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
-                    }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 2, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 1;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='&'){
-                        if(ch=='#'){
-                            handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 13, 0);
-                            push(RULE_CHAR_REF, 1, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch!=-1 && NAME_START(ch)){
-                            handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, 13, 0);
-                            push(RULE_ENTITY_REF, 1, 0);
-                            consumed();
-                            buffer.push();
-                            push(RULE_NAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                    }
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
-                            handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_ELEM, 15, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
-                            buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                        if(ch=='?'){
-                            handler.xdeclEnd();
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_PI, 15, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 1;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
-                                handler.xdeclEnd();
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_COMMENT, 17, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                handler.xdeclEnd();
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_CDATA, 17, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                        }
-                    }
                 }
                 handler.xdeclEnd();
                 return -1;
@@ -6912,13 +6804,13 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 2;
                 if(lookAhead.length()==1){
                     if(ch==']'){
-                        push(RULE_ELEM_CONTENT, 2, 0);
+                        push(RULE_ELEM_CONTENT, 3, 0);
                         buffer.push();
                         consumed();
                         return 8;
                     }
                     if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_ELEM_CONTENT, 2, 0);
+                        push(RULE_ELEM_CONTENT, 3, 0);
                         buffer.push();
                         consumed();
                         return 6;
@@ -6929,7 +6821,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='&'){
                         if(ch=='#'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_REFERENCE, 13, 0);
                             push(RULE_CHAR_REF, 1, 0);
                             consumed();
@@ -6937,7 +6829,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 2;
                         }
                         if(ch!=-1 && NAME_START(ch)){
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_REFERENCE, 13, 0);
                             push(RULE_ENTITY_REF, 1, 0);
                             consumed();
@@ -6949,7 +6841,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(lookAhead.charAt(0)=='<'){
                         if(ch!=-1 && NCNAME_START(ch)){
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
@@ -6961,7 +6853,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                             return 1;
                         }
                         if(ch=='?'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_PI, 15, 0);
                             consumed();
                             consumed();
@@ -6975,7 +6867,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.charAt(0)=='<'){
                         if(lookAhead.charAt(1)=='!'){
                             if(ch=='-'){
-                                push(RULE_ELEM_CONTENT, 2, 0);
+                                push(RULE_ELEM_CONTENT, 3, 0);
                                 push(RULE_COMMENT, 17, 0);
                                 consumed();
                                 consumed();
@@ -6983,7 +6875,95 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                                 return 3;
                             }
                             if(ch=='['){
-                                push(RULE_ELEM_CONTENT, 2, 0);
+                                push(RULE_ELEM_CONTENT, 3, 0);
+                                push(RULE_CDATA, 17, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                        }
+                    }
+                }
+                return -1;
+            case 3:
+                lookAhead.add(ch);
+                if(ch!=-1 && lookAhead.length()<1)
+                    return 3;
+                if(lookAhead.length()==1){
+                    if(ch==']'){
+                        push(RULE_ELEM_CONTENT, 3, 0);
+                        buffer.push();
+                        consumed();
+                        return 8;
+                    }
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        push(RULE_ELEM_CONTENT, 3, 0);
+                        buffer.push();
+                        consumed();
+                        return 6;
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<2)
+                    return 3;
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='&'){
+                        if(ch=='#'){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_REFERENCE, 13, 0);
+                            push(RULE_CHAR_REF, 1, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                        if(ch!=-1 && NAME_START(ch)){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_REFERENCE, 13, 0);
+                            push(RULE_ENTITY_REF, 1, 0);
+                            consumed();
+                            buffer.push();
+                            push(RULE_NAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                    }
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch!=-1 && NCNAME_START(ch)){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_ELEM, 15, 0);
+                            push(RULE_ELEM_ATTRS, 1, 0);
+                            consumed();
+                            push(RULE_QNAME, 2, 0);
+                            buffer.push();
+                            buffer.push();
+                            push(RULE_NCNAME, 2, 0);
+                            consumed();
+                            return 1;
+                        }
+                        if(ch=='?'){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_PI, 15, 0);
+                            consumed();
+                            consumed();
+                            return 2;
+                        }
+                    }
+                }
+                if(ch!=-1 && lookAhead.length()<3)
+                    return 3;
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='-'){
+                                push(RULE_ELEM_CONTENT, 3, 0);
+                                push(RULE_COMMENT, 17, 0);
+                                consumed();
+                                consumed();
+                                consumed();
+                                return 3;
+                            }
+                            if(ch=='['){
+                                push(RULE_ELEM_CONTENT, 3, 0);
                                 push(RULE_CDATA, 17, 0);
                                 consumed();
                                 consumed();
