@@ -2914,7 +2914,9 @@
         <node/>
         <node/>
         <node/>
-        <node/>
+        <node>
+            <event name="xdeclEnd"/>
+        </node>
         <node/>
         <edge source="0" target="1" fallback="false">
             <any chars="&lt;"/>
@@ -3155,13 +3157,15 @@
             <event name="xdeclEnd"/>
         </node>
         <node/>
-        <edge source="0" target="1" fallback="false">
-            <rule name="text_decl"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
             <rule name="ext_subset_decl"/>
         </edge>
-        <edge source="0" target="1" fallback="false"/>
+        <edge source="0" target="2" fallback="false">
+            <rule name="text_decl"/>
+        </edge>
     </rule>
     <rule name="entity_value_content">
         <node/>
@@ -3213,9 +3217,6 @@
         </node>
         <node/>
         <node>
-            <event name="xdeclEnd"/>
-        </node>
-        <node>
             <buffer/>
         </node>
         <edge source="0" target="1" fallback="false">
@@ -3249,8 +3250,7 @@
         <edge source="13" target="14" fallback="false">
             <rule name="text_decl" node="A"/>
         </edge>
-        <edge source="14" target="15" fallback="false"/>
-        <edge source="15" target="9" fallback="false"/>
+        <edge source="14" target="9" fallback="false"/>
         <edge source="4" target="6" fallback="false"/>
         <edge source="3" target="6" fallback="false"/>
         <edge source="2" target="6" fallback="false"/>
@@ -3299,14 +3299,16 @@
         </node>
         <node/>
         <node/>
-        <edge source="0" target="1" fallback="false">
-            <rule name="text_decl"/>
-        </edge>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
         <edge source="1" target="2" fallback="false"/>
         <edge source="2" target="3" fallback="false"/>
-        <edge source="2" target="2" fallback="false">
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="3" fallback="false">
             <rule name="elem_content"/>
         </edge>
-        <edge source="0" target="1" fallback="false"/>
+        <edge source="0" target="2" fallback="false">
+            <rule name="text_decl"/>
+        </edge>
     </rule>
 </syntax>

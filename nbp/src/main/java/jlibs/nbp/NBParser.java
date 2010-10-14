@@ -279,7 +279,7 @@ public abstract class NBParser{
         }
     }
 
-    protected void encodingError(CoderResult coderResult) throws IOException{
+    public void encodingError(CoderResult coderResult) throws IOException{
         ioError(coderResult.isMalformed() ? "Malformed Input" : "Unmappable Character");
     }
 

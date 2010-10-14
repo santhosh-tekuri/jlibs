@@ -15,26 +15,19 @@
 
 package jlibs.xml.sax.async;
 
-import jlibs.core.io.IOUtil;
-import jlibs.core.net.URLUtil;
 import jlibs.nbp.Chars;
 import jlibs.nbp.NBHandler;
 import jlibs.xml.sax.AbstractXMLReader;
-import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.xsl.TransformerUtil;
 import org.apache.xerces.util.XMLChar;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.Locator2;
-import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-import java.io.*;
-import java.net.URL;
+import java.io.CharArrayReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 
 /**
@@ -52,8 +45,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private XMLEntityScanner xmlScanner = new XMLEntityScanner(this, XMLScanner.RULE_DOCUMENT);
-    private XMLEntityScanner curScanner = xmlScanner;
-
+    private XMLFeeder feeder;
+    void setFeeder(XMLFeeder feeder){
+        if(this.feeder.getParent()==feeder){
+            if(this.feeder.postAction!=null)
+                this.feeder.postAction.run();
+        }
+        this.feeder = feeder;
+    }
+    
     @Override
     public void setFeature(String name, boolean value) throws SAXNotRecognizedException{
         try{
@@ -63,48 +63,43 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
     }
 
-    private void reset() throws SAXException{
-        curScanner = xmlScanner;
+    public XMLFeeder createFeeder(InputSource inputSource) throws IOException, SAXException{
         xmlScanner.reset();
-    }
-
-    public Writer getWriter() throws SAXException{
-        reset();
-        return xmlScanner.writer;
+        feeder=new XMLFeeder(this, xmlScanner, inputSource);
+        documentStart();
+        return feeder;
     }
 
     @Override
     public void parse(InputSource input) throws IOException, SAXException{
-        reset();
-        xmlScanner.parse(input);
+        createFeeder(input).feed();
     }
 
     @Override
-    public void parse(String systemId) throws IOException, SAXException{
-        reset();
-        xmlScanner.parse(URLUtil.toURL(systemId));
+    public void parse(String systemID) throws IOException, SAXException{
+        createFeeder(new InputSource(systemID)).feed();
     }
 
     /*-------------------------------------------------[ Locator ]---------------------------------------------------*/
 
     @Override
     public String getPublicId(){
-        return null;
+        return feeder.publicID;
     }
 
     @Override
     public String getSystemId(){
-        return curScanner.sourceURL.toString();
+        return feeder.systemID;
     }
 
     @Override
     public int getLineNumber(){
-        return curScanner.location.getLineNumber();
+        return feeder.parser.location.getLineNumber();
     }
 
     @Override
     public int getColumnNumber(){
-        return curScanner.location.getColumnNumber();
+        return feeder.parser.location.getColumnNumber();
     }
 
     @Override
@@ -114,13 +109,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public String getEncoding(){
-        return encoding;
+        return feeder.getCharset().name(); // todo: return declared encoding
     }
 
     /*-------------------------------------------------[ Document ]---------------------------------------------------*/
 
     void documentStart() throws SAXException{
-        encoding = "UTF-8";
+        encoding = null;
         standalone = null;
         xdeclEnd = false;
         curQName.reset();
@@ -177,6 +172,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     boolean xdeclEnd;
     void xdeclEnd(){
+        feeder.setDeclaredEncoding(encoding);
+        encoding = null;
         xdeclEnd = true;
     }
 
@@ -229,14 +226,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void hexCode(Chars data) throws SAXException{
-        codePoint(Integer.parseInt(data.toString(), 16));
+        codePoint(data, 16);
     }
 
     void asciiCode(Chars data) throws SAXException{
-        codePoint(Integer.parseInt(data.toString(), 10));
+        codePoint(data, 10);
     }
 
-    private void codePoint(int cp) throws SAXException{
+    private void codePoint(Chars data, int radix) throws SAXException{
+        int cp = Integer.parseInt(data.toString(), radix);
         if(XMLChar.isValid(cp)){
             if(valueStarted)
                 value.appendCodePoint(cp);
@@ -291,11 +289,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
             entityStack.push(entity);
             try{
-                entityValue.parse(rule, valueStarted);
+                entityValue.parse(rule, valueStarted).postAction = new Runnable(){
+                    @Override
+                    public void run(){
+                        entityStack.pop();
+                    }
+                };
             }catch(IOException ex){
                 throw new RuntimeException(ex);
-            }finally{
-                entityStack.pop();
             }
         }
     }
@@ -310,7 +311,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     @SuppressWarnings({"ConstantConditions"})
     void peReference(Chars data) throws Exception{
         String param = data.toString();
-        EntityValue entityValue = paramEntities.get(param);
+        final EntityValue entityValue = paramEntities.get(param);
 
         if(entityValue==null)
             fatalError("The param entity \""+param+"\" was referenced, but not declared.");
@@ -321,25 +322,57 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         checkRecursion(paramEntityStack, param, "parameter entity");
 
         if(valueStarted){
-            if(curScanner==xmlScanner && curScanner.peStack.size()==0)
+            if(feeder.parser==xmlScanner && feeder.getParent()==null)
                 fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
-            value.append(entityValue.getContent());
+            if(entityValue.content!=null)
+                value.append(entityValue.content);
+            else{
+                entityValue.getContent().postAction = new Runnable(){
+                    @Override
+                    public void run(){
+                        entityValue.content = externalEntityValue;
+                        value.append(externalEntityValue);
+                    }
+                };
+            }
         }else{
             if(peReferenceOutsideMarkup){
                 peReferenceOutsideMarkup = false;
                 paramEntityStack.push(param);
                 try{
-                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL, false);
+                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL, false).postAction =  new Runnable(){
+                        @Override
+                        public void run(){
+                            paramEntityStack.pop();
+                        }
+                    };
                 }catch(IOException ex){
                     throw new RuntimeException(ex);
-                }finally{
-                    paramEntityStack.pop();
                 }
             }else{
-                if(curScanner==xmlScanner && curScanner.peStack.size()==0)
+                if(feeder.parser==xmlScanner && feeder.getParent()==null)
                     fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
-                curScanner.peStack.push(new XMLEntityScanner.CharReader(entityValue.getContent()));
+
+                final InputSource is = new InputSource(feeder.systemID);
+                is.setPublicId(feeder.publicID);
+                if(entityValue.content!=null){
+                    is.setCharacterStream(new StringReader(new StringBuilder(" ").append(entityValue.content).append(" ").toString())); // todo: create special reader
+                    feeder.setChild(new XMLFeeder(this, feeder.parser, is));
+                }else{
+                    entityValue.getContent().postAction = new Runnable(){
+                        @Override
+                        public void run(){
+                            entityValue.content = externalEntityValue;
+                            is.setCharacterStream(new StringReader(new StringBuilder(" ").append(externalEntityValue).append(" ").toString())); // todo: create special reader
+                            try{
+                                feeder.setChild(new XMLFeeder(AsyncXMLReader.this, feeder.parser, is));
+                            } catch(Exception ex){
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    };
+                }
             }
         }
     }
@@ -444,7 +477,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public void onSuccessful() throws SAXException{
-        if(entityStack.isEmpty() && paramEntityStack.isEmpty() && curScanner==xmlScanner)
+        if(feeder.getParent()==null)
             handler.endDocument();
     }
 
@@ -477,7 +510,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void notationEnd() throws SAXException, IOException{
-        systemID = curScanner.resolve(systemID);
+        systemID = feeder.resolve(systemID);
         handler.notationDecl(notationName, publicID, systemID);
         notationName = null;
         publicID = this.systemID = null;
@@ -494,7 +527,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     public void dtdEnd() throws SAXException, IOException{
         if(externalDTDPublicID!=null || externalDTDSystemID!=null){
-            externalDTDSystemID = curScanner.resolve(externalDTDSystemID);
+            externalDTDSystemID = feeder.resolve(externalDTDSystemID);
             resolveExternalDTD();
         }
         handler.endDTD();
@@ -509,7 +542,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private boolean unparsedEntity;
     void notationReference(Chars data) throws IOException, SAXException{
-        handler.unparsedEntityDecl(entityName, publicID, curScanner.resolve(systemID) , data.toString());
+        handler.unparsedEntityDecl(entityName, publicID, feeder.resolve(systemID) , data.toString());
         unparsedEntity = true;
     }
 
@@ -538,49 +571,54 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
         public EntityValue() throws IOException, SAXException{
             entityName = AsyncXMLReader.this.entityName;
-            externalDefinition = curScanner!=xmlScanner;
+            externalDefinition = feeder.getParent()!=null;
             unparsed = unparsedEntity;
 
             if(systemID==null && publicID==null)
                 content = value.toString().toCharArray();
             else{
                 externalValue = true;
-                inputSource = curScanner.resolve(publicID, systemID);
+                inputSource = feeder.resolve(publicID, systemID);
             }
         }
 
-        public char[] getContent() throws IOException, SAXException{
-            if(content==null){
-                InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
-                if(is==null)
-                    is = inputSource;
+        public XMLFeeder getContent() throws IOException, SAXException{
+            InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+            if(is==null)
+                is = inputSource;
 
-                XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_EXTERNAL_ENTITY_VALUE);
-                scanner.parent = curScanner;
-                curScanner = scanner;
-                scanner.parse(is);
-                curScanner = curScanner.parent;
-                content = externalEntityValue;
-            }
-            return content;
+            XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_EXTERNAL_ENTITY_VALUE);
+            XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is);
+            feeder.setChild(childFeeder);
+            return childFeeder;
         }
 
-        public void parse(int rule, boolean attributeValue) throws IOException, SAXException{
+        public XMLFeeder parse(int rule, boolean attributeValue) throws IOException, SAXException{
             if(inputSource==null){
-                XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
-                for(char ch: content){
-                    if(attributeValue && (ch=='\n' || ch=='\r' || ch=='\t'))
-                        ch = ' ';
-                    scanner.consume(ch);
-                }
-                scanner.consume(-1);
+                XMLScanner scanner;
+                if(attributeValue){
+                    scanner = new XMLScanner(AsyncXMLReader.this, rule){
+                        @Override
+                        public void consume(char ch) throws IOException{
+                            if(ch=='\n' || ch=='\r' || ch=='\t')
+                                ch = ' ';
+                            super.consume(ch);
+                        }
+                    };
+                }else
+                    scanner = new XMLScanner(AsyncXMLReader.this, rule);
+                InputSource is = new InputSource(getSystemId());
+                is.setPublicId(getPublicId());
+                is.setCharacterStream(new CharArrayReader(content));
+                XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is);
+                feeder.setChild(childFeeder);
+                return childFeeder;
             }else{
                 InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
                 XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, rule);
-                scanner.parent = curScanner;
-                curScanner = scanner;
-                scanner.parse(is==null ? inputSource : is);
-                curScanner = curScanner.parent;
+                XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is == null ? inputSource : is);
+                feeder.setChild(childFeeder);
+                return childFeeder;
             }
         }
     }
@@ -739,9 +777,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         value.setLength(0);
     }
 
-    void dtdAttributesEnd(){
-        System.out.println("dtdAttributesEnd");
-    }
+    void dtdAttributesEnd(){}
 
     /*-------------------------------------------------[ Entity Resolution ]---------------------------------------------------*/
 
@@ -752,57 +788,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         this.externalDTDPublicID = this.externalDTDSystemID = null;
         InputSource is = handler.resolveEntity(publicID, systemID);
         XMLEntityScanner dtdScanner = new XMLEntityScanner(this, XMLScanner.RULE_EXT_SUBSET);
-        dtdScanner.parent = curScanner;
-        curScanner = dtdScanner;
-        encoding = null;
-        xdeclEnd = false;
-        if(is!=null)
-            dtdScanner.parse(is);
-        else
-            dtdScanner.parse(new URL(systemID));
-        curScanner = curScanner.parent;
-    }
-
-    /*-------------------------------------------------[ Test ]---------------------------------------------------*/
-
-    public static void main(String[] args) throws Exception{
-        AsyncXMLReader parser = new AsyncXMLReader();
-
-        TransformerHandler handler = TransformerUtil.newTransformerHandler(null, true, -1, null);
-        handler.setResult(new StreamResult(System.out));
-        SAXUtil.setHandler(parser, handler);
-
-//        String xml = "<root attr1='value1'/>";
-//        parser.parse(new InputSource(new StringReader(xml)));
-
-//        String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/049.xml"; // with BOM
-         String file = "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/sa/097.xml";
-//        String file = "/Users/santhosh/projects/jlibs/examples/resources/xmlFiles/test.xml";
-//        String file = "test.xml";
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        try{
-            factory.newSAXParser().parse(file, new DefaultHandler(){
-                @Override
-                public void characters(char[] ch, int start, int length) throws SAXException{
-                    super.characters(ch, start, length);    //To change body of overridden methods use File | Settings | File Templates.
-                }
-
-                @Override
-                public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName) throws SAXException{
-                    super.unparsedEntityDecl(name, publicId, systemId, notationName);    //To change body of overridden methods use File | Settings | File Templates.
-                }
-            });
-        }catch(Exception ex){
-            ex.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            System.err.println("==================================================================================================================================");
+        if(is==null){
+            is = new InputSource(systemID);
+            is.setPublicId(publicID);
         }
-
-        IOUtil.pump(new InputStreamReader(new FileInputStream(file), "UTF-8"), new StringWriter(), true, true);
-//        IOUtil.pump(new UTF8Reader(new FileInputStream(file)), new StringWriter(), true, true);
-
-        parser.parse(new InputSource(file));
-//        parser.scanner.write("<root attr1='value1'/>");        
-//        parser.scanner.close();
+        encoding = null;
+        feeder.setChild(new XMLFeeder(this, dtdScanner, is));
     }
 }
