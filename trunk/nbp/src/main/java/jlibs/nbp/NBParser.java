@@ -16,11 +16,6 @@
 package jlibs.nbp;
 
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 
 /**
@@ -39,9 +34,7 @@ public abstract class NBParser{
         reset(startingRule);
     }
 
-    private boolean inProgress = true;
     public void reset(int rule){
-        inProgress = true;
         wasHighSurrogate = false;
         stream.clear();
         location.reset();
@@ -68,10 +61,8 @@ public abstract class NBParser{
                 if(Character.isLowSurrogate(ch)){
                     int codePoint = Character.toCodePoint(highSurrogate, ch);
                     consume(codePoint);
-                }else{
-                    inProgress = false;
+                }else
                     ioError("bad surrogate pair");
-                }
             }else
                 consume((int)ch);
         }
@@ -94,10 +85,8 @@ public abstract class NBParser{
             }
 
         }catch(IOException ex){
-            inProgress = false;
             throw ex;
         }catch(Exception ex){
-            inProgress = false;
             if(ex.getCause() instanceof IOException)
                 throw (IOException)ex.getCause();
             else
@@ -189,108 +178,16 @@ public abstract class NBParser{
         stateStack.pop();
     }
 
-    /*-------------------------------------------------[ Input ]---------------------------------------------------*/
-
-    public final Writer writer = new Writer(){
-        @Override
-        public void write(int c) throws IOException{
-            consume((char)c);
-        }
-
-        @Override
-        public void write(char[] chars, int offset, int length) throws IOException{
-            while(length>0){
-                consume(chars[offset]);
-                offset++;
-                length--;
-            }
-        }
-
-        @Override
-        public Writer append(char ch) throws IOException{
-            consume(ch);
-            return this;
-        }
-
-        @Override
-        public void write(String str, int offset, int length) throws IOException{
-            while(length>0){
-                consume(str.charAt(offset));
-                offset++;
-                length--;
-            }
-        }
-
-        @Override
-        public Writer append(CharSequence csq, int start, int end) throws IOException{
-            while(start<end){
-                consume(csq.charAt(start));
-                start++;
-            }
-            return this;
-        }
-
-        @Override
-        public void close() throws IOException{
-            if(inProgress)
-                consume(-1);
-            reset(startingRule);
-        }
-
-        @Override
-        public void flush() throws IOException{}
-    };
-
-    public void write(CharBuffer in, boolean eof) throws IOException{
-        char chars[] = in.array();
-        for(int i=in.position(); i<in.limit(); i++)
-            consume(chars[i]);
-        if(eof){
-            if(inProgress)
-                consume(-1);
-            reset(startingRule);
-        }
-    }
-
-    protected CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
-    CharBuffer out = CharBuffer.allocate(1000);
-    public void setCharset(Charset charset){
-        decoder = charset.newDecoder();
-    }
-
-    public void write(ByteBuffer in, boolean eof) throws IOException{
-        out.clear();
-        while(true){
-            CoderResult cr = in.hasRemaining() ? decoder.decode(in, out, eof) : CoderResult.UNDERFLOW;
-            if(cr.isUnderflow()){
-                out.flip();
-                write(out, eof);
-                return;
-            }else if(cr.isOverflow()){
-                out.flip();
-                write(out, false);
-                out.clear();
-                continue;
-            }
-            out.flip();
-            write(out, false);
-            out.clear();
-            encodingError(cr);
-        }
-    }
-
     public void encodingError(CoderResult coderResult) throws IOException{
         ioError(coderResult.isMalformed() ? "Malformed Input" : "Unmappable Character");
     }
 
     protected void ioError(String message) throws IOException{
         try{
-            inProgress = false;
             fatalError(message);
             throw new IOException(message);
         }catch(Exception ex){
             throw new IOException(message);
         }
     }
-
 }

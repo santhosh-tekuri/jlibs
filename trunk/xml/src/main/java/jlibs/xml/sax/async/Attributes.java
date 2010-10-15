@@ -73,25 +73,25 @@ class Attributes{
 
     private Set<String> attributeNames = new HashSet<String>();
     public String fixAttributes(String elemName) throws SAXException{
-        attributeNames.clear();
         int attrCount = attrs.getLength();
-        for(int i=0; i<attrCount; i++){
-            String prefix = attrs.getURI(i);
-            String uri = "";
-            if(prefix.length()>0){
-                uri = namespaces.getNamespaceURI(prefix);
-                if(uri==null)
-                    return "Unbound prefix: "+prefix;
-                attrs.setURI(i, uri);
+        if(attrCount>0){
+            attributeNames.clear();
+            for(int i=0; i<attrCount; i++){
+                String prefix = attrs.getURI(i);
+                String uri = "";
+                if(prefix.length()>0){
+                    uri = namespaces.getNamespaceURI(prefix);
+                    if(uri==null)
+                        return "Unbound prefix: "+prefix;
+                    attrs.setURI(i, uri);
+                }
+
+                String clarkName = ClarkName.valueOf(uri, attrs.getLocalName(i));
+                if(!attributeNames.add(clarkName))
+                    return "Attribute \""+clarkName+"\" was already specified for element \""+elemName+"\"";
             }
-
-            String clarkName = ClarkName.valueOf(uri, attrs.getLocalName(i));
-            if(!attributeNames.add(clarkName))
-                return "Attribute \""+clarkName+"\" was already specified for element \""+elemName+"\"";
         }
-
-        if(dtd!=null)
-            dtd.addMissingAttributes(elemName, attrs);
+        dtd.addMissingAttributes(elemName, attrs);
 
         return null;
     }
