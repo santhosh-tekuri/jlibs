@@ -18,7 +18,8 @@ package jlibs.xml.sax.async;
 /**
  * @author Santhosh Kumar T
  */
-public class QName{
+class QName{
+    public int prefixLength;
     public String prefix;
     public String localName;
     public String name;
@@ -27,7 +28,19 @@ public class QName{
         reset();
     }
 
+    public void setName(String name){
+        this.name = name;
+        if(prefixLength==0){
+            prefix = "";
+            localName = name;
+        }else{
+            prefix = name.substring(0, prefixLength);
+            localName = name.substring(prefixLength+1);
+        }
+    }
+
     public void reset(){
+        prefixLength = 0;
         prefix = "";
         localName = null;
         name = null;
