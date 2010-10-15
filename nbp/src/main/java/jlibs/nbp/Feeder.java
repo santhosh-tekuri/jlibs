@@ -43,9 +43,9 @@ public class Feeder{
 
     protected void setSource(Object source){
         this.source = source;
-        charBuffer = CharBuffer.allocate(100);
+        charBuffer = CharBuffer.allocate(2048);
         if(!(source instanceof Reader))
-            byteBuffer = ByteBuffer.allocate(500);
+            byteBuffer = ByteBuffer.allocate(2048*2);
     }
 
     public Object getSource(){
