@@ -74,14 +74,14 @@ class Elements{
         return null;
     }
 
-    public void pop() throws SAXException{
-        pop(names.peek());
-    }
-
     public String pop(String elemName) throws SAXException{
-        String startName = names.pop();
-        if(!startName.equals(elemName))
-            return "expected </"+startName+">";
+        if(elemName==null)
+            elemName = names.pop();
+        else{
+            String startName = names.pop();
+            if(!startName.equals(elemName))
+                return "expected </"+startName+">";
+        }
 
         handler.endElement(uris.pop(), localNames.pop(), elemName);
         namespaces.pop();
