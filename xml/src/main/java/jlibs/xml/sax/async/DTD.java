@@ -31,6 +31,7 @@ public class DTD{
     public Map<String, Map<String, DTDAttribute>> attributes = new HashMap<String, Map<String, DTDAttribute>>();
     private Namespaces namespaces;
     public Set<String> nonMixedElements = new HashSet<String>();
+    public InputSource externalDTD;
 
     public DTD(Namespaces namespaces){
         this.namespaces = namespaces;
@@ -40,6 +41,7 @@ public class DTD{
         root = null;
         attributes.clear();
         nonMixedElements.clear();
+        externalDTD = null;
     }
 
     public AttributeType attributeType(String element, String attribute){
@@ -79,6 +81,4 @@ public class DTD{
             }
         }
     }
-
-    public InputSource externalDTD;
 }
