@@ -19,7 +19,6 @@ import jlibs.xml.sax.SAXDelegate;
 import org.xml.sax.SAXException;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
 
 /**
  * @author Santhosh Kumar T
@@ -27,7 +26,7 @@ import java.util.Deque;
 class Elements{
     private final Namespaces namespaces;
     private final Attributes attributes;
-    private SAXDelegate handler;
+    private final SAXDelegate handler;
 
     public Elements(SAXDelegate handler, Namespaces namespaces, Attributes attributes){
         this.handler = handler;
@@ -35,9 +34,9 @@ class Elements{
         this.attributes = attributes;
     }
 
-    private Deque<String> uris = new ArrayDeque<String>();
-    private Deque<String> localNames = new ArrayDeque<String>();
-    private Deque<String> names = new ArrayDeque<String>();
+    private final ArrayDeque<String> uris = new ArrayDeque<String>();
+    private final ArrayDeque<String> localNames = new ArrayDeque<String>();
+    private final ArrayDeque<String> names = new ArrayDeque<String>();
 
     public void reset(){
         uris.clear();
@@ -46,44 +45,45 @@ class Elements{
     }
 
     public String currentElementName(){
-        return names.peek();
+        return names.peekFirst();
     }
     
     public void push1(QName qname){
-        uris.push(qname.prefix); // replaced with actual uri in push2()
-        localNames.push(qname.localName);
-        names.push(qname.name);
+        uris.addFirst(qname.prefix); // replaced with actual uri in push2()
+        localNames.addFirst(qname.localName);
+        names.addFirst(qname.name);
 
         namespaces.push();
         attributes.reset();
     }
 
     public String push2() throws SAXException{
-        String name = names.peek();
+        String name = names.peekFirst();
         String error = attributes.fixAttributes(name);
         if(error!=null)
             return error;
 
-        String prefix = uris.pop();
+        String prefix = uris.pollFirst();
         String uri = namespaces.getNamespaceURI(prefix);
         if(uri==null)
             return "Unbound prefix: "+prefix;
-        uris.push(uri);
-        handler.startElement(uri, localNames.peek(), name, attributes.get());
+        uris.addFirst(uri);
+        
+        handler.startElement(uri, localNames.peekFirst(), name, attributes.get());
 
         return null;
     }
 
     public String pop(String elemName) throws SAXException{
         if(elemName==null)
-            elemName = names.pop();
+            elemName = names.pollFirst();
         else{
-            String startName = names.pop();
+            String startName = names.pollFirst();
             if(!startName.equals(elemName))
                 return "expected </"+startName+">";
         }
 
-        handler.endElement(uris.pop(), localNames.pop(), elemName);
+        handler.endElement(uris.pollFirst(), localNames.pollFirst(), elemName);
         namespaces.pop();
 
         return null;
