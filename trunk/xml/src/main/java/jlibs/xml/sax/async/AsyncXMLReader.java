@@ -180,15 +180,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private QName curQName = new QName();
     void prefix(Chars data){
-        curQName.prefix = data.toString();
+        curQName.prefixLength = data.length();
     }
 
-    void localName(Chars data){
-        curQName.localName = data.toString();
-    }
+    void localName(Chars data){}
 
     void qname(Chars data){
-        curQName.name = data.toString();
+        curQName.setName(data.toString());
     }
 
     /*-------------------------------------------------[ Value ]---------------------------------------------------*/

@@ -86,8 +86,8 @@ public class XMLFeeder extends Feeder{
 
     protected Feeder feed(Feeder current) throws IOException{
         xmlReader.setFeeder((XMLFeeder)current);
-        if(source instanceof CharReader)
-            return feed((CharReader)source);
+        if(current.getSource() instanceof CharReader)
+            return ((XMLFeeder)current).feed((CharReader)current.getSource());
         else
             return super.feed(current);
     }
@@ -97,17 +97,14 @@ public class XMLFeeder extends Feeder{
         int index = reader.index;
         int len = chars.length;
         try{
-            if(!eofSent){
-                while(index<=len){
-                    char ch = index==-1||index==len ? ' ' : chars[index];
-                    index++;
-                    parser.consume(ch);
-                    if(child!=null)
-                        return child;
-                }
-                eofSent = true;
-                parser.consume(-1);
+            while(index<=len){
+                char ch = index==-1||index==len ? ' ' : chars[index];
+                index++;
+                parser.consume(ch);
+                if(child!=null)
+                    return child;
             }
+            // not EOF is not sent for CharReader
             return child!=null ? child : parent();
         }finally{
             reader.index = index;
