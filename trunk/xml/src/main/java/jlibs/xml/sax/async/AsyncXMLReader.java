@@ -209,13 +209,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             value.append(data);
         else{
             char[] chars = data.array();
-            int end = data.offset() + data.length();
-            for(int i=data.offset(); i<end; i++){
+            int offset = data.offset();
+            int length = data.length();
+            for(int i=offset+length-1; i>=0; i--){
                 char ch = chars[i];
                 if(ch=='\n' || ch=='\r' || ch=='\t')
-                    ch = ' ';
-                value.append(ch);
+                    chars[i] = ' ';
             }
+            value.append(chars, offset, length);
         }
     }
 
