@@ -35,12 +35,12 @@ class Elements{
         this.attributes = attributes;
     }
 
-    private Deque<String> prefixes = new ArrayDeque<String>();
+    private Deque<String> uris = new ArrayDeque<String>();
     private Deque<String> localNames = new ArrayDeque<String>();
     private Deque<String> names = new ArrayDeque<String>();
 
     public void reset(){
-        prefixes.clear();
+        uris.clear();
         localNames.clear();
         names.clear();
     }
@@ -50,7 +50,7 @@ class Elements{
     }
     
     public void push1(QName qname){
-        prefixes.push(qname.prefix);
+        uris.push(qname.prefix); // replaced with actual uri in push2()
         localNames.push(qname.localName);
         names.push(qname.name);
 
@@ -64,10 +64,11 @@ class Elements{
         if(error!=null)
             return error;
 
-        String prefix = prefixes.peek();
+        String prefix = uris.pop();
         String uri = namespaces.getNamespaceURI(prefix);
         if(uri==null)
             return "Unbound prefix: "+prefix;
+        uris.push(uri);
         handler.startElement(uri, localNames.peek(), name, attributes.get());
 
         return null;
@@ -82,10 +83,7 @@ class Elements{
         if(!startName.equals(elemName))
             return "expected </"+startName+">";
 
-        String prefix = prefixes.pop();
-        String uri = namespaces.getNamespaceURI(prefix);
-        handler.endElement(uri, localNames.pop(), elemName);
-
+        handler.endElement(uris.pop(), localNames.pop(), elemName);
         namespaces.pop();
 
         return null;

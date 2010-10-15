@@ -126,8 +126,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         attributes.reset();
         elements.reset();
 
-        externalDTDPublicID = null;
-        externalDTDSystemID = null;
         piTarget = null;
         systemID = null;
         publicID = null;
@@ -490,11 +488,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         publicID = AttributeType.toPublicID(data.toString());
     }
 
-    void dtdStart() throws SAXException{
+    void dtdStart() throws SAXException, IOException{
         handler.startDTD(dtd.root, publicID, systemID);
-        externalDTDPublicID = publicID;
-        externalDTDSystemID = systemID;
-        publicID = systemID = null;
+        if(publicID!=null || systemID!=null){
+            dtd.externalDTD = feeder.resolve(publicID, systemID);
+            publicID = systemID = null;
+        }
     }
 
     private String notationName;
@@ -519,9 +518,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     public void dtdEnd() throws SAXException, IOException{
-        if(externalDTDPublicID!=null || externalDTDSystemID!=null){
-            externalDTDSystemID = feeder.resolve(externalDTDSystemID);
-            resolveExternalDTD();
+        if(dtd.externalDTD!=null){
+            InputSource inputSource = dtd.externalDTD;
+            dtd.externalDTD = null;
+            InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+            encoding = null;
+            XMLEntityScanner dtdScanner = new XMLEntityScanner(this, XMLScanner.RULE_EXT_SUBSET);
+            feeder.setChild(new XMLFeeder(this, dtdScanner, is==null?inputSource:is));
+
         }
         handler.endDTD();
     }
@@ -771,21 +775,4 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void dtdAttributesEnd(){}
-
-    /*-------------------------------------------------[ Entity Resolution ]---------------------------------------------------*/
-
-    private String externalDTDPublicID, externalDTDSystemID;    
-    private void resolveExternalDTD() throws IOException, SAXException{
-        String publicID = externalDTDPublicID;
-        String systemID = this.externalDTDSystemID;
-        this.externalDTDPublicID = this.externalDTDSystemID = null;
-        InputSource is = handler.resolveEntity(publicID, systemID);
-        XMLEntityScanner dtdScanner = new XMLEntityScanner(this, XMLScanner.RULE_EXT_SUBSET);
-        if(is==null){
-            is = new InputSource(systemID);
-            is.setPublicId(publicID);
-        }
-        encoding = null;
-        feeder.setChild(new XMLFeeder(this, dtdScanner, is));
-    }
 }
