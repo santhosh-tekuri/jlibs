@@ -30,7 +30,7 @@ public class IntStack{
     }
 
     public IntStack(){
-        this(16);
+        this(50);
     }
 
     public int size(){
@@ -38,20 +38,19 @@ public class IntStack{
     }
 
     public boolean isEmpty(){
-        return size()==0;
+        return free==0;
     }
     
     public void push(int i){
         if(free>=data.length)
             data = Arrays.copyOf(data, 2*data.length);
-        data[free] = i;
-        free++;
+        data[free++] = i;
     }
 
     public int pop(){
-        int value = peek();
-        free--;
-        return value;
+        if(free==0)
+            throw new EmptyStackException();
+        return data[--free];
     }
 
     public int peek(){
@@ -59,13 +58,13 @@ public class IntStack{
     }
     
     public int peek(int index){
-        if(size()==0)
+        if(free==0)
             throw new EmptyStackException();
         return data[free-1-index];
     }
 
     public void setPeek(int i){
-        if(size()==0)
+        if(free==0)
             throw new EmptyStackException();
         data[free-1] = i;
     }
