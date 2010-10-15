@@ -33,7 +33,7 @@ public class DTDAttribute{
     public List<String> validValues;
 
     boolean isNamespace(){
-        return name.equals("xmlns") || name.startsWith("xmlns:");
+        return name.startsWith("xmlns") && (name.length()==5 || name.charAt(5)==':');
     }
     
     void fire(SAXDelegate handler) throws SAXException{
