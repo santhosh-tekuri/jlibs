@@ -30,12 +30,16 @@ public class ContextMap<K, V>{
     }
 
     public ContextMap(ContextMap<K, V> parent){
-        this.parent = parent;
+        setParent(parent);
     }
 
     private ContextMap<K, V> parent;
     public ContextMap<K, V> parent(){
         return parent;
+    }
+
+    public void setParent(ContextMap<K, V> parent){
+        this.parent = parent;
     }
 
     private Map<K, V> map;
@@ -65,6 +69,11 @@ public class ContextMap<K, V>{
         if(map==null)
             map = createMap();
         map.put(key, value);
+    }
+
+    public void clear(){
+        if(map!=null)
+            map.clear();
     }
 
     public Iterator<K> keys(){

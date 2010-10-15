@@ -24,6 +24,8 @@ import org.xml.sax.SAXException;
  */
 class Namespaces{
     private NamespaceMap namespaces;
+    private NamespaceMap freeNamespaces;
+
     private SAXDelegate handler;
 
     public Namespaces(SAXDelegate handler){
@@ -39,7 +41,13 @@ class Namespaces{
     }
     
     public void push(){
-        namespaces = new NamespaceMap(namespaces);
+        if(freeNamespaces!=null){
+            NamespaceMap newOne = freeNamespaces;
+            freeNamespaces = freeNamespaces.parent();
+            newOne.setParent(namespaces);
+            namespaces = newOne;
+        }else
+            namespaces = new NamespaceMap(namespaces);
     }
 
     public void add(String prefix, String namespace) throws SAXException{
@@ -51,7 +59,13 @@ class Namespaces{
         if(namespaces.map()!=null){
             for(String nsPrefix: namespaces.map().keySet())
                 handler.endPrefixMapping(nsPrefix);
+            namespaces.clear();
         }
+
+        NamespaceMap current = namespaces;
         namespaces = namespaces.parent();
+
+        current.setParent(freeNamespaces);
+        freeNamespaces = current;
     }
 }
