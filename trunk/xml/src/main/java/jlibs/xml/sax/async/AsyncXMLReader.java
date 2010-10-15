@@ -141,7 +141,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         peReferenceOutsideMarkup = false;
 
         dtd.reset();
-        dtdElementName = null;
         dtdElement = null;
         attributeList = null;
         dtdAttribute = null;
@@ -657,12 +656,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ DTD Attributes ]---------------------------------------------------*/
 
-    private String dtdElementName;
     private Map<String, DTDAttribute> attributeList;
     private DTDAttribute dtdAttribute;
 
     void dtdAttributesStart(Chars data){
-        dtdElementName = data.toString();
+        String dtdElementName = data.toString();
         attributeList = dtd.attributes.get(dtdElementName);
         if(attributeList==null)
             dtd.attributes.put(dtdElementName, attributeList=new HashMap<String, DTDAttribute>());
