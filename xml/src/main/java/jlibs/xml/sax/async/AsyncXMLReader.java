@@ -398,7 +398,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void emptyElementEnd() throws SAXException{
-        elements.pop();
+        elements.pop(null);
     }
 
     void elementEnd() throws SAXException{
