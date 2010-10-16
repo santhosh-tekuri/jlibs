@@ -18,6 +18,8 @@ package jlibs.nbp;
 import java.io.IOException;
 import java.nio.charset.CoderResult;
 
+import static java.lang.Character.*;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -53,20 +55,17 @@ public abstract class NBParser{
     private char highSurrogate;
     private boolean wasHighSurrogate;
     public void consume(char ch) throws IOException{
-        if(Character.isHighSurrogate(ch)){
+        if(wasHighSurrogate){
+            wasHighSurrogate = false;
+            if(ch>=MIN_LOW_SURROGATE && ch<=MAX_LOW_SURROGATE)
+                consume(((highSurrogate - MIN_HIGH_SURROGATE) << 10) + (ch - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT);
+            else
+                ioError("bad surrogate pair");
+        }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE){
             highSurrogate = ch;
             wasHighSurrogate = true;
-        }else{
-            if(wasHighSurrogate){
-                wasHighSurrogate = false;
-                if(Character.isLowSurrogate(ch)){
-                    int codePoint = Character.toCodePoint(highSurrogate, ch);
-                    consume(codePoint);
-                }else
-                    ioError("bad surrogate pair");
-            }else
-                consume((int)ch);
-        }
+        }else
+            consume((int)ch);
     }
 
     public void consume(int codePoint) throws IOException{
@@ -130,7 +129,7 @@ public abstract class NBParser{
             if(ch==-1)
                 found = "<EOF>";
             else
-                found = new String(Character.toChars(ch));
+                found = new String(toChars(ch));
         }        
         StringBuilder buff = new StringBuilder();
         for(String matcher: matchers){
