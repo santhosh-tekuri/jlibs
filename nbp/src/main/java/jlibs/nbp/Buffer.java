@@ -20,15 +20,15 @@ import java.util.Arrays;
 /**
  * @author Santhosh Kumar T
  */
-public class Buffer{
-    private char chars[] = new char[25];
+public final class Buffer{
+    private char chars[] = new char[100];
     private final Chars data = new Chars(chars, 0, 0);
     private int count;
 
     private final IntStack stack = new IntStack();
 
     public boolean isBufferring(){
-        return stack.size()>0;
+        return !stack.isEmpty();
     }
 
     public void push(){
@@ -66,7 +66,7 @@ public class Buffer{
         begin += stack.pop();
         end = count-end;
         data.set(chars, begin, end-begin);
-        if(stack.size()==0)
+        if(stack.isEmpty())
             count = 0;
         return data;
     }
