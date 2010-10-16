@@ -54,7 +54,9 @@ public class IntStack{
     }
 
     public int peek(){
-        return peek(0);
+        if(free==0)
+            throw new EmptyStackException();
+        return data[free-1];
     }
     
     public int peek(int index){
@@ -64,8 +66,6 @@ public class IntStack{
     }
 
     public void setPeek(int i){
-        if(free==0)
-            throw new EmptyStackException();
         data[free-1] = i;
     }
 

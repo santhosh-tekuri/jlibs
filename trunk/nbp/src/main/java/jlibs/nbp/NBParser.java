@@ -42,7 +42,8 @@ public abstract class NBParser{
         ruleStack.clear();
         stateStack.clear();
 
-        push(startingRule=rule, -1, 0);
+        ruleStack.push(startingRule=rule);
+        stateStack.push(0);
     }
 
     public void reset(){
@@ -167,8 +168,7 @@ public abstract class NBParser{
     protected final IntStack stateStack = new IntStack();
 
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
-        if(!stateStack.isEmpty())
-            stateStack.setPeek(stateAfterRule);
+        stateStack.setPeek(stateAfterRule);
         ruleStack.push(toRule);
         stateStack.push(stateInsideRule);
     }
