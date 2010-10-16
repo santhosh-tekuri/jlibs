@@ -59,11 +59,13 @@ public class RuleScene extends GraphScene<Node, Edge>{
     private LayerWidget interactionLayer = new LayerWidget (this);
     private WidgetAction connectAction = ActionFactory.createConnectAction(interactionLayer, new NodeConnectProvider());
 
+    private TwoStateHoverProvider hoverProvider;
     public RuleScene(TwoStateHoverProvider hoverProvider, EditProvider edgeEditProvider){
         addChild(nodes);
         addChild(connections);
         addChild(interactionLayer);
 
+        this.hoverProvider = hoverProvider;
         hoverAction = ActionFactory.createHoverAction(new Highlighter(hoverProvider));
         editAction = ActionFactory.createEditAction(edgeEditProvider);
 
@@ -96,6 +98,7 @@ public class RuleScene extends GraphScene<Node, Edge>{
             populate(rule.node);
 
         layout();
+        hoverProvider.unsetHovering(this);
         ruleObservable.notifyObservers(rule);
     }
 
