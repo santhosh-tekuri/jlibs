@@ -74,18 +74,8 @@ class Elements{
         return null;
     }
 
-    public String pop(String elemName) throws SAXException{
-        if(elemName==null)
-            elemName = names.pollFirst();
-        else{
-            String startName = names.pollFirst();
-            if(!startName.equals(elemName))
-                return "expected </"+startName+">";
-        }
-
-        handler.endElement(uris.pollFirst(), localNames.pollFirst(), elemName);
+    public void pop() throws SAXException{
+        handler.endElement(uris.pollFirst(), localNames.pollFirst(), names.pollFirst());
         namespaces.pop();
-
-        return null;
     }
 }

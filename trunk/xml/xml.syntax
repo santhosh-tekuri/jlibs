@@ -884,28 +884,6 @@
         <edge source="4" target="6" fallback="false"/>
         <edge source="3" target="6" fallback="false"/>
     </rule>
-    <rule name="elem_end">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="&lt;"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="/"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <rule name="qname"/>
-        </edge>
-        <edge source="3" target="3" fallback="false">
-            <matcher name="WS"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="&gt;"/>
-        </edge>
-    </rule>
     <rule name="elem_content">
         <node/>
         <node>
@@ -985,11 +963,17 @@
             <event name="attributesEnd"/>
         </node>
         <node>
-            <event name="emptyElementEnd"/>
+            <event name="elementEnd"/>
         </node>
         <node>
             <event name="attributesEnd"/>
         </node>
+        <node/>
+        <node/>
+        <node>
+            <event name="endingElem"/>
+        </node>
+        <node/>
         <node/>
         <node>
             <event name="elementEnd"/>
@@ -1007,12 +991,25 @@
         <edge source="4" target="5" fallback="false">
             <any chars="&gt;"/>
         </edge>
-        <edge source="5" target="6" fallback="false">
-            <rule name="elem_end"/>
-        </edge>
         <edge source="5" target="5" fallback="false">
             <rule name="elem_content"/>
         </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="&lt;"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <any chars="/"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <rule name="qname"/>
+        </edge>
+        <edge source="8" target="8" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <any chars="&gt;"/>
+        </edge>
+        <edge source="9" target="10" fallback="false"/>
     </rule>
     <rule name="xdecl">
         <node/>
