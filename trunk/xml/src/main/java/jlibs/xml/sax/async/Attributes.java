@@ -42,31 +42,34 @@ class Attributes{
     }
 
     public String addAttribute(String elemName, QName attrQName, StringBuilder value) throws SAXException{
-        AttributeType type = dtd==null ? AttributeType.CDATA : dtd.attributeType(elemName, attrQName.name);
+        String attrName = attrQName.name;
+        AttributeType type = dtd==null ? AttributeType.CDATA : dtd.attributeType(elemName, attrName);
         String attrValue = type.normalize(value.toString());
 
-        if(attrQName.name.equals("xmlns")){
-            namespaces.add("", attrValue);
-        }else if(attrQName.prefix.equals("xmlns")){
-            if(attrQName.localName.equals(XML_NS_PREFIX)){
-                if(!attrValue.equals(XML_NS_URI)){
-                    return "prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI;
-                }
-            }else if(attrQName.localName.equals(XMLNS_ATTRIBUTE)){
-                return "prefix "+ XMLNS_ATTRIBUTE+" must not be declared";
-            }else{
-                if(attrValue.equals(XML_NS_URI)){
-                    return XML_NS_URI+" must be bound to "+ XML_NS_PREFIX;
-                }else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI)){
-                    return XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE;
-                }else{
-                    if(attrValue.length()==0)
-                        return "No Prefix Undeclaring: "+attrQName.localName;
-                    namespaces.add(attrQName.localName, attrValue);
+        String attrLocalName = attrQName.localName;
+        if(attrName.startsWith("xmlns")){
+            if(attrName.length()==5){
+                namespaces.add("", attrValue);
+            }else if(attrName.charAt(5)==':'){
+                if(attrLocalName.equals(XML_NS_PREFIX)){
+                    if(!attrValue.equals(XML_NS_URI))
+                        return "prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI;
+                }else if(attrLocalName.equals(XMLNS_ATTRIBUTE))
+                    return "prefix "+ XMLNS_ATTRIBUTE+" must not be declared";
+                else{
+                    if(attrValue.equals(XML_NS_URI))
+                        return XML_NS_URI+" must be bound to "+ XML_NS_PREFIX;
+                    else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI))
+                        return XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE;
+                    else{
+                        if(attrValue.length()==0)
+                            return "No Prefix Undeclaring: "+attrLocalName;
+                        namespaces.add(attrLocalName, attrValue);
+                    }
                 }
             }
         }else
-            attrs.addAttribute(attrQName.prefix, attrQName.localName, attrQName.name, type.name(), attrValue);
+            attrs.addAttribute(attrQName.prefix, attrLocalName, attrName, type.name(), attrValue);
 
         return null;
     }
