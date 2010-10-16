@@ -43,6 +43,7 @@ import java.awt.event.ItemListener;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 
 import static jlibs.nblr.matchers.Matcher.*;
 
@@ -75,7 +76,18 @@ public class NBLREditor extends JFrame{
         scene = new RuleScene(new TwoStateHoverProvider() {
             @Override
             public void unsetHovering(Widget widget){
-                message.setText("");
+                String msg = "";
+                Rule rule = scene.getRule();
+                if(rule!=null){
+                    List<Rule> usages = scene.getSyntax().usages(rule);
+                    if(usages.size()==0)
+                        msg = "this is primary rule";
+                    else if(usages.size()==1){
+                        if(usages.get(0)!=rule)
+                            msg = "this rule can be inlined in "+usages.get(0).name;
+                    }
+                }
+                message.setText(msg);
             }
 
             @Override
