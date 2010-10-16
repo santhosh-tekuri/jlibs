@@ -19,15 +19,15 @@ package jlibs.nbp;
  * @author Santhosh Kumar T
  */
 public class Stream{
-    private int chars[];
-    private int begin = 0;
-    private int end = 0;
+    final int chars[];
+    int begin = 0;
+    int end = 0;
 
     public Stream(int capacity){
         chars = new int[capacity+1];
     }
 
-    private int capacity(){
+    int capacity(){
         return chars.length-1;
     }
 
@@ -45,7 +45,7 @@ public class Stream{
         begin = end = lookAhead.end = 0;
     }
 
-    private String toString(int length){
+    String toString(int length){
         StringBuilder buff = new StringBuilder();
         for(int i=0; i<length; i++){
             int data = charAt(i);
@@ -64,7 +64,7 @@ public class Stream{
 
     public LookAhead lookAhead = new LookAhead();
     public class LookAhead{
-        private int end;
+        int end;
 
         public int length(){
             int len = end-begin;
