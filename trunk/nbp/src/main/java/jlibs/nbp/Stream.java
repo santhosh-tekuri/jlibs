@@ -37,8 +37,7 @@ public class Stream{
     }
 
     public int charAt(int index){
-        if(index<0 && index>=length())
-            throw new IndexOutOfBoundsException("index: "+index+" length: "+length());
+        assert index>=0 && index<length();
         return chars[(begin+index)%chars.length];
     }
 
@@ -73,28 +72,23 @@ public class Stream{
         }
 
         public int charAt(int index){
-            if(index>=0 && index<length())
-                return Stream.this.charAt(index);
-            else
-                throw new IndexOutOfBoundsException("index: "+index+" length: "+length());            
+            assert index>=0 && index<length();
+            return Stream.this.charAt(index);
         }
 
         public void add(int ch){
             if(hasNext()){
-                if(getNext()!=ch)
-                    throw new IllegalArgumentException("expected char: "+ch);
+                assert getNext()==ch : "expected char: "+ch;
                 end = (end+1)%chars.length;
             }else{
-                if(capacity()==Stream.this.length())
-                    throw new RuntimeException("Stream is Full");
+                assert capacity()>Stream.this.length() : "Stream is Full";
                 chars[end] = ch;
                 this.end = Stream.this.end = (end+1)%chars.length;
             }
         }
 
         public void consumed(){
-            if(Stream.this.length()==0)
-                throw new RuntimeException("nothing found to consume");
+            assert Stream.this.length()>0 : "nothing found to consume";
             
             if(length()==0)
                 begin = end = (begin+1)%chars.length;
