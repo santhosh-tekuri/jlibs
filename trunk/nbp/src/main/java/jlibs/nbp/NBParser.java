@@ -73,17 +73,16 @@ public abstract class NBParser{
             consumed = false;
             _eat(codePoint);
 
-            if(stream.length()==0 && !consumed)
+            if(!consumed && stream.length()==0)
                 consumed(codePoint);
 
             while(stream.lookAhead.hasNext()){
                 consumed = false;
                 int lookAheadLen = stream.lookAhead.length();
                 _eat(stream.lookAhead.getNext());
-                if(stream.lookAhead.length()==lookAheadLen && !consumed)
+                if(!consumed && stream.lookAhead.length()==lookAheadLen)
                     consumed();
             }
-
         }catch(IOException ex){
             throw ex;
         }catch(Exception ex){
