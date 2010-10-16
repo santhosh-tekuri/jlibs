@@ -19,8 +19,6 @@ package jlibs.xml.sax.async;
  * @author Santhosh Kumar T
  */
 public class XMLEntityScanner extends XMLScanner{
-    XMLEntityScanner parent;
-    
     public XMLEntityScanner(AsyncXMLReader handler, int startingRule){
         super(handler, startingRule);
         handler.encoding = null;
@@ -29,9 +27,7 @@ public class XMLEntityScanner extends XMLScanner{
 
     protected void consumed(int ch){
         consumed = true;
-        int line = location.getLineNumber();
-        boolean addToBuffer = location.consume(ch);
-        if(addToBuffer && buffer.isBufferring())
-            buffer.append(location.getLineNumber()>line ? '\n' : ch);
+        if(location.consume(ch) && buffer.isBufferring())
+            buffer.append(ch=='\r' ? '\n' : ch);
     }
 }
