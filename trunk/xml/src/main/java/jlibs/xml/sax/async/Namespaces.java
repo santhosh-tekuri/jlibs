@@ -23,7 +23,7 @@ import org.xml.sax.SAXException;
  * @author Santhosh Kumar T
  */
 class Namespaces{
-    private NamespaceMap namespaces;
+    private NamespaceMap namespaces = new NamespaceMap();
     private NamespaceMap freeNamespaces;
 
     private SAXDelegate handler;
@@ -33,7 +33,8 @@ class Namespaces{
     }
 
     public void reset(){
-        namespaces = new NamespaceMap();
+        if(namespaces.parent()!=null)
+            namespaces = new NamespaceMap();
     }
 
     public String getNamespaceURI(String prefix){
