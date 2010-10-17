@@ -76,11 +76,11 @@ public abstract class NBParser{
             if(!consumed && stream.length()==0)
                 consumed(codePoint);
 
-            while(stream.lookAhead.hasNext()){
+            while(lookAhead.hasNext()){
                 consumed = false;
-                int lookAheadLen = stream.lookAhead.length();
-                _eat(stream.lookAhead.getNext());
-                if(!consumed && stream.lookAhead.length()==lookAheadLen)
+                int lookAheadLen = lookAhead.length();
+                _eat(lookAhead.getNext());
+                if(!consumed && lookAhead.length()==lookAheadLen)
                     consumed();
             }
         }catch(IOException ex){
@@ -104,12 +104,10 @@ public abstract class NBParser{
             }
             int state = callRule(ch);
             if(state==-1){
-                if(!stateStack.isEmpty()){
-                    pop();
-                    if(lookAhead.length()>0){
-                        lookAhead.reset();
-                        return;
-                    }
+                pop();
+                if(lookAhead.length()>0){
+                    lookAhead.reset();
+                    return;
                 }
             }else{
                 stateStack.setPeek(state);
