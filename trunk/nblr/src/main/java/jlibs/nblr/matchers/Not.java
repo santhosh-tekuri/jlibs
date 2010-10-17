@@ -37,7 +37,21 @@ public final class Not extends Matcher{
 
     @Override
     protected String __javaCode(String variable){
-        return "!("+delegate._javaCode(variable)+")";
+        if(delegate instanceof Any){
+            Any any = (Any)delegate;
+
+            if(any.chars==null)
+                return variable+"==-1";
+
+            StringBuilder buff = new StringBuilder();
+            for(int ch: any.chars){
+                if(buff.length()>0)
+                    buff.append(" && ");
+                buff.append(variable).append("!=").append(toJava(ch));
+            }
+            return buff.toString();
+        }else
+            return "!("+delegate._javaCode(variable)+")";
     }
 
     public static int minValue = Character.MIN_VALUE;

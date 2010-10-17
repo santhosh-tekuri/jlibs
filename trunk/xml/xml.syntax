@@ -34,18 +34,6 @@
             <any chars="-"/>
         </not>
     </and>
-    <and name="NBRACKET">
-        <matcher name="CHAR"/>
-        <not>
-            <any chars="["/>
-        </not>
-    </and>
-    <and name="NGT">
-        <matcher name="CHAR"/>
-        <not>
-            <any chars="&gt;"/>
-        </not>
-    </and>
     <and name="ELEM_CONTENT_CHAR">
         <matcher name="CHAR"/>
         <not>
@@ -435,8 +423,8 @@
         <edge source="5" target="6" fallback="false">
             <matcher name="DASH"/>
         </edge>
-        <edge source="6" target="5" fallback="false">
-            <matcher name="NDASH"/>
+        <edge source="6" target="5" fallback="true">
+            <matcher name="CHAR"/>
         </edge>
         <edge source="6" target="7" fallback="false">
             <matcher name="DASH"/>
@@ -444,8 +432,8 @@
         <edge source="7" target="8" fallback="false">
             <any chars="&gt;"/>
         </edge>
-        <edge source="5" target="5" fallback="false">
-            <matcher name="NDASH"/>
+        <edge source="5" target="5" fallback="true">
+            <matcher name="CHAR"/>
         </edge>
     </rule>
     <rule name="cdata_end">

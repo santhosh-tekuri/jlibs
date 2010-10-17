@@ -67,6 +67,10 @@ public abstract class Matcher{
         return javaCode!=null;
     }
     
+    public boolean canInline(){
+        return false;
+    }
+
     protected abstract String __javaCode(String variable);
     public final String javaCode(String variable){
         if(javaCode==null)
@@ -75,7 +79,7 @@ public abstract class Matcher{
             return javaCode.replace("$codePoint", variable);
     }
     public final String _javaCode(String variable){
-        if(name==null)
+        if(name==null || canInline())
             return javaCode(variable);
         else
             return name+'('+variable+')';
