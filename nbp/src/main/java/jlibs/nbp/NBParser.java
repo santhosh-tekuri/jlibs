@@ -105,13 +105,11 @@ public abstract class NBParser{
             int state = callRule(ch);
             if(state==-1){
                 pop();
-                if(lookAhead.length()>0){
-                    lookAhead.reset();
+                if(lookAhead.reset())
                     return;
-                }
             }else{
                 stateStack.setPeek(state);
-                break;
+                return;
             }
         }
     }

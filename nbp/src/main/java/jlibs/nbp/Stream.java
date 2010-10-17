@@ -96,8 +96,13 @@ public class Stream{
                 begin = (begin+1)%chars.length;
         }
 
-        public void reset(){
-            end = begin;
+        public boolean reset(){
+            if(end==begin)
+                return false;
+            else{
+                end = begin;
+                return true;
+            }
         }
 
         public boolean hasNext(){
