@@ -107,13 +107,15 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void printMatcherMethod(Matcher matcher){
-        printer.printlns(
-            "private static boolean "+matcher.name+"(int ch){",
-                PLUS,
-                "return "+matcher.javaCode("ch")+';',
-                MINUS,
-            "}"
-        );
+        if(!matcher.canInline()){
+            printer.printlns(
+                "private static boolean "+matcher.name+"(int ch){",
+                    PLUS,
+                    "return "+matcher.javaCode("ch")+';',
+                    MINUS,
+                "}"
+            );
+        }
     }
 
     @Override

@@ -51,6 +51,11 @@ public final class Any extends Matcher{
     }
 
     @Override
+    public boolean canInline(){
+        return javaCode==null && (chars==null || chars.length==1);
+    }
+
+    @Override
     protected String __javaCode(String variable){
         if(chars==null)
             return variable+"!=-1";
