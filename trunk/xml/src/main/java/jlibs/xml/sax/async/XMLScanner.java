@@ -29,60 +29,32 @@ public class XMLScanner extends jlibs.nbp.NBParser{
         return (ENCODING_START(ch)) || (DIGIT(ch)) || (ch=='.' || ch=='_' || ch=='-');
     }
 
-    private static boolean CHAR(int ch){
-        return org.apache.xerces.util.XMLChar.isValid(ch);
-    }
-
-    private static boolean NDASH(int ch){
-        return (CHAR(ch)) && (ch!='-');
-    }
-
     private static boolean ELEM_CONTENT_CHAR(int ch){
-        return (CHAR(ch)) && (ch!='<' && ch!='&');
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&');
     }
 
     private static boolean ATTR_Q_CONTENT(int ch){
-        return (CHAR(ch)) && (ch!='<' && ch!='&' && ch!='\'');
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='\'');
     }
 
     private static boolean ATTR_DQ_CONTENT(int ch){
-        return (CHAR(ch)) && (ch!='<' && ch!='&' && ch!='"');
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='"');
     }
 
     private static boolean ENTITY_CONTENT(int ch){
-        return (CHAR(ch)) && (ch!='%' && ch!='&');
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&');
     }
 
     private static boolean ENTITY_Q_CONTENT(int ch){
-        return (CHAR(ch)) && (ch!='%' && ch!='&' && ch!='\'');
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='\'');
     }
 
     private static boolean ENTITY_DQ_CONTENT(int ch){
-        return (CHAR(ch)) && (ch!='%' && ch!='&' && ch!='"');
-    }
-
-    private static boolean NAME_START(int ch){
-        return org.apache.xerces.util.XMLChar.isNameStart(ch);
-    }
-
-    private static boolean NAME_PART(int ch){
-        return org.apache.xerces.util.XMLChar.isName(ch);
-    }
-
-    private static boolean NCNAME_START(int ch){
-        return org.apache.xerces.util.XMLChar.isNCNameStart(ch);
-    }
-
-    private static boolean NCNAME_PART(int ch){
-        return org.apache.xerces.util.XMLChar.isNCName(ch);
-    }
-
-    private static boolean PUBID_CHAR(int ch){
-        return org.apache.xerces.util.XMLChar.isPubid(ch);
+        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='"');
     }
 
     private static boolean PUBID_CHAR_NQ(int ch){
-        return (PUBID_CHAR(ch)) && (ch!='\'');
+        return (org.apache.xerces.util.XMLChar.isPubid(ch)) && (ch!='\'');
     }
 
     /*-------------------------------------------------[ Rules ]---------------------------------------------------*/
@@ -513,7 +485,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     return 6;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     buffer.push();
                     return 5;
                 }
@@ -522,7 +494,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='-'){
                     return 6;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 5;
                 }
                 expected(ch, "<DASH> OR <CHAR>");
@@ -530,7 +502,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='-'){
                     return 7;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 5;
                 }
                 expected(ch, "<DASH> OR <CHAR>");
@@ -554,7 +526,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch==']'){
                     return 1;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 0;
                 }
                 expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
@@ -562,7 +534,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch==']'){
                     return 2;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 0;
                 }
                 expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
@@ -573,7 +545,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch==']'){
                     return 2;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 0;
                 }
                 expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
@@ -638,7 +610,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CDATA_END, 10, 0);
                     return 1;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     buffer.push();
                     push(RULE_CDATA_END, 10, 0);
                     return 0;
@@ -656,12 +628,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int name(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     return 1;
                 }
                 expected(ch, "<NAME_START>");
             case 1:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     return 1;
                 }
                 return -1;
@@ -677,7 +649,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='x' || ch=='X'){
                     return 1;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     return 7;
                 }
                 expected(ch, "[xX] OR <NCNAME_START>");
@@ -685,7 +657,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='m' || ch=='M'){
                     return 2;
                 }
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 4;
                 }
                 return -1;
@@ -693,22 +665,22 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='l' || ch=='L'){
                     return 3;
                 }
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 4;
                 }
                 return -1;
             case 3:
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 4;
                 }
                 expected(ch, "<NCNAME_PART>");
             case 4:
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 4;
                 }
                 return -1;
             case 7:
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 4;
                 }
                 return -1;
@@ -736,7 +708,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_PI_TARGET, 3, 0);
                     return 1;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     push(RULE_PI_TARGET, 3, 0);
                     return 7;
@@ -761,7 +733,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     return 8;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     buffer.push();
                     return 7;
                 }
@@ -770,7 +742,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='?'){
                     return 8;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 7;
                 }
                 expected(ch, "[?] OR <CHAR>");
@@ -782,7 +754,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='?'){
                     return 8;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 7;
                 }
                 expected(ch, "[>] OR [?] OR <CHAR>");
@@ -804,12 +776,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int ncname(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     return 1;
                 }
                 expected(ch, "<NCNAME_START>");
             case 1:
-                if(ch!=-1 && NCNAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
                     return 1;
                 }
                 return -1;
@@ -822,7 +794,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int qname(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     buffer.push();
                     push(RULE_NCNAME, 2, 0);
@@ -838,7 +810,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 handler.qname(buffer.pop(0, 0));
                 return -1;
             case 4:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     push(RULE_NCNAME, 5, 0);
                     return 1;
@@ -862,7 +834,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[\\&]");
             case 1:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 3, 0);
                     return 1;
@@ -923,7 +895,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int attr(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     push(RULE_QNAME, 1, 0);
                     buffer.push();
                     buffer.push();
@@ -1073,7 +1045,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[<]");
             case 1:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     push(RULE_QNAME, 2, 0);
                     buffer.push();
                     buffer.push();
@@ -1092,7 +1064,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 4;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     push(RULE_ATTR, 5, 0);
                     push(RULE_QNAME, 1, 0);
                     buffer.push();
@@ -1139,7 +1111,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 0;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
                             consumed();
@@ -1280,7 +1252,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 5;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_ELEM_CONTENT, 5, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
@@ -1337,7 +1309,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[/]");
             case 7:
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     handler.endingElem();
                     push(RULE_QNAME, 8, 0);
                     buffer.push();
@@ -1582,7 +1554,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<DQ> OR <Q>");
             case 1:
-                if(ch!=-1 && PUBID_CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
                     buffer.push();
                     return 2;
                 }
@@ -1593,7 +1565,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<PUBID_CHAR> OR <DQ>");
             case 2:
-                if(ch!=-1 && PUBID_CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
                     return 2;
                 }
                 if(ch=='"'){
@@ -1806,7 +1778,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     push(RULE_NCNAME, 13, 0);
                     return 1;
@@ -1920,7 +1892,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[%]");
             case 1:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 2, 0);
                     return 1;
@@ -1976,7 +1948,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 6;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 8, 0);
                     return 1;
@@ -2206,7 +2178,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='%'){
                     return 10;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     push(RULE_NCNAME, 18, 0);
                     return 1;
@@ -2221,7 +2193,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NCNAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                     buffer.push();
                     push(RULE_NCNAME, 13, 0);
                     return 1;
@@ -2548,12 +2520,12 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int nmtoken(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     return 1;
                 }
                 expected(ch, "<NAME_PART>");
             case 1:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     return 1;
                 }
                 return -1;
@@ -2566,7 +2538,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int nmtokens(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     push(RULE_NMTOKEN, 1, 0);
                     return 1;
                 }
@@ -2577,7 +2549,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[#x20;]");
             case 2:
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     push(RULE_NMTOKEN, 3, 0);
                     return 1;
                 }
@@ -2596,7 +2568,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int names(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
@@ -2607,7 +2579,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[#x20;]");
             case 2:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME, 3, 0);
                     return 1;
                 }
@@ -2635,7 +2607,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 1;
                 }
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     buffer.push();
                     push(RULE_NMTOKEN, 3, 0);
                     return 1;
@@ -2670,7 +2642,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 7;
                 }
-                if(ch!=-1 && NAME_PART(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
                     buffer.push();
                     push(RULE_NMTOKEN, 9, 0);
                     return 1;
@@ -2845,7 +2817,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 14;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME, 15, 0);
                     return 1;
                 }
@@ -2858,7 +2830,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 14;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME, 15, 0);
                     return 1;
                 }
@@ -2972,7 +2944,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 10;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 12, 0);
                     return 1;
@@ -3007,7 +2979,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 16;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 18, 0);
                     return 1;
@@ -3281,7 +3253,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int att_def(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3479,7 +3451,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 13, 0);
                     return 1;
@@ -3493,7 +3465,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 13, 0);
                     return 1;
@@ -3528,7 +3500,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<WS> OR [%]");
             case 15:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_ATT_DEF, 17, 0);
                     buffer.push();
                     push(RULE_NAME, 1, 0);
@@ -3546,7 +3518,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
             case 16:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_ATT_DEF, 17, 0);
                     buffer.push();
                     push(RULE_NAME, 1, 0);
@@ -3599,7 +3571,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3617,7 +3589,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3632,7 +3604,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 4, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3682,7 +3654,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 9;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 10, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3700,7 +3672,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 9;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 10, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3748,7 +3720,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
             case 15:
                 return -1;
             case 17:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 19, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3766,7 +3738,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
             case 18:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME_CARDINALITY, 19, 0);
                     push(RULE_NAME, 1, 0);
                     return 1;
@@ -3822,7 +3794,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     private int name_cardinality(int ch) throws Exception{
         switch(stateStack.peek()){
             case 0:
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     push(RULE_NAME, 1, 0);
                     return 1;
                 }
@@ -4005,7 +3977,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 13, 0);
                     return 1;
@@ -4019,7 +3991,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 11;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 13, 0);
                     return 1;
@@ -4099,7 +4071,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     handler.notMixed();
                     push(RULE_CHILDREN, 21, 3);
                     push(RULE_NAME_CARDINALITY, 4, 0);
@@ -4125,7 +4097,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_CHILDREN, 4, 0);
                     return 1;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     handler.notMixed();
                     push(RULE_CHILDREN, 21, 3);
                     push(RULE_NAME_CARDINALITY, 4, 0);
@@ -4472,7 +4444,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(WS(ch)){
                     return 10;
                 }
-                if(ch!=-1 && NAME_START(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     buffer.push();
                     push(RULE_NAME, 12, 0);
                     return 1;
@@ -4883,7 +4855,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 0;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_PROLOG, 1, 0);
                             handler.xdeclEnd();
                             pop();
@@ -5036,7 +5008,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 0;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_ELEM_CONTENT, 0, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
@@ -5216,7 +5188,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -5227,7 +5199,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -5238,7 +5210,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -5252,7 +5224,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
@@ -5268,7 +5240,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
@@ -5282,7 +5254,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
@@ -5295,7 +5267,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     push(RULE_IGNORE_SECT, 16, 7);
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     push(RULE_IGNORE_SECT, 16, 7);
                     return 8;
                 }
@@ -5307,7 +5279,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='<'){
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 8;
                 }
                 expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -6095,7 +6067,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     return 1;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     buffer.push();
                     handler.xdeclEnd();
                     return 10;
@@ -6108,7 +6080,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='?'){
                     return 2;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     handler.xdeclEnd();
                     return 10;
                 }
@@ -6119,7 +6091,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='x'){
                     return 3;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     handler.xdeclEnd();
                     return 10;
                 }
@@ -6130,7 +6102,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='m'){
                     return 4;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     handler.xdeclEnd();
                     return 10;
                 }
@@ -6141,7 +6113,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='l'){
                     return 5;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     handler.xdeclEnd();
                     return 10;
                 }
@@ -6153,7 +6125,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     handler.discard(buffer.pop(0, 0));
                     return 13;
                 }
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     handler.xdeclEnd();
                     return 10;
                 }
@@ -6161,7 +6133,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 handler.externalEntityValue(buffer.pop(0, 0));
                 return -1;
             case 10:
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     return 10;
                 }
                 handler.externalEntityValue(buffer.pop(0, 0));
@@ -6183,7 +6155,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 expected(ch, "[v] OR [e] OR <WS>");
             case 14:
-                if(ch!=-1 && CHAR(ch)){
+                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
                     buffer.push();
                     return 10;
                 }
@@ -6268,7 +6240,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 0;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             handler.xdeclEnd();
                             push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_ELEM, 15, 0);
@@ -6371,7 +6343,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 2;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
@@ -6445,7 +6417,7 @@ public class XMLScanner extends jlibs.nbp.NBParser{
                     return 3;
                 if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && NCNAME_START(ch)){
+                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                             push(RULE_ELEM_CONTENT, 3, 0);
                             push(RULE_ELEM, 15, 0);
                             push(RULE_ELEM_ATTRS, 1, 0);
