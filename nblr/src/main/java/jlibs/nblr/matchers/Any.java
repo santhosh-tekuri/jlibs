@@ -52,7 +52,7 @@ public final class Any extends Matcher{
 
     @Override
     public boolean canInline(){
-        return javaCode==null && (chars==null || chars.length==1);
+        return super.canInline() || chars==null || chars.length==1;
     }
 
     @Override

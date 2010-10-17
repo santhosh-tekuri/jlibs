@@ -68,7 +68,7 @@ public abstract class Matcher{
     }
     
     public boolean canInline(){
-        return false;
+        return javaCode!=null;
     }
 
     protected abstract String __javaCode(String variable);

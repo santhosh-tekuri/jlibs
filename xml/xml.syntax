@@ -28,12 +28,6 @@
         <range from="&#65536;" to="&#1114111;"/>
     </or>
     <any name="DASH" chars="-"/>
-    <and name="NDASH">
-        <matcher name="CHAR"/>
-        <not>
-            <any chars="-"/>
-        </not>
-    </and>
     <and name="ELEM_CONTENT_CHAR">
         <matcher name="CHAR"/>
         <not>
