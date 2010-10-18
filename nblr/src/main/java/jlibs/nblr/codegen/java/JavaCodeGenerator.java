@@ -432,7 +432,6 @@ public class JavaCodeGenerator extends CodeGenerator{
         this.handlerClass = isClass;
     }
 
-    private boolean debuggable;
     public void setDebuggable(Class superClass, Class handler){
         debuggable = true;
         this.superClass = superClass;
