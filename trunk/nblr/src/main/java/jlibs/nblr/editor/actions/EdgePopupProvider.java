@@ -21,7 +21,6 @@ import jlibs.nblr.editor.RuleScene;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
-import jlibs.nblr.rules.Rule;
 import jlibs.nblr.rules.RuleTarget;
 import org.netbeans.api.visual.action.PopupMenuProvider;
 import org.netbeans.api.visual.widget.Widget;
@@ -187,20 +186,7 @@ public class EdgePopupProvider implements PopupMenuProvider{
     private Action inlineRuleAction = new AbstractAction("Inline Rule"){
         @Override
         public void actionPerformed(ActionEvent ae){
-            Rule rule = edge.ruleTarget.rule.copy();
-            edge.source.addEdgeTo(rule.node);
-            for(Node node: rule.nodes()){
-                boolean sink = true;
-                for(Edge outgoing: node.outgoing){
-                    if(!outgoing.loop()){
-                        sink = false;
-                        break;
-                    }
-                }
-                if(sink)
-                    node.addEdgeTo(edge.target);
-            }
-            edge.delete();
+            edge.inlineRule();
             scene.refresh();
         }
 

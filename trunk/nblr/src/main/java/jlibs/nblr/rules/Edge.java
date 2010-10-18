@@ -53,8 +53,23 @@ public class Edge{
 
     public Matcher matcher;
     public RuleTarget ruleTarget;
-//    public Rule rule;
-//    public String name;
+
+    public void inlineRule(){
+        Rule rule = ruleTarget.rule.copy();
+        source.addEdgeTo(rule.node);
+        for(Node node: rule.nodes()){
+            boolean sink = true;
+            for(Edge outgoing: node.outgoing){
+                if(!outgoing.loop()){
+                    sink = false;
+                    break;
+                }
+            }
+            if(sink)
+                node.addEdgeTo(target);
+        }
+        delete();
+    }
 
     @Override
     public String toString(){
