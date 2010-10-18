@@ -18,23 +18,18 @@ package jlibs.nblr.editor;
 import jlibs.core.lang.OS;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.editor.debug.Debugger;
-import jlibs.nblr.editor.serialize.SyntaxBinding;
-import jlibs.nblr.editor.serialize.SyntaxDocument;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
-import jlibs.xml.sax.binding.BindingHandler;
 import org.netbeans.api.visual.action.EditProvider;
 import org.netbeans.api.visual.action.TwoStateHoverProvider;
 import org.netbeans.api.visual.widget.Widget;
-import org.xml.sax.InputSource;
 
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
-import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
@@ -250,9 +245,8 @@ public class NBLREditor extends JFrame{
                 chooser.setCurrentDirectory(file.getParentFile());
             if(chooser.showOpenDialog(NBLREditor.this)==JFileChooser.APPROVE_OPTION){
                 File selected = chooser.getSelectedFile();
-                BindingHandler handler = new BindingHandler(SyntaxBinding.class);
                 try{
-                    showSyntax((Syntax)handler.parse(new InputSource(selected.getPath())));
+                    showSyntax(Syntax.loadFrom(selected));
                     file = selected;
                     getRootPane().putClientProperty("Window.documentFile", file);
                     setTitle(file.getName());
@@ -275,10 +269,7 @@ public class NBLREditor extends JFrame{
                 return;
         }
         try{
-            SyntaxDocument xml = new SyntaxDocument(new StreamResult(file.getPath()));
-            xml.startDocument();
-            xml.add(scene.getSyntax());
-            xml.endDocument();
+            syntax.saveTo(file);
             this.file = file;
         }catch(Exception ex){
             ex.printStackTrace();
