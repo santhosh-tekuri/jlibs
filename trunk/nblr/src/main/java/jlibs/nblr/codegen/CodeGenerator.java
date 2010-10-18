@@ -16,16 +16,17 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.io.FileUtil;
 import jlibs.core.util.Range;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.matchers.Matcher;
+import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Routes;
 import jlibs.nblr.rules.Rule;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.util.*;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 
@@ -33,15 +34,78 @@ import static jlibs.core.annotation.processing.Printer.MINUS;
  * @author Santhosh Kumar T
  */
 public abstract class CodeGenerator{
-    protected final Syntax syntax;
+    protected Syntax syntax;
     protected Printer printer;
 
     public CodeGenerator(Syntax syntax){
         this.syntax = syntax;
     }
 
+    protected boolean debuggable;
+    protected void inlineRules() throws Exception{
+        File tempFile = new File("temp/temp.syntax");
+        FileUtil.mkdirs(tempFile.getParentFile());
+
+        syntax.saveTo(tempFile);
+        syntax = Syntax.loadFrom(tempFile);
+
+        Set<String> rulesChecked = new HashSet<String>();
+
+        Iterator<Rule> rules = syntax.rules.values().iterator();
+        while(rules.hasNext()){
+            Rule rule = rules.next();
+            if(rulesChecked.contains(rule.name))
+                continue;
+
+            rulesChecked.add(rule.name);
+
+            boolean hasNodeWithName = false;
+            for(Node node: rule.nodes()){
+                if(node.name!=null){
+                    hasNodeWithName = true;
+                    break;
+                }
+            }
+            if(hasNodeWithName)
+                continue;
+
+            List<Rule> usages = syntax.usages(rule);
+            if(usages.size()==1 && usages.get(0)!=rule){
+                boolean inlined = false;
+                
+                Rule usingRule = usages.get(0);
+                for(Edge edge: usingRule.edges()){
+                    if(edge.ruleTarget!=null && edge.ruleTarget.rule==rule && edge.ruleTarget.name==null && !edge.loop()){
+                        edge.inlineRule();
+                        inlined = true;
+                    }
+                }
+                if(inlined){
+                    rules.remove();
+                    syntax.updateRuleIDs();
+                    try{
+                        for(Node state: usingRule.states())
+                            new Routes(state);
+                        syntax.saveTo(tempFile);
+                        System.out.println("inlined "+rule.name+" in "+usingRule.name);
+                    }catch(IllegalStateException ex){
+                        syntax = Syntax.loadFrom(tempFile);
+                        rules = syntax.rules.values().iterator();
+                    }
+                }
+            }
+        }
+    }
+
     public final void generateParser(Printer printer){
         this.printer = printer;
+        if(!debuggable){
+            try{
+                inlineRules();
+            }catch(Exception ex){
+                throw new RuntimeException(ex);
+            }
+        }
         
         startParser();
         printer.emptyLine(true);

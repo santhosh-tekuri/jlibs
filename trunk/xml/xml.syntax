@@ -2525,22 +2525,27 @@
     <rule name="markup_decl">
         <node/>
         <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
         <edge source="0" target="1" fallback="false">
             <rule name="element_decl"/>
         </edge>
-        <edge source="0" target="1" fallback="false">
+        <edge source="0" target="2" fallback="false">
             <rule name="att_list_decl"/>
         </edge>
-        <edge source="0" target="1" fallback="false">
+        <edge source="0" target="3" fallback="false">
             <rule name="entity_decl"/>
         </edge>
-        <edge source="0" target="1" fallback="false">
+        <edge source="0" target="4" fallback="false">
             <rule name="notation_decl"/>
         </edge>
-        <edge source="0" target="1" fallback="false">
+        <edge source="0" target="5" fallback="false">
             <rule name="pi"/>
         </edge>
-        <edge source="0" target="1" fallback="false">
+        <edge source="0" target="6" fallback="false">
             <rule name="comment"/>
         </edge>
     </rule>
