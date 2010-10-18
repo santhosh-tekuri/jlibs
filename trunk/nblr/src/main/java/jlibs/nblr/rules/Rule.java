@@ -114,6 +114,7 @@ public class Rule{
         for(Edge edge: edges){
             Edge newEdge = nodes.get(edge.source.id).addEdgeTo(nodes.get(edge.target.id));
             newEdge.matcher = edge.matcher;
+            newEdge.fallback = edge.fallback;
             if(edge.ruleTarget!=null){
                 RuleTarget ruleTarget = edge.ruleTarget;
                 RuleTarget newRuleTarget = newEdge.ruleTarget = new RuleTarget();
