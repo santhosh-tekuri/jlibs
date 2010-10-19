@@ -18,7 +18,7 @@ package jlibs.nbp;
 /**
  * @author Santhosh Kumar T
  */
-public class Stream{
+public final class Stream{
     final int chars[];
     int begin = 0;
     int end = 0;
@@ -62,8 +62,8 @@ public class Stream{
         return toString(length());
     }
 
-    public LookAhead lookAhead = new LookAhead();
-    public class LookAhead{
+    public final LookAhead lookAhead = new LookAhead();
+    public final class LookAhead{
         int end;
 
         public int length(){
@@ -71,13 +71,17 @@ public class Stream{
             return len<0 ? len+chars.length : len;
         }
 
+        public boolean isEmpty(){
+            return end==begin;
+        }
+
         public int charAt(int index){
             assert index>=0 && index<length();
-            return Stream.this.charAt(index);
+            return chars[(begin+index)%chars.length];
         }
 
         public void add(int ch){
-            if(hasNext()){
+            if(this.end!=Stream.this.end){ // hasNext()
                 assert getNext()==ch : "expected char: "+ch;
                 end = (end+1)%chars.length;
             }else{
@@ -90,7 +94,7 @@ public class Stream{
         public void consumed(){
             assert Stream.this.length()>0 : "nothing found to consume";
             
-            if(length()==0)
+            if(begin==end) // length()==0
                 begin = end = (begin+1)%chars.length;
             else
                 begin = (begin+1)%chars.length;
@@ -105,12 +109,8 @@ public class Stream{
             }
         }
 
-        public boolean hasNext(){
-            return this.end!=Stream.this.end;
-        }
-
         public int getNext(){
-            return Stream.this.charAt(length());
+            return this.end==Stream.this.end ? -2 : chars[end];
         }
 
         @Override
