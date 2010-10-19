@@ -70,18 +70,37 @@ public abstract class NBParser{
 
     public void consume(int codePoint) throws IOException{
         try{
-            consumed = false;
-            _eat(codePoint);
+            boolean fromLookAhead = false;
+            while(true){
+                while(true){
+                    if(stateStack.isEmpty()){
+                        if(codePoint==-1){
+                            onSuccessful();
+                            return;
+                        }else
+                            expected(codePoint, "<EOF>");
+                    }
+                    consumed = false;
+                    int state = callRule(codePoint);
+                    if(state==-1){
+                        pop();
+                        if(lookAhead.reset())
+                            break;
+                    }else{
+                        stateStack.setPeek(state);
+                        if(!consumed && lookAhead.isEmpty()){
+                            consumed(codePoint);
+                            if(fromLookAhead)
+                                lookAhead.consumed();
+                        }
+                        break;
+                    }
+                }
 
-            if(!consumed && stream.length()==0)
-                consumed(codePoint);
-
-            while(lookAhead.hasNext()){
-                consumed = false;
-                int lookAheadLen = lookAhead.length();
-                _eat(lookAhead.getNext());
-                if(!consumed && lookAhead.length()==lookAheadLen)
-                    consumed();
+                codePoint = lookAhead.getNext();
+                if(codePoint==-2)
+                    return;
+                fromLookAhead = true;
             }
         }catch(IOException ex){
             throw ex;
@@ -90,27 +109,6 @@ public abstract class NBParser{
                 throw (IOException)ex.getCause();
             else
                 throw new IOException(ex);
-        }
-    }
-
-    private void _eat(int ch) throws Exception{
-        while(true){
-            if(stateStack.isEmpty()){
-                if(ch==-1){
-                    onSuccessful();
-                    return;
-                }else
-                    expected(ch, "<EOF>");
-            }
-            int state = callRule(ch);
-            if(state==-1){
-                pop();
-                if(lookAhead.reset())
-                    return;
-            }else{
-                stateStack.setPeek(state);
-                return;
-            }
         }
     }
 
