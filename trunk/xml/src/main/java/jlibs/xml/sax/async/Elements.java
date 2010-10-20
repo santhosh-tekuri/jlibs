@@ -18,7 +18,7 @@ package jlibs.xml.sax.async;
 import jlibs.xml.sax.SAXDelegate;
 import org.xml.sax.SAXException;
 
-import java.util.ArrayDeque;
+import java.util.Arrays;
 
 /**
  * @author Santhosh Kumar T
@@ -34,48 +34,49 @@ class Elements{
         this.attributes = attributes;
     }
 
-    private final ArrayDeque<String> uris = new ArrayDeque<String>();
-    private final ArrayDeque<String> localNames = new ArrayDeque<String>();
-    private final ArrayDeque<String> names = new ArrayDeque<String>();
+    private String stack[] = new String[15*3];
+    private int free = 0;
 
     public void reset(){
-        uris.clear();
-        localNames.clear();
-        names.clear();
+        free = 0;
     }
 
     public String currentElementName(){
-        return names.peekFirst();
+        return stack[free-1];
     }
     
     public void push1(QName qname){
-        uris.addFirst(qname.prefix); // replaced with actual uri in push2()
-        localNames.addFirst(qname.localName);
-        names.addFirst(qname.name);
+        free += 3;
+        if(free>stack.length)
+            stack = Arrays.copyOf(stack, free*2);
+        stack[free-3] = qname.prefix; // replaced with actual uri in push2()
+        stack[free-2] = qname.localName;
+        stack[free-1] = qname.name;
 
         namespaces.push();
         attributes.reset();
     }
 
     public String push2() throws SAXException{
-        String name = names.peekFirst();
+        String name = stack[free-1];
         String error = attributes.fixAttributes(name);
         if(error!=null)
             return error;
 
-        String prefix = uris.pollFirst();
+        String prefix = stack[free-3];
         String uri = namespaces.getNamespaceURI(prefix);
         if(uri==null)
             return "Unbound prefix: "+prefix;
-        uris.addFirst(uri);
-        
-        handler.startElement(uri, localNames.peekFirst(), name, attributes.get());
+        stack[free-3] = uri;
+
+        handler.startElement(uri, stack[free-2], name, attributes.get());
 
         return null;
     }
 
     public void pop() throws SAXException{
-        handler.endElement(uris.pollFirst(), localNames.pollFirst(), names.pollFirst());
+        handler.endElement(stack[free-3], stack[free-2], stack[free-1]);
+        free -= 3;
         namespaces.pop();
     }
 }
