@@ -156,11 +156,11 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         try{
             if(inputIndex<input.getDocument().getLength()){
                 char ch = input.getDocument().getText(inputIndex, 1).charAt(0);
-                parser.consume(ch);
+                parser.consume(new char[]{ ch }, 0, 1);
                 inputIndex++;
                 updateGuardedBlock();
             }else{
-                parser.consume(-1);
+                parser.eof();
                 stop(null, "Input Matched");
             }
         }catch(BadLocationException ex){
