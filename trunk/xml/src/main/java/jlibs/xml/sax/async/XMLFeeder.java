@@ -94,12 +94,13 @@ public class XMLFeeder extends Feeder{
             setSource(source);
     }
 
-    protected Feeder feed(Feeder current) throws IOException{
-        xmlReader.setFeeder((XMLFeeder)current);
-        if(current.getSource() instanceof CharReader)
-            return ((XMLFeeder)current).feed((CharReader)current.getSource());
+    @Override
+    protected Feeder _feed() throws IOException{
+        xmlReader.setFeeder(this);
+        if(source instanceof CharReader)
+            return feed((CharReader)source);
         else
-            return super.feed(current);
+            return super._feed();
     }
 
     private Feeder feed(CharReader reader) throws IOException{

@@ -123,7 +123,7 @@ public class Feeder{
         Feeder current = this;
         Feeder next;
         do{
-            next = feed(current);
+            next = current._feed();
             if(next==current)
                 return current;
             current = next;
@@ -132,15 +132,15 @@ public class Feeder{
         return null;
     }
 
-    protected Feeder feed(Feeder current) throws IOException{
-        if(current.source instanceof Reader)
-            return current.feed((Reader)current.source);
-        else if(current.source instanceof InputStream)
-            return current.feed((InputStream)current.source);
-        else if(current.source instanceof ReadableByteChannel)
-            return current.feed((ReadableByteChannel)current.source);
+    protected Feeder _feed() throws IOException{
+        if(source instanceof Reader)
+            return feed((Reader)source);
+        else if(source instanceof InputStream)
+            return feed((InputStream)source);
+        else if(source instanceof ReadableByteChannel)
+            return feed((ReadableByteChannel)source);
         else
-            throw new IOException("Invalid Source: "+current.source.getClass());
+            throw new IOException("Invalid Source: "+source.getClass());
     }
     
     protected boolean eofSent;
