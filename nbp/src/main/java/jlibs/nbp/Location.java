@@ -39,21 +39,23 @@ public class Location{
      */
     public boolean consume(int ch){
         offset++;
-        if(skipLF && ch=='\n'){
-            skipLF = false;
-            return false;
+        if(ch==0x0D){
+            skipLF = true;
+            line++;
+            col = 0;
+            return true;
+        }else if(ch==0x0A){
+            if(skipLF){
+                skipLF = false;
+                return false;
+            }else{
+                line++;
+                col = 0;
+                return true;
+            }
         }else{
             skipLF = false;
-            switch(ch){
-                case '\r':
-                    skipLF = true;
-                case '\n':
-                    line++;
-                    col = 0;
-                    break;
-                default:
-                    col++;
-            }
+            col++;
             return true;
         }
     }
