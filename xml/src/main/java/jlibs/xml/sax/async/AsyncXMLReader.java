@@ -44,7 +44,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private XMLEntityScanner xmlScanner = new XMLEntityScanner(this, XMLScanner.RULE_DOCUMENT);
-    private XMLFeeder feeder;
+    private XMLFeeder xmlFeeder, feeder;
     void setFeeder(XMLFeeder feeder){
         if(this.feeder.getParent()==feeder){
             if(this.feeder.postAction!=null)
@@ -64,7 +64,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     public XMLFeeder createFeeder(InputSource inputSource) throws IOException, SAXException{
         xmlScanner.reset();
-        feeder=new XMLFeeder(this, xmlScanner, inputSource);
+        if(xmlFeeder==null)
+            xmlFeeder = new XMLFeeder(this, xmlScanner, inputSource);
+        else
+            xmlFeeder.init(inputSource);
+        feeder = xmlFeeder;
         documentStart();
         return feeder;
     }
