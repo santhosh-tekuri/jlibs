@@ -19,9 +19,6 @@ import jlibs.xml.ClarkName;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import static javax.xml.XMLConstants.*;
 
 /**
@@ -74,24 +71,23 @@ class Attributes{
         return null;
     }
 
-    private Set<String> attributeNames = new HashSet<String>();
     public String fixAttributes(String elemName) throws SAXException{
         int attrCount = attrs.getLength();
         if(attrCount>0){
-            attributeNames.clear();
             for(int i=0; i<attrCount; i++){
                 String prefix = attrs.getURI(i);
-                String uri = "";
                 if(prefix.length()>0){
-                    uri = namespaces.getNamespaceURI(prefix);
+                    String uri = namespaces.getNamespaceURI(prefix);
                     if(uri==null)
                         return "Unbound prefix: "+prefix;
                     attrs.setURI(i, uri);
                 }
-
-                String clarkName = ClarkName.valueOf(uri, attrs.getLocalName(i));
-                if(!attributeNames.add(clarkName))
-                    return "Attribute \""+clarkName+"\" was already specified for element \""+elemName+"\"";
+            }
+            if(attrCount>1){
+                for(int i=1; i<attrCount; i++){
+                    if(attrs.getIndex(attrs.getURI(i), attrs.getLocalName(i))<i)
+                        return "Attribute \""+ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elemName+"\"";
+                }
             }
         }
         dtd.addMissingAttributes(elemName, attrs);
