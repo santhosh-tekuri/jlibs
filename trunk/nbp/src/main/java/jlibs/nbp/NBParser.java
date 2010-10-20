@@ -17,6 +17,7 @@ package jlibs.nbp;
 
 import java.io.IOException;
 import java.nio.charset.CoderResult;
+import java.util.Arrays;
 
 import static java.lang.Character.*;
 
@@ -37,15 +38,13 @@ public abstract class NBParser{
     }
 
     public void reset(int rule){
-//        wasHighSurrogate = false;
         stream.clear();
         location.reset();
         buffer.clear();
-        ruleStack.clear();
-        stateStack.clear();
 
-        ruleStack.push(startingRule=rule);
-        stateStack.push(0);
+        free = 2;
+        stack[0] = startingRule = rule;
+        stack[1] = 0;
     }
 
     public void reset(){
@@ -79,7 +78,7 @@ public abstract class NBParser{
                 boolean fromLookAhead = false;
                 while(true){
                     while(true){
-                        if(stateStack.isEmpty()){
+                        if(free==0){
                             if(codePoint==-1){
                                 onSuccessful();
                                 return limit;
@@ -89,11 +88,11 @@ public abstract class NBParser{
                         consumed = false;
                         int state = callRule(codePoint);
                         if(state==-1){
-                            pop();
+                            free -= 2;
                             if(lookAhead.reset())
                                 break;
                         }else{
-                            stateStack.setPeek(state);
+                            stack[free-1] = state;
                             if(!consumed && lookAhead.isEmpty()){
                                 consumed(codePoint);
                                 if(fromLookAhead)
@@ -171,18 +170,16 @@ public abstract class NBParser{
 
     /*-------------------------------------------------[ Parsing Status ]---------------------------------------------------*/
 
-    protected final IntStack ruleStack = new IntStack();
-    protected final IntStack stateStack = new IntStack();
+    protected int stack[] = new int[100];
+    protected int free = 0;
 
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
-        stateStack.setPeek(stateAfterRule);
-        ruleStack.push(toRule);
-        stateStack.push(stateInsideRule);
-    }
-
-    protected void pop(){
-        ruleStack.pop();
-        stateStack.pop();
+        stack[free-1] = stateAfterRule;
+        free += 2;
+        if(free>stack.length)
+            stack = Arrays.copyOf(stack, free*2);
+        stack[free-2] = toRule;
+        stack[free-1] = stateInsideRule;
     }
 
     public void encodingError(CoderResult coderResult) throws IOException{

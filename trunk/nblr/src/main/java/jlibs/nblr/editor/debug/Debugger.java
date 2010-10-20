@@ -234,8 +234,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         model.clear();
         if(parser!=null){
             Rule rules[] = scene.getSyntax().rules.values().toArray(new Rule[scene.getSyntax().rules.values().size()]);
-            for(int i=0; i<parser.getRuleStack().size(); i++)
-                model.insertElementAt(rules[parser.getRuleStack().peek(i)], 0);
+            for(int i=0; i<parser.free(); i+=2)
+                model.insertElementAt(rules[parser.getStack()[i]], 0);
             ruleStackList.setSelectedIndex(model.size()-1);
         }
         scroll.revalidate();
@@ -319,8 +319,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         else{
             ruleStackList.setSelectedIndex(ruleIndex);
             ArrayList<Integer> states = new ArrayList<Integer>();
-            for(int i=0; i<parser.getStateStack().size(); i++)
-                states.add(0, parser.getStateStack().peek(i));
+            for(int i=1; i<parser.free(); i+=2)
+                states.add(0, parser.getStack()[i]);
             int state = states.get(ruleIndex);
             Node node = ((Rule)rule).nodes().get(state);
             if(ruleIndex==model.getSize()-1)
@@ -338,7 +338,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
 
     /*-------------------------------------------------[ Consumer ]---------------------------------------------------*/
 
-    public void execute(int... ids) throws Exception{
+    public void execute(int rule, int... ids) throws Exception{
+        setCurrentRule(rule);
         for(int id: ids){
 //            System.out.println("hitNode("+id+")");
             Node node = currentRule.nodes().get(id);
@@ -361,25 +362,23 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         }
     }
 
-    public void currentNode(int id){
-//        System.out.println("currentNode("+id+")");
-//        System.out.println("--------------------------");
-        Node node = currentRule.nodes().get(id);
-        scene.executing(node);
-    }
-
     private Rule currentRule;
-    public void currentNode(int ruleID, int nodeID){
-        currentRule = (Rule)scene.getSyntax().rules.values().toArray()[ruleID];
-        if(scene.getRule()!=currentRule){
+    private void setCurrentRule(int rule){
+        if(scene.getRule().id!=rule){
             ignoreRuleChange = true;
             try{
-                scene.setRule(scene.getSyntax(), currentRule);
+                currentRule = (Rule)scene.getSyntax().rules.values().toArray()[rule];
+                scene.setRule(scene.getSyntax(),  currentRule);
             }finally{
                 ignoreRuleChange = false;
             }
         }
-        currentNode(nodeID);
+    }
+
+    public void currentNode(int ruleID, int nodeID){
+        setCurrentRule(ruleID);
+        Node node = currentRule.nodes().get(nodeID);
+        scene.executing(node);
     }
 
     @Override
