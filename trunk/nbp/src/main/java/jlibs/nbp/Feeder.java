@@ -43,9 +43,16 @@ public class Feeder{
 
     protected void setSource(Object source){
         this.source = source;
-        charBuffer = CharBuffer.allocate(2048);
-        if(!(source instanceof Reader))
-            byteBuffer = ByteBuffer.allocate(2048*2);
+        if(charBuffer==null)
+            charBuffer = CharBuffer.allocate(2048);
+        else
+            charBuffer.clear();
+        if(!(source instanceof Reader)){
+            if(byteBuffer==null)
+                byteBuffer = ByteBuffer.allocate(2048*2);
+            else
+                byteBuffer.clear();
+        }
     }
 
     public Object getSource(){
@@ -77,7 +84,8 @@ public class Feeder{
 
     /*-------------------------------------------------[ ByteBuffer ]---------------------------------------------------*/
 
-    protected CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
+    protected static final CharsetDecoder DEFAULT_DECODER = Charset.defaultCharset().newDecoder();
+    protected CharsetDecoder decoder = DEFAULT_DECODER;
 
     public Charset getCharset(){
         return decoder.charset();

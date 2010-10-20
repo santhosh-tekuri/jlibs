@@ -44,7 +44,17 @@ public class XMLFeeder extends Feeder{
     public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, Object source) throws IOException{
         super(parser);
         this.xmlReader = xmlReader;
-        
+        init(source);
+    }
+
+    void init(Object source) throws IOException{
+        publicID = systemID = null;
+        postAction = null;
+        decoder = DEFAULT_DECODER;
+        eofSent = false;
+        iProlog = -1;
+        child = null;
+
         if(source instanceof InputSource){
             InputSource is = (InputSource)source;
             publicID = is.getPublicId();
@@ -53,7 +63,7 @@ public class XMLFeeder extends Feeder{
                 systemURL = URLUtil.toURL(is.getSystemId());
                 systemID = systemURL.toString();
             }
-            
+
             Reader charStream = is.getCharacterStream();
             if(charStream !=null)
                 setSource(charStream);
@@ -116,7 +126,7 @@ public class XMLFeeder extends Feeder{
     // <  6  see if it has prolog
     // ==7   found declared encoding
     private int iProlog = -1;
-    private char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
+    private static char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
     CharBuffer singleChar = CharBuffer.allocate(1);
     protected void feedByteBuffer(boolean eof) throws IOException{
         if(iProlog==-1){
