@@ -16,7 +16,6 @@
 package jlibs.nblr.editor.debug;
 
 import jlibs.nbp.Buffer;
-import jlibs.nbp.IntStack;
 import jlibs.nbp.NBParser;
 
 public abstract class DebuggableNBParser extends NBParser{
@@ -25,14 +24,14 @@ public abstract class DebuggableNBParser extends NBParser{
     protected DebuggableNBParser(Debugger debugger, int maxLookAhead, int startingRule){
         super(maxLookAhead, startingRule);
         this.debugger = debugger;
-        debugger.currentNode(ruleStack.peek(), stateStack.peek());
+        debugger.currentNode(stack[free-2], stack[free-1]);
     }
 
     @Override
     protected final int callRule(int ch) throws Exception{
         int newState = _callRule(ch);
         if(newState!=-1)
-            debugger.currentNode(newState);
+            debugger.currentNode(stack[free-2], newState);
         return newState;
     }
 
@@ -42,22 +41,15 @@ public abstract class DebuggableNBParser extends NBParser{
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
         super.push(toRule, stateAfterRule, stateInsideRule);
         if(debugger!=null)
-            debugger.currentNode(ruleStack.peek(), stateStack.peek());
+            debugger.currentNode(stack[free-2], stack[free-1]);
     }
 
-    @Override
-    protected void pop(){
-        super.pop();
-        if(!ruleStack.isEmpty())
-            debugger.currentNode(ruleStack.peek(), stateStack.peek());
+    public int[] getStack(){
+        return stack;
     }
 
-    public IntStack getRuleStack(){
-        return ruleStack;
-    }
-
-    public IntStack getStateStack(){
-        return stateStack;
+    public int free(){
+        return free;
     }
 
     public Buffer getBuffer(){

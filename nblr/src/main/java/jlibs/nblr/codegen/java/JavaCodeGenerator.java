@@ -128,7 +128,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
             "private int "+rule.name+"(int ch) throws Exception{",
                 PLUS,
-                "switch(stateStack.peek()){",
+                "switch(stack[free-1]){",
                     PLUS
         );
     }
@@ -169,7 +169,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             "@Override",
             "protected int "+prefix+"callRule(int ch) throws Exception{",
                 PLUS,
-                "switch(ruleStack.peek()){",
+                "switch(stack[free-2]){",
                     PLUS
         );
     }
@@ -299,7 +299,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     private StringBuilder nodesToBeExecuted = new StringBuilder();
     private void println(String line){
         if(nodesToBeExecuted.length()>0){
-            printer.println("handler.execute("+nodesToBeExecuted+");");
+            printer.println("handler.execute(stack[free-2], "+nodesToBeExecuted+");");
             nodesToBeExecuted.setLength(0);
         }
         printer.println(line);
@@ -325,7 +325,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         for(Object obj: path){
             if(obj instanceof Node){
                 if(wasNode)
-                    println("pop();");
+                    println("free -= 2;");
                 wasNode = true;
 
                 Node node = (Node)obj;
