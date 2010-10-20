@@ -25,14 +25,17 @@ public final class Buffer{
     private final Chars data = new Chars(chars, 0, 0);
     private int count;
 
-    private final IntStack stack = new IntStack();
+    private int stack[] = new int[50];
+    private int free = 0;
 
     public boolean isBufferring(){
-        return !stack.isEmpty();
+        return free>0;
     }
 
     public void push(){
-        stack.push(count);
+        if(free>=stack.length)
+            stack = Arrays.copyOf(stack, 2*stack.length);
+        stack[free++] = count;
     }
 
     private void expandCapacity(int minimumCapacity){
@@ -63,16 +66,15 @@ public final class Buffer{
     }
 
     public Chars pop(int begin, int end){
-        begin += stack.pop();
+        begin += stack[--free];
         end = count-end;
         data.set(chars, begin, end-begin);
-        if(stack.isEmpty())
+        if(free==0)
             count = 0;
         return data;
     }
 
     public void clear(){
-        count = 0;
-        stack.clear();
+        free = count = 0;
     }
 }
