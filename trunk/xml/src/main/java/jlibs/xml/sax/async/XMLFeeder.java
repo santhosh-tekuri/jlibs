@@ -93,28 +93,30 @@ public class XMLFeeder extends Feeder{
     }
 
     private Feeder feed(CharReader reader) throws IOException{
+        parser.consume(new char[]{ ' '}, 0, 1);
+        reader.index = 0;
+        if(child!=null)
+            return child;
+
         char chars[] = reader.chars;
         int index = reader.index;
         int len = chars.length;
-        try{
-            while(index<=len){
-                char ch = index==-1||index==len ? ' ' : chars[index];
-                index++;
-                parser.consume(ch);
-                if(child!=null)
-                    return child;
-            }
-            // not EOF is not sent for CharReader
-            return child!=null ? child : parent();
-        }finally{
-            reader.index = index;
-        }
+        reader.index = parser.consume(chars, index, index+len);
+        if(child!=null)
+            return child;
+
+        parser.consume(new char[]{ ' '}, 0, 1);
+        reader.index++;
+
+        // EOF is not sent for CharReader
+        return child!=null ? child : parent();
     }
 
     // == -1 detectBOM
     // <  6  see if it has prolog
     // ==7   found declared encoding
     private int iProlog = -1;
+    private char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
     CharBuffer singleChar = CharBuffer.allocate(1);
     protected void feedByteBuffer(boolean eof) throws IOException{
         if(iProlog==-1){
@@ -138,9 +140,7 @@ public class XMLFeeder extends Feeder{
         }
         while(iProlog<6){
             if(eof){
-                String str = "<?xml ";
-                for(int i=0; i<iProlog; i++)
-                    parser.consume(str.charAt(i));
+                charBuffer.append("<?xml ", 0, iProlog);
                 super.feedByteBuffer(true);
                 return;
             }
@@ -150,21 +150,13 @@ public class XMLFeeder extends Feeder{
                 char ch = singleChar.array()[0];
                 if(isPrologStart(ch)){
                     iProlog++;
-                    if(iProlog==6){
-                        parser.consume('<');
-                        parser.consume('?');
-                        parser.consume('x');
-                        parser.consume('m');
-                        parser.consume('l');
-                        parser.consume(' ');
-                    }
+                    if(iProlog==6)
+                        parser.consume(prologStart, 0, iProlog);
                     if(coderResult.isUnderflow())
                         return;
                 }else{
-                    String str = "<?xml ";
-                    for(int i=0; i<iProlog; i++)
-                        parser.consume(str.charAt(i));
-                    parser.consume(ch);
+                    charBuffer.append("<?xml ", 0, iProlog);
+                    charBuffer.append(ch);
                     iProlog = 7;
                 }
             }else
@@ -175,8 +167,7 @@ public class XMLFeeder extends Feeder{
                 singleChar.clear();
                 CoderResult coderResult = decoder.decode(byteBuffer, singleChar, eof);
                 if(coderResult.isUnderflow() || coderResult.isOverflow()){
-                    char ch = singleChar.array()[0];
-                    parser.consume(ch);
+                    parser.consume(singleChar.array(), 0, 1);
                     if(coderResult.isUnderflow())
                         return;
                 }else

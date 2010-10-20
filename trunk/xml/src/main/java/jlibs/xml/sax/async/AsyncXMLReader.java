@@ -598,21 +598,33 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
         public XMLFeeder parse(int rule, boolean attributeValue) throws IOException, SAXException{
             if(inputSource==null){
-                XMLScanner scanner;
+                char[] chars;
                 if(attributeValue){
-                    scanner = new XMLScanner(AsyncXMLReader.this, rule){
-                        @Override
-                        public void consume(char ch) throws IOException{
-                            if(ch=='\n' || ch=='\r' || ch=='\t')
-                                ch = ' ';
-                            super.consume(ch);
+                    int len = content.length;
+                    int i=0;
+                    for(;i<len; i++){
+                        char ch = content[i];
+                        if(ch=='\n' || ch=='\r' || ch=='\t'){
+                            break;
                         }
-                    };
+                    }
+                    if(i==len)
+                        chars = this.content;
+                    else{
+                        chars = Arrays.copyOf(content, content.length);
+                        for(;i<len;i++){
+                            char ch = chars[i];
+                            if(ch=='\n' || ch=='\r' || ch=='\t')
+                                chars[i] = ' ';
+                        }
+                    }
                 }else
-                    scanner = new XMLScanner(AsyncXMLReader.this, rule);
+                    chars = this.content;
+                
+                XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
                 InputSource is = new InputSource(getSystemId());
                 is.setPublicId(getPublicId());
-                is.setCharacterStream(new CharArrayReader(content));
+                is.setCharacterStream(new CharArrayReader(chars));
                 XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is);
                 feeder.setChild(childFeeder);
                 return childFeeder;

@@ -57,6 +57,7 @@ public class Feeder{
     public void setChild(Feeder child){
         this.child = child;
         child.parent = this;
+        parser.stop = true;
     }
 
     public Feeder getParent(){
@@ -69,18 +70,9 @@ public class Feeder{
 
     /*-------------------------------------------------[ CharBuffer ]---------------------------------------------------*/
     
-    private CharBuffer charBuffer;
+    protected CharBuffer charBuffer;
     private void feedCharBuffer() throws IOException{
-        char chars[] = charBuffer.array();
-        int position = charBuffer.position();
-        int limit = charBuffer.limit();
-        while(position<limit){
-            parser.consume(chars[position]);
-            position++;
-            if(child!=null)
-                break;                
-        }
-        charBuffer.position(position);
+        charBuffer.position(parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
     }
 
     /*-------------------------------------------------[ ByteBuffer ]---------------------------------------------------*/
@@ -166,7 +158,7 @@ public class Feeder{
                 }
                 if(read==-1 && canClose()){
                     eofSent = true;
-                    parser.consume(-1);
+                    parser.eof();
                     if(child!=null)
                         return child;
                 }
@@ -214,7 +206,7 @@ public class Feeder{
                     return child;
                 if(read==-1 && canClose()){
                     eofSent = true;
-                    parser.consume(-1);
+                    parser.eof();
                     if(child!=null)
                         return child;
                 }
@@ -263,7 +255,7 @@ public class Feeder{
 
                 if(read==-1 && canClose()){
                     eofSent = true;
-                    parser.consume(-1);
+                    parser.eof();
                     if(child!=null)
                         return child;
                 }

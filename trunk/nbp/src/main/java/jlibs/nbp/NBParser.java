@@ -37,7 +37,7 @@ public abstract class NBParser{
     }
 
     public void reset(int rule){
-        wasHighSurrogate = false;
+//        wasHighSurrogate = false;
         stream.clear();
         location.reset();
         buffer.clear();
@@ -52,56 +52,67 @@ public abstract class NBParser{
         reset(startingRule);
     }
 
-    private char highSurrogate;
-    private boolean wasHighSurrogate;
-    public void consume(char ch) throws IOException{
-        if(wasHighSurrogate){
-            wasHighSurrogate = false;
-            if(ch>=MIN_LOW_SURROGATE && ch<=MAX_LOW_SURROGATE)
-                consume(((highSurrogate - MIN_HIGH_SURROGATE) << 10) + (ch - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT);
-            else
-                ioError("bad surrogate pair");
-        }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE){
-            highSurrogate = ch;
-            wasHighSurrogate = true;
-        }else
-            consume((int)ch);
-    }
-
-    public void consume(int codePoint) throws IOException{
+    public boolean stop;
+    public int consume(char chars[], int position, int limit) throws IOException{
         try{
-            boolean fromLookAhead = false;
-            while(true){
-                while(true){
-                    if(stateStack.isEmpty()){
-                        if(codePoint==-1){
-                            onSuccessful();
-                            return;
+            stop = false;
+            while(position<limit){
+                int codePoint = -1;
+
+                if(chars!=null){
+                    char ch0 = chars[position];
+                    if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
+                        if(position+1==limit)
+                            return position;
+                        char ch1 = chars[position+1];
+                        if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
+                            codePoint = ((ch0 - MIN_HIGH_SURROGATE) << 10) + (ch1 - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
+                            position += 2;
                         }else
-                            expected(codePoint, "<EOF>");
-                    }
-                    consumed = false;
-                    int state = callRule(codePoint);
-                    if(state==-1){
-                        pop();
-                        if(lookAhead.reset())
-                            break;
+                            ioError("bad surrogate pair");
                     }else{
-                        stateStack.setPeek(state);
-                        if(!consumed && lookAhead.isEmpty()){
-                            consumed(codePoint);
-                            if(fromLookAhead)
-                                lookAhead.consumed();
-                        }
-                        break;
+                        codePoint = ch0;
+                        position++;
                     }
                 }
+                
+                boolean fromLookAhead = false;
+                while(true){
+                    while(true){
+                        if(stateStack.isEmpty()){
+                            if(codePoint==-1){
+                                onSuccessful();
+                                return limit;
+                            }else
+                                expected(codePoint, "<EOF>");
+                        }
+                        consumed = false;
+                        int state = callRule(codePoint);
+                        if(state==-1){
+                            pop();
+                            if(lookAhead.reset())
+                                break;
+                        }else{
+                            stateStack.setPeek(state);
+                            if(!consumed && lookAhead.isEmpty()){
+                                consumed(codePoint);
+                                if(fromLookAhead)
+                                    lookAhead.consumed();
+                            }
+                            break;
+                        }
+                    }
 
-                codePoint = lookAhead.getNext();
-                if(codePoint==-2)
-                    return;
-                fromLookAhead = true;
+                    codePoint = lookAhead.getNext();
+                    if(codePoint==-2)
+                        break;
+                    fromLookAhead = true;
+                }
+
+                if(stop)
+                    break;
             }
+            return position;
         }catch(IOException ex){
             throw ex;
         }catch(Exception ex){
@@ -110,6 +121,10 @@ public abstract class NBParser{
             else
                 throw new IOException(ex);
         }
+    }
+
+    public void eof() throws IOException{
+        consume(null, 0, 1);
     }
 
     protected abstract int callRule(int ch) throws Exception;
