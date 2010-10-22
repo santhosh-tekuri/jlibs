@@ -23,6 +23,7 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class Routes{
+    public final Rule rule;
     public final Node fromNode;
     public final Paths paths;
     public final int maxLookAhead;
@@ -31,7 +32,8 @@ public class Routes{
     public final Path routeStartingWithEOF;
 
     @SuppressWarnings({"unchecked"})
-    public Routes(Node fromNode){
+    public Routes(Rule rule, Node fromNode){
+        this.rule = rule;
         this.fromNode = fromNode;
         this.paths = Paths.travel(fromNode);
 
@@ -134,5 +136,28 @@ public class Routes{
         if(buff.length()>0)
             buff.append(" OR ");
         buff.append(route);
+    }
+
+    public boolean isEOF(){
+        if(maxLookAhead>1)
+            return false;
+        if(determinateRoutes.size()>0)
+            return false;
+        if(indeterminateRoute!=null)
+            return false;
+        for(Object obj: routeStartingWithEOF){
+            if(obj instanceof Node){
+                Node node = (Node)obj;
+                if(node.action!=null)
+                    return false;
+            }else if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.ruleTarget!=null)
+                    return false;
+                else if(edge.matcher!=null)
+                    return false;
+            }
+        }
+        return true;
     }
 }

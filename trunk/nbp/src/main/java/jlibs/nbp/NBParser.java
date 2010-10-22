@@ -25,6 +25,8 @@ import static java.lang.Character.*;
  * @author Santhosh Kumar T
  */
 public abstract class NBParser{
+    private static final boolean SHOW_STATS = false;
+    
     private final Stream stream;
     protected final Stream.LookAhead lookAhead;
     public final Location location = new Location();
@@ -51,6 +53,7 @@ public abstract class NBParser{
         reset(startingRule);
     }
 
+    private int callRuleCount = 0;
     public boolean stop;
     public int consume(char chars[], int position, int limit) throws IOException{
         try{
@@ -81,25 +84,37 @@ public abstract class NBParser{
                         if(free==0){
                             if(codePoint==-1){
                                 onSuccessful();
+                                if(SHOW_STATS){
+                                    System.out.println("callRuleCount = " + callRuleCount);
+                                    System.out.println("offset: "+location.getCharacterOffset());
+                                }
                                 return limit;
                             }else
                                 expected(codePoint, "<EOF>");
                         }
                         consumed = false;
+
+                        if(SHOW_STATS)
+                            callRuleCount++;
                         int state = callRule(codePoint);
-                        if(state==-1){
+                        stack[free-1] = state;
+
+                        while(free!=0 && stack[free-1]<0)
                             free -= 2;
-                            if(lookAhead.reset())
-                                break;
-                        }else{
-                            stack[free-1] = state;
+
+                        if(state!=-1){
                             if(!consumed && lookAhead.isEmpty()){
                                 consumed(codePoint);
                                 if(fromLookAhead)
                                     lookAhead.consumed();
                             }
-                            break;
                         }
+                        if(state<0){
+                            if(lookAhead.reset())
+                                break;
+                        }
+                        if(state!=-1)
+                            break;
                     }
 
                     codePoint = lookAhead.getNext();

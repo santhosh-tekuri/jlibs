@@ -92,7 +92,7 @@ public class NBLREditor extends JFrame{
                 if(model instanceof Node){
                     Node node = (Node)model;
                     try{
-                        msg = new Routes(node).toString();
+                        msg = new Routes(scene.getRule(), node).toString();
                     }catch(IllegalStateException ex){
                         msg = ex.getMessage();
                     }

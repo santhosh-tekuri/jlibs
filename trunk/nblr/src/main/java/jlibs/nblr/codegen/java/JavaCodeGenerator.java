@@ -24,7 +24,9 @@ import jlibs.nblr.matchers.Not;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -153,7 +155,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
                     "default:",
                         PLUS,
-                        "throw new Error(\"impossible\");",
+                        "throw new Error(\"impossible state: \"+stack[free-1]);",
                         MINUS,
                     MINUS,
                 "}",
@@ -184,8 +186,11 @@ public class JavaCodeGenerator extends CodeGenerator{
         finishRuleMethod(null);
     }
 
+    private Rule curRule;
+    
     @Override
     protected void addRoutes(Routes routes){
+        curRule = routes.rule;
         String expected = "expected(ch, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
@@ -220,9 +225,9 @@ public class JavaCodeGenerator extends CodeGenerator{
             Matcher matcher = path.matcher();
             startIf(matcher, 0);
 
-            int state = _travelPath(path, true);
+            Destination dest = _travelPath(curRule, path, true);
             println("lookAhead.reset();");
-            println("return "+ state +';');
+            println("return "+ dest.state() +';');
 
             endIf(1);
         }
@@ -306,26 +311,52 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void travelRoute(Path route, boolean consumeLookAhead){
-        int state = -1;
+        Destination dest = new Destination(curRule, null);
         for(Path path: route.route())
-            state = _travelPath(path, consumeLookAhead);
-        println("return "+ state +';');
+            dest = _travelPath(dest.rule, path, consumeLookAhead);
+        println("return "+ dest.state() +';');
     }
 
     private void travelPath(Path path, boolean consumeLookAhead){
-        int state = _travelPath(path, consumeLookAhead);
-        println("return "+ state +';');
+        Destination dest = _travelPath(curRule, path, consumeLookAhead);
+        println("return "+ dest.state() +';');
     }
 
-    private int _travelPath(Path path, boolean consumeLookAhead){
+    class Destination{
+        Rule rule;
+        Node node;
+
+        Destination(Rule rule, Node node){
+            this.rule = rule;
+            this.node = node;
+        }
+
+        public int state(){
+            if(node==null)
+                return -1;
+            else{
+                if(debuggable)
+                    return node.id;
+                else
+                    return new Routes(rule, node).isEOF() ? -2 : node.id;
+            }
+        }
+    }
+    
+    private Destination _travelPath(Rule rule, Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
 
-        int nextState = -1;
+        Deque<Rule> ruleStack = new ArrayDeque<Rule>();
+        ruleStack.push(rule);
+        Node destNode = null;
+
         boolean wasNode = false;
         for(Object obj: path){
             if(obj instanceof Node){
-                if(wasNode)
+                if(wasNode){
                     println("free -= 2;");
+                    ruleStack.pop();
+                }
                 wasNode = true;
 
                 Node node = (Node)obj;
@@ -338,17 +369,20 @@ public class JavaCodeGenerator extends CodeGenerator{
             }else if(obj instanceof Edge){
                 wasNode = false;
                 Edge edge = (Edge)obj;
-                if(edge.ruleTarget!=null)
-                    println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+edge.target.id+", "+edge.ruleTarget.node().id+");");
+                if(edge.ruleTarget!=null){
+                    int stateAfterRule = new Destination(ruleStack.peek(), edge.target).state();// edge.target.id;
+                    println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
+                    ruleStack.push(edge.ruleTarget.rule);
+                }
                 else if(edge.matcher!=null){
-                    nextState = edge.target.id;
+                    destNode = edge.target;
                     if(consumeLookAhead)
                         println("consumed();");
                     break;
                 }
             }
         }
-        return nextState;
+        return new Destination(ruleStack.peek(), destNode);
     }
 
     /*-------------------------------------------------[ Handler ]---------------------------------------------------*/
