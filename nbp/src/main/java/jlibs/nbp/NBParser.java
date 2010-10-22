@@ -16,7 +16,6 @@
 package jlibs.nbp;
 
 import java.io.IOException;
-import java.nio.charset.CoderResult;
 import java.util.Arrays;
 
 import static java.lang.Character.*;
@@ -39,7 +38,7 @@ public abstract class NBParser{
         reset(startingRule);
     }
 
-    public void reset(int rule){
+    public final void reset(int rule){
         stream.clear();
         location.reset();
         buffer.clear();
@@ -49,8 +48,77 @@ public abstract class NBParser{
         stack[1] = 0;
     }
 
-    public void reset(){
+    public final void reset(){
         reset(startingRule);
+    }
+
+    private char input[];
+    private int position;
+    private int limit;
+    
+    private int increment;
+    protected final int codePoint() throws IOException{
+        int cp  = lookAhead.getNext();
+        if(cp!=-2){
+            increment = 0;
+            return cp;
+        }
+        if(position==limit){
+            assert input!=null;
+            increment = 0;
+            return -2;
+        }
+
+        if(input==null){
+            increment = 1;
+            return -1;
+        }
+
+        char ch0 = input[position];
+        if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
+            if(position+1==limit){
+                increment = 0;
+                return -2;
+            }
+
+            char ch1 = input[position+1];
+            if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
+                increment = 2;
+                return ((ch0 - MIN_HIGH_SURROGATE) << 10) + (ch1 - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
+            }else{
+                ioError("bad surrogate pair");
+                throw new Error("Impossible");
+            }
+        }else{
+            increment = 1;
+            return ch0;
+        }
+    }
+
+    public boolean coelsceNewLines = false;
+    protected final void consume(int cp){
+        if(stream.length()>0){
+            if(cp==-2)
+                cp = stream.charAt(0);
+            lookAhead.consumed();
+        }else{
+            position += increment;
+        }
+        if(cp!=-1){
+            if(coelsceNewLines){
+                if(location.consume(cp) && buffer.isBufferring())
+                    buffer.append(cp=='\r' ? '\n' : cp);
+            }else{
+                location.consume(cp);
+                if(buffer.isBufferring())
+                    buffer.append(cp);
+            }
+        }
+    }
+
+    protected void addToLookAhead(int cp){
+        if(lookAhead.add(cp))
+            position += increment;
     }
 
     private int callRuleCount = 0;
@@ -58,75 +126,44 @@ public abstract class NBParser{
     public int consume(char chars[], int position, int limit) throws IOException{
         try{
             stop = false;
-            while(position<limit){
-                int codePoint = -1;
+            input = chars;
+            this.position = position;
+            this.limit = limit;
 
-                if(chars!=null){
-                    char ch0 = chars[position];
-                    if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
-                        if(position+1==limit)
-                            return position;
-                        char ch1 = chars[position+1];
-                        if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
-                            codePoint = ((ch0 - MIN_HIGH_SURROGATE) << 10) + (ch1 - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
-                            position += 2;
-                        }else
-                            ioError("bad surrogate pair");
-                    }else{
-                        codePoint = ch0;
-                        position++;
-                    }
-                }
-                
-                boolean fromLookAhead = false;
-                while(true){
-                    while(true){
-                        if(free==0){
-                            if(codePoint==-1){
-                                onSuccessful();
-                                if(SHOW_STATS){
-                                    System.out.println("callRuleCount = " + callRuleCount);
-                                    System.out.println("offset: "+location.getCharacterOffset());
-                                }
-                                return limit;
-                            }else
-                                expected(codePoint, "<EOF>");
-                        }
-                        consumed = false;
-
-                        if(SHOW_STATS)
-                            callRuleCount++;
-                        int state = callRule(codePoint);
-                        stack[free-1] = state;
-
-                        while(free!=0 && stack[free-1]<0)
-                            free -= 2;
-
-                        if(state!=-1){
-                            if(!consumed && lookAhead.isEmpty()){
-                                consumed(codePoint);
-                                if(fromLookAhead)
-                                    lookAhead.consumed();
-                            }
-                        }
-                        if(state<0){
-                            if(lookAhead.reset())
-                                break;
-                        }
-                        if(state!=-1)
-                            break;
-                    }
-
-                    codePoint = lookAhead.getNext();
-                    if(codePoint==-2)
-                        break;
-                    fromLookAhead = true;
-                }
-
-                if(stop)
-                    break;
+            if(free==0){
+                int cp = codePoint();
+                if(cp==-1)
+                    return 1;
+                else
+                    expected(cp, "<EOF>");
             }
-            return position;
+            
+            if(SHOW_STATS)
+                callRuleCount++;
+            while(callRule()){
+                if(stack[free-1]<0)
+                    lookAhead.reset();
+                while(free!=0 && stack[free-1]<0)
+                    free -= 2;
+                if(free==0){
+                    int cp = codePoint();
+                    if(cp==-1)
+                        this.position = 1;
+                    else
+                        expected(cp, "<EOF>");
+                    break;
+                }
+                if(SHOW_STATS)
+                    callRuleCount++;
+            }
+            if(chars==null && this.position==limit){
+                onSuccessful();
+                if(SHOW_STATS){
+                    System.out.println("callRuleCount = " + callRuleCount);
+                    System.out.println("offset = " + location.getCharacterOffset());
+                }
+            }
+            return this.position;
         }catch(IOException ex){
             throw ex;
         }catch(Exception ex){
@@ -141,7 +178,7 @@ public abstract class NBParser{
         consume(null, 0, 1);
     }
 
-    protected abstract int callRule(int ch) throws Exception;
+    protected abstract boolean callRule() throws Exception;
 
     protected void expected(int ch, String... matchers) throws Exception{
         String found;
@@ -195,10 +232,6 @@ public abstract class NBParser{
             stack = Arrays.copyOf(stack, free*2);
         stack[free-2] = toRule;
         stack[free-1] = stateInsideRule;
-    }
-
-    public void encodingError(CoderResult coderResult) throws IOException{
-        ioError(coderResult.isMalformed() ? "Malformed Input" : "Unmappable Character");
     }
 
     protected void ioError(String message) throws IOException{
