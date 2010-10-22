@@ -16,47 +16,28 @@
 package jlibs.nbp;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CoderResult;
 
 /**
  * @author Santhosh Kumar T
  */
 public class Feeder{
+    public static final int DEFAULT_BUFFER_SIZE = 8192;
+    
     public final NBParser parser;
-    protected Object source;
+    protected ReadableCharChannel channel;
 
-    public Feeder(NBParser parser, Object source){
+    public Feeder(NBParser parser, ReadableCharChannel channel){
         this(parser);
-        setSource(source);
+        this.channel = channel;
     }
 
     protected Feeder(NBParser parser){
         this.parser = parser;
     }
 
-    protected void setSource(Object source){
-        this.source = source;
-        if(charBuffer==null)
-            charBuffer = CharBuffer.allocate(2048);
-        else
-            charBuffer.clear();
-        if(!(source instanceof Reader)){
-            if(byteBuffer==null)
-                byteBuffer = ByteBuffer.allocate(2048*2);
-            else
-                byteBuffer.clear();
-        }
-    }
-
-    public Object getSource(){
-        return source;
+    public ReadableCharChannel channel(){
+        return channel;
     }
 
     protected Feeder child;
@@ -71,44 +52,15 @@ public class Feeder{
         return parent;
     }
 
-    private boolean canClose(){
+    protected boolean canClose(){
         return parent==null || this.parser!=parent.parser;
     }
 
     /*-------------------------------------------------[ CharBuffer ]---------------------------------------------------*/
     
-    protected CharBuffer charBuffer;
-    private void feedCharBuffer() throws IOException{
+    protected CharBuffer charBuffer = CharBuffer.allocate(DEFAULT_BUFFER_SIZE);
+    protected void feedCharBuffer() throws IOException{
         charBuffer.position(parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
-    }
-
-    /*-------------------------------------------------[ ByteBuffer ]---------------------------------------------------*/
-
-    protected static final CharsetDecoder DEFAULT_DECODER = Charset.defaultCharset().newDecoder();
-    protected CharsetDecoder decoder = DEFAULT_DECODER;
-
-    public Charset getCharset(){
-        return decoder.charset();
-    }
-
-    public void setCharset(Charset charset){
-        decoder = charset.newDecoder();
-    }
-
-    protected ByteBuffer byteBuffer;
-    protected void feedByteBuffer(boolean eof) throws IOException{
-        while(true){
-            CoderResult cr = byteBuffer.hasRemaining() ? decoder.decode(byteBuffer, charBuffer, eof) : CoderResult.UNDERFLOW;
-            charBuffer.flip();
-            feedCharBuffer();
-            charBuffer.compact();
-            if(child!=null)
-                break;
-            if(cr.isUnderflow())
-                break;
-            else if(!cr.isOverflow())
-                parser.encodingError(cr);
-        }
     }
 
     /*-------------------------------------------------[ Eating ]---------------------------------------------------*/
@@ -120,31 +72,23 @@ public class Feeder{
     }
 
     public Feeder feed() throws IOException{
-        Feeder current = this;
-        Feeder next;
-        do{
-            next = current._feed();
-            if(next==current)
-                return current;
-            current = next;
-        }while(current!=null);
-
+        try{
+            Feeder current = this;
+            Feeder next;
+            do{
+                next = current.read();
+                if(next==current)
+                    return current;
+                current = next;
+            }while(current!=null);
+        }catch(IOException ex){
+            parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
+        }
         return null;
     }
 
-    protected Feeder _feed() throws IOException{
-        if(source instanceof Reader)
-            return feed((Reader)source);
-        else if(source instanceof InputStream)
-            return feed((InputStream)source);
-        else if(source instanceof ReadableByteChannel)
-            return feed((ReadableByteChannel)source);
-        else
-            throw new IOException("Invalid Source: "+source.getClass());
-    }
-    
     protected boolean eofSent;
-    private Feeder feed(Reader reader) throws IOException{
+    protected Feeder read() throws IOException{
         if(charBuffer.position()>0){
             charBuffer.flip();
             feedCharBuffer();
@@ -156,111 +100,13 @@ public class Feeder{
         int read = eofSent ? -1 : 0;
         try{
             if(!eofSent){
-                while((read=reader.read(charBuffer.array(), charBuffer.position(), charBuffer.remaining()))>0){
-                    charBuffer.position(read);
+                while((read=channel.read(charBuffer))>0){
                     charBuffer.flip();
                     feedCharBuffer();
                     charBuffer.compact();
                     if(child!=null)
                         return child;
                 }
-                if(read==-1 && canClose()){
-                    eofSent = true;
-                    parser.eof();
-                    if(child!=null)
-                        return child;
-                }
-            }
-            return read==-1 ? parent() : this;
-        }finally{
-            try{
-                if(child==null && read==-1){
-                    if(canClose())
-                        parser.reset();
-                    reader.close();
-                }
-            } catch(IOException e){
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private Feeder feed(InputStream stream) throws IOException{
-        if(charBuffer.position()>0){
-            charBuffer.flip();
-            feedCharBuffer();
-            charBuffer.compact();
-            if(child!=null)
-                return child;
-        }
-
-        int read = eofSent ? -1 : 0;
-        try{
-            if(!eofSent){
-                while((read=stream.read(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining()))>0){
-                    byteBuffer.position(read);
-                    byteBuffer.flip();
-                    feedByteBuffer(false);
-                    byteBuffer.compact();
-                    if(child!=null)
-                        return child;
-                }
-                if(read==-1){
-                    byteBuffer.flip();
-                    feedByteBuffer(true);
-                    byteBuffer.compact();
-                }
-                if(child!=null)
-                    return child;
-                if(read==-1 && canClose()){
-                    eofSent = true;
-                    parser.eof();
-                    if(child!=null)
-                        return child;
-                }
-            }
-
-            return read==-1 ? parent() : this;
-        }finally{
-            try{
-                if(child==null && read==-1){
-                    if(canClose())
-                        parser.reset();
-                    stream.close();
-                }
-            } catch(IOException e){
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private Feeder feed(ReadableByteChannel channel) throws IOException{
-        if(charBuffer.position()>0){
-            charBuffer.flip();
-            feedCharBuffer();
-            charBuffer.compact();
-            if(child!=null)
-                return child;
-        }
-
-        int read = eofSent ? -1 : 0;
-        try{
-            if(!eofSent){
-                while((read=channel.read(byteBuffer))>0){
-                    byteBuffer.flip();
-                    feedByteBuffer(false);
-                    byteBuffer.compact();
-                    if(child!=null)
-                        return child;
-                }
-                if(read==-1){
-                    byteBuffer.flip();
-                    feedByteBuffer(true);
-                    byteBuffer.compact();
-                }
-                if(child!=null)
-                    return child;
-
                 if(read==-1 && canClose()){
                     eofSent = true;
                     parser.eof();
