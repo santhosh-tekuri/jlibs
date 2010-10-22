@@ -142,6 +142,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
                 return;
             }
 
+            currentRule = scene.getRule();
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
             Class clazz = classLoader.loadClass(parserName);
             parser = (DebuggableNBParser)clazz.getConstructor(getClass(), int.class).newInstance(this, scene.getRule().id);
@@ -235,7 +236,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
         if(parser!=null){
             Rule rules[] = scene.getSyntax().rules.values().toArray(new Rule[scene.getSyntax().rules.values().size()]);
             for(int i=0; i<parser.free(); i+=2)
-                model.insertElementAt(rules[parser.getStack()[i]], 0);
+                model.addElement(rules[parser.getStack()[i]]);
             ruleStackList.setSelectedIndex(model.size()-1);
         }
         scroll.revalidate();
@@ -320,7 +321,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             ruleStackList.setSelectedIndex(ruleIndex);
             ArrayList<Integer> states = new ArrayList<Integer>();
             for(int i=1; i<parser.free(); i+=2)
-                states.add(0, parser.getStack()[i]);
+                states.add(parser.getStack()[i]);
             int state = states.get(ruleIndex);
             Node node = ((Rule)rule).nodes().get(state);
             if(ruleIndex==model.getSize()-1)
@@ -341,7 +342,6 @@ public class Debugger extends JPanel implements NBHandler, Observer{
     public void execute(int rule, int... ids) throws Exception{
         setCurrentRule(rule);
         for(int id: ids){
-//            System.out.println("hitNode("+id+")");
             Node node = currentRule.nodes().get(id);
             if(node.action== BufferAction.INSTANCE){
                 System.out.println("BUFFERRING");
