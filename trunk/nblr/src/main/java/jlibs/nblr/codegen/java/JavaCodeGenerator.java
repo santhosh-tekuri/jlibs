@@ -128,10 +128,21 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void startRuleMethod(Rule rule){
         printer.printlns(
-            "private int "+rule.name+"(int ch) throws Exception{",
+            "private boolean "+rule.name+"() throws Exception{",
                 PLUS,
-                "switch(stack[free-1]){",
-                    PLUS
+                "int state = stack[free-1];",
+                "while(true){",
+                    PLUS,
+                    "int ch;",
+                    "if(stop || (ch=codePoint())==-2){",
+                        PLUS,
+                        "stack[free-1] = state;",
+                        "return false;",
+                        MINUS,
+                    "}",
+                    "",
+                    "switch(state){",
+                        PLUS
         );
     }
 
@@ -153,10 +164,12 @@ public class JavaCodeGenerator extends CodeGenerator{
     @Override
     protected void finishRuleMethod(Rule rule){
         printer.printlns(
-                    "default:",
-                        PLUS,
-                        "throw new Error(\"impossible state: \"+stack[free-1]);",
+                        "default:",
+                            PLUS,
+                            "throw new Error(\"impossible state: \"+state);",
+                            MINUS,
                         MINUS,
+                    "}",
                     MINUS,
                 "}",
                 MINUS,
@@ -169,7 +182,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String prefix = debuggable ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected int "+prefix+"callRule(int ch) throws Exception{",
+            "protected final boolean "+prefix+"callRule() throws Exception{",
                 PLUS,
                 "switch(stack[free-2]){",
                     PLUS
@@ -178,12 +191,21 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void callRuleMethod(String ruleName){
-        printer.println("return "+ruleName+"(ch);");
+        printer.println("return "+ruleName+"();");
     }
 
     @Override
     protected void finishCallRuleMethod(){
-        finishRuleMethod(null);
+        printer.printlns(
+                    "default:",
+                        PLUS,
+                        "throw new Error(\"impossible rule: \"+stack[free-2]);",
+                        MINUS,
+                    MINUS,
+                "}",
+                MINUS,
+            "}"
+        );
     }
 
     private Rule curRule;
@@ -195,14 +217,14 @@ public class JavaCodeGenerator extends CodeGenerator{
 
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
         if(lookAheadBufferReqd)
-            printer.printlns("lookAhead.add(ch);");
+            printer.printlns("addToLookAhead(ch);");
 
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 printer.printlns(
                     "if(ch!=-1 && lookAhead.length()<"+lookAhead+")",
                         PLUS,
-                        "return "+routes.fromNode.id+";",
+                        "continue;",
                         MINUS
                 );
 
@@ -227,7 +249,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
             Destination dest = _travelPath(curRule, path, true);
             println("lookAhead.reset();");
-            println("return "+ dest.state() +';');
+            returnDestination(dest);
 
             endIf(1);
         }
@@ -311,22 +333,44 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void travelRoute(Path route, boolean consumeLookAhead){
-        Destination dest = new Destination(curRule, null);
+        Destination dest = new Destination(consumeLookAhead, curRule, null);
         for(Path path: route.route())
             dest = _travelPath(dest.rule, path, consumeLookAhead);
-        println("return "+ dest.state() +';');
+        returnDestination(dest);
     }
 
     private void travelPath(Path path, boolean consumeLookAhead){
         Destination dest = _travelPath(curRule, path, consumeLookAhead);
-        println("return "+ dest.state() +';');
+        returnDestination(dest);
+    }
+
+    private void returnDestination(Destination dest){
+        int state = dest.state();
+        if(state<0){
+            if(state==-2 && !dest.consumedFromLookAhead)
+                println("consume(ch);");
+            println("stack[free-1] = -1;");
+            println("return true;");
+        }else if(dest.rule==curRule){
+            println("state = "+state+";");
+            if(!dest.consumedFromLookAhead)
+                println("consume(ch);");
+            println("continue;");
+        }else{
+            if(!dest.consumedFromLookAhead)
+                println("consume(ch);");
+            println("stack[free-1] = "+state+";");
+            println("return true;");
+        }
     }
 
     class Destination{
+        boolean consumedFromLookAhead;
         Rule rule;
         Node node;
 
-        Destination(Rule rule, Node node){
+        Destination(boolean consumedFromLookAhead, Rule rule, Node node){
+            this.consumedFromLookAhead = consumedFromLookAhead;
             this.rule = rule;
             this.node = node;
         }
@@ -370,19 +414,21 @@ public class JavaCodeGenerator extends CodeGenerator{
                 wasNode = false;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null){
-                    int stateAfterRule = new Destination(ruleStack.peek(), edge.target).state();// edge.target.id;
+                    int stateAfterRule = new Destination(consumeLookAhead, ruleStack.peek(), edge.target).state();
+                    if(stateAfterRule==-2)
+                        stateAfterRule = -1;
                     println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
                     ruleStack.push(edge.ruleTarget.rule);
                 }
                 else if(edge.matcher!=null){
                     destNode = edge.target;
                     if(consumeLookAhead)
-                        println("consumed();");
+                        println("consume(-2);");
                     break;
                 }
             }
         }
-        return new Destination(ruleStack.peek(), destNode);
+        return new Destination(consumeLookAhead, ruleStack.peek(), destNode);
     }
 
     /*-------------------------------------------------[ Handler ]---------------------------------------------------*/

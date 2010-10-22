@@ -60,6624 +60,9117 @@ public class XMLScanner extends jlibs.nbp.NBParser{
     /*-------------------------------------------------[ Rules ]---------------------------------------------------*/
 
     public static final int RULE_EQ = 0;
-    private int eq(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='='){
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 0;
-                }
-                expected(ch, "[=] OR <WS>");
-            case 1:
-                if(WS(ch)){
-                    return 1;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean eq() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='='){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 0;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[=] OR <WS>");
+                case 1:
+                    if(WS(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_YES_NO = 1;
-    private int yes_no(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='y'){
-                    buffer.push();
-                    return 1;
-                }
-                if(ch=='n'){
-                    buffer.push();
-                    return 4;
-                }
-                expected(ch, "[y] OR [n]");
-            case 1:
-                if(ch=='e'){
-                    return 2;
-                }
-                expected(ch, "[e]");
-            case 2:
-                if(ch=='s'){
-                    return 3;
-                }
-                expected(ch, "[s]");
-            case 3:
-                handler.standalone(buffer.pop(0, 0));
-                return -1;
-            case 4:
-                if(ch=='o'){
-                    return 3;
-                }
-                expected(ch, "[o]");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean yes_no() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='y'){
+                        buffer.push();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='n'){
+                        buffer.push();
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[y] OR [n]");
+                case 1:
+                    if(ch=='e'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[e]");
+                case 2:
+                    if(ch=='s'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[s]");
+                case 3:
+                    handler.standalone(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    if(ch=='o'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[o]");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_SD_DECL = 2;
-    private int sd_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='s'){
-                    return 1;
-                }
-                expected(ch, "[s]");
-            case 1:
-                if(ch=='t'){
-                    return 2;
-                }
-                expected(ch, "[t]");
-            case 2:
-                if(ch=='a'){
-                    return 3;
-                }
-                expected(ch, "[a]");
-            case 3:
-                if(ch=='n'){
-                    return 4;
-                }
-                expected(ch, "[n]");
-            case 4:
-                if(ch=='d'){
-                    return 5;
-                }
-                expected(ch, "[d]");
-            case 5:
-                if(ch=='a'){
-                    return 6;
-                }
-                expected(ch, "[a]");
-            case 6:
-                if(ch=='l'){
-                    return 7;
-                }
-                expected(ch, "[l]");
-            case 7:
-                if(ch=='o'){
-                    return 8;
-                }
-                expected(ch, "[o]");
-            case 8:
-                if(ch=='n'){
-                    return 9;
-                }
-                expected(ch, "[n]");
-            case 9:
-                if(ch=='e'){
-                    return 10;
-                }
-                expected(ch, "[e]");
-            case 10:
-                if(ch=='='){
-                    push(RULE_EQ, 11, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    push(RULE_EQ, 11, 0);
-                    return 0;
-                }
-                expected(ch, "[=] OR <WS>");
-            case 11:
-                if(ch=='\''){
-                    return 12;
-                }
-                if(ch=='"'){
-                    return 15;
-                }
-                expected(ch, "<Q> OR <DQ>");
-            case 12:
-                if(ch=='y'){
-                    push(RULE_YES_NO, 13, 0);
-                    buffer.push();
-                    return 1;
-                }
-                if(ch=='n'){
-                    push(RULE_YES_NO, 13, 0);
-                    buffer.push();
-                    return 4;
-                }
-                expected(ch, "[y] OR [n]");
-            case 13:
-                if(ch=='\''){
-                    return -2;
-                }
-                expected(ch, "<Q>");
-            case 14:
-                // EOF-State
-                return -1;
-            case 15:
-                if(ch=='y'){
-                    push(RULE_YES_NO, 16, 0);
-                    buffer.push();
-                    return 1;
-                }
-                if(ch=='n'){
-                    push(RULE_YES_NO, 16, 0);
-                    buffer.push();
-                    return 4;
-                }
-                expected(ch, "[y] OR [n]");
-            case 16:
-                if(ch=='"'){
-                    return -2;
-                }
-                expected(ch, "<DQ>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean sd_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='s'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[s]");
+                case 1:
+                    if(ch=='t'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[t]");
+                case 2:
+                    if(ch=='a'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[a]");
+                case 3:
+                    if(ch=='n'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[n]");
+                case 4:
+                    if(ch=='d'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[d]");
+                case 5:
+                    if(ch=='a'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[a]");
+                case 6:
+                    if(ch=='l'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[l]");
+                case 7:
+                    if(ch=='o'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[o]");
+                case 8:
+                    if(ch=='n'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[n]");
+                case 9:
+                    if(ch=='e'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[e]");
+                case 10:
+                    if(ch=='='){
+                        push(RULE_EQ, 11, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EQ, 11, 0);
+                        consume(ch);
+                        stack[free-1] = 0;
+                        return true;
+                    }
+                    expected(ch, "[=] OR <WS>");
+                case 11:
+                    if(ch=='\''){
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ>");
+                case 12:
+                    if(ch=='y'){
+                        push(RULE_YES_NO, 13, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='n'){
+                        push(RULE_YES_NO, 13, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "[y] OR [n]");
+                case 13:
+                    if(ch=='\''){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<Q>");
+                case 14:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 15:
+                    if(ch=='y'){
+                        push(RULE_YES_NO, 16, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='n'){
+                        push(RULE_YES_NO, 16, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "[y] OR [n]");
+                case 16:
+                    if(ch=='"'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<DQ>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENC_NAME = 3;
-    private int enc_name(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ENCODING_START(ch)){
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "<ENCODING_START>");
-            case 1:
-                if(ENCODING_PART(ch)){
-                    return 1;
-                }
-                handler.encoding(buffer.pop(0, 0));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean enc_name() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ENCODING_START(ch)){
+                        buffer.push();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<ENCODING_START>");
+                case 1:
+                    if(ENCODING_PART(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.encoding(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENC_DECL = 4;
-    private int enc_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='e'){
-                    return 1;
-                }
-                expected(ch, "[e]");
-            case 1:
-                if(ch=='n'){
-                    return 2;
-                }
-                expected(ch, "[n]");
-            case 2:
-                if(ch=='c'){
-                    return 3;
-                }
-                expected(ch, "[c]");
-            case 3:
-                if(ch=='o'){
-                    return 4;
-                }
-                expected(ch, "[o]");
-            case 4:
-                if(ch=='d'){
-                    return 5;
-                }
-                expected(ch, "[d]");
-            case 5:
-                if(ch=='i'){
-                    return 6;
-                }
-                expected(ch, "[i]");
-            case 6:
-                if(ch=='n'){
-                    return 7;
-                }
-                expected(ch, "[n]");
-            case 7:
-                if(ch=='g'){
-                    return 8;
-                }
-                expected(ch, "[g]");
-            case 8:
-                if(ch=='='){
-                    push(RULE_EQ, 9, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    push(RULE_EQ, 9, 0);
-                    return 0;
-                }
-                expected(ch, "[=] OR <WS>");
-            case 9:
-                if(ch=='\''){
-                    return 10;
-                }
-                if(ch=='"'){
-                    return 13;
-                }
-                expected(ch, "<Q> OR <DQ>");
-            case 10:
-                if(ENCODING_START(ch)){
-                    push(RULE_ENC_NAME, 11, 0);
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "<ENCODING_START>");
-            case 11:
-                if(ch=='\''){
-                    return -2;
-                }
-                expected(ch, "<Q>");
-            case 12:
-                // EOF-State
-                return -1;
-            case 13:
-                if(ENCODING_START(ch)){
-                    push(RULE_ENC_NAME, 14, 0);
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "<ENCODING_START>");
-            case 14:
-                if(ch=='"'){
-                    return -2;
-                }
-                expected(ch, "<DQ>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean enc_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='e'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[e]");
+                case 1:
+                    if(ch=='n'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[n]");
+                case 2:
+                    if(ch=='c'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[c]");
+                case 3:
+                    if(ch=='o'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[o]");
+                case 4:
+                    if(ch=='d'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[d]");
+                case 5:
+                    if(ch=='i'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[i]");
+                case 6:
+                    if(ch=='n'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[n]");
+                case 7:
+                    if(ch=='g'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[g]");
+                case 8:
+                    if(ch=='='){
+                        push(RULE_EQ, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EQ, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 0;
+                        return true;
+                    }
+                    expected(ch, "[=] OR <WS>");
+                case 9:
+                    if(ch=='\''){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ>");
+                case 10:
+                    if(ENCODING_START(ch)){
+                        push(RULE_ENC_NAME, 11, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ENCODING_START>");
+                case 11:
+                    if(ch=='\''){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<Q>");
+                case 12:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 13:
+                    if(ENCODING_START(ch)){
+                        push(RULE_ENC_NAME, 14, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ENCODING_START>");
+                case 14:
+                    if(ch=='"'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<DQ>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_VERSION_NUM = 5;
-    private int version_num(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='1'){
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "[1]");
-            case 1:
-                if(ch=='.'){
-                    return 2;
-                }
-                expected(ch, "[\\.]");
-            case 2:
-                if(DIGIT(ch)){
-                    return 3;
-                }
-                expected(ch, "<DIGIT>");
-            case 3:
-                if(DIGIT(ch)){
-                    return 3;
-                }
-                handler.version(buffer.pop(0, 0));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean version_num() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='1'){
+                        buffer.push();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[1]");
+                case 1:
+                    if(ch=='.'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\.]");
+                case 2:
+                    if(DIGIT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DIGIT>");
+                case 3:
+                    if(DIGIT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.version(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_VERSION_INFO = 6;
-    private int version_info(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='v'){
-                    return 1;
-                }
-                expected(ch, "[v]");
-            case 1:
-                if(ch=='e'){
-                    return 2;
-                }
-                expected(ch, "[e]");
-            case 2:
-                if(ch=='r'){
-                    return 3;
-                }
-                expected(ch, "[r]");
-            case 3:
-                if(ch=='s'){
-                    return 4;
-                }
-                expected(ch, "[s]");
-            case 4:
-                if(ch=='i'){
-                    return 5;
-                }
-                expected(ch, "[i]");
-            case 5:
-                if(ch=='o'){
-                    return 6;
-                }
-                expected(ch, "[o]");
-            case 6:
-                if(ch=='n'){
-                    return 7;
-                }
-                expected(ch, "[n]");
-            case 7:
-                if(ch=='='){
-                    push(RULE_EQ, 8, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    push(RULE_EQ, 8, 0);
-                    return 0;
-                }
-                expected(ch, "[=] OR <WS>");
-            case 8:
-                if(ch=='\''){
-                    return 9;
-                }
-                if(ch=='"'){
-                    return 12;
-                }
-                expected(ch, "<Q> OR <DQ>");
-            case 9:
-                if(ch=='1'){
-                    push(RULE_VERSION_NUM, 10, 0);
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "[1]");
-            case 10:
-                if(ch=='\''){
-                    return -2;
-                }
-                expected(ch, "<Q>");
-            case 11:
-                // EOF-State
-                return -1;
-            case 12:
-                if(ch=='1'){
-                    push(RULE_VERSION_NUM, 13, 0);
-                    buffer.push();
-                    return 1;
-                }
-                expected(ch, "[1]");
-            case 13:
-                if(ch=='"'){
-                    return -2;
-                }
-                expected(ch, "<DQ>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean version_info() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='v'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[v]");
+                case 1:
+                    if(ch=='e'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[e]");
+                case 2:
+                    if(ch=='r'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[r]");
+                case 3:
+                    if(ch=='s'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[s]");
+                case 4:
+                    if(ch=='i'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[i]");
+                case 5:
+                    if(ch=='o'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[o]");
+                case 6:
+                    if(ch=='n'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[n]");
+                case 7:
+                    if(ch=='='){
+                        push(RULE_EQ, 8, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EQ, 8, 0);
+                        consume(ch);
+                        stack[free-1] = 0;
+                        return true;
+                    }
+                    expected(ch, "[=] OR <WS>");
+                case 8:
+                    if(ch=='\''){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ>");
+                case 9:
+                    if(ch=='1'){
+                        push(RULE_VERSION_NUM, 10, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[1]");
+                case 10:
+                    if(ch=='\''){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<Q>");
+                case 11:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 12:
+                    if(ch=='1'){
+                        push(RULE_VERSION_NUM, 13, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[1]");
+                case 13:
+                    if(ch=='"'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<DQ>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_COMMENT = 7;
-    private int comment(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='-'){
-                    return 3;
-                }
-                expected(ch, "[\\-]");
-            case 3:
-                if(ch=='-'){
-                    return 4;
-                }
-                expected(ch, "[\\-]");
-            case 4:
-                if(ch=='-'){
-                    buffer.push();
-                    return 6;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    buffer.push();
-                    return 5;
-                }
-                expected(ch, "<DASH> OR <CHAR>");
-            case 5:
-                if(ch=='-'){
-                    return 6;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 5;
-                }
-                expected(ch, "<DASH> OR <CHAR>");
-            case 6:
-                if(ch=='-'){
-                    return 7;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 5;
-                }
-                expected(ch, "<DASH> OR <CHAR>");
-            case 7:
-                if(ch=='>'){
-                    return 8;
-                }
-                expected(ch, "[>]");
-            case 8:
-                handler.comment(buffer.pop(0, 3));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean comment() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='-'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\-]");
+                case 3:
+                    if(ch=='-'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\-]");
+                case 4:
+                    if(ch=='-'){
+                        buffer.push();
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        buffer.push();
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DASH> OR <CHAR>");
+                case 5:
+                    if(ch=='-'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DASH> OR <CHAR>");
+                case 6:
+                    if(ch=='-'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DASH> OR <CHAR>");
+                case 7:
+                    if(ch=='>'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>]");
+                case 8:
+                    handler.comment(buffer.pop(0, 3));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_CDATA_END = 8;
-    private int cdata_end(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch==']'){
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 0;
-                }
-                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
-            case 1:
-                if(ch==']'){
-                    return 2;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 0;
-                }
-                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
-            case 2:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(ch==']'){
-                    return 2;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 0;
-                }
-                expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
-            case 4:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean cdata_end() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch==']'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 0;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
+                case 1:
+                    if(ch==']'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 0;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
+                case 2:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(ch==']'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 0;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_CDATA = 9;
-    private int cdata(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='['){
-                    return 3;
-                }
-                expected(ch, "[\\[]");
-            case 3:
-                if(ch=='C'){
-                    return 4;
-                }
-                expected(ch, "[C]");
-            case 4:
-                if(ch=='D'){
-                    return 5;
-                }
-                expected(ch, "[D]");
-            case 5:
-                if(ch=='A'){
-                    return 6;
-                }
-                expected(ch, "[A]");
-            case 6:
-                if(ch=='T'){
-                    return 7;
-                }
-                expected(ch, "[T]");
-            case 7:
-                if(ch=='A'){
-                    return 8;
-                }
-                expected(ch, "[A]");
-            case 8:
-                if(ch=='['){
-                    return 9;
-                }
-                expected(ch, "[\\[]");
-            case 9:
-                if(ch==']'){
-                    buffer.push();
-                    push(RULE_CDATA_END, 10, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    buffer.push();
-                    push(RULE_CDATA_END, 10, 0);
-                    return 0;
-                }
-                expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
-            case 10:
-                handler.cdata(buffer.pop(0, 3));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean cdata() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='['){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\[]");
+                case 3:
+                    if(ch=='C'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 4:
+                    if(ch=='D'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 5:
+                    if(ch=='A'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 6:
+                    if(ch=='T'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 7:
+                    if(ch=='A'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 8:
+                    if(ch=='['){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\[]");
+                case 9:
+                    if(ch==']'){
+                        buffer.push();
+                        push(RULE_CDATA_END, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        buffer.push();
+                        push(RULE_CDATA_END, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 0;
+                        return true;
+                    }
+                    expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
+                case 10:
+                    handler.cdata(buffer.pop(0, 3));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NAME = 10;
-    private int name(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    return 1;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean name() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PI_TARGET = 11;
-    private int pi_target(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='x' || ch=='X'){
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    return 7;
-                }
-                expected(ch, "[xX] OR <NCNAME_START>");
-            case 1:
-                if(ch=='m' || ch=='M'){
-                    return 2;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 4;
-                }
-                return -1;
-            case 2:
-                if(ch=='l' || ch=='L'){
-                    return 3;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 4;
-                }
-                return -1;
-            case 3:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 4;
-                }
-                expected(ch, "<NCNAME_PART>");
-            case 4:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 4;
-                }
-                return -1;
-            case 7:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 4;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean pi_target() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='x' || ch=='X'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[xX] OR <NCNAME_START>");
+                case 1:
+                    if(ch=='m' || ch=='M'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    if(ch=='l' || ch=='L'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<NCNAME_PART>");
+                case 4:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 7:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PI = 12;
-    private int pi(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='?'){
-                    return 2;
-                }
-                expected(ch, "[?]");
-            case 2:
-                if(ch=='x' || ch=='X'){
-                    buffer.push();
-                    push(RULE_PI_TARGET, 3, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    push(RULE_PI_TARGET, 3, 0);
-                    return 7;
-                }
-                expected(ch, "[xX] OR <NCNAME_START>");
-            case 3:
-                if(WS(ch)){
-                    handler.piTarget(buffer.pop(0, 0));
-                    return 5;
-                }
-                if(ch=='?'){
-                    handler.piTarget(buffer.pop(0, 0));
-                    handler.piData();
-                    return 12;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 5:
-                if(WS(ch)){
-                    return 5;
-                }
-                if(ch=='?'){
-                    buffer.push();
-                    return 8;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    buffer.push();
-                    return 7;
-                }
-                expected(ch, "<WS> OR [?] OR <CHAR>");
-            case 7:
-                if(ch=='?'){
-                    return 8;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 7;
-                }
-                expected(ch, "[?] OR <CHAR>");
-            case 8:
-                if(ch=='>'){
-                    handler.piData(buffer.pop(0, 1));
-                    return -2;
-                }
-                if(ch=='?'){
-                    return 8;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 7;
-                }
-                expected(ch, "[>] OR [?] OR <CHAR>");
-            case 10:
-                // EOF-State
-                return -1;
-            case 12:
-                if(ch=='>'){
-                    return -2;
-                }
-                expected(ch, "[>]");
-            case 13:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean pi() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='?'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[?]");
+                case 2:
+                    if(ch=='x' || ch=='X'){
+                        buffer.push();
+                        push(RULE_PI_TARGET, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        push(RULE_PI_TARGET, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 7;
+                        return true;
+                    }
+                    expected(ch, "[xX] OR <NCNAME_START>");
+                case 3:
+                    if(WS(ch)){
+                        handler.piTarget(buffer.pop(0, 0));
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        handler.piTarget(buffer.pop(0, 0));
+                        handler.piData();
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?]");
+                case 5:
+                    if(WS(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        buffer.push();
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        buffer.push();
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?] OR <CHAR>");
+                case 7:
+                    if(ch=='?'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[?] OR <CHAR>");
+                case 8:
+                    if(ch=='>'){
+                        handler.piData(buffer.pop(0, 1));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(ch=='?'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>] OR [?] OR <CHAR>");
+                case 10:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 12:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[>]");
+                case 13:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NCNAME = 13;
-    private int ncname(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                    return 1;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean ncname() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCName(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_QNAME = 14;
-    private int qname(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 2:
-                if(ch==':'){
-                    handler.prefix(buffer.pop(0, 0));
-                    return 4;
-                }
-                handler.localName(buffer.pop(0, 0));
-                handler.qname(buffer.pop(0, 0));
-                return -1;
-            case 4:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NCNAME, 5, 0);
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 5:
-                handler.localName(buffer.pop(0, 0));
-                handler.qname(buffer.pop(0, 0));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean qname() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        buffer.push();
+                        push(RULE_NCNAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 2:
+                    if(ch==':'){
+                        handler.prefix(buffer.pop(0, 0));
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.localName(buffer.pop(0, 0));
+                    handler.qname(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NCNAME, 5, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 5:
+                    handler.localName(buffer.pop(0, 0));
+                    handler.qname(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_REFERENCE = 15;
-    private int reference(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='&'){
-                    return 1;
-                }
-                expected(ch, "[\\&]");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 3, 0);
-                    return 1;
-                }
-                if(ch=='#'){
-                    return 6;
-                }
-                expected(ch, "<NAME_START> OR [\\#]");
-            case 3:
-                if(ch==';'){
-                    return 4;
-                }
-                expected(ch, "[;]");
-            case 4:
-                handler.entityReference(buffer.pop(0, 1));
-                return -1;
-            case 6:
-                if(ch=='x'){
-                    return 7;
-                }
-                if(DIGIT(ch)){
-                    buffer.push();
-                    return 13;
-                }
-                expected(ch, "[x] OR <DIGIT>");
-            case 7:
-                if(HEX_DIGIT(ch)){
-                    buffer.push();
-                    return 8;
-                }
-                expected(ch, "<HEX_DIGIT>");
-            case 8:
-                if(ch==';'){
-                    handler.hexCode(buffer.pop(0, 0));
-                    return -2;
-                }
-                if(HEX_DIGIT(ch)){
-                    return 8;
-                }
-                expected(ch, "[;] OR <HEX_DIGIT>");
-            case 11:
-                // EOF-State
-                return -1;
-            case 13:
-                if(ch==';'){
-                    handler.asciiCode(buffer.pop(0, 0));
-                    return -2;
-                }
-                if(DIGIT(ch)){
-                    return 13;
-                }
-                expected(ch, "[;] OR <DIGIT>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean reference() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='&'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\&]");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<NAME_START> OR [\\#]");
+                case 3:
+                    if(ch==';'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[;]");
+                case 4:
+                    handler.entityReference(buffer.pop(0, 1));
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    if(ch=='x'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(DIGIT(ch)){
+                        buffer.push();
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[x] OR <DIGIT>");
+                case 7:
+                    if(HEX_DIGIT(ch)){
+                        buffer.push();
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<HEX_DIGIT>");
+                case 8:
+                    if(ch==';'){
+                        handler.hexCode(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(HEX_DIGIT(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[;] OR <HEX_DIGIT>");
+                case 11:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 13:
+                    if(ch==';'){
+                        handler.asciiCode(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(DIGIT(ch)){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[;] OR <DIGIT>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ATTR = 16;
-    private int attr(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    push(RULE_QNAME, 1, 0);
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 1:
-                if(ch=='='){
-                    push(RULE_EQ, 2, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    push(RULE_EQ, 2, 0);
-                    return 0;
-                }
-                expected(ch, "[=] OR <WS>");
-            case 2:
-                if(ch=='\''){
-                    push(RULE_VALUE, 3, 0);
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_VALUE, 3, 0);
-                    handler.valueStart();
-                    return 3;
-                }
-                expected(ch, "['] OR [\"]");
-            case 3:
-                handler.attributeEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean attr() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        push(RULE_QNAME, 1, 0);
+                        buffer.push();
+                        buffer.push();
+                        push(RULE_NCNAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 1:
+                    if(ch=='='){
+                        push(RULE_EQ, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        push(RULE_EQ, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 0;
+                        return true;
+                    }
+                    expected(ch, "[=] OR <WS>");
+                case 2:
+                    if(ch=='\''){
+                        push(RULE_VALUE, 3, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_VALUE, 3, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    expected(ch, "['] OR [\"]");
+                case 3:
+                    handler.attributeEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_VALUE = 17;
-    private int value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='\''){
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    handler.valueStart();
-                    return 3;
-                }
-                expected(ch, "['] OR [\"]");
-            case 1:
-                if(ch=='\''){
-                    return 2;
-                }
-                if(ch!=-1 && ATTR_Q_CONTENT(ch)){
-                    push(RULE_Q_VALUE, 1, 0);
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_Q_VALUE, 1, 0);
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "['] OR <ATTR_Q_CONTENT> OR [\\&]");
-            case 2:
-                handler.valueEnd();
-                return -1;
-            case 3:
-                if(ch=='"'){
-                    return 2;
-                }
-                if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                    push(RULE_DQ_VALUE, 3, 0);
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_DQ_VALUE, 3, 0);
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&]");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='\''){
+                        handler.valueStart();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        handler.valueStart();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "['] OR [\"]");
+                case 1:
+                    if(ch=='\''){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
+                        push(RULE_Q_VALUE, 1, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='&'){
+                        push(RULE_Q_VALUE, 1, 0);
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "['] OR <ATTR_Q_CONTENT> OR [\\&]");
+                case 2:
+                    handler.valueEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    if(ch=='"'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
+                        push(RULE_DQ_VALUE, 3, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='&'){
+                        push(RULE_DQ_VALUE, 3, 0);
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[\"] OR <ATTR_DQ_CONTENT> OR [\\&]");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_Q_VALUE = 18;
-    private int q_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ATTR_Q_CONTENT(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<ATTR_Q_CONTENT> OR [\\&]");
-            case 3:
-                if(ch!=-1 && ATTR_Q_CONTENT(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean q_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ATTR_Q_CONTENT> OR [\\&]");
+                case 3:
+                    if(ch!=-1 && ATTR_Q_CONTENT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.rawValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DQ_VALUE = 19;
-    private int dq_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<ATTR_DQ_CONTENT> OR [\\&]");
-            case 3:
-                if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean dq_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ATTR_DQ_CONTENT> OR [\\&]");
+                case 3:
+                    if(ch!=-1 && ATTR_DQ_CONTENT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.rawValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ELEM_ATTRS = 20;
-    private int elem_attrs(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    push(RULE_QNAME, 2, 0);
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 2:
-                if(WS(ch)){
+    private boolean elem_attrs() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        push(RULE_QNAME, 2, 0);
+                        buffer.push();
+                        buffer.push();
+                        push(RULE_NCNAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 2:
+                    if(WS(ch)){
+                        handler.attributesStart();
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
                     handler.attributesStart();
-                    return 4;
-                }
-                handler.attributesStart();
-                return -1;
-            case 4:
-                if(WS(ch)){
-                    return 4;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    push(RULE_ATTR, 5, 0);
-                    push(RULE_QNAME, 1, 0);
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    return 1;
-                }
-                return -1;
-            case 5:
-                if(WS(ch)){
-                    return 4;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    if(WS(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        push(RULE_ATTR, 5, 0);
+                        push(RULE_QNAME, 1, 0);
+                        buffer.push();
+                        buffer.push();
+                        push(RULE_NCNAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    if(WS(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ELEM_CONTENT = 21;
-    private int elem_content(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        buffer.push();
-                        consumed();
-                        return 8;
+    private boolean elem_content() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
+                            buffer.push();
+                            consume(-2);
+                            state = 8;
+                            continue;
+                        }
+                        if(ch=='&'){
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            buffer.push();
+                            consume(-2);
+                            state = 6;
+                            continue;
+                        }
                     }
-                    if(ch=='&'){
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][!][\\-] OR [<][!][\\[]");
+                case 6:
+                    if(ch==']'){
+                        state = 8;
+                        consume(ch);
+                        continue;
                     }
                     if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        buffer.push();
-                        consumed();
-                        return 6;
+                        state = 6;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
-                            buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                        if(ch=='?'){
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
+                    handler.characters(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 8:
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                        }
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
                     }
-                }
-                expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][!][\\-] OR [<][!][\\[]");
-            case 6:
-                if(ch==']'){
-                    return 8;
-                }
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    return 6;
-                }
-                handler.characters(buffer.pop(0, 0));
-                return -1;
-            case 8:
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    return 6;
-                }
-                handler.characters(buffer.pop(0, 0));
-                return -1;
-            case 9:
-                if(ch=='>'){
-                    return 11;
-                }
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    return 6;
-                }
-                handler.characters(buffer.pop(0, 0));
-                return -1;
-            case 11:
-                handler.fatalError("Text may not contain a literal ']]>' sequence");
-                return -1;
-            case 13:
-                // EOF-State
-                return -1;
-            case 15:
-                // EOF-State
-                return -1;
-            case 17:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    handler.characters(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 9:
+                    if(ch=='>'){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.characters(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 11:
+                    handler.fatalError("Text may not contain a literal ']]>' sequence");
+                    stack[free-1] = -1;
+                    return true;
+                case 13:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 15:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 17:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ELEM = 22;
-    private int elem(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    push(RULE_ELEM_ATTRS, 1, 0);
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='/'){
-                    return 2;
-                }
-                if(ch=='>'){
-                    handler.attributesEnd();
-                    return 5;
-                }
-                expected(ch, "[/] OR [>]");
-            case 2:
-                if(ch=='>'){
-                    handler.attributesEnd();
-                    return 3;
-                }
-                expected(ch, "[>]");
-            case 3:
-                handler.elementEnd();
-                return -1;
-            case 5:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 5;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        push(RULE_ELEM_CONTENT, 5, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
+    private boolean elem() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        push(RULE_ELEM_ATTRS, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
                     }
-                    if(ch=='&'){
-                        push(RULE_ELEM_CONTENT, 5, 0);
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='/'){
+                        state = 2;
+                        consume(ch);
+                        continue;
                     }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_ELEM_CONTENT, 5, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
+                    if(ch=='>'){
+                        handler.attributesEnd();
+                        state = 5;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 5;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                    expected(ch, "[/] OR [>]");
+                case 2:
+                    if(ch=='>'){
+                        handler.attributesEnd();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>]");
+                case 3:
+                    handler.elementEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
                             push(RULE_ELEM_CONTENT, 5, 0);
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
                             buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
+                            consume(-2);
+                            stack[free-1] = 8;
+                            return true;
                         }
-                        if(ch=='?'){
+                        if(ch=='&'){
                             push(RULE_ELEM_CONTENT, 5, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
-                        if(ch=='/'){
-                            consumed();
-                            consumed();
-                            return 7;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 5;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
-                                push(RULE_ELEM_CONTENT, 5, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_ELEM_CONTENT, 5, 0);
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            push(RULE_ELEM_CONTENT, 5, 0);
+                            buffer.push();
+                            consume(-2);
+                            stack[free-1] = 6;
+                            return true;
                         }
                     }
-                }
-                expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][/] OR [<][!][\\-] OR [<][!][\\[]");
-            case 6:
-                if(ch=='/'){
-                    return 7;
-                }
-                expected(ch, "[/]");
-            case 7:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    handler.endingElem();
-                    push(RULE_QNAME, 8, 0);
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    return 1;
-                }
-                expected(ch, "<NCNAME_START>");
-            case 8:
-                if(WS(ch)){
-                    return 8;
-                }
-                if(ch=='>'){
-                    return 9;
-                }
-                expected(ch, "<WS> OR [>]");
-            case 9:
-                handler.elementEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                                push(RULE_ELEM_CONTENT, 5, 0);
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_ELEM_CONTENT, 5, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='/'){
+                                consume(-2);
+                                consume(-2);
+                                state = 7;
+                                continue;
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    push(RULE_ELEM_CONTENT, 5, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_ELEM_CONTENT, 5, 0);
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][/] OR [<][!][\\-] OR [<][!][\\[]");
+                case 6:
+                    if(ch=='/'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[/]");
+                case 7:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        handler.endingElem();
+                        push(RULE_QNAME, 8, 0);
+                        buffer.push();
+                        buffer.push();
+                        push(RULE_NCNAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NCNAME_START>");
+                case 8:
+                    if(WS(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [>]");
+                case 9:
+                    handler.elementEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_XDECL = 23;
-    private int xdecl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='?'){
-                    return 2;
-                }
-                expected(ch, "[?]");
-            case 2:
-                if(ch=='x'){
-                    return 3;
-                }
-                expected(ch, "[x]");
-            case 3:
-                if(ch=='m'){
-                    return 4;
-                }
-                expected(ch, "[m]");
-            case 4:
-                if(ch=='l'){
-                    return 5;
-                }
-                expected(ch, "[l]");
-            case 5:
-                if(WS(ch)){
-                    return 6;
-                }
-                expected(ch, "<WS>");
-            case 6:
-                if(WS(ch)){
-                    return 6;
-                }
-                if(ch=='v'){
-                    push(RULE_VERSION_INFO, 7, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [v]");
-            case 7:
-                if(WS(ch)){
-                    return 8;
-                }
-                if(ch=='?'){
-                    return 14;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 8:
-                if(WS(ch)){
-                    return 8;
-                }
-                if(ch=='e'){
-                    push(RULE_ENC_DECL, 9, 0);
-                    return 1;
-                }
-                if(ch=='?'){
-                    return 14;
-                }
-                if(ch=='s'){
-                    push(RULE_SD_DECL, 12, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [e] OR [?] OR [s]");
-            case 9:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='?'){
-                    return 14;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 10:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='s'){
-                    push(RULE_SD_DECL, 12, 0);
-                    return 1;
-                }
-                if(ch=='?'){
-                    return 14;
-                }
-                expected(ch, "<WS> OR [s] OR [?]");
-            case 12:
-                if(WS(ch)){
-                    return 12;
-                }
-                if(ch=='?'){
-                    return 14;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 14:
-                if(ch=='>'){
-                    return -2;
-                }
-                expected(ch, "[>]");
-            case 15:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean xdecl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='?'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[?]");
+                case 2:
+                    if(ch=='x'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[x]");
+                case 3:
+                    if(ch=='m'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[m]");
+                case 4:
+                    if(ch=='l'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[l]");
+                case 5:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 6:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='v'){
+                        push(RULE_VERSION_INFO, 7, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [v]");
+                case 7:
+                    if(WS(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?]");
+                case 8:
+                    if(WS(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='e'){
+                        push(RULE_ENC_DECL, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='?'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='s'){
+                        push(RULE_SD_DECL, 12, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [e] OR [?] OR [s]");
+                case 9:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?]");
+                case 10:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='s'){
+                        push(RULE_SD_DECL, 12, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='?'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [s] OR [?]");
+                case 12:
+                    if(WS(ch)){
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?]");
+                case 14:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[>]");
+                case 15:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_MISC = 24;
-    private int misc(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
+    private boolean misc() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 1;
+                            continue;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='!'){
+                                push(RULE_COMMENT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    expected(ch, "<WS> OR [<][!] OR [<][?]");
+                case 1:
                     if(WS(ch)){
-                        consumed();
-                        return 1;
+                        state = 1;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='!'){
-                            push(RULE_COMMENT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch=='?'){
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                expected(ch, "<WS> OR [<][!] OR [<][?]");
-            case 1:
-                if(WS(ch)){
-                    return 1;
-                }
-                return -1;
-            case 2:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_SYTEM_LITERAL = 25;
-    private int sytem_literal(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='\''){
-                    return 1;
-                }
-                if(ch=='"'){
-                    return 5;
-                }
-                expected(ch, "<Q> OR <DQ>");
-            case 1:
-                if(ch!=-1 && (ch!='\'')){
-                    buffer.push();
-                    return 2;
-                }
-                if(ch=='\''){
-                    buffer.push();
-                    handler.systemID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "[^'] OR <Q>");
-            case 2:
-                if(ch!=-1 && (ch!='\'')){
-                    return 2;
-                }
-                if(ch=='\''){
-                    handler.systemID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "[^'] OR <Q>");
-            case 4:
-                // EOF-State
-                return -1;
-            case 5:
-                if(ch!=-1 && (ch!='"')){
-                    buffer.push();
-                    return 6;
-                }
-                if(ch=='"'){
-                    buffer.push();
-                    handler.systemID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "[^\"] OR <DQ>");
-            case 6:
-                if(ch!=-1 && (ch!='"')){
-                    return 6;
-                }
-                if(ch=='"'){
-                    handler.systemID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "[^\"] OR <DQ>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean sytem_literal() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='\''){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ>");
+                case 1:
+                    if(ch!=-1 && (ch!='\'')){
+                        buffer.push();
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        buffer.push();
+                        handler.systemID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[^'] OR <Q>");
+                case 2:
+                    if(ch!=-1 && (ch!='\'')){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        handler.systemID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[^'] OR <Q>");
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    if(ch!=-1 && (ch!='"')){
+                        buffer.push();
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        buffer.push();
+                        handler.systemID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[^\"] OR <DQ>");
+                case 6:
+                    if(ch!=-1 && (ch!='"')){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        handler.systemID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[^\"] OR <DQ>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PUBID_LITERAL = 26;
-    private int pubid_literal(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='"'){
-                    return 1;
-                }
-                if(ch=='\''){
-                    return 5;
-                }
-                expected(ch, "<DQ> OR <Q>");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
-                    buffer.push();
-                    return 2;
-                }
-                if(ch=='"'){
-                    buffer.push();
-                    handler.publicID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<PUBID_CHAR> OR <DQ>");
-            case 2:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
-                    return 2;
-                }
-                if(ch=='"'){
-                    handler.publicID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<PUBID_CHAR> OR <DQ>");
-            case 4:
-                // EOF-State
-                return -1;
-            case 5:
-                if(ch!=-1 && PUBID_CHAR_NQ(ch)){
-                    buffer.push();
-                    return 6;
-                }
-                if(ch=='\''){
-                    buffer.push();
-                    handler.publicID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<PUBID_CHAR_NQ> OR <Q>");
-            case 6:
-                if(ch!=-1 && PUBID_CHAR_NQ(ch)){
-                    return 6;
-                }
-                if(ch=='\''){
-                    handler.publicID(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<PUBID_CHAR_NQ> OR <Q>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean pubid_literal() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='"'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DQ> OR <Q>");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
+                        buffer.push();
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        buffer.push();
+                        handler.publicID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<PUBID_CHAR> OR <DQ>");
+                case 2:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isPubid(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        handler.publicID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<PUBID_CHAR> OR <DQ>");
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    if(ch!=-1 && PUBID_CHAR_NQ(ch)){
+                        buffer.push();
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        buffer.push();
+                        handler.publicID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<PUBID_CHAR_NQ> OR <Q>");
+                case 6:
+                    if(ch!=-1 && PUBID_CHAR_NQ(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        handler.publicID(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<PUBID_CHAR_NQ> OR <Q>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_SYSTEM_ID = 27;
-    private int system_id(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='S'){
-                    return 1;
-                }
-                expected(ch, "[S]");
-            case 1:
-                if(ch=='Y'){
-                    return 2;
-                }
-                expected(ch, "[Y]");
-            case 2:
-                if(ch=='S'){
-                    return 3;
-                }
-                expected(ch, "[S]");
-            case 3:
-                if(ch=='T'){
-                    return 4;
-                }
-                expected(ch, "[T]");
-            case 4:
-                if(ch=='E'){
-                    return 5;
-                }
-                expected(ch, "[E]");
-            case 5:
-                if(ch=='M'){
-                    return 6;
-                }
-                expected(ch, "[M]");
-            case 6:
-                if(WS(ch)){
-                    return 7;
-                }
-                expected(ch, "<WS>");
-            case 7:
-                if(ch=='\''){
-                    push(RULE_SYTEM_LITERAL, -2, 0);
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_SYTEM_LITERAL, -2, 0);
-                    return 5;
-                }
-                if(WS(ch)){
-                    return 7;
-                }
-                expected(ch, "<Q> OR <DQ> OR <WS>");
-            case 8:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean system_id() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='S'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[S]");
+                case 1:
+                    if(ch=='Y'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y]");
+                case 2:
+                    if(ch=='S'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[S]");
+                case 3:
+                    if(ch=='T'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 4:
+                    if(ch=='E'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 5:
+                    if(ch=='M'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[M]");
+                case 6:
+                    if(WS(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 7:
+                    if(ch=='\''){
+                        push(RULE_SYTEM_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_SYTEM_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 5;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ> OR <WS>");
+                case 8:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PUBLIC_ID = 28;
-    private int public_id(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='P'){
-                    return 1;
-                }
-                expected(ch, "[P]");
-            case 1:
-                if(ch=='U'){
-                    return 2;
-                }
-                expected(ch, "[U]");
-            case 2:
-                if(ch=='B'){
-                    return 3;
-                }
-                expected(ch, "[B]");
-            case 3:
-                if(ch=='L'){
-                    return 4;
-                }
-                expected(ch, "[L]");
-            case 4:
-                if(ch=='I'){
-                    return 5;
-                }
-                expected(ch, "[I]");
-            case 5:
-                if(ch=='C'){
-                    return 6;
-                }
-                expected(ch, "[C]");
-            case 6:
-                if(WS(ch)){
-                    return 7;
-                }
-                expected(ch, "<WS>");
-            case 7:
-                if(ch=='"'){
-                    push(RULE_PUBID_LITERAL, -2, 0);
-                    return 1;
-                }
-                if(ch=='\''){
-                    push(RULE_PUBID_LITERAL, -2, 0);
-                    return 5;
-                }
-                if(WS(ch)){
-                    return 7;
-                }
-                expected(ch, "<DQ> OR <Q> OR <WS>");
-            case 8:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean public_id() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='P'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P]");
+                case 1:
+                    if(ch=='U'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[U]");
+                case 2:
+                    if(ch=='B'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[B]");
+                case 3:
+                    if(ch=='L'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[L]");
+                case 4:
+                    if(ch=='I'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 5:
+                    if(ch=='C'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 6:
+                    if(WS(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 7:
+                    if(ch=='"'){
+                        push(RULE_PUBID_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='\''){
+                        push(RULE_PUBID_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 5;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<DQ> OR <Q> OR <WS>");
+                case 8:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NOTATION_DECL = 29;
-    private int notation_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='N'){
-                    return 3;
-                }
-                expected(ch, "[N]");
-            case 3:
-                if(ch=='O'){
-                    return 4;
-                }
-                expected(ch, "[O]");
-            case 4:
-                if(ch=='T'){
-                    return 5;
-                }
-                expected(ch, "[T]");
-            case 5:
-                if(ch=='A'){
-                    return 6;
-                }
-                expected(ch, "[A]");
-            case 6:
-                if(ch=='T'){
-                    return 7;
-                }
-                expected(ch, "[T]");
-            case 7:
-                if(ch=='I'){
-                    return 8;
-                }
-                expected(ch, "[I]");
-            case 8:
-                if(ch=='O'){
-                    return 9;
-                }
-                expected(ch, "[O]");
-            case 9:
-                if(ch=='N'){
-                    return 10;
-                }
-                expected(ch, "[N]");
-            case 10:
-                if(WS(ch)){
-                    return 11;
-                }
-                expected(ch, "<WS>");
-            case 11:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NCNAME, 13, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NCNAME_START>");
-            case 13:
-                if(WS(ch)){
-                    handler.notationName(buffer.pop(0, 0));
-                    return 14;
-                }
-                expected(ch, "<WS>");
-            case 14:
-                if(ch=='P'){
-                    push(RULE_PUBLIC_ID, 15, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 14;
-                }
-                if(ch=='S'){
-                    push(RULE_SYSTEM_ID, 18, 0);
-                    return 1;
-                }
-                expected(ch, "[P] OR <WS> OR [S]");
-            case 15:
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='>'){
-                    return 20;
-                }
-                expected(ch, "<WS> OR [>]");
-            case 16:
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='\''){
-                    push(RULE_SYTEM_LITERAL, 18, 0);
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_SYTEM_LITERAL, 18, 0);
-                    return 5;
-                }
-                if(ch=='>'){
-                    return 20;
-                }
-                expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
-            case 18:
-                if(WS(ch)){
-                    return 18;
-                }
-                if(ch=='>'){
-                    return 20;
-                }
-                expected(ch, "<WS> OR [>]");
-            case 20:
-                handler.notationEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean notation_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='N'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 3:
+                    if(ch=='O'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 4:
+                    if(ch=='T'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 5:
+                    if(ch=='A'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 6:
+                    if(ch=='T'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 7:
+                    if(ch=='I'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 8:
+                    if(ch=='O'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 9:
+                    if(ch=='N'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 10:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 11:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NCNAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NCNAME_START>");
+                case 13:
+                    if(WS(ch)){
+                        handler.notationName(buffer.pop(0, 0));
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 14:
+                    if(ch=='P'){
+                        push(RULE_PUBLIC_ID, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='S'){
+                        push(RULE_SYSTEM_ID, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[P] OR <WS> OR [S]");
+                case 15:
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [>]");
+                case 16:
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        push(RULE_SYTEM_LITERAL, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_SYTEM_LITERAL, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 5;
+                        return true;
+                    }
+                    if(ch=='>'){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
+                case 18:
+                    if(WS(ch)){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [>]");
+                case 20:
+                    handler.notationEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_EXTERNAL_ID = 30;
-    private int external_id(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='P'){
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                expected(ch, "[P] OR [S]");
-            case 1:
-                if(WS(ch)){
-                    return 2;
-                }
-                expected(ch, "<WS>");
-            case 2:
-                if(WS(ch)){
-                    return 2;
-                }
-                if(ch=='\''){
-                    push(RULE_SYTEM_LITERAL, -2, 0);
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_SYTEM_LITERAL, -2, 0);
-                    return 5;
-                }
-                expected(ch, "<WS> OR <Q> OR <DQ>");
-            case 4:
-                // EOF-State
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean external_id() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='P'){
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[P] OR [S]");
+                case 1:
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 2:
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        push(RULE_SYTEM_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_SYTEM_LITERAL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 5;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <Q> OR <DQ>");
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PE_REFERENCE = 31;
-    private int pe_reference(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='%'){
-                    return 1;
-                }
-                expected(ch, "[%]");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 2, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 2:
-                if(ch==';'){
-                    handler.peReference(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "[;]");
-            case 3:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean pe_reference() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='%'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[%]");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 2, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 2:
+                    if(ch==';'){
+                        handler.peReference(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[;]");
+                case 3:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NDATA_DECL = 32;
-    private int ndata_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='N'){
-                    return 1;
-                }
-                expected(ch, "[N]");
-            case 1:
-                if(ch=='D'){
-                    return 2;
-                }
-                expected(ch, "[D]");
-            case 2:
-                if(ch=='A'){
-                    return 3;
-                }
-                expected(ch, "[A]");
-            case 3:
-                if(ch=='T'){
-                    return 4;
-                }
-                expected(ch, "[T]");
-            case 4:
-                if(ch=='A'){
-                    return 5;
-                }
-                expected(ch, "[A]");
-            case 5:
-                if(WS(ch)){
-                    return 6;
-                }
-                expected(ch, "<WS>");
-            case 6:
-                if(WS(ch)){
-                    return 6;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 8, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 8:
-                handler.notationReference(buffer.pop(0, 0));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean ndata_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='N'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 1:
+                    if(ch=='D'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 2:
+                    if(ch=='A'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 3:
+                    if(ch=='T'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 4:
+                    if(ch=='A'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 5:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 6:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 8, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START>");
+                case 8:
+                    handler.notationReference(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PE_DEF = 33;
-    private int pe_def(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='P'){
-                    push(RULE_EXTERNAL_ID, -2, 0);
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_EXTERNAL_ID, -2, 0);
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                if(ch=='\''){
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 2;
-                }
-                if(ch=='"'){
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 4;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
-            case 1:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean pe_def() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='P'){
+                        push(RULE_EXTERNAL_ID, -1, 0);
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_EXTERNAL_ID, -1, 0);
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='\''){
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
+                case 1:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENTITY_VALUE = 34;
-    private int entity_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='\''){
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 2;
-                }
-                if(ch=='"'){
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 4;
-                }
-                expected(ch, "<Q> OR <DQ>");
-            case 2:
-                if(ch=='\''){
-                    return 3;
-                }
-                if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
-                    push(RULE_Q_ENTITY_VALUE, 2, 0);
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_Q_ENTITY_VALUE, 2, 0);
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_Q_ENTITY_VALUE, 2, 0);
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<Q> OR <ENTITY_Q_CONTENT> OR [\\&] OR [%]");
-            case 3:
-                handler.valueEnd();
-                return -1;
-            case 4:
-                if(ch=='"'){
-                    return 3;
-                }
-                if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                    push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean entity_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='\''){
+                        handler.valueStart();
+                        handler.entityValue();
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='"'){
+                        handler.valueStart();
+                        handler.entityValue();
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<Q> OR <DQ>");
+                case 2:
+                    if(ch=='\''){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
+                        push(RULE_Q_ENTITY_VALUE, 2, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='&'){
+                        push(RULE_Q_ENTITY_VALUE, 2, 0);
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_Q_ENTITY_VALUE, 2, 0);
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<Q> OR <ENTITY_Q_CONTENT> OR [\\&] OR [%]");
+                case 3:
+                    handler.valueEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    if(ch=='"'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
+                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                        buffer.push();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='&'){
+                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_Q_ENTITY_VALUE = 35;
-    private int q_entity_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<ENTITY_Q_CONTENT> OR [\\&] OR [%]");
-            case 3:
-                if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            case 6:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean q_entity_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ENTITY_Q_CONTENT> OR [\\&] OR [%]");
+                case 3:
+                    if(ch!=-1 && ENTITY_Q_CONTENT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.rawValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DQ_ENTITY_VALUE = 36;
-    private int dq_entity_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
-            case 3:
-                if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            case 6:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean dq_entity_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
+                case 3:
+                    if(ch!=-1 && ENTITY_DQ_CONTENT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.rawValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENTITY_DECL = 37;
-    private int entity_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='E'){
-                    return 3;
-                }
-                expected(ch, "[E]");
-            case 3:
-                if(ch=='N'){
-                    return 4;
-                }
-                expected(ch, "[N]");
-            case 4:
-                if(ch=='T'){
-                    return 5;
-                }
-                expected(ch, "[T]");
-            case 5:
-                if(ch=='I'){
-                    return 6;
-                }
-                expected(ch, "[I]");
-            case 6:
-                if(ch=='T'){
-                    return 7;
-                }
-                expected(ch, "[T]");
-            case 7:
-                if(ch=='Y'){
-                    return 8;
-                }
-                expected(ch, "[Y]");
-            case 8:
-                if(WS(ch)){
-                    return 9;
-                }
-                expected(ch, "<WS>");
-            case 9:
-                if(WS(ch)){
-                    return 9;
-                }
-                if(ch=='%'){
-                    return 10;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NCNAME, 18, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%] OR <NCNAME_START>");
-            case 10:
-                if(WS(ch)){
-                    return 11;
-                }
-                expected(ch, "<WS>");
-            case 11:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NCNAME, 13, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NCNAME_START>");
-            case 13:
-                if(WS(ch)){
-                    handler.paramEntityName(buffer.pop(0, 0));
-                    return 14;
-                }
-                expected(ch, "<WS>");
-            case 14:
-                if(ch=='P'){
-                    push(RULE_PE_DEF, 15, 0);
-                    push(RULE_EXTERNAL_ID, -2, 0);
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_PE_DEF, 15, 0);
-                    push(RULE_EXTERNAL_ID, -2, 0);
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                if(ch=='\''){
-                    push(RULE_PE_DEF, 15, 0);
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 2;
-                }
-                if(ch=='"'){
-                    push(RULE_PE_DEF, 15, 0);
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 4;
-                }
-                if(WS(ch)){
-                    return 14;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
-            case 15:
-                if(ch=='>'){
-                    return 16;
-                }
-                if(WS(ch)){
-                    return 15;
-                }
-                expected(ch, "[>] OR <WS>");
-            case 16:
-                handler.paramEntityEnd();
-                return -1;
-            case 18:
-                if(WS(ch)){
-                    handler.entityName(buffer.pop(0, 0));
-                    return 19;
-                }
-                expected(ch, "<WS>");
-            case 19:
-                if(ch=='P'){
-                    push(RULE_ENTITY_DEF, 20, 0);
-                    push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_ENTITY_DEF, 20, 0);
-                    push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                if(ch=='\''){
-                    push(RULE_ENTITY_DEF, 20, 0);
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 2;
-                }
-                if(ch=='"'){
-                    push(RULE_ENTITY_DEF, 20, 0);
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 4;
-                }
-                if(WS(ch)){
-                    return 19;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
-            case 20:
-                if(WS(ch)){
-                    return 20;
-                }
-                if(ch=='>'){
-                    return 21;
-                }
-                expected(ch, "<WS> OR [>]");
-            case 21:
-                handler.entityEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean entity_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='E'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 3:
+                    if(ch=='N'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 4:
+                    if(ch=='T'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 5:
+                    if(ch=='I'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 6:
+                    if(ch=='T'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 7:
+                    if(ch=='Y'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y]");
+                case 8:
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 9:
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NCNAME, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%] OR <NCNAME_START>");
+                case 10:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 11:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NCNAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NCNAME_START>");
+                case 13:
+                    if(WS(ch)){
+                        handler.paramEntityName(buffer.pop(0, 0));
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 14:
+                    if(ch=='P'){
+                        push(RULE_PE_DEF, 15, 0);
+                        push(RULE_EXTERNAL_ID, -1, 0);
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_PE_DEF, 15, 0);
+                        push(RULE_EXTERNAL_ID, -1, 0);
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='\''){
+                        push(RULE_PE_DEF, 15, 0);
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_PE_DEF, 15, 0);
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
+                case 15:
+                    if(ch=='>'){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>] OR <WS>");
+                case 16:
+                    handler.paramEntityEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 18:
+                    if(WS(ch)){
+                        handler.entityName(buffer.pop(0, 0));
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 19:
+                    if(ch=='P'){
+                        push(RULE_ENTITY_DEF, 20, 0);
+                        push(RULE_EXTERNAL_ID, 1, 0);
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_ENTITY_DEF, 20, 0);
+                        push(RULE_EXTERNAL_ID, 1, 0);
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='\''){
+                        push(RULE_ENTITY_DEF, 20, 0);
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_ENTITY_DEF, 20, 0);
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
+                case 20:
+                    if(WS(ch)){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 21;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [>]");
+                case 21:
+                    handler.entityEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENTITY_DEF = 38;
-    private int entity_def(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='P'){
-                    push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_EXTERNAL_ID, 1, 0);
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                if(ch=='\''){
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 2;
-                }
-                if(ch=='"'){
-                    push(RULE_ENTITY_VALUE, -2, 0);
-                    handler.valueStart();
-                    handler.entityValue();
-                    return 4;
-                }
-                expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
-            case 1:
-                if(WS(ch)){
-                    return 2;
-                }
-                return -1;
-            case 2:
-                if(ch=='N'){
-                    push(RULE_NDATA_DECL, -2, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 2;
-                }
-                return -1;
-            case 4:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean entity_def() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='P'){
+                        push(RULE_EXTERNAL_ID, 1, 0);
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_EXTERNAL_ID, 1, 0);
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='\''){
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_ENTITY_VALUE, -1, 0);
+                        handler.valueStart();
+                        handler.entityValue();
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
+                case 1:
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    if(ch=='N'){
+                        push(RULE_NDATA_DECL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_STRING_TYPE = 39;
-    private int string_type(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='C'){
-                    return 1;
-                }
-                expected(ch, "[C]");
-            case 1:
-                if(ch=='D'){
-                    return 2;
-                }
-                expected(ch, "[D]");
-            case 2:
-                if(ch=='A'){
-                    return 3;
-                }
-                expected(ch, "[A]");
-            case 3:
-                if(ch=='T'){
-                    return 4;
-                }
-                expected(ch, "[T]");
-            case 4:
-                if(ch=='A'){
-                    return 5;
-                }
-                expected(ch, "[A]");
-            case 5:
-                handler.cdataAttribute();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean string_type() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='C'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 1:
+                    if(ch=='D'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 2:
+                    if(ch=='A'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 3:
+                    if(ch=='T'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 4:
+                    if(ch=='A'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 5:
+                    handler.cdataAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_TOKENIZED_TYPE = 40;
-    private int tokenized_type(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='E'){
-                    return 5;
-                }
-                if(ch=='N'){
-                    return 14;
-                }
-                if(ch=='I'){
-                    return 23;
-                }
-                expected(ch, "[E] OR [N] OR [I]");
-            case 5:
-                if(ch=='N'){
-                    return 6;
-                }
-                expected(ch, "[N]");
-            case 6:
-                if(ch=='T'){
-                    return 7;
-                }
-                expected(ch, "[T]");
-            case 7:
-                if(ch=='I'){
-                    return 8;
-                }
-                expected(ch, "[I]");
-            case 8:
-                if(ch=='T'){
-                    return 9;
-                }
-                expected(ch, "[T]");
-            case 9:
-                if(ch=='Y'){
-                    return 10;
-                }
-                if(ch=='I'){
-                    return 11;
-                }
-                expected(ch, "[Y] OR [I]");
-            case 10:
-                handler.entityAttribute();
-                return -1;
-            case 11:
-                if(ch=='E'){
-                    return 12;
-                }
-                expected(ch, "[E]");
-            case 12:
-                if(ch=='S'){
-                    return 13;
-                }
-                expected(ch, "[S]");
-            case 13:
-                handler.entitiesAttribute();
-                return -1;
-            case 14:
-                if(ch=='M'){
-                    return 15;
-                }
-                expected(ch, "[M]");
-            case 15:
-                if(ch=='T'){
-                    return 16;
-                }
-                expected(ch, "[T]");
-            case 16:
-                if(ch=='O'){
-                    return 17;
-                }
-                expected(ch, "[O]");
-            case 17:
-                if(ch=='K'){
-                    return 18;
-                }
-                expected(ch, "[K]");
-            case 18:
-                if(ch=='E'){
-                    return 19;
-                }
-                expected(ch, "[E]");
-            case 19:
-                if(ch=='N'){
-                    return 20;
-                }
-                expected(ch, "[N]");
-            case 20:
-                if(ch=='S'){
-                    return 22;
-                }
-                handler.nmtokenAttribute();
-                return -1;
-            case 22:
-                handler.nmtokensAttribute();
-                return -1;
-            case 23:
-                if(ch=='D'){
-                    return 24;
-                }
-                expected(ch, "[D]");
-            case 24:
-                if(ch=='R'){
-                    return 25;
-                }
-                handler.idAttribute();
-                return -1;
-            case 25:
-                if(ch=='E'){
-                    return 26;
-                }
-                expected(ch, "[E]");
-            case 26:
-                if(ch=='F'){
-                    return 27;
-                }
-                expected(ch, "[F]");
-            case 27:
-                if(ch=='S'){
-                    return 28;
-                }
-                handler.idRefAttribute();
-                return -1;
-            case 28:
-                handler.idRefsAttribute();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean tokenized_type() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='E'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='N'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='I'){
+                        state = 23;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E] OR [N] OR [I]");
+                case 5:
+                    if(ch=='N'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 6:
+                    if(ch=='T'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 7:
+                    if(ch=='I'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 8:
+                    if(ch=='T'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 9:
+                    if(ch=='Y'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='I'){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y] OR [I]");
+                case 10:
+                    handler.entityAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 11:
+                    if(ch=='E'){
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 12:
+                    if(ch=='S'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[S]");
+                case 13:
+                    handler.entitiesAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 14:
+                    if(ch=='M'){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[M]");
+                case 15:
+                    if(ch=='T'){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 16:
+                    if(ch=='O'){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 17:
+                    if(ch=='K'){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[K]");
+                case 18:
+                    if(ch=='E'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 19:
+                    if(ch=='N'){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 20:
+                    if(ch=='S'){
+                        state = 22;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.nmtokenAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 22:
+                    handler.nmtokensAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 23:
+                    if(ch=='D'){
+                        state = 24;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 24:
+                    if(ch=='R'){
+                        state = 25;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.idAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 25:
+                    if(ch=='E'){
+                        state = 26;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 26:
+                    if(ch=='F'){
+                        state = 27;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[F]");
+                case 27:
+                    if(ch=='S'){
+                        state = 28;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.idRefAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                case 28:
+                    handler.idRefsAttribute();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NMTOKEN = 41;
-    private int nmtoken(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    return 1;
-                }
-                expected(ch, "<NAME_PART>");
-            case 1:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    return 1;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean nmtoken() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<NAME_PART>");
+                case 1:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NMTOKENS = 42;
-    private int nmtokens(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    push(RULE_NMTOKEN, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_PART>");
-            case 1:
-                if(ch==0x20){
-                    return 2;
-                }
-                expected(ch, "[#x20;]");
-            case 2:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    push(RULE_NMTOKEN, 3, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_PART>");
-            case 3:
-                if(ch==0x20){
-                    return 2;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean nmtokens() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        push(RULE_NMTOKEN, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_PART>");
+                case 1:
+                    if(ch==0x20){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[#x20;]");
+                case 2:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        push(RULE_NMTOKEN, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_PART>");
+                case 3:
+                    if(ch==0x20){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NAMES = 43;
-    private int names(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 1:
-                if(ch==0x20){
-                    return 2;
-                }
-                expected(ch, "[#x20;]");
-            case 2:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME, 3, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 3:
-                if(ch==0x20){
-                    return 2;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean names() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 1:
+                    if(ch==0x20){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[#x20;]");
+                case 2:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 3:
+                    if(ch==0x20){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENUMERATION = 44;
-    private int enumeration(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='('){
-                    handler.enumerationAttribute();
-                    return 1;
-                }
-                expected(ch, "[(]");
-            case 1:
-                if(WS(ch)){
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    buffer.push();
-                    push(RULE_NMTOKEN, 3, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_PART>");
-            case 3:
-                if(WS(ch)){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 4;
-                }
-                if(ch=='|'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 7;
-                }
-                if(ch==')'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 4:
-                if(WS(ch)){
-                    return 4;
-                }
-                if(ch=='|'){
-                    return 7;
-                }
-                if(ch==')'){
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 7:
-                if(WS(ch)){
-                    return 7;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
-                    buffer.push();
-                    push(RULE_NMTOKEN, 9, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_PART>");
-            case 9:
-                if(WS(ch)){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 10;
-                }
-                if(ch=='|'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return 7;
-                }
-                if(ch==')'){
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 10:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='|'){
-                    return 7;
-                }
-                if(ch==')'){
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 13:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean enumeration() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='('){
+                        handler.enumerationAttribute();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[(]");
+                case 1:
+                    if(WS(ch)){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        buffer.push();
+                        push(RULE_NMTOKEN, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_PART>");
+                case 3:
+                    if(WS(ch)){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 4:
+                    if(WS(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 7:
+                    if(WS(ch)){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isName(ch)){
+                        buffer.push();
+                        push(RULE_NMTOKEN, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_PART>");
+                case 9:
+                    if(WS(ch)){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        handler.attributeEnumValue(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 10:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 13:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_MIXED = 45;
-    private int mixed(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='('){
-                    return 1;
-                }
-                expected(ch, "[(]");
-            case 1:
-                if(WS(ch)){
-                    return 2;
-                }
-                if(ch=='#'){
-                    return 4;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [\\#] OR [%]");
-            case 2:
-                if(WS(ch)){
-                    return 2;
-                }
-                if(ch=='#'){
-                    return 4;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [\\#] OR [%]");
-            case 3:
-                if(ch=='#'){
-                    return 4;
-                }
-                expected(ch, "[\\#]");
-            case 4:
-                if(ch=='P'){
-                    return 5;
-                }
-                expected(ch, "[P]");
-            case 5:
-                if(ch=='C'){
-                    return 6;
-                }
-                expected(ch, "[C]");
-            case 6:
-                if(ch=='D'){
-                    return 7;
-                }
-                expected(ch, "[D]");
-            case 7:
-                if(ch=='A'){
-                    return 8;
-                }
-                expected(ch, "[A]");
-            case 8:
-                if(ch=='T'){
-                    return 9;
-                }
-                expected(ch, "[T]");
-            case 9:
-                if(ch=='A'){
-                    return 10;
-                }
-                expected(ch, "[A]");
-            case 10:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 10;
-                if(lookAhead.length()==1){
-                    if(ch=='|'){
-                        consumed();
-                        return 13;
+    private boolean mixed() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='('){
+                        state = 1;
+                        consume(ch);
+                        continue;
                     }
+                    expected(ch, "[(]");
+                case 1:
                     if(WS(ch)){
-                        consumed();
-                        return 11;
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='#'){
+                        state = 4;
+                        consume(ch);
+                        continue;
                     }
                     if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 10, 0);
-                        consumed();
-                        return 1;
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 10;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)==')'){
-                        if(ch=='*'){
-                            consumed();
-                            consumed();
-                            return -2;
-                        }
-                        consumed();
-                        return -1;
-                    }
-                }
-                expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
-            case 11:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 11;
-                if(lookAhead.length()==1){
-                    if(ch=='|'){
-                        consumed();
-                        return 13;
-                    }
+                    expected(ch, "<WS> OR [\\#] OR [%]");
+                case 2:
                     if(WS(ch)){
-                        consumed();
-                        return 11;
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='#'){
+                        state = 4;
+                        consume(ch);
+                        continue;
                     }
                     if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 10, 0);
-                        consumed();
-                        return 1;
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 11;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)==')'){
-                        if(ch=='*'){
-                            consumed();
-                            consumed();
-                            return -2;
+                    expected(ch, "<WS> OR [\\#] OR [%]");
+                case 3:
+                    if(ch=='#'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\#]");
+                case 4:
+                    if(ch=='P'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P]");
+                case 5:
+                    if(ch=='C'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 6:
+                    if(ch=='D'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 7:
+                    if(ch=='A'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 8:
+                    if(ch=='T'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 9:
+                    if(ch=='A'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 10:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='|'){
+                            consume(-2);
+                            state = 13;
+                            continue;
                         }
-                        consumed();
-                        return -1;
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 11;
+                            continue;
+                        }
+                        if(ch=='%'){
+                            push(RULE_PE_REFERENCE, 10, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
                     }
-                }
-                expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
-            case 13:
-                if(WS(ch)){
-                    return 14;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME, 15, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 13, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 14:
-                if(WS(ch)){
-                    return 14;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME, 15, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 13, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 15:
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='|'){
-                    return 13;
-                }
-                if(ch==')'){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [|] OR [)] OR [%]");
-            case 16:
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='|'){
-                    return 13;
-                }
-                if(ch==')'){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [|] OR [)] OR [%]");
-            case 19:
-                if(ch=='*'){
-                    return -2;
-                }
-                expected(ch, "[*]");
-            case 20:
-                // EOF-State
-                return -1;
-            case 21:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)==')'){
+                            if(ch=='*'){
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = -1;
+                                return true;
+                            }
+                            consume(-2);
+                            stack[free-1] = -1;
+                            return true;
+                        }
+                    }
+                    expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
+                case 11:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='|'){
+                            consume(-2);
+                            state = 13;
+                            continue;
+                        }
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 11;
+                            continue;
+                        }
+                        if(ch=='%'){
+                            push(RULE_PE_REFERENCE, 10, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)==')'){
+                            if(ch=='*'){
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = -1;
+                                return true;
+                            }
+                            consume(-2);
+                            stack[free-1] = -1;
+                            return true;
+                        }
+                    }
+                    expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
+                case 13:
+                    if(WS(ch)){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 14:
+                    if(WS(ch)){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 15:
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)] OR [%]");
+                case 16:
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)] OR [%]");
+                case 19:
+                    if(ch=='*'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[*]");
+                case 20:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 21:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NOTATION_TYPE = 46;
-    private int notation_type(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='N'){
-                    handler.notationAttribute();
-                    return 1;
-                }
-                expected(ch, "[N]");
-            case 1:
-                if(ch=='O'){
-                    return 2;
-                }
-                expected(ch, "[O]");
-            case 2:
-                if(ch=='T'){
-                    return 3;
-                }
-                expected(ch, "[T]");
-            case 3:
-                if(ch=='A'){
-                    return 4;
-                }
-                expected(ch, "[A]");
-            case 4:
-                if(ch=='T'){
-                    return 5;
-                }
-                expected(ch, "[T]");
-            case 5:
-                if(ch=='I'){
-                    return 6;
-                }
-                expected(ch, "[I]");
-            case 6:
-                if(ch=='O'){
-                    return 7;
-                }
-                expected(ch, "[O]");
-            case 7:
-                if(ch=='N'){
-                    return 8;
-                }
-                expected(ch, "[N]");
-            case 8:
-                if(WS(ch)){
-                    return 9;
-                }
-                expected(ch, "<WS>");
-            case 9:
-                if(WS(ch)){
-                    return 9;
-                }
-                if(ch=='('){
-                    return 10;
-                }
-                expected(ch, "<WS> OR [(]");
-            case 10:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 12, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 12:
-                if(WS(ch)){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 13;
-                }
-                if(ch=='|'){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 16;
-                }
-                if(ch==')'){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 13:
-                if(WS(ch)){
-                    return 13;
-                }
-                if(ch=='|'){
-                    return 16;
-                }
-                if(ch==')'){
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 16:
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 18, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 18:
-                if(WS(ch)){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 19;
-                }
-                if(ch=='|'){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return 16;
-                }
-                if(ch==')'){
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 19:
-                if(WS(ch)){
-                    return 19;
-                }
-                if(ch=='|'){
-                    return 16;
-                }
-                if(ch==')'){
-                    return -2;
-                }
-                expected(ch, "<WS> OR [|] OR [)]");
-            case 22:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean notation_type() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='N'){
+                        handler.notationAttribute();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 1:
+                    if(ch=='O'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 2:
+                    if(ch=='T'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 3:
+                    if(ch=='A'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 4:
+                    if(ch=='T'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 5:
+                    if(ch=='I'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 6:
+                    if(ch=='O'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 7:
+                    if(ch=='N'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 8:
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 9:
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='('){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [(]");
+                case 10:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 12, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START>");
+                case 12:
+                    if(WS(ch)){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 13:
+                    if(WS(ch)){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 16:
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START>");
+                case 18:
+                    if(WS(ch)){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        handler.attributeNotationValue(buffer.pop(0, 0));
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 19:
+                    if(WS(ch)){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='|'){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [|] OR [)]");
+                case 22:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENUMERATED_TYPE = 47;
-    private int enumerated_type(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='N'){
-                    push(RULE_NOTATION_TYPE, -2, 0);
-                    handler.notationAttribute();
-                    return 1;
-                }
-                if(ch=='('){
-                    push(RULE_ENUMERATION, -2, 0);
-                    handler.enumerationAttribute();
-                    return 1;
-                }
-                expected(ch, "[N] OR [(]");
-            case 1:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean enumerated_type() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='N'){
+                        push(RULE_NOTATION_TYPE, -1, 0);
+                        handler.notationAttribute();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='('){
+                        push(RULE_ENUMERATION, -1, 0);
+                        handler.enumerationAttribute();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[N] OR [(]");
+                case 1:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ATT_TYPE = 48;
-    private int att_type(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch=='('){
-                        push(RULE_ENUMERATED_TYPE, -2, 0);
-                        push(RULE_ENUMERATION, -2, 0);
-                        handler.enumerationAttribute();
-                        consumed();
-                        return 1;
-                    }
-                    if(ch=='E'){
-                        push(RULE_TOKENIZED_TYPE, -2, 0);
-                        consumed();
-                        return 5;
-                    }
-                    if(ch=='I'){
-                        push(RULE_TOKENIZED_TYPE, -2, 0);
-                        consumed();
-                        return 23;
-                    }
-                    if(ch=='C'){
-                        push(RULE_STRING_TYPE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='N'){
-                        if(ch=='O'){
-                            push(RULE_ENUMERATED_TYPE, -2, 0);
-                            push(RULE_NOTATION_TYPE, -2, 0);
-                            handler.notationAttribute();
-                            consumed();
-                            consumed();
-                            return 2;
+    private boolean att_type() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='('){
+                            push(RULE_ENUMERATED_TYPE, -1, 0);
+                            push(RULE_ENUMERATION, -1, 0);
+                            handler.enumerationAttribute();
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
-                        if(ch=='M'){
-                            push(RULE_TOKENIZED_TYPE, -2, 0);
-                            consumed();
-                            consumed();
-                            return 15;
+                        if(ch=='E'){
+                            push(RULE_TOKENIZED_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 5;
+                            return true;
+                        }
+                        if(ch=='I'){
+                            push(RULE_TOKENIZED_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 23;
+                            return true;
+                        }
+                        if(ch=='C'){
+                            push(RULE_STRING_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                expected(ch, "[(] OR [E] OR [I] OR [C] OR [N][O] OR [N][M]");
-            case 1:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='N'){
+                            if(ch=='O'){
+                                push(RULE_ENUMERATED_TYPE, -1, 0);
+                                push(RULE_NOTATION_TYPE, -1, 0);
+                                handler.notationAttribute();
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='M'){
+                                push(RULE_TOKENIZED_TYPE, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 15;
+                                return true;
+                            }
+                        }
+                    }
+                    expected(ch, "[(] OR [E] OR [I] OR [C] OR [N][O] OR [N][M]");
+                case 1:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DEFAULT_DECL = 49;
-    private int default_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='\''){
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 3;
-                }
-                if(ch=='#'){
-                    return 2;
-                }
-                expected(ch, "['] OR [\"] OR [\\#]");
-            case 1:
-                handler.attributeDefaultValue();
-                return -1;
-            case 2:
-                if(ch=='R'){
-                    return 3;
-                }
-                if(ch=='I'){
-                    return 11;
-                }
-                if(ch=='F'){
-                    return 18;
-                }
-                expected(ch, "[R] OR [I] OR [F]");
-            case 3:
-                if(ch=='E'){
-                    return 4;
-                }
-                expected(ch, "[E]");
-            case 4:
-                if(ch=='Q'){
-                    return 5;
-                }
-                expected(ch, "[Q]");
-            case 5:
-                if(ch=='U'){
-                    return 6;
-                }
-                expected(ch, "[U]");
-            case 6:
-                if(ch=='I'){
-                    return 7;
-                }
-                expected(ch, "[I]");
-            case 7:
-                if(ch=='R'){
-                    return 8;
-                }
-                expected(ch, "[R]");
-            case 8:
-                if(ch=='E'){
-                    return 9;
-                }
-                expected(ch, "[E]");
-            case 9:
-                if(ch=='D'){
-                    return 10;
-                }
-                expected(ch, "[D]");
-            case 10:
-                handler.attributeRequired();
-                return -1;
-            case 11:
-                if(ch=='M'){
-                    return 12;
-                }
-                expected(ch, "[M]");
-            case 12:
-                if(ch=='P'){
-                    return 13;
-                }
-                expected(ch, "[P]");
-            case 13:
-                if(ch=='L'){
-                    return 14;
-                }
-                expected(ch, "[L]");
-            case 14:
-                if(ch=='I'){
-                    return 15;
-                }
-                expected(ch, "[I]");
-            case 15:
-                if(ch=='E'){
-                    return 16;
-                }
-                expected(ch, "[E]");
-            case 16:
-                if(ch=='D'){
-                    return 17;
-                }
-                expected(ch, "[D]");
-            case 17:
-                handler.attributeImplied();
-                return -1;
-            case 18:
-                if(ch=='I'){
-                    return 19;
-                }
-                expected(ch, "[I]");
-            case 19:
-                if(ch=='X'){
-                    return 20;
-                }
-                expected(ch, "[X]");
-            case 20:
-                if(ch=='E'){
-                    return 21;
-                }
-                expected(ch, "[E]");
-            case 21:
-                if(ch=='D'){
-                    return 22;
-                }
-                expected(ch, "[D]");
-            case 22:
-                if(WS(ch)){
-                    return 23;
-                }
-                expected(ch, "<WS>");
-            case 23:
-                if(WS(ch)){
-                    return 23;
-                }
-                if(ch=='\''){
-                    push(RULE_VALUE, 24, 0);
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_VALUE, 24, 0);
-                    handler.valueStart();
-                    return 3;
-                }
-                expected(ch, "<WS> OR ['] OR [\"]");
-            case 24:
-                handler.attributeFixedValue();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean default_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='\''){
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "['] OR [\"] OR [\\#]");
+                case 1:
+                    handler.attributeDefaultValue();
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    if(ch=='R'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='I'){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='F'){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[R] OR [I] OR [F]");
+                case 3:
+                    if(ch=='E'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 4:
+                    if(ch=='Q'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Q]");
+                case 5:
+                    if(ch=='U'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[U]");
+                case 6:
+                    if(ch=='I'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 7:
+                    if(ch=='R'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[R]");
+                case 8:
+                    if(ch=='E'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 9:
+                    if(ch=='D'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 10:
+                    handler.attributeRequired();
+                    stack[free-1] = -1;
+                    return true;
+                case 11:
+                    if(ch=='M'){
+                        state = 12;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[M]");
+                case 12:
+                    if(ch=='P'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P]");
+                case 13:
+                    if(ch=='L'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[L]");
+                case 14:
+                    if(ch=='I'){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 15:
+                    if(ch=='E'){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 16:
+                    if(ch=='D'){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 17:
+                    handler.attributeImplied();
+                    stack[free-1] = -1;
+                    return true;
+                case 18:
+                    if(ch=='I'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 19:
+                    if(ch=='X'){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[X]");
+                case 20:
+                    if(ch=='E'){
+                        state = 21;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 21:
+                    if(ch=='D'){
+                        state = 22;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 22:
+                    if(WS(ch)){
+                        state = 23;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 23:
+                    if(WS(ch)){
+                        state = 23;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        push(RULE_VALUE, 24, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_VALUE, 24, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR ['] OR [\"]");
+                case 24:
+                    handler.attributeFixedValue();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ATT_DEF = 50;
-    private int att_def(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 1:
-                if(WS(ch)){
-                    handler.dtdAttribute(buffer.pop(0, 0));
-                    return 2;
-                }
-                expected(ch, "<WS>");
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
+    private boolean att_def() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 1:
                     if(WS(ch)){
-                        consumed();
-                        return 2;
+                        handler.dtdAttribute(buffer.pop(0, 0));
+                        state = 2;
+                        consume(ch);
+                        continue;
                     }
-                    if(ch=='('){
-                        push(RULE_ATT_TYPE, 3, 0);
-                        push(RULE_ENUMERATED_TYPE, -2, 0);
-                        push(RULE_ENUMERATION, -2, 0);
-                        handler.enumerationAttribute();
-                        consumed();
-                        return 1;
-                    }
-                    if(ch=='E'){
-                        push(RULE_ATT_TYPE, 3, 0);
-                        push(RULE_TOKENIZED_TYPE, -2, 0);
-                        consumed();
-                        return 5;
-                    }
-                    if(ch=='I'){
-                        push(RULE_ATT_TYPE, 3, 0);
-                        push(RULE_TOKENIZED_TYPE, -2, 0);
-                        consumed();
-                        return 23;
-                    }
-                    if(ch=='C'){
-                        push(RULE_ATT_TYPE, 3, 0);
-                        push(RULE_STRING_TYPE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='N'){
-                        if(ch=='O'){
-                            push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_ENUMERATED_TYPE, -2, 0);
-                            push(RULE_NOTATION_TYPE, -2, 0);
-                            handler.notationAttribute();
-                            consumed();
-                            consumed();
-                            return 2;
+                    expected(ch, "<WS>");
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 2;
+                            continue;
                         }
-                        if(ch=='M'){
+                        if(ch=='('){
                             push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_TOKENIZED_TYPE, -2, 0);
-                            consumed();
-                            consumed();
-                            return 15;
+                            push(RULE_ENUMERATED_TYPE, -1, 0);
+                            push(RULE_ENUMERATION, -1, 0);
+                            handler.enumerationAttribute();
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch=='E'){
+                            push(RULE_ATT_TYPE, 3, 0);
+                            push(RULE_TOKENIZED_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 5;
+                            return true;
+                        }
+                        if(ch=='I'){
+                            push(RULE_ATT_TYPE, 3, 0);
+                            push(RULE_TOKENIZED_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 23;
+                            return true;
+                        }
+                        if(ch=='C'){
+                            push(RULE_ATT_TYPE, 3, 0);
+                            push(RULE_STRING_TYPE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                expected(ch, "<WS> OR [(] OR [E] OR [I] OR [C] OR [N][O] OR [N][M]");
-            case 3:
-                if(WS(ch)){
-                    return 4;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 3, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 4:
-                if(WS(ch)){
-                    return 5;
-                }
-                if(ch=='\''){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 3;
-                }
-                if(ch=='#'){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    return 2;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 4, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
-            case 5:
-                if(WS(ch)){
-                    return 5;
-                }
-                if(ch=='\''){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 1;
-                }
-                if(ch=='"'){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    push(RULE_VALUE, 1, 0);
-                    handler.valueStart();
-                    return 3;
-                }
-                if(ch=='#'){
-                    push(RULE_DEFAULT_DECL, -2, 0);
-                    return 2;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 4, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
-            case 6:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='N'){
+                            if(ch=='O'){
+                                push(RULE_ATT_TYPE, 3, 0);
+                                push(RULE_ENUMERATED_TYPE, -1, 0);
+                                push(RULE_NOTATION_TYPE, -1, 0);
+                                handler.notationAttribute();
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='M'){
+                                push(RULE_ATT_TYPE, 3, 0);
+                                push(RULE_TOKENIZED_TYPE, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 15;
+                                return true;
+                            }
+                        }
+                    }
+                    expected(ch, "<WS> OR [(] OR [E] OR [I] OR [C] OR [N][O] OR [N][M]");
+                case 3:
+                    if(WS(ch)){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 3, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 4:
+                    if(WS(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
+                case 5:
+                    if(WS(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='\''){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='"'){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        push(RULE_VALUE, 1, 0);
+                        handler.valueStart();
+                        consume(ch);
+                        stack[free-1] = 3;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        push(RULE_DEFAULT_DECL, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 2;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR ['] OR [\"] OR [\\#] OR [%]");
+                case 6:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ATT_LIST_DECL = 51;
-    private int att_list_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='A'){
-                    return 3;
-                }
-                expected(ch, "[A]");
-            case 3:
-                if(ch=='T'){
-                    return 4;
-                }
-                expected(ch, "[T]");
-            case 4:
-                if(ch=='T'){
-                    return 5;
-                }
-                expected(ch, "[T]");
-            case 5:
-                if(ch=='L'){
-                    return 6;
-                }
-                expected(ch, "[L]");
-            case 6:
-                if(ch=='I'){
-                    return 7;
-                }
-                expected(ch, "[I]");
-            case 7:
-                if(ch=='S'){
-                    return 8;
-                }
-                expected(ch, "[S]");
-            case 8:
-                if(ch=='T'){
-                    return 9;
-                }
-                expected(ch, "[T]");
-            case 9:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 9, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 10:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 13, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 11:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 13, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 13:
-                if(WS(ch)){
-                    handler.dtdAttributesStart(buffer.pop(0, 0));
-                    return 15;
-                }
-                if(ch=='%'){
-                    handler.dtdAttributesStart(buffer.pop(0, 0));
-                    push(RULE_PE_REFERENCE, 14, 0);
-                    return 1;
-                }
-                if(ch=='>'){
-                    handler.dtdAttributesStart(buffer.pop(0, 0));
-                    return 19;
-                }
-                expected(ch, "<WS> OR [%] OR [>]");
-            case 14:
-                if(WS(ch)){
-                    return 15;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 14, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 15:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_ATT_DEF, 17, 0);
-                    buffer.push();
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='>'){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
-            case 16:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_ATT_DEF, 17, 0);
-                    buffer.push();
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='>'){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
-            case 17:
-                if(ch=='>'){
-                    return 19;
-                }
-                if(WS(ch)){
-                    return 15;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 14, 0);
-                    return 1;
-                }
-                expected(ch, "[>] OR <WS> OR [%]");
-            case 19:
-                handler.dtdAttributesEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean att_list_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='A'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[A]");
+                case 3:
+                    if(ch=='T'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 4:
+                    if(ch=='T'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 5:
+                    if(ch=='L'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[L]");
+                case 6:
+                    if(ch=='I'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 7:
+                    if(ch=='S'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[S]");
+                case 8:
+                    if(ch=='T'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 9:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 10:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 11:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 13:
+                    if(WS(ch)){
+                        handler.dtdAttributesStart(buffer.pop(0, 0));
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        handler.dtdAttributesStart(buffer.pop(0, 0));
+                        push(RULE_PE_REFERENCE, 14, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='>'){
+                        handler.dtdAttributesStart(buffer.pop(0, 0));
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [%] OR [>]");
+                case 14:
+                    if(WS(ch)){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 14, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 15:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_ATT_DEF, 17, 0);
+                        buffer.push();
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
+                case 16:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_ATT_DEF, 17, 0);
+                        buffer.push();
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
+                case 17:
+                    if(ch=='>'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 14, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[>] OR <WS> OR [%]");
+                case 19:
+                    handler.dtdAttributesEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_CHILDREN = 52;
-    private int children(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='('){
-                    return 1;
-                }
-                expected(ch, "[(]");
-            case 1:
-                if(WS(ch)){
-                    return 2;
-                }
-                if(ch=='('){
-                    push(RULE_CHILDREN, 4, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 4, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
-            case 2:
-                if(WS(ch)){
-                    return 2;
-                }
-                if(ch=='('){
-                    push(RULE_CHILDREN, 4, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 4, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
-            case 3:
-                if(ch=='('){
-                    push(RULE_CHILDREN, 4, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 4, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR <NAME_START>");
-            case 4:
-                if(ch=='|'){
-                    return 8;
-                }
-                if(ch==','){
-                    return 17;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 5;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 4, 0);
-                    return 1;
-                }
-                expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
-            case 5:
-                if(ch=='|'){
-                    return 8;
-                }
-                if(ch==','){
-                    return 17;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 5;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 4, 0);
-                    return 1;
-                }
-                expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
-            case 8:
-                if(ch=='('){
-                    push(RULE_CHILDREN, 10, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 9;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 10, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 8, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
-            case 9:
-                if(ch=='('){
-                    push(RULE_CHILDREN, 10, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 9;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 10, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 8, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
-            case 10:
-                if(ch=='|'){
-                    return 8;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "[|] OR [)] OR <WS> OR [%]");
-            case 11:
-                if(ch=='|'){
-                    return 8;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "[|] OR [)] OR <WS> OR [%]");
-            case 14:
-                if(ch=='?' || ch=='+' || ch=='*'){
-                    return -2;
-                }
-                return -1;
-            case 15:
-                // EOF-State
-                return -1;
-            case 17:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 19, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 18;
-                }
-                if(ch=='('){
-                    push(RULE_CHILDREN, 19, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 17, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
-            case 18:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME_CARDINALITY, 19, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 18;
-                }
-                if(ch=='('){
-                    push(RULE_CHILDREN, 19, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 17, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
-            case 19:
-                if(ch==','){
-                    return 17;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 20;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 19, 0);
-                    return 1;
-                }
-                expected(ch, "[,] OR [)] OR <WS> OR [%]");
-            case 20:
-                if(ch==','){
-                    return 17;
-                }
-                if(ch==')'){
-                    return 14;
-                }
-                if(WS(ch)){
-                    return 20;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 19, 0);
-                    return 1;
-                }
-                expected(ch, "[,] OR [)] OR <WS> OR [%]");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean children() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='('){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[(]");
+                case 1:
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 4, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 4, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
+                case 2:
+                    if(WS(ch)){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 4, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 4, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
+                case 3:
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 4, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 4, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[(] OR <NAME_START>");
+                case 4:
+                    if(ch=='|'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==','){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
+                case 5:
+                    if(ch=='|'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==','){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
+                case 8:
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 10, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 10, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 8, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
+                case 9:
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 10, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 10, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 8, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
+                case 10:
+                    if(ch=='|'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[|] OR [)] OR <WS> OR [%]");
+                case 11:
+                    if(ch=='|'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[|] OR [)] OR <WS> OR [%]");
+                case 14:
+                    if(ch=='?' || ch=='+' || ch=='*'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 15:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 17:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 19, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 19, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 17, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
+                case 18:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME_CARDINALITY, 19, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='('){
+                        push(RULE_CHILDREN, 19, 0);
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 17, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
+                case 19:
+                    if(ch==','){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 19, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[,] OR [)] OR <WS> OR [%]");
+                case 20:
+                    if(ch==','){
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==')'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 20;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 19, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[,] OR [)] OR <WS> OR [%]");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_NAME_CARDINALITY = 53;
-    private int name_cardinality(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                expected(ch, "<NAME_START>");
-            case 1:
-                if(ch=='?' || ch=='*' || ch=='+'){
-                    return -2;
-                }
-                return -1;
-            case 2:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean name_cardinality() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<NAME_START>");
+                case 1:
+                    if(ch=='?' || ch=='*' || ch=='+'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DECL_SEP = 54;
-    private int decl_sep(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='%'){
-                    handler.peReferenceOutsideMarkup();
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 3;
-                }
-                expected(ch, "[%] OR <WS>");
-            case 2:
-                // EOF-State
-                return -1;
-            case 3:
-                if(WS(ch)){
-                    return 3;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean decl_sep() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='%'){
+                        handler.peReferenceOutsideMarkup();
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[%] OR <WS>");
+                case 2:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    if(WS(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_MARKUP_DECL = 55;
-    private int markup_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+    private boolean markup_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 0;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                expected(ch, "[<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
-            case 1:
-                // EOF-State
-                return -1;
-            case 2:
-                // EOF-State
-                return -1;
-            case 3:
-                // EOF-State
-                return -1;
-            case 4:
-                // EOF-State
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            case 6:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    expected(ch, "[<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
+                case 1:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ELEMENT_DECL = 56;
-    private int element_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='E'){
-                    return 3;
-                }
-                expected(ch, "[E]");
-            case 3:
-                if(ch=='L'){
-                    return 4;
-                }
-                expected(ch, "[L]");
-            case 4:
-                if(ch=='E'){
-                    return 5;
-                }
-                expected(ch, "[E]");
-            case 5:
-                if(ch=='M'){
-                    return 6;
-                }
-                expected(ch, "[M]");
-            case 6:
-                if(ch=='E'){
-                    return 7;
-                }
-                expected(ch, "[E]");
-            case 7:
-                if(ch=='N'){
-                    return 8;
-                }
-                expected(ch, "[N]");
-            case 8:
-                if(ch=='T'){
-                    return 9;
-                }
-                expected(ch, "[T]");
-            case 9:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 9, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 10:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 13, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 11:
-                if(WS(ch)){
-                    return 11;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 13, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 10, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START> OR [%]");
-            case 13:
-                if(WS(ch)){
-                    handler.dtdElement(buffer.pop(0, 0));
-                    return 15;
-                }
-                if(ch=='%'){
-                    handler.dtdElement(buffer.pop(0, 0));
-                    push(RULE_PE_REFERENCE, 14, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 14:
-                if(WS(ch)){
-                    return 15;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 14, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [%]");
-            case 15:
-                if(ch=='('){
-                    return 18;
-                }
-                if(ch=='E'){
-                    return 27;
-                }
-                if(ch=='A'){
-                    return 31;
-                }
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
-            case 16:
-                if(ch=='('){
-                    return 18;
-                }
-                if(ch=='E'){
-                    return 27;
-                }
-                if(ch=='A'){
-                    return 31;
-                }
-                if(WS(ch)){
-                    return 16;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 15, 0);
-                    return 1;
-                }
-                expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
-            case 18:
-                if(WS(ch)){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 18, 0);
-                    return 1;
-                }
-                if(ch=='('){
-                    handler.notMixed();
-                    push(RULE_CHILDREN, 21, 3);
-                    push(RULE_CHILDREN, 4, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    handler.notMixed();
-                    push(RULE_CHILDREN, 21, 3);
-                    push(RULE_NAME_CARDINALITY, 4, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='#'){
-                    push(RULE_MIXED, 21, 3);
-                    return 4;
-                }
-                expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
-            case 19:
-                if(WS(ch)){
-                    return 19;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 18, 0);
-                    return 1;
-                }
-                if(ch=='('){
-                    handler.notMixed();
-                    push(RULE_CHILDREN, 21, 3);
-                    push(RULE_CHILDREN, 4, 0);
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    handler.notMixed();
-                    push(RULE_CHILDREN, 21, 3);
-                    push(RULE_NAME_CARDINALITY, 4, 0);
-                    push(RULE_NAME, 1, 0);
-                    return 1;
-                }
-                if(ch=='#'){
-                    push(RULE_MIXED, 21, 3);
-                    return 4;
-                }
-                expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
-            case 21:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(WS(ch)){
-                    return 25;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 24, 0);
-                    return 1;
-                }
-                expected(ch, "[>] OR <WS> OR [%]");
-            case 24:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(WS(ch)){
-                    return 25;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 24, 0);
-                    return 1;
-                }
-                expected(ch, "[>] OR <WS> OR [%]");
-            case 25:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(WS(ch)){
-                    return 25;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 24, 0);
-                    return 1;
-                }
-                expected(ch, "[>] OR <WS> OR [%]");
-            case 26:
-                // EOF-State
-                return -1;
-            case 27:
-                if(ch=='M'){
-                    handler.notMixed();
-                    return 28;
-                }
-                expected(ch, "[M]");
-            case 28:
-                if(ch=='P'){
-                    return 29;
-                }
-                expected(ch, "[P]");
-            case 29:
-                if(ch=='T'){
-                    return 30;
-                }
-                expected(ch, "[T]");
-            case 30:
-                if(ch=='Y'){
-                    return 24;
-                }
-                expected(ch, "[Y]");
-            case 31:
-                if(ch=='N'){
-                    return 32;
-                }
-                expected(ch, "[N]");
-            case 32:
-                if(ch=='Y'){
-                    return 33;
-                }
-                expected(ch, "[Y]");
-            case 33:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(WS(ch)){
-                    return 25;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, 24, 0);
-                    return 1;
-                }
-                expected(ch, "[>] OR <WS> OR [%]");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean element_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='E'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 3:
+                    if(ch=='L'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[L]");
+                case 4:
+                    if(ch=='E'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 5:
+                    if(ch=='M'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[M]");
+                case 6:
+                    if(ch=='E'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 7:
+                    if(ch=='N'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 8:
+                    if(ch=='T'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 9:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 9, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 10:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 11:
+                    if(WS(ch)){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 13, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START> OR [%]");
+                case 13:
+                    if(WS(ch)){
+                        handler.dtdElement(buffer.pop(0, 0));
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        handler.dtdElement(buffer.pop(0, 0));
+                        push(RULE_PE_REFERENCE, 14, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 14:
+                    if(WS(ch)){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 14, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%]");
+                case 15:
+                    if(ch=='('){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='E'){
+                        state = 27;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='A'){
+                        state = 31;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
+                case 16:
+                    if(ch=='('){
+                        state = 18;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='E'){
+                        state = 27;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='A'){
+                        state = 31;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 16;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 15, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
+                case 18:
+                    if(WS(ch)){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='('){
+                        handler.notMixed();
+                        push(RULE_CHILDREN, 21, 3);
+                        push(RULE_CHILDREN, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        handler.notMixed();
+                        push(RULE_CHILDREN, 21, 3);
+                        push(RULE_NAME_CARDINALITY, 4, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        push(RULE_MIXED, 21, 3);
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
+                case 19:
+                    if(WS(ch)){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 18, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='('){
+                        handler.notMixed();
+                        push(RULE_CHILDREN, 21, 3);
+                        push(RULE_CHILDREN, 4, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        handler.notMixed();
+                        push(RULE_CHILDREN, 21, 3);
+                        push(RULE_NAME_CARDINALITY, 4, 0);
+                        push(RULE_NAME, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='#'){
+                        push(RULE_MIXED, 21, 3);
+                        consume(ch);
+                        stack[free-1] = 4;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
+                case 21:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 25;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 24, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[>] OR <WS> OR [%]");
+                case 24:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 25;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 24, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[>] OR <WS> OR [%]");
+                case 25:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 25;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 24, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[>] OR <WS> OR [%]");
+                case 26:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 27:
+                    if(ch=='M'){
+                        handler.notMixed();
+                        state = 28;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[M]");
+                case 28:
+                    if(ch=='P'){
+                        state = 29;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P]");
+                case 29:
+                    if(ch=='T'){
+                        state = 30;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 30:
+                    if(ch=='Y'){
+                        state = 24;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y]");
+                case 31:
+                    if(ch=='N'){
+                        state = 32;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 32:
+                    if(ch=='Y'){
+                        state = 33;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y]");
+                case 33:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 25;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, 24, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[>] OR <WS> OR [%]");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_INT_SUBSET = 57;
-    private int int_subset(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_DECL_SEP, 1, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        push(RULE_DECL_SEP, 1, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_MARKUP_DECL, 1, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+    private boolean int_subset() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            push(RULE_DECL_SEP, 1, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_DECL_SEP, 1, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 0;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_MARKUP_DECL, 1, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
-            case 1:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 1;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_DECL_SEP, 1, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        push(RULE_DECL_SEP, 1, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 1;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_MARKUP_DECL, 1, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 1;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 1;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
+                case 1:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            push(RULE_DECL_SEP, 1, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_DECL_SEP, 1, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
+                                push(RULE_MARKUP_DECL, 1, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_MARKUP_DECL, 1, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DOCTYPE_DECL = 58;
-    private int doctype_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='D'){
-                    return 3;
-                }
-                expected(ch, "[D]");
-            case 3:
-                if(ch=='O'){
-                    return 4;
-                }
-                expected(ch, "[O]");
-            case 4:
-                if(ch=='C'){
-                    return 5;
-                }
-                expected(ch, "[C]");
-            case 5:
-                if(ch=='T'){
-                    return 6;
-                }
-                expected(ch, "[T]");
-            case 6:
-                if(ch=='Y'){
-                    return 7;
-                }
-                expected(ch, "[Y]");
-            case 7:
-                if(ch=='P'){
-                    return 8;
-                }
-                expected(ch, "[P]");
-            case 8:
-                if(ch=='E'){
-                    return 9;
-                }
-                expected(ch, "[E]");
-            case 9:
-                if(WS(ch)){
-                    return 10;
-                }
-                expected(ch, "<WS>");
-            case 10:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    buffer.push();
-                    push(RULE_NAME, 12, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR <NAME_START>");
-            case 12:
-                if(WS(ch)){
-                    handler.dtdRoot(buffer.pop(0, 0));
-                    return 13;
-                }
-                if(ch=='['){
-                    handler.dtdRoot(buffer.pop(0, 0));
-                    handler.dtdStart();
-                    return 17;
-                }
-                if(ch=='>'){
-                    handler.dtdRoot(buffer.pop(0, 0));
-                    handler.dtdStart();
-                    return 21;
-                }
-                expected(ch, "<WS> OR [\\[] OR [>]");
-            case 13:
-                if(WS(ch)){
-                    return 13;
-                }
-                if(ch=='P'){
-                    push(RULE_EXTERNAL_ID, 14, 0);
-                    push(RULE_PUBLIC_ID, 1, 0);
-                    return 1;
-                }
-                if(ch=='S'){
-                    push(RULE_EXTERNAL_ID, 14, 0);
-                    push(RULE_SYSTEM_ID, -2, 0);
-                    return 1;
-                }
-                if(ch=='['){
-                    handler.dtdStart();
-                    return 17;
-                }
-                if(ch=='>'){
-                    handler.dtdStart();
-                    return 21;
-                }
-                expected(ch, "<WS> OR [P] OR [S] OR [\\[] OR [>]");
-            case 14:
-                if(ch=='['){
-                    handler.dtdStart();
-                    return 17;
-                }
-                if(ch=='>'){
-                    handler.dtdStart();
-                    return 21;
-                }
-                if(WS(ch)){
-                    return 14;
-                }
-                expected(ch, "[\\[] OR [>] OR <WS>");
-            case 17:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 17;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_INT_SUBSET, 18, 0);
-                        push(RULE_DECL_SEP, 1, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
+    private boolean doctype_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='D'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 3:
+                    if(ch=='O'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 4:
+                    if(ch=='C'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 5:
+                    if(ch=='T'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[T]");
+                case 6:
+                    if(ch=='Y'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[Y]");
+                case 7:
+                    if(ch=='P'){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[P]");
+                case 8:
+                    if(ch=='E'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 9:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 10:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        buffer.push();
+                        push(RULE_NAME, 12, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR <NAME_START>");
+                case 12:
+                    if(WS(ch)){
+                        handler.dtdRoot(buffer.pop(0, 0));
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='['){
+                        handler.dtdRoot(buffer.pop(0, 0));
+                        handler.dtdStart();
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        handler.dtdRoot(buffer.pop(0, 0));
+                        handler.dtdStart();
+                        state = 21;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [\\[] OR [>]");
+                case 13:
+                    if(WS(ch)){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='P'){
+                        push(RULE_EXTERNAL_ID, 14, 0);
+                        push(RULE_PUBLIC_ID, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='S'){
+                        push(RULE_EXTERNAL_ID, 14, 0);
+                        push(RULE_SYSTEM_ID, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='['){
+                        handler.dtdStart();
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        handler.dtdStart();
+                        state = 21;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [P] OR [S] OR [\\[] OR [>]");
+                case 14:
+                    if(ch=='['){
+                        handler.dtdStart();
+                        state = 17;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='>'){
+                        handler.dtdStart();
+                        state = 21;
+                        consume(ch);
+                        continue;
                     }
                     if(WS(ch)){
-                        push(RULE_INT_SUBSET, 18, 0);
-                        push(RULE_DECL_SEP, 1, 0);
-                        consumed();
-                        return 3;
+                        state = 14;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 17;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
+                    expected(ch, "[\\[] OR [>] OR <WS>");
+                case 17:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
                             push(RULE_INT_SUBSET, 18, 0);
-                            push(RULE_MARKUP_DECL, 1, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            push(RULE_DECL_SEP, 1, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_INT_SUBSET, 18, 0);
+                            push(RULE_DECL_SEP, 1, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 17;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 push(RULE_INT_SUBSET, 18, 0);
                                 push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_INT_SUBSET, 18, 0);
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_INT_SUBSET, 18, 0);
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 17;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_INT_SUBSET, 18, 0);
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_INT_SUBSET, 18, 0);
                                     push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_INT_SUBSET, 18, 0);
+                                    push(RULE_MARKUP_DECL, 1, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
-            case 18:
-                if(ch==']'){
-                    return 19;
-                }
-                expected(ch, "[\\]]");
-            case 19:
-                if(ch=='>'){
-                    return 21;
-                }
-                if(WS(ch)){
-                    return 19;
-                }
-                expected(ch, "[>] OR <WS>");
-            case 21:
-                handler.dtdEnd();
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_INT_SUBSET, 18, 0);
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_INT_SUBSET, 18, 0);
+                                        push(RULE_MARKUP_DECL, 1, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
+                case 18:
+                    if(ch==']'){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]]");
+                case 19:
+                    if(ch=='>'){
+                        state = 21;
+                        consume(ch);
+                        continue;
+                    }
+                    if(WS(ch)){
+                        state = 19;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>] OR <WS>");
+                case 21:
+                    handler.dtdEnd();
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_PROLOG = 59;
-    private int prolog(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        handler.xdeclEnd();
-                        push(RULE_MISC, 2, 0);
-                        consumed();
-                        return 1;
+    private boolean prolog() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            handler.xdeclEnd();
+                            push(RULE_MISC, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='D'){
-                                handler.xdeclEnd();
-                                push(RULE_DOCTYPE_DECL, 4, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                handler.xdeclEnd();
-                                push(RULE_MISC, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='D'){
+                                    handler.xdeclEnd();
+                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    handler.xdeclEnd();
+                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<6)
-                    return 0;
-                if(lookAhead.length()==6){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='?'){
-                            if(lookAhead.charAt(2)=='x'){
-                                if(lookAhead.charAt(3)=='m'){
-                                    if(lookAhead.charAt(4)=='l'){
-                                        if(WS(ch)){
-                                            push(RULE_XDECL, 1, 0);
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            return 6;
+                    if(ch!=-1 && lookAhead.length()<6)
+                        continue;
+                    if(lookAhead.length()==6){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='?'){
+                                if(lookAhead.charAt(2)=='x'){
+                                    if(lookAhead.charAt(3)=='m'){
+                                        if(lookAhead.charAt(4)=='l'){
+                                            if(WS(ch)){
+                                                push(RULE_XDECL, 1, 0);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                stack[free-1] = 6;
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                if(lookAhead.charAt(0)=='<'){
-                    handler.xdeclEnd();
-                    push(RULE_MISC, 2, 0);
-                    push(RULE_PI, -2, 0);
-                    consumed();
-                    lookAhead.reset();
-                    return 1;
-                }
-                handler.xdeclEnd();
-                return -1;
-            case 1:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 1;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
+                    if(lookAhead.charAt(0)=='<'){
                         handler.xdeclEnd();
                         push(RULE_MISC, 2, 0);
-                        consumed();
-                        return 1;
+                        push(RULE_PI, -1, 0);
+                        consume(-2);
+                        lookAhead.reset();
+                        stack[free-1] = 1;
+                        return true;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 1;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
+                    handler.xdeclEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 1:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
                             handler.xdeclEnd();
                             push(RULE_MISC, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 1;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='D'){
-                                handler.xdeclEnd();
-                                push(RULE_DOCTYPE_DECL, 4, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 handler.xdeclEnd();
                                 push(RULE_MISC, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                handler.xdeclEnd();
-                return -1;
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        push(RULE_MISC, 2, 0);
-                        consumed();
-                        return 1;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='D'){
+                                    handler.xdeclEnd();
+                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    handler.xdeclEnd();
+                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
+                    handler.xdeclEnd();
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
                             push(RULE_MISC, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 2;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='D'){
-                                push(RULE_DOCTYPE_DECL, 4, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 push(RULE_MISC, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                return -1;
-            case 4:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 4;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        push(RULE_MISC, 4, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 4;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='!'){
-                            push(RULE_MISC, 4, 0);
-                            push(RULE_COMMENT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch=='?'){
-                            push(RULE_MISC, 4, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='D'){
+                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            push(RULE_MISC, 4, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='!'){
+                                push(RULE_MISC, 4, 0);
+                                push(RULE_COMMENT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_MISC, 4, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_DOCUMENT = 60;
-    private int document(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        push(RULE_PROLOG, 1, 0);
-                        handler.xdeclEnd();
-                        push(RULE_MISC, 2, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+    private boolean document() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
                             push(RULE_PROLOG, 1, 0);
                             handler.xdeclEnd();
-                            free -= 2;
-                            push(RULE_ELEM, 2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
-                            buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
+                            push(RULE_MISC, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='D'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 push(RULE_PROLOG, 1, 0);
                                 handler.xdeclEnd();
-                                push(RULE_DOCTYPE_DECL, 4, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_PROLOG, 1, 0);
-                                handler.xdeclEnd();
-                                push(RULE_MISC, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                free -= 2;
+                                push(RULE_ELEM, 2, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<6)
-                    return 0;
-                if(lookAhead.length()==6){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='?'){
-                            if(lookAhead.charAt(2)=='x'){
-                                if(lookAhead.charAt(3)=='m'){
-                                    if(lookAhead.charAt(4)=='l'){
-                                        if(WS(ch)){
-                                            push(RULE_PROLOG, 1, 0);
-                                            push(RULE_XDECL, 1, 0);
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            return 6;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='D'){
+                                    push(RULE_PROLOG, 1, 0);
+                                    handler.xdeclEnd();
+                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_PROLOG, 1, 0);
+                                    handler.xdeclEnd();
+                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<6)
+                        continue;
+                    if(lookAhead.length()==6){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='?'){
+                                if(lookAhead.charAt(2)=='x'){
+                                    if(lookAhead.charAt(3)=='m'){
+                                        if(lookAhead.charAt(4)=='l'){
+                                            if(WS(ch)){
+                                                push(RULE_PROLOG, 1, 0);
+                                                push(RULE_XDECL, 1, 0);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                stack[free-1] = 6;
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                if(lookAhead.charAt(0)=='<'){
-                    push(RULE_PROLOG, 1, 0);
-                    handler.xdeclEnd();
-                    push(RULE_MISC, 2, 0);
-                    push(RULE_PI, -2, 0);
-                    consumed();
-                    lookAhead.reset();
-                    return 1;
-                }
-                expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][!][D] OR [<][!][\\-] OR [<][?][x][m][l]<WS> OR [<]");
-            case 1:
-                if(ch=='<'){
-                    push(RULE_ELEM, 2, 0);
-                    push(RULE_ELEM_ATTRS, 1, 0);
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        push(RULE_MISC, 2, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
                     if(lookAhead.charAt(0)=='<'){
-                        if(ch=='!'){
+                        push(RULE_PROLOG, 1, 0);
+                        handler.xdeclEnd();
+                        push(RULE_MISC, 2, 0);
+                        push(RULE_PI, -1, 0);
+                        consume(-2);
+                        lookAhead.reset();
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][!][D] OR [<][!][\\-] OR [<][?][x][m][l]<WS> OR [<]");
+                case 1:
+                    if(ch=='<'){
+                        push(RULE_ELEM, 2, 0);
+                        push(RULE_ELEM_ATTRS, 1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "[<]");
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
                             push(RULE_MISC, 2, 0);
-                            push(RULE_COMMENT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch=='?'){
-                            push(RULE_MISC, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='!'){
+                                push(RULE_MISC, 2, 0);
+                                push(RULE_COMMENT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_MISC, 2, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_INT_ELEM_CONTENT = 61;
-    private int int_elem_content(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        push(RULE_ELEM_CONTENT, 0, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
-                    }
-                    if(ch=='&'){
-                        push(RULE_ELEM_CONTENT, 0, 0);
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_ELEM_CONTENT, 0, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+    private boolean int_elem_content() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
                             push(RULE_ELEM_CONTENT, 0, 0);
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
                             buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
+                            consume(-2);
+                            stack[free-1] = 8;
+                            return true;
                         }
-                        if(ch=='?'){
+                        if(ch=='&'){
                             push(RULE_ELEM_CONTENT, 0, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            push(RULE_ELEM_CONTENT, 0, 0);
+                            buffer.push();
+                            consume(-2);
+                            stack[free-1] = 6;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 push(RULE_ELEM_CONTENT, 0, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
                             }
-                            if(ch=='['){
+                            if(ch=='?'){
                                 push(RULE_ELEM_CONTENT, 0, 0);
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    push(RULE_ELEM_CONTENT, 0, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_ELEM_CONTENT, 0, 0);
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_TEXT_DECL = 62;
-    private int text_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='?'){
-                    return 2;
-                }
-                expected(ch, "[?]");
-            case 2:
-                if(ch=='x'){
-                    return 3;
-                }
-                expected(ch, "[x]");
-            case 3:
-                if(ch=='m'){
-                    return 4;
-                }
-                expected(ch, "[m]");
-            case 4:
-                if(ch=='l'){
-                    return 5;
-                }
-                expected(ch, "[l]");
-            case 5:
-                if(WS(ch)){
-                    return 6;
-                }
-                expected(ch, "<WS>");
-            case 6:
-                if(ch=='v'){
-                    push(RULE_VERSION_INFO, 7, 0);
-                    return 1;
-                }
-                if(ch=='e'){
-                    push(RULE_ENC_DECL, 10, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    return 6;
-                }
-                expected(ch, "[v] OR [e] OR <WS>");
-            case 7:
-                if(WS(ch)){
-                    return 8;
-                }
-                expected(ch, "<WS>");
-            case 8:
-                if(WS(ch)){
-                    return 8;
-                }
-                if(ch=='e'){
-                    push(RULE_ENC_DECL, 10, 0);
-                    return 1;
-                }
-                expected(ch, "<WS> OR [e]");
-            case 10:
-                if(WS(ch)){
-                    return 10;
-                }
-                if(ch=='?'){
-                    return 11;
-                }
-                expected(ch, "<WS> OR [?]");
-            case 11:
-                if(ch=='>'){
-                    handler.xdeclEnd();
-                    return -2;
-                }
-                expected(ch, "[>]");
-            case 12:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean text_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='?'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[?]");
+                case 2:
+                    if(ch=='x'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[x]");
+                case 3:
+                    if(ch=='m'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[m]");
+                case 4:
+                    if(ch=='l'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[l]");
+                case 5:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 6:
+                    if(ch=='v'){
+                        push(RULE_VERSION_INFO, 7, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='e'){
+                        push(RULE_ENC_DECL, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[v] OR [e] OR <WS>");
+                case 7:
+                    if(WS(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS>");
+                case 8:
+                    if(WS(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='e'){
+                        push(RULE_ENC_DECL, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<WS> OR [e]");
+                case 10:
+                    if(WS(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='?'){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [?]");
+                case 11:
+                    if(ch=='>'){
+                        handler.xdeclEnd();
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[>]");
+                case 12:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_IGNORE_SECT = 63;
-    private int ignore_sect(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='I'){
-                    return 1;
-                }
-                expected(ch, "[I]");
-            case 1:
-                if(ch=='G'){
-                    return 2;
-                }
-                expected(ch, "[G]");
-            case 2:
-                if(ch=='N'){
-                    return 3;
-                }
-                expected(ch, "[N]");
-            case 3:
-                if(ch=='O'){
-                    return 4;
-                }
-                expected(ch, "[O]");
-            case 4:
-                if(ch=='R'){
-                    return 5;
-                }
-                expected(ch, "[R]");
-            case 5:
-                if(ch=='E'){
-                    return 6;
-                }
-                expected(ch, "[E]");
-            case 6:
-                if(WS(ch)){
-                    return 6;
-                }
-                if(ch=='['){
-                    return 7;
-                }
-                expected(ch, "<WS> OR [\\[]");
-            case 7:
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[\\]] OR [<] OR <CHAR>");
-            case 8:
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[\\]] OR [<] OR <CHAR>");
-            case 9:
-                if(ch==']'){
-                    return 10;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[\\]] OR [<] OR <CHAR>");
-            case 10:
-                if(ch=='>'){
-                    return -2;
-                }
-                if(ch==']'){
-                    return 10;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
-            case 11:
-                // EOF-State
-                return -1;
-            case 13:
-                if(ch=='!'){
-                    return 14;
-                }
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
-            case 14:
-                if(ch=='['){
-                    return 15;
-                }
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
-            case 15:
-                if(ch==']'){
-                    push(RULE_IGNORE_SECT, 16, 7);
-                    return 9;
-                }
-                if(ch=='<'){
-                    push(RULE_IGNORE_SECT, 16, 7);
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    push(RULE_IGNORE_SECT, 16, 7);
-                    return 8;
-                }
-                expected(ch, "[\\]] OR [<] OR <CHAR>");
-            case 16:
-                if(ch==']'){
-                    return 9;
-                }
-                if(ch=='<'){
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 8;
-                }
-                expected(ch, "[\\]] OR [<] OR <CHAR>");
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean ignore_sect() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='I'){
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[I]");
+                case 1:
+                    if(ch=='G'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[G]");
+                case 2:
+                    if(ch=='N'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 3:
+                    if(ch=='O'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[O]");
+                case 4:
+                    if(ch=='R'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[R]");
+                case 5:
+                    if(ch=='E'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 6:
+                    if(WS(ch)){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='['){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [\\[]");
+                case 7:
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]] OR [<] OR <CHAR>");
+                case 8:
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]] OR [<] OR <CHAR>");
+                case 9:
+                    if(ch==']'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]] OR [<] OR <CHAR>");
+                case 10:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    if(ch==']'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
+                case 11:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 13:
+                    if(ch=='!'){
+                        state = 14;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
+                case 14:
+                    if(ch=='['){
+                        state = 15;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
+                case 15:
+                    if(ch==']'){
+                        push(RULE_IGNORE_SECT, 16, 7);
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        push(RULE_IGNORE_SECT, 16, 7);
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        push(RULE_IGNORE_SECT, 16, 7);
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]] OR [<] OR <CHAR>");
+                case 16:
+                    if(ch==']'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='<'){
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 8;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]] OR [<] OR <CHAR>");
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_EXT_SUBSET_DECL = 64;
-    private int ext_subset_decl(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_DECL_SEP, 2, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        push(RULE_DECL_SEP, 2, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_MARKUP_DECL, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+    private boolean ext_subset_decl() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            push(RULE_DECL_SEP, 2, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_DECL_SEP, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_CONDITIONAL_SECT, 2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 0;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_CONDITIONAL_SECT, 2, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                return -1;
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_DECL_SEP, 2, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        push(RULE_DECL_SEP, 2, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_MARKUP_DECL, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 2;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_CONDITIONAL_SECT, 2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 2;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            push(RULE_DECL_SEP, 2, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_DECL_SEP, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
+                                push(RULE_MARKUP_DECL, 2, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_CONDITIONAL_SECT, 2, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_CONDITIONAL_SECT = 65;
-    private int conditional_sect(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
-                    return 1;
-                }
-                expected(ch, "[<]");
-            case 1:
-                if(ch=='!'){
-                    return 2;
-                }
-                expected(ch, "[!]");
-            case 2:
-                if(ch=='['){
-                    return 3;
-                }
-                expected(ch, "[\\[]");
-            case 3:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 3;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        consumed();
-                        return 4;
+    private boolean conditional_sect() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        state = 1;
+                        consume(ch);
+                        continue;
                     }
-                    if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 3, 0);
-                        consumed();
-                        return 1;
+                    expected(ch, "[<]");
+                case 1:
+                    if(ch=='!'){
+                        state = 2;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 3;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='I'){
-                        if(ch=='G'){
-                            push(RULE_IGNORE_SECT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                    expected(ch, "[!]");
+                case 2:
+                    if(ch=='['){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\[]");
+                case 3:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 4;
+                            continue;
                         }
-                        if(ch=='N'){
-                            push(RULE_INCLUDE_SECT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
-            case 4:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 4;
-                if(lookAhead.length()==1){
-                    if(WS(ch)){
-                        consumed();
-                        return 4;
-                    }
-                    if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 3, 0);
-                        consumed();
-                        return 1;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 4;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='I'){
-                        if(ch=='G'){
-                            push(RULE_IGNORE_SECT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                        if(ch=='N'){
-                            push(RULE_INCLUDE_SECT, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                        if(ch=='%'){
+                            push(RULE_PE_REFERENCE, 3, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
                         }
                     }
-                }
-                expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
-            case 5:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='I'){
+                            if(ch=='G'){
+                                push(RULE_IGNORE_SECT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='N'){
+                                push(RULE_INCLUDE_SECT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
+                case 4:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(WS(ch)){
+                            consume(-2);
+                            state = 4;
+                            continue;
+                        }
+                        if(ch=='%'){
+                            push(RULE_PE_REFERENCE, 3, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='I'){
+                            if(ch=='G'){
+                                push(RULE_IGNORE_SECT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                            if(ch=='N'){
+                                push(RULE_INCLUDE_SECT, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_INCLUDE_SECT = 66;
-    private int include_sect(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='I'){
-                    return 1;
-                }
-                expected(ch, "[I]");
-            case 1:
-                if(ch=='N'){
-                    return 2;
-                }
-                expected(ch, "[N]");
-            case 2:
-                if(ch=='C'){
-                    return 3;
-                }
-                expected(ch, "[C]");
-            case 3:
-                if(ch=='L'){
-                    return 4;
-                }
-                expected(ch, "[L]");
-            case 4:
-                if(ch=='U'){
-                    return 5;
-                }
-                expected(ch, "[U]");
-            case 5:
-                if(ch=='D'){
-                    return 6;
-                }
-                expected(ch, "[D]");
-            case 6:
-                if(ch=='E'){
-                    return 7;
-                }
-                expected(ch, "[E]");
-            case 7:
-                if(WS(ch)){
-                    return 7;
-                }
-                if(ch=='['){
-                    return 8;
-                }
-                expected(ch, "<WS> OR [\\[]");
-            case 8:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 8;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_EXT_SUBSET_DECL, 9, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
+    private boolean include_sect() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='I'){
+                        state = 1;
+                        consume(ch);
+                        continue;
                     }
+                    expected(ch, "[I]");
+                case 1:
+                    if(ch=='N'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[N]");
+                case 2:
+                    if(ch=='C'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[C]");
+                case 3:
+                    if(ch=='L'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[L]");
+                case 4:
+                    if(ch=='U'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[U]");
+                case 5:
+                    if(ch=='D'){
+                        state = 6;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[D]");
+                case 6:
+                    if(ch=='E'){
+                        state = 7;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[E]");
+                case 7:
                     if(WS(ch)){
-                        push(RULE_EXT_SUBSET_DECL, 9, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        consumed();
-                        return 3;
+                        state = 7;
+                        consume(ch);
+                        continue;
                     }
-                    if(ch==']'){
-                        push(RULE_EXT_SUBSET_DECL, 9, 0);
-                        free -= 2;
-                        consumed();
-                        return 10;
+                    if(ch=='['){
+                        state = 8;
+                        consume(ch);
+                        continue;
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 8;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
+                    expected(ch, "<WS> OR [\\[]");
+                case 8:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
                             push(RULE_EXT_SUBSET_DECL, 9, 0);
-                            push(RULE_MARKUP_DECL, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            push(RULE_DECL_SEP, 2, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            push(RULE_DECL_SEP, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
+                        }
+                        if(ch==']'){
+                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            free -= 2;
+                            consume(-2);
+                            state = 10;
+                            continue;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 8;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
                                 push(RULE_EXT_SUBSET_DECL, 9, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_EXT_SUBSET_DECL, 9, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_EXT_SUBSET_DECL, 9, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_EXT_SUBSET_DECL, 9, 0);
-                                push(RULE_CONDITIONAL_SECT, 2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 8;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     push(RULE_EXT_SUBSET_DECL, 9, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     push(RULE_EXT_SUBSET_DECL, 9, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_CONDITIONAL_SECT, 2, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
-            case 9:
-                if(ch==']'){
-                    return 10;
-                }
-                expected(ch, "[\\]]");
-            case 10:
-                if(ch==']'){
-                    return 11;
-                }
-                expected(ch, "[\\]]");
-            case 11:
-                if(ch=='>'){
-                    return -2;
-                }
-                expected(ch, "[>]");
-            case 12:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
+                case 9:
+                    if(ch==']'){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]]");
+                case 10:
+                    if(ch==']'){
+                        state = 11;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "[\\]]");
+                case 11:
+                    if(ch=='>'){
+                        consume(ch);
+                        stack[free-1] = -1;
+                        return true;
+                    }
+                    expected(ch, "[>]");
+                case 12:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_EXT_SUBSET = 67;
-    private int ext_subset(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, -2, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        handler.xdeclEnd();
-                        push(RULE_EXT_SUBSET_DECL, -2, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                handler.xdeclEnd();
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_CONDITIONAL_SECT, 2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
+    private boolean ext_subset() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            handler.xdeclEnd();
+                            push(RULE_EXT_SUBSET_DECL, -1, 0);
+                            push(RULE_DECL_SEP, 2, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            handler.xdeclEnd();
+                            push(RULE_EXT_SUBSET_DECL, -1, 0);
+                            push(RULE_DECL_SEP, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 0;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
                                     handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, -2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
                                     handler.xdeclEnd();
-                                    push(RULE_EXT_SUBSET_DECL, -2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    handler.xdeclEnd();
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    handler.xdeclEnd();
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                    push(RULE_CONDITIONAL_SECT, 2, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<6)
-                    return 0;
-                if(lookAhead.length()==6){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='?'){
-                            if(lookAhead.charAt(2)=='x'){
-                                if(lookAhead.charAt(3)=='m'){
-                                    if(lookAhead.charAt(4)=='l'){
-                                        if(WS(ch)){
-                                            push(RULE_TEXT_DECL, 2, 0);
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            return 6;
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        handler.xdeclEnd();
+                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        handler.xdeclEnd();
+                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<6)
+                        continue;
+                    if(lookAhead.length()==6){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='?'){
+                                if(lookAhead.charAt(2)=='x'){
+                                    if(lookAhead.charAt(3)=='m'){
+                                        if(lookAhead.charAt(4)=='l'){
+                                            if(WS(ch)){
+                                                push(RULE_TEXT_DECL, 2, 0);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                stack[free-1] = 6;
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                if(lookAhead.charAt(0)=='<'){
+                    if(lookAhead.charAt(0)=='<'){
+                        handler.xdeclEnd();
+                        push(RULE_EXT_SUBSET_DECL, -1, 0);
+                        push(RULE_MARKUP_DECL, 2, 0);
+                        push(RULE_PI, -1, 0);
+                        consume(-2);
+                        lookAhead.reset();
+                        stack[free-1] = 1;
+                        return true;
+                    }
                     handler.xdeclEnd();
-                    push(RULE_EXT_SUBSET_DECL, -2, 0);
-                    push(RULE_MARKUP_DECL, 2, 0);
-                    push(RULE_PI, -2, 0);
-                    consumed();
-                    lookAhead.reset();
-                    return 1;
-                }
-                handler.xdeclEnd();
-                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                free -= 2;
-                return -1;
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(ch=='%'){
-                        push(RULE_EXT_SUBSET_DECL, -2, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(WS(ch)){
-                        push(RULE_EXT_SUBSET_DECL, -2, 0);
-                        push(RULE_DECL_SEP, 2, 0);
-                        consumed();
-                        return 3;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch=='?'){
-                            push(RULE_EXT_SUBSET_DECL, -2, 0);
-                            push(RULE_MARKUP_DECL, 2, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                    free -= 2;
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch=='%'){
+                            push(RULE_EXT_SUBSET_DECL, -1, 0);
+                            push(RULE_DECL_SEP, 2, 0);
+                            handler.peReferenceOutsideMarkup();
+                            push(RULE_PE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(WS(ch)){
+                            push(RULE_EXT_SUBSET_DECL, -1, 0);
+                            push(RULE_DECL_SEP, 2, 0);
+                            consume(-2);
+                            stack[free-1] = 3;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 2;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='A'){
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch=='?'){
+                                push(RULE_EXT_SUBSET_DECL, -1, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_ATT_LIST_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='N'){
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_NOTATION_DECL, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='-'){
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                                push(RULE_CONDITIONAL_SECT, 2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<4)
-                    return 2;
-                if(lookAhead.length()==4){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(lookAhead.charAt(2)=='E'){
-                                if(ch=='L'){
-                                    push(RULE_EXT_SUBSET_DECL, -2, 0);
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='A'){
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ELEMENT_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_ATT_LIST_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                                 if(ch=='N'){
-                                    push(RULE_EXT_SUBSET_DECL, -2, 0);
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ENTITY_DECL, -2, 0);
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    consumed();
-                                    return 4;
+                                    push(RULE_NOTATION_DECL, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='-'){
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                    push(RULE_MARKUP_DECL, 2, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                    push(RULE_CONDITIONAL_SECT, 2, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
                                 }
                             }
                         }
                     }
-                }
-                push(RULE_EXT_SUBSET_DECL, -2, 0);
-                free -= 2;
-                return -1;
-            case 3:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    if(ch!=-1 && lookAhead.length()<4)
+                        continue;
+                    if(lookAhead.length()==4){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(lookAhead.charAt(2)=='E'){
+                                    if(ch=='L'){
+                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ELEMENT_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                    if(ch=='N'){
+                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
+                                        push(RULE_MARKUP_DECL, 2, 0);
+                                        push(RULE_ENTITY_DECL, -1, 0);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        consume(-2);
+                                        stack[free-1] = 4;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    push(RULE_EXT_SUBSET_DECL, -1, 0);
+                    free -= 2;
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_ENTITY_VALUE_CONTENT = 68;
-    private int entity_value_content(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                if(ch=='%'){
-                    push(RULE_PE_REFERENCE, -2, 0);
-                    return 1;
-                }
-                expected(ch, "<ENTITY_CONTENT> OR [\\&] OR [%]");
-            case 3:
-                if(ch!=-1 && ENTITY_CONTENT(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                // EOF-State
-                return -1;
-            case 6:
-                // EOF-State
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+    private boolean entity_value_content() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ENTITY_CONTENT(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='%'){
+                        push(RULE_PE_REFERENCE, -1, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    expected(ch, "<ENTITY_CONTENT> OR [\\&] OR [%]");
+                case 3:
+                    if(ch!=-1 && ENTITY_CONTENT(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.rawValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    // EOF-State
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_EXTERNAL_ENTITY_VALUE = 69;
-    private int external_entity_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch=='<'){
+    private boolean external_entity_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch=='<'){
+                        buffer.push();
+                        state = 1;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        buffer.push();
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
                     buffer.push();
-                    return 1;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 1:
+                    if(ch=='?'){
+                        state = 2;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    if(ch=='x'){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    if(ch=='m'){
+                        state = 4;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 4:
+                    if(ch=='l'){
+                        state = 5;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 5:
+                    if(WS(ch)){
+                        handler.discard(buffer.pop(0, 0));
+                        state = 13;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        handler.xdeclEnd();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.xdeclEnd();
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 10:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                case 13:
+                    if(ch=='v'){
+                        push(RULE_TEXT_DECL, 14, 6);
+                        push(RULE_VERSION_INFO, 7, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch=='e'){
+                        push(RULE_TEXT_DECL, 14, 6);
+                        push(RULE_ENC_DECL, 10, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(WS(ch)){
+                        push(RULE_TEXT_DECL, 14, 6);
+                        consume(ch);
+                        stack[free-1] = 6;
+                        return true;
+                    }
+                    expected(ch, "[v] OR [e] OR <WS>");
+                case 14:
+                    if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
+                        buffer.push();
+                        state = 10;
+                        consume(ch);
+                        continue;
+                    }
                     buffer.push();
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                buffer.push();
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 1:
-                if(ch=='?'){
-                    return 2;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 2:
-                if(ch=='x'){
-                    return 3;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 3:
-                if(ch=='m'){
-                    return 4;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 4:
-                if(ch=='l'){
-                    return 5;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 5:
-                if(WS(ch)){
-                    handler.discard(buffer.pop(0, 0));
-                    return 13;
-                }
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    handler.xdeclEnd();
-                    return 10;
-                }
-                handler.xdeclEnd();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 10:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    return 10;
-                }
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            case 13:
-                if(ch=='v'){
-                    push(RULE_TEXT_DECL, 14, 6);
-                    push(RULE_VERSION_INFO, 7, 0);
-                    return 1;
-                }
-                if(ch=='e'){
-                    push(RULE_TEXT_DECL, 14, 6);
-                    push(RULE_ENC_DECL, 10, 0);
-                    return 1;
-                }
-                if(WS(ch)){
-                    push(RULE_TEXT_DECL, 14, 6);
-                    return 6;
-                }
-                expected(ch, "[v] OR [e] OR <WS>");
-            case 14:
-                if(ch!=-1 && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    buffer.push();
-                    return 10;
-                }
-                buffer.push();
-                handler.externalEntityValue(buffer.pop(0, 0));
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    handler.externalEntityValue(buffer.pop(0, 0));
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_INT_VALUE = 70;
-    private int int_value(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, 6, 0);
-                    return 1;
-                }
-                return -1;
-            case 3:
-                if(ch=='&'){
+    private boolean int_value() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, 6, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    if(ch=='&'){
+                        handler.rawValue(buffer.pop(0, 0));
+                        push(RULE_REFERENCE, 6, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
                     handler.rawValue(buffer.pop(0, 0));
-                    push(RULE_REFERENCE, 6, 0);
-                    return 1;
-                }
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    return 3;
-                }
-                handler.rawValue(buffer.pop(0, 0));
-                return -1;
-            case 6:
-                if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                    buffer.push();
-                    return 3;
-                }
-                if(ch=='&'){
-                    push(RULE_REFERENCE, 6, 0);
-                    return 1;
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    stack[free-1] = -1;
+                    return true;
+                case 6:
+                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                        buffer.push();
+                        state = 3;
+                        consume(ch);
+                        continue;
+                    }
+                    if(ch=='&'){
+                        push(RULE_REFERENCE, 6, 0);
+                        consume(ch);
+                        stack[free-1] = 1;
+                        return true;
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     public static final int RULE_EXT_ELEM_CONTENT = 71;
-    private int ext_elem_content(int ch) throws Exception{
-        switch(stack[free-1]){
-            case 0:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 0;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
-                    }
-                    if(ch=='&'){
-                        handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        handler.xdeclEnd();
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 0;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+    private boolean ext_elem_content() throws Exception{
+        int state = stack[free-1];
+        while(true){
+            int ch;
+            if(stop || (ch=codePoint())==-2){
+                stack[free-1] = state;
+                return false;
+            }
+
+            switch(state){
+                case 0:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
                             handler.xdeclEnd();
                             push(RULE_ELEM_CONTENT, 3, 0);
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
                             buffer.push();
+                            consume(-2);
+                            stack[free-1] = 8;
+                            return true;
+                        }
+                        if(ch=='&'){
+                            handler.xdeclEnd();
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            handler.xdeclEnd();
+                            push(RULE_ELEM_CONTENT, 3, 0);
                             buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
+                            consume(-2);
+                            stack[free-1] = 6;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 0;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 handler.xdeclEnd();
                                 push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                handler.xdeclEnd();
-                                push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
                             }
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<6)
-                    return 0;
-                if(lookAhead.length()==6){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='?'){
-                            if(lookAhead.charAt(2)=='x'){
-                                if(lookAhead.charAt(3)=='m'){
-                                    if(lookAhead.charAt(4)=='l'){
-                                        if(WS(ch)){
-                                            push(RULE_TEXT_DECL, 2, 0);
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            consumed();
-                                            return 6;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    handler.xdeclEnd();
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    handler.xdeclEnd();
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<6)
+                        continue;
+                    if(lookAhead.length()==6){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='?'){
+                                if(lookAhead.charAt(2)=='x'){
+                                    if(lookAhead.charAt(3)=='m'){
+                                        if(lookAhead.charAt(4)=='l'){
+                                            if(WS(ch)){
+                                                push(RULE_TEXT_DECL, 2, 0);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                consume(-2);
+                                                stack[free-1] = 6;
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                if(lookAhead.charAt(0)=='<'){
+                    if(lookAhead.charAt(0)=='<'){
+                        handler.xdeclEnd();
+                        push(RULE_ELEM_CONTENT, 3, 0);
+                        push(RULE_PI, -1, 0);
+                        consume(-2);
+                        lookAhead.reset();
+                        stack[free-1] = 1;
+                        return true;
+                    }
                     handler.xdeclEnd();
-                    push(RULE_ELEM_CONTENT, 3, 0);
-                    push(RULE_PI, -2, 0);
-                    consumed();
-                    lookAhead.reset();
-                    return 1;
-                }
-                handler.xdeclEnd();
-                return -1;
-            case 2:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 2;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
-                    }
-                    if(ch=='&'){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 2;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                    stack[free-1] = -1;
+                    return true;
+                case 2:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
                             push(RULE_ELEM_CONTENT, 3, 0);
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
                             buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
+                            consume(-2);
+                            stack[free-1] = 8;
+                            return true;
                         }
-                        if(ch=='?'){
+                        if(ch=='&'){
                             push(RULE_ELEM_CONTENT, 3, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            buffer.push();
+                            consume(-2);
+                            stack[free-1] = 6;
+                            return true;
                         }
                     }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 2;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
                             }
-                            if(ch=='['){
+                            if(ch=='?'){
                                 push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
                             }
                         }
                     }
-                }
-                return -1;
-            case 3:
-                lookAhead.add(ch);
-                if(ch!=-1 && lookAhead.length()<1)
-                    return 3;
-                if(lookAhead.length()==1){
-                    if(ch==']'){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 8;
-                    }
-                    if(ch=='&'){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        push(RULE_REFERENCE, -2, 0);
-                        consumed();
-                        return 1;
-                    }
-                    if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
-                        push(RULE_ELEM_CONTENT, 3, 0);
-                        buffer.push();
-                        consumed();
-                        return 6;
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<2)
-                    return 3;
-                if(lookAhead.length()==2){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                            push(RULE_ELEM_CONTENT, 3, 0);
-                            push(RULE_ELEM, -2, 0);
-                            push(RULE_ELEM_ATTRS, 1, 0);
-                            consumed();
-                            push(RULE_QNAME, 2, 0);
-                            buffer.push();
-                            buffer.push();
-                            push(RULE_NCNAME, 2, 0);
-                            consumed();
-                            return 1;
-                        }
-                        if(ch=='?'){
-                            push(RULE_ELEM_CONTENT, 3, 0);
-                            push(RULE_PI, -2, 0);
-                            consumed();
-                            consumed();
-                            return 2;
-                        }
-                    }
-                }
-                if(ch!=-1 && lookAhead.length()<3)
-                    return 3;
-                if(lookAhead.length()==3){
-                    if(lookAhead.charAt(0)=='<'){
-                        if(lookAhead.charAt(1)=='!'){
-                            if(ch=='-'){
-                                push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_COMMENT, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
-                            }
-                            if(ch=='['){
-                                push(RULE_ELEM_CONTENT, 3, 0);
-                                push(RULE_CDATA, -2, 0);
-                                consumed();
-                                consumed();
-                                consumed();
-                                return 3;
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
-                return -1;
-            default:
-                throw new Error("impossible state: "+stack[free-1]);
+                    stack[free-1] = -1;
+                    return true;
+                case 3:
+                    addToLookAhead(ch);
+                    if(ch!=-1 && lookAhead.length()<1)
+                        continue;
+                    if(lookAhead.length()==1){
+                        if(ch==']'){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            buffer.push();
+                            consume(-2);
+                            stack[free-1] = 8;
+                            return true;
+                        }
+                        if(ch=='&'){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            push(RULE_REFERENCE, -1, 0);
+                            consume(-2);
+                            stack[free-1] = 1;
+                            return true;
+                        }
+                        if(ch!=-1 && ELEM_CONTENT_CHAR(ch)){
+                            push(RULE_ELEM_CONTENT, 3, 0);
+                            buffer.push();
+                            consume(-2);
+                            stack[free-1] = 6;
+                            return true;
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<2)
+                        continue;
+                    if(lookAhead.length()==2){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(ch!=-1 && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                                push(RULE_ELEM_CONTENT, 3, 0);
+                                push(RULE_ELEM, -1, 0);
+                                push(RULE_ELEM_ATTRS, 1, 0);
+                                consume(-2);
+                                push(RULE_QNAME, 2, 0);
+                                buffer.push();
+                                buffer.push();
+                                push(RULE_NCNAME, 2, 0);
+                                consume(-2);
+                                stack[free-1] = 1;
+                                return true;
+                            }
+                            if(ch=='?'){
+                                push(RULE_ELEM_CONTENT, 3, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(-2);
+                                consume(-2);
+                                stack[free-1] = 2;
+                                return true;
+                            }
+                        }
+                    }
+                    if(ch!=-1 && lookAhead.length()<3)
+                        continue;
+                    if(lookAhead.length()==3){
+                        if(lookAhead.charAt(0)=='<'){
+                            if(lookAhead.charAt(1)=='!'){
+                                if(ch=='-'){
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_COMMENT, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                                if(ch=='['){
+                                    push(RULE_ELEM_CONTENT, 3, 0);
+                                    push(RULE_CDATA, -1, 0);
+                                    consume(-2);
+                                    consume(-2);
+                                    consume(-2);
+                                    stack[free-1] = 3;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    stack[free-1] = -1;
+                    return true;
+                default:
+                    throw new Error("impossible state: "+state);
+            }
         }
     }
 
     @Override
-    protected int callRule(int ch) throws Exception{
+    protected final boolean callRule() throws Exception{
         switch(stack[free-2]){
             case 0:
-                return eq(ch);
+                return eq();
             case 1:
-                return yes_no(ch);
+                return yes_no();
             case 2:
-                return sd_decl(ch);
+                return sd_decl();
             case 3:
-                return enc_name(ch);
+                return enc_name();
             case 4:
-                return enc_decl(ch);
+                return enc_decl();
             case 5:
-                return version_num(ch);
+                return version_num();
             case 6:
-                return version_info(ch);
+                return version_info();
             case 7:
-                return comment(ch);
+                return comment();
             case 8:
-                return cdata_end(ch);
+                return cdata_end();
             case 9:
-                return cdata(ch);
+                return cdata();
             case 10:
-                return name(ch);
+                return name();
             case 11:
-                return pi_target(ch);
+                return pi_target();
             case 12:
-                return pi(ch);
+                return pi();
             case 13:
-                return ncname(ch);
+                return ncname();
             case 14:
-                return qname(ch);
+                return qname();
             case 15:
-                return reference(ch);
+                return reference();
             case 16:
-                return attr(ch);
+                return attr();
             case 17:
-                return value(ch);
+                return value();
             case 18:
-                return q_value(ch);
+                return q_value();
             case 19:
-                return dq_value(ch);
+                return dq_value();
             case 20:
-                return elem_attrs(ch);
+                return elem_attrs();
             case 21:
-                return elem_content(ch);
+                return elem_content();
             case 22:
-                return elem(ch);
+                return elem();
             case 23:
-                return xdecl(ch);
+                return xdecl();
             case 24:
-                return misc(ch);
+                return misc();
             case 25:
-                return sytem_literal(ch);
+                return sytem_literal();
             case 26:
-                return pubid_literal(ch);
+                return pubid_literal();
             case 27:
-                return system_id(ch);
+                return system_id();
             case 28:
-                return public_id(ch);
+                return public_id();
             case 29:
-                return notation_decl(ch);
+                return notation_decl();
             case 30:
-                return external_id(ch);
+                return external_id();
             case 31:
-                return pe_reference(ch);
+                return pe_reference();
             case 32:
-                return ndata_decl(ch);
+                return ndata_decl();
             case 33:
-                return pe_def(ch);
+                return pe_def();
             case 34:
-                return entity_value(ch);
+                return entity_value();
             case 35:
-                return q_entity_value(ch);
+                return q_entity_value();
             case 36:
-                return dq_entity_value(ch);
+                return dq_entity_value();
             case 37:
-                return entity_decl(ch);
+                return entity_decl();
             case 38:
-                return entity_def(ch);
+                return entity_def();
             case 39:
-                return string_type(ch);
+                return string_type();
             case 40:
-                return tokenized_type(ch);
+                return tokenized_type();
             case 41:
-                return nmtoken(ch);
+                return nmtoken();
             case 42:
-                return nmtokens(ch);
+                return nmtokens();
             case 43:
-                return names(ch);
+                return names();
             case 44:
-                return enumeration(ch);
+                return enumeration();
             case 45:
-                return mixed(ch);
+                return mixed();
             case 46:
-                return notation_type(ch);
+                return notation_type();
             case 47:
-                return enumerated_type(ch);
+                return enumerated_type();
             case 48:
-                return att_type(ch);
+                return att_type();
             case 49:
-                return default_decl(ch);
+                return default_decl();
             case 50:
-                return att_def(ch);
+                return att_def();
             case 51:
-                return att_list_decl(ch);
+                return att_list_decl();
             case 52:
-                return children(ch);
+                return children();
             case 53:
-                return name_cardinality(ch);
+                return name_cardinality();
             case 54:
-                return decl_sep(ch);
+                return decl_sep();
             case 55:
-                return markup_decl(ch);
+                return markup_decl();
             case 56:
-                return element_decl(ch);
+                return element_decl();
             case 57:
-                return int_subset(ch);
+                return int_subset();
             case 58:
-                return doctype_decl(ch);
+                return doctype_decl();
             case 59:
-                return prolog(ch);
+                return prolog();
             case 60:
-                return document(ch);
+                return document();
             case 61:
-                return int_elem_content(ch);
+                return int_elem_content();
             case 62:
-                return text_decl(ch);
+                return text_decl();
             case 63:
-                return ignore_sect(ch);
+                return ignore_sect();
             case 64:
-                return ext_subset_decl(ch);
+                return ext_subset_decl();
             case 65:
-                return conditional_sect(ch);
+                return conditional_sect();
             case 66:
-                return include_sect(ch);
+                return include_sect();
             case 67:
-                return ext_subset(ch);
+                return ext_subset();
             case 68:
-                return entity_value_content(ch);
+                return entity_value_content();
             case 69:
-                return external_entity_value(ch);
+                return external_entity_value();
             case 70:
-                return int_value(ch);
+                return int_value();
             case 71:
-                return ext_elem_content(ch);
+                return ext_elem_content();
             default:
-                throw new Error("impossible state: "+stack[free-1]);
+                throw new Error("impossible rule: "+stack[free-2]);
         }
     }
 

@@ -23,11 +23,6 @@ public class XMLEntityScanner extends XMLScanner{
         super(handler, startingRule);
         handler.encoding = null;
         handler.xdeclEnd = false;
-    }
-
-    protected void consumed(int ch){
-        consumed = true;
-        if(location.consume(ch) && buffer.isBufferring())
-            buffer.append(ch=='\r' ? '\n' : ch);
+        super.coelsceNewLines = true;
     }
 }
