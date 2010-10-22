@@ -15,20 +15,18 @@
 
 package jlibs.xml.sax.async;
 
-import jlibs.core.io.BOM;
-import jlibs.core.io.IOUtil;
 import jlibs.core.net.URLUtil;
-import jlibs.nbp.Feeder;
-import jlibs.nbp.NBParser;
+import jlibs.nbp.*;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.xml.sax.InputSource;
 
-import java.io.*;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.net.URL;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.CoderResult;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Locale;
 
@@ -41,153 +39,162 @@ public class XMLFeeder extends Feeder{
     String systemID;
     Runnable postAction;
 
-    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, Object source) throws IOException{
+    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, InputSource source) throws IOException{
         super(parser);
         this.xmlReader = xmlReader;
         init(source);
     }
 
-    void init(Object source) throws IOException{
+    private CharReader charReader;
+    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, CharReader charReader) throws IOException{
+        super(parser);
+        this.xmlReader = xmlReader;
+        this.charReader = charReader;
+        publicID = charReader.feeder.publicID;
+        systemID = charReader.feeder.systemID;
+    }
+
+    void init(InputSource is) throws IOException{
         publicID = systemID = null;
         postAction = null;
-        decoder = DEFAULT_DECODER;
         eofSent = false;
-        iProlog = -1;
+        iProlog = 0;
         child = null;
+        charBuffer.clear();
 
-        if(source instanceof InputSource){
-            InputSource is = (InputSource)source;
-            publicID = is.getPublicId();
-            URL systemURL = null;
-            if(is.getSystemId()!=null){
-                systemURL = URLUtil.toURL(is.getSystemId());
-                systemID = systemURL.toString();
+        publicID = is.getPublicId();
+        URL systemURL = null;
+        if(is.getSystemId()!=null){
+            systemURL = URLUtil.toURL(is.getSystemId());
+            systemID = systemURL.toString();
+        }
+
+        Reader charStream = is.getCharacterStream();
+        if(charStream !=null){
+            channel = new NBReaderChannel(charStream);
+            iProlog = 7;
+        }else{
+            InputStream inputStream = is.getByteStream();
+            if(inputStream==null){
+                assert systemURL!=null;
+                // special handling for http url's like redirect, get encoding information from http headers
+                inputStream = systemURL.openStream();
             }
+            NBChannel channel = new NBChannel(new InputStreamChannel(inputStream)){
+                @Override
+                public void decoder(CharsetDecoder decoder){
+                    super.decoder(decoder);
+                    if(!decoder.charset().name().equals("UTF-8")){
+                        decoder.onMalformedInput(CodingErrorAction.REPLACE)
+                               .onMalformedInput(CodingErrorAction.REPLACE);
+                    }
+                }
+            };
+            if(is.getEncoding()==null)
+                channel.setEncoding("UTF-8", true);
+            else
+                channel.setEncoding(is.getEncoding(), false);
 
-            Reader charStream = is.getCharacterStream();
-            if(charStream !=null)
-                setSource(charStream);
-            else{
-                setCharset(is.getEncoding()==null ? IOUtil.UTF_8 : Charset.forName(is.getEncoding()));
-                InputStream inputStream = is.getByteStream();
-                if(inputStream!=null)
-                    setSource(inputStream);
-                else{
-                    assert systemURL!=null;
-                    if(systemURL.getProtocol().equals("file")){
-                        try{
-                            setSource(new FileInputStream(new File(systemURL.toURI())).getChannel());
-                        }catch(URISyntaxException ex){
-                            throw new IOException(ex);
-                        }
+            this.channel = channel;
+        }
+    }
+
+    // <  6  see if it has prolog
+    // ==7   found declared encoding
+    private int iProlog = 0;
+    private static char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
+    CharBuffer singleChar = CharBuffer.allocate(1);
+
+    @Override
+    protected Feeder read() throws IOException{
+        xmlReader.setFeeder(this);
+        if(charReader!=null){
+            parser.consume(new char[]{ ' '}, 0, 1);
+            charReader.index = 0;
+            if(child!=null)
+                return child;
+
+            char chars[] = charReader.chars;
+            int index = charReader.index;
+            int len = chars.length;
+            charReader.index = parser.consume(chars, index, index+len);
+            if(child!=null)
+                return child;
+
+            parser.consume(new char[]{ ' '}, 0, 1);
+            charReader.index++;
+
+            // EOF is not sent for CharReader
+            return child!=null ? child : parent();
+        }else{
+            while(iProlog<6){
+                singleChar.clear();
+                int read = channel.read(singleChar);
+                if(read==0)
+                    return this;
+                else if(read==-1){
+                    charBuffer.append("<?xml ", 0, iProlog);
+                    return onPrologEOF();
+                }else{
+                    char ch = singleChar.get(0);
+                    if(isPrologStart(ch)){
+                        iProlog++;
+                        if(iProlog==6)
+                            parser.consume(prologStart, 0, iProlog);
                     }else{
-                        // special handling for http url's like redirect, get encoding information from http headers
-                        setSource(systemURL.openStream());
+                        charBuffer.append("<?xml ", 0, iProlog);
+                        charBuffer.append(ch);
+                        iProlog = 7;
                     }
                 }
             }
-        }else if(source instanceof CharReader){
-            this.source = source;
-            publicID = ((CharReader)source).feeder.publicID;
-            systemID = ((CharReader)source).feeder.systemID;
-        }else
-            setSource(source);
-    }
-
-    @Override
-    protected Feeder _feed() throws IOException{
-        xmlReader.setFeeder(this);
-        if(source instanceof CharReader)
-            return feed((CharReader)source);
-        else
-            return super._feed();
-    }
-
-    private Feeder feed(CharReader reader) throws IOException{
-        parser.consume(new char[]{ ' '}, 0, 1);
-        reader.index = 0;
-        if(child!=null)
-            return child;
-
-        char chars[] = reader.chars;
-        int index = reader.index;
-        int len = chars.length;
-        reader.index = parser.consume(chars, index, index+len);
-        if(child!=null)
-            return child;
-
-        parser.consume(new char[]{ ' '}, 0, 1);
-        reader.index++;
-
-        // EOF is not sent for CharReader
-        return child!=null ? child : parent();
-    }
-
-    // == -1 detectBOM
-    // <  6  see if it has prolog
-    // ==7   found declared encoding
-    private int iProlog = -1;
-    private static char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
-    CharBuffer singleChar = CharBuffer.allocate(1);
-    protected void feedByteBuffer(boolean eof) throws IOException{
-        if(iProlog==-1){
-            if(byteBuffer.remaining()>=4){
-                byte marker[] = new byte[]{ byteBuffer.get(0), byteBuffer.get(1), byteBuffer.get(2), byteBuffer.get(3) };
-                BOM bom = BOM.get(marker, true);
-                if(bom!=null){
-                    byteBuffer.position(bom.with().length);
-                }else{
-                    bom = BOM.get(marker, false);
-                    if(bom==null)
-                        bom = BOM.UTF8;
-                }
-                setCharset(Charset.forName(bom.encoding()));
-                iProlog = 0;
-            }else{
-                if(eof)
-                    super.feedByteBuffer(true);
-                return;
-            }
-        }
-        while(iProlog<6){
-            if(eof){
-                charBuffer.append("<?xml ", 0, iProlog);
-                super.feedByteBuffer(true);
-                return;
-            }
-            singleChar.clear();
-            CoderResult coderResult = decoder.decode(byteBuffer, singleChar, eof);
-            if(coderResult.isUnderflow() || coderResult.isOverflow()){
-                char ch = singleChar.array()[0];
-                if(isPrologStart(ch)){
-                    iProlog++;
-                    if(iProlog==6)
-                        parser.consume(prologStart, 0, iProlog);
-                    if(coderResult.isUnderflow())
-                        return;
-                }else{
-                    charBuffer.append("<?xml ", 0, iProlog);
-                    charBuffer.append(ch);
-                    iProlog = 7;
-                }
-            }else
-                parser.encodingError(coderResult);
-        }
-        if(iProlog==6 && !eof){
             while(iProlog!=7){
                 singleChar.clear();
-                CoderResult coderResult = decoder.decode(byteBuffer, singleChar, eof);
-                if(coderResult.isUnderflow() || coderResult.isOverflow()){
+                int read = channel.read(singleChar);
+                if(read==0)
+                    return this;
+                else if(read==-1)
+                    return onPrologEOF();
+                else
                     parser.consume(singleChar.array(), 0, 1);
-                    if(coderResult.isUnderflow())
-                        return;
-                }else
-                    parser.encodingError(coderResult);
             }
+
+            return super.read();
         }
-        super.feedByteBuffer(eof);
     }
 
+    private Feeder onPrologEOF() throws IOException{
+        if(charBuffer.position()>0){
+            charBuffer.flip();
+            feedCharBuffer();
+            charBuffer.compact();
+            if(child!=null)
+                return child;
+        }
+
+        int read = eofSent ? -1 : 0;
+        try{
+            if(!eofSent){
+                if(canClose()){
+                    eofSent = true;
+                    parser.eof();
+                    if(child!=null)
+                        return child;
+                }
+            }
+            return parent();
+        }finally{
+            try{
+                if(child==null){
+                    if(canClose())
+                        parser.reset();
+                    channel.close();
+                }
+            } catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
 
     private boolean isPrologStart(char ch){
         switch(iProlog){
@@ -210,23 +217,16 @@ public class XMLFeeder extends Feeder{
 
     void setDeclaredEncoding(String encoding){
         iProlog = 7;
-        if(encoding!=null){
-            String detectedEncoding = decoder.charset().name().toUpperCase(Locale.ENGLISH);
+        if(encoding!=null && channel instanceof NBChannel){
+            NBChannel nbChannel = (NBChannel)channel;
+            String detectedEncoding = nbChannel.decoder().charset().name().toUpperCase(Locale.ENGLISH);
             String declaredEncoding = encoding.toUpperCase(Locale.ENGLISH);
             if(!detectedEncoding.equals(declaredEncoding)){
                 if(detectedEncoding.startsWith("UTF-16") && declaredEncoding.equals("UTF-16"))
                     return;
                 if(!detectedEncoding.equals(encoding))
-                    setCharset(Charset.forName(encoding));
+                    nbChannel.decoder(Charset.forName(encoding).newDecoder());
             }
-        }
-    }
-
-    public void setCharset(Charset charset){
-        super.setCharset(charset);
-        if(!decoder.charset().name().equals("UTF-8")){
-            decoder.onMalformedInput(CodingErrorAction.REPLACE)
-                   .onMalformedInput(CodingErrorAction.REPLACE);
         }
     }
 

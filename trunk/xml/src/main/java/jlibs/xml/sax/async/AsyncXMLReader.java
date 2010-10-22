@@ -16,7 +16,9 @@
 package jlibs.xml.sax.async;
 
 import jlibs.nbp.Chars;
+import jlibs.nbp.NBChannel;
 import jlibs.nbp.NBHandler;
+import jlibs.nbp.ReadableCharChannel;
 import jlibs.xml.sax.AbstractXMLReader;
 import org.apache.xerces.util.XMLChar;
 import org.xml.sax.InputSource;
@@ -112,7 +114,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public String getEncoding(){
-        return feeder.getCharset().name(); // todo: return declared encoding
+        ReadableCharChannel channel = feeder.channel();
+        if(channel instanceof NBChannel){
+            NBChannel nbChannel = (NBChannel)channel;
+            if(nbChannel.decoder()!=null)
+                return nbChannel.decoder().charset().name();
+        }
+        return "UTF-8";
     }
 
     /*-------------------------------------------------[ Document ]---------------------------------------------------*/

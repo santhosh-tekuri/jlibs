@@ -190,8 +190,10 @@ public abstract class NBParser{
         try{
             fatalError(message);
             throw new IOException(message);
+        }catch(IOException ex){
+            throw ex;
         }catch(Exception ex){
-            throw new IOException(message);
+            throw new IOException(ex);
         }
     }
 }
