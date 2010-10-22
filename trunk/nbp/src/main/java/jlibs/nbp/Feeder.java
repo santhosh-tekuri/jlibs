@@ -17,6 +17,7 @@ package jlibs.nbp;
 
 import java.io.IOException;
 import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 
 /**
  * @author Santhosh Kumar T
@@ -81,7 +82,7 @@ public class Feeder{
                     return current;
                 current = next;
             }while(current!=null);
-        }catch(IOException ex){
+        }catch(CharacterCodingException ex){
             parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
         }
         return null;
