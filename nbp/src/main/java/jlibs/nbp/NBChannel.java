@@ -22,6 +22,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 
 /**
  * @author Santhosh Kumar T
@@ -64,6 +65,10 @@ public class NBChannel implements ReadableCharChannel{
 
     public void decoder(CharsetDecoder decoder){
         this.decoder = decoder;
+        if(!decoder.charset().name().equals("UTF-8")){
+            decoder.onMalformedInput(CodingErrorAction.REPLACE)
+                   .onMalformedInput(CodingErrorAction.REPLACE);
+        }
     }
 
     protected CharsetDecoder createDecoder(ByteBuffer byteBuffer, boolean eof){
