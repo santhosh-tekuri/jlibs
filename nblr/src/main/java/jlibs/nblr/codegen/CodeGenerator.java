@@ -34,6 +34,8 @@ import static jlibs.core.annotation.processing.Printer.MINUS;
  * @author Santhosh Kumar T
  */
 public abstract class CodeGenerator{
+    public boolean INLINE_RULES = false;
+
     protected Syntax syntax;
     protected Printer printer;
 
@@ -85,7 +87,7 @@ public abstract class CodeGenerator{
                     syntax.updateRuleIDs();
                     try{
                         for(Node state: usingRule.states())
-                            new Routes(state);
+                            new Routes(usingRule, state);
                         syntax.saveTo(tempFile);
                         System.out.println("inlined "+rule.name+" in "+usingRule.name);
                     }catch(IllegalStateException ex){
@@ -101,7 +103,8 @@ public abstract class CodeGenerator{
         this.printer = printer;
         if(!debuggable){
             try{
-                inlineRules();
+                if(INLINE_RULES)
+                    inlineRules();
             }catch(Exception ex){
                 throw new RuntimeException(ex);
             }
@@ -135,7 +138,9 @@ public abstract class CodeGenerator{
                 for(Node state: rule.states()){
                     try{
                         startCase(state.id);
-                        Routes routes = new Routes(state);
+                        Routes routes = new Routes(rule, state);
+                        if(routes.isEOF())
+                            printer.println("// EOF-State");
                         maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                         addRoutes(routes);
                         endCase();
