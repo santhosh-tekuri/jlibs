@@ -116,6 +116,24 @@ public abstract class NBParser{
         }
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected final void consumeLookAhead(int count){
+        while(count-->0){
+            int cp = stream.charAt(0);
+            lookAhead.consumed();
+            if(cp!=-1){
+                if(coelsceNewLines){
+                    if(location.consume(cp) && buffer.isBufferring())
+                        buffer.append(cp=='\r' ? '\n' : cp);
+                }else{
+                    location.consume(cp);
+                    if(buffer.isBufferring())
+                        buffer.append(cp);
+                }
+            }
+        }
+    }
+
     protected void addToLookAhead(int cp){
         if(lookAhead.add(cp))
             position += increment;
@@ -205,28 +223,21 @@ public abstract class NBParser{
     protected abstract void fatalError(String message) throws Exception;
     protected abstract void onSuccessful() throws Exception;
 
-    protected void consumed(){
-        int ch = stream.charAt(0);
-        if(ch!=-1)
-            consumed(ch);
-        lookAhead.consumed();
-    }
-
-    protected boolean consumed = false;
-    protected void consumed(int ch){
-        consumed = true;
-        location.consume(ch);
-        if(buffer.isBufferring())
-            buffer.append(ch);
-    }
-
     /*-------------------------------------------------[ Parsing Status ]---------------------------------------------------*/
 
     protected int stack[] = new int[100];
     protected int free = 0;
 
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
+        /*
+        // fails "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/001.xml"
+        if(stateAfterRule==-1)
+            free -= 2;
+        else
+            stack[free-1] = stateAfterRule;
+        */
         stack[free-1] = stateAfterRule;
+
         free += 2;
         if(free>stack.length)
             stack = Arrays.copyOf(stack, free*2);

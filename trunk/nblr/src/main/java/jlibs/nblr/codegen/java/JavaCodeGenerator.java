@@ -247,6 +247,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             Matcher matcher = path.matcher();
             startIf(matcher, 0);
 
+            consumeLAFirst = false;
+            consumeLALen = 0;
             Destination dest = _travelPath(curRule, path, true);
             println("lookAhead.reset();");
             returnDestination(dest);
@@ -324,15 +326,35 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private StringBuilder nodesToBeExecuted = new StringBuilder();
+    private int consumeLALen = 0;
+    private boolean consumeLAFirst = false;
+    private void printlnConsumeLA(){
+        if(consumeLALen>0){
+            if(consumeLALen==1)
+                printer.println("consume(-2);");
+            else
+                printer.println("consumeLookAhead("+consumeLALen+");");
+        }
+    }
+
     private void println(String line){
+        if(consumeLAFirst)
+            printlnConsumeLA();
         if(nodesToBeExecuted.length()>0){
             printer.println("handler.execute(stack[free-2], "+nodesToBeExecuted+");");
             nodesToBeExecuted.setLength(0);
         }
+        if(!consumeLAFirst)
+            printlnConsumeLA();
         printer.println(line);
+
+        consumeLAFirst = false;
+        consumeLALen = 0;
     }
 
     private void travelRoute(Path route, boolean consumeLookAhead){
+        consumeLAFirst = false;
+        consumeLALen = 0;
         Destination dest = new Destination(consumeLookAhead, curRule, null);
         for(Path path: route.route())
             dest = _travelPath(dest.rule, path, consumeLookAhead);
@@ -340,6 +362,8 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void travelPath(Path path, boolean consumeLookAhead){
+        consumeLAFirst = false;
+        consumeLALen = 0;
         Destination dest = _travelPath(curRule, path, consumeLookAhead);
         returnDestination(dest);
     }
@@ -387,6 +411,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
     }
     
+    public static boolean COELSCE_LA_CONSUME_CALLS = false;
     private Destination _travelPath(Rule rule, Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
 
@@ -422,8 +447,13 @@ public class JavaCodeGenerator extends CodeGenerator{
                 }
                 else if(edge.matcher!=null){
                     destNode = edge.target;
-                    if(consumeLookAhead)
-                        println("consume(-2);");
+                    if(consumeLookAhead){
+                        if(COELSCE_LA_CONSUME_CALLS){
+                            if(nodesToBeExecuted.length()==0)
+                                consumeLAFirst = true;
+                            consumeLALen++;
+                        }else
+                            println("consume(-2);");                    }
                     break;
                 }
             }
