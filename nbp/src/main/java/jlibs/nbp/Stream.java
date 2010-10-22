@@ -80,14 +80,17 @@ public final class Stream{
             return chars[(begin+index)%chars.length];
         }
 
-        public void add(int ch){
+        // returns true if this was a fresh data added
+        public boolean add(int ch){
             if(this.end!=Stream.this.end){ // hasNext()
                 assert getNext()==ch : "expected char: "+ch;
                 end = (end+1)%chars.length;
+                return false;
             }else{
                 assert capacity()>Stream.this.length() : "Stream is Full";
                 chars[end] = ch;
                 this.end = Stream.this.end = (end+1)%chars.length;
+                return true;
             }
         }
 
