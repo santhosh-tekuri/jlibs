@@ -45,7 +45,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         defaultEntities.put("quot", new char[]{ '"' });
     }
 
-    private XMLEntityScanner xmlScanner = new XMLEntityScanner(this, XMLScanner.RULE_DOCUMENT);
+    private XMLScanner xmlScanner = new XMLScanner(this, XMLScanner.RULE_DOCUMENT);
+
+    public AsyncXMLReader(){
+        xmlScanner.coelsceNewLines = true;
+        encoding = null;
+    }
+
     private XMLFeeder xmlFeeder, feeder;
     void setFeeder(XMLFeeder feeder){
         if(this.feeder.getParent()==feeder){
@@ -128,7 +134,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void documentStart() throws SAXException{
         encoding = null;
         standalone = null;
-        xdeclEnd = false;
         endingElem = false;
         curQName.reset();
         value.setLength(0);
@@ -179,11 +184,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         standalone = "yes".contentEquals(data);
     }
 
-    boolean xdeclEnd;
     void xdeclEnd(){
         feeder.setDeclaredEncoding(encoding);
         encoding = null;
-        xdeclEnd = true;
     }
 
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
@@ -540,8 +543,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             InputSource inputSource = dtd.externalDTD;
             dtd.externalDTD = null;
             InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+
+            XMLScanner dtdScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET);
+            dtdScanner.coelsceNewLines = true;
             encoding = null;
-            XMLEntityScanner dtdScanner = new XMLEntityScanner(this, XMLScanner.RULE_EXT_SUBSET);
+
             feeder.setChild(new XMLFeeder(this, dtdScanner, is==null?inputSource:is));
 
         }
@@ -602,7 +608,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             if(is==null)
                 is = inputSource;
 
-            XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, XMLScanner.RULE_EXTERNAL_ENTITY_VALUE);
+            XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, XMLScanner.RULE_EXTERNAL_ENTITY_VALUE);
+            scanner.coelsceNewLines = true;
+            encoding = null;
+
             XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is);
             feeder.setChild(childFeeder);
             return childFeeder;
@@ -642,7 +651,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 return childFeeder;
             }else{
                 InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
-                XMLEntityScanner scanner = new XMLEntityScanner(AsyncXMLReader.this, rule);
+                XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
+                scanner.coelsceNewLines = true;
+                encoding = null;
+
                 XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is == null ? inputSource : is);
                 feeder.setChild(childFeeder);
                 return childFeeder;
