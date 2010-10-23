@@ -225,10 +225,7 @@ public class XMLFeeder extends Feeder{
 
     private Feeder onPrologEOF() throws IOException{
         if(charBuffer.position()>0){
-            charBuffer.flip();
-            feedCharBuffer();
-            charBuffer.compact();
-            if(child!=null)
+            if(feedCharBuffer())
                 return child;
         }
 
