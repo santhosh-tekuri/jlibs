@@ -34,7 +34,7 @@ import static jlibs.core.annotation.processing.Printer.MINUS;
  * @author Santhosh Kumar T
  */
 public abstract class CodeGenerator{
-    public boolean INLINE_RULES = false;
+    public boolean INLINE_RULES = true;
 
     protected Syntax syntax;
     protected Printer printer;
@@ -89,7 +89,7 @@ public abstract class CodeGenerator{
                         for(Node state: usingRule.states())
                             new Routes(usingRule, state);
                         syntax.saveTo(tempFile);
-                        System.out.println("inlined "+rule.name+" in "+usingRule.name);
+                        //System.out.println("inlined "+rule.name+" in "+usingRule.name);
                     }catch(IllegalStateException ex){
                         syntax = Syntax.loadFrom(tempFile);
                         rules = syntax.rules.values().iterator();
