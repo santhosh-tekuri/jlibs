@@ -85,7 +85,7 @@ public class NodePopupProvider implements PopupMenuProvider{
                     JOptionPane.showMessageDialog(scene.getView(), "Node with name '"+name+"' already exists");
                     return;
                 }
-                node.name = name;
+                node.name = name.isEmpty() ? null : name;
                 scene.layout(node);
             }
         }
