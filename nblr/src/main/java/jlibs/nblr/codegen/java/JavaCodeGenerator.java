@@ -225,12 +225,14 @@ public class JavaCodeGenerator extends CodeGenerator{
 
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
-                printer.printlns(
-                    "if(ch!=EOF && lookAhead.length()<"+lookAhead+")",
-                        PLUS,
-                        "continue;",
-                        MINUS
-                );
+                if(lookAhead>1){
+                    printer.printlns(
+                        "if(ch!=EOF && lookAhead.length()<"+lookAhead+")",
+                            PLUS,
+                            "continue;",
+                            MINUS
+                    );
+                }
 
                 printer.printlns(
                     "if(lookAhead.length()=="+lookAhead+"){",
