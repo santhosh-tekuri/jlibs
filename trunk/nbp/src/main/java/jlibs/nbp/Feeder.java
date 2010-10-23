@@ -43,36 +43,39 @@ public class Feeder{
 
     protected Feeder child;
     private Feeder parent;
-    public void setChild(Feeder child){
+    public final void setChild(Feeder child){
         this.child = child;
         child.parent = this;
         parser.stop = true;
     }
 
-    public Feeder getParent(){
+    public final Feeder getParent(){
         return parent;
     }
 
-    protected boolean canClose(){
+    protected final boolean canClose(){
         return parent==null || this.parser!=parent.parser;
     }
 
     /*-------------------------------------------------[ CharBuffer ]---------------------------------------------------*/
     
     protected CharBuffer charBuffer = CharBuffer.allocate(DEFAULT_BUFFER_SIZE);
-    protected void feedCharBuffer() throws IOException{
+    protected final boolean feedCharBuffer() throws IOException{
+        charBuffer.flip();
         charBuffer.position(parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
+        charBuffer.compact();
+        return child!=null;
     }
 
     /*-------------------------------------------------[ Eating ]---------------------------------------------------*/
 
-    protected Feeder parent(){
+    protected final Feeder parent(){
         if(parent!=null)
             parent.child = null;
         return parent;
     }
 
-    public Feeder feed() throws IOException{
+    public final Feeder feed() throws IOException{
         try{
             Feeder current = this;
             Feeder next;
@@ -91,10 +94,7 @@ public class Feeder{
     protected boolean eofSent;
     protected Feeder read() throws IOException{
         if(charBuffer.position()>0){
-            charBuffer.flip();
-            feedCharBuffer();
-            charBuffer.compact();
-            if(child!=null)
+            if(feedCharBuffer())
                 return child;
         }
 
@@ -102,10 +102,7 @@ public class Feeder{
         try{
             if(!eofSent){
                 while((read=channel.read(charBuffer))>0){
-                    charBuffer.flip();
-                    feedCharBuffer();
-                    charBuffer.compact();
-                    if(child!=null)
+                    if(feedCharBuffer())
                         return child;
                 }
                 if(read==-1 && canClose()){
