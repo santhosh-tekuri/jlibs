@@ -24,7 +24,7 @@ import static java.lang.Character.*;
  * @author Santhosh Kumar T
  */
 public abstract class NBParser{
-    public static final boolean SHOW_STATS = true;
+    public static final boolean SHOW_STATS = false;
     public static int callRuleCount = 0;    
     public static int chunkCount = 0;
     public void printStats(){
@@ -64,25 +64,27 @@ public abstract class NBParser{
     private int position;
     private int limit;
     
+    protected final int EOF = -1;
+    protected final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
         int cp  = lookAhead.getNext();
-        if(cp!=-2)
+        if(cp!=EOC)
             return cp;
         if(position==limit){
             assert input!=null;
-            return -2;
+            return EOC;
         }
 
         if(input==null){
             increment = 1;
-            return -1;
+            return EOF;
         }
 
         char ch0 = input[position];
         if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
             if(position+1==limit)
-                return -2;
+                return EOC;
 
             char ch1 = input[position+1];
             if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
@@ -99,15 +101,16 @@ public abstract class NBParser{
     }
 
     public boolean coelsceNewLines = false;
+    protected static final int FROM_LA = -2;
     protected final void consume(int cp){
         if(stream.length()>0){
-            if(cp==-2)
+            if(cp==FROM_LA)
                 cp = stream.charAt(0);
             lookAhead.consumed();
         }else
             position += increment;
 
-        if(cp!=-1){
+        if(cp!=EOF){
             if(coelsceNewLines){
                 if(location.consume(cp) && buffer.isBufferring())
                     buffer.append(cp=='\r' ? '\n' : cp);
