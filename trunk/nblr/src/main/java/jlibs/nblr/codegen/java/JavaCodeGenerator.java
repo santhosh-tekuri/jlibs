@@ -50,7 +50,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String className[] = className(parserName);
         if(className[0].length()>0){
             printer.printlns(
-                "package "+className[0]+";",
+                "package"+(finalParser ? " final " :" ")+className[0]+";",
                 ""
             );
         }
@@ -534,6 +534,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
 
     private String parserName = "jlibs.xml.sax.async.XMLScanner";
+    public boolean finalParser = true;
     private Class superClass = NBParser.class;
     public void setParserName(String parserName){
         this.parserName = parserName;
