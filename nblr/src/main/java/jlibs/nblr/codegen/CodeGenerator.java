@@ -131,19 +131,22 @@ public abstract class CodeGenerator{
             for(Rule rule: syntax.rules.values())
                 rule.computeIDS();
 
-            int id = 0;
             for(Rule rule: syntax.rules.values()){
-                addRuleID(rule.name, id++);
+                addRuleID(rule.name, rule.id);
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
                     try{
-                        startCase(state.id);
                         Routes routes = new Routes(rule, state);
+                        if(routes.isEOF() && !debuggable) // don't generate EOF states in production code
+                            continue;
+
+                        startCase(state.id);
                         if(routes.isEOF())
                             printer.println("// EOF-State");
-                        maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                         addRoutes(routes);
                         endCase();
+
+                        maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                     }catch(IllegalStateException ex){
                         throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
                     }
