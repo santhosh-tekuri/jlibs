@@ -197,8 +197,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             curQName.prefixLength = data.length();
     }
 
-    void localName(Chars data){}
-
     private boolean endingElem;
     void endingElem(){
         endingElem = true;
@@ -230,8 +228,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         entityValue = true;
     }
 
-    void discard(Chars data){}
-    
     void rawValue(Chars data){
         if(entityValue)
             value.append(data);

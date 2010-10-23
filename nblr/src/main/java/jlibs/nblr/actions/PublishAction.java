@@ -19,6 +19,8 @@ package jlibs.nblr.actions;
  * @author Santhosh Kumar T
  */
 public class PublishAction implements Action{
+    public static final String DISCARD = "discard";
+
     public final String name;
     public final int begin;
     public final int end;
@@ -31,7 +33,10 @@ public class PublishAction implements Action{
 
     @Override
     public String javaCode(){
-        return "handler."+name+"(buffer.pop("+begin+", "+end+"))";
+        if(name.equals(DISCARD) && begin==0 && end==0)
+            return "buffer.pop(0, 0)";
+        else
+            return "handler."+name+"(buffer.pop("+begin+", "+end+"))";
     }
 
     @Override
