@@ -34,7 +34,7 @@ import static jlibs.core.annotation.processing.Printer.MINUS;
  * @author Santhosh Kumar T
  */
 public abstract class CodeGenerator{
-    public boolean INLINE_RULES = true;
+    public boolean INLINE_RULES = false;
 
     protected Syntax syntax;
     protected Printer printer;
