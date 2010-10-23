@@ -50,7 +50,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         String className[] = className(parserName);
         if(className[0].length()>0){
             printer.printlns(
-                "package"+(finalParser ? " final " :" ")+className[0]+";",
+                "package "+className[0]+";",
                 ""
             );
         }
@@ -58,7 +58,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printClassDoc();
 
         printer.printlns(
-            "public class "+className[1]+" extends "+superClass.getName()+"{",
+            "public"+(finalParser ? " final " :" ")+"class "+className[1]+" extends "+superClass.getName()+"{",
                 PLUS
         );
     }
