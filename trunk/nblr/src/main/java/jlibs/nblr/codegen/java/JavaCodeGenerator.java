@@ -134,7 +134,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 "while(true){",
                     PLUS,
                     "int ch;",
-                    "if(stop || (ch=codePoint())==-2){",
+                    "if(stop || (ch=codePoint())==EOC){",
                         PLUS,
                         "stack[free-1] = state;",
                         "return false;",
@@ -226,7 +226,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 printer.printlns(
-                    "if(ch!=-1 && lookAhead.length()<"+lookAhead+")",
+                    "if(ch!=EOF && lookAhead.length()<"+lookAhead+")",
                         PLUS,
                         "continue;",
                         MINUS
@@ -309,7 +309,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             if(lookAheadIndex==-1 && (matcher.hasCustomJavaCode() || matcher.clashesWith(new Any(-1)))){
                 if(matcher.name==null)
                     condition = '('+condition+')';
-                condition = "ch!=-1 && "+condition;
+                condition = "ch!=EOF && "+condition;
             }
         }finally{
             Not.minValue = Character.MIN_VALUE;
@@ -335,7 +335,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     private void printlnConsumeLA(){
         if(consumeLALen>0){
             if(consumeLALen==1)
-                printer.println("consume(-2);");
+                printer.println("consume(FROM_LA);");
             else
                 printer.println("consumeLookAhead("+consumeLALen+");");
         }
@@ -457,7 +457,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                                 consumeLAFirst = true;
                             consumeLALen++;
                         }else
-                            println("consume(-2);");                    }
+                            println("consume(FROM_LA);");                    }
                     break;
                 }
             }
