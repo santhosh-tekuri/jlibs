@@ -17,6 +17,8 @@ package jlibs.nbp;
 
 import java.util.Arrays;
 
+import static java.lang.Character.*;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -38,31 +40,25 @@ public final class Buffer{
         stack[free++] = count;
     }
 
-    private void expandCapacity(int minimumCapacity){
+    private void expandCapacity(){
         int newCapacity = (chars.length+1)*2;
         if(newCapacity<0)
             newCapacity = Integer.MAX_VALUE;
-        else if(minimumCapacity>newCapacity)
-            newCapacity = minimumCapacity;
         chars = Arrays.copyOf(chars, newCapacity);
     }
 
     public void append(int codePoint){
-        int newCount;
-        if(codePoint<Character.MIN_SUPPLEMENTARY_CODE_POINT){
-            newCount = count+1;
-            if(newCount >chars.length)
-                expandCapacity(newCount);
-            chars[count] = (char)codePoint;
+        if(codePoint<MIN_SUPPLEMENTARY_CODE_POINT){
+            if(count==chars.length)
+                expandCapacity();
+            chars[count++] = (char)codePoint;
         }else{
-            newCount = count+2;
-            if(newCount >chars.length)
-                expandCapacity(newCount);
-            int offset = codePoint - Character.MIN_SUPPLEMENTARY_CODE_POINT;
-            chars[count] = (char)((offset >>> 10) + Character.MIN_HIGH_SURROGATE);
-            chars[count+1] = (char)((offset & 0x3ff) + Character.MIN_LOW_SURROGATE);
+            if(count==chars.length-1)
+                expandCapacity();
+            int offset = codePoint - MIN_SUPPLEMENTARY_CODE_POINT;
+            chars[count++] = (char)((offset >>> 10) + MIN_HIGH_SURROGATE);
+            chars[count++] = (char)((offset & 0x3ff) + MIN_LOW_SURROGATE);
         }
-        count = newCount;
     }
 
     public Chars pop(int begin, int end){
