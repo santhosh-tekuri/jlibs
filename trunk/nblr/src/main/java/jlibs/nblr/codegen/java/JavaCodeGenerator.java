@@ -184,6 +184,10 @@ public class JavaCodeGenerator extends CodeGenerator{
             "@Override",
             "protected final boolean "+prefix+"callRule() throws Exception{",
                 PLUS,
+                "if(SHOW_STATS)",
+                    PLUS,
+                    "callRuleCount++;",
+                    MINUS,
                 "switch(stack[free-2]){",
                     PLUS
         );

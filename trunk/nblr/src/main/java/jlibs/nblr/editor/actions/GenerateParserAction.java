@@ -41,7 +41,7 @@ public class GenerateParserAction extends AbstractAction{
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Debuggable Parser ?");
         if(response==JOptionPane.YES_OPTION)
             codeGenerator.setDebuggable(DebuggableNBParser.class, Debugger.class);
-        else if(response==JOptionPane.CANCEL_OPTION)
+        else if(response!=JOptionPane.NO_OPTION)
             return;
         Printer printer = new Printer(new PrintWriter(System.out, true));
         codeGenerator.generateParser(printer);
