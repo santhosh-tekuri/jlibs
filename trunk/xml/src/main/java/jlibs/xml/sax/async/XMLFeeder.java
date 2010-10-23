@@ -87,7 +87,7 @@ public class XMLFeeder extends Feeder{
                         for(Map.Entry<String, String> entry: requestProperties.entrySet())
                             httpCon.setRequestProperty(entry.getKey(), entry.getValue());
                         */
-                        
+
                         // set preference for redirection
                         XMLEntityManager.setInstanceFollowRedirects(httpCon, true);
                     }
@@ -142,7 +142,7 @@ public class XMLFeeder extends Feeder{
                         encoding = detectedEncoding;
                 }
             }
-            
+
             NBChannel channel = new NBChannel(new InputStreamChannel(inputStream));
             if(encoding==null)
                 channel.setEncoding("UTF-8", true);
@@ -158,6 +158,7 @@ public class XMLFeeder extends Feeder{
     private int iProlog = 0;
     private static char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
     CharBuffer singleChar = CharBuffer.allocate(1);
+    CharBuffer sixChars = CharBuffer.allocate(6);
 
     @Override
     protected Feeder read() throws IOException{
@@ -182,23 +183,28 @@ public class XMLFeeder extends Feeder{
             return child!=null ? child : parent();
         }else{
             while(iProlog<6){
-                singleChar.clear();
-                int read = channel.read(singleChar);
+                sixChars.clear();
+                int read = channel.read(sixChars);
                 if(read==0)
                     return this;
                 else if(read==-1){
                     charBuffer.append("<?xml ", 0, iProlog);
                     return onPrologEOF();
                 }else{
-                    char ch = singleChar.get(0);
-                    if(isPrologStart(ch)){
-                        iProlog++;
-                        if(iProlog==6)
-                            parser.consume(prologStart, 0, iProlog);
-                    }else{
-                        charBuffer.append("<?xml ", 0, iProlog);
-                        charBuffer.append(ch);
-                        iProlog = 7;
+                    char chars[] = sixChars.array();
+                    for(int i=0; i<read; i++){
+                        char ch = chars[i];
+                        if(isPrologStart(ch)){
+                            iProlog++;
+                            if(iProlog==6)
+                                parser.consume(prologStart, 0, iProlog);
+                        }else{
+                            charBuffer.append("<?xml ", 0, iProlog);
+                            while(i<read)
+                                charBuffer.append(chars[i++]);
+                            iProlog = 7;
+                            break;
+                        }
                     }
                 }
             }
@@ -226,7 +232,6 @@ public class XMLFeeder extends Feeder{
                 return child;
         }
 
-        int read = eofSent ? -1 : 0;
         try{
             if(!eofSent){
                 if(canClose()){
