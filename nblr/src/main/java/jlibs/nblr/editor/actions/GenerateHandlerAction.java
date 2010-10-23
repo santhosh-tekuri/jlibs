@@ -39,7 +39,7 @@ public class GenerateHandlerAction extends AbstractAction{
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Class ?");
         if(response==JOptionPane.YES_OPTION)
             codeGenerator.setHandlerName("UntitledHandler", true);
-        else if(response==JOptionPane.CANCEL_OPTION)
+        else if(response!=JOptionPane.NO_OPTION)
             return;
         Printer printer = new Printer(new PrintWriter(System.out, true));
         codeGenerator.generateConsumer(printer);
