@@ -24,11 +24,14 @@ import static java.lang.Character.*;
  * @author Santhosh Kumar T
  */
 public abstract class NBParser{
-    public static final boolean SHOW_STATS = false;
+    public static final boolean SHOW_STATS = true;
     public static int callRuleCount = 0;    
+    public static int chunkCount = 0;
     public void printStats(){
         System.out.println("callRuleCount = " + callRuleCount);
-        System.out.println("offset = " + location.getCharacterOffset());
+        System.out.println("chunkCount = " + chunkCount);
+        System.out.println("lineCount = " + (location.getLineNumber()+1));
+        System.out.println("charCount = " + location.getCharacterOffset());
     }
 
     private final Stream stream;
@@ -141,6 +144,11 @@ public abstract class NBParser{
 
     public boolean stop;
     public int consume(char chars[], int position, int limit) throws IOException{
+        if(SHOW_STATS){
+            chunkCount++;
+            if(chars!=null)
+                System.out.println("chunk["+chunkCount+"] = {"+new String(chars, position, limit-position)+'}');
+        }
         try{
             stop = false;
             input = chars;
