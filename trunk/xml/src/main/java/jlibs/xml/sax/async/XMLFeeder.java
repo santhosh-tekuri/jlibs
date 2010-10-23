@@ -156,9 +156,9 @@ public class XMLFeeder extends Feeder{
     // <  6  see if it has prolog
     // ==7   found declared encoding
     private int iProlog = 0;
-    private static char[] prologStart = { '<', '?', 'x', 'm', 'l', ' ' };
     CharBuffer singleChar = CharBuffer.allocate(1);
     CharBuffer sixChars = CharBuffer.allocate(6);
+    private static final int MAX_PROLOG_LENGTH = 70;
 
     @Override
     protected Feeder read() throws IOException{
@@ -196,8 +196,27 @@ public class XMLFeeder extends Feeder{
                         char ch = chars[i];
                         if(isPrologStart(ch)){
                             iProlog++;
-                            if(iProlog==6)
-                                parser.consume(prologStart, 0, iProlog);
+                            if(iProlog==6){
+                                charBuffer.append("<?xml ");
+                                for(i=0; i<MAX_PROLOG_LENGTH; i++){
+                                    singleChar.clear();
+                                    read = channel.read(singleChar);
+                                    if(read==1){
+                                        ch = singleChar.get(0);
+                                        charBuffer.append(ch);
+                                        if(ch=='>')
+                                            break;
+                                    }else
+                                        break;
+                                }
+                                if(charBuffer.position()>0)
+                                    feedCharBuffer();
+                                if(read==0)
+                                    return this;
+                                else if(read==-1)
+                                    return onPrologEOF();
+                                break;
+                            }
                         }else{
                             charBuffer.append("<?xml ", 0, iProlog);
                             while(i<read)
