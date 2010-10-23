@@ -484,13 +484,18 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             throw ex;
         }finally{
             handler.endDocument();
+            if(XMLScanner.SHOW_STATS)
+                xmlScanner.printStats();
         }
     }
 
     @Override
     public void onSuccessful() throws SAXException{
-        if(feeder.getParent()==null)
+        if(feeder.getParent()==null){
             handler.endDocument();
+            if(XMLScanner.SHOW_STATS)
+                xmlScanner.printStats();
+        }
     }
 
     /*-------------------------------------------------[ DTD ]---------------------------------------------------*/

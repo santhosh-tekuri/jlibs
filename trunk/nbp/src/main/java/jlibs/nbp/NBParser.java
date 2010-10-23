@@ -24,8 +24,13 @@ import static java.lang.Character.*;
  * @author Santhosh Kumar T
  */
 public abstract class NBParser{
-    private static final boolean SHOW_STATS = false;
-    
+    public static final boolean SHOW_STATS = false;
+    public static int callRuleCount = 0;    
+    public void printStats(){
+        System.out.println("callRuleCount = " + callRuleCount);
+        System.out.println("offset = " + location.getCharacterOffset());
+    }
+
     private final Stream stream;
     protected final Stream.LookAhead lookAhead;
     public final Location location = new Location();
@@ -59,13 +64,10 @@ public abstract class NBParser{
     private int increment;
     protected final int codePoint() throws IOException{
         int cp  = lookAhead.getNext();
-        if(cp!=-2){
-            increment = 0;
+        if(cp!=-2)
             return cp;
-        }
         if(position==limit){
             assert input!=null;
-            increment = 0;
             return -2;
         }
 
@@ -76,10 +78,8 @@ public abstract class NBParser{
 
         char ch0 = input[position];
         if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
-            if(position+1==limit){
-                increment = 0;
+            if(position+1==limit)
                 return -2;
-            }
 
             char ch1 = input[position+1];
             if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
@@ -101,9 +101,9 @@ public abstract class NBParser{
             if(cp==-2)
                 cp = stream.charAt(0);
             lookAhead.consumed();
-        }else{
+        }else
             position += increment;
-        }
+
         if(cp!=-1){
             if(coelsceNewLines){
                 if(location.consume(cp) && buffer.isBufferring())
@@ -139,7 +139,6 @@ public abstract class NBParser{
             position += increment;
     }
 
-    private int callRuleCount = 0;
     public boolean stop;
     public int consume(char chars[], int position, int limit) throws IOException{
         try{
@@ -156,8 +155,6 @@ public abstract class NBParser{
                     expected(cp, "<EOF>");
             }
             
-            if(SHOW_STATS)
-                callRuleCount++;
             while(callRule()){
                 if(stack[free-1]<0)
                     lookAhead.reset();
@@ -171,16 +168,11 @@ public abstract class NBParser{
                         expected(cp, "<EOF>");
                     break;
                 }
-                if(SHOW_STATS)
-                    callRuleCount++;
+                if(stop)
+                    break;
             }
-            if(chars==null && this.position==limit){
+            if(chars==null && this.position==limit)
                 onSuccessful();
-                if(SHOW_STATS){
-                    System.out.println("callRuleCount = " + callRuleCount);
-                    System.out.println("offset = " + location.getCharacterOffset());
-                }
-            }
             return this.position;
         }catch(IOException ex){
             throw ex;
