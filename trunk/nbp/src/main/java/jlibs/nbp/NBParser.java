@@ -110,15 +110,14 @@ public abstract class NBParser{
         }else
             position += increment;
 
-        if(cp!=EOF){
-            if(coelsceNewLines){
-                if(location.consume(cp) && buffer.isBufferring())
-                    buffer.append(cp=='\r' ? '\n' : cp);
-            }else{
-                location.consume(cp);
-                if(buffer.isBufferring())
-                    buffer.append(cp);
-            }
+        assert cp!=EOF;
+        if(coelsceNewLines){
+            if(location.consume(cp) && buffer.isBufferring())
+                buffer.append(cp=='\r' ? '\n' : cp);
+        }else{
+            location.consume(cp);
+            if(buffer.isBufferring())
+                buffer.append(cp);
         }
     }
 
@@ -127,15 +126,13 @@ public abstract class NBParser{
         while(count-->0){
             int cp = stream.charAt(0);
             lookAhead.consumed();
-            if(cp!=-1){
-                if(coelsceNewLines){
-                    if(location.consume(cp) && buffer.isBufferring())
-                        buffer.append(cp=='\r' ? '\n' : cp);
-                }else{
-                    location.consume(cp);
-                    if(buffer.isBufferring())
-                        buffer.append(cp);
-                }
+            if(coelsceNewLines){
+                if(location.consume(cp) && buffer.isBufferring())
+                    buffer.append(cp=='\r' ? '\n' : cp);
+            }else{
+                location.consume(cp);
+                if(buffer.isBufferring())
+                    buffer.append(cp);
             }
         }
     }
