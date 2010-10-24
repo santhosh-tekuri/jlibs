@@ -27,6 +27,7 @@ public class Node{
     public String name;
     public int id;
     
+    public static final String DYNAMIC_STRING_MATCH = "@DYNAMIC_STRING_MATCH";
     public Action action;
     
     public List<Edge> outgoing = new ArrayList<Edge>();

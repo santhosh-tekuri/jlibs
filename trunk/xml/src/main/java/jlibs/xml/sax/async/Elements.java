@@ -35,23 +35,31 @@ class Elements{
     }
 
     private String stack[] = new String[15*3];
+    private char[] charsStack[] = new char[15*3][];
     private int free = 0;
 
     public void reset(){
         free = 0;
     }
 
+    public char[] currentElementNameAsCharArray(){
+        return charsStack[free/3];
+    }
+    
     public String currentElementName(){
         return stack[free-1];
     }
-    
+
     public void push1(QName qname){
         free += 3;
-        if(free>stack.length)
+        if(free>stack.length){
             stack = Arrays.copyOf(stack, free*2);
+            charsStack = Arrays.copyOf(charsStack, free*2);
+        }
         stack[free-3] = qname.prefix; // replaced with actual uri in push2()
         stack[free-2] = qname.localName;
         stack[free-1] = qname.name;
+        charsStack[free/3] = qname.name.toCharArray();
 
         namespaces.push();
         attributes.reset();

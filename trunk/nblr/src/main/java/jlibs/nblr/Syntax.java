@@ -15,6 +15,8 @@
 
 package jlibs.nblr;
 
+import jlibs.core.io.FileUtil;
+import jlibs.core.lang.ImpossibleException;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.editor.serialize.SyntaxBinding;
@@ -115,6 +117,18 @@ public class Syntax{
     public static Syntax loadFrom(File file) throws IOException, SAXException, ParserConfigurationException{
         BindingHandler handler = new BindingHandler(SyntaxBinding.class);
         return (Syntax)handler.parse(new InputSource(new FileInputStream(file)));
+    }
+
+    public Syntax copy(){
+        try{
+            File tempFile = new File("temp/temp.syntax");
+            FileUtil.mkdirs(tempFile.getParentFile());
+
+            saveTo(tempFile);
+            return Syntax.loadFrom(tempFile);
+        }catch(Exception ex){
+            throw new ImpossibleException(ex);
+        }
     }
 
     /*-------------------------------------------------[ Actions ]---------------------------------------------------*/

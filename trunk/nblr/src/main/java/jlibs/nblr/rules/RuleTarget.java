@@ -27,6 +27,6 @@ public class RuleTarget{
     }
     
     public String toString(){
-        return name==null ? rule.name : rule.name+':'+name;
+        return name==null ? rule.toString() : rule.name+':'+name;
     }
 }

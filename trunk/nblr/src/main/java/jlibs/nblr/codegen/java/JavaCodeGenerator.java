@@ -204,8 +204,27 @@ public class JavaCodeGenerator extends CodeGenerator{
                     PLUS,
                     "callRuleCount++;",
                     MINUS,
-                "switch(stack[free-2]){",
-                    PLUS
+                    "int rule = stack[free-2];"
+        );
+        if(!debuggable){
+            printer.printlns(
+                    "if(rule<0){",
+                        PLUS,
+                        "if(rule==RULE_DYNAMIC_STRING_MATCH)",
+                            PLUS,
+                            "return matchString(dynamicStringToBeMatched);",
+                            MINUS,
+                        "else",
+                            PLUS,
+                            "return matchString(STRING_IDS[-rule]);",
+                            MINUS,
+                        MINUS,
+                    "}"
+            );
+        }
+        printer.printlns(
+                    "switch(rule){",
+                        PLUS
         );
     }
 
@@ -497,10 +516,17 @@ public class JavaCodeGenerator extends CodeGenerator{
             println("stack[free-1] = -1;");
             println("return true;");
         }else if(dest.rule==curRule){
-            println("state = "+state+";");
-            if(!dest.consumedFromLookAhead)
-                println("consume(ch);");
-            println("continue;");
+            if(!debuggable && Node.DYNAMIC_STRING_MATCH.equals(dest.node.name)){
+                if(!dest.consumedFromLookAhead)
+                    println("consume(ch);");
+                println("stack[free-3] = "+state+"; // "+Node.DYNAMIC_STRING_MATCH);
+                println("return true;");
+            }else{
+                println("state = "+state+";");
+                if(!dest.consumedFromLookAhead)
+                    println("consume(ch);");
+                println("continue;");
+            }
         }else{
             if(!dest.consumedFromLookAhead)
                 println("consume(ch);");
@@ -645,6 +671,34 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
                 MINUS,
             "}"
+        );
+    }
+
+    /*-------------------------------------------------[ StringIDs ]---------------------------------------------------*/
+
+    @Override
+    protected void startStringIDs(){
+        printer.printlns(
+            "int STRING_IDS[][] = {",
+                PLUS,
+                "{}, // dummy one"
+        );
+    }
+
+    @Override
+    protected void addStringID(int[] codePoints){
+        StringBuilder buff = new StringBuilder(Arrays.toString(codePoints));
+        buff.setCharAt(0, '{');
+        buff.setCharAt(buff.length()-1, '}');
+        buff.append(", // ").append(new String(codePoints, 0, codePoints.length));
+        printer.println(buff.toString());
+    }
+
+    @Override
+    protected void finishStringIDs(){
+        printer.printlns(
+                MINUS,
+            "};"
         );
     }
 

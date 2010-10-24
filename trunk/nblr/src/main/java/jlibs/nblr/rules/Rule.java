@@ -15,6 +15,10 @@
 
 package jlibs.nblr.rules;
 
+import jlibs.core.lang.StringUtil;
+import jlibs.core.util.CollectionUtil;
+import jlibs.nblr.matchers.Any;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -126,8 +130,38 @@ public class Rule{
         return newRule;
     }
 
+    public int[] matchString(){
+        ArrayList<Integer> ints = new ArrayList<Integer>();
+
+        Node node = this.node;
+        while(true){
+            if(node.action!=null)
+                return null;
+
+            switch(node.outgoing.size()){
+                case 0:
+                    return CollectionUtil.toIntArray(ints);
+                case 1:
+                    Edge edge = node.outgoing.get(0);
+                    if(edge.loop() || !(edge.matcher instanceof Any))
+                        return null;
+                    Any any = (Any)edge.matcher;
+                    if(any.chars==null || any.chars.length!=1)
+                        return null;
+                    ints.add(any.chars[0]);
+                    node = edge.target;
+                    continue;
+                default:
+                    return null;
+            }
+        }
+    }
+
     @Override
     public String toString(){
+        int matchString[] = matchString();
+        if(matchString!=null)
+            return '"'+StringUtil.toLiteral(new String(matchString, 0, matchString.length), false)+'"';
         return name;
     }
 }

@@ -9,6 +9,13 @@ import java.io.IOException;
  */
 public final class XMLScanner extends jlibs.nbp.NBParser{
 
+    int STRING_IDS[][] = {
+        {}, // dummy one
+        {78, 79, 84, 65, 84, 73, 79, 78}, // NOTATION
+    };
+
+    public static final int RULE_STR_NOTATION = -1;
+
     /*-------------------------------------------------[ Matchers ]---------------------------------------------------*/
 
     private static boolean DIGIT(int ch){
@@ -1795,9 +1802,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='/'){
                                 consume(FROM_LA);
+                                handler.endingElem();
                                 consume(FROM_LA);
-                                state = 7;
-                                continue;
+                                stack[free-3] = 7; // @DYNAMIC_STRING_MATCH
+                                return true;
                             }
                         }
                     }
@@ -1830,23 +1838,24 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][/] OR [<][!][\\-] OR [<][!][\\[]");
                 case 6:
                     if(ch=='/'){
-                        state = 7;
+                        handler.endingElem();
                         consume(ch);
-                        continue;
+                        stack[free-3] = 7; // @DYNAMIC_STRING_MATCH
+                        return true;
                     }
                     expected(ch, "[/]");
                 case 7:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        handler.endingElem();
-                        push(RULE_QNAME, 8, 0);
-                        buffer.push();
-                        buffer.push();
-                        push(RULE_NCNAME, 2, 0);
+                    if(WS(ch)){
+                        state = 8;
                         consume(ch);
-                        stack[free-1] = 1;
-                        return true;
+                        continue;
                     }
-                    expected(ch, "<NCNAME_START>");
+                    if(ch=='>'){
+                        state = 9;
+                        consume(ch);
+                        continue;
+                    }
+                    expected(ch, "<WS> OR [>]");
                 case 8:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
@@ -2413,145 +2422,97 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[!]");
                 case 2:
                     if(ch=='N'){
-                        state = 3;
+                        push(RULE_STR_NOTATION, 3, 0);
                         consume(ch);
-                        continue;
+                        stack[free-1] = 1;
+                        return true;
                     }
                     expected(ch, "[N]");
                 case 3:
-                    if(ch=='O'){
+                    if(WS(ch)){
                         state = 4;
                         consume(ch);
                         continue;
                     }
-                    expected(ch, "[O]");
-                case 4:
-                    if(ch=='T'){
-                        state = 5;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[T]");
-                case 5:
-                    if(ch=='A'){
-                        state = 6;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[A]");
-                case 6:
-                    if(ch=='T'){
-                        state = 7;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[T]");
-                case 7:
-                    if(ch=='I'){
-                        state = 8;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[I]");
-                case 8:
-                    if(ch=='O'){
-                        state = 9;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[O]");
-                case 9:
-                    if(ch=='N'){
-                        state = 10;
-                        consume(ch);
-                        continue;
-                    }
-                    expected(ch, "[N]");
-                case 10:
-                    if(WS(ch)){
-                        state = 11;
-                        consume(ch);
-                        continue;
-                    }
                     expected(ch, "<WS>");
-                case 11:
+                case 4:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                         buffer.push();
-                        push(RULE_NCNAME, 13, 0);
+                        push(RULE_NCNAME, 6, 0);
                         consume(ch);
                         stack[free-1] = 1;
                         return true;
                     }
                     expected(ch, "<WS> OR <NCNAME_START>");
-                case 13:
+                case 6:
                     if(WS(ch)){
                         handler.notationName(buffer.pop(0, 0));
-                        state = 14;
+                        state = 7;
                         consume(ch);
                         continue;
                     }
                     expected(ch, "<WS>");
-                case 14:
+                case 7:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='P'){
-                        push(RULE_PUBLIC_ID, 15, 0);
+                        push(RULE_PUBLIC_ID, 8, 0);
                         consume(ch);
                         stack[free-1] = 1;
                         return true;
                     }
                     if(ch=='S'){
-                        push(RULE_SYSTEM_ID, 18, 0);
+                        push(RULE_SYSTEM_ID, 11, 0);
                         consume(ch);
                         stack[free-1] = 1;
                         return true;
                     }
                     expected(ch, "[P] OR <WS> OR [S]");
-                case 15:
+                case 8:
                     if(WS(ch)){
-                        state = 16;
+                        state = 9;
                         consume(ch);
                         continue;
                     }
                     if(ch=='>'){
-                        state = 20;
+                        state = 13;
                         consume(ch);
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
-                case 16:
+                case 9:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='\''){
-                        push(RULE_SYTEM_LITERAL, 18, 0);
+                        push(RULE_SYTEM_LITERAL, 11, 0);
                         consume(ch);
                         stack[free-1] = 1;
                         return true;
                     }
                     if(ch=='"'){
-                        push(RULE_SYTEM_LITERAL, 18, 0);
+                        push(RULE_SYTEM_LITERAL, 11, 0);
                         consume(ch);
                         stack[free-1] = 5;
                         return true;
                     }
                     if(ch=='>'){
-                        state = 20;
+                        state = 13;
                         consume(ch);
                         continue;
                     }
                     expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
-                case 18:
+                case 11:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        state = 20;
+                        state = 13;
                         consume(ch);
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
-                case 20:
+                case 13:
                     handler.notationEnd();
                     stack[free-1] = -1;
                     return true;
@@ -5373,8 +5334,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -5877,8 +5839,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -5975,8 +5938,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -6245,8 +6209,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -7185,8 +7150,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -7292,8 +7258,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -7596,8 +7563,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -7734,8 +7702,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -7886,8 +7855,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
+                                    push(RULE_STR_NOTATION, 3, 0);
                                     consume(FROM_LA);
-                                    stack[free-1] = 3;
+                                    stack[free-1] = 1;
                                     return true;
                                 }
                                 if(ch=='-'){
@@ -8496,7 +8466,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     protected final boolean callRule() throws Exception{
         if(SHOW_STATS)
             callRuleCount++;
-        switch(stack[free-2]){
+        int rule = stack[free-2];
+        if(rule<0){
+            if(rule==RULE_DYNAMIC_STRING_MATCH)
+                return matchString(dynamicStringToBeMatched);
+            else
+                return matchString(STRING_IDS[-rule]);
+        }
+        switch(rule){
             case 0:
                 return eq();
             case 1:

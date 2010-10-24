@@ -16,7 +16,6 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.io.FileUtil;
 import jlibs.core.util.Range;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.matchers.Matcher;
@@ -44,13 +43,10 @@ public abstract class CodeGenerator{
     }
 
     protected boolean debuggable;
-    protected void inlineRules() throws Exception{
+    private void inlineRules() throws Exception{
+        syntax = syntax.copy();
+
         File tempFile = new File("temp/temp.syntax");
-        FileUtil.mkdirs(tempFile.getParentFile());
-
-        syntax.saveTo(tempFile);
-        syntax = Syntax.loadFrom(tempFile);
-
         Set<String> rulesChecked = new HashSet<String>();
 
         Iterator<Rule> rules = syntax.rules.values().iterator();
@@ -74,7 +70,7 @@ public abstract class CodeGenerator{
             List<Rule> usages = syntax.usages(rule);
             if(usages.size()==1 && usages.get(0)!=rule){
                 boolean inlined = false;
-                
+
                 Rule usingRule = usages.get(0);
                 for(Edge edge: usingRule.edges()){
                     if(edge.ruleTarget!=null && edge.ruleTarget.rule==rule && edge.ruleTarget.name==null && !edge.loop()){
@@ -99,6 +95,47 @@ public abstract class CodeGenerator{
         }
     }
 
+    protected int stringRuleID = -1;
+    private void detectStringRules(){
+        startStringIDs();
+        syntax = syntax.copy();        
+        int id = 0;
+        for(Rule r: syntax.rules.values()){
+            int codePoints[] = r.matchString();
+            if(codePoints!=null){
+                r.id = stringRuleID--;
+                addStringID(codePoints);
+            }else
+                r.id = id++;
+        }
+        finishStringIDs();
+        printer.emptyLine(true);
+        for(Rule rule: syntax.rules.values()){
+            if(rule.id<0)
+                addRuleID(rule.name, rule.id);
+        }
+        printer.emptyLine(true);
+    }
+
+    private void detectDynamicStringMatches(){
+        syntax = syntax.copy();
+        for(Rule r: syntax.rules.values()){
+            for(Node node: r.nodes()){
+                if(Node.DYNAMIC_STRING_MATCH.equals(node.name)){
+                    if(node.outgoing.size()!=1)
+                        throw new IllegalStateException("Illegal Usage of "+Node.DYNAMIC_STRING_MATCH);
+                    Edge edge = node.outgoing.get(0);
+                    if(edge.loop())
+                        throw new IllegalStateException("Illegal Usage of "+Node.DYNAMIC_STRING_MATCH);
+                    if(edge.matcher==null && edge.ruleTarget==null)
+                        throw new IllegalStateException("Illegal Usage of "+Node.DYNAMIC_STRING_MATCH);
+                    edge.matcher = null;
+                    edge.ruleTarget = null;
+                }
+            }
+        }
+    }
+
     public final void generateParser(Printer printer){
         this.printer = printer;
         if(!debuggable){
@@ -109,10 +146,15 @@ public abstract class CodeGenerator{
                 throw new RuntimeException(ex);
             }
         }
-        
+
         startParser();
         printer.emptyLine(true);
-        
+
+        if(!debuggable){
+            detectDynamicStringMatches();
+            detectStringRules();
+        }
+
         if(syntax.matchers.size()>0){
             printTitleComment("Matchers");
             printer.emptyLine(true);
@@ -126,12 +168,14 @@ public abstract class CodeGenerator{
         if(syntax.rules.size()>0){
             printTitleComment("Rules");
             printer.emptyLine(true);
-            
+
             // NOTE: ids of all rules should be computed before calculating Routes
             for(Rule rule: syntax.rules.values())
                 rule.computeIDS();
 
             for(Rule rule: syntax.rules.values()){
+                if(rule.id<0)
+                    continue;
                 addRuleID(rule.name, rule.id);
                 startRuleMethod(rule);
                 for(Node state: rule.states()){
@@ -157,11 +201,12 @@ public abstract class CodeGenerator{
         }
 
         startCallRuleMethod();
-        int id = 0;
         for(Rule rule: syntax.rules.values()){
-            startCase(id++);
-            callRuleMethod(rule.name);
-            printer.printlns(MINUS);
+            if(rule.id>=0){
+                startCase(rule.id);
+                callRuleMethod(rule.name);
+                printer.printlns(MINUS);
+            }
         }
         finishCallRuleMethod();
 
@@ -171,17 +216,21 @@ public abstract class CodeGenerator{
 
     protected abstract void startCase(int id);
     protected abstract void endCase();
-    
+
     protected abstract void printTitleComment(String title);
     protected abstract void startParser();
     protected abstract void finishParser(int maxLookAhead);
 
     protected abstract void printMatcherMethod(Matcher matcher);
-    
+
     protected abstract void addRuleID(String name, int id);
     protected abstract void startRuleMethod(Rule rule);
     protected abstract void addRoutes(Routes routes);
     protected abstract void finishRuleMethod(Rule rule);
+
+    protected abstract void startStringIDs();
+    protected abstract void addStringID(int codePoints[]);
+    protected abstract void finishStringIDs();
 
     protected abstract void startCallRuleMethod();
     protected abstract void callRuleMethod(String ruleName);
