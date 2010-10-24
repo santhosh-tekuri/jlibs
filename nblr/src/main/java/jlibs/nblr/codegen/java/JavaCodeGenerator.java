@@ -146,18 +146,15 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
             "private boolean "+rule.name+"() throws Exception{",
                 PLUS,
-                "int state = stack[free-1];",
                 "while(true){",
                     PLUS,
                     "int ch;",
-                    "if(stop || (ch=codePoint())==EOC){",
+                    "if(stop || (ch=codePoint())==EOC)",
                         PLUS,
-                        "stack[free-1] = state;",
                         "return false;",
                         MINUS,
-                    "}",
                     "",
-                    "switch(state){",
+                    "switch(curState){",
                         PLUS
         );
     }
@@ -182,7 +179,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
                         "default:",
                             PLUS,
-                            "throw new Error(\"impossible state: \"+state);",
+                            "throw new Error(\"impossible state: \"+curState);",
                             MINUS,
                         MINUS,
                     "}",
@@ -513,16 +510,17 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(state<0){
             if(state==-2 && !dest.consumedFromLookAhead)
                 println("consume(ch);");
-            println("stack[free-1] = -1;");
+            println("curState = -1;");
             println("return true;");
         }else if(dest.rule==curRule){
             if(!debuggable && Node.DYNAMIC_STRING_MATCH.equals(dest.node.name)){
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
                 println("stack[free-3] = "+state+"; // "+Node.DYNAMIC_STRING_MATCH);
+                println("curState = stack[free-1];");
                 println("return true;");
             }else{
-                println("state = "+state+";");
+                println("curState = "+state+";");
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
                 println("continue;");
@@ -530,7 +528,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }else{
             if(!dest.consumedFromLookAhead)
                 println("consume(ch);");
-            println("stack[free-1] = "+state+";");
+            println("curState = "+state+";");
             println("return true;");
         }
     }
