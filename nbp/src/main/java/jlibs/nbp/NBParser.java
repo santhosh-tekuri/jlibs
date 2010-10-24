@@ -271,11 +271,7 @@ public abstract class NBParser{
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
 
     public static final int RULE_DYNAMIC_STRING_MATCH = Integer.MIN_VALUE;
-    protected char[] dynamicStringToBeMatched;
-    public void setDynamicStringToBeMatched(char expected[]){
-        dynamicStringToBeMatched = expected;
-        push(RULE_DYNAMIC_STRING_MATCH, stack[free-1], 0);
-    }
+    public char[] dynamicStringToBeMatched;
 
     protected final boolean matchString(char expected[]) throws Exception{
         int length = expected.length;
