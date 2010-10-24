@@ -55,7 +55,7 @@ public class RuleChooser extends TreeSelectionDialog{
             @Override
             public String visit(Object elem){
                 if(elem instanceof Rule)
-                    return ((Rule)elem).name;
+                    return elem.toString();
                 else if(elem instanceof Node)
                     return ((Node)elem).name;
                 else
