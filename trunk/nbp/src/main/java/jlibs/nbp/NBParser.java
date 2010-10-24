@@ -304,7 +304,7 @@ public abstract class NBParser{
                     curState = i;
                     return false;
                 }
-                expected(cp, new String(expected, i, i+1));
+                expected(cp, new String(expected, i, 1));
             }
             consume(cp);
         }
