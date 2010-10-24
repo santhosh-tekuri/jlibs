@@ -255,4 +255,22 @@ public abstract class NBParser{
             throw new IOException(ex);
         }
     }
+
+    /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
+
+    protected final int finishAll(int ch, int expected) throws IOException{
+        while(ch>=0 && ch==expected){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    protected final int finishAll_OtherThan(int ch, int expected) throws IOException{
+        while(ch>=0 && ch!=expected){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
 }

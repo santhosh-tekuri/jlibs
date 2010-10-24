@@ -34,7 +34,7 @@ public abstract class Matcher{
             return "[<"+name+">]";
     }
 
-    protected String toJava(int codePoint){
+    public static String toJava(int codePoint){
         if(codePoint>0x0020 && codePoint<0x007f) // visible character in ascii)
             return '\''+StringUtil.toLiteral((char)codePoint, false)+'\'';
         else

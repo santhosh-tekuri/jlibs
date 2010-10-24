@@ -768,7 +768,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
                 case 2:
-                    if((ch=finishAll_BRACKET_CLOSE(ch))==EOC)
+                    if((ch=finishAll(ch, ']'))==EOC)
                         return false;
                     if(ch=='>'){
                         consume(ch);
@@ -1079,7 +1079,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[?] OR <CHAR>");
                 case 8:
-                    if((ch=finishAll_1(ch))==EOC)
+                    if((ch=finishAll(ch, '?'))==EOC)
                         return false;
                     if(ch=='>'){
                         handler.piData(buffer.pop(0, 1));
@@ -1674,7 +1674,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     stack[free-1] = -1;
                     return true;
                 case 9:
-                    if((ch=finishAll_BRACKET_CLOSE(ch))==EOC)
+                    if((ch=finishAll(ch, ']'))==EOC)
                         return false;
                     if(ch=='>'){
                         state = 11;
@@ -2103,7 +2103,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[^'] OR <Q>");
                 case 2:
-                    if((ch=finishAll_2(ch))==EOC)
+                    if((ch=finishAll_OtherThan(ch, '\''))==EOC)
                         return false;
                     if(ch=='\''){
                         handler.systemID(buffer.pop(0, 0));
@@ -2128,7 +2128,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[^\"] OR <DQ>");
                 case 6:
-                    if((ch=finishAll_3(ch))==EOC)
+                    if((ch=finishAll_OtherThan(ch, '"'))==EOC)
                         return false;
                     if(ch=='"'){
                         handler.systemID(buffer.pop(0, 0));
@@ -7018,7 +7018,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 10:
-                    if((ch=finishAll_BRACKET_CLOSE(ch))==EOC)
+                    if((ch=finishAll(ch, ']'))==EOC)
                         return false;
                     if(ch=='>'){
                         consume(ch);
@@ -8670,24 +8670,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return ch;
     }
 
-    private int finishAll_BRACKET_CLOSE(int ch) throws IOException{
-        while(ch!=EOC && ch==']'){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
     private int finishAll_NAME_PART(int ch) throws IOException{
         while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_1(int ch) throws IOException{
-        while(ch!=EOC && ch=='?'){
             consume(ch);
             ch = codePoint();
         }
@@ -8704,22 +8688,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
     private int finishAll_HEX_DIGIT(int ch) throws IOException{
         while(ch!=EOC && HEX_DIGIT(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_2(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && (ch!='\'')){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_3(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && (ch!='"')){
             consume(ch);
             ch = codePoint();
         }

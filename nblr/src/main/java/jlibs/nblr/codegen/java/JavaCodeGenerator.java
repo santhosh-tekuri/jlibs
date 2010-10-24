@@ -319,7 +319,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
             String finishAll = checkFinishAll(route, consumeLookAhead);
             if(finishAll!=null && i==0){
-                useFinishAll(finishAll, false);
+                useFinishAll(route.matcher(), finishAll, false);
                 continue;
             }
 
@@ -334,7 +334,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 print(group, depth+1, consumeLookAhead);
             if(depth==route.depth){
                 if(finishAll!=null)
-                    useFinishAll(finishAll, true);
+                    useFinishAll(route.matcher(), finishAll, true);
                 else
                     travelRoute(route, consumeLookAhead);
             }
@@ -405,7 +405,22 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private int unnamed_finishAllMethods = 0;
     private Map<Matcher, String> finishAllMethods = new LinkedHashMap<Matcher, String>();
+    public static final String FINISH_ALL = "finishAll";
+    public static final String FINISH_ALL_OTHER_THAN = "finishAll_OtherThan";
     private String addToFinishAll(Matcher matcher){
+        boolean not = false;
+        Matcher givenMatcher = matcher;
+        if(matcher instanceof Not){
+            not = true;
+            matcher = ((Not)matcher).delegate;
+        }
+        if(matcher instanceof Any){
+            Any any = (Any)matcher;
+            if(any.chars!=null && any.chars.length==1)
+                return not ? FINISH_ALL_OTHER_THAN : FINISH_ALL;
+        }
+        matcher = givenMatcher;
+        
         String name = null;
         if(matcher.name!=null)
             name = finishAllMethods.get(matcher);
@@ -438,8 +453,14 @@ public class JavaCodeGenerator extends CodeGenerator{
         return null;
     }
 
-    private void useFinishAll(String name, boolean addContinue){
-        String methodCall = "finishAll_"+name+"(ch)";
+    private void useFinishAll(Matcher matcher, String name, boolean addContinue){
+        String methodCall;
+        if(name.equals(FINISH_ALL) || name.equals(FINISH_ALL_OTHER_THAN)){
+            Any any = (Any)(name.equals(FINISH_ALL_OTHER_THAN) ? ((Not)matcher).delegate : matcher);
+            methodCall = name+"(ch, "+Matcher.toJava(any.chars[0])+')';
+        }else
+            methodCall = "finishAll_"+name+"(ch)";
+
         if(!addContinue)
             methodCall = "(ch="+methodCall+")";
         printer.printlns(
