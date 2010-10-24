@@ -162,25 +162,36 @@ public abstract class NBParser{
                 else
                     expected(cp, "<EOF>");
             }
-            
+
+            curState = stack[free-1];
             while(callRule()){
-                if(stack[free-1]<0)
+                if(curState<0){
                     lookAhead.reset();
-                while(free!=0 && stack[free-1]<0)
-                    free -= 2;
-                if(free==0){
-                    int cp = codePoint();
-                    if(cp==-1)
-                        this.position = 1;
-                    else
-                        expected(cp, "<EOF>");
-                    break;
-                }
+                    do{
+                        free -= 2;
+                    }while(free!=0 && stack[free-1]<0);
+
+                    if(free==0){
+                        int cp = codePoint();
+                        if(cp==-1)
+                            this.position = 1;
+                        else
+                            expected(cp, "<EOF>");
+                        break;
+                    }else
+                        curState = stack[free-1];
+                }else
+                    stack[free-1] = curState;
+                
                 if(stop)
                     break;
             }
+
             if(chars==null && this.position==limit)
                 onSuccessful();
+            else
+                stack[free-1] = curState;
+            
             return this.position;
         }catch(IOException ex){
             throw ex;
@@ -225,8 +236,9 @@ public abstract class NBParser{
 
     /*-------------------------------------------------[ Parsing Status ]---------------------------------------------------*/
 
-    protected int stack[] = new int[100];
     protected int free = 0;
+    protected int curState;
+    protected int stack[] = new int[100];
 
     protected void push(int toRule, int stateAfterRule, int stateInsideRule){
         /*
@@ -268,13 +280,12 @@ public abstract class NBParser{
     protected final boolean matchString(char expected[]) throws Exception{
         int length = expected.length;
 
-        int i;
-        for(i = stack[free-1]; i<length;){
+        for(int i=curState; i<length;){
             int cp = codePoint();
             int expectedCP = Character.codePointAt(expected, i);
             if(cp!=expectedCP){
                 if(cp==EOC){
-                    stack[free-1] = i;
+                    curState = i;
                     return false;
                 }
                 expected(cp, new String(new int[]{ expectedCP }, 0, 1));
@@ -283,19 +294,18 @@ public abstract class NBParser{
             i += cp<MIN_SUPPLEMENTARY_CODE_POINT ? 1 : 2;
         }
 
-        stack[free-1] = -1;
+        curState = -1;
         return true;
     }
 
     protected final boolean matchString(int expected[]) throws Exception{
         int length = expected.length;
 
-        int i;
-        for(i = stack[free-1]; i<length; i++){
+        for(int i=curState; i<length; i++){
             int cp = codePoint();
             if(cp!=expected[i]){
                 if(cp==EOC){
-                    stack[free-1] = i;
+                    curState = i;
                     return false;
                 }
                 expected(cp, new String(expected, i, i+1));
@@ -303,7 +313,7 @@ public abstract class NBParser{
             consume(cp);
         }
 
-        stack[free-1] = -1;
+        curState = -1;
         return true;
     }
 
