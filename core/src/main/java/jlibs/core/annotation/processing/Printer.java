@@ -54,7 +54,8 @@ public class Printer{
         }
     }
     public void println(String str){
-        indent();
+        if(str.length()>0)
+            indent();
         ps.println(str);
         doIndent = true;
     }
