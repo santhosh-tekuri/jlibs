@@ -258,6 +258,55 @@ public abstract class NBParser{
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
 
+    public static final int RULE_DYNAMIC_STRING_MATCH = Integer.MIN_VALUE;
+    protected char[] dynamicStringToBeMatched;
+    public void setDynamicStringToBeMatched(char expected[]){
+        dynamicStringToBeMatched = expected;
+        push(RULE_DYNAMIC_STRING_MATCH, stack[free-1], 0);
+    }
+
+    protected final boolean matchString(char expected[]) throws Exception{
+        int length = expected.length;
+
+        int i;
+        for(i = stack[free-1]; i<length;){
+            int cp = codePoint();
+            int expectedCP = Character.codePointAt(expected, i);
+            if(cp!=expectedCP){
+                if(cp==EOC){
+                    stack[free-1] = i;
+                    return false;
+                }
+                expected(cp, new String(new int[]{ expectedCP }, 0, 1));
+            }
+            consume(cp);
+            i += cp<MIN_SUPPLEMENTARY_CODE_POINT ? 1 : 2;
+        }
+
+        stack[free-1] = -1;
+        return true;
+    }
+
+    protected final boolean matchString(int expected[]) throws Exception{
+        int length = expected.length;
+
+        int i;
+        for(i = stack[free-1]; i<length; i++){
+            int cp = codePoint();
+            if(cp!=expected[i]){
+                if(cp==EOC){
+                    stack[free-1] = i;
+                    return false;
+                }
+                expected(cp, new String(expected, i, i+1));
+            }
+            consume(cp);
+        }
+
+        stack[free-1] = -1;
+        return true;
+    }
+
     protected final int finishAll(int ch, int expected) throws IOException{
         while(ch>=0 && ch==expected){
             consume(ch);
