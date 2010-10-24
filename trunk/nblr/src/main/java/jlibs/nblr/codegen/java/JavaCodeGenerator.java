@@ -24,10 +24,8 @@ import jlibs.nblr.matchers.Not;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
 import static jlibs.core.annotation.processing.Printer.PLUS;
@@ -55,6 +53,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
+        printer.importClass(IOException.class);
+        printer.emptyLine(true);
         printer.printClassDoc();
 
         printer.printlns(
@@ -76,8 +76,24 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void finishParser(int maxLookAhead){
-        String className = className(parserName)[1];
+        for(Map.Entry<Matcher, String> entry: finishAllMethods.entrySet()){
+            printer.emptyLine(true);
+            printer.printlns(
+                "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
+                    PLUS,
+                    "while(ch!=EOC && "+condition(entry.getKey(), -1)+"){",
+                        PLUS,
+                        "consume(ch);",
+                        "ch = codePoint();",
+                        MINUS,
+                    "}",
+                    "return ch;",
+                    MINUS,
+                 "}"
+            );
+        }
 
+        String className = className(parserName)[1];
         String debuggerArgs = debuggable ? "handler, " : "";
         printer.emptyLine(true);
         printer.printlns(
@@ -251,7 +267,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(routes.indeterminateRoute !=null){
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
-            startIf(matcher, 0);
+            startIf(condition(matcher, 0));
 
             consumeLAFirst = false;
             consumeLALen = 0;
@@ -268,6 +284,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println(expected);
     }
 
+    @SuppressWarnings({"UnnecessaryLocalVariable"})
     private void print(List<Path> routes, int depth, boolean consumeLookAhead){
         List<List<Path>> groups = new ArrayList<List<Path>>();
         Matcher matcher = null;
@@ -284,25 +301,49 @@ public class JavaCodeGenerator extends CodeGenerator{
             groups.get(groups.size()-1).add(route);
         }
 
-        for(List<Path> group: groups){
+        // move all routes that can use finishAll to the beginning
+        for(int i=1; i<groups.size(); i++){
+            List<Path> group = groups.get(i);
             Path route = group.get(0);
+            String finishAll = checkFinishAll(route, consumeLookAhead);
+            if(finishAll!=null){ // move to beginning
+                groups.remove(i);
+                groups.add(0, group);
+            }
+        }
+
+        int i = -1;
+        for(List<Path> group: groups){
+            ++i;
+            Path route = group.get(0);
+
+            String finishAll = checkFinishAll(route, consumeLookAhead);
+            if(finishAll!=null && i==0){
+                useFinishAll(finishAll, false);
+                continue;
+            }
+
             matcher = route.route()[depth-1].matcher();
             boolean endIf = false;
             if(matcher!=null){
                 int lookAheadIndex = route.depth>1 && depth!=route.depth ? depth-1 : -1;
-                startIf(matcher, lookAheadIndex);
+                startIf(condition(matcher, lookAheadIndex));
                 endIf = true;
             }
             if(depth<routes.get(0).depth)
                 print(group, depth+1, consumeLookAhead);
-            if(depth==route.depth)
-                travelRoute(route, consumeLookAhead);
+            if(depth==route.depth){
+                if(finishAll!=null)
+                    useFinishAll(finishAll, true);
+                else
+                    travelRoute(route, consumeLookAhead);
+            }
             if(endIf)
                 endIf(1);
         }
     }
 
-    private void startIf(Matcher matcher, int lookAheadIndex){
+    private String condition(Matcher matcher, int lookAheadIndex){
         String ch = lookAheadIndex==-1 ? "ch" : "lookAhead.charAt("+lookAheadIndex+')';
 
         String condition = matcher._javaCode(ch);
@@ -316,6 +357,10 @@ public class JavaCodeGenerator extends CodeGenerator{
         }finally{
             Not.minValue = Character.MIN_VALUE;
         }
+        return condition;
+    }
+
+    private void startIf(String condition){
         printer.printlns(
             "if("+condition+"){",
                 PLUS
@@ -356,6 +401,55 @@ public class JavaCodeGenerator extends CodeGenerator{
 
         consumeLAFirst = false;
         consumeLALen = 0;
+    }
+
+    private int unnamed_finishAllMethods = 0;
+    private Map<Matcher, String> finishAllMethods = new LinkedHashMap<Matcher, String>();
+    private String addToFinishAll(Matcher matcher){
+        String name = null;
+        if(matcher.name!=null)
+            name = finishAllMethods.get(matcher);
+        else{
+            for(Map.Entry<Matcher, String> entry: finishAllMethods.entrySet()){
+                if(entry.getKey().same(matcher)){
+                    name = entry.getValue();
+                    break;
+                }
+            }
+        }
+        if(name==null){
+            name = matcher.name;
+            if(name==null)
+                name = String.valueOf(++unnamed_finishAllMethods);
+            finishAllMethods.put(matcher, name);
+        }
+        return name;    
+    }
+
+    private String checkFinishAll(Path path, boolean consumeLookAhead){
+        if(!consumeLookAhead && path.parent==null){
+            if(path.size()==3 && path.get(0)==path.get(2)){ // loop
+                Node node = (Node)path.get(0);
+                Edge edge = (Edge)path.get(1);
+                if(node.action==null && edge.matcher!=null && !edge.fallback)
+                    return addToFinishAll(edge.matcher);
+            }
+        }
+        return null;
+    }
+
+    private void useFinishAll(String name, boolean addContinue){
+        String methodCall = "finishAll_"+name+"(ch)";
+        if(!addContinue)
+            methodCall = "(ch="+methodCall+")";
+        printer.printlns(
+            "if("+methodCall+"==EOC)",
+                PLUS,
+                "return false;",
+                MINUS
+        );
+        if(addContinue)
+            printer.println("continue;");
     }
 
     private void travelRoute(Path route, boolean consumeLookAhead){
