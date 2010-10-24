@@ -78,7 +78,7 @@ public class Paths extends ArrayList<Path>{
 
         while(true){
             if(list.size()==0){
-                rootPaths.populate(fromNode, new ArrayDeque<Object>());
+                rootPaths.populate(fromNode);
                 list.addAll(rootPaths);
             }else{
                 List<Path> newList = new ArrayList<Path>();
