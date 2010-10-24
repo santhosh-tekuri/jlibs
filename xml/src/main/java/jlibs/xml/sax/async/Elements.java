@@ -34,8 +34,8 @@ class Elements{
         this.attributes = attributes;
     }
 
-    private String stack[] = new String[15*3];
-    private char[] charsStack[] = new char[15*3][];
+    private QName qnameStack[] = new QName[15];
+    private String uriStack[] = new String[15];
     private int free = 0;
 
     public void reset(){
@@ -43,48 +43,44 @@ class Elements{
     }
 
     public char[] currentElementNameAsCharArray(){
-        return charsStack[free/3];
+        return qnameStack[free-1].chars;
     }
     
     public String currentElementName(){
-        return stack[free-1];
+        return qnameStack[free-1].name;
     }
 
     public void push1(QName qname){
-        free += 3;
-        if(free>stack.length){
-            stack = Arrays.copyOf(stack, free*2);
-            charsStack = Arrays.copyOf(charsStack, free*2);
+        if(free== qnameStack.length){
+            qnameStack = Arrays.copyOf(qnameStack, free*2);
+            uriStack = Arrays.copyOf(uriStack, free*2);
         }
-        stack[free-3] = qname.prefix; // replaced with actual uri in push2()
-        stack[free-2] = qname.localName;
-        stack[free-1] = qname.name;
-        charsStack[free/3] = qname.name.toCharArray();
+        qnameStack[free++] = qname;
 
         namespaces.push();
         attributes.reset();
     }
 
     public String push2() throws SAXException{
-        String name = stack[free-1];
-        String error = attributes.fixAttributes(name);
+        QName bucket = qnameStack[free-1];
+        String error = attributes.fixAttributes(bucket.name);
         if(error!=null)
             return error;
 
-        String prefix = stack[free-3];
-        String uri = namespaces.getNamespaceURI(prefix);
+        String uri = namespaces.getNamespaceURI(bucket.prefix);
         if(uri==null)
-            return "Unbound prefix: "+prefix;
-        stack[free-3] = uri;
+            return "Unbound prefix: "+bucket.prefix;
+        uriStack[free-1] = uri;
 
-        handler.startElement(uri, stack[free-2], name, attributes.get());
+        handler.startElement(uri, bucket.localName, bucket.name, attributes.get());
 
         return null;
     }
 
     public void pop() throws SAXException{
-        handler.endElement(stack[free-3], stack[free-2], stack[free-1]);
-        free -= 3;
+        QName qname = qnameStack[free-1];
+        handler.endElement(uriStack[free-1], qname.localName, qname.name);
+        free--;
         namespaces.pop();
     }
 }
