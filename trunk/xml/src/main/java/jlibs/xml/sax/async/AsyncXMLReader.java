@@ -134,7 +134,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void documentStart() throws SAXException{
         encoding = null;
         standalone = null;
-        curQName.reset();
+        prefixLength = 0;
         value.setLength(0);
         valueStarted = false;
         entityValue = false;
@@ -190,13 +190,17 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
 
-    private QName curQName = new QName();
+    private QNamePool QNamePool = new QNamePool();
+    private QName curQName;
+    private int prefixLength = 0;
+    
     void prefix(Chars data){
-        curQName.prefixLength = data.length();
+        prefixLength = data.length();
     }
 
     void qname(Chars data) throws SAXException{
-        curQName.setName(data.toString());
+        curQName = QNamePool.add(prefixLength, data.array(), data.offset(), data.length());
+        prefixLength = 0;
     }
 
     /*-------------------------------------------------[ Value ]---------------------------------------------------*/
@@ -399,7 +403,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         String error = attributes.addAttribute(elements.currentElementName(), curQName, value);
         if(error!=null)
             fatalError(error);
-        curQName.reset();
     }
 
     void attributesEnd() throws SAXException{
