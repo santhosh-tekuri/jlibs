@@ -516,8 +516,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             if(!debuggable && Node.DYNAMIC_STRING_MATCH.equals(dest.node.name)){
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
-                println("stack[free-3] = "+state+"; // "+Node.DYNAMIC_STRING_MATCH);
-                println("curState = stack[free-1];");
+                println("push(RULE_DYNAMIC_STRING_MATCH, "+state+", 0);");
+                println("curState = 0;");
                 println("return true;");
             }else{
                 println("curState = "+state+";");

@@ -1735,8 +1735,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 consume(FROM_LA);
                                 handler.endingElem();
                                 consume(FROM_LA);
-                                stack[free-3] = 7; // @DYNAMIC_STRING_MATCH
-                                curState = stack[free-1];
+                                push(RULE_DYNAMIC_STRING_MATCH, 7, 0);
+                                curState = 0;
                                 return true;
                             }
                         }
@@ -1772,8 +1772,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='/'){
                         handler.endingElem();
                         consume(ch);
-                        stack[free-3] = 7; // @DYNAMIC_STRING_MATCH
-                        curState = stack[free-1];
+                        push(RULE_DYNAMIC_STRING_MATCH, 7, 0);
+                        curState = 0;
                         return true;
                     }
                     expected(ch, "[/]");

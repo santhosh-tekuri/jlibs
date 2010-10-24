@@ -412,7 +412,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void endingElem(){
-        feeder.parser.setDynamicStringToBeMatched(elements.currentElementNameAsCharArray());
+        feeder.parser.dynamicStringToBeMatched = elements.currentElementNameAsCharArray();
     }
 
     void elementEnd() throws SAXException{
