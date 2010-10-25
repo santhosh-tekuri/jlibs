@@ -156,7 +156,7 @@ public class Paths extends ArrayList<Path>{
             temp.parent = this.owner;
             
             Path p = temp;
-            while(p!=null){
+            while(p!=null && target==null){
                 boolean wasNode = false;
                 for(int i=p.size()-1; i>=0; i--){
                     Object obj = p.get(i);
