@@ -27,11 +27,12 @@ import java.util.*;
  */
 public class CollectionUtil{
     /**
-     * Creates Properties from given inputStream and returns it.
+     * Reads Properties from given inputStream and returns it.
      * NOTE: the given stream is closed by this method
      */
-    public static Properties readProperties(InputStream is, Properties defaults) throws IOException{
-        Properties props = new Properties(defaults);
+    public static Properties readProperties(InputStream is, Properties props) throws IOException{
+        if(props==null)
+            props = new Properties();
         try{
             props.load(is);
         }finally{
