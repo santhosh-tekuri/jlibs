@@ -43,6 +43,7 @@ import org.netbeans.api.visual.widget.Widget;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.util.Observable;
 
 /**
@@ -60,6 +61,9 @@ public class RuleScene extends GraphScene<Node, Edge>{
     private WidgetAction connectAction = ActionFactory.createConnectAction(interactionLayer, new NodeConnectProvider());
 
     private TwoStateHoverProvider hoverProvider;
+    
+    public File file;
+    
     public RuleScene(TwoStateHoverProvider hoverProvider, EditProvider edgeEditProvider){
         addChild(nodes);
         addChild(connections);

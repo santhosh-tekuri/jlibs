@@ -16,14 +16,14 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.io.FileUtil;
+import jlibs.core.util.CollectionUtil;
 import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
-import jlibs.nblr.editor.debug.DebuggableNBParser;
-import jlibs.nblr.editor.debug.Debugger;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.io.PrintWriter;
+import java.io.*;
 
 /**
  * @author Santhosh Kumar T
@@ -38,9 +38,22 @@ public class GenerateParserAction extends AbstractAction{
     @Override
     public void actionPerformed(ActionEvent ae){
         JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
+        if(scene.file!=null){
+            File propsFile = new File(scene.file.getParentFile(), FileUtil.getName(scene.file.getName())+".properties");
+            try{
+                if(propsFile.exists())
+                    CollectionUtil.readProperties(new FileInputStream(propsFile), codeGenerator.properties);
+                else
+                    codeGenerator.properties.store(new FileOutputStream(propsFile), "Properties for "+scene.file.getName());
+            }catch (IOException ex){
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(scene.getView(), ex.getMessage());
+            }
+        }
+        
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Debuggable Parser ?");
         if(response==JOptionPane.YES_OPTION)
-            codeGenerator.setDebuggable(DebuggableNBParser.class, Debugger.class);
+            codeGenerator.setDebuggable();
         else if(response!=JOptionPane.NO_OPTION)
             return;
         Printer printer = new Printer(new PrintWriter(System.out, true));

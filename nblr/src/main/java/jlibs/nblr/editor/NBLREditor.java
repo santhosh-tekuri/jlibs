@@ -220,12 +220,10 @@ public class NBLREditor extends JFrame{
         return new ImageIcon(getClass().getResource(name));
     }
     
-    private File file;
-    
     @SuppressWarnings({"FieldCanBeLocal"})
     private Action newAction = new AbstractAction("New"){
         public void actionPerformed(ActionEvent ae){
-            file = null;
+            scene.file = null;
             Syntax syntax = new Syntax();
             syntax.add("ANY", any());
             Rule rule = new Rule();
@@ -241,15 +239,15 @@ public class NBLREditor extends JFrame{
     private Action openAction = new AbstractAction("Open..."){
         public void actionPerformed(ActionEvent ae){
             JFileChooser chooser = new JFileChooser();
-            if(file!=null)
-                chooser.setCurrentDirectory(file.getParentFile());
+            if(scene.file!=null)
+                chooser.setCurrentDirectory(scene.file.getParentFile());
             if(chooser.showOpenDialog(NBLREditor.this)==JFileChooser.APPROVE_OPTION){
                 File selected = chooser.getSelectedFile();
                 try{
                     showSyntax(Syntax.loadFrom(selected));
-                    file = selected;
-                    getRootPane().putClientProperty("Window.documentFile", file);
-                    setTitle(file.getName());
+                    scene.file = selected;
+                    getRootPane().putClientProperty("Window.documentFile", scene.file);
+                    setTitle(scene.file.getName());
                 }catch(Exception ex){
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(NBLREditor.this, ex.getMessage(), ex.getClass().getSimpleName(), JOptionPane.ERROR_MESSAGE);
@@ -261,8 +259,8 @@ public class NBLREditor extends JFrame{
     private void saveTo(File file){
         if(file==null){
             JFileChooser chooser = new JFileChooser();
-            if(this.file!=null)
-                chooser.setCurrentDirectory(this.file.getParentFile());
+            if(scene.file!=null)
+                chooser.setCurrentDirectory(scene.file.getParentFile());
             if(chooser.showSaveDialog(NBLREditor.this)==JFileChooser.APPROVE_OPTION)
                 file = chooser.getSelectedFile();
             else
@@ -270,7 +268,7 @@ public class NBLREditor extends JFrame{
         }
         try{
             syntax.saveTo(file);
-            this.file = file;
+            scene.file = file;
         }catch(Exception ex){
             ex.printStackTrace();
             JOptionPane.showMessageDialog(NBLREditor.this, ex.getMessage(), ex.getClass().getSimpleName(), JOptionPane.ERROR_MESSAGE);
@@ -280,7 +278,7 @@ public class NBLREditor extends JFrame{
     @SuppressWarnings({"FieldCanBeLocal"})
     private Action saveAction = new AbstractAction("Save"){
         public void actionPerformed(ActionEvent ae){
-            saveTo(file);
+            saveTo(scene.file);
         }
     };
 
