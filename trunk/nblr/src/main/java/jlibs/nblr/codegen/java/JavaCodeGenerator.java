@@ -45,7 +45,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void startParser(){
-        String className[] = className(parserName);
+        String className[] = className(stringProperty(PARSER_CLASS_NAME));
         if(className[0].length()>0){
             printer.printlns(
                 "package "+className[0]+";",
@@ -58,7 +58,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printClassDoc();
 
         printer.printlns(
-            "public"+(finalParser ? " final " :" ")+"class "+className[1]+" extends "+superClass.getName()+"{",
+            "public"+(booleanProperty(PARSER_FINAL) ? " final " :" ")+"class "+className[1]+" extends "+stringProperty(PARSER_SUPER_CLASS)+"{",
                 PLUS
         );
     }
@@ -93,7 +93,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        String className = className(parserName)[1];
+        String className = className(stringProperty(PARSER_CLASS_NAME))[1];
         String debuggerArgs = debuggable ? "handler, " : "";
         printer.emptyLine(true);
         printer.printlns(
@@ -111,8 +111,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                     MINUS,
                 "}",
                 "",
-                "protected final "+ handlerName +" handler;",
-                "public "+className+"("+ handlerName +" handler, int startingRule){",
+                "protected final "+ stringProperty(HANDLER_CLASS_NAME) +" handler;",
+                "public "+className+"("+ stringProperty(HANDLER_CLASS_NAME) +" handler, int startingRule){",
                     PLUS,
                     "super("+debuggerArgs+maxLookAhead+", startingRule);",
                     "this.handler = handler;",
@@ -611,7 +611,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     protected void startHandler(){
         printer.printClassDoc();
 
-        String className[] = className(handlerName);
+        String className[] = className(stringProperty(HANDLER_CLASS_NAME));
         if(className[0].length()>0){
             printer.printlns(
                 "package "+className[0]+";",
@@ -619,8 +619,14 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        String keyWord = handlerClass ? "class" : "interface";
-        String suffix = handlerClass ? " implements " : " extends ";
+        String keyWord, suffix;
+        if(booleanProperty(HANDLER_IS_CLASS)){
+            keyWord = "class";
+            suffix = "implements";
+        }else{
+            keyWord = "interface";
+            suffix = " extends ";
+        }
         printer.printlns(
             "public "+keyWord+" "+className[1]+"<E extends Exception>"+suffix+"<E>{",
                 PLUS
@@ -628,7 +634,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     protected void addPublishMethod(String name){
-        if(handlerClass){
+        if(booleanProperty(HANDLER_IS_CLASS)){
             printer.printlns(
                 "public void "+name+"(Chars data){",
                     PLUS,
@@ -641,7 +647,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     protected void addEventMethod(String name){
-        if(handlerClass){
+        if(booleanProperty(HANDLER_IS_CLASS)){
             printer.printlns(
                 "public void "+name+"(){",
                     PLUS,
@@ -654,7 +660,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     protected void finishHandler(){
-        if(handlerClass){
+        if(booleanProperty(HANDLER_IS_CLASS)){
             printer.printlns(
                     "@Override",
                     "public void fatalError(String message) throws E{",
@@ -702,23 +708,37 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     /*-------------------------------------------------[ Customization ]---------------------------------------------------*/
 
-    private String parserName = "jlibs.xml.sax.async.XMLScanner";
-    public boolean finalParser = true;
-    private Class superClass = NBParser.class;
-    public void setParserName(String parserName){
-        this.parserName = parserName;
+    public static final String PARSER_CLASS_NAME = "PARSER_CLASS_NAME";
+    public static final String PARSER_FINAL = "PARSER_FINAL";
+    private static final String PARSER_SUPER_CLASS = "PARSER_SUPER_CLASS";
+    public static final String HANDLER_CLASS_NAME = "HANDLER_CLASS_NAME";
+    public static final String HANDLER_IS_CLASS = "HANDLER_IS_CLASS";
+    
+    public static final Properties DEFAULTS = new Properties();
+    static{
+        DEFAULTS.put(PARSER_CLASS_NAME, "UntitledParser");
+        DEFAULTS.put(PARSER_FINAL, "true");
+        DEFAULTS.put(PARSER_SUPER_CLASS, NBParser.class.getName());        
+        
+        DEFAULTS.put(HANDLER_CLASS_NAME, "UntitledHandler");
+        DEFAULTS.put(HANDLER_IS_CLASS, "false");
+    }
+    public final Properties properties = new Properties(DEFAULTS);
+    private final Properties debugProperties = new Properties(properties);
+    {
+        debugProperties.put(PARSER_SUPER_CLASS, "jlibs.nblr.editor.debug.DebuggableNBParser");
+        debugProperties.put(HANDLER_CLASS_NAME, "jlibs.nblr.editor.debug.Debugger");
+    }
+    
+    private String stringProperty(String name){
+        return (debuggable ? debugProperties : properties).getProperty(name);
     }
 
-    private String handlerName = "jlibs.xml.sax.async.AsyncXMLReader";
-    private boolean handlerClass = false;
-    public void setHandlerName(String handlerName, boolean isClass){
-        this.handlerName = handlerName;
-        this.handlerClass = isClass;
+    private boolean booleanProperty(String name){
+        return "true".equals(stringProperty(name));
     }
 
-    public void setDebuggable(Class superClass, Class handler){
+    public void setDebuggable(){
         debuggable = true;
-        this.superClass = superClass;
-        this.handlerName = handler.getName();
     }
 }

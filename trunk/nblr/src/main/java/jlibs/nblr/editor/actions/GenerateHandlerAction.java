@@ -36,9 +36,10 @@ public class GenerateHandlerAction extends AbstractAction{
     @Override
     public void actionPerformed(ActionEvent ae){
         JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
+        codeGenerator.properties.put(JavaCodeGenerator.HANDLER_CLASS_NAME, "UntitledHandler");
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Class ?");
         if(response==JOptionPane.YES_OPTION)
-            codeGenerator.setHandlerName("UntitledHandler", true);
+            codeGenerator.properties.put(JavaCodeGenerator.HANDLER_IS_CLASS, "true");
         else if(response!=JOptionPane.NO_OPTION)
             return;
         Printer printer = new Printer(new PrintWriter(System.out, true));

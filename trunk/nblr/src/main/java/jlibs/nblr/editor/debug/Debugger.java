@@ -129,8 +129,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             FileUtil.mkdirs(file.getParentFile());
             
             JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
-            codeGenerator.setParserName(parserName);
-            codeGenerator.setDebuggable(DebuggableNBParser.class, getClass());
+            codeGenerator.properties.put(JavaCodeGenerator.PARSER_CLASS_NAME, parserName);
+            codeGenerator.setDebuggable();
 
             Printer printer = new Printer(new PrintWriter(new FileWriter(file)));
             codeGenerator.generateParser(printer);
