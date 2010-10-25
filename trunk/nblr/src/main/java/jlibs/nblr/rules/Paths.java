@@ -150,29 +150,14 @@ public class Paths extends ArrayList<Path>{
             }
         }else{
             int rulesPopped = 0;
-            boolean wasNode = false;
             Node target = null;
-            for(Object obj: stack){
-                if(obj instanceof Node){
-                    if(wasNode)
-                        rulesPopped++;
-                    wasNode = true;
-                }else if(obj instanceof Edge){
-                    wasNode = false;
-                    Edge edge = (Edge)obj;
-                    if(edge.ruleTarget!=null){
-                        if(rulesPopped==0){
-                            target = edge.target;
-                            break;
-                        }else
-                            rulesPopped--;
-                    }
-                }
-            }
 
-            Path p = this.owner;
-            while(p!=null && target==null){
-                wasNode = false;
+            Path temp = new Path(stack);
+            temp.parent = this.owner;
+            
+            Path p = temp;
+            while(p!=null){
+                boolean wasNode = false;
                 for(int i=p.size()-1; i>=0; i--){
                     Object obj = p.get(i);
                     if(obj instanceof Node){
