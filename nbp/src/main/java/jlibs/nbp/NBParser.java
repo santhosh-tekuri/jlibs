@@ -25,7 +25,7 @@ import static java.lang.Character.*;
  */
 public abstract class NBParser{
     public static final boolean SHOW_STATS = false;
-    public static int callRuleCount = 0;    
+    public static int callRuleCount = 0;
     public static int chunkCount = 0;
     public void printStats(){
         System.out.println("callRuleCount = " + callRuleCount);
@@ -63,12 +63,12 @@ public abstract class NBParser{
     private char input[];
     private int position;
     private int limit;
-    
+
     protected final int EOF = -1;
     protected final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
-        int cp  = lookAhead.getNext();
+        int cp = lookAhead.getNext();
         if(cp!=EOC)
             return cp;
         if(position==limit){
@@ -155,16 +155,8 @@ public abstract class NBParser{
             this.position = position;
             this.limit = limit;
 
-            if(free==0){
-                int cp = codePoint();
-                if(cp==-1)
-                    return 1;
-                else
-                    expected(cp, "<EOF>");
-            }
-
             curState = stack[free-1];
-            while(callRule()){
+            while(!stop && callRule()){
                 if(curState<0){
                     lookAhead.reset();
                     do{
@@ -180,18 +172,14 @@ public abstract class NBParser{
                         break;
                     }else
                         curState = stack[free-1];
-                }else
-                    stack[free-1] = curState;
-                
-                if(stop)
-                    break;
+                }
             }
 
             if(chars==null && this.position==limit)
                 onSuccessful();
             else
                 stack[free-1] = curState;
-            
+
             return this.position;
         }catch(IOException ex){
             throw ex;
@@ -218,7 +206,7 @@ public abstract class NBParser{
                 found = "<EOF>";
             else
                 found = new String(toChars(ch));
-        }        
+        }
         StringBuilder buff = new StringBuilder();
         for(String matcher: matchers){
             if(buff.length()>0)
