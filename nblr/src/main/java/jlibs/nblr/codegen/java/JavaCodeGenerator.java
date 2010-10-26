@@ -516,10 +516,12 @@ public class JavaCodeGenerator extends CodeGenerator{
             if(!debuggable && Node.DYNAMIC_STRING_MATCH.equals(dest.node.name)){
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
+                addState(dest.node);
                 println("push(RULE_DYNAMIC_STRING_MATCH, "+state+", 0);");
                 println("curState = 0;");
                 println("return true;");
             }else{
+                addState(dest.node);
                 println("curState = "+state+";");
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
@@ -588,6 +590,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                     if(stateAfterRule==-2)
                         stateAfterRule = -1;
                     println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
+                    if(stateAfterRule!=-1 && ruleStack.peek()==curRule)
+                        addState(edge.target);
                     ruleStack.push(edge.ruleTarget.rule);
                 }
                 else if(edge.matcher!=null){
@@ -598,7 +602,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                                 consumeLAFirst = true;
                             consumeLALen++;
                         }else
-                            println("consume(FROM_LA);");                    }
+                            println("consume(FROM_LA);");
+                    }
                     break;
                 }
             }

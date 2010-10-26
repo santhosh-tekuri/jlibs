@@ -178,7 +178,18 @@ public abstract class CodeGenerator{
                     continue;
                 addRuleID(rule.name, rule.id);
                 startRuleMethod(rule);
-                for(Node state: rule.states()){
+
+                statesVisited.clear();
+                statesPending.clear();
+                statesPending.add(rule.node);
+                for(Node node: rule.nodes()){
+                    if(node.name!=null)
+                        statesPending.add(node);
+                }
+                while(!statesPending.isEmpty()){
+                    Node state = statesPending.first();
+                    statesPending.remove(state);
+                    statesVisited.add(state);
                     try{
                         Routes routes = new Routes(rule, state);
                         if(routes.isEOF() && !debuggable) // don't generate EOF states in production code
@@ -189,7 +200,6 @@ public abstract class CodeGenerator{
                             printer.println("// EOF-State");
                         addRoutes(routes);
                         endCase();
-
                         maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                     }catch(IllegalStateException ex){
                         throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
@@ -212,6 +222,18 @@ public abstract class CodeGenerator{
 
         printer.emptyLine(false);
         finishParser(maxLookAhead);
+    }
+
+    private ArrayList<Node> statesVisited = new ArrayList<Node>();
+    protected TreeSet<Node> statesPending = new TreeSet<Node>(new Comparator<Node>(){
+        @Override
+        public int compare(Node n1, Node n2){
+            return n1.id-n2.id;
+        }
+    });
+    protected void addState(Node state){
+        if(!statesVisited.contains(state))
+            statesPending.add(state);
     }
 
     protected abstract void startCase(int id);
