@@ -29,10 +29,15 @@ public class Path extends ArrayList<Object>{
     }
 
     public Edge matcherEdge(){
-        if(size()>1 && get(size()-2) instanceof Edge)
-            return (Edge)get(size()-2);
-        else
-            return null;
+        for(int i=size()-1; i>=0; i--){
+            Object obj = get(i);
+            if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.matcher!=null)
+                    return edge;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings({"SimplifiableConditionalExpression"})
