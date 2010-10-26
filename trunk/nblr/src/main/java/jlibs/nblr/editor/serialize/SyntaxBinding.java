@@ -34,6 +34,16 @@ import java.util.List;
 @Binding("syntax")
 public class SyntaxBinding extends Matchers{
     static ThreadLocal<Syntax> SYNTAX = new ThreadLocal<Syntax>();
+    static Rule getRule(String name){
+        Syntax syntax = SyntaxBinding.SYNTAX.get();
+        Rule rule = syntax.rules.get(name);
+        if(rule==null){
+            rule = new Rule();
+            rule.name = name;
+            syntax.add(name, rule);
+        }
+        return rule;
+    }
 
     @Binding.Start
     public static Syntax onStart(){
@@ -45,7 +55,16 @@ public class SyntaxBinding extends Matchers{
     @Binding.Element(element="rule", clazz=RuleBinding.class)
     public static void rule(){}
 
-    @Relation.Finish("rule")
+    @Binding.Start("string-rule")
+    public static Rule onStringRule(@Attr String name, @Attr String string){
+        Rule rule = SyntaxBinding.getRule(name);
+        if(rule.node==null)
+            rule.node = new Node();
+        rule.addStringBranch(rule.node, string);
+        return rule;
+    }
+
+    @Relation.Finish({"rule", "string-rule"})
     public static void relateWithRule(Syntax syntax, Rule rule){
         syntax.add(rule.name, rule);
     }
@@ -173,14 +192,7 @@ class Matchers{
 class RuleBinding{
     @Binding.Start
     public static Rule onStart(@Attr String name){
-        Syntax syntax = SyntaxBinding.SYNTAX.get();
-        Rule rule = syntax.rules.get(name);
-        if(rule==null){
-            rule = new Rule();
-            rule.name = name;
-            syntax.add(name, rule);
-        }
-        return rule;
+        return SyntaxBinding.getRule(name);
     }
 
     @Binding.Element(element="node", clazz=NodeBinding.class)
@@ -250,13 +262,7 @@ class EdgeBinding extends Matchers{
 
     @Binding.Start("rule")
     public static RuleTarget onRuleTarget(@Attr String name, @Attr String node){
-        Syntax syntax = SyntaxBinding.SYNTAX.get();
-        Rule rule = syntax.rules.get(name);
-        if(rule==null){
-            rule = new Rule();
-            rule.name = name;
-            syntax.add(name, rule);
-        }
+        Rule rule = SyntaxBinding.getRule(name);
         RuleTarget ruleTarget = new RuleTarget();
         ruleTarget.rule = rule;
         ruleTarget.name = node;

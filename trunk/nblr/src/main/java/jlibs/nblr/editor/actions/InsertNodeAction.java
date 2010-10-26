@@ -16,7 +16,6 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.nblr.editor.RuleScene;
-import jlibs.nblr.matchers.Any;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 
@@ -76,18 +75,7 @@ class InsertStringBeforeNodeAction extends InsertNodeAction{
     protected boolean insert(){
         String str = JOptionPane.showInputDialog("String");
         if(str!=null){
-            boolean startingNode = scene.getRule().node==node;
-            for(int i=str.length()-1; i>=0; i--){
-                Node newNode = new Node();
-                for(Edge edge: node.incoming()){
-                    if(!edge.loop())
-                        edge.setTarget(newNode);
-                }
-                newNode.addEdgeTo(node).matcher = new Any(str.charAt(i));
-                node = newNode;
-            }
-            if(startingNode)
-                scene.getRule().node = node;
+            scene.getRule().insertStringBefore(node, str);
             return true;
         }else
             return false;
@@ -125,15 +113,7 @@ class InsertStringAfterNodeAction extends InsertNodeAction{
     protected boolean insert(){
         String str = JOptionPane.showInputDialog("String");
         if(str!=null){
-            for(int i=0; i<str.length(); i++){
-                Node newNode = new Node();
-                for(Edge edge: node.outgoing()){
-                    if(!edge.loop())
-                        edge.setSource(newNode);
-                }
-                newNode.addEdgeFrom(node).matcher = new Any(str.charAt(i));
-                node = newNode;
-            }
+            scene.getRule().insertStringAfter(node, str);
             return true;
         }else
             return false;
@@ -165,11 +145,7 @@ class AddStringBranchAction extends InsertNodeAction{
     protected boolean insert(){
         String str = JOptionPane.showInputDialog("String");
         if(str!=null){
-            for(int i=0; i<str.length(); i++){
-                Node newNode = new Node();
-                node.addEdgeTo(newNode).matcher = new Any(str.charAt(i));
-                node = newNode;
-            }
+            scene.getRule().addStringBranch(node, str);
             return true;
         }else
             return false;

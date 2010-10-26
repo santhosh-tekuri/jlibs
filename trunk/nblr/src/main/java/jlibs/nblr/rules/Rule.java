@@ -73,13 +73,6 @@ public class Rule{
         }
     }
 
-    public boolean contains(Node node){
-        ArrayList<Node> nodes = new ArrayList<Node>();
-        ArrayList<Edge> edges = new ArrayList<Edge>();
-        computeIDS(nodes, edges, this.node);
-        return nodes.contains(node);
-    }
-
     public Set<Node> states(){
         Set<Node> states = new LinkedHashSet<Node>();
         for(Node node: nodes()){
@@ -128,6 +121,44 @@ public class Rule{
         }
 
         return newRule;
+    }
+
+    /*-------------------------------------------------[ String Related ]---------------------------------------------------*/
+
+    public void insertStringBefore(Node node, String str){
+        boolean startingNode = this.node==node;
+        int cp[] = StringUtil.toCodePoints(str);
+        for(int i=cp.length-1; i>=0; i--){
+            Node newNode = new Node();
+            for(Edge edge: node.incoming()){
+                if(!edge.loop())
+                    edge.setTarget(newNode);
+            }
+            newNode.addEdgeTo(node).matcher = new Any(cp[i]);
+            node = newNode;
+        }
+        if(startingNode)
+            this.node = node;
+    }
+
+    public void insertStringAfter(Node node, String str){
+        for(int cp: StringUtil.toCodePoints(str)){
+            Node newNode = new Node();
+            for(Edge edge: node.outgoing()){
+                if(!edge.loop())
+                    edge.setSource(newNode);
+            }
+            newNode.addEdgeFrom(node).matcher = new Any(cp);
+            node = newNode;
+        }
+    }
+
+    public void addStringBranch(Node node, String str){
+        for(int cp: StringUtil.toCodePoints(str)){
+            Node newNode = new Node();
+            node.addEdgeTo(newNode).matcher = new Any(cp);
+            node = newNode;
+        }
     }
 
     public int[] matchString(){
