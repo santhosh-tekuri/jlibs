@@ -522,9 +522,9 @@ public class JavaCodeGenerator extends CodeGenerator{
                 println("return true;");
             }else{
                 addState(dest.node);
-                println("curState = "+state+";");
                 if(!dest.consumedFromLookAhead)
                     println("consume(ch);");
+                println("curState = "+state+";");
                 println("continue;");
             }
         }else{

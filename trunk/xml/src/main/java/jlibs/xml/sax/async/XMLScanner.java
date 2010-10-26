@@ -110,8 +110,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='='){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[=] OR <WS>");
@@ -137,28 +137,28 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch=='y'){
                         buffer.push();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='n'){
                         buffer.push();
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[y] OR [n]");
                 case 1:
                     if(ch=='e'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[e]");
                 case 2:
                     if(ch=='s'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[s]");
@@ -168,8 +168,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 4:
                     if(ch=='o'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[o]");
@@ -211,13 +211,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[=] OR <WS>");
                 case 2:
                     if(ch=='\''){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='"'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
@@ -284,8 +284,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ENCODING_START(ch)){
                         buffer.push();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "<ENCODING_START>");
@@ -333,13 +333,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[=] OR <WS>");
                 case 2:
                     if(ch=='\''){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='"'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
@@ -392,22 +392,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch=='1'){
                         buffer.push();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[1]");
                 case 1:
                     if(ch=='.'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[\\.]");
                 case 2:
                     if(DIGIT(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "<DIGIT>");
@@ -455,13 +455,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[=] OR <WS>");
                 case 2:
                     if(ch=='\''){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='"'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
@@ -513,74 +513,74 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
                 case 2:
                     if(ch=='-'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\-]");
                 case 3:
                     if(ch=='-'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[\\-]");
                 case 4:
                     if(ch=='-'){
                         buffer.push();
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "<DASH> OR <CHAR>");
                 case 5:
                     if(ch=='-'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "<DASH> OR <CHAR>");
                 case 6:
                     if(ch=='-'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "<DASH> OR <CHAR>");
                 case 7:
                     if(ch=='>'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[>]");
@@ -604,25 +604,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch==']'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 0;
                         consume(ch);
+                        curState = 0;
                         continue;
                     }
                     expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
                 case 1:
                     if(ch==']'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 0;
                         consume(ch);
+                        curState = 0;
                         continue;
                     }
                     expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
@@ -635,8 +635,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 0;
                         consume(ch);
+                        curState = 0;
                         continue;
                     }
                     expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
@@ -656,22 +656,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
                 case 2:
                     if(ch=='['){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\[]");
@@ -685,8 +685,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[C]");
                 case 4:
                     if(ch=='['){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[\\[]");
@@ -726,8 +726,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "<NAME_START>");
@@ -752,61 +752,61 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='x' || ch=='X'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "[xX] OR <NCNAME_START>");
                 case 1:
                     if(ch=='m' || ch=='M'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     curState = -1;
                     return true;
                 case 2:
                     if(ch=='l' || ch=='L'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     curState = -1;
                     return true;
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<NCNAME_PART>");
                 case 4:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     curState = -1;
                     return true;
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     curState = -1;
@@ -827,15 +827,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='?'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[?]");
@@ -858,15 +858,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.piTarget(buffer.pop(0, 0));
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch=='?'){
                         handler.piTarget(buffer.pop(0, 0));
                         handler.piData();
-                        curState = 12;
                         consume(ch);
+                        curState = 12;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
@@ -875,26 +875,26 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     if(ch=='?'){
                         buffer.push();
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "<WS> OR [?] OR <CHAR>");
                 case 7:
                     if(ch=='?'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "[?] OR <CHAR>");
@@ -908,8 +908,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "[>] OR [?] OR <CHAR>");
@@ -936,8 +936,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "<NCNAME_START>");
@@ -973,8 +973,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if(ch==':'){
                         handler.prefix(buffer.pop(0, 0));
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     buffer.pop(0, 0);
@@ -1009,8 +1009,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='&'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[\\&]");
@@ -1023,15 +1023,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='#'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<NAME_START> OR [\\#]");
                 case 3:
                     if(ch==';'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[;]");
@@ -1041,22 +1041,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 6:
                     if(ch=='x'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(DIGIT(ch)){
                         buffer.push();
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "[x] OR <DIGIT>");
                 case 7:
                     if(HEX_DIGIT(ch)){
                         buffer.push();
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "<HEX_DIGIT>");
@@ -1156,21 +1156,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch=='\''){
                         handler.valueStart();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='"'){
                         handler.valueStart();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
                 case 1:
                     if(ch=='\''){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch!=EOF && ATTR_Q_CONTENT(ch)){
@@ -1194,8 +1194,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 3:
                     if(ch=='"'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
@@ -1230,8 +1230,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch!=EOF && ATTR_Q_CONTENT(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
@@ -1243,8 +1243,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<ATTR_Q_CONTENT> OR [\\&]");
                 case 3:
                     if(ch!=EOF && ATTR_Q_CONTENT(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     handler.rawValue(buffer.pop(0, 0));
@@ -1267,8 +1267,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
@@ -1280,8 +1280,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<ATTR_DQ_CONTENT> OR [\\&]");
                 case 3:
                     if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     handler.rawValue(buffer.pop(0, 0));
@@ -1303,8 +1303,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
@@ -1322,8 +1322,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributesStart();
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     handler.attributesStart();
@@ -1346,8 +1346,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     curState = -1;
@@ -1440,13 +1440,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][!][\\-] OR [<][!][\\[]");
                 case 6:
                     if(ch==']'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     handler.characters(buffer.pop(0, 0));
@@ -1454,13 +1454,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 8:
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     handler.characters(buffer.pop(0, 0));
@@ -1470,13 +1470,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll(ch, ']'))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     handler.characters(buffer.pop(0, 0));
@@ -1510,22 +1510,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='/'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch=='>'){
                         handler.attributesEnd();
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[/] OR [>]");
                 case 2:
                     if(ch=='>'){
                         handler.attributesEnd();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[>]");
@@ -1620,24 +1620,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][/] OR [<][!][\\-] OR [<][!][\\[]");
-                case 6:
-                    if(ch=='/'){
-                        handler.endingElem();
-                        consume(ch);
-                        push(RULE_DYNAMIC_STRING_MATCH, 7, 0);
-                        curState = 0;
-                        return true;
-                    }
-                    expected(ch, "[/]");
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch=='>'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
@@ -1645,8 +1636,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
@@ -1670,43 +1661,43 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='?'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[?]");
                 case 2:
                     if(ch=='x'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[x]");
                 case 3:
                     if(ch=='m'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[m]");
                 case 4:
                     if(ch=='l'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[l]");
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -1723,13 +1714,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [v]");
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch=='?'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
@@ -1744,8 +1735,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='?'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch=='s'){
@@ -1758,13 +1749,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [e] OR [?] OR [s]");
                 case 9:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='?'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
@@ -1779,8 +1770,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='?'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     expected(ch, "<WS> OR [s] OR [?]");
@@ -1788,8 +1779,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='?'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
@@ -1866,13 +1857,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='\''){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='"'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
@@ -1886,8 +1877,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<Q> OR <CHAR>");
@@ -1899,8 +1890,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<Q> OR <CHAR>");
@@ -1914,8 +1905,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<DQ> OR <CHAR>");
@@ -1927,8 +1918,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<DQ> OR <CHAR>");
@@ -1948,13 +1939,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='"'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='\''){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "<DQ> OR <Q>");
@@ -1968,8 +1959,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         buffer.push();
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<DQ> OR <PUBID_CHAR>");
@@ -1981,8 +1972,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<DQ> OR <PUBID_CHAR>");
@@ -1996,8 +1987,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         buffer.push();
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<Q> OR <PUBID_CHAR>");
@@ -2009,8 +2000,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<Q> OR <PUBID_CHAR>");
@@ -2038,8 +2029,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[S]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2083,8 +2074,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[P]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2120,15 +2111,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
@@ -2142,8 +2133,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[N]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2161,8 +2152,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 6:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.notationName(buffer.pop(0, 0));
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2186,13 +2177,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[P] OR <WS> OR [S]");
                 case 8:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
@@ -2212,8 +2203,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
@@ -2221,8 +2212,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
@@ -2262,8 +2253,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[P] OR [S]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2299,8 +2290,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='%'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[%]");
@@ -2345,8 +2336,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[N]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2431,22 +2422,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\''){
                         handler.valueStart();
                         handler.entityValue();
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch=='"'){
                         handler.valueStart();
                         handler.entityValue();
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ>");
                 case 2:
                     if(ch=='\''){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
@@ -2477,8 +2468,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 4:
                     if(ch=='"'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
@@ -2520,8 +2511,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
@@ -2539,8 +2530,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<ENTITY_Q_CONTENT> OR [\\&] OR [%]");
                 case 3:
                     if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     handler.rawValue(buffer.pop(0, 0));
@@ -2563,8 +2554,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
@@ -2582,8 +2573,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
                 case 3:
                     if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     handler.rawValue(buffer.pop(0, 0));
@@ -2605,15 +2596,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
@@ -2627,8 +2618,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[E]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2636,8 +2627,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='%'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -2650,8 +2641,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%] OR <NCNAME_START>");
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2669,8 +2660,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 8:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.paramEntityName(buffer.pop(0, 0));
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2718,8 +2709,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     expected(ch, "[>] OR <WS>");
@@ -2730,8 +2721,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 13:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.entityName(buffer.pop(0, 0));
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -2779,8 +2770,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 16;
                         consume(ch);
+                        curState = 16;
                         continue;
                     }
                     expected(ch, "<WS> OR [>]");
@@ -2838,8 +2829,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     curState = -1;
@@ -2884,20 +2875,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='I'){
-                        curState = 23;
                         consume(ch);
+                        curState = 23;
                         continue;
                     }
                     expected(ch, "[E] OR [N] OR [I]");
                 case 9:
                     if(ch=='Y'){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='I'){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     expected(ch, "[Y] OR [I]");
@@ -2907,15 +2898,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 11:
                     if(ch=='E'){
-                        curState = 12;
                         consume(ch);
+                        curState = 12;
                         continue;
                     }
                     expected(ch, "[E]");
                 case 12:
                     if(ch=='S'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "[S]");
@@ -2925,8 +2916,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 20:
                     if(ch=='S'){
-                        curState = 22;
                         consume(ch);
+                        curState = 22;
                         continue;
                     }
                     handler.nmtokenAttribute();
@@ -2938,15 +2929,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 23:
                     if(ch=='D'){
-                        curState = 24;
                         consume(ch);
+                        curState = 24;
                         continue;
                     }
                     expected(ch, "[D]");
                 case 24:
                     if(ch=='R'){
-                        curState = 25;
                         consume(ch);
+                        curState = 25;
                         continue;
                     }
                     handler.idAttribute();
@@ -2954,22 +2945,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 25:
                     if(ch=='E'){
-                        curState = 26;
                         consume(ch);
+                        curState = 26;
                         continue;
                     }
                     expected(ch, "[E]");
                 case 26:
                     if(ch=='F'){
-                        curState = 27;
                         consume(ch);
+                        curState = 27;
                         continue;
                     }
                     expected(ch, "[F]");
                 case 27:
                     if(ch=='S'){
-                        curState = 28;
                         consume(ch);
+                        curState = 28;
                         continue;
                     }
                     handler.idRefAttribute();
@@ -2995,8 +2986,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "<NAME_PART>");
@@ -3022,8 +3013,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch=='('){
                         handler.enumerationAttribute();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[(]");
@@ -3041,14 +3032,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
@@ -3062,8 +3053,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
@@ -3086,14 +3077,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 9:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
@@ -3107,8 +3098,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
@@ -3133,15 +3124,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='('){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[(]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch=='#'){
@@ -3255,8 +3246,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -3290,18 +3281,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 9:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='|'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch=='%'){
@@ -3315,13 +3306,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch=='%'){
@@ -3363,8 +3354,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[N]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -3372,8 +3363,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='('){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "<WS> OR [(]");
@@ -3391,14 +3382,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch==')'){
@@ -3412,8 +3403,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch==')'){
@@ -3436,14 +3427,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 11:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        curState = 12;
                         consume(ch);
+                        curState = 12;
                         continue;
                     }
                     if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch==')'){
@@ -3457,8 +3448,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch==')'){
@@ -3602,8 +3593,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='#'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<Q> OR <DQ> OR [\\#]");
@@ -3641,8 +3632,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -3694,8 +3685,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdAttribute(buffer.pop(0, 0));
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -3768,8 +3759,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [C] OR [(] OR [E] OR [I] OR [N][O] OR [N][M]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     if(ch=='%'){
@@ -3781,8 +3772,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%]");
                 case 4:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch=='\''){
@@ -3862,15 +3853,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
@@ -3884,8 +3875,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[A]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     if(ch=='%'){
@@ -3897,8 +3888,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%]");
                 case 4:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -3935,8 +3926,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdAttributesStart(buffer.pop(0, 0));
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='%'){
@@ -3948,15 +3939,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='>'){
                         handler.dtdAttributesStart(buffer.pop(0, 0));
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "<WS> OR [%] OR [>]");
                 case 8:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='%'){
@@ -3976,13 +3967,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch=='%'){
@@ -4004,8 +3995,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch=='%'){
@@ -4017,13 +4008,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
                 case 11:
                     if(ch=='>'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='%'){
@@ -4053,21 +4044,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='('){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[(]");
                 case 1:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch=='('){
                         push(RULE_CHILDREN, 4, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4089,8 +4080,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     if(ch=='('){
                         push(RULE_CHILDREN, 4, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4110,8 +4101,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 3:
                     if(ch=='('){
                         push(RULE_CHILDREN, 4, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4124,23 +4115,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[(] OR <NAME_START>");
                 case 4:
                     if(ch=='|'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch==','){
-                        curState = 17;
                         consume(ch);
+                        curState = 17;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch=='%'){
@@ -4154,18 +4145,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch==','){
-                        curState = 17;
                         consume(ch);
+                        curState = 17;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch=='%'){
@@ -4178,13 +4169,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 8:
                     if(ch=='('){
                         push(RULE_CHILDREN, 10, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4206,8 +4197,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     if(ch=='('){
                         push(RULE_CHILDREN, 10, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4226,18 +4217,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
                 case 10:
                     if(ch=='|'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     if(ch=='%'){
@@ -4251,13 +4242,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='|'){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch=='%'){
@@ -4284,14 +4275,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 18;
                         consume(ch);
+                        curState = 18;
                         continue;
                     }
                     if(ch=='('){
                         push(RULE_CHILDREN, 19, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='%'){
@@ -4313,8 +4304,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='('){
                         push(RULE_CHILDREN, 19, 0);
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch=='%'){
@@ -4326,18 +4317,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
                 case 19:
                     if(ch==','){
-                        curState = 17;
                         consume(ch);
+                        curState = 17;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 20;
                         consume(ch);
+                        curState = 20;
                         continue;
                     }
                     if(ch=='%'){
@@ -4351,13 +4342,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch==','){
-                        curState = 17;
                         consume(ch);
+                        curState = 17;
                         continue;
                     }
                     if(ch==')'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch=='%'){
@@ -4420,8 +4411,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[%] OR <WS>");
@@ -4540,15 +4531,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
@@ -4562,8 +4553,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[E]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     if(ch=='%'){
@@ -4575,8 +4566,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%]");
                 case 4:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
@@ -4613,8 +4604,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdElement(buffer.pop(0, 0));
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='%'){
@@ -4627,8 +4618,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%]");
                 case 8:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='%'){
@@ -4640,8 +4631,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "<WS> OR [%]");
                 case 9:
                     if(ch=='('){
-                        curState = 12;
                         consume(ch);
+                        curState = 12;
                         continue;
                     }
                     if(ch=='E'){
@@ -4658,8 +4649,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='%'){
@@ -4673,8 +4664,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='('){
-                        curState = 12;
                         consume(ch);
+                        curState = 12;
                         continue;
                     }
                     if(ch=='E'){
@@ -4699,8 +4690,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
                 case 12:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch=='%'){
@@ -4775,8 +4766,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 19;
                         consume(ch);
+                        curState = 19;
                         continue;
                     }
                     if(ch=='%'){
@@ -4793,8 +4784,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 19;
                         consume(ch);
+                        curState = 19;
                         continue;
                     }
                     if(ch=='%'){
@@ -5054,15 +5045,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
@@ -5076,8 +5067,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[D]");
                 case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -5095,22 +5086,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 6:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdRoot(buffer.pop(0, 0));
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     if(ch=='['){
                         handler.dtdRoot(buffer.pop(0, 0));
                         handler.dtdStart();
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     if(ch=='>'){
                         handler.dtdRoot(buffer.pop(0, 0));
                         handler.dtdStart();
-                        curState = 15;
                         consume(ch);
+                        curState = 15;
                         continue;
                     }
                     expected(ch, "<WS> OR [\\[] OR [>]");
@@ -5135,14 +5126,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='['){
                         handler.dtdStart();
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     if(ch=='>'){
                         handler.dtdStart();
-                        curState = 15;
                         consume(ch);
+                        curState = 15;
                         continue;
                     }
                     expected(ch, "<WS> OR [P] OR [S] OR [\\[] OR [>]");
@@ -5151,14 +5142,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     if(ch=='['){
                         handler.dtdStart();
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     if(ch=='>'){
                         handler.dtdStart();
-                        curState = 15;
                         consume(ch);
+                        curState = 15;
                         continue;
                     }
                     expected(ch, "[\\[] OR [>] OR <WS>");
@@ -5274,8 +5265,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
                 case 12:
                     if(ch==']'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     expected(ch, "[\\]]");
@@ -5283,8 +5274,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='>'){
-                        curState = 15;
                         consume(ch);
+                        curState = 15;
                         continue;
                     }
                     expected(ch, "[>] OR <WS>");
@@ -5777,43 +5768,43 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='?'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[?]");
                 case 2:
                     if(ch=='x'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[x]");
                 case 3:
                     if(ch=='m'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[m]");
                 case 4:
                     if(ch=='l'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[l]");
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -5837,8 +5828,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[v] OR [e] OR <WS>");
                 case 7:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "<WS>");
@@ -5857,8 +5848,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='?'){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
@@ -5886,43 +5877,43 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='I'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[I]");
                 case 1:
                     if(ch=='G'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[G]");
                 case 2:
                     if(ch=='N'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[N]");
                 case 3:
                     if(ch=='O'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[O]");
                 case 4:
                     if(ch=='R'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[R]");
                 case 5:
                     if(ch=='E'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "[E]");
@@ -5930,59 +5921,59 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='['){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "<WS> OR [\\[]");
                 case 7:
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 8:
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 9:
                     if(ch==']'){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -5995,94 +5986,94 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
                 case 13:
                     if(ch=='!'){
-                        curState = 14;
                         consume(ch);
+                        curState = 14;
                         continue;
                     }
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
                 case 14:
                     if(ch=='['){
-                        curState = 15;
                         consume(ch);
+                        curState = 15;
                         continue;
                     }
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
                 case 15:
                     if(ch==']'){
                         push(RULE_IGNORE_SECT, 16, 7);
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
                         push(RULE_IGNORE_SECT, 16, 7);
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         push(RULE_IGNORE_SECT, 16, 7);
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 16:
                     if(ch==']'){
-                        curState = 9;
                         consume(ch);
+                        curState = 9;
                         continue;
                     }
                     if(ch=='<'){
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -6338,22 +6329,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='<'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[<]");
                 case 1:
                     if(ch=='!'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[!]");
                 case 2:
                     if(ch=='['){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\[]");
@@ -6445,50 +6436,50 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     if(ch=='I'){
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     expected(ch, "[I]");
                 case 1:
                     if(ch=='N'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "[N]");
                 case 2:
                     if(ch=='C'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[C]");
                 case 3:
                     if(ch=='L'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[L]");
                 case 4:
                     if(ch=='U'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[U]");
                 case 5:
                     if(ch=='D'){
-                        curState = 6;
                         consume(ch);
+                        curState = 6;
                         continue;
                     }
                     expected(ch, "[D]");
                 case 6:
                     if(ch=='E'){
-                        curState = 7;
                         consume(ch);
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "[E]");
@@ -6496,8 +6487,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='['){
-                        curState = 8;
                         consume(ch);
+                        curState = 8;
                         continue;
                     }
                     expected(ch, "<WS> OR [\\[]");
@@ -6629,15 +6620,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
                 case 9:
                     if(ch==']'){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     expected(ch, "[\\]]");
                 case 10:
                     if(ch==']'){
-                        curState = 11;
                         consume(ch);
+                        curState = 11;
                         continue;
                     }
                     expected(ch, "[\\]]");
@@ -6942,14 +6933,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch=='<'){
                         buffer.push();
-                        curState = 1;
                         consume(ch);
+                        curState = 1;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     buffer.push();
@@ -6958,13 +6949,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 1:
                     if(ch=='?'){
-                        curState = 2;
                         consume(ch);
+                        curState = 2;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -6972,13 +6963,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 2:
                     if(ch=='x'){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -6986,13 +6977,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 3:
                     if(ch=='m'){
-                        curState = 4;
                         consume(ch);
+                        curState = 4;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -7000,13 +6991,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 4:
                     if(ch=='l'){
-                        curState = 5;
                         consume(ch);
+                        curState = 5;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -7015,13 +7006,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         buffer.pop(0, 0);
-                        curState = 13;
                         consume(ch);
+                        curState = 13;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -7029,8 +7020,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 case 10:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     handler.externalEntityValue(buffer.pop(0, 0));
@@ -7063,8 +7054,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 14:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
-                        curState = 10;
                         consume(ch);
+                        curState = 10;
                         continue;
                     }
                     buffer.push();
@@ -7088,8 +7079,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
@@ -7109,8 +7100,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     handler.rawValue(buffer.pop(0, 0));
@@ -7119,8 +7110,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 6:
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         buffer.push();
-                        curState = 3;
                         consume(ch);
+                        curState = 3;
                         continue;
                     }
                     if(ch=='&'){
