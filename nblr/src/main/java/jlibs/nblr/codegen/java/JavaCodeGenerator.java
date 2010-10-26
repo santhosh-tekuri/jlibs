@@ -335,7 +335,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
             String finishAll = checkFinishAll(route, consumeLookAhead);
             if(finishAll!=null && i==0){
-                useFinishAll(route.matcher(), finishAll, false);
+                useFinishAll(route.matcher(), finishAll, false, groups.size()>1);
                 continue;
             }
 
@@ -350,7 +350,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 print(group, depth+1, consumeLookAhead);
             if(depth==route.depth){
                 if(finishAll!=null)
-                    useFinishAll(route.matcher(), finishAll, true);
+                    useFinishAll(route.matcher(), finishAll, true, false);
                 else
                     travelRoute(route, consumeLookAhead);
             }
@@ -469,7 +469,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         return null;
     }
 
-    private void useFinishAll(Matcher matcher, String name, boolean addContinue){
+    private void useFinishAll(Matcher matcher, String name, boolean addContinue, boolean storeReturnValue){
         String methodCall;
         if(name.equals(FINISH_ALL) || name.equals(FINISH_ALL_OTHER_THAN)){
             Any any = (Any)(name.equals(FINISH_ALL_OTHER_THAN) ? ((Not)matcher).delegate : matcher);
@@ -477,7 +477,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }else
             methodCall = "finishAll_"+name+"(ch)";
 
-        if(!addContinue)
+        if(!addContinue && storeReturnValue)
             methodCall = "(ch="+methodCall+")";
         printer.printlns(
             "if("+methodCall+"==EOC)",
