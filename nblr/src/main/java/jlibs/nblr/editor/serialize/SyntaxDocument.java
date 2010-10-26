@@ -87,6 +87,24 @@ public class SyntaxDocument extends XMLDocument{
     }        
 
     public void add(Rule rule) throws SAXException{
+        int cp[] = rule.matchString();
+        if(cp!=null){
+            boolean hasNamedNode = false;
+            for(Node node: rule.nodes()){
+                if(node.name!=null){
+                    hasNamedNode = true;
+                    break;
+                }
+            }
+            if(!hasNamedNode){
+                startElement("string-rule");
+                addAttribute("name", rule.name);
+                addAttribute("string", new String(cp, 0, cp.length));
+                endElement();
+                return;
+            }
+        }
+
         startElement("rule");
         addAttribute("name", rule.name);
 

@@ -11,7 +11,7 @@
         <range from="a" to="f"/>
         <range from="A" to="F"/>
     </or>
-    <any name="WS" chars=" &#9;&#10;&#13;"/>
+    <any name="WS" chars=" &#9;&#10;&#13;" javaCode="org.apache.xerces.util.XMLChar.isSpace($codePoint)"/>
     <or name="ENCODING_START">
         <range from="A" to="Z"/>
         <range from="a" to="z"/>
@@ -185,49 +185,7 @@
             <matcher name="DQ"/>
         </edge>
     </rule>
-    <rule name="str_standalone">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="s"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="t"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="a"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="n"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="d"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="a"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="l"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <any chars="o"/>
-        </edge>
-        <edge source="8" target="9" fallback="false">
-            <any chars="n"/>
-        </edge>
-        <edge source="9" target="10" fallback="false">
-            <any chars="e"/>
-        </edge>
-    </rule>
+    <string-rule name="str_standalone" string="standalone"/>
     <rule name="enc_name">
         <node>
             <buffer/>
@@ -278,41 +236,7 @@
             <matcher name="DQ"/>
         </edge>
     </rule>
-    <rule name="str_encoding">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="e"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="n"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="c"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="o"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="d"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="i"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="n"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <any chars="g"/>
-        </edge>
-    </rule>
+    <string-rule name="str_encoding" string="encoding"/>
     <rule name="version_num">
         <node>
             <buffer/>
@@ -371,37 +295,7 @@
             <matcher name="DQ"/>
         </edge>
     </rule>
-    <rule name="str_version">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="v"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="e"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="r"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="s"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="i"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="o"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="n"/>
-        </edge>
-    </rule>
+    <string-rule name="str_version" string="version"/>
     <rule name="comment">
         <node/>
         <node/>
@@ -505,29 +399,7 @@
             <rule name="cdata_end"/>
         </edge>
     </rule>
-    <rule name="str_CDATA">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="C"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="D"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="A"/>
-        </edge>
-    </rule>
+    <string-rule name="str_CDATA" string="CDATA"/>
     <rule name="name">
         <node/>
         <node/>
@@ -1188,33 +1060,7 @@
             <matcher name="WS"/>
         </edge>
     </rule>
-    <rule name="str_SYSTEM">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="S"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="Y"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="S"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="M"/>
-        </edge>
-    </rule>
+    <string-rule name="str_SYSTEM" string="SYSTEM"/>
     <rule name="public_id">
         <node/>
         <node/>
@@ -1233,33 +1079,7 @@
             <matcher name="WS"/>
         </edge>
     </rule>
-    <rule name="str_PUBLIC">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="U"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="B"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="L"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="C"/>
-        </edge>
-    </rule>
+    <string-rule name="str_PUBLIC" string="PUBLIC"/>
     <rule name="notation_decl">
         <node/>
         <node/>
@@ -1332,41 +1152,7 @@
             <rule name="system_id"/>
         </edge>
     </rule>
-    <rule name="str_notation">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="O"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="O"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <any chars="N"/>
-        </edge>
-    </rule>
+    <string-rule name="str_notation" string="NOTATION"/>
     <rule name="external_id">
         <node/>
         <node/>
@@ -1434,6 +1220,7 @@
             <rule name="name"/>
         </edge>
     </rule>
+    <string-rule name="str_NDATA" string="NDATA"/>
     <rule name="pe_def">
         <node/>
         <node/>
@@ -1621,6 +1408,7 @@
             <matcher name="WS"/>
         </edge>
     </rule>
+    <string-rule name="str_ENTITY" string="ENTITY"/>
     <rule name="entity_def">
         <node/>
         <node/>
@@ -1749,6 +1537,8 @@
         <edge source="27" target="29" fallback="false"/>
         <edge source="24" target="30" fallback="false"/>
     </rule>
+    <string-rule name="str_ENTIT" string="ENTIT"/>
+    <string-rule name="str_NMTOKEN" string="NMTOKEN"/>
     <rule name="nmtoken">
         <node/>
         <node/>
@@ -1760,42 +1550,6 @@
         <edge source="1" target="1" fallback="false">
             <matcher name="NAME_PART"/>
         </edge>
-    </rule>
-    <rule name="nmtokens">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <rule name="nmtoken"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars=" "/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <rule name="nmtoken"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="1" fallback="false"/>
-    </rule>
-    <rule name="names">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <rule name="name"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars=" "/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <rule name="name"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="1" fallback="false"/>
     </rule>
     <rule name="enumeration">
         <node>
@@ -1933,6 +1687,7 @@
             <rule name="pe_reference"/>
         </edge>
     </rule>
+    <string-rule name="str_hash_PCDATA" string="#PCDATA"/>
     <rule name="notation_type">
         <node>
             <event name="notationAttribute"/>
@@ -2076,95 +1831,9 @@
             <rule name="value"/>
         </edge>
     </rule>
-    <rule name="str_REQUIRED">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="R"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="Q"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="U"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="R"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="7" target="8" fallback="false">
-            <any chars="D"/>
-        </edge>
-    </rule>
-    <rule name="str_IMPLIED">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="M"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="L"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="D"/>
-        </edge>
-    </rule>
-    <rule name="str_FIXED">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="F"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="X"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="D"/>
-        </edge>
-    </rule>
+    <string-rule name="str_REQUIRED" string="REQUIRED"/>
+    <string-rule name="str_IMPLIED" string="IMPLIED"/>
+    <string-rule name="str_FIXED" string="FIXED"/>
     <rule name="att_def">
         <node>
             <buffer/>
@@ -2278,37 +1947,7 @@
             <rule name="pe_reference"/>
         </edge>
     </rule>
-    <rule name="str_ATTLIST">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="L"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="S"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="T"/>
-        </edge>
-    </rule>
+    <string-rule name="str_ATTLIST" string="ATTLIST"/>
     <rule name="children">
         <node/>
         <node/>
@@ -2591,75 +2230,9 @@
             <rule name="pe_reference"/>
         </edge>
     </rule>
-    <rule name="str_ELEMENT">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="L"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="M"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="T"/>
-        </edge>
-    </rule>
-    <rule name="str_EMPTY">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="M"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="Y"/>
-        </edge>
-    </rule>
-    <rule name="str_ANY">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="Y"/>
-        </edge>
-    </rule>
+    <string-rule name="str_ELEMENT" string="ELEMENT"/>
+    <string-rule name="str_EMPTY" string="EMPTY"/>
+    <string-rule name="str_ANY" string="ANY"/>
     <rule name="int_subset">
         <node/>
         <node/>
@@ -2751,37 +2324,7 @@
         <edge source="7" target="9" fallback="false"/>
         <edge source="6" target="9" fallback="false"/>
     </rule>
-    <rule name="str_DOCTYPE">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="D"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="O"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="C"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="Y"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="E"/>
-        </edge>
-    </rule>
+    <string-rule name="str_DOCTYPE" string="DOCTYPE"/>
     <rule name="prolog">
         <node/>
         <node/>
@@ -3092,32 +2635,6 @@
         </edge>
         <edge source="0" target="1" fallback="false"/>
     </rule>
-    <rule name="entity_value_content">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ENTITY_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="2" fallback="false"/>
-        <edge source="0" target="5" fallback="false">
-            <rule name="reference"/>
-        </edge>
-        <edge source="0" target="6" fallback="false">
-            <rule name="pe_reference"/>
-        </edge>
-    </rule>
     <rule name="external_entity_value">
         <node>
             <buffer/>
@@ -3229,140 +2746,5 @@
             <rule name="elem_content"/>
         </edge>
         <edge source="0" target="1" fallback="false"/>
-    </rule>
-    <rule name="str_NDATA">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="D"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="A"/>
-        </edge>
-    </rule>
-    <rule name="str_ENTITY">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="Y"/>
-        </edge>
-    </rule>
-    <rule name="str_NMTOKEN">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="M"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="O"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="K"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="N"/>
-        </edge>
-    </rule>
-    <rule name="str_hash_PCDATA">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="#"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="P"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="C"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="D"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="A"/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="6" target="7" fallback="false">
-            <any chars="A"/>
-        </edge>
-    </rule>
-    <rule name="str_ENTIT">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="E"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="N"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="T"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="I"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="T"/>
-        </edge>
     </rule>
 </syntax>
