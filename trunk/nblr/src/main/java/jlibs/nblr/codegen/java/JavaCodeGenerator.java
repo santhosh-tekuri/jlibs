@@ -577,6 +577,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 wasNode = false;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null){
+                    destNode = null;
                     int stateAfterRule = new Routes(ruleStack.peek(), edge.target).isEOF() ? -1 : edge.target.id;
                     println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
                     if(stateAfterRule!=-1 && ruleStack.peek()==curRule)

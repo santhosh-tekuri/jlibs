@@ -72,20 +72,20 @@ public class Paths extends ArrayList<Path>{
         return false;
     }
 
-    public static Paths travel(Node fromNode){
+    public static Paths travel(Node fromNode, boolean digIntoRule){
         Paths rootPaths = new Paths(null);
         List<Path> list = new ArrayList<Path>();
 
         while(true){
             if(list.size()==0){
-                rootPaths.populate(fromNode);
+                rootPaths.populate(fromNode, digIntoRule);
                 list.addAll(rootPaths);
             }else{
                 List<Path> newList = new ArrayList<Path>();
                 for(Path path: list){
                     if(path.matcher()!=null){
                         Paths paths = new Paths(path);
-                        paths.populate((Node)path.get(path.size()-1));
+                        paths.populate((Node)path.get(path.size()-1), true);
                         newList.addAll(paths);
                     }
                 }
@@ -126,26 +126,38 @@ public class Paths extends ArrayList<Path>{
         }
     }
 
-    private void populate(Node fromNode){
-        populate(fromNode, new ArrayDeque<Object>());
+    private void populate(Node fromNode, boolean digIntoRule){
+        populate(fromNode, new ArrayDeque<Object>(), digIntoRule);
     }
 
-    private void populate(Node fromNode, Deque<Object> stack){
+    private void populate(Node fromNode, Deque<Object> stack, boolean digIntoRule){
         if(stack.contains(fromNode))
             throw new IllegalStateException("infinite loop detected");
 
         stack.push(fromNode);
         if(fromNode.outgoing.size()>0){
+            if(fromNode.outgoing.size()>1)
+                digIntoRule = true;
             for(Edge edge: fromNode.outgoing){
                 stack.push(edge);
                 if(edge.matcher!=null){
                     stack.push(edge.target);
                     add(new Path(stack));
                     stack.pop();
-                }else if(edge.ruleTarget!=null)
-                    populate(edge.ruleTarget.node(), stack);
-                else
-                    populate(edge.target, stack);
+                }else if(edge.ruleTarget!=null){
+                    if(!digIntoRule){
+                        if(new Routes(edge.ruleTarget.rule, edge.ruleTarget.node()).routeStartingWithEOF!=null) // the rule can match nothing
+                            digIntoRule = true;
+                    }
+                    if(!digIntoRule){
+                        stack.push(edge.ruleTarget.node());
+                        add(new Path(stack));
+                        stack.pop();
+                    } else{
+                        populate(edge.ruleTarget.node(), stack, digIntoRule);
+                    }
+                }else
+                    populate(edge.target, stack, digIntoRule);
                 stack.pop();
             }
         }else{
@@ -155,7 +167,7 @@ public class Paths extends ArrayList<Path>{
             if(target==null)
                 add(new Path(stack));
             else
-                populate(target, stack);
+                populate(target, stack, digIntoRule);
         }
         stack.pop();
     }
