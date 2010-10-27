@@ -33,9 +33,13 @@ public class Routes{
 
     @SuppressWarnings({"unchecked"})
     public Routes(Rule rule, Node fromNode){
+        this(rule, fromNode, false);
+    }
+    
+    public Routes(Rule rule, Node fromNode, boolean digIntoRule){
         this.rule = rule;
         this.fromNode = fromNode;
-        this.paths = Paths.travel(fromNode);
+        this.paths = Paths.travel(fromNode, digIntoRule);
 
         List<Path> routes = paths.leafs();
 
