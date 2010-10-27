@@ -149,39 +149,12 @@ public class Paths extends ArrayList<Path>{
                 stack.pop();
             }
         }else{
-            int rulesPopped = 0;
-            Node target = null;
-
             Path temp = new Path(stack);
             temp.parent = this.owner;
-            
-            Path p = temp;
-            while(p!=null && target==null){
-                boolean wasNode = false;
-                for(int i=p.size()-1; i>=0; i--){
-                    Object obj = p.get(i);
-                    if(obj instanceof Node){
-                        if(wasNode)
-                            rulesPopped++;
-                        wasNode = true;
-                    }else if(obj instanceof Edge){
-                        wasNode = false;
-                        Edge edge = (Edge)obj;
-                        if(edge.ruleTarget!=null){
-                            if(rulesPopped==0){
-                                target = edge.target;
-                                break;
-                            }else
-                                rulesPopped--;
-                        }
-                    }
-                }
-                p = p.parent;
-            }
-
-            if(target==null){
+            Node target = temp.nodeAfterPop();
+            if(target==null)
                 add(new Path(stack));
-            }else
+            else
                 populate(target, stack);
         }
         stack.pop();
