@@ -95,6 +95,61 @@ public class Path extends ArrayList<Object>{
         return route.toArray(new Path[route.size()]);
     }
 
+    public Node nodeAfterPop(){
+        int rulesPopped = 0;
+        Node target = null;
+
+        Path p = this;
+        while(p!=null && target==null){
+            boolean wasNode = false;
+            for(int i=p.size()-1; i>=0; i--){
+                Object obj = p.get(i);
+                if(obj instanceof Node){
+                    if(wasNode)
+                        rulesPopped++;
+                    wasNode = true;
+                }else if(obj instanceof Edge){
+                    wasNode = false;
+                    Edge edge = (Edge)obj;
+                    if(edge.ruleTarget!=null){
+                        if(rulesPopped==0){
+                            target = edge.target;
+                            break;
+                        }else
+                            rulesPopped--;
+                    }
+                }
+            }
+            p = p.parent;
+        }
+
+        return target;
+    }
+
+    public Node destination(){
+        return (Node)get(size()-1);
+    }
+
+    public void travelWithoutMatching(){
+        while(true){
+            Node node = destination();
+            if(Node.DYNAMIC_STRING_MATCH.equals(node.name))
+                return;
+            switch(node.outgoing.size()){
+                case 1:
+                    Edge edge = node.outgoing.get(0);
+                    if(edge.matcher==null && edge.ruleTarget==null){
+                        add(edge);
+                        add(edge.target);
+                        break;
+                    }else
+                        return;
+                default:
+                    return;
+            }
+        }
+    }
+    
     @Override
     public String toString(){
         String str;

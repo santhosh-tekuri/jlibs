@@ -98,7 +98,7 @@ public abstract class CodeGenerator{
     protected int stringRuleID = -1;
     private void detectStringRules(){
         startStringIDs();
-        syntax = syntax.copy();        
+        syntax = syntax.copy();
         int id = 0;
         for(Rule r: syntax.rules.values()){
             int codePoints[] = r.matchString();
@@ -192,8 +192,7 @@ public abstract class CodeGenerator{
                     statesVisited.add(state);
                     try{
                         Routes routes = new Routes(rule, state);
-                        if(routes.isEOF() && !debuggable) // don't generate EOF states in production code
-                            continue;
+                        routes.travelWithoutMatching();
 
                         startCase(state.id);
                         if(routes.isEOF())

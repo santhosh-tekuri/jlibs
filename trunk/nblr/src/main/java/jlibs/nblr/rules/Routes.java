@@ -138,6 +138,13 @@ public class Routes{
         buff.append(route);
     }
 
+    public void travelWithoutMatching(){
+        for(Path route: determinateRoutes)
+            route.travelWithoutMatching();
+        if(indeterminateRoute!=null)
+            indeterminateRoute.travelWithoutMatching();
+    }
+
     public boolean isEOF(){
         if(maxLookAhead>1)
             return false;

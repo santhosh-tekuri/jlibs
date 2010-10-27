@@ -245,7 +245,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private Rule curRule;
-    
+
     @Override
     protected void addRoutes(Routes routes){
         curRule = routes.rule;
@@ -436,7 +436,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 return not ? FINISH_ALL_OTHER_THAN : FINISH_ALL;
         }
         matcher = givenMatcher;
-        
+
         String name = null;
         if(matcher.name!=null)
             name = finishAllMethods.get(matcher);
@@ -454,7 +454,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 name = String.valueOf(++unnamed_finishAllMethods);
             finishAllMethods.put(matcher, name);
         }
-        return name;    
+        return name;
     }
 
     private String checkFinishAll(Path path, boolean consumeLookAhead){
@@ -508,28 +508,20 @@ public class JavaCodeGenerator extends CodeGenerator{
     private void returnDestination(Destination dest){
         int state = dest.state();
         if(state<0){
-            if(state==-2 && !dest.consumedFromLookAhead)
-                println("consume(ch);");
             println("curState = -1;");
             println("return true;");
         }else if(dest.rule==curRule){
             if(!debuggable && Node.DYNAMIC_STRING_MATCH.equals(dest.node.name)){
-                if(!dest.consumedFromLookAhead)
-                    println("consume(ch);");
                 addState(dest.node);
                 println("push(RULE_DYNAMIC_STRING_MATCH, "+state+", 0);");
                 println("curState = 0;");
                 println("return true;");
             }else{
                 addState(dest.node);
-                if(!dest.consumedFromLookAhead)
-                    println("consume(ch);");
                 println("curState = "+state+";");
                 println("continue;");
             }
         }else{
-            if(!dest.consumedFromLookAhead)
-                println("consume(ch);");
             println("curState = "+state+";");
             println("return true;");
         }
@@ -547,17 +539,10 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
 
         public int state(){
-            if(node==null)
-                return -1;
-            else{
-                if(debuggable)
-                    return node.id;
-                else
-                    return new Routes(rule, node).isEOF() ? -2 : node.id;
-            }
+            return node.outgoing.size()==0 ? -1 : node.id;
         }
     }
-    
+
     public static boolean COELSCE_LA_CONSUME_CALLS = false;
     private Destination _travelPath(Rule rule, Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
@@ -566,8 +551,10 @@ public class JavaCodeGenerator extends CodeGenerator{
         ruleStack.push(rule);
         Node destNode = null;
 
+        int index = -1;
         boolean wasNode = false;
         for(Object obj: path){
+            ++index;
             if(obj instanceof Node){
                 if(wasNode){
                     println("free -= 2;");
@@ -576,19 +563,21 @@ public class JavaCodeGenerator extends CodeGenerator{
                 wasNode = true;
 
                 Node node = (Node)obj;
-                if(debuggable){
-                    if(nodesToBeExecuted.length()>0)
-                        nodesToBeExecuted.append(", ");
-                    nodesToBeExecuted.append(node.id);
-                }else if(node.action!=null)
-                    printer.println(node.action.javaCode()+';');
+
+                if(index<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
+                    if(debuggable){
+                        if(nodesToBeExecuted.length()>0)
+                            nodesToBeExecuted.append(", ");
+                        nodesToBeExecuted.append(node.id);
+                    }else if(node.action!=null)
+                        printer.println(node.action.javaCode()+';');
+                }
+                destNode = node;
             }else if(obj instanceof Edge){
                 wasNode = false;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null){
-                    int stateAfterRule = new Destination(consumeLookAhead, ruleStack.peek(), edge.target).state();
-                    if(stateAfterRule==-2)
-                        stateAfterRule = -1;
+                    int stateAfterRule = new Routes(ruleStack.peek(), edge.target).isEOF() ? -1 : edge.target.id;
                     println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
                     if(stateAfterRule!=-1 && ruleStack.peek()==curRule)
                         addState(edge.target);
@@ -603,8 +592,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                             consumeLALen++;
                         }else
                             println("consume(FROM_LA);");
-                    }
-                    break;
+                    }else
+                        println("consume(ch);");
                 }
             }
         }
@@ -718,13 +707,13 @@ public class JavaCodeGenerator extends CodeGenerator{
     private static final String PARSER_SUPER_CLASS = "PARSER_SUPER_CLASS";
     public static final String HANDLER_CLASS_NAME = "HANDLER_CLASS_NAME";
     public static final String HANDLER_IS_CLASS = "HANDLER_IS_CLASS";
-    
+
     public static final Properties DEFAULTS = new Properties();
     static{
         DEFAULTS.put(PARSER_CLASS_NAME, "UntitledParser");
         DEFAULTS.put(PARSER_FINAL, "true");
-        DEFAULTS.put(PARSER_SUPER_CLASS, NBParser.class.getName());        
-        
+        DEFAULTS.put(PARSER_SUPER_CLASS, NBParser.class.getName());
+
         DEFAULTS.put(HANDLER_CLASS_NAME, "UntitledHandler");
         DEFAULTS.put(HANDLER_IS_CLASS, "false");
     }
@@ -734,7 +723,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         debugProperties.put(PARSER_SUPER_CLASS, "jlibs.nblr.editor.debug.DebuggableNBParser");
         debugProperties.put(HANDLER_CLASS_NAME, "jlibs.nblr.editor.debug.Debugger");
     }
-    
+
     private String stringProperty(String name){
         return (debuggable ? debugProperties : properties).getProperty(name);
     }
