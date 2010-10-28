@@ -299,7 +299,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
             entityStack.push(entity);
             try{
-                entityValue.parse(rule, valueStarted).postAction = new Runnable(){
+                entityValue.parse(rule).postAction = new Runnable(){
                     @Override
                     public void run(){
                         entityStack.pop();
@@ -351,7 +351,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 peReferenceOutsideMarkup = false;
                 paramEntityStack.push(param);
                 try{
-                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL, false).postAction =  new Runnable(){
+                    entityValue.parse(entityValue.externalValue ? XMLScanner.RULE_EXT_SUBSET : XMLScanner.RULE_EXT_SUBSET_DECL).postAction =  new Runnable(){
                         @Override
                         public void run(){
                             paramEntityStack.pop();
@@ -365,14 +365,20 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
                 if(entityValue.content!=null){
-                    feeder.setChild(new XMLFeeder(this, feeder.parser, new CharReader(feeder, entityValue.content)));
+                    InputSource source = new InputSource(new SpaceWrappedReader(entityValue.content));
+                    source.setSystemId(feeder.systemID);
+                    source.setPublicId(feeder.publicID);
+                    feeder.setChild(new XMLFeeder(this, feeder.parser, source));
                 }else{
                     entityValue.getContent().postAction = new Runnable(){
                         @Override
                         public void run(){
                             entityValue.content = externalEntityValue;
                             try{
-                                feeder.setChild(new XMLFeeder(AsyncXMLReader.this, feeder.parser, new CharReader((XMLFeeder)feeder.getParent(), externalEntityValue)));
+                                InputSource source = new InputSource(new SpaceWrappedReader(externalEntityValue));
+                                source.setSystemId(feeder.systemID);
+                                source.setPublicId(feeder.publicID);
+                                feeder.setChild(new XMLFeeder(AsyncXMLReader.this, feeder.parser, source));
                             } catch(Exception ex){
                                 throw new RuntimeException(ex);
                             }
@@ -612,35 +618,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             return childFeeder;
         }
 
-        public XMLFeeder parse(int rule, boolean attributeValue) throws IOException, SAXException{
+        public XMLFeeder parse(int rule) throws IOException, SAXException{
             if(inputSource==null){
-                char[] chars;
-                if(attributeValue){
-                    int len = content.length;
-                    int i=0;
-                    for(;i<len; i++){
-                        char ch = content[i];
-                        if(ch=='\n' || ch=='\r' || ch=='\t'){
-                            break;
-                        }
-                    }
-                    if(i==len)
-                        chars = this.content;
-                    else{
-                        chars = Arrays.copyOf(content, content.length);
-                        for(;i<len;i++){
-                            char ch = chars[i];
-                            if(ch=='\n' || ch=='\r' || ch=='\t')
-                                chars[i] = ' ';
-                        }
-                    }
-                }else
-                    chars = this.content;
-                
                 XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
                 InputSource is = new InputSource(getSystemId());
                 is.setPublicId(getPublicId());
-                is.setCharacterStream(new CharArrayReader(chars));
+                is.setCharacterStream(new CharArrayReader(content));
                 XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, is);
                 feeder.setChild(childFeeder);
                 return childFeeder;
