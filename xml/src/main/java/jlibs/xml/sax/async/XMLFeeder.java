@@ -40,15 +40,6 @@ public class XMLFeeder extends Feeder{
         init(source);
     }
 
-    private CharReader charReader;
-    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, CharReader charReader) throws IOException{
-        super(parser);
-        this.xmlReader = xmlReader;
-        this.charReader = charReader;
-        publicID = charReader.feeder.publicID;
-        systemID = charReader.feeder.systemID;
-    }
-
     final void init(InputSource is) throws IOException{
         publicID = systemID = null;
         postAction = null;
@@ -163,83 +154,63 @@ public class XMLFeeder extends Feeder{
     @Override
     protected Feeder read() throws IOException{
         xmlReader.setFeeder(this);
-        if(charReader!=null){
-            parser.consume(new char[]{ ' '}, 0, 1);
-            charReader.index = 0;
-            if(child!=null)
-                return child;
-
-            char chars[] = charReader.chars;
-            int index = charReader.index;
-            int len = chars.length;
-            charReader.index = parser.consume(chars, index, index+len);
-            if(child!=null)
-                return child;
-
-            parser.consume(new char[]{ ' '}, 0, 1);
-            charReader.index++;
-
-            // EOF is not sent for CharReader
-            return child!=null ? child : parent();
-        }else{
-            while(iProlog<6){
-                sixChars.clear();
-                int read = channel.read(sixChars);
-                if(read==0)
-                    return this;
-                else if(read==-1){
-                    charBuffer.append("<?xml ", 0, iProlog);
-                    return onPrologEOF();
-                }else{
-                    char chars[] = sixChars.array();
-                    for(int i=0; i<read; i++){
-                        char ch = chars[i];
-                        if(isPrologStart(ch)){
-                            iProlog++;
-                            if(iProlog==6){
-                                charBuffer.append("<?xml ");
-                                for(i=0; i<MAX_PROLOG_LENGTH; i++){
-                                    singleChar.clear();
-                                    read = channel.read(singleChar);
-                                    if(read==1){
-                                        ch = singleChar.get(0);
-                                        charBuffer.append(ch);
-                                        if(ch=='>')
-                                            break;
-                                    }else
+        while(iProlog<6){
+            sixChars.clear();
+            int read = channel.read(sixChars);
+            if(read==0)
+                return this;
+            else if(read==-1){
+                charBuffer.append("<?xml ", 0, iProlog);
+                return onPrologEOF();
+            }else{
+                char chars[] = sixChars.array();
+                for(int i=0; i<read; i++){
+                    char ch = chars[i];
+                    if(isPrologStart(ch)){
+                        iProlog++;
+                        if(iProlog==6){
+                            charBuffer.append("<?xml ");
+                            for(i=0; i<MAX_PROLOG_LENGTH; i++){
+                                singleChar.clear();
+                                read = channel.read(singleChar);
+                                if(read==1){
+                                    ch = singleChar.get(0);
+                                    charBuffer.append(ch);
+                                    if(ch=='>')
                                         break;
-                                }
-                                if(charBuffer.position()>0)
-                                    feedCharBuffer();
-                                if(read==0)
-                                    return this;
-                                else if(read==-1)
-                                    return onPrologEOF();
-                                break;
+                                }else
+                                    break;
                             }
-                        }else{
-                            charBuffer.append("<?xml ", 0, iProlog);
-                            while(i<read)
-                                charBuffer.append(chars[i++]);
-                            iProlog = 7;
+                            if(charBuffer.position()>0)
+                                feedCharBuffer();
+                            if(read==0)
+                                return this;
+                            else if(read==-1)
+                                return onPrologEOF();
                             break;
                         }
+                    }else{
+                        charBuffer.append("<?xml ", 0, iProlog);
+                        while(i<read)
+                            charBuffer.append(chars[i++]);
+                            iProlog = 7;
+                        break;
                     }
                 }
             }
-            while(iProlog!=7){
-                singleChar.clear();
-                int read = channel.read(singleChar);
-                if(read==0)
-                    return this;
-                else if(read==-1)
-                    return onPrologEOF();
-                else
-                    parser.consume(singleChar.array(), 0, 1);
-            }
-
-            return super.read();
         }
+        while(iProlog!=7){
+            singleChar.clear();
+            int read = channel.read(singleChar);
+            if(read==0)
+                return this;
+            else if(read==-1)
+                return onPrologEOF();
+            else
+                parser.consume(singleChar.array(), 0, 1);
+        }
+
+        return super.read();
     }
 
     private Feeder onPrologEOF() throws IOException{
@@ -313,16 +284,5 @@ public class XMLFeeder extends Feeder{
 
     public String resolve(String systemID) throws IOException{
         return XMLEntityManager.expandSystemId(systemID, this.systemID, false);
-    }
-}
-
-class CharReader{
-    XMLFeeder feeder;
-    char chars[];
-    int index = -1;
-
-    CharReader(XMLFeeder feeder, char[] chars){
-        this.feeder = feeder;
-        this.chars = chars;
     }
 }
