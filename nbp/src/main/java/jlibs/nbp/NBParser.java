@@ -165,7 +165,9 @@ public abstract class NBParser{
 
                     if(free==0){
                         int cp = codePoint();
-                        if(cp==-1)
+                        if(cp==EOC)
+                            return this.position;
+                        else if(cp==EOF)
                             this.position = 1;
                         else
                             expected(cp, "<EOF>");
