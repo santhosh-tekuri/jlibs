@@ -928,6 +928,7 @@
         <edge source="4" target="7" fallback="false"/>
         <edge source="3" target="9" fallback="false"/>
     </rule>
+    <string-rule name="str_xml" string="&lt;?xml"/>
     <rule name="misc">
         <node/>
         <node/>
@@ -2309,37 +2310,28 @@
         <edge source="6" target="9" fallback="false"/>
     </rule>
     <string-rule name="str_DOCTYPE" string="DOCTYPE"/>
-    <rule name="prolog">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false">
-            <rule name="doctype_decl"/>
-        </edge>
-        <edge source="2" target="3" fallback="false"/>
-        <edge source="2" target="2" fallback="false">
-            <rule name="misc"/>
-        </edge>
-        <edge source="1" target="3" fallback="false"/>
-        <edge source="0" target="0" fallback="false">
-            <rule name="misc"/>
-        </edge>
-    </rule>
     <rule name="document">
         <node/>
         <node/>
         <node/>
         <node/>
+        <node/>
         <edge source="0" target="1" fallback="false">
-            <rule name="prolog"/>
+            <rule name="doctype_decl"/>
         </edge>
-        <edge source="1" target="2" fallback="false">
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
             <rule name="elem"/>
         </edge>
-        <edge source="2" target="3" fallback="false"/>
-        <edge source="2" target="2" fallback="false">
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="3" fallback="false">
+            <rule name="misc"/>
+        </edge>
+        <edge source="1" target="1" fallback="false">
+            <rule name="misc"/>
+        </edge>
+        <edge source="0" target="2" fallback="false"/>
+        <edge source="0" target="0" fallback="false">
             <rule name="misc"/>
         </edge>
     </rule>
@@ -2459,6 +2451,7 @@
         </edge>
         <edge source="3" target="7" fallback="false"/>
     </rule>
+    <string-rule name="str_IGNORE" string="IGNORE"/>
     <rule name="ext_subset_decl">
         <node/>
         <node/>
@@ -2540,6 +2533,7 @@
             <any chars="&gt;"/>
         </edge>
     </rule>
+    <string-rule name="str_INCLUDE" string="INCLUDE"/>
     <rule name="external_entity_value">
         <node>
             <buffer/>
@@ -2589,7 +2583,4 @@
         <edge source="0" target="10" fallback="false"/>
         <edge source="0" target="5" fallback="false"/>
     </rule>
-    <string-rule name="str_xml" string="&lt;?xml"/>
-    <string-rule name="str_INCLUDE" string="INCLUDE"/>
-    <string-rule name="str_IGNORE" string="IGNORE"/>
 </syntax>
