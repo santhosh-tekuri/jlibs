@@ -34,17 +34,18 @@ public class XMLFeeder extends Feeder{
     String systemID;
     Runnable postAction;
 
-    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, InputSource source) throws IOException{
+    public XMLFeeder(AsyncXMLReader xmlReader, NBParser parser, InputSource source, XMLScanner declParser) throws IOException{
         super(parser);
         this.xmlReader = xmlReader;
-        init(source);
+        init(source, declParser);
     }
 
-    final void init(InputSource is) throws IOException{
+    final void init(InputSource is, XMLScanner prologParser) throws IOException{
         publicID = systemID = null;
         postAction = null;
         eofSent = false;
         iProlog = 0;
+        this.prologParser = prologParser;
         child = null;
         charBuffer.clear();
 
@@ -149,67 +150,73 @@ public class XMLFeeder extends Feeder{
     private int iProlog = 0;
     CharBuffer singleChar = CharBuffer.allocate(1);
     CharBuffer sixChars = CharBuffer.allocate(6);
+    XMLScanner prologParser;
     private static final int MAX_PROLOG_LENGTH = 70;
 
     @Override
     protected Feeder read() throws IOException{
         xmlReader.setFeeder(this);
-        while(iProlog<6){
-            sixChars.clear();
-            int read = channel.read(sixChars);
-            if(read==0)
-                return this;
-            else if(read==-1){
-                charBuffer.append("<?xml ", 0, iProlog);
-                return onPrologEOF();
-            }else{
-                char chars[] = sixChars.array();
-                for(int i=0; i<read; i++){
-                    char ch = chars[i];
-                    if(isPrologStart(ch)){
-                        iProlog++;
-                        if(iProlog==6){
-                            charBuffer.append("<?xml ");
-                            for(i=0; i<MAX_PROLOG_LENGTH; i++){
-                                singleChar.clear();
-                                read = channel.read(singleChar);
-                                if(read==1){
-                                    ch = singleChar.get(0);
-                                    charBuffer.append(ch);
-                                    if(ch=='>')
+        if(prologParser !=null){
+            while(iProlog<6){
+                sixChars.clear();
+                int read = channel.read(sixChars);
+                if(read==0)
+                    return this;
+                else if(read==-1){
+                    charBuffer.append("<?xml ", 0, iProlog);
+                    return onPrologEOF();
+                }else{
+                    char chars[] = sixChars.array();
+                    for(int i=0; i<read; i++){
+                        char ch = chars[i];
+                        if(isPrologStart(ch)){
+                            iProlog++;
+                            if(iProlog==6){
+                                charBuffer.append("<?xml ");
+                                for(i=0; i<MAX_PROLOG_LENGTH; i++){
+                                    singleChar.clear();
+                                    read = channel.read(singleChar);
+                                    if(read==1){
+                                        ch = singleChar.get(0);
+                                        charBuffer.append(ch);
+                                        if(ch=='>')
+                                            break;
+                                    }else
                                         break;
-                                }else
-                                    break;
+                                }
+                                if(charBuffer.position()>0){
+                                    charBuffer.flip();
+                                    charBuffer.position(prologParser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
+                                    charBuffer.compact();
+                                }
+                                if(read==0)
+                                    return this;
+                                else if(read==-1)
+                                    return onPrologEOF();
+                                break;
                             }
-                            if(charBuffer.position()>0)
-                                feedCharBuffer();
-                            if(read==0)
-                                return this;
-                            else if(read==-1)
-                                return onPrologEOF();
+                        }else{
+                            charBuffer.append("<?xml ", 0, iProlog);
+                            while(i<read)
+                                charBuffer.append(chars[i++]);
+                            iProlog = 7;
+                            prologParser = null;
                             break;
                         }
-                    }else{
-                        charBuffer.append("<?xml ", 0, iProlog);
-                        while(i<read)
-                            charBuffer.append(chars[i++]);
-                            iProlog = 7;
-                        break;
                     }
                 }
             }
+            while(iProlog!=7){
+                singleChar.clear();
+                int read = channel.read(singleChar);
+                if(read==0)
+                    return this;
+                else if(read==-1)
+                    return onPrologEOF();
+                else
+                    prologParser.consume(singleChar.array(), 0, 1);
+            }
         }
-        while(iProlog!=7){
-            singleChar.clear();
-            int read = channel.read(singleChar);
-            if(read==0)
-                return this;
-            else if(read==-1)
-                return onPrologEOF();
-            else
-                parser.consume(singleChar.array(), 0, 1);
-        }
-
         return super.read();
     }
 
@@ -263,6 +270,7 @@ public class XMLFeeder extends Feeder{
 
     void setDeclaredEncoding(String encoding){
         iProlog = 7;
+        parser.location.set(prologParser.location);
         if(encoding!=null && channel instanceof NBChannel){
             NBChannel nbChannel = (NBChannel)channel;
             String detectedEncoding = nbChannel.decoder().charset().name().toUpperCase(Locale.ENGLISH);

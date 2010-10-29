@@ -15,6 +15,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         {101, 110, 99, 111, 100, 105, 110, 103}, // encoding
         {118, 101, 114, 115, 105, 111, 110}, // version
         {67, 68, 65, 84, 65}, // CDATA
+        {60, 63, 120, 109, 108}, // <?xml
         {83, 89, 83, 84, 69, 77}, // SYSTEM
         {80, 85, 66, 76, 73, 67}, // PUBLIC
         {78, 79, 84, 65, 84, 73, 79, 78}, // NOTATION
@@ -31,28 +32,33 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         {69, 77, 80, 84, 89}, // EMPTY
         {65, 78, 89}, // ANY
         {68, 79, 67, 84, 89, 80, 69}, // DOCTYPE
+        {73, 71, 78, 79, 82, 69}, // IGNORE
+        {73, 78, 67, 76, 85, 68, 69}, // INCLUDE
     };
 
     public static final int RULE_STR_STANDALONE = -1;
     public static final int RULE_STR_ENCODING = -2;
     public static final int RULE_STR_VERSION = -3;
     public static final int RULE_STR_CDATA = -4;
-    public static final int RULE_STR_SYSTEM = -5;
-    public static final int RULE_STR_PUBLIC = -6;
-    public static final int RULE_STR_NOTATION = -7;
-    public static final int RULE_STR_NDATA = -8;
-    public static final int RULE_STR_ENTITY = -9;
-    public static final int RULE_STR_ENTIT = -10;
-    public static final int RULE_STR_NMTOKEN = -11;
-    public static final int RULE_STR_HASH_PCDATA = -12;
-    public static final int RULE_STR_REQUIRED = -13;
-    public static final int RULE_STR_IMPLIED = -14;
-    public static final int RULE_STR_FIXED = -15;
-    public static final int RULE_STR_ATTLIST = -16;
-    public static final int RULE_STR_ELEMENT = -17;
-    public static final int RULE_STR_EMPTY = -18;
-    public static final int RULE_STR_ANY = -19;
-    public static final int RULE_STR_DOCTYPE = -20;
+    public static final int RULE_STR_XML = -5;
+    public static final int RULE_STR_SYSTEM = -6;
+    public static final int RULE_STR_PUBLIC = -7;
+    public static final int RULE_STR_NOTATION = -8;
+    public static final int RULE_STR_NDATA = -9;
+    public static final int RULE_STR_ENTITY = -10;
+    public static final int RULE_STR_ENTIT = -11;
+    public static final int RULE_STR_NMTOKEN = -12;
+    public static final int RULE_STR_HASH_PCDATA = -13;
+    public static final int RULE_STR_REQUIRED = -14;
+    public static final int RULE_STR_IMPLIED = -15;
+    public static final int RULE_STR_FIXED = -16;
+    public static final int RULE_STR_ATTLIST = -17;
+    public static final int RULE_STR_ELEMENT = -18;
+    public static final int RULE_STR_EMPTY = -19;
+    public static final int RULE_STR_ANY = -20;
+    public static final int RULE_STR_DOCTYPE = -21;
+    public static final int RULE_STR_IGNORE = -22;
+    public static final int RULE_STR_INCLUDE = -23;
 
     /*-------------------------------------------------[ Matchers ]---------------------------------------------------*/
 
@@ -1475,75 +1481,44 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
             switch(curState){
                 case 0:
-                    if(ch=='<'){
-                        consume(ch);
-                        curState = 1;
-                        continue;
-                    }
-                    expected(ch, "[<]");
+                    push(RULE_STR_XML, 1, 0);
+                    curState = 0;
+                    return true;
                 case 1:
-                    if(ch=='?'){
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                         continue;
                     }
-                    expected(ch, "[?]");
-                case 2:
-                    if(ch=='x'){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    expected(ch, "[x]");
-                case 3:
-                    if(ch=='m'){
-                        consume(ch);
-                        curState = 4;
-                        continue;
-                    }
-                    expected(ch, "[m]");
-                case 4:
-                    if(ch=='l'){
-                        consume(ch);
-                        curState = 5;
-                        continue;
-                    }
-                    expected(ch, "[l]");
-                case 5:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 6;
-                        continue;
-                    }
                     expected(ch, "<WS>");
-                case 6:
+                case 2:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='v'){
-                        push(RULE_VERSION_INFO, 7, 0);
+                        push(RULE_VERSION_INFO, 3, 0);
                         push(RULE_STR_VERSION, 1, 0);
                         consume(ch);
                         curState = 1;
                         return true;
                     }
                     expected(ch, "<WS> OR [v]");
-                case 7:
+                case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 4;
                         continue;
                     }
                     if(ch=='?'){
                         consume(ch);
-                        curState = 14;
+                        curState = 10;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
-                case 8:
+                case 4:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='e'){
-                        push(RULE_ENC_DECL, 9, 0);
+                        push(RULE_ENC_DECL, 5, 0);
                         push(RULE_STR_ENCODING, 1, 0);
                         consume(ch);
                         curState = 1;
@@ -1551,34 +1526,34 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='?'){
                         consume(ch);
-                        curState = 14;
+                        curState = 10;
                         continue;
                     }
                     if(ch=='s'){
-                        push(RULE_SD_DECL, 12, 0);
+                        push(RULE_SD_DECL, 8, 0);
                         push(RULE_STR_STANDALONE, 1, 0);
                         consume(ch);
                         curState = 1;
                         return true;
                     }
                     expected(ch, "<WS> OR [e] OR [?] OR [s]");
-                case 9:
+                case 5:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
-                        curState = 10;
+                        curState = 6;
                         continue;
                     }
                     if(ch=='?'){
                         consume(ch);
-                        curState = 14;
+                        curState = 10;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
-                case 10:
+                case 6:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='s'){
-                        push(RULE_SD_DECL, 12, 0);
+                        push(RULE_SD_DECL, 8, 0);
                         push(RULE_STR_STANDALONE, 1, 0);
                         consume(ch);
                         curState = 1;
@@ -1586,20 +1561,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='?'){
                         consume(ch);
-                        curState = 14;
+                        curState = 10;
                         continue;
                     }
                     expected(ch, "<WS> OR [s] OR [?]");
-                case 12:
+                case 8:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='?'){
                         consume(ch);
-                        curState = 14;
+                        curState = 10;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
-                case 14:
+                case 10:
                     if(ch=='>'){
                         handler.xdeclEnd();
                         consume(ch);
@@ -4889,78 +4864,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     addToLookAhead(ch);
                     if(lookAhead.length()==1){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 2, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='D'){
-                                    push(RULE_DOCTYPE_DECL, 4, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_DOCTYPE, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='-'){
-                                    push(RULE_MISC, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<6)
-                        continue;
-                    if(lookAhead.length()==6){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='?'){
-                                if(lookAhead.charAt(2)=='x'){
-                                    if(lookAhead.charAt(3)=='m'){
-                                        if(lookAhead.charAt(4)=='l'){
-                                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                                                push(RULE_XDECL, 1, 0);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                curState = 6;
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(lookAhead.charAt(0)=='<'){
-                        push(RULE_MISC, 2, 0);
-                        push(RULE_PI, -1, 0);
-                        consume(FROM_LA);
-                        lookAhead.reset();
-                        curState = 1;
-                        return true;
-                    }
-                    curState = -1;
-                    return true;
-                case 1:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 2, 0);
+                            push(RULE_MISC, 0, 0);
                             consume(FROM_LA);
                             curState = 1;
                             return true;
@@ -4971,7 +4875,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_MISC, 2, 0);
+                                push(RULE_MISC, 0, 0);
                                 push(RULE_PI, -1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
@@ -4986,7 +4890,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='D'){
-                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    push(RULE_DOCTYPE_DECL, 2, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
                                     push(RULE_STR_DOCTYPE, 3, 0);
@@ -4995,7 +4899,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     return true;
                                 }
                                 if(ch=='-'){
-                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_MISC, 0, 0);
                                     push(RULE_COMMENT, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
@@ -5022,60 +4926,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
-                            if(ch=='?'){
-                                push(RULE_MISC, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return true;
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='D'){
-                                    push(RULE_DOCTYPE_DECL, 4, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_DOCTYPE, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='-'){
-                                    push(RULE_MISC, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    curState = -1;
-                    return true;
-                case 4:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 4, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
                             if(ch=='!'){
-                                push(RULE_MISC, 4, 0);
+                                push(RULE_MISC, 2, 0);
                                 push(RULE_COMMENT, -1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
@@ -5083,7 +4935,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 return true;
                             }
                             if(ch=='?'){
-                                push(RULE_MISC, 4, 0);
+                                push(RULE_MISC, 2, 0);
                                 push(RULE_PI, -1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
@@ -5113,7 +4965,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.length()==1){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_PROLOG, 1, 0);
-                            push(RULE_MISC, 2, 0);
+                            push(RULE_MISC, 0, 0);
                             consume(FROM_LA);
                             curState = 1;
                             return true;
@@ -5137,6 +4989,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 curState = 1;
                                 return true;
                             }
+                            if(ch=='?'){
+                                push(RULE_PROLOG, 1, 0);
+                                push(RULE_MISC, 0, 0);
+                                push(RULE_PI, -1, 0);
+                                consume(FROM_LA);
+                                consume(FROM_LA);
+                                curState = 2;
+                                return true;
+                            }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3)
@@ -5146,7 +5007,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='D'){
                                     push(RULE_PROLOG, 1, 0);
-                                    push(RULE_DOCTYPE_DECL, 4, 0);
+                                    push(RULE_DOCTYPE_DECL, 2, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
                                     push(RULE_STR_DOCTYPE, 3, 0);
@@ -5156,7 +5017,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 }
                                 if(ch=='-'){
                                     push(RULE_PROLOG, 1, 0);
-                                    push(RULE_MISC, 2, 0);
+                                    push(RULE_MISC, 0, 0);
                                     push(RULE_COMMENT, -1, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
@@ -5167,42 +5028,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<6)
-                        continue;
-                    if(lookAhead.length()==6){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='?'){
-                                if(lookAhead.charAt(2)=='x'){
-                                    if(lookAhead.charAt(3)=='m'){
-                                        if(lookAhead.charAt(4)=='l'){
-                                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                                                push(RULE_PROLOG, 1, 0);
-                                                push(RULE_XDECL, 1, 0);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                curState = 6;
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(lookAhead.charAt(0)=='<'){
-                        push(RULE_PROLOG, 1, 0);
-                        push(RULE_MISC, 2, 0);
-                        push(RULE_PI, -1, 0);
-                        consume(FROM_LA);
-                        lookAhead.reset();
-                        curState = 1;
-                        return true;
-                    }
-                    expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][!][D] OR [<][!][\\-] OR [<][?][x][m][l]<WS> OR [<]");
+                    expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][?] OR [<][!][D] OR [<][!][\\-]");
                 case 1:
                     if(ch=='<'){
                         push(RULE_ELEM, 2, 0);
@@ -5355,93 +5181,62 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
             switch(curState){
                 case 0:
-                    if(ch=='<'){
-                        consume(ch);
-                        curState = 1;
-                        continue;
-                    }
-                    expected(ch, "[<]");
+                    push(RULE_STR_XML, 1, 0);
+                    curState = 0;
+                    return true;
                 case 1:
-                    if(ch=='?'){
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                         continue;
                     }
-                    expected(ch, "[?]");
-                case 2:
-                    if(ch=='x'){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    expected(ch, "[x]");
-                case 3:
-                    if(ch=='m'){
-                        consume(ch);
-                        curState = 4;
-                        continue;
-                    }
-                    expected(ch, "[m]");
-                case 4:
-                    if(ch=='l'){
-                        consume(ch);
-                        curState = 5;
-                        continue;
-                    }
-                    expected(ch, "[l]");
-                case 5:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 6;
-                        continue;
-                    }
                     expected(ch, "<WS>");
-                case 6:
+                case 2:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='v'){
-                        push(RULE_VERSION_INFO, 7, 0);
+                        push(RULE_VERSION_INFO, 3, 0);
                         push(RULE_STR_VERSION, 1, 0);
                         consume(ch);
                         curState = 1;
                         return true;
                     }
                     if(ch=='e'){
-                        push(RULE_ENC_DECL, 10, 0);
+                        push(RULE_ENC_DECL, 6, 0);
                         push(RULE_STR_ENCODING, 1, 0);
                         consume(ch);
                         curState = 1;
                         return true;
                     }
                     expected(ch, "[v] OR [e] OR <WS>");
-                case 7:
+                case 3:
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "<WS>");
-                case 8:
+                case 4:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='e'){
-                        push(RULE_ENC_DECL, 10, 0);
+                        push(RULE_ENC_DECL, 6, 0);
                         push(RULE_STR_ENCODING, 1, 0);
                         consume(ch);
                         curState = 1;
                         return true;
                     }
                     expected(ch, "<WS> OR [e]");
-                case 10:
+                case 6:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='?'){
                         consume(ch);
-                        curState = 11;
+                        curState = 7;
                         continue;
                     }
                     expected(ch, "<WS> OR [?]");
-                case 11:
+                case 7:
                     if(ch=='>'){
                         handler.xdeclEnd();
                         consume(ch);
@@ -5464,108 +5259,70 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
             switch(curState){
                 case 0:
-                    if(ch=='I'){
-                        consume(ch);
-                        curState = 1;
-                        continue;
-                    }
-                    expected(ch, "[I]");
+                    push(RULE_STR_IGNORE, 1, 0);
+                    curState = 0;
+                    return true;
                 case 1:
-                    if(ch=='G'){
-                        consume(ch);
-                        curState = 2;
-                        continue;
-                    }
-                    expected(ch, "[G]");
-                case 2:
-                    if(ch=='N'){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    expected(ch, "[N]");
-                case 3:
-                    if(ch=='O'){
-                        consume(ch);
-                        curState = 4;
-                        continue;
-                    }
-                    expected(ch, "[O]");
-                case 4:
-                    if(ch=='R'){
-                        consume(ch);
-                        curState = 5;
-                        continue;
-                    }
-                    expected(ch, "[R]");
-                case 5:
-                    if(ch=='E'){
-                        consume(ch);
-                        curState = 6;
-                        continue;
-                    }
-                    expected(ch, "[E]");
-                case 6:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='['){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "<WS> OR [\\[]");
-                case 7:
+                case 2:
                     if(ch==']'){
                         consume(ch);
-                        curState = 9;
+                        curState = 4;
                         continue;
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
-                case 8:
+                case 3:
                     if(ch==']'){
                         consume(ch);
-                        curState = 9;
+                        curState = 4;
                         continue;
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
-                case 9:
+                case 4:
                     if(ch==']'){
                         consume(ch);
-                        curState = 10;
+                        curState = 5;
                         continue;
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
-                case 10:
+                case 5:
                     if((ch=finishAll(ch, ']'))==EOC)
                         return false;
                     if(ch=='>'){
@@ -5575,77 +5332,77 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
-                case 13:
+                case 8:
                     if(ch=='!'){
-                        consume(ch);
-                        curState = 14;
-                        continue;
-                    }
-                    if(ch==']'){
                         consume(ch);
                         curState = 9;
                         continue;
                     }
+                    if(ch==']'){
+                        consume(ch);
+                        curState = 4;
+                        continue;
+                    }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
-                case 14:
+                case 9:
                     if(ch=='['){
                         consume(ch);
-                        curState = 15;
+                        curState = 10;
                         continue;
                     }
                     if(ch==']'){
                         consume(ch);
-                        curState = 9;
+                        curState = 4;
                         continue;
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
-                case 15:
-                    push(RULE_IGNORE_SECT, 16, 7);
-                    curState = 7;
+                case 10:
+                    push(RULE_IGNORE_SECT, 11, 2);
+                    curState = 2;
                     continue;
-                case 16:
+                case 11:
                     if(ch==']'){
                         consume(ch);
-                        curState = 9;
+                        curState = 4;
                         continue;
                     }
                     if(ch=='<'){
                         consume(ch);
-                        curState = 13;
+                        curState = 8;
                         continue;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        curState = 8;
+                        curState = 3;
                         continue;
                     }
                     expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -5941,6 +5698,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
                                 push(RULE_IGNORE_SECT, -1, 0);
+                                push(RULE_STR_IGNORE, 1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
                                 curState = 2;
@@ -5948,6 +5706,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='N'){
                                 push(RULE_INCLUDE_SECT, -1, 0);
+                                push(RULE_STR_INCLUDE, 1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
                                 curState = 2;
@@ -5977,6 +5736,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
                                 push(RULE_IGNORE_SECT, -1, 0);
+                                push(RULE_STR_IGNORE, 1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
                                 curState = 2;
@@ -5984,6 +5744,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='N'){
                                 push(RULE_INCLUDE_SECT, -1, 0);
+                                push(RULE_STR_INCLUDE, 1, 0);
                                 consume(FROM_LA);
                                 consume(FROM_LA);
                                 curState = 2;
@@ -6007,68 +5768,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
             switch(curState){
                 case 0:
-                    if(ch=='I'){
-                        consume(ch);
-                        curState = 1;
-                        continue;
-                    }
-                    expected(ch, "[I]");
+                    push(RULE_STR_INCLUDE, 1, 0);
+                    curState = 0;
+                    return true;
                 case 1:
-                    if(ch=='N'){
-                        consume(ch);
-                        curState = 2;
-                        continue;
-                    }
-                    expected(ch, "[N]");
-                case 2:
-                    if(ch=='C'){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    expected(ch, "[C]");
-                case 3:
-                    if(ch=='L'){
-                        consume(ch);
-                        curState = 4;
-                        continue;
-                    }
-                    expected(ch, "[L]");
-                case 4:
-                    if(ch=='U'){
-                        consume(ch);
-                        curState = 5;
-                        continue;
-                    }
-                    expected(ch, "[U]");
-                case 5:
-                    if(ch=='D'){
-                        consume(ch);
-                        curState = 6;
-                        continue;
-                    }
-                    expected(ch, "[D]");
-                case 6:
-                    if(ch=='E'){
-                        consume(ch);
-                        curState = 7;
-                        continue;
-                    }
-                    expected(ch, "[E]");
-                case 7:
                     if((ch=finishAll_WS(ch))==EOC)
                         return false;
                     if(ch=='['){
                         consume(ch);
-                        curState = 8;
+                        curState = 2;
                         continue;
                     }
                     expected(ch, "<WS> OR [\\[]");
-                case 8:
+                case 2:
                     addToLookAhead(ch);
                     if(lookAhead.length()==1){
                         if(ch=='%'){
-                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            push(RULE_EXT_SUBSET_DECL, 3, 0);
                             push(RULE_DECL_SEP, 2, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
@@ -6077,17 +5793,17 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            push(RULE_EXT_SUBSET_DECL, 3, 0);
                             push(RULE_DECL_SEP, 2, 0);
                             consume(FROM_LA);
                             curState = 3;
                             return true;
                         }
                         if(ch==']'){
-                            push(RULE_EXT_SUBSET_DECL, 9, 0);
+                            push(RULE_EXT_SUBSET_DECL, 3, 0);
                             free -= 2;
                             consume(FROM_LA);
-                            curState = 10;
+                            curState = 4;
                             continue;
                         }
                     }
@@ -6096,7 +5812,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                push(RULE_EXT_SUBSET_DECL, 3, 0);
                                 push(RULE_MARKUP_DECL, 2, 0);
                                 push(RULE_PI, -1, 0);
                                 consume(FROM_LA);
@@ -6112,7 +5828,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='A'){
-                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_ATT_LIST_DECL, -1, 0);
                                     consume(FROM_LA);
@@ -6123,7 +5839,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     return true;
                                 }
                                 if(ch=='N'){
-                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_NOTATION_DECL, -1, 0);
                                     consume(FROM_LA);
@@ -6134,7 +5850,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     return true;
                                 }
                                 if(ch=='-'){
-                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_MARKUP_DECL, 2, 0);
                                     push(RULE_COMMENT, -1, 0);
                                     consume(FROM_LA);
@@ -6144,7 +5860,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                     return true;
                                 }
                                 if(ch=='['){
-                                    push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
                                     push(RULE_CONDITIONAL_SECT, 2, 0);
                                     consume(FROM_LA);
                                     consume(FROM_LA);
@@ -6162,7 +5878,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(lookAhead.charAt(2)=='E'){
                                     if(ch=='L'){
-                                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                                         push(RULE_MARKUP_DECL, 2, 0);
                                         push(RULE_ELEMENT_DECL, -1, 0);
                                         consume(FROM_LA);
@@ -6174,7 +5890,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                         return true;
                                     }
                                     if(ch=='N'){
-                                        push(RULE_EXT_SUBSET_DECL, 9, 0);
+                                        push(RULE_EXT_SUBSET_DECL, 3, 0);
                                         push(RULE_MARKUP_DECL, 2, 0);
                                         push(RULE_ENTITY_DECL, -1, 0);
                                         consume(FROM_LA);
@@ -6190,21 +5906,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
-                case 9:
+                case 3:
                     if(ch==']'){
                         consume(ch);
-                        curState = 10;
+                        curState = 4;
                         continue;
                     }
                     expected(ch, "[\\]]");
-                case 10:
+                case 4:
                     if(ch==']'){
                         consume(ch);
-                        curState = 11;
+                        curState = 5;
                         continue;
                     }
                     expected(ch, "[\\]]");
-                case 11:
+                case 5:
                     if(ch=='>'){
                         consume(ch);
                         curState = -1;
@@ -6217,284 +5933,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_EXT_SUBSET = 64;
-    private boolean ext_subset() throws Exception{
-        while(true){
-            int ch;
-            if(stop || (ch=codePoint())==EOC)
-                return false;
-
-            switch(curState){
-                case 0:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch=='%'){
-                            push(RULE_EXT_SUBSET_DECL, -1, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_EXT_SUBSET_DECL, -1, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            consume(FROM_LA);
-                            curState = 3;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='A'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='N'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='-'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                                if(ch=='['){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_CONDITIONAL_SECT, 2, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 4;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
-                    if(lookAhead.length()==4){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(lookAhead.charAt(2)=='E'){
-                                    if(ch=='L'){
-                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return true;
-                                    }
-                                    if(ch=='N'){
-                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<6)
-                        continue;
-                    if(lookAhead.length()==6){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='?'){
-                                if(lookAhead.charAt(2)=='x'){
-                                    if(lookAhead.charAt(3)=='m'){
-                                        if(lookAhead.charAt(4)=='l'){
-                                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                                                push(RULE_TEXT_DECL, 1, 0);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                curState = 6;
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(lookAhead.charAt(0)=='<'){
-                        push(RULE_EXT_SUBSET_DECL, -1, 0);
-                        push(RULE_MARKUP_DECL, 2, 0);
-                        push(RULE_PI, -1, 0);
-                        consume(FROM_LA);
-                        lookAhead.reset();
-                        curState = 1;
-                        return true;
-                    }
-                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                    free -= 2;
-                    curState = -1;
-                    return true;
-                case 1:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch=='%'){
-                            push(RULE_EXT_SUBSET_DECL, -1, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_EXT_SUBSET_DECL, -1, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            consume(FROM_LA);
-                            curState = 3;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch=='?'){
-                                push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return true;
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='A'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='N'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return true;
-                                }
-                                if(ch=='-'){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                                if(ch=='['){
-                                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                    push(RULE_CONDITIONAL_SECT, 2, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 4;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
-                    if(lookAhead.length()==4){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(lookAhead.charAt(2)=='E'){
-                                    if(ch=='L'){
-                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return true;
-                                    }
-                                    if(ch=='N'){
-                                        push(RULE_EXT_SUBSET_DECL, -1, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    push(RULE_EXT_SUBSET_DECL, -1, 0);
-                    free -= 2;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
-        }
-    }
-
-    public static final int RULE_EXTERNAL_ENTITY_VALUE = 65;
+    public static final int RULE_EXTERNAL_ENTITY_VALUE = 64;
     private boolean external_entity_value() throws Exception{
         while(true){
             int ch;
@@ -6503,16 +5942,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
             switch(curState){
                 case 0:
-                    if(ch=='<'){
-                        buffer.push();
-                        consume(ch);
-                        curState = 1;
-                        continue;
-                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         buffer.push();
                         consume(ch);
-                        curState = 10;
+                        curState = 1;
                         continue;
                     }
                     buffer.push();
@@ -6520,97 +5953,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     curState = -1;
                     return true;
                 case 1:
-                    if(ch=='?'){
-                        consume(ch);
-                        curState = 2;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 2:
-                    if(ch=='x'){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 3:
-                    if(ch=='m'){
-                        consume(ch);
-                        curState = 4;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 4:
-                    if(ch=='l'){
-                        consume(ch);
-                        curState = 5;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 5:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        buffer.pop(0, 0);
-                        consume(ch);
-                        curState = 13;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 10:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                case 13:
-                    push(RULE_TEXT_DECL, 14, 6);
-                    curState = 6;
-                    return true;
-                case 14:
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 10;
-                        continue;
-                    }
-                    buffer.push();
+                    if(finishAll_CHAR(ch)==EOC)
+                        return false;
                     handler.externalEntityValue(buffer.pop(0, 0));
                     curState = -1;
                     return true;
@@ -6620,7 +5964,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    public static final int RULE_INT_VALUE = 66;
+    public static final int RULE_INT_VALUE = 65;
     private boolean int_value() throws Exception{
         while(true){
             int ch;
@@ -6671,285 +6015,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         curState = 1;
                         return true;
-                    }
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
-        }
-    }
-
-    public static final int RULE_EXT_ELEM_CONTENT = 67;
-    private boolean ext_elem_content() throws Exception{
-        while(true){
-            int ch;
-            if(stop || (ch=codePoint())==EOC)
-                return false;
-
-            switch(curState){
-                case 0:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch==']'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 8;
-                            return true;
-                        }
-                        if(ch=='&'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 6;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return true;
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='-'){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                                if(ch=='['){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<6)
-                        continue;
-                    if(lookAhead.length()==6){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='?'){
-                                if(lookAhead.charAt(2)=='x'){
-                                    if(lookAhead.charAt(3)=='m'){
-                                        if(lookAhead.charAt(4)=='l'){
-                                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                                                push(RULE_TEXT_DECL, 1, 0);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                consume(FROM_LA);
-                                                curState = 6;
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(lookAhead.charAt(0)=='<'){
-                        push(RULE_ELEM_CONTENT, 2, 0);
-                        push(RULE_PI, -1, 0);
-                        consume(FROM_LA);
-                        lookAhead.reset();
-                        curState = 1;
-                        return true;
-                    }
-                    curState = -1;
-                    return true;
-                case 1:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch==']'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 8;
-                            return true;
-                        }
-                        if(ch=='&'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 6;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return true;
-                            }
-                            if(ch=='?'){
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return true;
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='-'){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                                if(ch=='['){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    curState = -1;
-                    return true;
-                case 2:
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch==']'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 8;
-                            return true;
-                        }
-                        if(ch=='&'){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
-                            curState = 1;
-                            return true;
-                        }
-                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            push(RULE_ELEM_CONTENT, 2, 0);
-                            buffer.push();
-                            consume(FROM_LA);
-                            curState = 6;
-                            return true;
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return true;
-                            }
-                            if(ch=='?'){
-                                push(RULE_ELEM_CONTENT, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return true;
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='-'){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                                if(ch=='['){
-                                    push(RULE_ELEM_CONTENT, 2, 0);
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return true;
-                                }
-                            }
-                        }
                     }
                     curState = -1;
                     return true;
@@ -7100,13 +6165,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             case 63:
                 return include_sect();
             case 64:
-                return ext_subset();
-            case 65:
                 return external_entity_value();
-            case 66:
+            case 65:
                 return int_value();
-            case 67:
-                return ext_elem_content();
             default:
                 throw new Error("impossible rule: "+stack[free-2]);
         }
@@ -7160,6 +6221,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return ch;
     }
 
+    private int finishAll_CHAR(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
     @Override
     public void onSuccessful() throws Exception{
         handler.onSuccessful();
@@ -7172,7 +6241,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
     protected final jlibs.xml.sax.async.AsyncXMLReader handler;
     public XMLScanner(jlibs.xml.sax.async.AsyncXMLReader handler, int startingRule){
-        super(6, startingRule);
+        super(4, startingRule);
         this.handler = handler;
     }
 }

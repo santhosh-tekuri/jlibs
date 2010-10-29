@@ -27,6 +27,12 @@ public class Location{
     public int getLineNumber(){ return line; }
     public int getColumnNumber(){ return col; }
     public int getCharacterOffset(){ return offset; }
+    public void set(Location that){
+        this.line = that.line;
+        this.col = that.col;
+        this.offset = that.offset;
+        this.skipLF = that.skipLF;
+    }
 
     private boolean skipLF;
 
