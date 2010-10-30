@@ -1292,8 +1292,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -1317,8 +1320,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -1495,8 +1501,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -1530,8 +1539,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -1704,8 +1716,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             curState = 1;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='!'){
@@ -3063,8 +3078,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)==')'){
                             if(ch=='*'){
@@ -3140,8 +3158,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)==')'){
                             if(ch=='*'){
@@ -3447,8 +3468,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='N'){
                             if(ch=='O'){
@@ -3645,8 +3669,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='N'){
                             if(ch=='O'){
@@ -4394,8 +4421,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=codePoint())==EOC)
                         return false;
                     addToLookAhead(ch);
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    while(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -4407,8 +4437,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -4441,8 +4474,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -4817,8 +4853,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -4831,8 +4870,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -4868,8 +4910,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -4921,8 +4966,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -4935,8 +4983,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -4972,8 +5023,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5190,8 +5244,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -5216,8 +5273,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5255,8 +5315,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='!'){
@@ -5291,8 +5354,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -5364,8 +5430,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -5391,8 +5460,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5708,8 +5780,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -5722,8 +5797,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5767,8 +5845,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5821,8 +5902,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -5835,8 +5919,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5880,8 +5967,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -5966,8 +6056,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
@@ -6006,8 +6099,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return true;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
@@ -6083,8 +6179,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<2)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<2){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
@@ -6098,8 +6197,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<3){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
@@ -6147,8 +6249,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<4)
-                        continue;
+                    if(ch!=EOF && lookAhead.length()<4){
+                        if((ch=codePoint())==EOC)
+                            return false;
+                        addToLookAhead(ch);
+                    }
                     if(lookAhead.length()==4){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
