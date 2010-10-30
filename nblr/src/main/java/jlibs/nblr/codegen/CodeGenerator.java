@@ -187,7 +187,7 @@ public abstract class CodeGenerator{
                         statesPending.add(node);
                 }
                 while(!statesPending.isEmpty()){
-                    Node state = statesPending.first();
+                    Node state = statesPending.iterator().next();
                     statesPending.remove(state);
                     statesVisited.add(state);
                     try{
@@ -224,12 +224,7 @@ public abstract class CodeGenerator{
     }
 
     private ArrayList<Node> statesVisited = new ArrayList<Node>();
-    protected TreeSet<Node> statesPending = new TreeSet<Node>(new Comparator<Node>(){
-        @Override
-        public int compare(Node n1, Node n2){
-            return n1.id-n2.id;
-        }
-    });
+    protected LinkedHashSet<Node> statesPending = new LinkedHashSet<Node>();
     protected void addState(Node state){
         if(!statesVisited.contains(state))
             statesPending.add(state);

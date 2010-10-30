@@ -146,14 +146,9 @@ public class JavaCodeGenerator extends CodeGenerator{
         printer.printlns(
             "private boolean "+rule.name+"() throws Exception{",
                 PLUS,
+                "int ch;",
                 "while(true){",
                     PLUS,
-                    "int ch;",
-                    "if(stop || (ch=codePoint())==EOC)",
-                        PLUS,
-                        "return false;",
-                        MINUS,
-                    "",
                     "switch(curState){",
                         PLUS
         );
@@ -248,6 +243,21 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addRoutes(Routes routes){
+        if(routes.determinateRoutes.size()==0 & routes.indeterminateRoute==null){
+            printer.printlns(
+                "if(stop || codePoint()==EOC)",
+                    PLUS,
+                    "return false;",
+                    MINUS
+            );
+        }else{
+            printer.printlns(
+                "if(stop || (ch=codePoint())==EOC)",
+                    PLUS,
+                    "return false;",
+                    MINUS
+            );
+        }
         curRule = routes.rule;
         String expected = "expected(ch, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
@@ -255,6 +265,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(lookAheadBufferReqd)
             printer.printlns("addToLookAhead(ch);");
 
+        boolean addElse = false;
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 if(lookAhead>1){
@@ -271,7 +282,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                         PLUS
                 );
             }
-            print(routes.determinateRoutes(lookAhead), 1 ,lookAheadBufferReqd);
+            addElse = print(routes.determinateRoutes(lookAhead), 1 ,lookAheadBufferReqd);
             if(lookAheadBufferReqd){
                 printer.printlns(
                         MINUS,
@@ -283,6 +294,8 @@ public class JavaCodeGenerator extends CodeGenerator{
         if(routes.indeterminateRoute !=null){
             Path path = routes.indeterminateRoute.route()[0];
             Matcher matcher = path.matcher();
+            if(addElse)
+                printer.print("else ");
             startIf(condition(matcher, 0));
 
             consumeLAFirst = false;
@@ -292,16 +305,34 @@ public class JavaCodeGenerator extends CodeGenerator{
             returnDestination(dest);
 
             endIf(1);
+            addElse = true;
         }
 
-        if(routes.routeStartingWithEOF!=null)
+        if(lookAheadBufferReqd)
+            addElse = false;
+        if(routes.routeStartingWithEOF!=null){
+            if(addElse){
+                printer.printlns(
+                    "else {",
+                        PLUS
+                );
+            }
             travelPath(routes.routeStartingWithEOF, false);
-        else
+            if(addElse){
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
+            }
+        }else{
+            if(addElse)
+                printer.print("else ");
             printer.println(expected);
+        }
     }
 
     @SuppressWarnings({"UnnecessaryLocalVariable"})
-    private void print(List<Path> routes, int depth, boolean consumeLookAhead){
+    private boolean print(List<Path> routes, int depth, boolean consumeLookAhead){
         List<List<Path>> groups = new ArrayList<List<Path>>();
         Matcher matcher = null;
         for(Path route: routes){
@@ -329,12 +360,16 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
 
         int i = -1;
+        boolean addElse = true;
+        int elseAfter = 0;
         for(List<Path> group: groups){
             ++i;
             Path route = group.get(0);
 
             String finishAll = checkFinishAll(route, consumeLookAhead);
             if(finishAll!=null && i==0){
+                elseAfter = 1;
+                addElse = false;
                 useFinishAll(route.matcher(), finishAll, false, groups.size()>1);
                 continue;
             }
@@ -343,6 +378,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             boolean endIf = false;
             if(matcher!=null){
                 int lookAheadIndex = route.depth>1 && depth!=route.depth ? depth-1 : -1;
+                if(i>elseAfter)
+                    printer.print("else ");
                 startIf(condition(matcher, lookAheadIndex));
                 endIf = true;
             }
@@ -356,7 +393,9 @@ public class JavaCodeGenerator extends CodeGenerator{
             }
             if(endIf)
                 endIf(1);
+            addElse = true;
         }
+        return addElse;
     }
 
     private String condition(Matcher matcher, int lookAheadIndex){
@@ -519,7 +558,8 @@ public class JavaCodeGenerator extends CodeGenerator{
             }else{
                 addState(dest.node);
                 println("curState = "+state+";");
-                println("continue;");
+                if(statesPending.isEmpty() || statesPending.iterator().next()!=dest.node)
+                    println("continue;");
             }
         }else{
             println("curState = "+state+";");
