@@ -182,10 +182,6 @@ public abstract class CodeGenerator{
                 statesVisited.clear();
                 statesPending.clear();
                 statesPending.add(rule.node);
-                for(Node node: rule.nodes()){
-                    if(node.name!=null)
-                        statesPending.add(node);
-                }
                 while(!statesPending.isEmpty()){
                     Node state = statesPending.iterator().next();
                     statesPending.remove(state);
@@ -202,6 +198,12 @@ public abstract class CodeGenerator{
                         maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
                     }catch(IllegalStateException ex){
                         throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
+                    }
+                    if(statesPending.isEmpty()){
+                        for(Node node: rule.nodes()){
+                            if(node.name!=null)
+                                addState(node);
+                        }
                     }
                 }
                 finishRuleMethod(rule);
