@@ -257,14 +257,16 @@ public class JavaCodeGenerator extends CodeGenerator{
         String expected = "expected(ch, \""+ StringUtil.toLiteral(routes.toString(), false)+"\");";
 
         boolean lookAheadBufferReqd = routes.maxLookAhead>1;
-        if(lookAheadBufferReqd)
-            printer.printlns("addToLookAhead(ch);");
-
         boolean addElse = false;
         int lastLookAhead = 0;
+        boolean addToLookAhead = true;
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 if(lookAhead>1){
+                    if(addToLookAhead){
+                        printer.printlns("addToLookAhead(ch);");
+                        addToLookAhead = false;
+                    }
                     String prefix = lookAhead==lastLookAhead+1 ? "if" : "while";
                     printer.printlns(
                         prefix+"(ch!=EOF && lookAhead.length()<"+lookAhead+"){",
@@ -279,12 +281,13 @@ public class JavaCodeGenerator extends CodeGenerator{
                     );
                 }
 
+                int len = lookAhead==1 ? 0 : lookAhead;
                 printer.printlns(
-                    "if(lookAhead.length()=="+lookAhead+"){",
+                    "if(lookAhead.length()=="+len+"){",
                         PLUS
                 );
             }
-            addElse = print(routes.determinateRoutes(lookAhead), 1 ,lookAheadBufferReqd);
+            addElse = print(routes.determinateRoutes(lookAhead), 1 , lookAhead==1 ? false : lookAheadBufferReqd);
             if(lookAheadBufferReqd){
                 printer.printlns(
                         MINUS,

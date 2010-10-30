@@ -1272,26 +1272,26 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch==']'){
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 8;
                         }
                         else if(ch=='&'){
                             push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 6;
                             continue;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -1477,30 +1477,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 5:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch==']'){
                             push(RULE_ELEM_CONTENT, 5, 0);
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 8;
                             return true;
                         }
                         else if(ch=='&'){
                             push(RULE_ELEM_CONTENT, 5, 0);
                             push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                             push(RULE_ELEM_CONTENT, 5, 0);
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 6;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -1709,13 +1709,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -3059,25 +3059,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='|'){
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 8;
                             continue;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 5;
                             continue;
                         }
                         else if(ch=='%'){
                             push(RULE_PE_REFERENCE, 4, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -3139,25 +3139,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 5:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
+                        if((ch=finishAll_WS(ch))==EOC)
+                            return false;
                         if(ch=='|'){
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 8;
-                            continue;
-                        }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
-                            curState = 5;
                             continue;
                         }
                         else if(ch=='%'){
                             push(RULE_PE_REFERENCE, 4, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -3438,11 +3435,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='C'){
                             push(RULE_STR_CDATA, 1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
@@ -3450,24 +3446,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_ENUMERATED_TYPE, -1, 0);
                             push(RULE_ENUMERATION, -1, 0);
                             handler.enumerationAttribute();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch=='E'){
                             push(RULE_TOKENIZED_TYPE, -1, 0);
                             push(RULE_STR_ENTIT, 9, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch=='I'){
                             push(RULE_TOKENIZED_TYPE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 23;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -3630,17 +3627,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
-                            curState = 2;
-                            continue;
-                        }
-                        else if(ch=='C'){
+                    if(lookAhead.length()==0){
+                        if((ch=finishAll_WS(ch))==EOC)
+                            return false;
+                        if(ch=='C'){
                             push(RULE_ATT_TYPE, 3, 0);
                             push(RULE_STR_CDATA, 1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
@@ -3649,7 +3642,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_ENUMERATED_TYPE, -1, 0);
                             push(RULE_ENUMERATION, -1, 0);
                             handler.enumerationAttribute();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
@@ -3657,18 +3650,19 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             push(RULE_ATT_TYPE, 3, 0);
                             push(RULE_TOKENIZED_TYPE, -1, 0);
                             push(RULE_STR_ENTIT, 9, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch=='I'){
                             push(RULE_ATT_TYPE, 3, 0);
                             push(RULE_TOKENIZED_TYPE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 23;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -4836,23 +4830,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='%'){
                             push(RULE_DECL_SEP, 1, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_DECL_SEP, 1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 3;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -4949,23 +4943,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 1:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='%'){
                             push(RULE_DECL_SEP, 1, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_DECL_SEP, 1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 3;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5235,15 +5229,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_MISC, 0, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5306,15 +5300,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 3:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_MISC, 3, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5345,15 +5339,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 1:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_MISC, 1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5406,30 +5400,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch==']'){
                             push(RULE_ELEM_CONTENT, 0, 0);
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 8;
                             return true;
                         }
                         else if(ch=='&'){
                             push(RULE_ELEM_CONTENT, 0, 0);
                             push(RULE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                             push(RULE_ELEM_CONTENT, 0, 0);
                             buffer.push();
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 6;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5763,23 +5757,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 0:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='%'){
                             push(RULE_DECL_SEP, 2, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_DECL_SEP, 2, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 3;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -5885,23 +5879,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='%'){
                             push(RULE_DECL_SEP, 2, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_DECL_SEP, 2, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 3;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -6042,20 +6036,17 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
-                            curState = 4;
-                            continue;
-                        }
-                        else if(ch=='%'){
+                    if(lookAhead.length()==0){
+                        if((ch=finishAll_WS(ch))==EOC)
+                            return false;
+                        if(ch=='%'){
                             push(RULE_PE_REFERENCE, 3, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -6085,20 +6076,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 3:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 4;
                             continue;
                         }
                         else if(ch=='%'){
                             push(RULE_PE_REFERENCE, 3, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
@@ -6153,32 +6144,32 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if((ch=codePoint())==EOC)
                         return false;
-                    addToLookAhead(ch);
-                    if(lookAhead.length()==1){
+                    if(lookAhead.length()==0){
                         if(ch=='%'){
                             push(RULE_EXT_SUBSET_DECL, 3, 0);
                             push(RULE_DECL_SEP, 2, 0);
                             handler.peReferenceOutsideMarkup();
                             push(RULE_PE_REFERENCE, -1, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 1;
                             return true;
                         }
                         else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             push(RULE_EXT_SUBSET_DECL, 3, 0);
                             push(RULE_DECL_SEP, 2, 0);
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 3;
                             return true;
                         }
                         else if(ch==']'){
                             push(RULE_EXT_SUBSET_DECL, 3, 0);
                             free -= 2;
-                            consume(FROM_LA);
+                            consume(ch);
                             curState = 4;
                             continue;
                         }
                     }
+                    addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
                         if((ch=codePoint())==EOC)
                             return false;
