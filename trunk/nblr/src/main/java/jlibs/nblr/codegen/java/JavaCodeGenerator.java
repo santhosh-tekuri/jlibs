@@ -17,6 +17,8 @@ package jlibs.nblr.codegen.java;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.actions.BufferAction;
+import jlibs.nblr.actions.ErrorAction;
 import jlibs.nblr.codegen.CodeGenerator;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
@@ -243,16 +245,9 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void addRoutes(Routes routes){
-        if(routes.determinateRoutes.size()==0 & routes.indeterminateRoute==null){
+        if(routes.determinateRoutes.size()>0 || routes.indeterminateRoute!=null){
             printer.printlns(
-                "if(stop || codePoint()==EOC)",
-                    PLUS,
-                    "return false;",
-                    MINUS
-            );
-        }else{
-            printer.printlns(
-                "if(stop || (ch=codePoint())==EOC)",
+                "if((ch=codePoint())==EOC)",
                     PLUS,
                     "return false;",
                     MINUS
@@ -529,6 +524,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void travelRoute(Path route, boolean consumeLookAhead){
+        handlerMethodCalled = false;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = new Destination(consumeLookAhead, curRule, null);
@@ -538,6 +534,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void travelPath(Path path, boolean consumeLookAhead){
+        handlerMethodCalled = false;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = _travelPath(curRule, path, consumeLookAhead);
@@ -558,6 +555,14 @@ public class JavaCodeGenerator extends CodeGenerator{
             }else{
                 addState(dest.node);
                 println("curState = "+state+";");
+                if(handlerMethodCalled){
+                    println("if(stop)");
+                    printer.printlns(
+                        PLUS,
+                            "return false;",
+                        MINUS
+                    );
+                }
                 if(statesPending.isEmpty() || statesPending.iterator().next()!=dest.node)
                     println("continue;");
             }
@@ -584,6 +589,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     public static boolean COELSCE_LA_CONSUME_CALLS = false;
+    private boolean handlerMethodCalled;
     private Destination _travelPath(Rule rule, Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
 
@@ -605,6 +611,8 @@ public class JavaCodeGenerator extends CodeGenerator{
                 Node node = (Node)obj;
 
                 if(index<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
+                    if(node.action!=null && !(node.action instanceof BufferAction || node.action instanceof ErrorAction))
+                        handlerMethodCalled = true;
                     if(debuggable){
                         if(nodesToBeExecuted.length()>0)
                             nodesToBeExecuted.append(", ");
