@@ -261,14 +261,21 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.printlns("addToLookAhead(ch);");
 
         boolean addElse = false;
+        int lastLookAhead = 0;
         for(int lookAhead: routes.lookAheads()){
             if(lookAheadBufferReqd){
                 if(lookAhead>1){
+                    String prefix = lookAhead==lastLookAhead+1 ? "if" : "while";
                     printer.printlns(
-                        "if(ch!=EOF && lookAhead.length()<"+lookAhead+")",
+                        prefix+"(ch!=EOF && lookAhead.length()<"+lookAhead+"){",
                             PLUS,
-                            "continue;",
-                            MINUS
+                            "if((ch=codePoint())==EOC)",
+                                PLUS,
+                                "return false;",
+                                MINUS,
+                            "addToLookAhead(ch);",
+                            MINUS,
+                        "}"
                     );
                 }
 
@@ -284,6 +291,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                     "}"
                 );
             }
+            lastLookAhead = lookAhead;
         }
 
         if(routes.indeterminateRoute !=null){
