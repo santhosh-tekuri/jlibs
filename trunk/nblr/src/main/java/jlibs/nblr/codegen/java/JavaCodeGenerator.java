@@ -303,13 +303,7 @@ public class JavaCodeGenerator extends CodeGenerator{
             if(addElse)
                 printer.print("else ");
             startIf(condition(matcher, 0));
-
-            consumeLAFirst = false;
-            consumeLALen = 0;
-            Destination dest = _travelPath(curRule, path, true);
-            println("lookAhead.reset();");
-            returnDestination(dest);
-
+            travelPath(path, true, true);
             endIf(1);
             addElse = true;
         }
@@ -323,7 +317,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                         PLUS
                 );
             }
-            travelPath(routes.routeStartingWithEOF, false);
+            travelPath(routes.routeStartingWithEOF, false, lookAheadBufferReqd);
             if(addElse){
                 printer.printlns(
                         MINUS,
@@ -395,7 +389,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                 if(finishAll!=null)
                     useFinishAll(route.matcher(), finishAll, true, false);
                 else
-                    travelRoute(route, consumeLookAhead);
+                    travelRoute(route, consumeLookAhead, matcher==null);
             }
             if(endIf)
                 endIf(1);
@@ -534,21 +528,25 @@ public class JavaCodeGenerator extends CodeGenerator{
             printer.println("continue;");
     }
 
-    private void travelRoute(Path route, boolean consumeLookAhead){
+    private void travelRoute(Path route, boolean consumeLookAhead, boolean resetLookAhead){
         handlerMethodCalled = false;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = new Destination(consumeLookAhead, curRule, null);
         for(Path path: route.route())
             dest = _travelPath(dest.rule, path, consumeLookAhead);
+        if(resetLookAhead)
+            println("lookAhead.reset();");
         returnDestination(dest);
     }
 
-    private void travelPath(Path path, boolean consumeLookAhead){
+    private void travelPath(Path path, boolean consumeLookAhead, boolean resetLookAhead){
         handlerMethodCalled = false;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = _travelPath(curRule, path, consumeLookAhead);
+        if(resetLookAhead)
+            println("lookAhead.reset();");
         returnDestination(dest);
     }
 

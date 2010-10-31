@@ -3085,6 +3085,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 return true;
                             }
                             consume(FROM_LA);
+                            lookAhead.reset();
                             curState = -1;
                             return true;
                         }
@@ -3162,6 +3163,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 return true;
                             }
                             consume(FROM_LA);
+                            lookAhead.reset();
                             curState = -1;
                             return true;
                         }
@@ -5048,6 +5050,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
+                    lookAhead.reset();
                     curState = -1;
                     return true;
                 default:
@@ -5330,6 +5333,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
+                    lookAhead.reset();
                     curState = -1;
                     return true;
                 case 1:
@@ -5479,6 +5483,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
+                    lookAhead.reset();
                     curState = -1;
                     return true;
                 default:
@@ -5869,6 +5874,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
+                    lookAhead.reset();
                     curState = -1;
                     return true;
                 case 2:
@@ -5991,6 +5997,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
+                    lookAhead.reset();
                     curState = -1;
                     return true;
                 default:

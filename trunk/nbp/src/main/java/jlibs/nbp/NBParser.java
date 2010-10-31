@@ -158,7 +158,7 @@ public abstract class NBParser{
             curState = stack[free-1];
             while(!stop && callRule()){
                 if(curState<0){
-                    lookAhead.reset();
+                    assert lookAhead.length()==0;
                     do{
                         free -= 2;
                     }while(free!=0 && stack[free-1]<0);
