@@ -146,7 +146,7 @@ public class Paths extends ArrayList<Path>{
                     stack.pop();
                 }else if(edge.ruleTarget!=null){
                     if(!digIntoRule){
-                        if(new Routes(edge.ruleTarget.rule, edge.ruleTarget.node()).routeStartingWithEOF!=null) // the rule can match nothing
+                        if(new Routes(edge.ruleTarget.rule, edge.ruleTarget.node(), true).routeStartingWithEOF!=null) // the rule can match nothing
                             digIntoRule = true;
                     }
                     if(!digIntoRule){
