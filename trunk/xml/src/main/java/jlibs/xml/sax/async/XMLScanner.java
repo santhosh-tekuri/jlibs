@@ -1000,18 +1000,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        push(RULE_QNAME, 1, 0);
-                        buffer.push();
-                        buffer.push();
-                        push(RULE_NCNAME, 2, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
-                    }
-                    else expected(ch, "<NCNAME_START>");
+                    push(RULE_QNAME, 1, 0);
+                    curState = 0;
+                    return qname();
                 case 1:
                     push(RULE_EQ, 2, 0);
                     curState = 0;
@@ -1200,18 +1191,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        push(RULE_QNAME, 2, 0);
-                        buffer.push();
-                        buffer.push();
-                        push(RULE_NCNAME, 2, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
-                    }
-                    else expected(ch, "<NCNAME_START>");
+                    push(RULE_QNAME, 2, 0);
+                    curState = 0;
+                    return qname();
                 case 2:
                     if((ch=codePoint())==EOC)
                         return false;
