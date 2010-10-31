@@ -579,7 +579,10 @@ public class JavaCodeGenerator extends CodeGenerator{
             }
         }else{
             println("curState = "+state+";");
-            println("return true;");
+            if(dest.rule.id<0)
+                println("return matchString(STRING_IDS[-RULE_"+dest.rule.name.toUpperCase()+"]);");
+            else
+                println("return "+dest.rule.name+"();");
         }
     }
 
