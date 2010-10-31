@@ -103,13 +103,8 @@ public final class Stream{
                 begin = (begin+1)%chars.length;
         }
 
-        public boolean reset(){
-            if(end==begin)
-                return false;
-            else{
-                end = begin;
-                return true;
-            }
+        public void reset(){
+            end = begin;
         }
 
         public int getNext(){
