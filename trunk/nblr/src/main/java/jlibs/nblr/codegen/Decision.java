@@ -284,9 +284,10 @@ public class Decision{
     public void addBody(Printer printer, State nextState){
         boolean checkStop = generatePath(printer);
 
+        int returnAction = returnAction(nextState);
         Node returnTarget = returnTarget();
-        if(id(returnTarget)!=-1)
-            printer.println("curState = "+id(returnTarget)+';');
+        if(id(returnTarget)!=-1 && returnAction==ADD_CONTINUE)
+            printer.println("state = "+id(returnTarget)+';');
 
         boolean resetLookAhead = false;
         if(matchers.length>1)
@@ -305,7 +306,6 @@ public class Decision{
         if(resetLookAhead)
             printer.println("lookAhead.reset();");
 
-        int returnAction = returnAction(nextState);
         switch(returnAction){
             case ADD_CONTINUE:
                 if(checkStop)
@@ -329,13 +329,13 @@ public class Decision{
                 Edge edgeWithRule = edgeWithRule();
                 String methodCall;
                 if(!SyntaxClass.DEBUGGABLE && Node.DYNAMIC_STRING_MATCH.equals(edgeWithRule.source.name))
-                    methodCall = "matchString(dynamicStringToBeMatched)";
+                    methodCall = "matchString("+id(returnTarget)+", dynamicStringToBeMatched)";
                 else{
                     Rule rule = edgeWithRule.ruleTarget.rule;
                     if(rule.id<0)
-                        methodCall = "matchString(RULE_"+rule.name.toUpperCase()+", STRING_IDS[-RULE_"+rule.name.toUpperCase()+"])";
+                        methodCall = "matchString(RULE_"+rule.name.toUpperCase()+", "+id(returnTarget)+", STRING_IDS[-RULE_"+rule.name.toUpperCase()+"])";
                     else
-                        methodCall = rule.name+"()";
+                        methodCall = rule.name+"("+id(returnTarget)+")";
                 }
 
                 if(checkStop){
@@ -356,11 +356,11 @@ public class Decision{
                         methodCallList.add("return true;");
                         break;
                     case CALL_RULE_AND_CONTINUE:
-                        methodCallList.add("curState = "+idAfterRule(edgeWithRule)+";");
+                        methodCallList.add("state = "+idAfterRule(edgeWithRule)+";");
                         methodCallList.add("continue;");
                         break;
                     case CALL_RULE_AND_NEXT_DECISION:
-                        //methodCallList.add("curState = "+idAfterRule(edgeWithRule)+";");
+                        //methodCallList.add("state = "+idAfterRule(edgeWithRule)+";");
                         break;
                 }
 

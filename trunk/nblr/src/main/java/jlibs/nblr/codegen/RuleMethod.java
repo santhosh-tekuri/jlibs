@@ -46,7 +46,8 @@ public class RuleMethod{
         statesPending.add(rule.node);
 
         while(!statesPending.isEmpty()){
-            Node pendingNode = statesPending.iterator().next();
+            List<Node> list = new ArrayList<Node>(statesPending);
+            Node pendingNode = list.get(list.size()-1);
             statesPending.remove(pendingNode);
             statesVisited.add(pendingNode);
             State state = new State(this, pendingNode);
@@ -92,7 +93,7 @@ public class RuleMethod{
         printer.println("public static final int RULE_"+rule.name.toUpperCase()+" = "+rule.id+';');
         
         printer.printlns(
-            "private boolean "+rule.name+"() throws Exception{",
+            "private boolean "+rule.name+"(int state) throws Exception{",
                 PLUS
         );
 
@@ -108,7 +109,7 @@ public class RuleMethod{
         }
 
         printer.printlns(
-            "switch(curState){",
+            "switch(state){",
                 PLUS
         );
         for(int i=0; i<states.size(); i++){
@@ -120,7 +121,7 @@ public class RuleMethod{
         printer.printlns(
                 "default:",
                     PLUS,
-                    "throw new Error(\"impossible state: \"+curState);",
+                    "throw new Error(\"impossible state: \"+state);",
                     MINUS,
                 MINUS,
             "}"

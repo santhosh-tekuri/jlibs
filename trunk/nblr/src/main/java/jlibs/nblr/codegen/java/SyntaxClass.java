@@ -61,6 +61,24 @@ public class SyntaxClass{
                 state.fromNode.stateID = DEBUGGABLE ? state.fromNode.id : i;
             }
         }
+
+        /*
+        // print no of continues used for each rule
+        for(RuleMethod ruleMethod: ruleMethods){
+            int count = 0;
+            for(int i=0; i<ruleMethod.states.size(); i++){
+                State state = ruleMethod.states.get(i);
+                for(Decision decision: state.decisions){
+                    switch(decision.returnAction(i<ruleMethod.states.size()-1 ? ruleMethod.states.get(i+1) : null)){
+                        case Decision.ADD_CONTINUE:
+                        case Decision.CALL_RULE_AND_CONTINUE:
+                            count++;
+                    }
+                }
+            }
+            System.out.println(count+" - "+ruleMethod.rule.name);
+        }
+        */
     }
 
     public int maxLookAhead(){
@@ -216,7 +234,7 @@ public class SyntaxClass{
         String prefix = DEBUGGABLE ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected final boolean "+prefix+"callRule(int rule) throws Exception{",
+            "protected final boolean "+prefix+"callRule(int rule, int state) throws Exception{",
                 PLUS,
                 "if(SHOW_STATS)",
                     PLUS,
@@ -229,11 +247,11 @@ public class SyntaxClass{
                         PLUS,
                         "if(rule==RULE_DYNAMIC_STRING_MATCH)",
                             PLUS,
-                            "return matchString(dynamicStringToBeMatched);",
+                            "return matchString(state, dynamicStringToBeMatched);",
                             MINUS,
                         "else",
                             PLUS,
-                            "return matchString(rule, STRING_IDS[-rule]);",
+                            "return matchString(rule, state, STRING_IDS[-rule]);",
                             MINUS,
                         MINUS,
                     "}"
@@ -249,7 +267,7 @@ public class SyntaxClass{
                 printer.printlns(
                     "case "+rule.id+":",
                         PLUS,
-                        "return "+rule.name+"();",
+                        "return "+rule.name+"(state);",
                         MINUS
                 );
             }

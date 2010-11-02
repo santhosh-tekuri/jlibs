@@ -28,13 +28,13 @@ public abstract class DebuggableNBParser extends NBParser{
     }
 
     @Override
-    protected boolean callRule(int rule) throws Exception{
-        boolean result = _callRule(rule);
-        debugger.currentNode(rule, curState);
+    protected boolean callRule(int rule, int state) throws Exception{
+        boolean result = _callRule(rule, state);
+        debugger.currentNode(rule, state);
         return result;
     }
 
-    protected abstract boolean _callRule(int rule) throws Exception;
+    protected abstract boolean _callRule(int rule, int state) throws Exception;
 
     public int[] getStack(){
         return stack;

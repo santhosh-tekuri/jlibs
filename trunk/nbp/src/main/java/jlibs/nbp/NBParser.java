@@ -155,7 +155,7 @@ public abstract class NBParser{
             this.position = position;
             this.limit = limit;
 
-            int rule;
+            int rule, state;
             do{
                 if(free==0){
                     int cp = codePoint();
@@ -168,9 +168,9 @@ public abstract class NBParser{
                     break;
                 }
                 rule = stack[free-2];
-                curState = stack[free-1];
+                state = stack[free-1];
                 free -= 2;
-            }while(callRule(rule));
+            }while(callRule(rule, state));
 
             if(exitFree>0){
                 if(free+exitFree>stack.length)
@@ -201,7 +201,7 @@ public abstract class NBParser{
         consume(null, 0, 1);
     }
 
-    protected abstract boolean callRule(int rule) throws Exception;
+    protected abstract boolean callRule(int rule, int state) throws Exception;
 
     protected final void expected(int ch, String... matchers) throws Exception{
         String found;
@@ -231,7 +231,6 @@ public abstract class NBParser{
     /*-------------------------------------------------[ Parsing Status ]---------------------------------------------------*/
 
     protected int free = 0;
-    protected int curState;
     protected int stack[] = new int[100];
 
     protected final void ioError(String message) throws IOException{
@@ -260,15 +259,14 @@ public abstract class NBParser{
     public static final int RULE_DYNAMIC_STRING_MATCH = Integer.MIN_VALUE;
     public char[] dynamicStringToBeMatched;
 
-    protected final boolean matchString(char expected[]) throws Exception{
+    protected final boolean matchString(int state, char expected[]) throws Exception{
         int length = expected.length;
 
-        for(int i=curState; i<length;){
+        for(int i=state; i<length;){
             int cp = codePoint();
             int expectedCP = Character.codePointAt(expected, i);
             if(cp!=expectedCP){
                 if(cp==EOC){
-                    curState = i;
                     exiting(RULE_DYNAMIC_STRING_MATCH, i);
                     return false;
                 }
@@ -277,19 +275,16 @@ public abstract class NBParser{
             consume(cp);
             i += cp<MIN_SUPPLEMENTARY_CODE_POINT ? 1 : 2;
         }
-
-        curState = -1;
         return true;
     }
 
-    protected final boolean matchString(int rule, int expected[]) throws Exception{
+    protected final boolean matchString(int rule, int state, int expected[]) throws Exception{
         int length = expected.length;
 
-        for(int i=curState; i<length; i++){
+        for(int i=state; i<length; i++){
             int cp = codePoint();
             if(cp!=expected[i]){
                 if(cp==EOC){
-                    curState = i;
                     exiting(rule, i);
                     return false;
                 }
@@ -297,8 +292,6 @@ public abstract class NBParser{
             }
             consume(cp);
         }
-
-        curState = -1;
         return true;
     }
 
