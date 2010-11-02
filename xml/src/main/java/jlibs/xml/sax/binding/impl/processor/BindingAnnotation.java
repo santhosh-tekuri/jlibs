@@ -220,12 +220,18 @@ class BindingStartAnnotation extends BindingAnnotation{
                 if(value.length()==0)
                     value = param.getSimpleName().toString();
 
-                QName qname = Binding.toQName(param, mirror, value);
+                
                 StringBuilder buff = new StringBuilder();
                 buff.append("attributes.getValue(");
-                if(qname.getNamespaceURI().length()>0)
-                    buff.append('"').append(qname.getNamespaceURI()).append("\", ");
-                buff.append('"').append(qname.getLocalPart()).append('"');
+                
+                if(value.contains(":")){
+                    QName qname = Binding.toQName(param, mirror, value);
+                    if(qname.getNamespaceURI().length()>0)
+                        buff.append('"').append(qname.getNamespaceURI()).append("\", ");
+                    buff.append('"').append(qname.getLocalPart()).append('"');
+                }else
+                    buff.append('"').append(value).append('"');
+                
                 buff.append(")");
                 params.add(buff.toString());
             }
