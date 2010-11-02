@@ -273,7 +273,14 @@ public class Decision{
         if(matcher==null)
             return;
 
-        String ch = (i==matchers.length-1) ? "ch" : "lookAhead.charAt("+i+")";
+        boolean useLookAhead = false;
+        if(i==matchers.length-1){
+            int idecision = state.decisions.indexOf(this);
+            if(idecision!=0 && state.decisions.get(idecision-1).matchers.length>matchers.length) // indeterminateroute
+                useLookAhead = true;
+        }else
+            useLookAhead = true;
+        String ch = useLookAhead ? "lookAhead.charAt("+i+")" : "ch";
         String condition = condition(matcher, ch);
 
         printer.printlns(
