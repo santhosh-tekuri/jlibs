@@ -93,7 +93,7 @@ public class Feeder{
 
     protected boolean eofSent;
     protected Feeder read() throws IOException{
-        if(charBuffer.position()>0){
+        if(parser.stop && charBuffer.position()>0){
             if(feedCharBuffer())
                 return child;
         }
@@ -102,6 +102,10 @@ public class Feeder{
         try{
             if(!eofSent){
                 while((read=channel.read(charBuffer))>0){
+                    if(feedCharBuffer())
+                        return child;
+                }
+                if(charBuffer.position()>0){
                     if(feedCharBuffer())
                         return child;
                 }
