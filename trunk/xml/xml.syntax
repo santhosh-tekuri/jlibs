@@ -129,26 +129,14 @@
         <node>
             <buffer/>
         </node>
-        <node/>
-        <node/>
         <node>
             <publish name="standalone" begin="0" end="0"/>
         </node>
-        <node/>
         <edge source="0" target="1" fallback="false">
-            <any chars="y"/>
+            <rule name="str_no"/>
         </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="e"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="s"/>
-        </edge>
-        <edge source="0" target="4" fallback="false">
-            <any chars="n"/>
-        </edge>
-        <edge source="4" target="3" fallback="false">
-            <any chars="o"/>
+        <edge source="0" target="1" fallback="false">
+            <rule name="str_yes"/>
         </edge>
     </rule>
     <rule name="sd_decl">
@@ -298,9 +286,6 @@
     <string-rule name="str_version" string="version"/>
     <rule name="comment">
         <node/>
-        <node/>
-        <node/>
-        <node/>
         <node>
             <buffer/>
         </node>
@@ -311,31 +296,22 @@
             <publish name="comment" begin="0" end="3"/>
         </node>
         <edge source="0" target="1" fallback="false">
-            <any chars="&lt;"/>
+            <rule name="str_comment_start"/>
         </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="!"/>
-        </edge>
+        <edge source="1" target="2" fallback="false"/>
         <edge source="2" target="3" fallback="false">
-            <any chars="-"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <any chars="-"/>
-        </edge>
-        <edge source="4" target="5" fallback="false"/>
-        <edge source="5" target="6" fallback="false">
             <matcher name="DASH"/>
         </edge>
-        <edge source="6" target="5" fallback="true">
+        <edge source="3" target="2" fallback="true">
             <matcher name="CHAR"/>
         </edge>
-        <edge source="6" target="7" fallback="false">
+        <edge source="3" target="4" fallback="false">
             <matcher name="DASH"/>
         </edge>
-        <edge source="7" target="8" fallback="false">
+        <edge source="4" target="5" fallback="false">
             <any chars="&gt;"/>
         </edge>
-        <edge source="5" target="5" fallback="true">
+        <edge source="2" target="2" fallback="true">
             <matcher name="CHAR"/>
         </edge>
     </rule>
@@ -370,10 +346,6 @@
     </rule>
     <rule name="cdata">
         <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
         <node>
             <buffer/>
         </node>
@@ -381,21 +353,9 @@
             <publish name="cdata" begin="0" end="3"/>
         </node>
         <edge source="0" target="1" fallback="false">
-            <any chars="&lt;"/>
+            <rule name="str_cdata_start"/>
         </edge>
         <edge source="1" target="2" fallback="false">
-            <any chars="!"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="["/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <rule name="str_CDATA"/>
-        </edge>
-        <edge source="4" target="5" fallback="false">
-            <any chars="["/>
-        </edge>
-        <edge source="5" target="6" fallback="false">
             <rule name="cdata_end"/>
         </edge>
     </rule>
@@ -2583,4 +2543,8 @@
         <edge source="0" target="10" fallback="false"/>
         <edge source="0" target="5" fallback="false"/>
     </rule>
+    <string-rule name="str_yes" string="yes"/>
+    <string-rule name="str_no" string="no"/>
+    <string-rule name="str_comment_start" string="&lt;!--"/>
+    <string-rule name="str_cdata_start" string="&lt;![CDATA["/>
 </syntax>
