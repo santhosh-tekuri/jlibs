@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 public final class XMLScanner extends jlibs.nbp.NBParser{
 
-    int STRING_IDS[][] = {
+    private static final int STRING_IDS[][] = {
         {}, // dummy one
         {115, 116, 97, 110, 100, 97, 108, 111, 110, 101}, // standalone
         {101, 110, 99, 111, 100, 105, 110, 103}, // encoding
@@ -107,28 +107,33 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_EQ = 0;
     private boolean eq() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='='){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "[=] OR <WS>");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_WS(ch)==EOC)
-                        return false;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EQ, 0);
+                    return false;
+                }
+                if((ch=finishAll_WS(ch))==EOC){
+                    exiting(RULE_EQ, 0);
+                    return false;
+                }
+                if(ch=='='){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "<WS> OR [=]");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EQ, 1);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_EQ, 1);
+                    return false;
+                }
+                return true;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -138,8 +143,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_YES_NO, 0);
                         return false;
+                    }
                     if(ch=='y'){
                         buffer.push();
                         consume(ch);
@@ -153,8 +160,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[y] OR [n]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_YES_NO, 1);
                         return false;
+                    }
                     if(ch=='e'){
                         consume(ch);
                         curState = 2;
@@ -162,23 +171,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[e]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_YES_NO, 4);
                         return false;
+                    }
                     if(ch=='o'){
                         consume(ch);
                         handler.standalone(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[o]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_YES_NO, 2);
                         return false;
+                    }
                     if(ch=='s'){
                         consume(ch);
                         handler.standalone(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[s]");
                 default:
@@ -193,16 +204,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_STANDALONE, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_STANDALONE]);
-                case 1:
-                    push(RULE_EQ, 2, 0);
-                    curState = 0;
-                    return eq();
-                case 2:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_STANDALONE, STRING_IDS[-RULE_STR_STANDALONE])){
+                        exiting(RULE_SD_DECL, 1);
                         return false;
+                    }
+                case 1:
+                    curState = 0;
+                    if(!eq()){
+                        exiting(RULE_SD_DECL, 2);
+                        return false;
+                    }
+                case 2:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SD_DECL, 2);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         curState = 3;
@@ -214,28 +231,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
-                    push(RULE_YES_NO, 4, 0);
                     curState = 0;
-                    return yes_no();
-                case 6:
-                    push(RULE_YES_NO, 7, 0);
-                    curState = 0;
-                    return yes_no();
-                case 4:
-                    if((ch=codePoint())==EOC)
+                    if(yes_no()){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_SD_DECL, 4);
                         return false;
+                    }
+                case 6:
+                    curState = 0;
+                    if(yes_no()){
+                        curState = 7;
+                        continue;
+                    }else{
+                        exiting(RULE_SD_DECL, 7);
+                        return false;
+                    }
+                case 4:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SD_DECL, 4);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<Q>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SD_DECL, 7);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -248,28 +277,31 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_ENC_NAME = 3;
     private boolean enc_name() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ENCODING_START(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "<ENCODING_START>");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_ENCODING_PART(ch)==EOC)
-                        return false;
-                    handler.encoding(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENC_NAME, 0);
+                    return false;
+                }
+                if(ENCODING_START(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "<ENCODING_START>");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENC_NAME, 1);
+                    return false;
+                }
+                if(finishAll_ENCODING_PART(ch)==EOC){
+                    exiting(RULE_ENC_NAME, 1);
+                    return false;
+                }
+                handler.encoding(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -279,16 +311,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_ENCODING, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_ENCODING]);
-                case 1:
-                    push(RULE_EQ, 2, 0);
-                    curState = 0;
-                    return eq();
-                case 2:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_ENCODING, STRING_IDS[-RULE_STR_ENCODING])){
+                        exiting(RULE_ENC_DECL, 1);
                         return false;
+                    }
+                case 1:
+                    curState = 0;
+                    if(!eq()){
+                        exiting(RULE_ENC_DECL, 2);
+                        return false;
+                    }
+                case 2:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENC_DECL, 2);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         curState = 3;
@@ -300,28 +338,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
-                    push(RULE_ENC_NAME, 4, 0);
                     curState = 0;
-                    return enc_name();
-                case 6:
-                    push(RULE_ENC_NAME, 7, 0);
-                    curState = 0;
-                    return enc_name();
-                case 4:
-                    if((ch=codePoint())==EOC)
+                    if(enc_name()){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_ENC_DECL, 4);
                         return false;
+                    }
+                case 6:
+                    curState = 0;
+                    if(enc_name()){
+                        curState = 7;
+                        continue;
+                    }else{
+                        exiting(RULE_ENC_DECL, 7);
+                        return false;
+                    }
+                case 4:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENC_DECL, 4);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<Q>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENC_DECL, 7);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -334,44 +384,51 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_VERSION_NUM = 5;
     private boolean version_num() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='1'){
-                        buffer.push();
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "[1]");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='.'){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "[\\.]");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(DIGIT(ch)){
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else expected(ch, "<DIGIT>");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_DIGIT(ch)==EOC)
-                        return false;
-                    handler.version(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_VERSION_NUM, 0);
+                    return false;
+                }
+                if(ch=='1'){
+                    buffer.push();
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "[1]");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_VERSION_NUM, 1);
+                    return false;
+                }
+                if(ch=='.'){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "[\\.]");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_VERSION_NUM, 2);
+                    return false;
+                }
+                if(DIGIT(ch)){
+                    consume(ch);
+                    curState = 3;
+                }
+                else expected(ch, "<DIGIT>");
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_VERSION_NUM, 3);
+                    return false;
+                }
+                if(finishAll_DIGIT(ch)==EOC){
+                    exiting(RULE_VERSION_NUM, 3);
+                    return false;
+                }
+                handler.version(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -381,16 +438,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_VERSION, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_VERSION]);
-                case 1:
-                    push(RULE_EQ, 2, 0);
-                    curState = 0;
-                    return eq();
-                case 2:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_VERSION, STRING_IDS[-RULE_STR_VERSION])){
+                        exiting(RULE_VERSION_INFO, 1);
                         return false;
+                    }
+                case 1:
+                    curState = 0;
+                    if(!eq()){
+                        exiting(RULE_VERSION_INFO, 2);
+                        return false;
+                    }
+                case 2:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VERSION_INFO, 2);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         curState = 3;
@@ -402,28 +465,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
-                    push(RULE_VERSION_NUM, 4, 0);
                     curState = 0;
-                    return version_num();
-                case 6:
-                    push(RULE_VERSION_NUM, 7, 0);
-                    curState = 0;
-                    return version_num();
-                case 4:
-                    if((ch=codePoint())==EOC)
+                    if(version_num()){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_VERSION_INFO, 4);
                         return false;
+                    }
+                case 6:
+                    curState = 0;
+                    if(version_num()){
+                        curState = 7;
+                        continue;
+                    }else{
+                        exiting(RULE_VERSION_INFO, 7);
+                        return false;
+                    }
+                case 4:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VERSION_INFO, 4);
+                        return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<Q>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VERSION_INFO, 7);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -439,32 +514,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 2);
                         return false;
+                    }
                     if(ch=='-'){
                         consume(ch);
                         curState = 3;
                     }
                     else expected(ch, "[\\-]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 3);
                         return false;
+                    }
                     if(ch=='-'){
                         consume(ch);
                         buffer.push();
@@ -472,8 +555,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\-]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 5);
                         return false;
+                    }
                     if(ch=='-'){
                         consume(ch);
                         curState = 6;
@@ -485,8 +570,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DASH> OR <CHAR>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 6);
                         return false;
+                    }
                     if(ch=='-'){
                         consume(ch);
                         curState = 7;
@@ -498,13 +585,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DASH> OR <CHAR>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_COMMENT, 7);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.comment(buffer.pop(0, 3));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[>]");
                 default:
@@ -519,8 +607,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CDATA_END, 0);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 1;
@@ -532,8 +622,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CDATA_END, 1);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 2;
@@ -545,13 +637,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CDATA_END, 2);
                         return false;
-                    if((ch=finishAll(ch, ']'))==EOC)
+                    }
+                    if((ch=finishAll(ch, ']'))==EOC){
+                        exiting(RULE_CDATA_END, 2);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
@@ -559,7 +654,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 0;
                         continue;
                     }
-                    else expected(ch, "<GT> OR <BRACKET_CLOSE> OR <CHAR>");
+                    else expected(ch, "<BRACKET_CLOSE> OR <GT> OR <CHAR>");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -569,82 +664,94 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_CDATA = 9;
     private boolean cdata() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='<'){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "[<]");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='!'){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "[!]");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='['){
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else expected(ch, "[\\[]");
-                case 3:
-                    push(RULE_STR_CDATA, 4, 0);
-                    curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_CDATA]);
-                case 4:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='['){
-                        consume(ch);
-                        curState = 5;
-                    }
-                    else expected(ch, "[\\[]");
-                case 5:
-                    buffer.push();
-                    push(RULE_CDATA_END, 6, 0);
-                    curState = 0;
-                    return cdata_end();
-                case 6:
-                    handler.cdata(buffer.pop(0, 3));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_CDATA, 0);
+                    return false;
+                }
+                if(ch=='<'){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "[<]");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_CDATA, 1);
+                    return false;
+                }
+                if(ch=='!'){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "[!]");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_CDATA, 2);
+                    return false;
+                }
+                if(ch=='['){
+                    consume(ch);
+                    curState = 3;
+                }
+                else expected(ch, "[\\[]");
+            case 3:
+                curState = 0;
+                if(!matchString(RULE_STR_CDATA, STRING_IDS[-RULE_STR_CDATA])){
+                    exiting(RULE_CDATA, 4);
+                    return false;
+                }
+            case 4:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_CDATA, 4);
+                    return false;
+                }
+                if(ch=='['){
+                    consume(ch);
+                    curState = 5;
+                }
+                else expected(ch, "[\\[]");
+            case 5:
+                buffer.push();
+                curState = 0;
+                if(!cdata_end()){
+                    exiting(RULE_CDATA, 6);
+                    return false;
+                }
+            case 6:
+                handler.cdata(buffer.pop(0, 3));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_NAME = 10;
     private boolean name() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "<NAME_START>");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_NAME_PART(ch)==EOC)
-                        return false;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NAME, 0);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "<NAME_START>");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NAME, 1);
+                    return false;
+                }
+                if(finishAll_NAME_PART(ch)==EOC){
+                    exiting(RULE_NAME, 1);
+                    return false;
+                }
+                return true;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -654,8 +761,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI_TARGET, 0);
                         return false;
+                    }
                     if(ch=='x' || ch=='X'){
                         consume(ch);
                         curState = 1;
@@ -667,8 +776,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[xX] OR <NCNAME_START>");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI_TARGET, 1);
                         return false;
+                    }
                     if(ch=='m' || ch=='M'){
                         consume(ch);
                         curState = 2;
@@ -679,24 +790,26 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 4;
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI_TARGET, 4);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
                         consume(ch);
                         curState = 4;
                         continue;
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI_TARGET, 2);
                         return false;
+                    }
                     if(ch=='l' || ch=='L'){
                         consume(ch);
                         curState = 3;
@@ -707,12 +820,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI_TARGET, 3);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
                         consume(ch);
                         curState = 4;
@@ -731,16 +845,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 1);
                         return false;
+                    }
                     if(ch=='?'){
                         consume(ch);
                         curState = 2;
@@ -748,34 +866,46 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else expected(ch, "[?]");
                 case 2:
                     buffer.push();
-                    push(RULE_PI_TARGET, 3, 0);
                     curState = 0;
-                    return pi_target();
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!pi_target()){
+                        exiting(RULE_PI, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.piTarget(buffer.pop(0, 0));
                         consume(ch);
                         curState = 5;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_PI, 5);
                             return false;
+                        }
                     }
                     else if(ch=='?'){
                         handler.piTarget(buffer.pop(0, 0));
                         handler.piData();
                         consume(ch);
                         curState = 12;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_PI, 12);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 5);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_PI, 5);
                         return false;
+                    }
                     if(ch=='?'){
                         buffer.push();
                         consume(ch);
@@ -790,33 +920,39 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?] OR <CHAR>");
                 case 12:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 12);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "[>]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 8);
                         return false;
-                    if((ch=finishAll(ch, '?'))==EOC)
+                    }
+                    if((ch=finishAll(ch, '?'))==EOC){
+                        exiting(RULE_PI, 8);
                         return false;
+                    }
                     if(ch=='>'){
                         handler.piData(buffer.pop(0, 1));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         curState = 7;
                     }
-                    else expected(ch, "[>] OR [?] OR <CHAR>");
+                    else expected(ch, "[?] OR [>] OR <CHAR>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PI, 7);
                         return false;
+                    }
                     if(ch=='?'){
                         consume(ch);
                         curState = 8;
@@ -837,67 +973,74 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_NCNAME = 13;
     private boolean ncname() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "<NCNAME_START>");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_NCNAME_PART(ch)==EOC)
-                        return false;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NCNAME, 0);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "<NCNAME_START>");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NCNAME, 1);
+                    return false;
+                }
+                if(finishAll_NCNAME_PART(ch)==EOC){
+                    exiting(RULE_NCNAME, 1);
+                    return false;
+                }
+                return true;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_QNAME = 14;
     private boolean qname() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    buffer.push();
-                    buffer.push();
-                    push(RULE_NCNAME, 2, 0);
-                    curState = 0;
-                    return ncname();
-                case 2:
-                    if((ch=codePoint())==EOC)
+        switch(curState){
+            case 0:
+                buffer.push();
+                buffer.push();
+                curState = 0;
+                if(!ncname()){
+                    exiting(RULE_QNAME, 2);
+                    return false;
+                }
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_QNAME, 2);
+                    return false;
+                }
+                if(ch==':'){
+                    handler.prefix(buffer.pop(0, 0));
+                    consume(ch);
+                    curState = 4;
+                    if(stop){
+                        exiting(RULE_QNAME, 4);
                         return false;
-                    if(ch==':'){
-                        handler.prefix(buffer.pop(0, 0));
-                        consume(ch);
-                        curState = 4;
-                        if(stop)
-                            return false;
                     }
-                    else {
-                        buffer.pop(0, 0);
-                        handler.qname(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                case 4:
-                    push(RULE_NCNAME, 5, 0);
-                    curState = 0;
-                    return ncname();
-                case 5:
+                }
+                else {
+                    buffer.pop(0, 0);
                     handler.qname(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                    return !stop;
+                }
+            case 4:
+                curState = 0;
+                if(!ncname()){
+                    exiting(RULE_QNAME, 5);
+                    return false;
+                }
+            case 5:
+                handler.qname(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -907,45 +1050,44 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 0);
                         return false;
+                    }
                     if(ch=='&'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[\\&]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 1);
                         return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NAME, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
                     }
-                    else if(ch=='#'){
+                    if(ch=='#'){
                         consume(ch);
                         curState = 6;
-                        continue;
                     }
-                    else expected(ch, "<NAME_START> OR [\\#]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch==';'){
-                        consume(ch);
-                        handler.entityReference(buffer.pop(0, 1));
-                        curState = -1;
-                        return true;
+                    else {
+                        buffer.push();
+                        curState = 0;
+                        if(name()){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_REFERENCE, 3);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[;]");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 6);
                         return false;
+                    }
                     if(ch=='x'){
                         consume(ch);
                         curState = 7;
+                        continue;
                     }
                     else if(DIGIT(ch)){
                         buffer.push();
@@ -954,9 +1096,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else expected(ch, "[x] OR <DIGIT>");
-                case 7:
-                    if((ch=codePoint())==EOC)
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 3);
                         return false;
+                    }
+                    if(ch==';'){
+                        consume(ch);
+                        handler.entityReference(buffer.pop(0, 1));
+                        return !stop;
+                    }
+                    else expected(ch, "[;]");
+                case 7:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 7);
+                        return false;
+                    }
                     if(HEX_DIGIT(ch)){
                         buffer.push();
                         consume(ch);
@@ -965,29 +1120,35 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<HEX_DIGIT>");
                 case 13:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 13);
                         return false;
-                    if((ch=finishAll_DIGIT(ch))==EOC)
+                    }
+                    if((ch=finishAll_DIGIT(ch))==EOC){
+                        exiting(RULE_REFERENCE, 13);
                         return false;
+                    }
                     if(ch==';'){
                         handler.asciiCode(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "[;] OR <DIGIT>");
+                    else expected(ch, "<DIGIT> OR [;]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_REFERENCE, 8);
                         return false;
-                    if((ch=finishAll_HEX_DIGIT(ch))==EOC)
+                    }
+                    if((ch=finishAll_HEX_DIGIT(ch))==EOC){
+                        exiting(RULE_REFERENCE, 8);
                         return false;
+                    }
                     if(ch==';'){
                         handler.hexCode(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "[;] OR <HEX_DIGIT>");
+                    else expected(ch, "<HEX_DIGIT> OR [;]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -996,28 +1157,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
     public static final int RULE_ATTR = 16;
     private boolean attr() throws Exception{
-        int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_QNAME, 1, 0);
-                    curState = 0;
-                    return qname();
-                case 1:
-                    push(RULE_EQ, 2, 0);
-                    curState = 0;
-                    return eq();
-                case 2:
-                    push(RULE_VALUE, 3, 0);
-                    curState = 0;
-                    return value();
-                case 3:
-                    handler.attributeEnd();
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!qname()){
+                    exiting(RULE_ATTR, 1);
+                    return false;
+                }
+            case 1:
+                curState = 0;
+                if(!eq()){
+                    exiting(RULE_ATTR, 2);
+                    return false;
+                }
+            case 2:
+                curState = 0;
+                if(!value()){
+                    exiting(RULE_ATTR, 3);
+                    return false;
+                }
+            case 3:
+                handler.attributeEnd();
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -1027,72 +1190,70 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VALUE, 0);
                         return false;
+                    }
                     if(ch=='\''){
                         handler.valueStart();
                         consume(ch);
                         curState = 1;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_VALUE, 1);
                             return false;
+                        }
                     }
                     else if(ch=='"'){
                         handler.valueStart();
                         consume(ch);
                         curState = 3;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_VALUE, 3);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VALUE, 1);
                         return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         handler.valueEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch!=EOF && ATTR_Q_CONTENT(ch)){
-                        push(RULE_Q_VALUE, 1, 0);
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                        return q_value();
+                    else {
+                        curState = 0;
+                        if(q_value()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_VALUE, 1);
+                            return false;
+                        }
                     }
-                    else if(ch=='&'){
-                        push(RULE_Q_VALUE, 1, 0);
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else expected(ch, "<Q> OR <ATTR_Q_CONTENT> OR [\\&]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_VALUE, 3);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
                         handler.valueEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
-                        push(RULE_DQ_VALUE, 3, 0);
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                        return dq_value();
+                    else {
+                        curState = 0;
+                        if(dq_value()){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_VALUE, 3);
+                            return false;
+                        }
                     }
-                    else if(ch=='&'){
-                        push(RULE_DQ_VALUE, 3, 0);
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else expected(ch, "<DQ> OR <ATTR_DQ_CONTENT> OR [\\&]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -1102,78 +1263,68 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_Q_VALUE = 18;
     private boolean q_value() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ATTR_Q_CONTENT(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else if(ch=='&'){
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else expected(ch, "<ATTR_Q_CONTENT> OR [\\&]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ATTR_Q_CONTENT(ch)){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    else {
-                        handler.rawValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_Q_VALUE, 0);
+                    return false;
+                }
+                if(ch!=EOF && ATTR_Q_CONTENT(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 3;
+                }
+                else {
+                    curState = 0;
+                    return reference();
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_Q_VALUE, 3);
+                    return false;
+                }
+                if(finishAll_ATTR_Q_CONTENT(ch)==EOC){
+                    exiting(RULE_Q_VALUE, 3);
+                    return false;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_DQ_VALUE = 19;
     private boolean dq_value() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else if(ch=='&'){
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else expected(ch, "<ATTR_DQ_CONTENT> OR [\\&]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    else {
-                        handler.rawValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DQ_VALUE, 0);
+                    return false;
+                }
+                if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 3;
+                }
+                else {
+                    curState = 0;
+                    return reference();
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DQ_VALUE, 3);
+                    return false;
+                }
+                if(finishAll_ATTR_DQ_CONTENT(ch)==EOC){
+                    exiting(RULE_DQ_VALUE, 3);
+                    return false;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -1183,61 +1334,69 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_ATTRS, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    push(RULE_QNAME, 2, 0);
                     curState = 0;
-                    return qname();
-                case 2:
-                    if((ch=codePoint())==EOC)
+                    if(!qname()){
+                        exiting(RULE_ELEM_ATTRS, 2);
                         return false;
+                    }
+                case 2:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_ATTRS, 2);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributesStart();
                         consume(ch);
                         curState = 4;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ELEM_ATTRS, 4);
                             return false;
+                        }
                     }
                     else {
                         handler.attributesStart();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_ATTRS, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEM_ATTRS, 4);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        push(RULE_ATTR, 5, 0);
-                        push(RULE_QNAME, 1, 0);
-                        buffer.push();
-                        buffer.push();
-                        push(RULE_NCNAME, 2, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
+                        curState = 0;
+                        if(!attr()){
+                            exiting(RULE_ELEM_ATTRS, 5);
+                            return false;
+                        }
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_ATTRS, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
                         continue;
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 default:
@@ -1252,21 +1411,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_CONTENT, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch==']'){
                             buffer.push();
                             consume(ch);
                             curState = 8;
+                            continue;
                         }
-                        else if(ch=='&'){
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
+                        if(ch=='&'){
+                            curState = 0;
                             return reference();
                         }
-                        else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                             buffer.push();
                             consume(ch);
                             curState = 6;
@@ -1275,55 +1435,44 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_ELEM_CONTENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return ncname();
+                                curState = 0;
+                                lookAhead.reset();
+                                return elem();
                             }
-                            else if(ch=='?'){
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
                                 return pi();
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_ELEM_CONTENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='-'){
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
+                                    curState = 0;
+                                    lookAhead.reset();
                                     return comment();
                                 }
-                                else if(ch=='['){
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
+                                if(ch=='['){
+                                    curState = 0;
+                                    lookAhead.reset();
                                     return cdata();
                                 }
                             }
@@ -1331,8 +1480,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][!][\\-] OR [<][!][\\[]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_CONTENT, 8);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 9;
@@ -1344,12 +1495,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else {
                         handler.characters(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_CONTENT, 6);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 8;
@@ -1362,18 +1514,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else {
                         handler.characters(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM_CONTENT, 9);
                         return false;
-                    if((ch=finishAll(ch, ']'))==EOC)
+                    }
+                    if((ch=finishAll(ch, ']'))==EOC){
+                        exiting(RULE_ELEM_CONTENT, 9);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.fatalError("Text may not contain a literal ']]>' sequence");
-                        curState = -1;
                         return true;
                     }
                     else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
@@ -1383,8 +1537,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else {
                         handler.characters(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 default:
                     throw new Error("impossible state: "+curState);
@@ -1398,12 +1551,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_ELEM_ATTRS, 1, 0);
                     curState = 0;
-                    return elem_attrs();
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    if(!elem_attrs()){
+                        exiting(RULE_ELEM, 1);
                         return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM, 1);
+                        return false;
+                    }
                     if(ch=='/'){
                         consume(ch);
                         curState = 2;
@@ -1412,141 +1569,91 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.attributesEnd();
                         consume(ch);
                         curState = 5;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ELEM, 5);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "[/] OR [>]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM, 2);
                         return false;
+                    }
                     if(ch=='>'){
                         handler.attributesEnd();
                         consume(ch);
                         handler.elementEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[>]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM, 5);
                         return false;
-                    if(lookAhead.length()==0){
-                        if(ch==']'){
-                            push(RULE_ELEM_CONTENT, 5, 0);
-                            buffer.push();
-                            consume(ch);
-                            curState = 8;
-                            return elem_content();
-                        }
-                        else if(ch=='&'){
-                            push(RULE_ELEM_CONTENT, 5, 0);
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return reference();
-                        }
-                        else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            push(RULE_ELEM_CONTENT, 5, 0);
-                            buffer.push();
-                            consume(ch);
-                            curState = 6;
-                            return elem_content();
-                        }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_ELEM, 5);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
-                            if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM_CONTENT, 5, 0);
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
+                            if(ch=='/'){
                                 consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return ncname();
-                            }
-                            else if(ch=='?'){
-                                push(RULE_ELEM_CONTENT, 5, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
-                            }
-                            else if(ch=='/'){
-                                consume(FROM_LA);
-                                handler.endingElem();
-                                consume(FROM_LA);
-                                push(RULE_DYNAMIC_STRING_MATCH, 7, 0);
-                                curState = 0;
-                                return true;
+                                curState = 6;
+                                lookAhead.reset();
+                                continue;
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                    curState = 0;
+                    lookAhead.reset();
+                    if(elem_content()){
+                        curState = 5;
+                        continue;
+                    }else{
+                        exiting(RULE_ELEM, 5);
+                        return false;
+                    }
+                case 6:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM, 6);
+                        return false;
+                    }
+                    if(ch=='/'){
+                        handler.endingElem();
+                        consume(ch);
+                        curState = 7;
+                        if(stop){
+                            exiting(RULE_ELEM, 7);
                             return false;
-                        addToLookAhead(ch);
-                    }
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='-'){
-                                    push(RULE_ELEM_CONTENT, 5, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
-                                }
-                                else if(ch=='['){
-                                    push(RULE_ELEM_CONTENT, 5, 0);
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return cdata();
-                                }
-                            }
                         }
                     }
-                    expected(ch, "[\\]] OR [\\&] OR <ELEM_CONTENT_CHAR> OR [<]<NCNAME_START> OR [<][?] OR [<][/] OR [<][!][\\-] OR [<][!][\\[]");
+                    else expected(ch, "[/]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    curState = 0;
+                    if(!matchString(dynamicStringToBeMatched)){
+                        exiting(RULE_ELEM, 8);
                         return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 8;
                     }
-                    else if(ch=='>'){
-                        consume(ch);
-                        handler.elementEnd();
-                        curState = -1;
-                        return true;
-                    }
-                    else expected(ch, "<WS> OR [>]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEM, 8);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEM, 8);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.elementEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [>]");
                 default:
@@ -1561,33 +1668,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_XML, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_XML]);
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_XML, STRING_IDS[-RULE_STR_XML])){
+                        exiting(RULE_XDECL, 1);
                         return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 1);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "<WS>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 2);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='v'){
-                        push(RULE_VERSION_INFO, 3, 0);
-                        push(RULE_STR_VERSION, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_VERSION]);
                     }
-                    else expected(ch, "<WS> OR [v]");
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_XDECL, 2);
                         return false;
+                    }
+                    curState = 0;
+                    if(!version_info()){
+                        exiting(RULE_XDECL, 3);
+                        return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
@@ -1599,42 +1713,54 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_XDECL, 4);
                         return false;
+                    }
                     if(ch=='e'){
-                        push(RULE_ENC_DECL, 5, 0);
-                        push(RULE_STR_ENCODING, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ENCODING]);
+                        curState = 0;
+                        if(enc_decl()){
+                            curState = 5;
+                            continue;
+                        }else{
+                            exiting(RULE_XDECL, 5);
+                            return false;
+                        }
                     }
                     else if(ch=='?'){
                         consume(ch);
                         curState = 10;
                     }
-                    else if(ch=='s'){
-                        push(RULE_SD_DECL, 8, 0);
-                        push(RULE_STR_STANDALONE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_STANDALONE]);
+                    else {
+                        curState = 0;
+                        if(sd_decl()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_XDECL, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [e] OR [?] OR [s]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 10);
                         return false;
+                    }
                     if(ch=='>'){
                         handler.xdeclEnd();
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[>]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 6;
@@ -1647,10 +1773,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 8);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_XDECL, 8);
                         return false;
+                    }
                     if(ch=='?'){
                         consume(ch);
                         curState = 10;
@@ -1658,23 +1788,29 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_XDECL, 6);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='s'){
-                        push(RULE_SD_DECL, 8, 0);
-                        push(RULE_STR_STANDALONE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_STANDALONE]);
                     }
-                    else if(ch=='?'){
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_XDECL, 6);
+                        return false;
+                    }
+                    if(ch=='?'){
                         consume(ch);
                         curState = 10;
                         continue;
                     }
-                    else expected(ch, "<WS> OR [s] OR [?]");
+                    else {
+                        curState = 0;
+                        if(sd_decl()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_XDECL, 8);
+                            return false;
+                        }
+                    }
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -1687,45 +1823,49 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MISC, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             consume(ch);
                             curState = 1;
+                            continue;
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_MISC, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='!'){
-                                push(RULE_COMMENT, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
+                                curState = 0;
+                                lookAhead.reset();
                                 return comment();
                             }
-                            else if(ch=='?'){
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
                                 return pi();
                             }
                         }
                     }
                     expected(ch, "<WS> OR [<][!] OR [<][?]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MISC, 1);
                         return false;
-                    if(finishAll_WS(ch)==EOC)
+                    }
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_MISC, 1);
                         return false;
-                    curState = -1;
+                    }
                     return true;
                 default:
                     throw new Error("impossible state: "+curState);
@@ -1739,8 +1879,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SYTEM_LITERAL, 0);
                         return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         buffer.push();
@@ -1754,13 +1896,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SYTEM_LITERAL, 2);
                         return false;
+                    }
                     if(ch=='\''){
                         handler.systemID(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -1769,13 +1912,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <CHAR>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_SYTEM_LITERAL, 6);
                         return false;
+                    }
                     if(ch=='"'){
                         handler.systemID(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -1795,8 +1939,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PUBID_LITERAL, 0);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
                         buffer.push();
@@ -1810,13 +1956,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DQ> OR <Q>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PUBID_LITERAL, 2);
                         return false;
+                    }
                     if(ch=='"'){
                         handler.publicID(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         consume(ch);
@@ -1825,13 +1972,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DQ> OR <PUBID_CHAR>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_PUBID_LITERAL, 6);
                         return false;
+                    }
                     if(ch=='\''){
                         handler.publicID(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         consume(ch);
@@ -1848,86 +1996,72 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_SYSTEM_ID = 27;
     private boolean system_id() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_STR_SYSTEM, 1, 0);
-                    curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "<WS>");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='\''){
-                        push(RULE_SYTEM_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 2;
-                        return sytem_literal();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_SYTEM_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 6;
-                        return sytem_literal();
-                    }
-                    else expected(ch, "<Q> OR <DQ> OR <WS>");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!matchString(RULE_STR_SYSTEM, STRING_IDS[-RULE_STR_SYSTEM])){
+                    exiting(RULE_SYSTEM_ID, 1);
+                    return false;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_SYSTEM_ID, 1);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "<WS>");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_SYSTEM_ID, 2);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_SYSTEM_ID, 2);
+                    return false;
+                }
+                curState = 0;
+                return sytem_literal();
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_PUBLIC_ID = 28;
     private boolean public_id() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_STR_PUBLIC, 1, 0);
-                    curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "<WS>");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='"'){
-                        push(RULE_PUBID_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 2;
-                        return pubid_literal();
-                    }
-                    else if(ch=='\''){
-                        push(RULE_PUBID_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 6;
-                        return pubid_literal();
-                    }
-                    else expected(ch, "<DQ> OR <Q> OR <WS>");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!matchString(RULE_STR_PUBLIC, STRING_IDS[-RULE_STR_PUBLIC])){
+                    exiting(RULE_PUBLIC_ID, 1);
+                    return false;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_PUBLIC_ID, 1);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "<WS>");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_PUBLIC_ID, 2);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_PUBLIC_ID, 2);
+                    return false;
+                }
+                curState = 0;
+                return pubid_literal();
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -1937,80 +2071,102 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    push(RULE_STR_NOTATION, 3, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_NOTATION, STRING_IDS[-RULE_STR_NOTATION])){
+                        exiting(RULE_NOTATION_DECL, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
                     }
                     else expected(ch, "<WS>");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NCNAME, 6, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
                     }
-                    else expected(ch, "<WS> OR <NCNAME_START>");
-                case 6:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_NOTATION_DECL, 4);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!ncname()){
+                        exiting(RULE_NOTATION_DECL, 6);
+                        return false;
+                    }
+                case 6:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 6);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.notationName(buffer.pop(0, 0));
                         consume(ch);
                         curState = 7;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_NOTATION_DECL, 7);
                             return false;
+                        }
                     }
                     else expected(ch, "<WS>");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 7);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_DECL, 7);
                         return false;
+                    }
                     if(ch=='P'){
-                        push(RULE_PUBLIC_ID, 8, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
+                        curState = 0;
+                        if(!public_id()){
+                            exiting(RULE_NOTATION_DECL, 8);
+                            return false;
+                        }
                     }
-                    else if(ch=='S'){
-                        push(RULE_SYSTEM_ID, 11, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
+                    else {
+                        curState = 0;
+                        if(system_id()){
+                            curState = 11;
+                            continue;
+                        }else{
+                            exiting(RULE_NOTATION_DECL, 11);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[P] OR <WS> OR [S]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 8);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 9;
@@ -2019,48 +2175,48 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else if(ch=='>'){
                         consume(ch);
                         handler.notationEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [>]");
                 case 11:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 11);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_DECL, 11);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.notationEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [>]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_DECL, 9);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_DECL, 9);
                         return false;
-                    if(ch=='\''){
-                        push(RULE_SYTEM_LITERAL, 11, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 2;
-                        return sytem_literal();
                     }
-                    else if(ch=='"'){
-                        push(RULE_SYTEM_LITERAL, 11, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 6;
-                        return sytem_literal();
-                    }
-                    else if(ch=='>'){
+                    if(ch=='>'){
                         consume(ch);
                         handler.notationEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "<WS> OR <Q> OR <DQ> OR [>]");
+                    else {
+                        curState = 0;
+                        if(sytem_literal()){
+                            curState = 11;
+                            continue;
+                        }else{
+                            exiting(RULE_NOTATION_DECL, 11);
+                            return false;
+                        }
+                    }
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -2070,178 +2226,152 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_EXTERNAL_ID = 30;
     private boolean external_id() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EXTERNAL_ID, 0);
+                    return false;
+                }
+                if(ch=='P'){
+                    curState = 0;
+                    if(!public_id()){
+                        exiting(RULE_EXTERNAL_ID, 1);
                         return false;
-                    if(ch=='P'){
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
                     }
-                    else if(ch=='S'){
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
-                    }
-                    else expected(ch, "[P] OR [S]");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "<WS>");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='\''){
-                        push(RULE_SYTEM_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 2;
-                        return sytem_literal();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_SYTEM_LITERAL, -1, 0);
-                        consume(ch);
-                        buffer.push();
-                        curState = 6;
-                        return sytem_literal();
-                    }
-                    else expected(ch, "<WS> OR <Q> OR <DQ>");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                }
+                else {
+                    curState = 0;
+                    return system_id();
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EXTERNAL_ID, 1);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "<WS>");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EXTERNAL_ID, 2);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_EXTERNAL_ID, 2);
+                    return false;
+                }
+                curState = 0;
+                return sytem_literal();
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_PE_REFERENCE = 31;
     private boolean pe_reference() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='%'){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "[%]");
-                case 1:
-                    buffer.push();
-                    push(RULE_NAME, 2, 0);
-                    curState = 0;
-                    return name();
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch==';'){
-                        handler.peReference(buffer.pop(0, 0));
-                        consume(ch);
-                        curState = -1;
-                        return true;
-                    }
-                    else expected(ch, "[;]");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_PE_REFERENCE, 0);
+                    return false;
+                }
+                if(ch=='%'){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "[%]");
+            case 1:
+                buffer.push();
+                curState = 0;
+                if(!name()){
+                    exiting(RULE_PE_REFERENCE, 2);
+                    return false;
+                }
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_PE_REFERENCE, 2);
+                    return false;
+                }
+                if(ch==';'){
+                    handler.peReference(buffer.pop(0, 0));
+                    consume(ch);
+                    return !stop;
+                }
+                else expected(ch, "[;]");
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_NDATA_DECL = 32;
     private boolean ndata_decl() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_STR_NDATA, 1, 0);
-                    curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_NDATA]);
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "<WS>");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NAME, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
-                    }
-                    else expected(ch, "<WS> OR <NAME_START>");
-                case 4:
-                    handler.notationReference(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!matchString(RULE_STR_NDATA, STRING_IDS[-RULE_STR_NDATA])){
+                    exiting(RULE_NDATA_DECL, 1);
+                    return false;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NDATA_DECL, 1);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "<WS>");
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NDATA_DECL, 2);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_NDATA_DECL, 2);
+                    return false;
+                }
+                buffer.push();
+                curState = 0;
+                if(!name()){
+                    exiting(RULE_NDATA_DECL, 4);
+                    return false;
+                }
+            case 4:
+                handler.notationReference(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_PE_DEF = 33;
     private boolean pe_def() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='P'){
-                        push(RULE_EXTERNAL_ID, -1, 0);
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
-                    }
-                    else if(ch=='S'){
-                        push(RULE_EXTERNAL_ID, -1, 0);
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
-                    }
-                    else if(ch=='\''){
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 2;
-                        return entity_value();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 4;
-                        return entity_value();
-                    }
-                    else expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_PE_DEF, 0);
+                    return false;
+                }
+                if(ch=='P'){
+                    curState = 0;
+                    return external_id();
+                }
+                else if(ch=='S'){
+                    curState = 0;
+                    return external_id();
+                }
+                else {
+                    curState = 0;
+                    return entity_value();
+                }
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -2251,88 +2381,72 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_VALUE, 0);
                         return false;
+                    }
                     if(ch=='\''){
                         handler.valueStart();
                         handler.entityValue();
                         consume(ch);
                         curState = 2;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENTITY_VALUE, 2);
                             return false;
+                        }
                     }
                     else if(ch=='"'){
                         handler.valueStart();
                         handler.entityValue();
                         consume(ch);
                         curState = 4;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENTITY_VALUE, 4);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_VALUE, 2);
                         return false;
+                    }
                     if(ch=='\''){
                         consume(ch);
                         handler.valueEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
-                        push(RULE_Q_ENTITY_VALUE, 2, 0);
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                        return q_entity_value();
+                    else {
+                        curState = 0;
+                        if(q_entity_value()){
+                            curState = 2;
+                            continue;
+                        }else{
+                            exiting(RULE_ENTITY_VALUE, 2);
+                            return false;
+                        }
                     }
-                    else if(ch=='&'){
-                        push(RULE_Q_ENTITY_VALUE, 2, 0);
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else if(ch=='%'){
-                        push(RULE_Q_ENTITY_VALUE, 2, 0);
-                        push(RULE_PE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<Q> OR <ENTITY_Q_CONTENT> OR [\\&] OR [%]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_VALUE, 4);
                         return false;
+                    }
                     if(ch=='"'){
                         consume(ch);
                         handler.valueEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
-                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                        return dq_entity_value();
+                    else {
+                        curState = 0;
+                        if(dq_entity_value()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ENTITY_VALUE, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='&'){
-                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else if(ch=='%'){
-                        push(RULE_DQ_ENTITY_VALUE, 4, 0);
-                        push(RULE_PE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<DQ> OR <ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -2342,90 +2456,76 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_Q_ENTITY_VALUE = 35;
     private boolean q_entity_value() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else if(ch=='&'){
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<ENTITY_Q_CONTENT> OR [\\&] OR [%]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    else {
-                        handler.rawValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_Q_ENTITY_VALUE, 0);
+                    return false;
+                }
+                if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 3;
+                }
+                else if(ch=='&'){
+                    curState = 0;
+                    return reference();
+                }
+                else {
+                    curState = 0;
+                    return pe_reference();
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_Q_ENTITY_VALUE, 3);
+                    return false;
+                }
+                if(finishAll_ENTITY_Q_CONTENT(ch)==EOC){
+                    exiting(RULE_Q_ENTITY_VALUE, 3);
+                    return false;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_DQ_ENTITY_VALUE = 36;
     private boolean dq_entity_value() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else if(ch=='&'){
-                        push(RULE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<ENTITY_DQ_CONTENT> OR [\\&] OR [%]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
-                        consume(ch);
-                        curState = 3;
-                        continue;
-                    }
-                    else {
-                        handler.rawValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DQ_ENTITY_VALUE, 0);
+                    return false;
+                }
+                if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 3;
+                }
+                else if(ch=='&'){
+                    curState = 0;
+                    return reference();
+                }
+                else {
+                    curState = 0;
+                    return pe_reference();
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DQ_ENTITY_VALUE, 3);
+                    return false;
+                }
+                if(finishAll_ENTITY_DQ_CONTENT(ch)==EOC){
+                    exiting(RULE_DQ_ENTITY_VALUE, 3);
+                    return false;
+                }
+                handler.rawValue(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -2435,53 +2535,70 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    push(RULE_STR_ENTITY, 3, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_ENTITY]);
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_ENTITY, STRING_IDS[-RULE_STR_ENTITY])){
+                        exiting(RULE_ENTITY_DECL, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
                     }
                     else expected(ch, "<WS>");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ENTITY_DECL, 4);
                         return false;
+                    }
                     if(ch=='%'){
                         consume(ch);
                         curState = 5;
                     }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                    else {
                         buffer.push();
-                        push(RULE_NCNAME, 13, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
+                        curState = 0;
+                        if(ncname()){
+                            curState = 13;
+                            continue;
+                        }else{
+                            exiting(RULE_ENTITY_DECL, 13);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%] OR <NCNAME_START>");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 6;
@@ -2489,150 +2606,116 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS>");
                 case 13:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 13);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.entityName(buffer.pop(0, 0));
                         consume(ch);
                         curState = 14;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENTITY_DECL, 14);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "<WS>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 6);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NCNAME, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return ncname();
                     }
-                    else expected(ch, "<WS> OR <NCNAME_START>");
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ENTITY_DECL, 6);
+                        return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(ncname()){
+                        curState = 8;
+                        continue;
+                    }else{
+                        exiting(RULE_ENTITY_DECL, 8);
+                        return false;
+                    }
                 case 14:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 14);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ENTITY_DECL, 14);
                         return false;
-                    if(ch=='P'){
-                        push(RULE_ENTITY_DEF, 15, 0);
-                        push(RULE_EXTERNAL_ID, 1, 0);
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
                     }
-                    else if(ch=='S'){
-                        push(RULE_ENTITY_DEF, 15, 0);
-                        push(RULE_EXTERNAL_ID, 1, 0);
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
+                    curState = 0;
+                    if(entity_def()){
+                        curState = 15;
+                        continue;
+                    }else{
+                        exiting(RULE_ENTITY_DECL, 15);
+                        return false;
                     }
-                    else if(ch=='\''){
-                        push(RULE_ENTITY_DEF, 15, 0);
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 2;
-                        return entity_value();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_ENTITY_DEF, 15, 0);
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 4;
-                        return entity_value();
-                    }
-                    else expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 8);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.paramEntityName(buffer.pop(0, 0));
                         consume(ch);
                         curState = 9;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENTITY_DECL, 9);
                             return false;
+                        }
                         continue;
                     }
                     else expected(ch, "<WS>");
                 case 15:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 15);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ENTITY_DECL, 15);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.entityEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [>]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 9);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ENTITY_DECL, 9);
                         return false;
-                    if(ch=='P'){
-                        push(RULE_PE_DEF, 10, 0);
-                        push(RULE_EXTERNAL_ID, -1, 0);
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
                     }
-                    else if(ch=='S'){
-                        push(RULE_PE_DEF, 10, 0);
-                        push(RULE_EXTERNAL_ID, -1, 0);
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
+                    curState = 0;
+                    if(!pe_def()){
+                        exiting(RULE_ENTITY_DECL, 10);
+                        return false;
                     }
-                    else if(ch=='\''){
-                        push(RULE_PE_DEF, 10, 0);
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 2;
-                        return entity_value();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_PE_DEF, 10, 0);
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 4;
-                        return entity_value();
-                    }
-                    else expected(ch, "[P] OR [S] OR <Q> OR <DQ> OR <WS>");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENTITY_DECL, 10);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ENTITY_DECL, 10);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.paramEntityEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "[>] OR <WS>");
+                    else expected(ch, "<WS> OR [>]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -2642,74 +2725,60 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_ENTITY_DEF = 38;
     private boolean entity_def() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENTITY_DEF, 0);
+                    return false;
+                }
+                if(ch=='P'){
+                    curState = 0;
+                    if(!external_id()){
+                        exiting(RULE_ENTITY_DEF, 1);
                         return false;
-                    if(ch=='P'){
-                        push(RULE_EXTERNAL_ID, 1, 0);
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
                     }
-                    else if(ch=='S'){
-                        push(RULE_EXTERNAL_ID, 1, 0);
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
-                    }
-                    else if(ch=='\''){
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 2;
-                        return entity_value();
-                    }
-                    else if(ch=='"'){
-                        push(RULE_ENTITY_VALUE, -1, 0);
-                        handler.valueStart();
-                        handler.entityValue();
-                        consume(ch);
-                        curState = 4;
-                        return entity_value();
-                    }
-                    else expected(ch, "[P] OR [S] OR <Q> OR <DQ>");
-                case 1:
-                    if((ch=codePoint())==EOC)
+                }
+                else if(ch=='S'){
+                    curState = 0;
+                    if(!external_id()){
+                        exiting(RULE_ENTITY_DEF, 1);
                         return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 2;
                     }
-                    else {
-                        curState = -1;
-                        return true;
-                    }
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='N'){
-                        push(RULE_NDATA_DECL, -1, 0);
-                        push(RULE_STR_NDATA, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_NDATA]);
-                    }
-                    else {
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                }
+                else {
+                    curState = 0;
+                    return entity_value();
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENTITY_DEF, 1);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 2;
+                }
+                else {
+                    return true;
+                }
+            case 2:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENTITY_DEF, 2);
+                    return false;
+                }
+                if((ch=finishAll_WS(ch))==EOC){
+                    exiting(RULE_ENTITY_DEF, 2);
+                    return false;
+                }
+                if(ch=='N'){
+                    curState = 0;
+                    return ndata_decl();
+                }
+                else {
+                    return true;
+                }
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -2719,34 +2788,41 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 0);
                         return false;
-                    if(ch=='E'){
-                        push(RULE_STR_ENTIT, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ENTIT]);
                     }
-                    else if(ch=='N'){
-                        push(RULE_STR_NMTOKEN, 20, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_NMTOKEN]);
+                    if(ch=='E'){
+                        curState = 0;
+                        if(!matchString(RULE_STR_ENTIT, STRING_IDS[-RULE_STR_ENTIT])){
+                            exiting(RULE_TOKENIZED_TYPE, 9);
+                            return false;
+                        }
                     }
                     else if(ch=='I'){
                         consume(ch);
                         curState = 23;
                         continue;
                     }
-                    else expected(ch, "[E] OR [N] OR [I]");
+                    else {
+                        curState = 0;
+                        if(matchString(RULE_STR_NMTOKEN, STRING_IDS[-RULE_STR_NMTOKEN])){
+                            curState = 20;
+                            continue;
+                        }else{
+                            exiting(RULE_TOKENIZED_TYPE, 20);
+                            return false;
+                        }
+                    }
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 9);
                         return false;
+                    }
                     if(ch=='Y'){
                         consume(ch);
                         handler.entityAttribute();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch=='I'){
                         consume(ch);
@@ -2754,32 +2830,36 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else expected(ch, "[Y] OR [I]");
-                case 20:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='S'){
-                        consume(ch);
-                        handler.nmtokensAttribute();
-                        curState = -1;
-                        return true;
-                    }
-                    else {
-                        handler.nmtokenAttribute();
-                        curState = -1;
-                        return true;
-                    }
                 case 23:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 23);
                         return false;
+                    }
                     if(ch=='D'){
                         consume(ch);
                         curState = 24;
                         continue;
                     }
                     else expected(ch, "[D]");
-                case 11:
-                    if((ch=codePoint())==EOC)
+                case 20:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 20);
                         return false;
+                    }
+                    if(ch=='S'){
+                        consume(ch);
+                        handler.nmtokensAttribute();
+                        return !stop;
+                    }
+                    else {
+                        handler.nmtokenAttribute();
+                        return !stop;
+                    }
+                case 11:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 11);
+                        return false;
+                    }
                     if(ch=='E'){
                         consume(ch);
                         curState = 12;
@@ -2787,8 +2867,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[E]");
                 case 24:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 24);
                         return false;
+                    }
                     if(ch=='R'){
                         consume(ch);
                         curState = 25;
@@ -2796,48 +2878,52 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else {
                         handler.idAttribute();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 case 12:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 12);
                         return false;
+                    }
                     if(ch=='S'){
                         consume(ch);
                         handler.entitiesAttribute();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[S]");
                 case 25:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 25);
                         return false;
+                    }
                     if(ch=='E'){
                         consume(ch);
                         curState = 26;
                     }
                     else expected(ch, "[E]");
                 case 26:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 26);
                         return false;
+                    }
                     if(ch=='F'){
                         consume(ch);
                         curState = 27;
                     }
                     else expected(ch, "[F]");
                 case 27:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TOKENIZED_TYPE, 27);
                         return false;
+                    }
                     if(ch=='S'){
                         consume(ch);
                         handler.idRefsAttribute();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else {
                         handler.idRefAttribute();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 default:
                     throw new Error("impossible state: "+curState);
@@ -2848,26 +2934,29 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_NMTOKEN = 40;
     private boolean nmtoken() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else expected(ch, "<NAME_PART>");
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_NAME_PART(ch)==EOC)
-                        return false;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NMTOKEN, 0);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
+                    consume(ch);
+                    curState = 1;
+                }
+                else expected(ch, "<NAME_PART>");
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NMTOKEN, 1);
+                    return false;
+                }
+                if(finishAll_NAME_PART(ch)==EOC){
+                    exiting(RULE_NMTOKEN, 1);
+                    return false;
+                }
+                return true;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -2877,112 +2966,137 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 0);
                         return false;
+                    }
                     if(ch=='('){
                         handler.enumerationAttribute();
                         consume(ch);
                         curState = 1;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENUMERATION, 1);
                             return false;
+                        }
                     }
                     else expected(ch, "[(]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 1);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-                        buffer.push();
-                        push(RULE_NMTOKEN, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return nmtoken();
                     }
-                    else expected(ch, "<WS> OR <NAME_PART>");
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ENUMERATION, 1);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!nmtoken()){
+                        exiting(RULE_ENUMERATION, 3);
+                        return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 4;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENUMERATION, 4);
                             return false;
+                        }
                     }
                     else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 7;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENUMERATION, 7);
                             return false;
+                        }
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ENUMERATION, 4);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 7;
                     }
                     else if(ch==')'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 7);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-                        buffer.push();
-                        push(RULE_NMTOKEN, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return nmtoken();
                     }
-                    else expected(ch, "<WS> OR <NAME_PART>");
-                case 9:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ENUMERATION, 7);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!nmtoken()){
+                        exiting(RULE_ENUMERATION, 9);
+                        return false;
+                    }
+                case 9:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 9);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 10;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENUMERATION, 10);
                             return false;
+                        }
                     }
                     else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 7;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ENUMERATION, 7);
                             return false;
+                        }
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ENUMERATION, 10);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ENUMERATION, 10);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 7;
@@ -2990,7 +3104,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch==')'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -3006,154 +3119,208 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 0);
                         return false;
+                    }
                     if(ch=='('){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[(]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 2);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_MIXED, 2);
                         return false;
+                    }
                     if(ch=='#'){
-                        push(RULE_STR_HASH_PCDATA, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_HASH_PCDATA]);
+                        curState = 0;
+                        if(!matchString(RULE_STR_HASH_PCDATA, STRING_IDS[-RULE_STR_HASH_PCDATA])){
+                            exiting(RULE_MIXED, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 1);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [\\#] OR [%]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 4);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='|'){
                             consume(ch);
                             curState = 8;
                             continue;
                         }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             consume(ch);
                             curState = 5;
                             continue;
                         }
-                        else if(ch=='%'){
-                            push(RULE_PE_REFERENCE, 4, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
-                        }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_MIXED, 4);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)==')'){
                             if(ch=='*'){
                                 consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = -1;
-                                return true;
+                                curState = 13;
+                                lookAhead.reset();
+                                continue;
                             }
                             consume(FROM_LA);
                             lookAhead.reset();
-                            curState = -1;
                             return true;
                         }
                     }
-                    expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    curState = 0;
+                    lookAhead.reset();
+                    if(pe_reference()){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_MIXED, 4);
                         return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 1);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                         continue;
                     }
                     else if(ch=='#'){
-                        push(RULE_STR_HASH_PCDATA, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_HASH_PCDATA]);
-                    }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<WS> OR [\\#] OR [%]");
-                case 8:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
-                    }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
-                case 5:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(lookAhead.length()==0){
-                        if((ch=finishAll_WS(ch))==EOC)
+                        curState = 0;
+                        if(matchString(RULE_STR_HASH_PCDATA, STRING_IDS[-RULE_STR_HASH_PCDATA])){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 4);
                             return false;
+                        }
+                    }
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 1);
+                            return false;
+                        }
+                    }
+                case 8:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 8);
+                        return false;
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_MIXED, 8);
+                        return false;
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        curState = 0;
+                        if(name()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 9);
+                            return false;
+                        }
+                    }
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 7;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 7);
+                            return false;
+                        }
+                    }
+                case 5:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 5);
+                        return false;
+                    }
+                    if(lookAhead.length()==0){
+                        if((ch=finishAll_WS(ch))==EOC){
+                            exiting(RULE_MIXED, 5);
+                            return false;
+                        }
                         if(ch=='|'){
                             consume(ch);
                             curState = 8;
                             continue;
                         }
-                        else if(ch=='%'){
-                            push(RULE_PE_REFERENCE, 4, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
-                        }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_MIXED, 5);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)==')'){
                             if(ch=='*'){
                                 consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = -1;
-                                return true;
+                                curState = 13;
+                                lookAhead.reset();
+                                continue;
                             }
                             consume(FROM_LA);
                             lookAhead.reset();
-                            curState = -1;
                             return true;
                         }
                     }
-                    expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
-                case 9:
-                    if((ch=codePoint())==EOC)
+                    curState = 0;
+                    lookAhead.reset();
+                    if(pe_reference()){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_MIXED, 4);
                         return false;
+                    }
+                case 13:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 13);
+                        return false;
+                    }
+                    if(ch=='*'){
+                        consume(ch);
+                        return true;
+                    }
+                    else expected(ch, "[*]");
+                case 9:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 9);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 10;
@@ -3169,39 +3336,55 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 13;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [|] OR [)] OR [%]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 7);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 8;
                         continue;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 9);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 7;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 7);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MIXED, 10);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_MIXED, 10);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 8;
@@ -3210,27 +3393,27 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else if(ch==')'){
                         consume(ch);
                         curState = 13;
+                        continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_MIXED, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [|] OR [)] OR [%]");
-                case 13:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='*'){
-                        consume(ch);
-                        curState = -1;
-                        return true;
-                    }
-                    else expected(ch, "[*]");
                 case 3:
-                    push(RULE_STR_HASH_PCDATA, 4, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_HASH_PCDATA]);
+                    if(matchString(RULE_STR_HASH_PCDATA, STRING_IDS[-RULE_STR_HASH_PCDATA])){
+                        curState = 4;
+                        continue;
+                    }else{
+                        exiting(RULE_MIXED, 4);
+                        return false;
+                    }
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -3244,123 +3427,157 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     handler.notationAttribute();
-                    push(RULE_STR_NOTATION, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    if(stop){
+                        exiting(RULE_STR_NOTATION, 0);
+                        exiting(RULE_NOTATION_TYPE, 1);
                         return false;
+                    }else
+                    if(!matchString(RULE_STR_NOTATION, STRING_IDS[-RULE_STR_NOTATION])){
+                        exiting(RULE_NOTATION_TYPE, 1);
+                        return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 1);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "<WS>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 2);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_TYPE, 2);
                         return false;
+                    }
                     if(ch=='('){
                         consume(ch);
                         curState = 3;
                     }
                     else expected(ch, "<WS> OR [(]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 3);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NAME, 5, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
                     }
-                    else expected(ch, "<WS> OR <NAME_START>");
-                case 5:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_NOTATION_TYPE, 3);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!name()){
+                        exiting(RULE_NOTATION_TYPE, 5);
+                        return false;
+                    }
+                case 5:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 5);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 6;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_NOTATION_TYPE, 6);
                             return false;
+                        }
                     }
                     else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 9;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_NOTATION_TYPE, 9);
                             return false;
+                        }
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 6);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_TYPE, 6);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
                     }
                     else if(ch==')'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 9);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NAME, 11, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
                     }
-                    else expected(ch, "<WS> OR <NAME_START>");
-                case 11:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_NOTATION_TYPE, 9);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!name()){
+                        exiting(RULE_NOTATION_TYPE, 11);
+                        return false;
+                    }
+                case 11:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 11);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 12;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_NOTATION_TYPE, 12);
                             return false;
+                        }
                     }
                     else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         curState = 9;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_NOTATION_TYPE, 9);
                             return false;
+                        }
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
                 case 12:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_NOTATION_TYPE, 12);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_NOTATION_TYPE, 12);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
@@ -3368,7 +3585,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch==')'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -3381,30 +3597,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_ENUMERATED_TYPE = 44;
     private boolean enumerated_type() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='N'){
-                        push(RULE_NOTATION_TYPE, -1, 0);
-                        handler.notationAttribute();
-                        push(RULE_STR_NOTATION, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                    }
-                    else if(ch=='('){
-                        push(RULE_ENUMERATION, -1, 0);
-                        handler.enumerationAttribute();
-                        consume(ch);
-                        curState = 1;
-                        return enumeration();
-                    }
-                    else expected(ch, "[N] OR [(]");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_ENUMERATED_TYPE, 0);
+                    return false;
+                }
+                if(ch=='N'){
+                    curState = 0;
+                    return notation_type();
+                }
+                else {
+                    curState = 0;
+                    return enumeration();
+                }
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -3414,70 +3622,60 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_TYPE, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='C'){
-                            push(RULE_STR_CDATA, 1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return matchString(STRING_IDS[-RULE_STR_CDATA]);
+                            curState = 0;
+                            if(matchString(RULE_STR_CDATA, STRING_IDS[-RULE_STR_CDATA])){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_ATT_TYPE, 1);
+                                return false;
+                            }
                         }
-                        else if(ch=='('){
-                            push(RULE_ENUMERATED_TYPE, -1, 0);
-                            push(RULE_ENUMERATION, -1, 0);
-                            handler.enumerationAttribute();
-                            consume(ch);
-                            curState = 1;
-                            return enumeration();
+                        if(ch=='('){
+                            curState = 0;
+                            return enumerated_type();
                         }
-                        else if(ch=='E'){
-                            push(RULE_TOKENIZED_TYPE, -1, 0);
-                            push(RULE_STR_ENTIT, 9, 0);
-                            consume(ch);
-                            curState = 1;
-                            return matchString(STRING_IDS[-RULE_STR_ENTIT]);
+                        if(ch=='E'){
+                            curState = 0;
+                            return tokenized_type();
                         }
-                        else if(ch=='I'){
-                            push(RULE_TOKENIZED_TYPE, -1, 0);
-                            consume(ch);
-                            curState = 23;
+                        if(ch=='I'){
+                            curState = 0;
                             return tokenized_type();
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_ATT_TYPE, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='N'){
                             if(ch=='O'){
-                                push(RULE_ENUMERATED_TYPE, -1, 0);
-                                push(RULE_NOTATION_TYPE, -1, 0);
-                                handler.notationAttribute();
-                                push(RULE_STR_NOTATION, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_NOTATION]);
+                                curState = 0;
+                                lookAhead.reset();
+                                return enumerated_type();
                             }
-                            else if(ch=='M'){
-                                push(RULE_TOKENIZED_TYPE, -1, 0);
-                                push(RULE_STR_NMTOKEN, 20, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_NMTOKEN]);
+                            if(ch=='M'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return tokenized_type();
                             }
                         }
                     }
                     expected(ch, "[C] OR [(] OR [E] OR [I] OR [N][O] OR [N][M]");
                 case 1:
                     handler.cdataAttribute();
-                    curState = -1;
-                    return true;
+                    return !stop;
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -3490,94 +3688,95 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DEFAULT_DECL, 0);
                         return false;
-                    if(ch=='\''){
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 1;
-                        return value();
                     }
-                    else if(ch=='"'){
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 3;
-                        return value();
-                    }
-                    else if(ch=='#'){
+                    if(ch=='#'){
                         consume(ch);
                         curState = 2;
-                        continue;
                     }
-                    else expected(ch, "<Q> OR <DQ> OR [\\#]");
-                case 1:
-                    handler.attributeDefaultValue();
-                    curState = -1;
-                    return true;
+                    else {
+                        curState = 0;
+                        if(value()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_DEFAULT_DECL, 1);
+                            return false;
+                        }
+                    }
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DEFAULT_DECL, 2);
                         return false;
+                    }
                     if(ch=='R'){
-                        push(RULE_STR_REQUIRED, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_REQUIRED]);
+                        curState = 0;
+                        if(matchString(RULE_STR_REQUIRED, STRING_IDS[-RULE_STR_REQUIRED])){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_DEFAULT_DECL, 3);
+                            return false;
+                        }
                     }
                     else if(ch=='I'){
-                        push(RULE_STR_IMPLIED, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_IMPLIED]);
+                        curState = 0;
+                        if(matchString(RULE_STR_IMPLIED, STRING_IDS[-RULE_STR_IMPLIED])){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_DEFAULT_DECL, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='F'){
-                        push(RULE_STR_FIXED, 5, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_FIXED]);
+                    else {
+                        curState = 0;
+                        if(matchString(RULE_STR_FIXED, STRING_IDS[-RULE_STR_FIXED])){
+                            curState = 5;
+                            continue;
+                        }else{
+                            exiting(RULE_DEFAULT_DECL, 5);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[R] OR [I] OR [F]");
+                case 1:
+                    handler.attributeDefaultValue();
+                    return !stop;
                 case 3:
                     handler.attributeRequired();
-                    curState = -1;
-                    return true;
+                    return !stop;
                 case 4:
                     handler.attributeImplied();
-                    curState = -1;
-                    return true;
+                    return !stop;
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DEFAULT_DECL, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 6;
                     }
                     else expected(ch, "<WS>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DEFAULT_DECL, 6);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_DEFAULT_DECL, 6);
                         return false;
-                    if(ch=='\''){
-                        push(RULE_VALUE, 7, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 1;
-                        return value();
                     }
-                    else if(ch=='"'){
-                        push(RULE_VALUE, 7, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 3;
-                        return value();
+                    curState = 0;
+                    if(!value()){
+                        exiting(RULE_DEFAULT_DECL, 7);
+                        return false;
                     }
-                    else expected(ch, "<WS> OR <Q> OR <DQ>");
                 case 7:
                     handler.attributeFixedValue();
-                    curState = -1;
-                    return true;
+                    return !stop;
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -3591,174 +3790,103 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             switch(curState){
                 case 0:
                     buffer.push();
-                    push(RULE_NAME, 1, 0);
                     curState = 0;
-                    return name();
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    if(!name()){
+                        exiting(RULE_ATT_DEF, 1);
                         return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_DEF, 1);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdAttribute(buffer.pop(0, 0));
                         consume(ch);
                         curState = 2;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ATT_DEF, 2);
                             return false;
+                        }
                     }
                     else expected(ch, "<WS>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_DEF, 2);
                         return false;
-                    if(lookAhead.length()==0){
-                        if((ch=finishAll_WS(ch))==EOC)
-                            return false;
-                        if(ch=='C'){
-                            push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_STR_CDATA, 1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return matchString(STRING_IDS[-RULE_STR_CDATA]);
-                        }
-                        else if(ch=='('){
-                            push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_ENUMERATED_TYPE, -1, 0);
-                            push(RULE_ENUMERATION, -1, 0);
-                            handler.enumerationAttribute();
-                            consume(ch);
-                            curState = 1;
-                            return enumeration();
-                        }
-                        else if(ch=='E'){
-                            push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_TOKENIZED_TYPE, -1, 0);
-                            push(RULE_STR_ENTIT, 9, 0);
-                            consume(ch);
-                            curState = 1;
-                            return matchString(STRING_IDS[-RULE_STR_ENTIT]);
-                        }
-                        else if(ch=='I'){
-                            push(RULE_ATT_TYPE, 3, 0);
-                            push(RULE_TOKENIZED_TYPE, -1, 0);
-                            consume(ch);
-                            curState = 23;
-                            return tokenized_type();
-                        }
                     }
-                    addToLookAhead(ch);
-                    if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_ATT_DEF, 2);
+                        return false;
                     }
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='N'){
-                            if(ch=='O'){
-                                push(RULE_ATT_TYPE, 3, 0);
-                                push(RULE_ENUMERATED_TYPE, -1, 0);
-                                push(RULE_NOTATION_TYPE, -1, 0);
-                                handler.notationAttribute();
-                                push(RULE_STR_NOTATION, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                            }
-                            else if(ch=='M'){
-                                push(RULE_ATT_TYPE, 3, 0);
-                                push(RULE_TOKENIZED_TYPE, -1, 0);
-                                push(RULE_STR_NMTOKEN, 20, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_NMTOKEN]);
-                            }
-                        }
+                    curState = 0;
+                    if(!att_type()){
+                        exiting(RULE_ATT_DEF, 3);
+                        return false;
                     }
-                    expected(ch, "<WS> OR [C] OR [(] OR [E] OR [I] OR [N][O] OR [N][M]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_DEF, 3);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_DEF, 3);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_DEF, 5);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ATT_DEF, 5);
                         return false;
-                    if(ch=='\''){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 1;
-                        return value();
                     }
-                    else if(ch=='"'){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 3;
-                        return value();
+                    if(ch=='%'){
+                        curState = 0;
+                        if(!pe_reference()){
+                            exiting(RULE_ATT_DEF, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='#'){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        consume(ch);
-                        curState = 2;
+                    else {
+                        curState = 0;
                         return default_decl();
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<WS> OR <Q> OR <DQ> OR [\\#] OR [%]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_DEF, 4);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
                         continue;
                     }
-                    else if(ch=='\''){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 1;
-                        return value();
+                    else if(ch=='%'){
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_DEF, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='"'){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        push(RULE_VALUE, 1, 0);
-                        handler.valueStart();
-                        consume(ch);
-                        curState = 3;
-                        return value();
-                    }
-                    else if(ch=='#'){
-                        push(RULE_DEFAULT_DECL, -1, 0);
-                        consume(ch);
-                        curState = 2;
+                    else {
+                        curState = 0;
                         return default_decl();
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else expected(ch, "<WS> OR <Q> OR <DQ> OR [\\#] OR [%]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -3771,87 +3899,119 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    push(RULE_STR_ATTLIST, 3, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_ATTLIST, STRING_IDS[-RULE_STR_ATTLIST])){
+                        exiting(RULE_ATT_LIST_DECL, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 3);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 5);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
-                        push(RULE_NAME, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(!name()){
+                            exiting(RULE_ATT_LIST_DECL, 7);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 7);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdAttributesStart(buffer.pop(0, 0));
                         consume(ch);
                         curState = 10;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ATT_LIST_DECL, 10);
                             return false;
+                        }
                         continue;
-                    }
-                    else if(ch=='%'){
-                        handler.dtdAttributesStart(buffer.pop(0, 0));
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
                     }
                     else if(ch=='>'){
                         handler.dtdAttributesStart(buffer.pop(0, 0));
                         consume(ch);
                         handler.dtdAttributesEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "<WS> OR [%] OR [>]");
+                    else {
+                        handler.dtdAttributesStart(buffer.pop(0, 0));
+                        curState = 0;
+                        if(stop){
+                            exiting(RULE_PE_REFERENCE, 0);
+                            exiting(RULE_ATT_LIST_DECL, 8);
+                            return false;
+                        }else
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 8);
+                            return false;
+                        }
+                    }
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 4);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
@@ -3859,90 +4019,118 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
-                        push(RULE_NAME, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name()){
+                            curState = 7;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 7);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 10);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 10);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_ATT_DEF, 11, 0);
-                        buffer.push();
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(att_def()){
+                            curState = 11;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 11);
+                            return false;
+                        }
                     }
                     else if(ch=='>'){
                         consume(ch);
                         handler.dtdAttributesEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 8);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 10;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 11:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 11);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.dtdAttributesEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 10;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[>] OR <WS> OR [%]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ATT_LIST_DECL, 9);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_ATT_DEF, 11, 0);
-                        buffer.push();
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(att_def()){
+                            curState = 11;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 11);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
@@ -3952,16 +4140,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else if(ch=='>'){
                         consume(ch);
                         handler.dtdAttributesEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_LIST_DECL, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<NAME_START> OR <WS> OR [>] OR [%]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -3974,41 +4164,53 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 0);
                         return false;
+                    }
                     if(ch=='('){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[(]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 2);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 2);
                         return false;
+                    }
                     if(ch=='('){
-                        push(RULE_CHILDREN, 4, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(!children()){
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 4, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(!name_cardinality()){
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 1);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 4);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
@@ -4029,108 +4231,155 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 5;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 1);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                         continue;
                     }
                     else if(ch=='('){
-                        push(RULE_CHILDREN, 4, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 4, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 1);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [(] OR <NAME_START> OR [%]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 9);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 9);
                         return false;
+                    }
                     if(ch=='('){
-                        push(RULE_CHILDREN, 10, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 10, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
                 case 18:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 18);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 18);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 19, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
                     else if(ch=='('){
-                        push(RULE_CHILDREN, 19, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 17, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 17;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 17);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
                 case 14:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 14);
                         return false;
+                    }
                     if(ch=='?' || ch=='+' || ch=='*'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 5);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 5);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
@@ -4146,16 +4395,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 14;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[|] OR [,] OR [)] OR <WS> OR [%]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 10);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
@@ -4171,21 +4425,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 11;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 10, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[|] OR [)] OR <WS> OR [%]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 8);
                         return false;
+                    }
                     if(ch=='('){
-                        push(RULE_CHILDREN, 10, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
@@ -4193,22 +4456,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 10, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[(] OR <WS> OR <NAME_START> OR [%]");
                 case 19:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 19);
                         return false;
+                    }
                     if(ch==','){
                         consume(ch);
                         curState = 18;
@@ -4224,22 +4495,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 20;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 19, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[,] OR [)] OR <WS> OR [%]");
                 case 17:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 17);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 19, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
@@ -4247,23 +4526,34 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else if(ch=='('){
-                        push(RULE_CHILDREN, 19, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 17, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 17;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 17);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<NAME_START> OR <WS> OR [(] OR [%]");
                 case 11:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 11);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 11);
                         return false;
+                    }
                     if(ch=='|'){
                         consume(ch);
                         curState = 9;
@@ -4274,18 +4564,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 14;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 10, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 10;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 10);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[|] OR [)] OR <WS> OR [%]");
                 case 20:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 20);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CHILDREN, 20);
                         return false;
+                    }
                     if(ch==','){
                         consume(ch);
                         curState = 18;
@@ -4296,30 +4593,41 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 14;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 19, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 19;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 19);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[,] OR [)] OR <WS> OR [%]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CHILDREN, 3);
                         return false;
+                    }
                     if(ch=='('){
-                        push(RULE_CHILDREN, 4, 0);
-                        consume(ch);
-                        curState = 2;
-                        continue;
+                        curState = 0;
+                        if(children()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        push(RULE_NAME_CARDINALITY, 4, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                    else {
+                        curState = 0;
+                        if(name_cardinality()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CHILDREN, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[(] OR <NAME_START>");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -4329,162 +4637,150 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_NAME_CARDINALITY = 50;
     private boolean name_cardinality() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_NAME, 1, 0);
-                    curState = 0;
-                    return name();
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='?' || ch=='*' || ch=='+'){
-                        consume(ch);
-                        curState = -1;
-                        return true;
-                    }
-                    else {
-                        curState = -1;
-                        return true;
-                    }
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!name()){
+                    exiting(RULE_NAME_CARDINALITY, 1);
+                    return false;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_NAME_CARDINALITY, 1);
+                    return false;
+                }
+                if(ch=='?' || ch=='*' || ch=='+'){
+                    consume(ch);
+                    return true;
+                }
+                else {
+                    return true;
+                }
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_DECL_SEP = 51;
     private boolean decl_sep() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DECL_SEP, 0);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    consume(ch);
+                    curState = 3;
+                }
+                else {
+                    handler.peReferenceOutsideMarkup();
+                    curState = 0;
+                    if(stop){
+                        exiting(RULE_PE_REFERENCE, 0);
+
                         return false;
-                    if(ch=='%'){
-                        handler.peReferenceOutsideMarkup();
-                        push(RULE_PE_REFERENCE, -1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        curState = 3;
-                    }
-                    else expected(ch, "[%] OR <WS>");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_WS(ch)==EOC)
-                        return false;
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                    }else
+                    return pe_reference();
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_DECL_SEP, 3);
+                    return false;
+                }
+                if(finishAll_WS(ch)==EOC){
+                    exiting(RULE_DECL_SEP, 3);
+                    return false;
+                }
+                return true;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_MARKUP_DECL = 52;
     private boolean markup_decl() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_MARKUP_DECL, 0);
+                    return false;
+                }
+                addToLookAhead(ch);
+                if(ch!=EOF && lookAhead.length()<2){
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MARKUP_DECL, 0);
                         return false;
+                    }
                     addToLookAhead(ch);
-                    while(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
+                }
+                if(lookAhead.length()==2){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(ch=='?'){
+                            curState = 0;
+                            lookAhead.reset();
+                            return pi();
+                        }
                     }
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch=='?'){
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                }
+                if(ch!=EOF && lookAhead.length()<3){
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MARKUP_DECL, 0);
+                        return false;
+                    }
+                    addToLookAhead(ch);
+                }
+                if(lookAhead.length()==3){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(ch=='A'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return att_list_decl();
+                            }
+                            if(ch=='N'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return notation_decl();
+                            }
+                            if(ch=='-'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return comment();
                             }
                         }
                     }
-                    if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
+                }
+                if(ch!=EOF && lookAhead.length()<4){
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_MARKUP_DECL, 0);
+                        return false;
                     }
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='A'){
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
+                    addToLookAhead(ch);
+                }
+                if(lookAhead.length()==4){
+                    if(lookAhead.charAt(0)=='<'){
+                        if(lookAhead.charAt(1)=='!'){
+                            if(lookAhead.charAt(2)=='E'){
+                                if(ch=='L'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    return element_decl();
                                 }
-                                else if(ch=='N'){
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                                }
-                                else if(ch=='-'){
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
-                    }
-                    if(lookAhead.length()==4){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(lookAhead.charAt(2)=='E'){
-                                    if(ch=='L'){
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
-                                    }
-                                    else if(ch=='N'){
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
-                                    }
+                                if(ch=='N'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    return entity_decl();
                                 }
                             }
                         }
                     }
-                    expected(ch, "[<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                }
+                expected(ch, "[<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -4494,80 +4790,113 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    push(RULE_STR_ELEMENT, 3, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_ELEMENT, STRING_IDS[-RULE_STR_ELEMENT])){
+                        exiting(RULE_ELEMENT_DECL, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 3, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 3;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 3);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 5);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEMENT_DECL, 5);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
-                        push(RULE_NAME, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(!name()){
+                            exiting(RULE_ELEMENT_DECL, 7);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 7);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdElement(buffer.pop(0, 0));
                         consume(ch);
                         curState = 10;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_ELEMENT_DECL, 10);
                             return false;
+                        }
                         continue;
                     }
-                    else if(ch=='%'){
+                    else {
                         handler.dtdElement(buffer.pop(0, 0));
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                        curState = 0;
+                        if(stop){
+                            exiting(RULE_PE_REFERENCE, 0);
+                            exiting(RULE_ELEMENT_DECL, 8);
+                            return false;
+                        }else
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 4);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 5;
@@ -4575,23 +4904,34 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
-                        push(RULE_NAME, 7, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(name()){
+                            curState = 7;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 7);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 4);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR <NAME_START> OR [%]");
                 case 10:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 10);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEMENT_DECL, 10);
                         return false;
+                    }
                     if(ch=='('){
                         consume(ch);
                         curState = 13;
@@ -4599,81 +4939,112 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='E'){
                         handler.notMixed();
-                        push(RULE_STR_EMPTY, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_EMPTY]);
+                        curState = 0;
+                        if(stop){
+                            exiting(RULE_STR_EMPTY, 0);
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }else
+                        if(matchString(RULE_STR_EMPTY, STRING_IDS[-RULE_STR_EMPTY])){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
                     else if(ch=='A'){
-                        push(RULE_STR_ANY, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ANY]);
+                        curState = 0;
+                        if(matchString(RULE_STR_ANY, STRING_IDS[-RULE_STR_ANY])){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 8);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 10;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 8, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 8);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%]");
                 case 13:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 13);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEMENT_DECL, 13);
                         return false;
+                    }
                     if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 12, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else if(ch=='('){
-                        handler.notMixed();
-                        push(RULE_CHILDREN, 15, 3);
-                        push(RULE_CHILDREN, 4, 0);
-                        consume(ch);
-                        curState = 2;
-                        return children();
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        handler.notMixed();
-                        push(RULE_CHILDREN, 15, 3);
-                        push(RULE_NAME_CARDINALITY, 4, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 12;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 12);
+                            return false;
+                        }
                     }
                     else if(ch=='#'){
-                        push(RULE_MIXED, 15, 3);
-                        push(RULE_STR_HASH_PCDATA, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_HASH_PCDATA]);
+                        curState = 3;
+                        if(mixed()){
+                            curState = 15;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
+                    else {
+                        handler.notMixed();
+                        curState = 3;
+                        if(stop){
+                            exiting(RULE_CHILDREN, 3);
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }else
+                        if(children()){
+                            curState = 15;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }
+                    }
                 case 18:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 18);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
@@ -4681,16 +5052,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 19;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[>] OR <WS> OR [%]");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 9);
                         return false;
+                    }
                     if(ch=='('){
                         consume(ch);
                         curState = 13;
@@ -4698,104 +5074,131 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='E'){
                         handler.notMixed();
-                        push(RULE_STR_EMPTY, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_EMPTY]);
+                        curState = 0;
+                        if(stop){
+                            exiting(RULE_STR_EMPTY, 0);
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }else
+                        if(matchString(RULE_STR_EMPTY, STRING_IDS[-RULE_STR_EMPTY])){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
                     else if(ch=='A'){
-                        push(RULE_STR_ANY, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ANY]);
+                        curState = 0;
+                        if(matchString(RULE_STR_ANY, STRING_IDS[-RULE_STR_ANY])){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 10;
                         continue;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 9, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 9;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 9);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[(] OR [E] OR [A] OR <WS> OR [%]");
                 case 12:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 12);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 13;
                         continue;
                     }
                     else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 12, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
-                    }
-                    else if(ch=='('){
-                        handler.notMixed();
-                        push(RULE_CHILDREN, 15, 3);
-                        push(RULE_CHILDREN, 4, 0);
-                        consume(ch);
-                        curState = 2;
-                        return children();
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        handler.notMixed();
-                        push(RULE_CHILDREN, 15, 3);
-                        push(RULE_NAME_CARDINALITY, 4, 0);
-                        push(RULE_NAME, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 12;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 12);
+                            return false;
+                        }
                     }
                     else if(ch=='#'){
-                        push(RULE_MIXED, 15, 3);
-                        push(RULE_STR_HASH_PCDATA, 4, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_HASH_PCDATA]);
+                        curState = 3;
+                        if(!mixed()){
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }
                     }
-                    else expected(ch, "<WS> OR [%] OR [(] OR <NAME_START> OR [\\#]");
+                    else {
+                        handler.notMixed();
+                        curState = 3;
+                        if(stop){
+                            exiting(RULE_CHILDREN, 3);
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }else
+                        if(!children()){
+                            exiting(RULE_ELEMENT_DECL, 15);
+                            return false;
+                        }
+                    }
                 case 15:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 15);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 19;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[>] OR <WS> OR [%]");
                 case 19:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_ELEMENT_DECL, 19);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_ELEMENT_DECL, 19);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
-                    else if(ch=='%'){
-                        push(RULE_PE_REFERENCE, 18, 0);
-                        consume(ch);
-                        curState = 1;
-                        return pe_reference();
+                    else {
+                        curState = 0;
+                        if(pe_reference()){
+                            curState = 18;
+                            continue;
+                        }else{
+                            exiting(RULE_ELEMENT_DECL, 18);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[>] OR <WS> OR [%]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -4808,85 +5211,106 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_SUBSET, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='%'){
-                            push(RULE_DECL_SEP, 1, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_SUBSET, 1);
+                                return false;
+                            }
                         }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_DECL_SEP, 1, 0);
-                            consume(ch);
-                            curState = 3;
-                            return decl_sep();
+                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_SUBSET, 1);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(markup_decl()){
+                                    curState = 1;
+                                    continue;
+                                }else{
+                                    exiting(RULE_INT_SUBSET, 1);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='A'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='N'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
+                                if(ch=='N'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='-'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                if(ch=='-'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==4){
@@ -4894,26 +5318,26 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(lookAhead.charAt(2)=='E'){
                                     if(ch=='L'){
-                                        push(RULE_MARKUP_DECL, 1, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 1;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_INT_SUBSET, 1);
+                                            return false;
+                                        }
                                     }
-                                    else if(ch=='N'){
-                                        push(RULE_MARKUP_DECL, 1, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
+                                    if(ch=='N'){
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 1;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_INT_SUBSET, 1);
+                                            return false;
+                                        }
                                     }
                                 }
                             }
@@ -4921,85 +5345,106 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     expected(ch, "[%] OR <WS> OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][E][L] OR [<][!][E][N]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_SUBSET, 1);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='%'){
-                            push(RULE_DECL_SEP, 1, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_SUBSET, 1);
+                                return false;
+                            }
                         }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_DECL_SEP, 1, 0);
-                            consume(ch);
-                            curState = 3;
-                            return decl_sep();
+                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_SUBSET, 1);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 1);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_MARKUP_DECL, 1, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(markup_decl()){
+                                    curState = 1;
+                                    continue;
+                                }else{
+                                    exiting(RULE_INT_SUBSET, 1);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 1);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='A'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='N'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
+                                if(ch=='N'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='-'){
-                                    push(RULE_MARKUP_DECL, 1, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                if(ch=='-'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_SUBSET, 1);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_SUBSET, 1);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==4){
@@ -5007,33 +5452,32 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(lookAhead.charAt(2)=='E'){
                                     if(ch=='L'){
-                                        push(RULE_MARKUP_DECL, 1, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 1;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_INT_SUBSET, 1);
+                                            return false;
+                                        }
                                     }
-                                    else if(ch=='N'){
-                                        push(RULE_MARKUP_DECL, 1, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
+                                    if(ch=='N'){
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 1;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_INT_SUBSET, 1);
+                                            return false;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                     lookAhead.reset();
-                    curState = -1;
                     return true;
                 default:
                     throw new Error("impossible state: "+curState);
@@ -5047,63 +5491,79 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    push(RULE_STR_DOCTYPE, 3, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_DOCTYPE]);
-                case 3:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_DOCTYPE, STRING_IDS[-RULE_STR_DOCTYPE])){
+                        exiting(RULE_DOCTYPE_DECL, 3);
                         return false;
+                    }
+                case 3:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 3);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
                     }
                     else expected(ch, "<WS>");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        push(RULE_NAME, 6, 0);
-                        consume(ch);
-                        curState = 1;
-                        return name();
                     }
-                    else expected(ch, "<WS> OR <NAME_START>");
-                case 6:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 4);
                         return false;
+                    }
+                    buffer.push();
+                    curState = 0;
+                    if(!name()){
+                        exiting(RULE_DOCTYPE_DECL, 6);
+                        return false;
+                    }
+                case 6:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 6);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         handler.dtdRoot(buffer.pop(0, 0));
                         consume(ch);
                         curState = 7;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_DOCTYPE_DECL, 7);
                             return false;
+                        }
                     }
                     else if(ch=='['){
                         handler.dtdRoot(buffer.pop(0, 0));
                         handler.dtdStart();
                         consume(ch);
                         curState = 11;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_DOCTYPE_DECL, 11);
                             return false;
+                        }
                         continue;
                     }
                     else if(ch=='>'){
@@ -5111,91 +5571,103 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.dtdStart();
                         consume(ch);
                         handler.dtdEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "<WS> OR [\\[] OR [>]");
                 case 7:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 7);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 7);
                         return false;
-                    if(ch=='P'){
-                        push(RULE_EXTERNAL_ID, 8, 0);
-                        push(RULE_PUBLIC_ID, 1, 0);
-                        push(RULE_STR_PUBLIC, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_PUBLIC]);
                     }
-                    else if(ch=='S'){
-                        push(RULE_EXTERNAL_ID, 8, 0);
-                        push(RULE_SYSTEM_ID, -1, 0);
-                        push(RULE_STR_SYSTEM, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_SYSTEM]);
-                    }
-                    else if(ch=='['){
-                        handler.dtdStart();
-                        consume(ch);
-                        curState = 11;
-                        if(stop)
-                            return false;
-                    }
-                    else if(ch=='>'){
-                        handler.dtdStart();
-                        consume(ch);
-                        handler.dtdEnd();
-                        curState = -1;
-                        return true;
-                    }
-                    else expected(ch, "<WS> OR [P] OR [S] OR [\\[] OR [>]");
-                case 11:
-                    push(RULE_INT_SUBSET, 12, 0);
-                    curState = 0;
-                    return int_subset();
-                case 8:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
                     if(ch=='['){
                         handler.dtdStart();
                         consume(ch);
                         curState = 11;
-                        if(stop)
+                        if(stop){
+                            exiting(RULE_DOCTYPE_DECL, 11);
                             return false;
+                        }
+                    }
+                    else if(ch=='>'){
+                        handler.dtdStart();
+                        consume(ch);
+                        handler.dtdEnd();
+                        return !stop;
+                    }
+                    else {
+                        curState = 0;
+                        if(external_id()){
+                            curState = 8;
+                            continue;
+                        }else{
+                            exiting(RULE_DOCTYPE_DECL, 8);
+                            return false;
+                        }
+                    }
+                case 11:
+                    curState = 0;
+                    if(int_subset()){
+                        curState = 12;
+                        continue;
+                    }else{
+                        exiting(RULE_DOCTYPE_DECL, 12);
+                        return false;
+                    }
+                case 8:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 8);
+                        return false;
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 8);
+                        return false;
+                    }
+                    if(ch=='['){
+                        handler.dtdStart();
+                        consume(ch);
+                        curState = 11;
+                        if(stop){
+                            exiting(RULE_DOCTYPE_DECL, 11);
+                            return false;
+                        }
                         continue;
                     }
                     else if(ch=='>'){
                         handler.dtdStart();
                         consume(ch);
                         handler.dtdEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "[\\[] OR [>] OR <WS>");
+                    else expected(ch, "<WS> OR [\\[] OR [>]");
                 case 12:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 12);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 13;
                     }
                     else expected(ch, "[\\]]");
                 case 13:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 13);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_DOCTYPE_DECL, 13);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
                         handler.dtdEnd();
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
-                    else expected(ch, "[>] OR <WS>");
+                    else expected(ch, "<WS> OR [>]");
                 default:
                     throw new Error("impossible state: "+curState);
             }
@@ -5208,162 +5680,204 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCUMENT, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 0, 0);
-                            consume(ch);
-                            curState = 1;
-                            return misc();
+                            curState = 0;
+                            if(misc()){
+                                curState = 0;
+                                continue;
+                            }else{
+                                exiting(RULE_DOCUMENT, 0);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_DOCUMENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM, 3, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return ncname();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(elem()){
+                                    curState = 3;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 3);
+                                    return false;
+                                }
                             }
-                            else if(ch=='?'){
-                                push(RULE_MISC, 0, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
+                                if(misc()){
+                                    curState = 0;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 0);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_DOCUMENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='D'){
-                                    push(RULE_DOCTYPE_DECL, 1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_DOCTYPE, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_DOCTYPE]);
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(doctype_decl()){
+                                        curState = 1;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_DOCUMENT, 1);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='-'){
-                                    push(RULE_MISC, 0, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                if(ch=='-'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(misc()){
+                                        curState = 0;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_DOCUMENT, 0);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     expected(ch, "<WS> OR [<]<NCNAME_START> OR [<][?] OR [<][!][D] OR [<][!][\\-]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCUMENT, 3);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 3, 0);
-                            consume(ch);
-                            curState = 1;
-                            return misc();
+                            curState = 0;
+                            if(misc()){
+                                curState = 3;
+                                continue;
+                            }else{
+                                exiting(RULE_DOCUMENT, 3);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_DOCUMENT, 3);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='!'){
-                                push(RULE_MISC, 3, 0);
-                                push(RULE_COMMENT, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return comment();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(misc()){
+                                    curState = 3;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 3);
+                                    return false;
+                                }
                             }
-                            else if(ch=='?'){
-                                push(RULE_MISC, 3, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
+                                if(misc()){
+                                    curState = 3;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 3);
+                                    return false;
+                                }
                             }
                         }
                     }
                     lookAhead.reset();
-                    curState = -1;
                     return true;
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_DOCUMENT, 1);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_MISC, 1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return misc();
+                            curState = 0;
+                            if(misc()){
+                                curState = 1;
+                                continue;
+                            }else{
+                                exiting(RULE_DOCUMENT, 1);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_DOCUMENT, 1);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM, 3, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return ncname();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(elem()){
+                                    curState = 3;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 3);
+                                    return false;
+                                }
                             }
-                            else if(ch=='!'){
-                                push(RULE_MISC, 1, 0);
-                                push(RULE_COMMENT, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return comment();
+                            if(ch=='!'){
+                                curState = 0;
+                                lookAhead.reset();
+                                if(misc()){
+                                    curState = 1;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 1);
+                                    return false;
+                                }
                             }
-                            else if(ch=='?'){
-                                push(RULE_MISC, 1, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
+                                if(misc()){
+                                    curState = 1;
+                                    continue;
+                                }else{
+                                    exiting(RULE_DOCUMENT, 1);
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -5380,93 +5894,112 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_ELEM_CONTENT, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch==']'){
-                            push(RULE_ELEM_CONTENT, 0, 0);
-                            buffer.push();
-                            consume(ch);
-                            curState = 8;
-                            return elem_content();
+                            curState = 0;
+                            if(elem_content()){
+                                curState = 0;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_ELEM_CONTENT, 0);
+                                return false;
+                            }
                         }
-                        else if(ch=='&'){
-                            push(RULE_ELEM_CONTENT, 0, 0);
-                            push(RULE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return reference();
+                        if(ch=='&'){
+                            curState = 0;
+                            if(elem_content()){
+                                curState = 0;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_ELEM_CONTENT, 0);
+                                return false;
+                            }
                         }
-                        else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            push(RULE_ELEM_CONTENT, 0, 0);
-                            buffer.push();
-                            consume(ch);
-                            curState = 6;
-                            return elem_content();
+                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                            curState = 0;
+                            if(elem_content()){
+                                curState = 0;
+                                continue;
+                            }else{
+                                exiting(RULE_INT_ELEM_CONTENT, 0);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_ELEM_CONTENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                push(RULE_ELEM_CONTENT, 0, 0);
-                                push(RULE_ELEM, -1, 0);
-                                push(RULE_ELEM_ATTRS, 1, 0);
-                                consume(FROM_LA);
-                                push(RULE_QNAME, 2, 0);
-                                buffer.push();
-                                buffer.push();
-                                push(RULE_NCNAME, 2, 0);
-                                consume(FROM_LA);
-                                curState = 1;
-                                return ncname();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(elem_content()){
+                                    curState = 0;
+                                    continue;
+                                }else{
+                                    exiting(RULE_INT_ELEM_CONTENT, 0);
+                                    return false;
+                                }
                             }
-                            else if(ch=='?'){
-                                push(RULE_ELEM_CONTENT, 0, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                            if(ch=='?'){
+                                curState = 0;
+                                lookAhead.reset();
+                                if(elem_content()){
+                                    curState = 0;
+                                    continue;
+                                }else{
+                                    exiting(RULE_INT_ELEM_CONTENT, 0);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_INT_ELEM_CONTENT, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='-'){
-                                    push(RULE_ELEM_CONTENT, 0, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(elem_content()){
+                                        curState = 0;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_ELEM_CONTENT, 0);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='['){
-                                    push(RULE_ELEM_CONTENT, 0, 0);
-                                    push(RULE_CDATA, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return cdata();
+                                if(ch=='['){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(elem_content()){
+                                        curState = 0;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_INT_ELEM_CONTENT, 0);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     lookAhead.reset();
-                    curState = -1;
                     return true;
                 default:
                     throw new Error("impossible state: "+curState);
@@ -5480,40 +6013,52 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_XML, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_XML]);
-                case 1:
-                    if((ch=codePoint())==EOC)
+                    if(!matchString(RULE_STR_XML, STRING_IDS[-RULE_STR_XML])){
+                        exiting(RULE_TEXT_DECL, 1);
                         return false;
+                    }
+                case 1:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 1);
+                        return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "<WS>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 2);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_TEXT_DECL, 2);
                         return false;
+                    }
                     if(ch=='v'){
-                        push(RULE_VERSION_INFO, 3, 0);
-                        push(RULE_STR_VERSION, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_VERSION]);
+                        curState = 0;
+                        if(!version_info()){
+                            exiting(RULE_TEXT_DECL, 3);
+                            return false;
+                        }
                     }
-                    else if(ch=='e'){
-                        push(RULE_ENC_DECL, 6, 0);
-                        push(RULE_STR_ENCODING, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ENCODING]);
+                    else {
+                        curState = 0;
+                        if(enc_decl()){
+                            curState = 6;
+                            continue;
+                        }else{
+                            exiting(RULE_TEXT_DECL, 6);
+                            return false;
+                        }
                     }
-                    else expected(ch, "[v] OR [e] OR <WS>");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 3);
                         return false;
+                    }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         curState = 4;
@@ -5521,10 +6066,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS>");
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 6);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_TEXT_DECL, 6);
                         return false;
+                    }
                     if(ch=='?'){
                         consume(ch);
                         curState = 7;
@@ -5532,26 +6081,31 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 4);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='e'){
-                        push(RULE_ENC_DECL, 6, 0);
-                        push(RULE_STR_ENCODING, 1, 0);
-                        consume(ch);
-                        curState = 1;
-                        return matchString(STRING_IDS[-RULE_STR_ENCODING]);
                     }
-                    else expected(ch, "<WS> OR [e]");
-                case 7:
-                    if((ch=codePoint())==EOC)
+                    if(finishAll_WS(ch)==EOC){
+                        exiting(RULE_TEXT_DECL, 4);
                         return false;
+                    }
+                    curState = 0;
+                    if(enc_decl()){
+                        curState = 6;
+                        continue;
+                    }else{
+                        exiting(RULE_TEXT_DECL, 6);
+                        return false;
+                    }
+                case 7:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_TEXT_DECL, 7);
+                        return false;
+                    }
                     if(ch=='>'){
                         handler.xdeclEnd();
                         consume(ch);
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                     else expected(ch, "[>]");
                 default:
@@ -5566,22 +6120,30 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    push(RULE_STR_IGNORE, 1, 0);
                     curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_IGNORE]);
+                    if(!matchString(RULE_STR_IGNORE, STRING_IDS[-RULE_STR_IGNORE])){
+                        exiting(RULE_IGNORE_SECT, 1);
+                        return false;
+                    }
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 1);
                         return false;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_IGNORE_SECT, 1);
                         return false;
+                    }
                     if(ch=='['){
                         consume(ch);
                         curState = 3;
                     }
                     else expected(ch, "<WS> OR [\\[]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 3);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 4;
@@ -5598,8 +6160,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 4);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 5;
@@ -5616,8 +6180,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 8:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 8);
                         return false;
+                    }
+                    if((ch=finishAll(ch, '<'))==EOC){
+                        exiting(RULE_IGNORE_SECT, 8);
+                        return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 9;
@@ -5628,25 +6198,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 4;
                         continue;
                     }
-                    else if(ch=='<'){
-                        consume(ch);
-                        curState = 8;
-                        continue;
-                    }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         curState = 3;
                         continue;
                     }
-                    else expected(ch, "[!] OR [\\]] OR [<] OR <CHAR>");
+                    else expected(ch, "[<] OR [!] OR [\\]] OR <CHAR>");
                 case 5:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 5);
                         return false;
-                    if((ch=finishAll(ch, ']'))==EOC)
+                    }
+                    if((ch=finishAll(ch, ']'))==EOC){
+                        exiting(RULE_IGNORE_SECT, 5);
                         return false;
+                    }
                     if(ch=='>'){
                         consume(ch);
-                        curState = -1;
                         return true;
                     }
                     else if(ch=='<'){
@@ -5659,10 +6227,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         curState = 3;
                         continue;
                     }
-                    else expected(ch, "[>] OR [\\]] OR [<] OR <CHAR>");
+                    else expected(ch, "[\\]] OR [>] OR [<] OR <CHAR>");
                 case 9:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 9);
                         return false;
+                    }
                     if(ch=='['){
                         consume(ch);
                         curState = 10;
@@ -5684,12 +6254,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\[] OR [\\]] OR [<] OR <CHAR>");
                 case 10:
-                    push(RULE_IGNORE_SECT, 11, 2);
                     curState = 2;
-                    continue;
-                case 11:
-                    if((ch=codePoint())==EOC)
+                    if(!ignore_sect()){
+                        exiting(RULE_IGNORE_SECT, 11);
                         return false;
+                    }
+                case 11:
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 11);
+                        return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 4;
@@ -5707,8 +6281,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\]] OR [<] OR <CHAR>");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_IGNORE_SECT, 2);
                         return false;
+                    }
                     if(ch==']'){
                         consume(ch);
                         curState = 4;
@@ -5737,93 +6313,117 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_EXT_SUBSET_DECL, 0);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='%'){
-                            push(RULE_DECL_SEP, 2, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 2;
+                                continue;
+                            }else{
+                                exiting(RULE_EXT_SUBSET_DECL, 2);
+                                return false;
+                            }
                         }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_DECL_SEP, 2, 0);
-                            consume(ch);
-                            curState = 3;
-                            return decl_sep();
+                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 2;
+                                continue;
+                            }else{
+                                exiting(RULE_EXT_SUBSET_DECL, 2);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(markup_decl()){
+                                    curState = 2;
+                                    continue;
+                                }else{
+                                    exiting(RULE_EXT_SUBSET_DECL, 2);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='A'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='N'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
+                                if(ch=='N'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='-'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                if(ch=='-'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='['){
-                                    push(RULE_CONDITIONAL_SECT, 2, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 4;
-                                    return conditional_sect();
+                                if(ch=='['){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(conditional_sect()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 0);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==4){
@@ -5831,122 +6431,145 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(lookAhead.charAt(2)=='E'){
                                     if(ch=='L'){
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 2;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_EXT_SUBSET_DECL, 2);
+                                            return false;
+                                        }
                                     }
-                                    else if(ch=='N'){
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
+                                    if(ch=='N'){
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 2;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_EXT_SUBSET_DECL, 2);
+                                            return false;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                     lookAhead.reset();
-                    curState = -1;
                     return true;
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_EXT_SUBSET_DECL, 2);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch=='%'){
-                            push(RULE_DECL_SEP, 2, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 2;
+                                continue;
+                            }else{
+                                exiting(RULE_EXT_SUBSET_DECL, 2);
+                                return false;
+                            }
                         }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_DECL_SEP, 2, 0);
-                            consume(ch);
-                            curState = 3;
-                            return decl_sep();
+                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                            curState = 0;
+                            if(decl_sep()){
+                                curState = 2;
+                                continue;
+                            }else{
+                                exiting(RULE_EXT_SUBSET_DECL, 2);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 2);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='<'){
                             if(ch=='?'){
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
+                                curState = 0;
+                                lookAhead.reset();
+                                if(markup_decl()){
+                                    curState = 2;
+                                    continue;
+                                }else{
+                                    exiting(RULE_EXT_SUBSET_DECL, 2);
+                                    return false;
+                                }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 2);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==3){
                         if(lookAhead.charAt(0)=='<'){
                             if(lookAhead.charAt(1)=='!'){
                                 if(ch=='A'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='N'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
+                                if(ch=='N'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='-'){
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
+                                if(ch=='-'){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(markup_decl()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
-                                else if(ch=='['){
-                                    push(RULE_CONDITIONAL_SECT, 2, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 4;
-                                    return conditional_sect();
+                                if(ch=='['){
+                                    curState = 0;
+                                    lookAhead.reset();
+                                    if(conditional_sect()){
+                                        curState = 2;
+                                        continue;
+                                    }else{
+                                        exiting(RULE_EXT_SUBSET_DECL, 2);
+                                        return false;
+                                    }
                                 }
                             }
                         }
                     }
                     if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_EXT_SUBSET_DECL, 2);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==4){
@@ -5954,33 +6577,32 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(lookAhead.charAt(1)=='!'){
                                 if(lookAhead.charAt(2)=='E'){
                                     if(ch=='L'){
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 2;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_EXT_SUBSET_DECL, 2);
+                                            return false;
+                                        }
                                     }
-                                    else if(ch=='N'){
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
+                                    if(ch=='N'){
+                                        curState = 0;
+                                        lookAhead.reset();
+                                        if(markup_decl()){
+                                            curState = 2;
+                                            continue;
+                                        }else{
+                                            exiting(RULE_EXT_SUBSET_DECL, 2);
+                                            return false;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                     lookAhead.reset();
-                    curState = -1;
                     return true;
                 default:
                     throw new Error("impossible state: "+curState);
@@ -5994,108 +6616,120 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 0);
                         return false;
+                    }
                     if(ch=='<'){
                         consume(ch);
                         curState = 1;
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 1);
                         return false;
+                    }
                     if(ch=='!'){
                         consume(ch);
                         curState = 2;
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 2);
                         return false;
+                    }
                     if(ch=='['){
                         consume(ch);
                         curState = 4;
                     }
                     else expected(ch, "[\\[]");
                 case 4:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 4);
                         return false;
+                    }
                     if(lookAhead.length()==0){
-                        if((ch=finishAll_WS(ch))==EOC)
+                        if((ch=finishAll_WS(ch))==EOC){
+                            exiting(RULE_CONDITIONAL_SECT, 4);
                             return false;
+                        }
                         if(ch=='%'){
-                            push(RULE_PE_REFERENCE, 3, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                            curState = 0;
+                            if(pe_reference()){
+                                curState = 3;
+                                continue;
+                            }else{
+                                exiting(RULE_CONDITIONAL_SECT, 3);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_CONDITIONAL_SECT, 4);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
-                                push(RULE_IGNORE_SECT, -1, 0);
-                                push(RULE_STR_IGNORE, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_IGNORE]);
+                                curState = 0;
+                                lookAhead.reset();
+                                return ignore_sect();
                             }
-                            else if(ch=='N'){
-                                push(RULE_INCLUDE_SECT, -1, 0);
-                                push(RULE_STR_INCLUDE, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_INCLUDE]);
+                            if(ch=='N'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return include_sect();
                             }
                         }
                     }
                     expected(ch, "<WS> OR [%] OR [I][G] OR [I][N]");
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 3);
                         return false;
+                    }
                     if(lookAhead.length()==0){
                         if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                             consume(ch);
                             curState = 4;
                             continue;
                         }
-                        else if(ch=='%'){
-                            push(RULE_PE_REFERENCE, 3, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
+                        if(ch=='%'){
+                            curState = 0;
+                            if(pe_reference()){
+                                curState = 3;
+                                continue;
+                            }else{
+                                exiting(RULE_CONDITIONAL_SECT, 3);
+                                return false;
+                            }
                         }
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
+                        if((ch=codePoint())==EOC){
+                            exiting(RULE_CONDITIONAL_SECT, 3);
                             return false;
+                        }
                         addToLookAhead(ch);
                     }
                     if(lookAhead.length()==2){
                         if(lookAhead.charAt(0)=='I'){
                             if(ch=='G'){
-                                push(RULE_IGNORE_SECT, -1, 0);
-                                push(RULE_STR_IGNORE, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_IGNORE]);
+                                curState = 0;
+                                lookAhead.reset();
+                                return ignore_sect();
                             }
-                            else if(ch=='N'){
-                                push(RULE_INCLUDE_SECT, -1, 0);
-                                push(RULE_STR_INCLUDE, 1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return matchString(STRING_IDS[-RULE_STR_INCLUDE]);
+                            if(ch=='N'){
+                                curState = 0;
+                                lookAhead.reset();
+                                return include_sect();
                             }
                         }
                     }
@@ -6109,220 +6743,100 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     public static final int RULE_INCLUDE_SECT = 62;
     private boolean include_sect() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    push(RULE_STR_INCLUDE, 1, 0);
-                    curState = 0;
-                    return matchString(STRING_IDS[-RULE_STR_INCLUDE]);
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if((ch=finishAll_WS(ch))==EOC)
-                        return false;
-                    if(ch=='['){
-                        consume(ch);
-                        curState = 2;
-                    }
-                    else expected(ch, "<WS> OR [\\[]");
-                case 2:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(lookAhead.length()==0){
-                        if(ch=='%'){
-                            push(RULE_EXT_SUBSET_DECL, 3, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            handler.peReferenceOutsideMarkup();
-                            push(RULE_PE_REFERENCE, -1, 0);
-                            consume(ch);
-                            curState = 1;
-                            return pe_reference();
-                        }
-                        else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            push(RULE_EXT_SUBSET_DECL, 3, 0);
-                            push(RULE_DECL_SEP, 2, 0);
-                            consume(ch);
-                            curState = 3;
-                            return decl_sep();
-                        }
-                        else if(ch==']'){
-                            push(RULE_EXT_SUBSET_DECL, 3, 0);
-                            free -= 2;
-                            consume(ch);
-                            curState = 4;
-                            continue;
-                        }
-                    }
-                    addToLookAhead(ch);
-                    if(ch!=EOF && lookAhead.length()<2){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
-                    }
-                    if(lookAhead.length()==2){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(ch=='?'){
-                                push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                push(RULE_MARKUP_DECL, 2, 0);
-                                push(RULE_PI, -1, 0);
-                                consume(FROM_LA);
-                                consume(FROM_LA);
-                                curState = 2;
-                                return pi();
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<3){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
-                    }
-                    if(lookAhead.length()==3){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(ch=='A'){
-                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_ATT_LIST_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_ATTLIST, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_ATTLIST]);
-                                }
-                                else if(ch=='N'){
-                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_NOTATION_DECL, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    push(RULE_STR_NOTATION, 3, 0);
-                                    consume(FROM_LA);
-                                    curState = 1;
-                                    return matchString(STRING_IDS[-RULE_STR_NOTATION]);
-                                }
-                                else if(ch=='-'){
-                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                    push(RULE_MARKUP_DECL, 2, 0);
-                                    push(RULE_COMMENT, -1, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 3;
-                                    return comment();
-                                }
-                                else if(ch=='['){
-                                    push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                    push(RULE_CONDITIONAL_SECT, 2, 0);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    consume(FROM_LA);
-                                    curState = 4;
-                                    return conditional_sect();
-                                }
-                            }
-                        }
-                    }
-                    if(ch!=EOF && lookAhead.length()<4){
-                        if((ch=codePoint())==EOC)
-                            return false;
-                        addToLookAhead(ch);
-                    }
-                    if(lookAhead.length()==4){
-                        if(lookAhead.charAt(0)=='<'){
-                            if(lookAhead.charAt(1)=='!'){
-                                if(lookAhead.charAt(2)=='E'){
-                                    if(ch=='L'){
-                                        push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ELEMENT_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ELEMENT, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ELEMENT]);
-                                    }
-                                    else if(ch=='N'){
-                                        push(RULE_EXT_SUBSET_DECL, 3, 0);
-                                        push(RULE_MARKUP_DECL, 2, 0);
-                                        push(RULE_ENTITY_DECL, -1, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        push(RULE_STR_ENTITY, 3, 0);
-                                        consume(FROM_LA);
-                                        consume(FROM_LA);
-                                        curState = 2;
-                                        return matchString(STRING_IDS[-RULE_STR_ENTITY]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    expected(ch, "[%] OR <WS> OR [\\]] OR [<][?] OR [<][!][A] OR [<][!][N] OR [<][!][\\-] OR [<][!][\\[] OR [<][!][E][L] OR [<][!][E][N]");
-                case 3:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch==']'){
-                        consume(ch);
-                        curState = 4;
-                    }
-                    else expected(ch, "[\\]]");
-                case 4:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch==']'){
-                        consume(ch);
-                        curState = 5;
-                    }
-                    else expected(ch, "[\\]]");
-                case 5:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch=='>'){
-                        consume(ch);
-                        curState = -1;
-                        return true;
-                    }
-                    else expected(ch, "[>]");
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+        switch(curState){
+            case 0:
+                curState = 0;
+                if(!matchString(RULE_STR_INCLUDE, STRING_IDS[-RULE_STR_INCLUDE])){
+                    exiting(RULE_INCLUDE_SECT, 1);
+                    return false;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_INCLUDE_SECT, 1);
+                    return false;
+                }
+                if((ch=finishAll_WS(ch))==EOC){
+                    exiting(RULE_INCLUDE_SECT, 1);
+                    return false;
+                }
+                if(ch=='['){
+                    consume(ch);
+                    curState = 2;
+                }
+                else expected(ch, "<WS> OR [\\[]");
+            case 2:
+                curState = 0;
+                if(!ext_subset_decl()){
+                    exiting(RULE_INCLUDE_SECT, 3);
+                    return false;
+                }
+            case 3:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_INCLUDE_SECT, 3);
+                    return false;
+                }
+                if(ch==']'){
+                    consume(ch);
+                    curState = 4;
+                }
+                else expected(ch, "[\\]]");
+            case 4:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_INCLUDE_SECT, 4);
+                    return false;
+                }
+                if(ch==']'){
+                    consume(ch);
+                    curState = 5;
+                }
+                else expected(ch, "[\\]]");
+            case 5:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_INCLUDE_SECT, 5);
+                    return false;
+                }
+                if(ch=='>'){
+                    consume(ch);
+                    return true;
+                }
+                else expected(ch, "[>]");
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
     public static final int RULE_EXTERNAL_ENTITY_VALUE = 63;
     private boolean external_entity_value() throws Exception{
         int ch;
-        while(true){
-            switch(curState){
-                case 0:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                        buffer.push();
-                        consume(ch);
-                        curState = 1;
-                    }
-                    else {
-                        buffer.push();
-                        handler.externalEntityValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
-                    }
-                case 1:
-                    if((ch=codePoint())==EOC)
-                        return false;
-                    if(finishAll_CHAR(ch)==EOC)
-                        return false;
+        switch(curState){
+            case 0:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EXTERNAL_ENTITY_VALUE, 0);
+                    return false;
+                }
+                if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    buffer.push();
+                    consume(ch);
+                    curState = 1;
+                }
+                else {
+                    buffer.push();
                     handler.externalEntityValue(buffer.pop(0, 0));
-                    curState = -1;
-                    return true;
-                default:
-                    throw new Error("impossible state: "+curState);
-            }
+                    return !stop;
+                }
+            case 1:
+                if((ch=codePoint())==EOC){
+                    exiting(RULE_EXTERNAL_ENTITY_VALUE, 1);
+                    return false;
+                }
+                if(finishAll_CHAR(ch)==EOC){
+                    exiting(RULE_EXTERNAL_ENTITY_VALUE, 1);
+                    return false;
+                }
+                handler.externalEntityValue(buffer.pop(0, 0));
+                return !stop;
+            default:
+                throw new Error("impossible state: "+curState);
         }
     }
 
@@ -6332,46 +6846,59 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(curState){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_VALUE, 0);
                         return false;
+                    }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         buffer.push();
                         consume(ch);
                         curState = 3;
                     }
                     else if(ch=='&'){
-                        push(RULE_REFERENCE, 6, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
+                        curState = 0;
+                        if(reference()){
+                            curState = 6;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_VALUE, 6);
+                            return false;
+                        }
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_VALUE, 3);
                         return false;
+                    }
+                    if((ch=finishAll_ELEM_CONTENT_CHAR(ch))==EOC){
+                        exiting(RULE_INT_VALUE, 3);
+                        return false;
+                    }
                     if(ch=='&'){
                         handler.rawValue(buffer.pop(0, 0));
-                        push(RULE_REFERENCE, 6, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
-                    }
-                    else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                        consume(ch);
-                        curState = 3;
-                        continue;
+                        curState = 0;
+                        if(stop){
+                            exiting(RULE_REFERENCE, 0);
+                            exiting(RULE_INT_VALUE, 6);
+                            return false;
+                        }else
+                        if(!reference()){
+                            exiting(RULE_INT_VALUE, 6);
+                            return false;
+                        }
                     }
                     else {
                         handler.rawValue(buffer.pop(0, 0));
-                        curState = -1;
-                        return true;
+                        return !stop;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=codePoint())==EOC){
+                        exiting(RULE_INT_VALUE, 6);
                         return false;
+                    }
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         buffer.push();
                         consume(ch);
@@ -6379,13 +6906,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else if(ch=='&'){
-                        push(RULE_REFERENCE, 6, 0);
-                        consume(ch);
-                        curState = 1;
-                        return reference();
+                        curState = 0;
+                        if(reference()){
+                            curState = 6;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_VALUE, 6);
+                            return false;
+                        }
                     }
                     else {
-                        curState = -1;
                         return true;
                     }
                 default:
@@ -6394,16 +6924,111 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
+    private int finishAll_WS(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ENCODING_PART(int ch) throws IOException{
+        while(ch!=EOC && ENCODING_PART(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_DIGIT(int ch) throws IOException{
+        while(ch!=EOC && DIGIT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_NAME_PART(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_NCNAME_PART(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_HEX_DIGIT(int ch) throws IOException{
+        while(ch!=EOC && HEX_DIGIT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && ATTR_Q_CONTENT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && ATTR_DQ_CONTENT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ENTITY_Q_CONTENT(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && ENTITY_Q_CONTENT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ENTITY_DQ_CONTENT(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && ENTITY_DQ_CONTENT(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_CHAR(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
+    private int finishAll_ELEM_CONTENT_CHAR(int ch) throws IOException{
+        while(ch!=EOC && ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+            consume(ch);
+            ch = codePoint();
+        }
+        return ch;
+    }
+
     @Override
-    protected final boolean callRule() throws Exception{
+    protected final boolean callRule(int rule) throws Exception{
         if(SHOW_STATS)
             callRuleCount++;
-        int rule = stack[free-2];
         if(rule<0){
             if(rule==RULE_DYNAMIC_STRING_MATCH)
                 return matchString(dynamicStringToBeMatched);
             else
-                return matchString(STRING_IDS[-rule]);
+                return matchString(rule, STRING_IDS[-rule]);
         }
         switch(rule){
             case 0:
@@ -6539,62 +7164,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             default:
                 throw new Error("impossible rule: "+stack[free-2]);
         }
-    }
-
-    private int finishAll_WS(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_ENCODING_PART(int ch) throws IOException{
-        while(ch!=EOC && ENCODING_PART(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_DIGIT(int ch) throws IOException{
-        while(ch!=EOC && DIGIT(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_NAME_PART(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_NCNAME_PART(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_HEX_DIGIT(int ch) throws IOException{
-        while(ch!=EOC && HEX_DIGIT(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
-    }
-
-    private int finishAll_CHAR(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
     }
 
     @Override

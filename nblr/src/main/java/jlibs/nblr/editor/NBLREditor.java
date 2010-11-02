@@ -50,6 +50,7 @@ public class NBLREditor extends JFrame{
     private RuleScene scene;
     private JComboBox combo;
     private JLabel message = new JLabel();
+    Debugger debugger;
 
     public NBLREditor(Syntax syntax){
         super("Untitled");
@@ -81,6 +82,12 @@ public class NBLREditor extends JFrame{
                         if(usages.get(0)!=rule)
                             msg = "this rule can be inlined in "+usages.get(0).name;
                     }
+
+//                    for(Rule r: scene.getSyntax().rules.values())
+//                        r.computeIDS();
+//                    System.out.println("=============================================");
+//                    SyntaxClass syntaxClass = new SyntaxClass(scene.getSyntax());
+//                    System.out.println(new RuleMethod(syntaxClass, rule));
                 }
                 message.setText(msg);
             }
@@ -137,7 +144,7 @@ public class NBLREditor extends JFrame{
         scenePanel.add(new JScrollPane(scene.createView()), BorderLayout.CENTER);
         scenePanel.add(message, BorderLayout.SOUTH);
 
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scenePanel, new Debugger(scene));
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scenePanel, debugger=new Debugger(scene));
         split.setBorder(null);
         split.addAncestorListener(new AncestorListener(){
             public void ancestorAdded(AncestorEvent event){

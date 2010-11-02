@@ -155,32 +155,38 @@ public abstract class NBParser{
             this.position = position;
             this.limit = limit;
 
+            int rule = stack[free-2];
             curState = stack[free-1];
-            while(!stop && callRule()){
-                if(curState<0){
-                    assert lookAhead.length()==0;
-                    do{
-                        free -= 2;
-                    }while(free!=0 && stack[free-1]<0);
-
-                    if(free==0){
-                        int cp = codePoint();
-                        if(cp==EOC)
-                            return this.position;
-                        else if(cp==EOF)
-                            this.position = 1;
-                        else
-                            expected(cp, "<EOF>");
-                        break;
-                    }else
-                        curState = stack[free-1];
+            free -= 2;
+            while(callRule(rule)){
+                if(free==0){
+                    int cp = codePoint();
+                    if(cp==EOC)
+                        return this.position;
+                    else if(cp==EOF)
+                        this.position = 1;
+                    else
+                        expected(cp, "<EOF>");
+                    break;
                 }
+                rule = stack[free-2];
+                curState = stack[free-1];
+                free -= 2;
+            }
+
+            if(exitFree>0){
+                if(free+exitFree>stack.length)
+                    stack = Arrays.copyOf(stack, Math.max(free+exitFree, free*2));
+                do{
+                    free += 2;
+                    stack[free-2] = exitStack[exitFree-2];
+                    stack[free-1] = exitStack[exitFree-1];
+                    exitFree -=2;
+                }while(exitFree!=0);
             }
 
             if(chars==null && this.position==limit)
                 onSuccessful();
-            else
-                stack[free-1] = curState;
 
             return this.position;
         }catch(IOException ex){
@@ -197,7 +203,7 @@ public abstract class NBParser{
         consume(null, 0, 1);
     }
 
-    protected abstract boolean callRule() throws Exception;
+    protected abstract boolean callRule(int rule) throws Exception;
 
     protected void expected(int ch, String... matchers) throws Exception{
         String found;
@@ -230,23 +236,6 @@ public abstract class NBParser{
     protected int curState;
     protected int stack[] = new int[100];
 
-    protected void push(int toRule, int stateAfterRule, int stateInsideRule){
-        /*
-        // fails "/Users/santhosh/projects/SAXTest/xmlconf/xmltest/valid/not-sa/001.xml"
-        if(stateAfterRule==-1)
-            free -= 2;
-        else
-            stack[free-1] = stateAfterRule;
-        */
-        stack[free-1] = stateAfterRule;
-
-        free += 2;
-        if(free>stack.length)
-            stack = Arrays.copyOf(stack, free*2);
-        stack[free-2] = toRule;
-        stack[free-1] = stateInsideRule;
-    }
-
     protected void ioError(String message) throws IOException{
         try{
             fatalError(message);
@@ -256,6 +245,16 @@ public abstract class NBParser{
         }catch(Exception ex){
             throw new IOException(ex);
         }
+    }
+
+    protected int exitStack[] = new int[100];
+    protected int exitFree = 0;
+    protected void exiting(int rule, int state){
+        exitFree += 2;
+        if(exitFree>exitStack.length)
+            exitStack = Arrays.copyOf(exitStack, exitFree*2);
+        exitStack[exitFree-2] = rule;
+        exitStack[exitFree-1] = state;
     }
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
@@ -272,6 +271,7 @@ public abstract class NBParser{
             if(cp!=expectedCP){
                 if(cp==EOC){
                     curState = i;
+                    exiting(RULE_DYNAMIC_STRING_MATCH, i);
                     return false;
                 }
                 expected(cp, new String(new int[]{ expectedCP }, 0, 1));
@@ -284,7 +284,7 @@ public abstract class NBParser{
         return true;
     }
 
-    protected final boolean matchString(int expected[]) throws Exception{
+    protected final boolean matchString(int rule, int expected[]) throws Exception{
         int length = expected.length;
 
         for(int i=curState; i<length; i++){
@@ -292,6 +292,7 @@ public abstract class NBParser{
             if(cp!=expected[i]){
                 if(cp==EOC){
                     curState = i;
+                    exiting(rule, i);
                     return false;
                 }
                 expected(cp, new String(expected, i, 1));

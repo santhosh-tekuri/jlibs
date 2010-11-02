@@ -149,7 +149,18 @@ public class Path extends ArrayList<Object>{
             }
         }
     }
-    
+
+    public boolean digsIntoRule(){
+        for(Object obj: this){
+            if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.ruleTarget!=null)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public String toString(){
         String str;

@@ -56,7 +56,7 @@ import java.util.Observer;
  */
 public class Debugger extends JPanel implements NBHandler, Observer{
     private RuleScene scene;
-    private JTextArea input = new JTextArea();
+    public JTextArea input = new JTextArea();
     private JList ruleStackList = new JList(new DefaultListModel());
 
     public Debugger(RuleScene scene){

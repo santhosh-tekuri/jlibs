@@ -18,6 +18,7 @@ package jlibs.nblr.codegen;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.util.Range;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.codegen.java.SyntaxClass;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
@@ -26,8 +27,6 @@ import jlibs.nblr.rules.Rule;
 
 import java.io.File;
 import java.util.*;
-
-import static jlibs.core.annotation.processing.Printer.MINUS;
 
 /**
  * @author Santhosh Kumar T
@@ -150,79 +149,84 @@ public abstract class CodeGenerator{
         startParser();
         printer.emptyLine(true);
 
-        if(!debuggable){
-            detectDynamicStringMatches();
-            detectStringRules();
-        }
+        SyntaxClass.DEBUGGABLE = debuggable;
+        SyntaxClass syntaxClass = new SyntaxClass(syntax);
+        syntaxClass.generate(printer);
+        syntax = syntaxClass.syntax;
 
-        if(syntax.matchers.size()>0){
-            printTitleComment("Matchers");
-            printer.emptyLine(true);
-            for(Matcher matcher: syntax.matchers.values()){
-                printMatcherMethod(matcher);
-                printer.emptyLine(true);
-            }
-        }
+//        if(!debuggable){
+//            detectDynamicStringMatches();
+//            detectStringRules();
+//        }
 
-        int maxLookAhead = 0;
-        if(syntax.rules.size()>0){
-            printTitleComment("Rules");
-            printer.emptyLine(true);
+//        if(syntax.matchers.size()>0){
+//            printTitleComment("Matchers");
+//            printer.emptyLine(true);
+//            for(Matcher matcher: syntax.matchers.values()){
+//                printMatcherMethod(matcher);
+//                printer.emptyLine(true);
+//            }
+//        }
 
-            // NOTE: ids of all rules should be computed before calculating Routes
-            for(Rule rule: syntax.rules.values())
-                rule.computeIDS();
-
-            for(Rule rule: syntax.rules.values()){
-                if(rule.id<0)
-                    continue;
-                addRuleID(rule.name, rule.id);
-                startRuleMethod(rule);
-
-                statesVisited.clear();
-                statesPending.clear();
-                statesPending.add(rule.node);
-                while(!statesPending.isEmpty()){
-                    Node state = statesPending.iterator().next();
-                    statesPending.remove(state);
-                    statesVisited.add(state);
-                    try{
-                        Routes routes = new Routes(rule, state);
-                        routes.travelWithoutMatching();
-
-                        startCase(state.id);
-                        if(routes.isEOF())
-                            printer.println("// EOF-State");
-                        addRoutes(routes);
-                        endCase();
-                        maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
-                    }catch(IllegalStateException ex){
-                        throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
-                    }
-                    if(statesPending.isEmpty()){
-                        for(Node node: rule.nodes()){
-                            if(node.name!=null)
-                                addState(node);
-                        }
-                    }
-                }
-                finishRuleMethod(rule);
-                printer.emptyLine(true);
-            }
-        }
-
-        startCallRuleMethod();
-        for(Rule rule: syntax.rules.values()){
-            if(rule.id>=0){
-                startCase(rule.id);
-                callRuleMethod(rule.name);
-                printer.printlns(MINUS);
-            }
-        }
-        finishCallRuleMethod();
+//        int maxLookAhead = 0;
+//        if(syntax.rules.size()>0){
+//            printTitleComment("Rules");
+//            printer.emptyLine(true);
+//
+//            // NOTE: ids of all rules should be computed before calculating Routes
+//            for(Rule rule: syntax.rules.values())
+//                rule.computeIDS();
+//
+//            for(Rule rule: syntax.rules.values()){
+//                if(rule.id<0)
+//                    continue;
+//                addRuleID(rule.name, rule.id);
+//                startRuleMethod(rule);
+//
+//                statesVisited.clear();
+//                statesPending.clear();
+//                statesPending.add(rule.node);
+//                while(!statesPending.isEmpty()){
+//                    Node state = statesPending.iterator().next();
+//                    statesPending.remove(state);
+//                    statesVisited.add(state);
+//                    try{
+//                        Routes routes = new Routes(rule, state);
+//                        routes.travelWithoutMatching();
+//
+//                        startCase(state.id);
+//                        if(routes.isEOF())
+//                            printer.println("// EOF-State");
+//                        addRoutes(routes);
+//                        endCase();
+//                        maxLookAhead = Math.max(maxLookAhead, routes.maxLookAhead);
+//                    }catch(IllegalStateException ex){
+//                        throw new IllegalStateException(ex.getMessage()+" in Rule '"+rule.name+"'");
+//                    }
+//                    if(statesPending.isEmpty()){
+//                        for(Node node: rule.nodes()){
+//                            if(node.name!=null)
+//                                addState(node);
+//                        }
+//                    }
+//                }
+//                finishRuleMethod(rule);
+//                printer.emptyLine(true);
+//            }
+//        }
+//
+//        startCallRuleMethod();
+//        for(Rule rule: syntax.rules.values()){
+//            if(rule.id>=0){
+//                startCase(rule.id);
+//                callRuleMethod(rule.name);
+//                printer.printlns(MINUS);
+//            }
+//        }
+//        finishCallRuleMethod();
 
         printer.emptyLine(false);
-        finishParser(maxLookAhead);
+        finishParser(syntaxClass.maxLookAhead());
     }
 
     private ArrayList<Node> statesVisited = new ArrayList<Node>();
