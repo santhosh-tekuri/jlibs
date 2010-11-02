@@ -28,21 +28,13 @@ public abstract class DebuggableNBParser extends NBParser{
     }
 
     @Override
-    protected boolean callRule() throws Exception{
-        boolean result = _callRule();
-        if(stack[free-1]!=-1)
-            debugger.currentNode(stack[free-2], stack[free-1]);
+    protected boolean callRule(int rule) throws Exception{
+        boolean result = _callRule(rule);
+        debugger.currentNode(rule, curState);
         return result;
     }
 
-    protected abstract boolean _callRule() throws Exception;
-
-    @Override
-    protected void push(int toRule, int stateAfterRule, int stateInsideRule){
-        super.push(toRule, stateAfterRule, stateInsideRule);
-        if(debugger!=null)
-            debugger.currentNode(stack[free-2], stack[free-1]);
-    }
+    protected abstract boolean _callRule(int rule) throws Exception;
 
     public int[] getStack(){
         return stack;

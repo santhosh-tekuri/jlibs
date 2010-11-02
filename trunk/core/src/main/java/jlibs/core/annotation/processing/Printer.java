@@ -167,4 +167,10 @@ public class Printer{
         println(" * @author Santhosh Kumar T");
         println(" */");
     }
+
+    public void titleComment(String title){
+        emptyLine(true);
+        println("/*-------------------------------------------------[ "+title+" ]---------------------------------------------------*/");
+        emptyLine(true);
+    }
 }

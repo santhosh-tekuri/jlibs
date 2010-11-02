@@ -530,6 +530,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private void travelRoute(Path route, boolean consumeLookAhead, boolean resetLookAhead){
         handlerMethodCalled = false;
+        pushCount = 0;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = new Destination(consumeLookAhead, curRule, null);
@@ -542,6 +543,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private void travelPath(Path path, boolean consumeLookAhead, boolean resetLookAhead){
         handlerMethodCalled = false;
+        pushCount = 0;
         consumeLAFirst = false;
         consumeLALen = 0;
         Destination dest = _travelPath(curRule, path, consumeLookAhead);
@@ -551,6 +553,8 @@ public class JavaCodeGenerator extends CodeGenerator{
     }
 
     private void returnDestination(Destination dest){
+        if(!dest.consumedFromLookAhead && pushCount>1)
+            System.out.print("");
         int state = dest.state();
         if(state<0){
             println("curState = -1;");
@@ -602,6 +606,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     public static boolean COELSCE_LA_CONSUME_CALLS = false;
     private boolean handlerMethodCalled;
+    private int pushCount;
     private Destination _travelPath(Rule rule, Path path, boolean consumeLookAhead){
         nodesToBeExecuted.setLength(0);
 
@@ -640,6 +645,7 @@ public class JavaCodeGenerator extends CodeGenerator{
                     destNode = null;
                     int stateAfterRule = new Routes(ruleStack.peek(), edge.target).isEOF() ? -1 : edge.target.id;
                     println("push(RULE_"+edge.ruleTarget.rule.name.toUpperCase()+", "+stateAfterRule+", "+edge.ruleTarget.node().id+");");
+                    pushCount++;
                     if(stateAfterRule!=-1 && ruleStack.peek()==curRule)
                         addState(edge.target);
                     ruleStack.push(edge.ruleTarget.rule);
