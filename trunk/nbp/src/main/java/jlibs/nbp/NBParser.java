@@ -137,13 +137,13 @@ public abstract class NBParser{
         }
     }
 
-    protected void addToLookAhead(int cp){
+    protected final void addToLookAhead(int cp){
         if(lookAhead.add(cp))
             position += increment;
     }
 
     public boolean stop;
-    public int consume(char chars[], int position, int limit) throws IOException{
+    public final int consume(char chars[], int position, int limit) throws IOException{
         if(SHOW_STATS){
             chunkCount++;
             if(chars!=null)
@@ -155,10 +155,8 @@ public abstract class NBParser{
             this.position = position;
             this.limit = limit;
 
-            int rule = stack[free-2];
-            curState = stack[free-1];
-            free -= 2;
-            while(callRule(rule)){
+            int rule;
+            do{
                 if(free==0){
                     int cp = codePoint();
                     if(cp==EOC)
@@ -172,7 +170,7 @@ public abstract class NBParser{
                 rule = stack[free-2];
                 curState = stack[free-1];
                 free -= 2;
-            }
+            }while(callRule(rule));
 
             if(exitFree>0){
                 if(free+exitFree>stack.length)
@@ -205,7 +203,7 @@ public abstract class NBParser{
 
     protected abstract boolean callRule(int rule) throws Exception;
 
-    protected void expected(int ch, String... matchers) throws Exception{
+    protected final void expected(int ch, String... matchers) throws Exception{
         String found;
         if(stream.length()>0)
             found = stream.toString();
@@ -236,7 +234,7 @@ public abstract class NBParser{
     protected int curState;
     protected int stack[] = new int[100];
 
-    protected void ioError(String message) throws IOException{
+    protected final void ioError(String message) throws IOException{
         try{
             fatalError(message);
             throw new IOException(message);
@@ -249,7 +247,7 @@ public abstract class NBParser{
 
     protected int exitStack[] = new int[100];
     protected int exitFree = 0;
-    protected void exiting(int rule, int state){
+    protected final void exiting(int rule, int state){
         exitFree += 2;
         if(exitFree>exitStack.length)
             exitStack = Arrays.copyOf(exitStack, exitFree*2);
