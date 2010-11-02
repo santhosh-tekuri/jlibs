@@ -447,7 +447,7 @@ public class Decision{
                 if(index<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
                     if(node.action!=null){
                         if(SyntaxClass.DEBUGGABLE)
-                            printer.println("handler.execute(stack[free-2], "+node.id+");");
+                            printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.id+");");
                         else
                             printer.println(node.action.javaCode()+';');
                         if(!(node.action instanceof BufferAction) && !(node.action instanceof ErrorAction))
