@@ -214,12 +214,13 @@ public class Decision{
         Matcher matcher = matchers[0];
         String methodName = state.ruleMethod.syntaxClass.addToFinishAll(matcher);
 
+        String ch = state.lookAheadRequired() ? "ch" : "codePoint()";
         String methodCall;
         if(methodName.equals(SyntaxClass.FINISH_ALL) || methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN)){
             Any any = (Any)(methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN) ? ((Not)matcher).delegate : matcher);
-            methodCall = methodName+"(ch, "+Matcher.toJava(any.chars[0])+')';
+            methodCall = methodName+"("+ch+", "+Matcher.toJava(any.chars[0])+')';
         }else
-            methodCall = "finishAll_"+methodName+"(ch)";
+            methodCall = "finishAll_"+methodName+"("+ch+")";
 
         boolean returnValueRequired = false;
         for(int i = state.decisions.indexOf(this)+1; i<state.decisions.size(); i++){

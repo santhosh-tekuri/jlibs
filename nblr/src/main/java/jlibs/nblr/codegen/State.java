@@ -189,7 +189,7 @@ public class State{
                 PLUS
         );
 
-        if(readCodePoint()){
+        if(readCodePoint() && (!decisions.get(0).usesFinishAll() || lookAheadRequired())){
             printer.printlns(
                 "if((ch=codePoint())==EOC){",
                     PLUS,
