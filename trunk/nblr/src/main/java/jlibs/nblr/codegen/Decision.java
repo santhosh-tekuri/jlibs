@@ -104,7 +104,7 @@ public class Decision{
 
     private int idAfterRule(Edge edgeWithRule){
         Node stateAfterRule = stateAfterRule(edgeWithRule);
-        return stateAfterRule==null ? -1 : stateAfterRule.id;
+        return stateAfterRule==null ? -1 : stateAfterRule.stateID;
     }
 
     private String ruleName(Edge edgeWithRule){
@@ -235,7 +235,7 @@ public class Decision{
         printer.printlns(
             "if("+methodCall+"==EOC){",
                 PLUS,
-                exiting(ruleID(), state.fromNode.id),
+                exiting(ruleID(), state.fromNode.stateID),
                 "return false;",
                 MINUS,
             "}"
@@ -432,7 +432,7 @@ public class Decision{
 
     // NOTE: don't use for edgeRuleTarget
     private int id(Node node){
-        return node==null || node.outgoing.size()==0 ? -1 : node.id;
+        return node==null || node.outgoing.size()==0 ? -1 : node.stateID;
     }
 
     private boolean generatePath(Printer printer){
@@ -447,7 +447,7 @@ public class Decision{
                 if(index<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
                     if(node.action!=null){
                         if(SyntaxClass.DEBUGGABLE)
-                            printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.id+");");
+                            printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.stateID+");");
                         else
                             printer.println(node.action.javaCode()+';');
                         if(!(node.action instanceof BufferAction) && !(node.action instanceof ErrorAction))

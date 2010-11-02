@@ -185,7 +185,7 @@ public class State{
 
     public void generate(Printer printer, State nextState){
         printer.printlns(
-            "case "+fromNode.id+":",
+            "case "+fromNode.stateID+":",
                 PLUS
         );
 
@@ -193,7 +193,7 @@ public class State{
             printer.printlns(
                 "if((ch=codePoint())==EOC){",
                     PLUS,
-                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.id+");",
+                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");",
                     "return false;",
                     MINUS,
                 "}"
@@ -226,7 +226,7 @@ public class State{
                                 PLUS,
                                 "if((ch=codePoint())==EOC){",
                                     PLUS,
-                                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.id+");",
+                                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");",
                                     "return false;",
                                     MINUS,
                                 "}",
