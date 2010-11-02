@@ -19,6 +19,7 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.Decision;
 import jlibs.nblr.codegen.RuleMethod;
+import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
@@ -52,6 +53,13 @@ public class SyntaxClass{
         for(Rule rule: syntax.rules.values()){
             if(rule.id>=0)
                 ruleMethods.add(new RuleMethod(this, rule));
+        }
+        for(RuleMethod ruleMethod: ruleMethods){
+            int i = -1;
+            for(State state: ruleMethod.states){
+                ++i;
+                state.fromNode.stateID = DEBUGGABLE ? state.fromNode.id : i;
+            }
         }
     }
 
