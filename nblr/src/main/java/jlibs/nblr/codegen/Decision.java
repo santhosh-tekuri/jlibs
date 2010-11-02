@@ -16,8 +16,8 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.ErrorAction;
+import jlibs.nblr.actions.EventAction;
+import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.codegen.java.SyntaxClass;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
@@ -450,8 +450,10 @@ public class Decision{
                             printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.stateID+");");
                         else
                             printer.println(node.action.javaCode()+';');
-                        if(!(node.action instanceof BufferAction) && !(node.action instanceof ErrorAction))
-                            checkStop = true;
+                        if(node.action instanceof EventAction || node.action instanceof PublishAction){
+                            if(node.action.toString().startsWith("#"))
+                                checkStop = true;
+                        }
                     }
                 }
             }else if(obj instanceof Edge){

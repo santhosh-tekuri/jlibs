@@ -33,10 +33,11 @@ public class PublishAction implements Action{
 
     @Override
     public String javaCode(){
-        if(name.equals(DISCARD) && begin==0 && end==0)
+        String methodName = name.startsWith("#") ? name.substring(1) : name;
+        if(methodName.equals(DISCARD) && begin==0 && end==0)
             return "buffer.pop(0, 0)";
         else
-            return "handler."+name+"(buffer.pop("+begin+", "+end+"))";
+            return "handler."+methodName+"(buffer.pop("+begin+", "+end+"))";
     }
 
     @Override
