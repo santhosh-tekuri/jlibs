@@ -280,7 +280,7 @@ public class Decision{
                 useLookAhead = true;
         }else
             useLookAhead = true;
-        String ch = useLookAhead ? "lookAhead.charAt("+i+")" : "ch";
+        String ch = useLookAhead ? "la["+i+"]" : "ch";
         String condition = condition(matcher, ch);
 
         printer.printlns(
@@ -312,7 +312,7 @@ public class Decision{
         }
 
         if(resetLookAhead)
-            printer.println("lookAhead.reset();");
+            printer.println("resetLookAhead();");
 
         switch(returnAction){
             case ADD_CONTINUE:
@@ -329,6 +329,8 @@ public class Decision{
                             MINUS
                     );
                 }
+                if(SyntaxClass.DEBUGGABLE)
+                    printer.printlns("handler.currentNode("+ruleID()+", "+returnTarget.id+");");
                 printer.printlns("return "+(checkStop ? "!stop" : "true")+";");
                 break;
             case CALL_RULE_AND_CONTINUE:

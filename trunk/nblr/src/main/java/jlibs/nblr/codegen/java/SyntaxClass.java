@@ -231,10 +231,9 @@ public class SyntaxClass{
 
     private void generateCallRuleMethod(Printer printer){
         printer.emptyLine(true);
-        String prefix = DEBUGGABLE ? "_" : "";
         printer.printlns(
             "@Override",
-            "protected final boolean "+prefix+"callRule(int rule, int state) throws Exception{",
+            "protected final boolean callRule(int rule, int state) throws Exception{",
                 PLUS,
                 "if(SHOW_STATS)",
                     PLUS,

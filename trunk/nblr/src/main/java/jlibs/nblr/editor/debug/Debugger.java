@@ -118,6 +118,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
 
     private DebuggableNBParser parser;
     private int inputIndex;
+    private char[] inputText;
+    private int inputPosition;
     private void start(){
         try{
             showMessage("");
@@ -146,6 +148,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
             URLClassLoader classLoader = new URLClassLoader(new URL[]{FileUtil.toURL(file.getParentFile())});
             Class clazz = classLoader.loadClass(parserName);
             parser = (DebuggableNBParser)clazz.getConstructor(getClass(), int.class).newInstance(this, scene.getRule().id);
+            inputText = input.getText(0, input.getDocument().getLength()).toCharArray();
             showMessage("Executing...");
         }catch(Exception ex){
             ex.printStackTrace();
@@ -156,12 +159,11 @@ public class Debugger extends JPanel implements NBHandler, Observer{
     private void step(){
         try{
             if(inputIndex<input.getDocument().getLength()){
-                char ch = input.getDocument().getText(inputIndex, 1).charAt(0);
-                parser.consume(new char[]{ ch }, 0, 1);
+                inputPosition = parser.consume(inputText, inputPosition, inputIndex+1, false);
                 inputIndex++;
                 updateGuardedBlock();
             }else{
-                parser.eof();
+                parser.consume(inputText, inputPosition, inputText.length, true);
                 stop(null, "Input Matched");
             }
         }catch(BadLocationException ex){
@@ -173,7 +175,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
 
     private void stop(Exception ex, String message){
         parser = null;
-        inputIndex = 0;
+        inputIndex = inputPosition = 0;
+        inputText = null;
         if(ex==null){
             clearGuardedBlock();
             scene.executing((Node)null);

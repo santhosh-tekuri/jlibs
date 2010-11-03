@@ -19,6 +19,7 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.util.Range;
+import jlibs.nblr.codegen.java.SyntaxClass;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Path;
@@ -193,7 +194,11 @@ public class State{
             printer.printlns(
                 "if((ch=codePoint())==EOC){",
                     PLUS,
-                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");",
+                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");"
+            );
+            if(SyntaxClass.DEBUGGABLE)
+                printer.println("handler.currentNode("+ruleMethod.rule.id+", "+fromNode.stateID+");");
+            printer.printlns(
                     "return false;",
                     MINUS,
                 "}"
@@ -222,7 +227,7 @@ public class State{
                         }
                         String prefix = curLookAhead==lastLookAhead+1 ? "if" : "while";
                         printer.printlns(
-                            prefix+"(ch!=EOF && lookAhead.length()<"+curLookAhead+"){",
+                            prefix+"(ch!=EOF && laLen<"+curLookAhead+"){",
                                 PLUS,
                                 "if((ch=codePoint())==EOC){",
                                     PLUS,
@@ -238,7 +243,7 @@ public class State{
                                         
                     closeLALengthCheck = true;
                     printer.printlns(
-                        "if(lookAhead.length()=="+(curLookAhead==1?0:curLookAhead)+"){",
+                        "if(laLen=="+(curLookAhead==1?0:curLookAhead)+"){",
                             PLUS
                     );
                 }

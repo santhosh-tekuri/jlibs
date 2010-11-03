@@ -34,20 +34,19 @@ public abstract class NBParser{
         System.out.println("charCount = " + location.getCharacterOffset());
     }
 
-    private final Stream stream;
-    protected final Stream.LookAhead lookAhead;
     public final Location location = new Location();
     protected final Buffer buffer = new Buffer();
 
     private int startingRule;
     public NBParser(int maxLookAhead, int startingRule){
-        stream = new Stream(maxLookAhead);
-        lookAhead = stream.lookAhead;
+        la = new int[maxLookAhead];
         reset(startingRule);
     }
 
     public final void reset(int rule){
-        stream.clear();
+        laLen = 0;
+        stop = false;
+        eof = eofSent = false;
         location.reset();
         buffer.clear();
 
@@ -63,22 +62,19 @@ public abstract class NBParser{
     private char input[];
     private int position;
     private int limit;
+    private boolean eof;
+    private boolean eofSent;
 
     protected final int EOF = -1;
     protected final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
-        int cp = lookAhead.getNext();
-        if(cp!=EOC)
-            return cp;
         if(position==limit){
-            assert input!=null;
-            return EOC;
-        }
-
-        if(input==null){
-            increment = 1;
-            return EOF;
+            if(eof){
+                eofSent = true;
+                return EOF;
+            }else
+                return EOC;
         }
 
         char ch0 = input[position];
@@ -103,10 +99,9 @@ public abstract class NBParser{
     public boolean coelsceNewLines = false;
     protected static final int FROM_LA = -2;
     protected final void consume(int cp){
-        if(stream.length()>0){
-            if(cp==FROM_LA)
-                cp = stream.charAt(0);
-            lookAhead.consumed();
+        if(cp==FROM_LA){
+            laPosition += laIncrement;
+            cp = la[0];
         }else
             position += increment;
 
@@ -121,29 +116,26 @@ public abstract class NBParser{
         }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
-    protected final void consumeLookAhead(int count){
-        while(count-->0){
-            int cp = stream.charAt(0);
-            lookAhead.consumed();
-            if(coelsceNewLines){
-                if(location.consume(cp) && buffer.isBufferring())
-                    buffer.append(cp=='\r' ? '\n' : cp);
-            }else{
-                location.consume(cp);
-                if(buffer.isBufferring())
-                    buffer.append(cp);
-            }
+    protected int la[];
+    protected int laLen;
+    protected int laPosition;
+    protected int laIncrement;
+    protected final void addToLookAhead(int cp){
+        if(laLen==0){
+            laPosition = position;
+            laIncrement = increment;
         }
+        la[laLen++] = cp;
+        position += increment;
     }
 
-    protected final void addToLookAhead(int cp){
-        if(lookAhead.add(cp))
-            position += increment;
+    protected final void resetLookAhead(){
+        this.position = laPosition;
+        laLen = 0;
     }
 
     public boolean stop;
-    public final int consume(char chars[], int position, int limit) throws IOException{
+    public final int consume(char chars[], int position, int limit, boolean eof) throws IOException{
         if(SHOW_STATS){
             chunkCount++;
             if(chars!=null)
@@ -154,16 +146,17 @@ public abstract class NBParser{
             input = chars;
             this.position = position;
             this.limit = limit;
+            this.eof = eof;
 
             int rule, state;
             do{
                 if(free==0){
                     int cp = codePoint();
-                    if(cp==EOC)
+                    if(cp==EOC){
+                        if(laLen>0)
+                            resetLookAhead();
                         return this.position;
-                    else if(cp==EOF)
-                        this.position = 1;
-                    else
+                    }else if(cp!=EOF)
                         expected(cp, "<EOF>");
                     break;
                 }
@@ -172,6 +165,8 @@ public abstract class NBParser{
                 free -= 2;
             }while(callRule(rule, state));
 
+            if(laLen>0)
+                resetLookAhead();
             if(exitFree>0){
                 if(free+exitFree>stack.length)
                     stack = Arrays.copyOf(stack, Math.max(free+exitFree, free*2));
@@ -183,7 +178,7 @@ public abstract class NBParser{
                 }while(exitFree!=0);
             }
 
-            if(chars==null && this.position==limit)
+            if(eofSent)
                 onSuccessful();
 
             return this.position;
@@ -197,18 +192,14 @@ public abstract class NBParser{
         }
     }
 
-    public void eof() throws IOException{
-        consume(null, 0, 1);
-    }
-
     protected abstract boolean callRule(int rule, int state) throws Exception;
 
     protected final void expected(int ch, String... matchers) throws Exception{
         String found;
-        if(stream.length()>0)
-            found = stream.toString();
+        if(laLen>0)
+            found = la[laLen-1]==EOF ? new String(la, 0, laLen-1).concat("<EOF>") : new String(la, 0, laLen);
         else{
-            if(ch==-1)
+            if(ch==EOF)
                 found = "<EOF>";
             else
                 found = new String(toChars(ch));

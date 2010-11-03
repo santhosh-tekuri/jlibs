@@ -40,23 +40,36 @@ public class XMLFeeder extends Feeder{
         init(source, declParser);
     }
 
+    public static String toURL(String systemID) throws IOException{
+        if(systemID==null)
+            return null;
+
+        int ix = systemID.indexOf(':', 0);
+        if (ix >= 3 && ix <= 8)
+            return systemID;
+        else{
+            String absPath = new File(systemID).getAbsolutePath();
+            char sep = File.separatorChar;
+            if(sep!='/')
+                absPath = absPath.replace(sep, '/');
+            if(absPath.length()>0 && absPath.charAt(0)!='/')
+                absPath = "/" + absPath;
+            return new URL("file", "", absPath).toString();
+        }
+    }
+
     final void init(InputSource is, XMLScanner prologParser) throws IOException{
-        publicID = systemID = null;
         postAction = null;
-        eofSent = false;
         iProlog = 0;
         this.prologParser = prologParser;
-        child = null;
-        charBuffer.clear();
 
         publicID = is.getPublicId();
-        systemID = XMLEntityManager.expandSystemId(is.getSystemId(), null, false);
+        systemID = toURL(is.getSystemId());
 
         Reader charStream = is.getCharacterStream();
-        if(charStream !=null){
-            channel = new NBReaderChannel(charStream);
-            iProlog = 7;
-        }else{
+        if(charStream !=null)
+            setChannel(new NBReaderChannel(charStream));
+        else{
             InputStream inputStream = is.getByteStream();
             String encoding = is.getEncoding();
             if(inputStream==null){
@@ -141,7 +154,7 @@ public class XMLFeeder extends Feeder{
             else
                 channel.setEncoding(encoding, false);
 
-            this.channel = channel;
+            setChannel(channel);
         }
     }
 
@@ -186,7 +199,7 @@ public class XMLFeeder extends Feeder{
                                 }
                                 if(charBuffer.position()>0){
                                     charBuffer.flip();
-                                    charBuffer.position(prologParser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
+                                    charBuffer.position(prologParser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit(), false));
                                     charBuffer.compact();
                                 }
                                 if(read==0)
@@ -214,39 +227,17 @@ public class XMLFeeder extends Feeder{
                 else if(read==-1)
                     return onPrologEOF();
                 else
-                    prologParser.consume(singleChar.array(), 0, 1);
+                    prologParser.consume(singleChar.array(), 0, 1, false);
             }
         }
         return super.read();
     }
 
     private Feeder onPrologEOF() throws IOException{
-        if(charBuffer.position()>0){
-            if(feedCharBuffer())
-                return child;
-        }
-
-        try{
-            if(!eofSent){
-                if(canClose()){
-                    eofSent = true;
-                    parser.eof();
-                    if(child!=null)
-                        return child;
-                }
-            }
-            return parent();
-        }finally{
-            try{
-                if(child==null){
-                    if(canClose())
-                        parser.reset();
-                    channel.close();
-                }
-            } catch(IOException e){
-                e.printStackTrace();
-            }
-        }
+        charBuffer.flip();
+        channel.close();
+        channel = null;
+        return super.read();
     }
 
     private boolean isPrologStart(char ch){
@@ -291,6 +282,25 @@ public class XMLFeeder extends Feeder{
     }
 
     public String resolve(String systemID) throws IOException{
-        return XMLEntityManager.expandSystemId(systemID, this.systemID, false);
+        if(systemID==null)
+            return null;
+        else{
+            if(this.systemID==null)
+                return toURL(systemID);
+            else{
+                if(systemID.length()==0)
+                    return systemID;
+                int ix = systemID.indexOf(':', 0);
+                if(ix>=3 && ix<=8)
+                    return systemID;
+                else{
+                    try{
+                        return new URI(this.systemID).resolve(new URI(systemID)).toString();
+                    }catch(URISyntaxException ex){
+                        return systemID;
+                    }
+                }
+            }
+        }
     }
 }
