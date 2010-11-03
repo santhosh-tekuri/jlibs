@@ -19,22 +19,10 @@ import jlibs.nbp.Buffer;
 import jlibs.nbp.NBParser;
 
 public abstract class DebuggableNBParser extends NBParser{
-    private Debugger debugger;
-
     protected DebuggableNBParser(Debugger debugger, int maxLookAhead, int startingRule){
         super(maxLookAhead, startingRule);
-        this.debugger = debugger;
         debugger.currentNode(stack[free-2], stack[free-1]);
     }
-
-    @Override
-    protected boolean callRule(int rule, int state) throws Exception{
-        boolean result = _callRule(rule, state);
-        debugger.currentNode(rule, state);
-        return result;
-    }
-
-    protected abstract boolean _callRule(int rule, int state) throws Exception;
 
     public int[] getStack(){
         return stack;

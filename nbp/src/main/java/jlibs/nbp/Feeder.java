@@ -41,6 +41,13 @@ public class Feeder{
         return channel;
     }
 
+    public void setChannel(ReadableCharChannel channel){
+        readMore = true;
+        this.channel = channel;
+        child = null;
+        charBuffer.clear();
+    }
+
     protected Feeder child;
     private Feeder parent;
     public final void setChild(Feeder child){
@@ -53,7 +60,7 @@ public class Feeder{
         return parent;
     }
 
-    protected final boolean canClose(){
+    protected final boolean canSendEOF(){
         return parent==null || this.parser!=parent.parser;
     }
 
@@ -61,9 +68,8 @@ public class Feeder{
     
     protected CharBuffer charBuffer = CharBuffer.allocate(DEFAULT_BUFFER_SIZE);
     protected final boolean feedCharBuffer() throws IOException{
-        charBuffer.flip();
-        charBuffer.position(parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit()));
-        charBuffer.compact();
+        int pos = parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit(), channel==null && canSendEOF());
+        charBuffer.position(pos);
         return child!=null;
     }
 
@@ -91,42 +97,41 @@ public class Feeder{
         return null;
     }
 
-    protected boolean eofSent;
+    private boolean readMore = true;
     protected Feeder read() throws IOException{
-        if(parser.stop && charBuffer.position()>0){
+        if(channel!=null){
+            if(!readMore){
+                if(feedCharBuffer())
+                    return child;
+                else{
+                    charBuffer.compact();
+                    readMore = true;
+                }
+            }
+
+            int read;
+            while((read=channel.read(charBuffer))>0){
+                charBuffer.flip();
+                if(feedCharBuffer()){
+                    readMore = false;
+                    return child;
+                }
+                charBuffer.compact();
+            }
+            if(read==-1){
+                charBuffer.flip();
+                channel.close();
+                channel = null;
+            }
+        }
+        if(channel==null){
             if(feedCharBuffer())
                 return child;
-        }
-
-        int read = eofSent ? -1 : 0;
-        try{
-            if(!eofSent){
-                while((read=channel.read(charBuffer))>0){
-                    if(feedCharBuffer())
-                        return child;
-                }
-                if(charBuffer.position()>0){
-                    if(feedCharBuffer())
-                        return child;
-                }
-                if(read==-1 && canClose()){
-                    eofSent = true;
-                    parser.eof();
-                    if(child!=null)
-                        return child;
-                }
-            }
-            return read==-1 ? parent() : this;
-        }finally{
-            try{
-                if(child==null && read==-1){
-                    if(canClose())
-                        parser.reset();
-                    channel.close();
-                }
-            } catch(IOException e){
-                e.printStackTrace();
-            }
-        }
+            
+            if(!canSendEOF() && charBuffer.hasRemaining())
+                    throw new IOException("NotImplemented: remaining "+charBuffer.position());
+            return parent();
+        }else
+            return this;
     }
 }
