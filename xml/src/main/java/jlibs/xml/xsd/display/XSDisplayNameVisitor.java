@@ -40,7 +40,7 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
     }
 
     protected String process(XSNamespaceItem nsItem){
-        return nsItem.getSchemaNamespace();
+        return StringUtil.toString(nsItem.getSchemaNamespace());
     }
 
     protected String process(XSObject obj){
