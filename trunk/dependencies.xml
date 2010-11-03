@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="jlibs-dependencies" default="download">
-    <property name="netbeans.repository" value="http://deadlock.netbeans.org/maven2"/>
+    <property name="netbeans.repository" value="http://dl.dropbox.com/u/326301/repository"/>
     <property name="ibiblio.repository" value="http://mirrors.ibiblio.org/pub/mirrors/maven2"/>
     <property name="apache.repository" value="http://svn.apache.org/repos/asf/tuscany/maven"/>
 
