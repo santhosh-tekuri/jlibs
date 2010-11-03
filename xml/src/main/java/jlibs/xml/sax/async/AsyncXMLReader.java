@@ -85,12 +85,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public void parse(InputSource input) throws IOException, SAXException{
-        createFeeder(input).feed();
+        if(createFeeder(input).feed()!=null)
+            throw new IOException("parse(...) shouldn't be used on non-blocking IO");
     }
 
     @Override
     public void parse(String systemID) throws IOException, SAXException{
-        createFeeder(new InputSource(systemID)).feed();
+        parse(new InputSource(systemID));
     }
 
     /*-------------------------------------------------[ Locator ]---------------------------------------------------*/
@@ -771,4 +772,4 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void dtdAttributesEnd(){}
-}
+    }
