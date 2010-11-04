@@ -5867,7 +5867,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_WS(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+        while(ch>=0 && org.apache.xerces.util.XMLChar.isSpace(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5875,7 +5875,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ENCODING_PART(int ch) throws IOException{
-        while(ch!=EOC && ENCODING_PART(ch)){
+        while(ENCODING_PART(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5883,7 +5883,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_DIGIT(int ch) throws IOException{
-        while(ch!=EOC && DIGIT(ch)){
+        while(DIGIT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5891,7 +5891,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_NAME_PART(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
+        while(ch>=0 && org.apache.xerces.util.XMLChar.isName(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5899,7 +5899,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_NCNAME_PART(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
+        while(ch>=0 && org.apache.xerces.util.XMLChar.isNCName(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5907,7 +5907,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_HEX_DIGIT(int ch) throws IOException{
-        while(ch!=EOC && HEX_DIGIT(ch)){
+        while(HEX_DIGIT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5915,7 +5915,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && ATTR_Q_CONTENT(ch)){
+        while(ch>=0 && ATTR_Q_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5923,7 +5923,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && ATTR_DQ_CONTENT(ch)){
+        while(ch>=0 && ATTR_DQ_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5931,7 +5931,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ENTITY_Q_CONTENT(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && ENTITY_Q_CONTENT(ch)){
+        while(ch>=0 && ENTITY_Q_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5939,7 +5939,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ENTITY_DQ_CONTENT(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && ENTITY_DQ_CONTENT(ch)){
+        while(ch>=0 && ENTITY_DQ_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5947,7 +5947,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_CHAR(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+        while(ch>=0 && org.apache.xerces.util.XMLChar.isValid(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -5955,7 +5955,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ELEM_CONTENT_CHAR(int ch) throws IOException{
-        while(ch!=EOC && ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+        while(ch>=0 && ELEM_CONTENT_CHAR(ch)){
             consume(ch);
             ch = codePoint();
         }

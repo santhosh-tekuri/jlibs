@@ -85,6 +85,15 @@ public abstract class Matcher{
             return name+'('+variable+')';
     }
 
+    public boolean checkFor(int min){
+        Not.minValue = min;
+        try{
+            return hasCustomJavaCode() || clashesWith(new Any(-1));
+        }finally{
+            Not.minValue = Character.MIN_VALUE;
+        }
+    }
+    
     /*-------------------------------------------------[ Ranges ]---------------------------------------------------*/
 
     public abstract List<jlibs.core.util.Range> ranges();

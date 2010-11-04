@@ -166,15 +166,6 @@ public class Decision{
         return builder.toString();
     }
 
-    private static boolean checkEOF(Matcher matcher){
-        Not.minValue = -1;
-        try{
-            return matcher.hasCustomJavaCode() || matcher.clashesWith(new Any(-1));
-        }finally{
-            Not.minValue = Character.MIN_VALUE;
-        }
-    }
-
     public static final int ADD_CONTINUE = 1;
     public static final int ADD_RETURN = 2;
     public static final int GOTO_NEXT_CASE = 4;
@@ -260,7 +251,7 @@ public class Decision{
 
     public static String condition(Matcher matcher, String ch){
         String condition = matcher._javaCode(ch);
-        if(checkEOF(matcher)){
+        if(matcher.checkFor(-1)){
             if(matcher.name==null)
                 condition = '('+condition+')';
             condition = "ch!=EOF && "+condition;
