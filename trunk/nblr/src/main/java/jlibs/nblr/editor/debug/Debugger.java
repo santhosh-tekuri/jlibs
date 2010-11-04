@@ -210,7 +210,7 @@ public class Debugger extends JPanel implements NBHandler, Observer{
     private Highlighter.HighlightPainter lookAheadHighlightPainter = new NewLineHighlightPainter(Color.CYAN);
     private void updateGuardedBlock() throws BadLocationException{
         input.getHighlighter().removeAllHighlights();
-        int consumed = parser.location.getCharacterOffset();
+        int consumed = parser.getCharacterOffset();
         if(consumed>inputIndex)
             throw new ImpossibleException("consumed="+consumed+" inputIndex="+inputIndex);
         if(consumed>0)

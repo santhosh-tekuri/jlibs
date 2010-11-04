@@ -261,7 +261,7 @@ public class XMLFeeder extends Feeder{
 
     void setDeclaredEncoding(String encoding){
         iProlog = 7;
-        parser.location.set(prologParser.location);
+        parser.setLocation(prologParser);
         if(encoding!=null && channel instanceof NBChannel){
             NBChannel nbChannel = (NBChannel)channel;
             String detectedEncoding = nbChannel.decoder().charset().name().toUpperCase(Locale.ENGLISH);
