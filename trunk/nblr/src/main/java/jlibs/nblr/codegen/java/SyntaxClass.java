@@ -17,7 +17,6 @@ package jlibs.nblr.codegen.java;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
-import jlibs.nblr.codegen.Decision;
 import jlibs.nblr.codegen.RuleMethod;
 import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
@@ -164,10 +163,14 @@ public class SyntaxClass{
     private void generateFinishAllMethods(Printer printer){
         for(Map.Entry<Matcher, String> entry: finishAllMethods.entrySet()){
             printer.emptyLine(true);
+            Matcher matcher = entry.getKey();
+            String condition = matcher._javaCode("ch");
+            if(matcher.checkFor(-1) || matcher.checkFor(-2))
+                condition = "ch>=0 && "+condition;
             printer.printlns(
                 "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
                     PLUS,
-                    "while(ch!=EOC && "+ Decision.condition(entry.getKey(), "ch")+"){",
+                    "while("+condition+"){",
                         PLUS,
                         "consume(ch);",
                         "ch = codePoint();",
