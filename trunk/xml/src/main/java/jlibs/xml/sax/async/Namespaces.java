@@ -19,6 +19,8 @@ import jlibs.xml.NamespaceMap;
 import jlibs.xml.sax.SAXDelegate;
 import org.xml.sax.SAXException;
 
+import java.util.Map;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -57,10 +59,11 @@ class Namespaces{
     }
 
     public void pop() throws SAXException{
-        if(namespaces.map()!=null){
-            for(String nsPrefix: namespaces.map().keySet())
+        Map<String,String> map = namespaces.map();
+        if(map!=null && map.size()>0){
+            for(String nsPrefix: map.keySet())
                 handler.endPrefixMapping(nsPrefix);
-            namespaces.clear();
+            map.clear();
         }
 
         NamespaceMap current = namespaces;
