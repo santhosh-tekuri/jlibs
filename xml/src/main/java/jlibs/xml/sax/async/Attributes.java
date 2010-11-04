@@ -46,6 +46,7 @@ class Attributes{
         if(attrName.startsWith("xmlns")){
             if(attrName.length()==5){
                 namespaces.add("", attrValue);
+                return null;
             }else if(attrName.charAt(5)==':'){
                 if(attrLocalName.equals(XML_NS_PREFIX)){
                     if(!attrValue.equals(XML_NS_URI))
@@ -61,12 +62,12 @@ class Attributes{
                         if(attrValue.length()==0)
                             return "No Prefix Undeclaring: "+attrLocalName;
                         namespaces.add(attrLocalName, attrValue);
+                        return null;
                     }
                 }
             }
-        }else
-            attrs.addAttribute(attrQName.prefix, attrLocalName, attrName, type.name(), attrValue);
-
+        }
+        attrs.addAttribute(attrQName.prefix, attrLocalName, attrName, type.name(), attrValue);
         return null;
     }
 
