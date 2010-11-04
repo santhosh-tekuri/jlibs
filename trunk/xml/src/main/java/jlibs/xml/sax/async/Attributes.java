@@ -27,11 +27,10 @@ import static javax.xml.XMLConstants.*;
 class Attributes{
     private AttributesImpl attrs = new AttributesImpl();
     private Namespaces namespaces;
-    private DTD dtd;
+    DTD dtd;
 
-    public Attributes(Namespaces namespaces, DTD dtd){
+    public Attributes(Namespaces namespaces){
         this.namespaces = namespaces;
-        this.dtd = dtd;
     }
 
     public void reset(){
@@ -90,7 +89,8 @@ class Attributes{
                 }
             }
         }
-        dtd.addMissingAttributes(elemName, attrs);
+        if(dtd!=null)
+            dtd.addMissingAttributes(elemName, attrs);
 
         return null;
     }

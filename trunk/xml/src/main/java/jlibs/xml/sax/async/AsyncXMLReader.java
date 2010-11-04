@@ -160,7 +160,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         paramEntityStack.clear();
         peReferenceOutsideMarkup = false;
 
-        dtd.reset();
+        dtd = null;
+        attributes.dtd = null;
+        _dtd.reset();
         dtdElement = null;
         attributeList = null;
         dtdAttribute = null;
@@ -378,8 +380,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ Start Element ]---------------------------------------------------*/
 
     private final Namespaces namespaces = new Namespaces(handler);
-    private final DTD dtd = new DTD(namespaces);
-    private final Attributes attributes = new Attributes(namespaces, dtd);
+    private final DTD _dtd = new DTD(namespaces);
+    private DTD dtd ;
+    private final Attributes attributes = new Attributes(namespaces);
     private final Elements elements = new Elements(handler, namespaces, attributes);
 
     void attributesStart(){
@@ -434,7 +437,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
     
     void characters(Chars data) throws SAXException{
-        if(dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
+        if(dtd!=null && dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
             handler.ignorableWhitespace(data.array(), data.offset(), data.length());
         else
             handler.characters(data.array(), data.offset(), data.length());
@@ -478,6 +481,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ DTD ]---------------------------------------------------*/
 
     void dtdRoot(Chars data){
+        attributes.dtd = dtd = _dtd;
         dtd.root = data.toString();
     }
 
