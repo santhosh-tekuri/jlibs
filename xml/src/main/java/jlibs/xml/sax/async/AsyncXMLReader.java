@@ -108,12 +108,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     @Override
     public int getLineNumber(){
-        return feeder.parser.location.getLineNumber();
+        return feeder.parser.getLineNumber();
     }
 
     @Override
     public int getColumnNumber(){
-        return feeder.parser.location.getColumnNumber();
+        return feeder.parser.getColumnNumber();
+    }
+
+    public int getCharacterOffset(){
+        return feeder.parser.getCharacterOffset();
     }
 
     @Override

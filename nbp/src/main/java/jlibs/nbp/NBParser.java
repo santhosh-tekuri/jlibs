@@ -30,11 +30,10 @@ public abstract class NBParser{
     public void printStats(){
         System.out.println("callRuleCount = " + callRuleCount);
         System.out.println("chunkCount = " + chunkCount);
-        System.out.println("lineCount = " + (location.getLineNumber()+1));
-        System.out.println("charCount = " + location.getCharacterOffset());
+        System.out.println("lineCount = " + getLineNumber());
+        System.out.println("charCount = " + getCharacterOffset());
     }
 
-    public final Location location = new Location();
     protected final Buffer buffer = new Buffer();
 
     private int startingRule;
@@ -47,7 +46,10 @@ public abstract class NBParser{
         laLen = 0;
         stop = false;
         eof = eofSent = false;
-        location.reset();
+        start = position = limit = 0;
+        offset = lineOffset = 0;
+        line = 1;
+        lastChar = 'X';
         buffer.clear();
 
         free = 2;
@@ -60,6 +62,7 @@ public abstract class NBParser{
     }
 
     private char input[];
+    private int start;
     private int position;
     private int limit;
     private boolean eof;
@@ -106,20 +109,26 @@ public abstract class NBParser{
             position += increment;
 
         assert cp!=EOF;
-        if(coelsceNewLines){
-            if(location.consume(cp) && buffer.isBufferring())
-                buffer.append(cp=='\r' ? '\n' : cp);
-        }else{
-            location.consume(cp);
-            if(buffer.isBufferring())
-                buffer.append(cp);
+        if(cp=='\r'){
+            line++;
+            lineOffset = getCharacterOffset();
+            cp = coelsceNewLines ? '\n' : '\r';
+        }else if(cp=='\n'){
+            lineOffset = getCharacterOffset();
+            char lastChar = position==start+1 ? this.lastChar : input[position-2];
+            if(lastChar!='\r')
+                line++;
+            else if(coelsceNewLines)
+                    return;
         }
+        if(buffer.isBufferring())
+            buffer.append(cp);
     }
 
     protected int la[];
     protected int laLen;
-    protected int laPosition;
-    protected int laIncrement;
+    private int laPosition;
+    private int laIncrement;
     protected final void addToLookAhead(int cp){
         if(laLen==0){
             laPosition = position;
@@ -134,6 +143,28 @@ public abstract class NBParser{
         laLen = 0;
     }
 
+    private int offset, line, lineOffset;
+    private char lastChar;
+
+    public final int getCharacterOffset(){
+        return offset + (position-start);
+    }
+
+    public final int getLineNumber(){
+        return line;
+    }
+
+    public final int getColumnNumber(){
+        return getCharacterOffset()-lineOffset;
+    }
+
+    public final void setLocation(NBParser parser){
+        this.offset = parser.offset;
+        this.line = parser.line;
+        this.lineOffset = parser.lineOffset;
+        this.lastChar = parser.lastChar;
+    }
+
     public boolean stop;
     public final int consume(char chars[], int position, int limit, boolean eof) throws IOException{
         if(SHOW_STATS){
@@ -144,7 +175,7 @@ public abstract class NBParser{
         try{
             stop = false;
             input = chars;
-            this.position = position;
+            start = this.position = position;
             this.limit = limit;
             this.eof = eof;
 
@@ -152,11 +183,7 @@ public abstract class NBParser{
             do{
                 if(free==0){
                     int cp = codePoint();
-                    if(cp==EOC){
-                        if(laLen>0)
-                            resetLookAhead();
-                        return this.position;
-                    }else if(cp!=EOF)
+                    if(cp>=0)
                         expected(cp, "<EOF>");
                     break;
                 }
@@ -174,14 +201,20 @@ public abstract class NBParser{
                     free += 2;
                     stack[free-2] = exitStack[exitFree-2];
                     stack[free-1] = exitStack[exitFree-1];
-                    exitFree -=2;
+                    exitFree -= 2;
                 }while(exitFree!=0);
             }
 
             if(eofSent)
                 onSuccessful();
+            if(this.position!=position)
+                lastChar = input[this.position-1];
 
-            return this.position;
+            offset += this.position-position;
+            position = this.position;
+            start = this.position = 0;
+
+            return position;
         }catch(IOException ex){
             throw ex;
         }catch(Exception ex){
@@ -287,7 +320,7 @@ public abstract class NBParser{
     }
 
     protected final int finishAll(int ch, int expected) throws IOException{
-        while(ch>=0 && ch==expected){
+        while(ch==expected){
             consume(ch);
             ch = codePoint();
         }
