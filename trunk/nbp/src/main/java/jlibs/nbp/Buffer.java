@@ -30,7 +30,7 @@ public final class Buffer{
     private int stack[] = new int[50];
     private int free = 0;
 
-    public boolean isBufferring(){
+    public boolean isBuffering(){
         return free>0;
     }
 
@@ -40,21 +40,34 @@ public final class Buffer{
         stack[free++] = count;
     }
 
-    private void expandCapacity(){
-        int newCapacity = (chars.length+1)*2;
+    private void expandCapacity(int increment){
+        int newCapacity = (chars.length+increment)*2;
         if(newCapacity<0)
             newCapacity = Integer.MAX_VALUE;
         chars = Arrays.copyOf(chars, newCapacity);
     }
 
+    public void append(char character){
+        if(count==chars.length)
+            expandCapacity(1);
+        chars[count++] = character;
+    }
+
+    public void append(char chars[], int offset, int len){
+        if(count+len==chars.length)
+            expandCapacity(len);
+        System.arraycopy(chars, offset, this.chars, count, len);
+        count += len;
+    }
+
     public void append(int codePoint){
         if(codePoint<MIN_SUPPLEMENTARY_CODE_POINT){
             if(count==chars.length)
-                expandCapacity();
+                expandCapacity(1);
             chars[count++] = (char)codePoint;
         }else{
             if(count==chars.length-1)
-                expandCapacity();
+                expandCapacity(2);
             int offset = codePoint - MIN_SUPPLEMENTARY_CODE_POINT;
             chars[count++] = (char)((offset >>> 10) + MIN_HIGH_SURROGATE);
             chars[count++] = (char)((offset & 0x3ff) + MIN_LOW_SURROGATE);

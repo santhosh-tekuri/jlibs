@@ -20,10 +20,16 @@ import jlibs.core.lang.StringUtil;
 import java.util.Collections;
 import java.util.List;
 
+import static java.lang.Character.MAX_CODE_POINT;
+import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
+
 /**
  * @author Santhosh Kumar T
  */
 public final class Range extends Matcher{
+    public static final Range SUPPLIMENTAL = new Range(MIN_SUPPLEMENTARY_CODE_POINT, MAX_CODE_POINT);
+    public static final Range NON_SUPPLIMENTAL = new Range(0, MIN_SUPPLEMENTARY_CODE_POINT-1);
+
     public final int from, to;
 
     public Range(String chars){

@@ -27,6 +27,7 @@ public class Node{
     public String name;
     public int id;
     public int stateID;
+    public Answer buffering;
     
     public static final String DYNAMIC_STRING_MATCH = "@DYNAMIC_STRING_MATCH";
     public Action action;

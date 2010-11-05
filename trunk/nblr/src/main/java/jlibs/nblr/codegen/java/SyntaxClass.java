@@ -22,6 +22,7 @@ import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
+import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.Rule;
 
 import java.util.*;
@@ -39,7 +40,7 @@ public class SyntaxClass{
     public List<RuleMethod> ruleMethods = new ArrayList<RuleMethod>();
 
     public SyntaxClass(Syntax syntax){
-        this.syntax = syntax;
+        this.syntax = syntax.copy();
         if(!DEBUGGABLE){
             detectStringRules();
             syntax = this.syntax;
@@ -60,6 +61,8 @@ public class SyntaxClass{
                 state.fromNode.stateID = DEBUGGABLE ? state.fromNode.id : i;
             }
         }
+
+        syntax.computeBufferingStates();
 
         /*
         // print no of continues used for each rule
@@ -167,16 +170,42 @@ public class SyntaxClass{
             String condition = matcher._javaCode("ch");
             if(matcher.checkFor(-1) || matcher.checkFor(-2))
                 condition = "ch>=0 && "+condition;
+
+            boolean supplemental = matcher.clashesWith(Range.SUPPLIMENTAL);
+
             printer.printlns(
                 "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
-                    PLUS,
+                    PLUS
+            );
+
+            if(!supplemental && !matcher.clashesWith(Any.NEW_LINE)){
+                condition = matcher._javaCode("input[position]");
+                printer.printlns(
+                    "int _position = position;",
+                    "while(position<limit && "+condition+")",
+                        PLUS,
+                        "++position;",
+                        MINUS,
+                    "int len = position-_position;",
+                    "if(len>0 && buffer.isBuffering())",
+                        PLUS,
+                        "buffer.append(input, _position, len);",
+                        MINUS,
+                    "return codePoint();"
+                );
+            }else{
+                printer.printlns(
                     "while("+condition+"){",
                         PLUS,
                         "consume(ch);",
                         "ch = codePoint();",
                         MINUS,
                     "}",
-                    "return ch;",
+                    "return ch;"
+                );
+            }
+
+            printer.printlns(
                     MINUS,
                  "}"
             );
