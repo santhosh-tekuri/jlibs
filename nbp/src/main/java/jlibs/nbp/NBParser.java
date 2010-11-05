@@ -283,23 +283,22 @@ public abstract class NBParser{
     public static final int RULE_DYNAMIC_STRING_MATCH = Integer.MIN_VALUE;
     public char[] dynamicStringToBeMatched;
 
+    // NOTE: use only when bufferring is off and no new lines in expected
     protected final boolean matchString(int state, char expected[]) throws Exception{
         int length = expected.length;
 
-        for(int i=state; i<length;){
-            int cp = codePoint();
-            int expectedCP = Character.codePointAt(expected, i);
-            if(cp!=expectedCP){
-                if(cp==EOC){
-                    exiting(RULE_DYNAMIC_STRING_MATCH, i);
-                    return false;
-                }
-                expected(cp, new String(new int[]{ expectedCP }, 0, 1));
-            }
-            consume(cp);
-            i += cp<MIN_SUPPLEMENTARY_CODE_POINT ? 1 : 2;
+        while(state<length && position<limit){
+            if(input[position]!=expected[state])
+                expected(codePoint(), new String(new int[]{ Character.codePointAt(expected, state) }, 0, 1));
+            state++;
+            position++;
         }
-        return true;
+        if(state==length)
+            return true;
+        else{
+            exiting(RULE_DYNAMIC_STRING_MATCH, state);
+            return false;
+        }
     }
 
     protected final boolean matchString(int rule, int state, int expected[]) throws Exception{
