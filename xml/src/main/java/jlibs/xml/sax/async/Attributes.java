@@ -51,6 +51,7 @@ class Attributes{
                 if(attrLocalName.equals(XML_NS_PREFIX)){
                     if(!attrValue.equals(XML_NS_URI))
                         return "prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI;
+                    return null;
                 }else if(attrLocalName.equals(XMLNS_ATTRIBUTE))
                     return "prefix "+ XMLNS_ATTRIBUTE+" must not be declared";
                 else{
