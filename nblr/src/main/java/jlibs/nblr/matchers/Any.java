@@ -26,6 +26,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public final class Any extends Matcher{
+    public static final Any NEW_LINE = new Any("\r\n");
+    
     public final int chars[];
 
     public Any(String str){

@@ -61,10 +61,10 @@ public abstract class NBParser{
         reset(startingRule);
     }
 
-    private char input[];
+    protected char input[];
     private int start;
-    private int position;
-    private int limit;
+    protected int position;
+    protected int limit;
     private boolean eof;
     private boolean eofSent;
 
@@ -121,7 +121,7 @@ public abstract class NBParser{
             else if(coelsceNewLines)
                     return;
         }
-        if(buffer.isBufferring())
+        if(buffer.isBuffering())
             buffer.append(cp);
     }
 
@@ -296,6 +296,8 @@ public abstract class NBParser{
         if(state==length)
             return true;
         else{
+            if(eof)
+                expected(EOF, new String(expected, state, expected.length-state));
             exiting(RULE_DYNAMIC_STRING_MATCH, state);
             return false;
         }

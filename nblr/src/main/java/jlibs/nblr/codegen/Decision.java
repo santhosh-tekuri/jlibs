@@ -22,6 +22,7 @@ import jlibs.nblr.codegen.java.SyntaxClass;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
+import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.*;
 
 import java.util.ArrayList;
@@ -465,10 +466,19 @@ public class Decision{
 //                    String ruleName = ruleName(edge);
 //                    printer.println("push(RULE_"+ruleName.toUpperCase()+", "+idAfterRule+", "+id(ruleTarget.node())+");");
                 }else if(edge.matcher!=null){
-                    if(matchers.length==1)
-                        printer.println("consume(ch);");
-                    else
-                        printer.println("consume(FROM_LA);");
+                    if(matchers.length==1){
+                        if(!matchers[0].clashesWith(Range.SUPPLIMENTAL) && !matchers[0].clashesWith(Any.NEW_LINE)){
+                            if(edge.source.buffering==Answer.NO){
+                                printer.println("position++;");
+                                continue;
+                            }else if(edge.source.buffering==Answer.YES){
+                                printer.println("buffer.append(input[position++]);");
+                                continue;
+                            }
+                        }
+                        printer.println("consume(ch);"); //"+edge.source.buffering);
+                    }else
+                        printer.println("consume(FROM_LA);"); //"+edge.source.buffering);
                 }
             }
         }

@@ -122,7 +122,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(ch=='='){
-                    consume(ch);
+                    position++;
                 }
                 else expected(ch, "<WS> OR [=]");
             case 1:
@@ -188,12 +188,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch=='"'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
@@ -207,7 +207,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -222,7 +222,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<Q>");
@@ -243,7 +243,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ENCODING_START(ch)){
                     buffer.push();
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else expected(ch, "<ENCODING_START>");
             case 1:
@@ -279,12 +279,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch=='"'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
@@ -298,7 +298,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -313,7 +313,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<Q>");
@@ -334,7 +334,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch=='1'){
                     buffer.push();
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else expected(ch, "[1]");
             case 1:
@@ -343,7 +343,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(ch=='.'){
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else expected(ch, "[\\.]");
             case 2:
@@ -352,7 +352,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(DIGIT(ch)){
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else expected(ch, "<DIGIT>");
             case 3:
@@ -388,12 +388,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch=='"'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 3:
@@ -407,7 +407,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<DQ>");
@@ -422,7 +422,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<Q>");
@@ -449,7 +449,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='-'){
                         buffer.push();
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 3;
                         continue;
                     }
@@ -464,7 +464,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='-'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -478,7 +478,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='-'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -492,7 +492,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         handler.comment(buffer.pop(0, 3));
                         return true;
                     }
@@ -514,7 +514,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==']'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -528,7 +528,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==']'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -542,7 +542,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
@@ -614,12 +614,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='x' || ch=='X'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 2;
                         continue;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else expected(ch, "[xX] OR <NCNAME_START>");
                 case 1:
@@ -628,7 +628,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 1;
                         continue;
                     }
@@ -641,10 +641,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='m' || ch=='M'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 1;
                         continue;
                     }
@@ -657,10 +657,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='l' || ch=='L'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 1;
                         continue;
                     }
@@ -673,7 +673,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 1;
                         continue;
                     }
@@ -695,7 +695,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -704,7 +704,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[?]");
                 case 2:
@@ -727,7 +727,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else if(ch=='?'){
                         handler.piTarget(buffer.pop(0, 0));
                         handler.piData();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
@@ -736,7 +736,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "[>]");
@@ -747,7 +747,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='?'){
                         buffer.push();
-                        consume(ch);
+                        buffer.append(input[position++]);
                         state = 7;
                         continue;
                     }
@@ -762,7 +762,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
@@ -777,7 +777,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='>'){
                         handler.piData(buffer.pop(0, 1));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
@@ -802,7 +802,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else expected(ch, "<NCNAME_START>");
             case 1:
@@ -834,7 +834,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch==':'){
                     handler.prefix(buffer.pop(0, 0));
-                    consume(ch);
+                    buffer.append(input[position++]);
                 }
                 else {
                     buffer.pop(0, 0);
@@ -865,7 +865,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='&'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[\\&]");
                 case 1:
@@ -874,7 +874,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='#'){
-                        consume(ch);
+                        position++;
                         state = 3;
                         continue;
                     }
@@ -891,7 +891,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==';'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         handler.entityReference(buffer.pop(0, 1));
                         return !stop;
                     }
@@ -902,13 +902,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='x'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(DIGIT(ch)){
                         buffer.push();
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else expected(ch, "[x] OR <DIGIT>");
                 case 4:
@@ -918,7 +918,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch==';'){
                         handler.asciiCode(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<DIGIT> OR [;]");
@@ -929,7 +929,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(HEX_DIGIT(ch)){
                         buffer.push();
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else expected(ch, "<HEX_DIGIT>");
                 case 6:
@@ -939,7 +939,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch==';'){
                         handler.hexCode(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<HEX_DIGIT> OR [;]");
@@ -987,13 +987,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='\''){
                         handler.valueStart();
-                        consume(ch);
+                        position++;
                         state = 2;
                         continue;
                     }
                     else if(ch=='"'){
                         handler.valueStart();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 1:
@@ -1002,7 +1002,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         handler.valueEnd();
                         return true;
                     }
@@ -1021,7 +1021,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         handler.valueEnd();
                         return true;
                     }
@@ -1107,7 +1107,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -1174,7 +1174,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==0){
                         if(ch==']'){
                             buffer.push();
-                            consume(ch);
+                            buffer.append(input[position++]);
                             state = 2;
                             continue;
                         }
@@ -1236,7 +1236,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==']'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         consume(ch);
@@ -1253,7 +1253,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==']'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                     }
                     else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         consume(ch);
@@ -1270,7 +1270,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        buffer.append(input[position++]);
                         handler.fatalError("Text may not contain a literal ']]>' sequence");
                         return true;
                     }
@@ -1305,13 +1305,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='/'){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch=='>'){
                         handler.attributesEnd();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[/] OR [>]");
                 case 2:
@@ -1352,7 +1352,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='/'){
                         handler.endingElem();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[/]");
                 case 4:
@@ -1366,7 +1366,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.elementEnd();
                         return true;
                     }
@@ -1378,7 +1378,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='>'){
                         handler.attributesEnd();
-                        consume(ch);
+                        position++;
                         handler.elementEnd();
                         return true;
                     }
@@ -1428,7 +1428,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else if(ch=='?'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
@@ -1438,7 +1438,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='>'){
                         handler.xdeclEnd();
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "[>]");
@@ -1457,7 +1457,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     else if(ch=='?'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -1473,7 +1473,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -1487,7 +1487,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                     }
                     else if(ch=='?'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -1498,7 +1498,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -1578,13 +1578,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         buffer.push();
                         state = 2;
                         continue;
                     }
                     else if(ch=='"'){
-                        consume(ch);
+                        position++;
                         buffer.push();
                     }
                     else expected(ch, "<Q> OR <DQ>");
@@ -1595,7 +1595,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='"'){
                         handler.systemID(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
@@ -1611,7 +1611,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='\''){
                         handler.systemID(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
@@ -1637,13 +1637,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         buffer.push();
                         state = 2;
                         continue;
                     }
                     else if(ch=='\''){
-                        consume(ch);
+                        position++;
                         buffer.push();
                     }
                     else expected(ch, "<DQ> OR <Q>");
@@ -1654,7 +1654,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='\''){
                         handler.publicID(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
@@ -1670,7 +1670,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='"'){
                         handler.publicID(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
@@ -1754,7 +1754,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -1763,7 +1763,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[!]");
                 case 2:
@@ -1826,7 +1826,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.notationEnd();
                         return true;
                     }
@@ -1840,7 +1840,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                     }
                     else if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.notationEnd();
                         return true;
                     }
@@ -1851,7 +1851,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.notationEnd();
                         return true;
                     }
@@ -1918,7 +1918,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(ch=='%'){
-                    consume(ch);
+                    position++;
                 }
                 else expected(ch, "[%]");
             case 1:
@@ -1934,7 +1934,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 if(ch==';'){
                     handler.peReference(buffer.pop(0, 0));
-                    consume(ch);
+                    position++;
                     return !stop;
                 }
                 else expected(ch, "[;]");
@@ -2015,14 +2015,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\''){
                         handler.valueStart();
                         handler.entityValue();
-                        consume(ch);
+                        position++;
                         state = 2;
                         continue;
                     }
                     else if(ch=='"'){
                         handler.valueStart();
                         handler.entityValue();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 1:
@@ -2031,7 +2031,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='"'){
-                        consume(ch);
+                        position++;
                         handler.valueEnd();
                         return true;
                     }
@@ -2050,7 +2050,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='\''){
-                        consume(ch);
+                        position++;
                         handler.valueEnd();
                         return true;
                     }
@@ -2142,7 +2142,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -2151,7 +2151,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[!]");
                 case 2:
@@ -2174,7 +2174,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='%'){
-                        consume(ch);
+                        position++;
                         state = 8;
                         continue;
                     }
@@ -2210,7 +2210,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.entityEnd();
                         return true;
                     }
@@ -2259,7 +2259,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.paramEntityEnd();
                         return true;
                     }
@@ -2341,7 +2341,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     else if(ch=='I'){
-                        consume(ch);
+                        position++;
                         state = 2;
                         continue;
                     }
@@ -2357,7 +2357,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='S'){
-                        consume(ch);
+                        position++;
                         handler.nmtokensAttribute();
                         return true;
                     }
@@ -2371,7 +2371,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='D'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[D]");
                 case 3:
@@ -2380,7 +2380,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='R'){
-                        consume(ch);
+                        position++;
                     }
                     else {
                         handler.idAttribute();
@@ -2392,7 +2392,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='E'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[E]");
                 case 5:
@@ -2401,7 +2401,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='F'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[F]");
                 case 6:
@@ -2410,7 +2410,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='S'){
-                        consume(ch);
+                        position++;
                         handler.idRefsAttribute();
                         return true;
                     }
@@ -2424,12 +2424,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='Y'){
-                        consume(ch);
+                        position++;
                         handler.entityAttribute();
                         return true;
                     }
                     else if(ch=='I'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[Y] OR [I]");
                 case 8:
@@ -2438,7 +2438,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='E'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[E]");
                 case 9:
@@ -2447,7 +2447,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='S'){
-                        consume(ch);
+                        position++;
                         handler.entitiesAttribute();
                         return true;
                     }
@@ -2494,7 +2494,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='('){
                         handler.enumerationAttribute();
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[(]");
                 case 1:
@@ -2520,11 +2520,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                     }
                     else if(ch==')'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2549,13 +2549,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         state = 3;
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2565,12 +2565,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 3;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2580,12 +2580,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 3;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2661,7 +2661,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(laLen==0){
                         if(ch=='|'){
-                            consume(ch);
+                            position++;
                             state = 6;
                             continue;
                         }
@@ -2706,7 +2706,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='*'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "[*]");
@@ -2721,7 +2721,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             return false;
                         }
                         if(ch=='|'){
-                            consume(ch);
+                            position++;
                             state = 6;
                             continue;
                         }
@@ -2809,12 +2809,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                     }
                     else if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -2833,12 +2833,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 4;
                         continue;
                     }
@@ -2891,7 +2891,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='('){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<WS> OR [(]");
                 case 3:
@@ -2917,11 +2917,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                     }
                     else if(ch==')'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2946,13 +2946,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch==')'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2962,12 +2962,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -2977,12 +2977,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "<WS> OR [|] OR [)]");
@@ -3083,7 +3083,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='#'){
-                        consume(ch);
+                        position++;
                         state = 2;
                         continue;
                     }
@@ -3258,7 +3258,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -3267,7 +3267,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[!]");
                 case 2:
@@ -3352,7 +3352,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else if(ch=='>'){
                         handler.dtdAttributesStart(buffer.pop(0, 0));
-                        consume(ch);
+                        position++;
                         handler.dtdAttributesEnd();
                         return true;
                     }
@@ -3395,7 +3395,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     else if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.dtdAttributesEnd();
                         return true;
                     }
@@ -3422,7 +3422,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     else if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.dtdAttributesEnd();
                         return true;
                     }
@@ -3441,7 +3441,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.dtdAttributesEnd();
                         return true;
                     }
@@ -3476,7 +3476,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='('){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[(]");
                 case 1:
@@ -3545,17 +3545,17 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 10;
                         continue;
                     }
                     else if(ch==','){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
@@ -3577,17 +3577,17 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 10;
                         continue;
                     }
                     else if(ch==','){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                     }
                     else {
                         if(pe_reference(0)){
@@ -3604,7 +3604,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?' || ch=='+' || ch=='*'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else {
@@ -3676,12 +3676,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==','){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
@@ -3703,12 +3703,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==','){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
@@ -3787,12 +3787,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 10;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
@@ -3814,12 +3814,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='|'){
-                        consume(ch);
+                        position++;
                         state = 10;
                         continue;
                     }
                     else if(ch==')'){
-                        consume(ch);
+                        position++;
                         state = 5;
                         continue;
                     }
@@ -3876,7 +3876,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
                 if(ch=='?' || ch=='*' || ch=='+'){
-                    consume(ch);
+                    position++;
                     return true;
                 }
                 else {
@@ -4004,7 +4004,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -4013,7 +4013,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[!]");
                 case 2:
@@ -4126,7 +4126,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='('){
-                        consume(ch);
+                        position++;
                         state = 12;
                         continue;
                     }
@@ -4161,7 +4161,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='('){
-                        consume(ch);
+                        position++;
                         state = 12;
                         continue;
                     }
@@ -4198,7 +4198,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
@@ -4219,7 +4219,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else {
@@ -4264,7 +4264,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
@@ -4600,7 +4600,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[<]");
                 case 1:
@@ -4609,7 +4609,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[!]");
                 case 2:
@@ -4650,12 +4650,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else if(ch=='['){
                         handler.dtdRoot(buffer.pop(0, 0));
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                     }
                     else if(ch=='>'){
                         handler.dtdRoot(buffer.pop(0, 0));
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                         handler.dtdEnd();
                         return !stop;
                     }
@@ -4671,7 +4671,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch==']'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "[\\]]");
                 case 8:
@@ -4680,7 +4680,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         handler.dtdEnd();
                         return !stop;
                     }
@@ -4692,13 +4692,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='['){
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch=='>'){
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                         handler.dtdEnd();
                         return !stop;
                     }
@@ -4715,13 +4715,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='['){
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }
                     else if(ch=='>'){
                         handler.dtdStart();
-                        consume(ch);
+                        position++;
                         handler.dtdEnd();
                         return !stop;
                     }
@@ -5091,7 +5091,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                     if(ch=='?'){
-                        consume(ch);
+                        position++;
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
@@ -5101,7 +5101,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     if(ch=='>'){
                         handler.xdeclEnd();
-                        consume(ch);
+                        position++;
                         return true;
                     }
                     else expected(ch, "[>]");
@@ -5875,19 +5875,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_ENCODING_PART(int ch) throws IOException{
-        while(ENCODING_PART(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
+        int _position = position;
+        while(position<limit && ENCODING_PART(input[position]))
+            ++position;
+        int len = position-_position;
+        if(len>0 && buffer.isBuffering())
+            buffer.append(input, _position, len);
+        return codePoint();
     }
 
     private int finishAll_DIGIT(int ch) throws IOException{
-        while(DIGIT(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
+        int _position = position;
+        while(position<limit && DIGIT(input[position]))
+            ++position;
+        int len = position-_position;
+        if(len>0 && buffer.isBuffering())
+            buffer.append(input, _position, len);
+        return codePoint();
     }
 
     private int finishAll_NAME_PART(int ch) throws IOException{
@@ -5899,19 +5903,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private int finishAll_NCNAME_PART(int ch) throws IOException{
-        while(ch>=0 && org.apache.xerces.util.XMLChar.isNCName(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
+        int _position = position;
+        while(position<limit && org.apache.xerces.util.XMLChar.isNCName(input[position]))
+            ++position;
+        int len = position-_position;
+        if(len>0 && buffer.isBuffering())
+            buffer.append(input, _position, len);
+        return codePoint();
     }
 
     private int finishAll_HEX_DIGIT(int ch) throws IOException{
-        while(HEX_DIGIT(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
+        int _position = position;
+        while(position<limit && HEX_DIGIT(input[position]))
+            ++position;
+        int len = position-_position;
+        if(len>0 && buffer.isBuffering())
+            buffer.append(input, _position, len);
+        return codePoint();
     }
 
     private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
