@@ -68,8 +68,8 @@ public abstract class NBParser{
     private boolean eof;
     private boolean eofSent;
 
-    protected final int EOF = -1;
-    protected final int EOC = -2;
+    public static final int EOF = -1;
+    public static final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
         if(position==limit){
