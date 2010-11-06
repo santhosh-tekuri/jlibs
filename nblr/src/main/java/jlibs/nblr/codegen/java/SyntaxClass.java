@@ -174,42 +174,40 @@ public class SyntaxClass{
 
             boolean supplemental = matcher.clashesWith(Range.SUPPLIMENTAL);
 
-            printer.printlns(
-                "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
-                    PLUS
-            );
-
             if(!supplemental && !matcher.clashesWith(Any.NEW_LINE)){
                 condition = matcher._javaCode("input[position]");
                 printer.printlns(
-                    "int _position = position;",
-                    "while(position<limit && "+condition+")",
+                    "private int finishAll_"+entry.getValue()+"() throws IOException{",
                         PLUS,
-                        "++position;",
+                        "int _position = position;",
+                        "while(position<limit && "+condition+")",
+                            PLUS,
+                            "++position;",
+                            MINUS,
+                        "int len = position-_position;",
+                        "if(len>0 && buffer.isBuffering())",
+                            PLUS,
+                            "buffer.append(input, _position, len);",
+                            MINUS,
+                        "return codePoint();",
                         MINUS,
-                    "int len = position-_position;",
-                    "if(len>0 && buffer.isBuffering())",
-                        PLUS,
-                        "buffer.append(input, _position, len);",
-                        MINUS,
-                    "return codePoint();"
+                    "}"
                 );
             }else{
                 printer.printlns(
-                    "while("+condition+"){",
+                    "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
                         PLUS,
-                        "consume(ch);",
-                        "ch = codePoint();",
+                        "while("+condition+"){",
+                            PLUS,
+                            "consume(ch);",
+                            "ch = codePoint();",
+                            MINUS,
+                        "}",
+                        "return ch;",
                         MINUS,
-                    "}",
-                    "return ch;"
+                     "}"
                 );
             }
-
-            printer.printlns(
-                    MINUS,
-                 "}"
-            );
         }
     }
 

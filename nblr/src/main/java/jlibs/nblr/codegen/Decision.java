@@ -155,6 +155,22 @@ public class Decision{
         return false;
     }
 
+    public boolean readCharacter(){
+        for(Matcher matcher: matchers){
+            if(matcher!=null && matcher.clashesWith(Range.SUPPLIMENTAL))
+                return false;
+        }
+        return true;
+    }
+
+    public boolean matchesNewLine(){
+        for(Matcher matcher: matchers){
+            if(matcher!=null && matcher.clashesWith(Any.NEW_LINE))
+                return true;
+        }
+        return false;
+    }
+
     public String expected(){
         StringBuilder builder = new StringBuilder();
         for(Matcher matcher: matchers){
@@ -207,13 +223,16 @@ public class Decision{
         Matcher matcher = matchers[0];
         String methodName = state.ruleMethod.syntaxClass.addToFinishAll(matcher);
 
-        String ch = state.lookAheadRequired() ? "ch" : "codePoint()";
+        String ch = state.lookAheadRequired() ? "ch" : state.readMethod();
         String methodCall;
         if(methodName.equals(SyntaxClass.FINISH_ALL) || methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN)){
             Any any = (Any)(methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN) ? ((Not)matcher).delegate : matcher);
             methodCall = methodName+"("+ch+", "+Matcher.toJava(any.chars[0])+')';
-        }else
+        }else{
+            if(!matcher.clashesWith(Range.SUPPLIMENTAL) && !matcher.clashesWith(Any.NEW_LINE))
+                ch = "";
             methodCall = "finishAll_"+methodName+"("+ch+")";
+        }
 
         boolean returnValueRequired = false;
         for(int i = state.decisions.indexOf(this)+1; i<state.decisions.size(); i++){
