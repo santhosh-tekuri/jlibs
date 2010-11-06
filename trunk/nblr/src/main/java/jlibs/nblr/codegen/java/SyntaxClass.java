@@ -24,6 +24,7 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
 import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.Rule;
+import jlibs.nbp.NBParser;
 
 import java.util.*;
 
@@ -168,7 +169,7 @@ public class SyntaxClass{
             printer.emptyLine(true);
             Matcher matcher = entry.getKey();
             String condition = matcher._javaCode("ch");
-            if(matcher.checkFor(-1) || matcher.checkFor(-2))
+            if(matcher.checkFor(NBParser.EOF) || matcher.checkFor(NBParser.EOC))
                 condition = "ch>=0 && "+condition;
 
             boolean supplemental = matcher.clashesWith(Range.SUPPLIMENTAL);

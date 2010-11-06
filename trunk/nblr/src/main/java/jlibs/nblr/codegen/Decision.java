@@ -24,6 +24,7 @@ import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
 import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.*;
+import jlibs.nbp.NBParser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -252,7 +253,7 @@ public class Decision{
 
     public static String condition(Matcher matcher, String ch){
         String condition = matcher._javaCode(ch);
-        if(matcher.checkFor(-1)){
+        if(matcher.checkFor(NBParser.EOF)){
             if(matcher.name==null)
                 condition = '('+condition+')';
             condition = "ch!=EOF && "+condition;
