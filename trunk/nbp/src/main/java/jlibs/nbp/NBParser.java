@@ -45,7 +45,7 @@ public abstract class NBParser{
     public final void reset(int rule){
         laLen = 0;
         stop = false;
-        eof = false;
+        marker = EOC;
         start = position = limit = 0;
         offset = lineOffset = 0;
         line = 1;
@@ -65,14 +65,14 @@ public abstract class NBParser{
     private int start;
     protected int position;
     protected int limit;
-    private boolean eof;
+    protected int marker;
 
     public static final int EOF = -1;
     public static final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
         if(position==limit)
-            return eof ? EOF : EOC;
+            return marker;
 
         char ch0 = input[position];
         if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
@@ -171,7 +171,7 @@ public abstract class NBParser{
             input = chars;
             start = this.position = position;
             this.limit = limit;
-            this.eof = eof;
+            marker = eof ? EOF : EOC;
 
             int rule, state;
             do{
@@ -290,7 +290,7 @@ public abstract class NBParser{
         if(state==length)
             return true;
         else{
-            if(eof)
+            if(marker==EOF)
                 expected(EOF, new String(expected, state, expected.length-state));
             exiting(RULE_DYNAMIC_STRING_MATCH, state);
             return false;

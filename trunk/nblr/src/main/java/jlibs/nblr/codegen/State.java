@@ -155,6 +155,22 @@ public class State{
         return false;
     }
 
+    public boolean readCharacter(){
+        for(Decision decision: decisions){
+            if(!decision.readCharacter())
+                return false;
+        }
+        return true;
+    }
+
+    public boolean matchesNewLine(){
+        for(Decision decision: decisions){
+            if(decision.matchesNewLine())
+                return true;
+        }
+        return false;
+    }
+
     public String expected(){
         StringBuilder builder = new StringBuilder();
         for(Decision decision: decisions){
@@ -184,6 +200,13 @@ public class State{
         return maxLookAhead()>1;
     }
 
+    public String readMethod(){
+        if(readCharacter() && !matchesNewLine())
+            return "position==limit ? marker : input[position]";
+        else
+            return "codePoint()";
+    }
+
     public void generate(Printer printer, State nextState){
         printer.printlns(
             "case "+fromNode.stateID+":",
@@ -192,7 +215,7 @@ public class State{
 
         if(readCodePoint() && (!decisions.get(0).usesFinishAll() || lookAheadRequired())){
             printer.printlns(
-                "if((ch=codePoint())==EOC){",
+                "if((ch="+readMethod()+")==EOC){",
                     PLUS,
                     "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");"
             );
@@ -242,10 +265,12 @@ public class State{
                     }
                                         
                     closeLALengthCheck = true;
-                    printer.printlns(
-                        "if(laLen=="+(curLookAhead==1?0:curLookAhead)+"){",
-                            PLUS
-                    );
+                    if(curLookAhead>1){
+                        printer.printlns(
+                            "if(laLen=="+curLookAhead+"){",
+                                PLUS
+                        );
+                    }
                 }
             }
 
@@ -286,10 +311,12 @@ public class State{
 
             if(lookAheadReqd && closeLALengthCheck && (i+1==decisions.size() || decisions.get(i+1).matchers.length!=curLookAhead)){
                 closeLALengthCheck = false;
-                printer.printlns(
-                        MINUS,
-                    "}"
-                );
+                if(curLookAhead>1){
+                    printer.printlns(
+                            MINUS,
+                        "}"
+                    );
+                }
             }
 
             lastLookAhead = curLookAhead;

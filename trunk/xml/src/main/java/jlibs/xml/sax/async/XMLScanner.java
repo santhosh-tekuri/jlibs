@@ -141,7 +141,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_YES_NO, 0);
                     return false;
                 }
@@ -183,7 +183,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_SD_DECL, 2);
                         return false;
                     }
@@ -202,7 +202,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_SD_DECL, 4);
                         return false;
                     }
@@ -217,7 +217,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_SD_DECL, 6);
                         return false;
                     }
@@ -237,7 +237,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_ENC_NAME, 0);
                     return false;
                 }
@@ -247,7 +247,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "<ENCODING_START>");
             case 1:
-                if(finishAll_ENCODING_PART(codePoint())==EOC){
+                if(finishAll_ENCODING_PART()==EOC){
                     exiting(RULE_ENC_NAME, 1);
                     return false;
                 }
@@ -274,7 +274,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENC_DECL, 2);
                         return false;
                     }
@@ -293,7 +293,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENC_DECL, 4);
                         return false;
                     }
@@ -308,7 +308,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENC_DECL, 6);
                         return false;
                     }
@@ -328,7 +328,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_VERSION_NUM, 0);
                     return false;
                 }
@@ -338,7 +338,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "[1]");
             case 1:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_VERSION_NUM, 1);
                     return false;
                 }
@@ -347,7 +347,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "[\\.]");
             case 2:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_VERSION_NUM, 2);
                     return false;
                 }
@@ -356,7 +356,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "<DIGIT>");
             case 3:
-                if(finishAll_DIGIT(codePoint())==EOC){
+                if(finishAll_DIGIT()==EOC){
                     exiting(RULE_VERSION_NUM, 3);
                     return false;
                 }
@@ -383,7 +383,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VERSION_INFO, 2);
                         return false;
                     }
@@ -402,7 +402,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VERSION_INFO, 4);
                         return false;
                     }
@@ -417,7 +417,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VERSION_INFO, 6);
                         return false;
                     }
@@ -487,7 +487,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DASH> OR <CHAR>");
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_COMMENT, 4);
                         return false;
                     }
@@ -609,7 +609,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI_TARGET, 0);
                         return false;
                     }
@@ -623,7 +623,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[xX] OR <NCNAME_START>");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI_TARGET, 1);
                         return false;
                     }
@@ -636,7 +636,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI_TARGET, 2);
                         return false;
                     }
@@ -652,7 +652,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI_TARGET, 3);
                         return false;
                     }
@@ -668,7 +668,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI_TARGET, 4);
                         return false;
                     }
@@ -690,7 +690,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI, 0);
                         return false;
                     }
@@ -699,7 +699,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI, 1);
                         return false;
                     }
@@ -731,7 +731,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PI, 4);
                         return false;
                     }
@@ -797,7 +797,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_NCNAME, 0);
                     return false;
                 }
@@ -806,7 +806,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "<NCNAME_START>");
             case 1:
-                if(finishAll_NCNAME_PART(codePoint())==EOC){
+                if(finishAll_NCNAME_PART()==EOC){
                     exiting(RULE_NCNAME, 1);
                     return false;
                 }
@@ -828,7 +828,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
             case 1:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_QNAME, 1);
                     return false;
                 }
@@ -860,7 +860,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_REFERENCE, 0);
                         return false;
                     }
@@ -869,7 +869,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[\\&]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_REFERENCE, 1);
                         return false;
                     }
@@ -886,7 +886,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_REFERENCE, 2);
                         return false;
                     }
@@ -897,7 +897,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[;]");
                 case 3:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_REFERENCE, 3);
                         return false;
                     }
@@ -912,7 +912,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[x] OR <DIGIT>");
                 case 4:
-                    if((ch=finishAll_DIGIT(codePoint()))==EOC){
+                    if((ch=finishAll_DIGIT())==EOC){
                         exiting(RULE_REFERENCE, 4);
                         return false;
                     }
@@ -923,7 +923,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<DIGIT> OR [;]");
                 case 5:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_REFERENCE, 5);
                         return false;
                     }
@@ -933,7 +933,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<HEX_DIGIT>");
                 case 6:
-                    if((ch=finishAll_HEX_DIGIT(codePoint()))==EOC){
+                    if((ch=finishAll_HEX_DIGIT())==EOC){
                         exiting(RULE_REFERENCE, 6);
                         return false;
                     }
@@ -981,7 +981,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VALUE, 0);
                         return false;
                     }
@@ -997,7 +997,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VALUE, 1);
                         return false;
                     }
@@ -1016,7 +1016,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_VALUE, 2);
                         return false;
                     }
@@ -1102,7 +1102,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEM_ATTRS, 0);
                         return false;
                     }
@@ -1171,22 +1171,20 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_ELEM_CONTENT, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch==']'){
-                            buffer.push();
-                            buffer.append(input[position++]);
-                            state = 2;
-                            continue;
-                        }
-                        if(ch=='&'){
-                            return reference(0);
-                        }
-                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            buffer.push();
-                            consume(ch);
-                            state = 1;
-                            continue;
-                        }
+                    if(ch==']'){
+                        buffer.push();
+                        buffer.append(input[position++]);
+                        state = 2;
+                        continue;
+                    }
+                    if(ch=='&'){
+                        return reference(0);
+                    }
+                    if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                        buffer.push();
+                        consume(ch);
+                        state = 1;
+                        continue;
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && laLen<2){
@@ -1300,7 +1298,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEM, 1);
                         return false;
                     }
@@ -1315,7 +1313,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[/] OR [>]");
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEM, 2);
                         return false;
                     }
@@ -1346,7 +1344,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEM, 3);
                         return false;
                     }
@@ -1372,7 +1370,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [>]");
                 case 6:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEM, 6);
                         return false;
                     }
@@ -1432,7 +1430,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_XDECL, 4);
                         return false;
                     }
@@ -1527,12 +1525,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_MISC, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(ch);
-                            state = 1;
-                            continue;
-                        }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        consume(ch);
+                        state = 1;
+                        continue;
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && laLen<2){
@@ -1573,7 +1569,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_SYTEM_LITERAL, 0);
                         return false;
                     }
@@ -1632,7 +1628,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_PUBID_LITERAL, 0);
                         return false;
                     }
@@ -1749,7 +1745,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_NOTATION_DECL, 0);
                         return false;
                     }
@@ -1758,7 +1754,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_NOTATION_DECL, 1);
                         return false;
                     }
@@ -1875,7 +1871,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_EXTERNAL_ID, 0);
                     return false;
                 }
@@ -1913,7 +1909,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_PE_REFERENCE, 0);
                     return false;
                 }
@@ -1928,7 +1924,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
             case 2:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_PE_REFERENCE, 2);
                     return false;
                 }
@@ -1984,7 +1980,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_PE_DEF, 0);
                     return false;
                 }
@@ -2008,7 +2004,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENTITY_VALUE, 0);
                         return false;
                     }
@@ -2026,7 +2022,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<Q> OR <DQ>");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENTITY_VALUE, 1);
                         return false;
                     }
@@ -2045,7 +2041,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENTITY_VALUE, 2);
                         return false;
                     }
@@ -2137,7 +2133,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENTITY_DECL, 0);
                         return false;
                     }
@@ -2146,7 +2142,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENTITY_DECL, 1);
                         return false;
                     }
@@ -2275,7 +2271,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_ENTITY_DEF, 0);
                     return false;
                 }
@@ -2327,7 +2323,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 0);
                         return false;
                     }
@@ -2352,7 +2348,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 1);
                         return false;
                     }
@@ -2366,7 +2362,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 2);
                         return false;
                     }
@@ -2375,7 +2371,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[D]");
                 case 3:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 3);
                         return false;
                     }
@@ -2387,7 +2383,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 4);
                         return false;
                     }
@@ -2396,7 +2392,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[E]");
                 case 5:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 5);
                         return false;
                     }
@@ -2405,7 +2401,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[F]");
                 case 6:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 6);
                         return false;
                     }
@@ -2419,7 +2415,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 7:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 7);
                         return false;
                     }
@@ -2433,7 +2429,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[Y] OR [I]");
                 case 8:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 8);
                         return false;
                     }
@@ -2442,7 +2438,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[E]");
                 case 9:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TOKENIZED_TYPE, 9);
                         return false;
                     }
@@ -2488,7 +2484,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ENUMERATION, 0);
                         return false;
                     }
@@ -2601,7 +2597,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_MIXED, 0);
                         return false;
                     }
@@ -2659,17 +2655,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_MIXED, 3);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='|'){
-                            position++;
-                            state = 6;
-                            continue;
-                        }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(ch);
-                            state = 5;
-                            continue;
-                        }
+                    if(ch=='|'){
+                        position++;
+                        state = 6;
+                        continue;
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        consume(ch);
+                        state = 5;
+                        continue;
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && laLen<2){
@@ -2701,7 +2695,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_MIXED, 4);
                         return false;
                     }
@@ -2715,16 +2709,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_MIXED, 5);
                         return false;
                     }
-                    if(laLen==0){
-                        if((ch=finishAll_WS(ch))==EOC){
-                            exiting(RULE_MIXED, 5);
-                            return false;
-                        }
-                        if(ch=='|'){
-                            position++;
-                            state = 6;
-                            continue;
-                        }
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_MIXED, 5);
+                        return false;
+                    }
+                    if(ch=='|'){
+                        position++;
+                        state = 6;
+                        continue;
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && laLen<2){
@@ -2997,7 +2989,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_ENUMERATED_TYPE, 0);
                     return false;
                 }
@@ -3018,29 +3010,27 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ATT_TYPE, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='C'){
-                            if(matchString(RULE_STR_CDATA, 0, STRING_IDS[-RULE_STR_CDATA])){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_ATT_TYPE, 1);
-                                return false;
-                            }
+                    if(ch=='C'){
+                        if(matchString(RULE_STR_CDATA, 0, STRING_IDS[-RULE_STR_CDATA])){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_ATT_TYPE, 1);
+                            return false;
                         }
-                        if(ch=='('){
-                            return enumerated_type(0);
-                        }
-                        if(ch=='E'){
-                            return tokenized_type(0);
-                        }
-                        if(ch=='I'){
-                            return tokenized_type(0);
-                        }
+                    }
+                    if(ch=='('){
+                        return enumerated_type(0);
+                    }
+                    if(ch=='E'){
+                        return tokenized_type(0);
+                    }
+                    if(ch=='I'){
+                        return tokenized_type(0);
                     }
                     addToLookAhead(ch);
                     if(ch!=EOF && laLen<2){
@@ -3078,7 +3068,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_DEFAULT_DECL, 0);
                         return false;
                     }
@@ -3097,7 +3087,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.attributeDefaultValue();
                     return true;
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_DEFAULT_DECL, 2);
                         return false;
                     }
@@ -3253,7 +3243,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ATT_LIST_DECL, 0);
                         return false;
                     }
@@ -3262,7 +3252,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ATT_LIST_DECL, 1);
                         return false;
                     }
@@ -3471,7 +3461,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CHILDREN, 0);
                         return false;
                     }
@@ -3599,7 +3589,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 5:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CHILDREN, 5);
                         return false;
                     }
@@ -3833,7 +3823,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 case 14:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CHILDREN, 14);
                         return false;
                     }
@@ -3871,7 +3861,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
             case 1:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_NAME_CARDINALITY, 1);
                     return false;
                 }
@@ -3919,7 +3909,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_MARKUP_DECL, 0);
                     return false;
                 }
@@ -3999,7 +3989,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEMENT_DECL, 0);
                         return false;
                     }
@@ -4008,7 +3998,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_ELEMENT_DECL, 1);
                         return false;
                     }
@@ -4335,24 +4325,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_INT_SUBSET, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='%'){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_SUBSET, 1);
-                                return false;
-                            }
+                    if(ch=='%'){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_SUBSET, 1);
+                            return false;
                         }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_SUBSET, 1);
-                                return false;
-                            }
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_SUBSET, 1);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -4461,24 +4449,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_INT_SUBSET, 1);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='%'){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_SUBSET, 1);
-                                return false;
-                            }
+                    if(ch=='%'){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_SUBSET, 1);
+                            return false;
                         }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_SUBSET, 1);
-                                return false;
-                            }
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_SUBSET, 1);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -4595,7 +4581,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_DOCTYPE_DECL, 0);
                         return false;
                     }
@@ -4604,7 +4590,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_DOCTYPE_DECL, 1);
                         return false;
                     }
@@ -4666,7 +4652,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return false;
                     }
                 case 7:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_DOCTYPE_DECL, 7);
                         return false;
                     }
@@ -4742,15 +4728,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_DOCUMENT, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(misc(0)){
-                                state = 0;
-                                continue;
-                            }else{
-                                exiting(RULE_DOCUMENT, 0);
-                                return false;
-                            }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(misc(0)){
+                            state = 0;
+                            continue;
+                        }else{
+                            exiting(RULE_DOCUMENT, 0);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -4824,15 +4808,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_DOCUMENT, 1);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(misc(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_DOCUMENT, 1);
-                                return false;
-                            }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(misc(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_DOCUMENT, 1);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -4883,15 +4865,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_DOCUMENT, 2);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(misc(0)){
-                                state = 2;
-                                continue;
-                            }else{
-                                exiting(RULE_DOCUMENT, 2);
-                                return false;
-                            }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(misc(0)){
+                            state = 2;
+                            continue;
+                        }else{
+                            exiting(RULE_DOCUMENT, 2);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -4944,33 +4924,31 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_INT_ELEM_CONTENT, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch==']'){
-                            if(elem_content(0)){
-                                state = 0;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_ELEM_CONTENT, 0);
-                                return false;
-                            }
+                    if(ch==']'){
+                        if(elem_content(0)){
+                            state = 0;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_ELEM_CONTENT, 0);
+                            return false;
                         }
-                        if(ch=='&'){
-                            if(elem_content(0)){
-                                state = 0;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_ELEM_CONTENT, 0);
-                                return false;
-                            }
+                    }
+                    if(ch=='&'){
+                        if(elem_content(0)){
+                            state = 0;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_ELEM_CONTENT, 0);
+                            return false;
                         }
-                        if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
-                            if(elem_content(0)){
-                                state = 0;
-                                continue;
-                            }else{
-                                exiting(RULE_INT_ELEM_CONTENT, 0);
-                                return false;
-                            }
+                    }
+                    if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                        if(elem_content(0)){
+                            state = 0;
+                            continue;
+                        }else{
+                            exiting(RULE_INT_ELEM_CONTENT, 0);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -5095,7 +5073,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "<WS> OR [?]");
                 case 4:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_TEXT_DECL, 4);
                         return false;
                     }
@@ -5313,24 +5291,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_EXT_SUBSET_DECL, 0);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='%'){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_EXT_SUBSET_DECL, 1);
-                                return false;
-                            }
+                    if(ch=='%'){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_EXT_SUBSET_DECL, 1);
+                            return false;
                         }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_EXT_SUBSET_DECL, 1);
-                                return false;
-                            }
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_EXT_SUBSET_DECL, 1);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -5450,24 +5426,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_EXT_SUBSET_DECL, 1);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch=='%'){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_EXT_SUBSET_DECL, 1);
-                                return false;
-                            }
+                    if(ch=='%'){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_EXT_SUBSET_DECL, 1);
+                            return false;
                         }
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            if(decl_sep(0)){
-                                state = 1;
-                                continue;
-                            }else{
-                                exiting(RULE_EXT_SUBSET_DECL, 1);
-                                return false;
-                            }
+                    }
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        if(decl_sep(0)){
+                            state = 1;
+                            continue;
+                        }else{
+                            exiting(RULE_EXT_SUBSET_DECL, 1);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -5594,7 +5568,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CONDITIONAL_SECT, 0);
                         return false;
                     }
@@ -5603,7 +5577,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[<]");
                 case 1:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CONDITIONAL_SECT, 1);
                         return false;
                     }
@@ -5612,7 +5586,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[!]");
                 case 2:
-                    if((ch=codePoint())==EOC){
+                    if((ch=position==limit ? marker : input[position])==EOC){
                         exiting(RULE_CONDITIONAL_SECT, 2);
                         return false;
                     }
@@ -5625,19 +5599,17 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_CONDITIONAL_SECT, 3);
                         return false;
                     }
-                    if(laLen==0){
-                        if((ch=finishAll_WS(ch))==EOC){
-                            exiting(RULE_CONDITIONAL_SECT, 3);
+                    if((ch=finishAll_WS(ch))==EOC){
+                        exiting(RULE_CONDITIONAL_SECT, 3);
+                        return false;
+                    }
+                    if(ch=='%'){
+                        if(pe_reference(0)){
+                            state = 4;
+                            continue;
+                        }else{
+                            exiting(RULE_CONDITIONAL_SECT, 4);
                             return false;
-                        }
-                        if(ch=='%'){
-                            if(pe_reference(0)){
-                                state = 4;
-                                continue;
-                            }else{
-                                exiting(RULE_CONDITIONAL_SECT, 4);
-                                return false;
-                            }
                         }
                     }
                     addToLookAhead(ch);
@@ -5666,20 +5638,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         exiting(RULE_CONDITIONAL_SECT, 4);
                         return false;
                     }
-                    if(laLen==0){
-                        if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                            consume(ch);
-                            state = 3;
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                        consume(ch);
+                        state = 3;
+                        continue;
+                    }
+                    if(ch=='%'){
+                        if(pe_reference(0)){
+                            state = 4;
                             continue;
-                        }
-                        if(ch=='%'){
-                            if(pe_reference(0)){
-                                state = 4;
-                                continue;
-                            }else{
-                                exiting(RULE_CONDITIONAL_SECT, 4);
-                                return false;
-                            }
+                        }else{
+                            exiting(RULE_CONDITIONAL_SECT, 4);
+                            return false;
                         }
                     }
                     addToLookAhead(ch);
@@ -5733,7 +5703,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return false;
                 }
             case 3:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_INCLUDE_SECT, 3);
                     return false;
                 }
@@ -5742,7 +5712,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "[\\]]");
             case 4:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_INCLUDE_SECT, 4);
                     return false;
                 }
@@ -5751,7 +5721,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
                 else expected(ch, "[\\]]");
             case 5:
-                if((ch=codePoint())==EOC){
+                if((ch=position==limit ? marker : input[position])==EOC){
                     exiting(RULE_INCLUDE_SECT, 5);
                     return false;
                 }
@@ -5874,7 +5844,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return ch;
     }
 
-    private int finishAll_ENCODING_PART(int ch) throws IOException{
+    private int finishAll_ENCODING_PART() throws IOException{
         int _position = position;
         while(position<limit && ENCODING_PART(input[position]))
             ++position;
@@ -5884,7 +5854,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return codePoint();
     }
 
-    private int finishAll_DIGIT(int ch) throws IOException{
+    private int finishAll_DIGIT() throws IOException{
         int _position = position;
         while(position<limit && DIGIT(input[position]))
             ++position;
@@ -5902,7 +5872,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return ch;
     }
 
-    private int finishAll_NCNAME_PART(int ch) throws IOException{
+    private int finishAll_NCNAME_PART() throws IOException{
         int _position = position;
         while(position<limit && org.apache.xerces.util.XMLChar.isNCName(input[position]))
             ++position;
@@ -5912,7 +5882,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return codePoint();
     }
 
-    private int finishAll_HEX_DIGIT(int ch) throws IOException{
+    private int finishAll_HEX_DIGIT() throws IOException{
         int _position = position;
         while(position<limit && HEX_DIGIT(input[position]))
             ++position;
