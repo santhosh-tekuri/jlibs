@@ -45,7 +45,7 @@ public abstract class NBParser{
     public final void reset(int rule){
         laLen = 0;
         stop = false;
-        eof = eofSent = false;
+        eof = false;
         start = position = limit = 0;
         offset = lineOffset = 0;
         line = 1;
@@ -66,19 +66,13 @@ public abstract class NBParser{
     protected int position;
     protected int limit;
     private boolean eof;
-    private boolean eofSent;
 
     public static final int EOF = -1;
     public static final int EOC = -2;
     private int increment;
     protected final int codePoint() throws IOException{
-        if(position==limit){
-            if(eof){
-                eofSent = true;
-                return EOF;
-            }else
-                return EOC;
-        }
+        if(position==limit)
+            return eof ? EOF : EOC;
 
         char ch0 = input[position];
         if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
@@ -205,7 +199,7 @@ public abstract class NBParser{
                 }while(exitFree!=0);
             }
 
-            if(eofSent)
+            if(free==0 && this.position==limit && eof)
                 onSuccessful();
             if(this.position!=position)
                 lastChar = input[this.position-1];
