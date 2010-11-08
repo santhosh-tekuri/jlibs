@@ -103,7 +103,7 @@ public class RuleMethod{
         boolean requiresWhile = requiresWhile();
         if(requiresWhile){
             printer.printlns(
-                "while(true){",
+                "loop: while(true){",
                     PLUS
             );
         }
@@ -135,6 +135,8 @@ public class RuleMethod{
         }
 
         printer.printlns(
+                "exiting(RULE_"+rule.name.toUpperCase()+", state);",
+                "return false;",
                 MINUS,
             "}"
         );

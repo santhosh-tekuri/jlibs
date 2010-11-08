@@ -246,12 +246,10 @@ public class Decision{
             methodCall = "(ch="+methodCall+")";
 
         printer.printlns(
-            "if("+methodCall+"==EOC){",
+            "if("+methodCall+"==EOC)",
                 PLUS,
-                exiting(ruleID(), state.fromNode.stateID),
-                "return false;",
-                MINUS,
-            "}"
+                state.breakStatement(),
+                MINUS
         );
     }
 
@@ -360,13 +358,15 @@ public class Decision{
                         methodCall = rule.name+"("+id(returnTarget)+")";
                 }
 
+                if(returnAction!=CALL_RULE_AND_RETURN)
+                    printer.println("state = "+idAfterRule(edgeWithRule)+";");
+                
                 if(checkStop){
                     printer.printlns(
                         "if(stop){",
                             PLUS,
                             exiting(ruleID(edgeWithRule), id(edgeWithRule.ruleTarget.node())),
-                            exiting(ruleID(), idAfterRule(edgeWithRule)),
-                            "return false;",
+                            idAfterRule(edgeWithRule)==-1 ? "return false;" : state.breakStatement(),
                             MINUS,
                         "}else"
                     );
@@ -378,52 +378,23 @@ public class Decision{
                         methodCallList.add("return true;");
                         break;
                     case CALL_RULE_AND_CONTINUE:
-                        methodCallList.add("state = "+idAfterRule(edgeWithRule)+";");
                         methodCallList.add("continue;");
                         break;
                     case CALL_RULE_AND_NEXT_DECISION:
-                        //methodCallList.add("state = "+idAfterRule(edgeWithRule)+";");
                         break;
                 }
 
                 List<String> elseList = new ArrayList<String>();
-                String line = exiting(ruleID(), idAfterRule(edgeWithRule));
-                if(line.length()>0)
-                    elseList.add(line);
-                elseList.add("return false;");
+                elseList.add(idAfterRule(edgeWithRule)==-1 ? "return false;" : state.breakStatement());
 
-                if(methodCallList.size()==1 && elseList.size()==1 && methodCallList.get(0).equals("return true;") && elseList.get(0).equals("return false;"))
-                    printer.println("return "+methodCall+";");
-                else if(methodCallList.size()==0){
-                    printer.printlns(
-                        "if(!"+methodCall+"){",
-                            PLUS
-                    );
-                    printer.printlns(elseList.toArray(new String[elseList.size()]));
-                    printer.printlns(
-                            MINUS,
-                        "}"
-                    );
-                }else{
-                    printer.printlns(
-                        "if("+methodCall+"){",
-                            PLUS
-                    );
-                    printer.printlns(methodCallList.toArray(new String[methodCallList.size()]));
-                    printer.printlns(
-                            MINUS,
-                        "}else{",
-                            PLUS
-                    );
-                    printer.printlns(elseList.toArray(new String[elseList.size()]));
-                    printer.printlns(
-                            MINUS,
-                        "}"
-                    );
-                }
+                if(methodCallList.size()==0)
+                    printer.printlnIf("!"+methodCall, elseList);
+                else
+                    printer.printlnIf(methodCall, methodCallList, elseList);
                 break;
             case GOTO_NEXT_CASE:
             case GOTO_NEXT_DECISION:
+                printer.println("state = "+id(returnTarget)+";");
                 if(checkStop)
                     doCheckStop(printer);
                 break;
@@ -432,12 +403,10 @@ public class Decision{
 
     private void doCheckStop(Printer printer){
         printer.printlns(
-            "if(stop){",
+            "if(stop)",
                 PLUS,
-                exiting(ruleID(), id(returnTarget())),
-                "return false;",
-                MINUS,
-            "}"
+                id(returnTarget())==-1 ? "return false;" : state.breakStatement(),
+                MINUS
         );
     }
 

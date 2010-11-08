@@ -21,6 +21,7 @@ import jlibs.core.util.regex.TemplateMatcher;
 import javax.lang.model.element.TypeElement;
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,6 +70,8 @@ public class Printer{
     @SuppressWarnings({"StringEquality"})
     public void printlns(String... lines){
         for(String line: lines){
+            if(line==null)
+                continue;
             if(line==PLUS)
                 indent++;
             else if(line==MINUS)
@@ -172,5 +175,39 @@ public class Printer{
         emptyLine(true);
         println("/*-------------------------------------------------[ "+title+" ]---------------------------------------------------*/");
         emptyLine(true);
+    }
+
+    public void printlnIf(String condition, List<String> body){
+        printlns(
+            "if("+condition+")"+(body.size()>1 ? "{" : ""),
+                PLUS
+        );
+        printlns(body.toArray(new String[body.size()]));
+        printlns(
+            MINUS,
+            body.size()>1 ? "}" : null
+        );
+    }
+
+    public void printlnIf(String condition, List<String> ifBody, List<String> elseBody){
+        if(ifBody.size()==1 && elseBody.size()==1 && ifBody.get(0).equals("return true;") && elseBody.get(0).equals("return false;"))
+            println("return "+condition+";");
+        else{
+            printlns(
+                "if("+condition+")"+(ifBody.size()>1 ? "{" : ""),
+                    PLUS
+            );
+            printlns(ifBody.toArray(new String[ifBody.size()]));
+            printlns(
+                    MINUS,
+                (ifBody.size()>1 ? "}" : "")+"else"+(elseBody.size()>1 ? "{" : ""),
+                    PLUS
+            );
+            printlns(elseBody.toArray(new String[elseBody.size()]));
+            printlns(
+                    MINUS,
+                elseBody.size()>1 ? "}" : null
+            );
+        }
     }
 }
