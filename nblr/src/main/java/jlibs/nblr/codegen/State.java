@@ -207,6 +207,10 @@ public class State{
             return "codePoint()";
     }
 
+    public String breakStatement(){
+        return ruleMethod.requiresWhile() ? "break loop;" : "break;";
+    }
+
     public void generate(Printer printer, State nextState){
         printer.printlns(
             "case "+fromNode.stateID+":",
@@ -215,16 +219,17 @@ public class State{
 
         if(readCodePoint() && (!decisions.get(0).usesFinishAll() || lookAheadRequired())){
             printer.printlns(
-                "if((ch="+readMethod()+")==EOC){",
-                    PLUS,
-                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");"
+                "if((ch="+readMethod()+")==EOC)"+(SyntaxClass.DEBUGGABLE ? "{" : ""),
+                    PLUS
+//                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");"
             );
             if(SyntaxClass.DEBUGGABLE)
                 printer.println("handler.currentNode("+ruleMethod.rule.id+", "+fromNode.stateID+");");
+            printer.println(breakStatement());
             printer.printlns(
-                    "return false;",
+//                    "return false;",
                     MINUS,
-                "}"
+                SyntaxClass.DEBUGGABLE ? "}" : null
             );
         }
 
