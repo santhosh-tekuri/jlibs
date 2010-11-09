@@ -1109,11 +1109,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_ELEM_CONTENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -1128,11 +1126,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_ELEM_CONTENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -1234,11 +1230,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_ELEM, 2);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -1421,11 +1415,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_MISC, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -2444,11 +2436,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_MIXED, 3);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -2489,11 +2479,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_MIXED, 5);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -2767,11 +2755,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return tokenized_type(0);
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_ATT_TYPE, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -3521,11 +3507,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 addToLookAhead(ch);
-                if(ch!=EOF && laLen<2){
-                    if((ch=codePoint())==EOC){
-                        exiting(RULE_MARKUP_DECL, 0);
-                        return false;
-                    }
+                if(ch!=EOF){
+                    if((ch=codePoint())==EOC)
+                        break;
                     addToLookAhead(ch);
                 }
                 if(laLen==2){
@@ -3536,11 +3520,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                if(ch!=EOF && laLen<3){
-                    if((ch=codePoint())==EOC){
-                        exiting(RULE_MARKUP_DECL, 0);
-                        return false;
-                    }
+                if(ch!=EOF){
+                    if((ch=codePoint())==EOC)
+                        break;
                     addToLookAhead(ch);
                 }
                 if(laLen==3){
@@ -3561,11 +3543,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                 }
-                if(ch!=EOF && laLen<4){
-                    if((ch=codePoint())==EOC){
-                        exiting(RULE_MARKUP_DECL, 0);
-                        return false;
-                    }
+                if(ch!=EOF){
+                    if((ch=codePoint())==EOC)
+                        break;
                     addToLookAhead(ch);
                 }
                 if(laLen==4){
@@ -3889,11 +3869,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -3908,11 +3886,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -3945,11 +3921,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<4){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==4){
@@ -3995,11 +3969,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4014,11 +3986,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -4051,11 +4021,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<4){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_SUBSET, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==4){
@@ -4236,11 +4204,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_DOCUMENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4263,11 +4229,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_DOCUMENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -4304,11 +4268,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_DOCUMENT, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4351,11 +4313,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_DOCUMENT, 2);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4418,11 +4378,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_ELEM_CONTENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4445,11 +4403,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_INT_ELEM_CONTENT, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -4741,11 +4697,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4760,11 +4714,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -4805,11 +4757,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<4){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 0);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==4){
@@ -4856,11 +4806,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -4875,11 +4823,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==3){
@@ -4920,11 +4866,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                         }
                     }
-                    if(ch!=EOF && laLen<4){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_EXT_SUBSET_DECL, 1);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==4){
@@ -5003,11 +4947,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_CONDITIONAL_SECT, 3);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
@@ -5039,11 +4981,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                     addToLookAhead(ch);
-                    if(ch!=EOF && laLen<2){
-                        if((ch=codePoint())==EOC){
-                            exiting(RULE_CONDITIONAL_SECT, 4);
-                            return false;
-                        }
+                    if(ch!=EOF){
+                        if((ch=codePoint())==EOC)
+                            break loop;
                         addToLookAhead(ch);
                     }
                     if(laLen==2){
