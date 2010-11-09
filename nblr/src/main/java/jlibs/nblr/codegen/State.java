@@ -253,16 +253,21 @@ public class State{
                             printer.println("addToLookAhead(ch);");
                             lastLookAhead = 1;
                         }
-                        String prefix = curLookAhead==lastLookAhead+1 ? "if" : "while";
+                        String prefix, condition;
+                        if(curLookAhead==lastLookAhead+1){
+                            prefix = "if";
+                            condition = "ch!=EOF";
+                        }else{
+                            prefix = "while";
+                            condition = "ch!=EOF && laLen<"+curLookAhead; 
+                        }
                         printer.printlns(
-                            prefix+"(ch!=EOF && laLen<"+curLookAhead+"){",
+                            prefix+"("+condition+"){",
                                 PLUS,
-                                "if((ch=codePoint())==EOC){",
+                                "if((ch=codePoint())==EOC)",
                                     PLUS,
-                                    "exiting(RULE_"+ruleMethod.rule.name.toUpperCase()+", "+fromNode.stateID+");",
-                                    "return false;",
+                                    breakStatement(),
                                     MINUS,
-                                "}",
                                 "addToLookAhead(ch);",
                                 MINUS,
                             "}"
