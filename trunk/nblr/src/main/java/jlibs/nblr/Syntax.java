@@ -19,6 +19,7 @@ import jlibs.core.io.FileUtil;
 import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.nblr.actions.BufferAction;
+import jlibs.nblr.actions.ErrorAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.editor.serialize.SyntaxBinding;
@@ -117,6 +118,8 @@ public class Syntax{
             return;
 
         path = path==null ? new TreePath(node) : path.pathByAddingChild(node);
+        if(node.action instanceof ErrorAction)
+            return;
         if(node.action instanceof BufferAction)
             bufferDepth++;
         else if(node.action instanceof PublishAction)
