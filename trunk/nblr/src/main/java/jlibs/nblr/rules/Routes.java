@@ -36,6 +36,7 @@ public class Routes{
         this(rule, fromNode, false);
     }
     
+    @SuppressWarnings({"unchecked"})
     public Routes(Rule rule, Node fromNode, boolean digIntoRule){
         this.rule = rule;
         this.fromNode = fromNode;
@@ -140,13 +141,6 @@ public class Routes{
         if(buff.length()>0)
             buff.append(" OR ");
         buff.append(route);
-    }
-
-    public void travelWithoutMatching(){
-        for(Path route: determinateRoutes)
-            route.travelWithoutMatching();
-        if(indeterminateRoute!=null)
-            indeterminateRoute.travelWithoutMatching();
     }
 
     public boolean isEOF(){

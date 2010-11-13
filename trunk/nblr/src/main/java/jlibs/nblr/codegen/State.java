@@ -63,141 +63,13 @@ public class State{
             }
         }
 
-        if(useNewAlgo()){
-            Decision indeterminateDecision = null;
-            if(routes.indeterminateRoute!=null)
-                decisions.add(indeterminateDecision=new Decision(this, routes.indeterminateRoute.route()[0], true));
+        if(routes.indeterminateRoute!=null)
+            decisions.add(new Decision(this, routes.indeterminateRoute.route()[0]));
 
-            Decision eofDecision = null;
-            if(routes.routeStartingWithEOF!=null)
-                decisions.add(eofDecision = new Decision(this, routes.routeStartingWithEOF, true));
+        if(routes.routeStartingWithEOF!=null)
+            decisions.add(new Decision(this, routes.routeStartingWithEOF));
 
-            List<List<Decision>> ruleTargetLists = new ArrayList<List<Decision>>();
-            for(Decision decision: decisions){
-                if(decision.path.matcher()!=null)
-                    continue;
-                if(decision.matchers.length>1){
-                    boolean endingWithEOF = false;
-                    for(Decision d: decisions){
-                        if(d.matchers.length==decision.matchers.length && d.matchers[decision.matchers.length-1]==null){
-                            endingWithEOF = true;
-                            break;
-                        }
-                    }
-                    if(endingWithEOF)
-                        continue;
-                }
-
-                Decision fallbackDecision = null;
-                for(Decision d: decisions){
-                    if(d.matchers.length==decision.matchers.length && d.fallback){
-                        fallbackDecision = d;
-                        break;
-                    }
-                }
-                if(fallbackDecision!=null){
-                    Matcher lastMatcher = ArrayUtil.getLast(decision.matchers);
-                    if(lastMatcher!=null && lastMatcher.clashesWith(ArrayUtil.getLast(fallbackDecision.matchers)))
-                        continue;
-                }
-
-                boolean listFound = false;
-                for(List<Decision> ruleTargetList: ruleTargetLists){
-                    if(decision.path.equals(ruleTargetList.get(0).path)){
-                        listFound = true;
-                        ruleTargetList.add(decision);
-                        break;
-                    }
-                }
-                if(!listFound){
-                    List<Decision> newList = new ArrayList<Decision>();
-                    newList.add(decision);
-                    ruleTargetLists.add(newList);
-                }
-            }
-
-//            Iterator<List<Decision>> iter = ruleTargetLists.iterator();
-//            while(iter.hasNext()){
-//                if(iter.next().size()==1)
-//                    iter.remove();
-//            }
-            if(routes.indeterminateRoute==null){
-                if(ruleTargetLists.size()==1){
-                    if(eofDecision==null || ruleTargetLists.get(0).contains(eofDecision)){
-                        List<Decision> ruleTargetList = ruleTargetLists.remove(0);
-                        decisions.removeAll(ruleTargetList);
-                        Decision ruleTargetDecision = ruleTargetList.get(ruleTargetList.size()-1);
-                        ruleTargetDecision.matchers = new Matcher[]{ null };
-                        decisions.add(ruleTargetDecision);
-                    }
-                }else if(ruleTargetLists.size()>1 && routes.routeStartingWithEOF==null){
-                    int preferred = ruleTargetLists.size()-1;
-                    for(int i=preferred-1; i>=0; i--){
-                        if(ruleTargetLists.get(i).size()>ruleTargetLists.get(preferred).size())
-                            preferred = i;
-                    }
-
-                    List<Decision> ruleTargetList = ruleTargetLists.remove(preferred);
-                    decisions.removeAll(ruleTargetList);
-                    Decision ruleTargetDecision = ruleTargetList.get(0);
-                    ruleTargetDecision.matchers = new Matcher[]{ null };
-                    decisions.add(ruleTargetDecision);
-                }
-            }
-        }else{
-            List<List<Decision>> ruleTargetLists = new ArrayList<List<Decision>>();
-            for(Decision decision: decisions){
-                if(decision.edgeWithRule()!=null){
-                    boolean listFound = false;
-                    for(List<Decision> ruleTargetList: ruleTargetLists){
-                        if(decision.path.equals(ruleTargetList.get(0).path)){
-                            listFound = true;
-                            ruleTargetList.add(decision);
-                            break;
-                        }
-                    }
-                    if(!listFound){
-                        List<Decision> newList = new ArrayList<Decision>();
-                        newList.add(decision);
-                        ruleTargetLists.add(newList);
-                    }
-                }
-            }
-
-            if(routes.indeterminateRoute!=null)
-                decisions.add(new Decision(this, routes.indeterminateRoute.route()[0]));
-            if(routes.routeStartingWithEOF!=null)
-                decisions.add(new Decision(this, routes.routeStartingWithEOF));
-
-            if(routes.indeterminateRoute==null && routes.routeStartingWithEOF==null){
-                if(ruleTargetLists.size()==1){
-                    Decision lastDecision = decisions.get(decisions.size()-1);
-                    assert lastDecision.matchers[0]!=null;
-
-                    List<Decision> ruleTargetList = ruleTargetLists.remove(0);
-                    decisions.removeAll(ruleTargetList);
-                    Decision ruleTargetDecision = ruleTargetList.get(0);
-                    ruleTargetDecision.matchers = new Matcher[]{ null };
-                    decisions.add(ruleTargetDecision);
-                }else if(ruleTargetLists.size()>1 && !lookAheadRequired()){
-                    int preferred = ruleTargetLists.size()-1;
-                    for(int i=preferred-1; i>=0; i--){
-                        if(ruleTargetLists.get(i).size()>ruleTargetLists.get(preferred).size())
-                            preferred = i;
-                    }
-
-                    List<Decision> ruleTargetList = ruleTargetLists.remove(preferred);
-                    decisions.removeAll(ruleTargetList);
-                    Decision ruleTargetDecision = ruleTargetList.get(0);
-                    ruleTargetDecision.matchers = new Matcher[]{ null };
-                    decisions.add(ruleTargetDecision);
-                }
-            }
-        }
-    }
-
-    private boolean useNewAlgo(){
-        return ruleMethod.rule.name.startsWith("new_elem");
+        optimize();
     }
 
     private void processLookAhead(List<Path> routes){
@@ -225,11 +97,76 @@ public class State{
             if(depth<routes.get(0).depth)
                 processLookAhead(group, depth+1);
             if(depth==route.depth){
-                Decision decision = useNewAlgo() ? new Decision(this, route, true) : new Decision(this, route);
-//                if(!decisions.contains(decision))
+                Decision decision = new Decision(this, route);
                     decisions.add(decision);
             }
         }
+    }
+
+    private boolean isCandidate(Decision decision){
+        int i = decisions.indexOf(decision)+1;
+        while(i<decisions.size()){
+            Decision d = decisions.get(i);
+            if(decision.matchers.length!=d.matchers.length)
+                return true;
+            if(!d.path.equals(decision.path)){
+                if(ArrayUtil.getLast(d.matchers)==null)
+                    return false;
+                if(ArrayUtil.getLast(decision.matchers).clashesWith(ArrayUtil.getLast(d.matchers)))
+                    return false;
+            }
+            i++;
+        }
+        return true;
+    }
+
+    private void optimize(){
+        List<List<Decision>> lists = new ArrayList<List<Decision>>();
+        for(int i=decisions.size()-1; i>=0; i--){
+            Decision decision = decisions.get(i);
+            if(decision.path.matcher()==null && isCandidate(decision)){
+                boolean listFound = false;
+                for(List<Decision> list: lists){
+                    if(decision.path.equals(list.get(0).path)){
+                        listFound = true;
+                        list.add(decision);
+                        break;
+                    }
+                }
+                if(!listFound){
+                    List<Decision> newList = new ArrayList<Decision>();
+                    newList.add(decision);
+                    lists.add(newList);
+                }
+            }
+        }
+        if(lists.size()==0)
+            return;
+
+        if(decisions.get(decisions.size()-1).matchers[0]==null){
+            Decision lastDecision = decisions.get(decisions.size()-1);
+            for(List<Decision> list: lists){
+                if(list.get(0).path.equals(lastDecision.path)){
+                    lists.clear();
+                    lists.add(list);
+                    break;
+                }
+            }
+        }
+
+        List<Decision> preferredList = lists.get(0);
+        for(int i=1; i<lists.size(); i++){
+            List<Decision> list = lists.get(i);
+            if(list.size()>preferredList.size())
+                preferredList = list;
+        }
+
+        Decision preferredDecision = preferredList.get(0);
+        if(preferredList.size()==1 && preferredDecision.matchers.length<maxLookAhead())
+            return;
+        decisions.removeAll(preferredList);
+        decisions.add(preferredDecision);
+        preferredDecision.matchers = new Matcher[]{ null };
     }
 
     public void computeNextStates(ArrayList<Node> statesVisited, LinkedHashSet<Node> statesPending){

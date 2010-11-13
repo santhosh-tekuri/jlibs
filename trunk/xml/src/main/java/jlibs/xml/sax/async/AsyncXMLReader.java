@@ -310,7 +310,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
                 rule = XMLScanner.RULE_INT_VALUE;
             }else{
-                rule = XMLScanner.RULE_NEW_ELEM_CONTENT; //RULE_INT_ELEM_CONTENT;
+                rule = XMLScanner.RULE_ELEM_CONTENT;
             }
 
             entityStack.push(entity);

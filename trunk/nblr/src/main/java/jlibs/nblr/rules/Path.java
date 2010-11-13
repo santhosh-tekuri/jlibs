@@ -133,26 +133,6 @@ public class Path extends ArrayList<Object>{
     public void travelWithoutMatching(){
         while(true){
             Node node = destination();
-            if(Node.DYNAMIC_STRING_MATCH.equals(node.name))
-                return;
-            switch(node.outgoing.size()){
-                case 1:
-                    Edge edge = node.outgoing.get(0);
-                    if(edge.matcher==null && edge.ruleTarget==null){
-                        add(edge);
-                        add(edge.target);
-                        break;
-                    }else
-                        return;
-                default:
-                    return;
-            }
-        }
-    }
-
-    public void travelWithoutMatching(boolean newOne){
-        while(true){
-            Node node = destination();
             if(node.junction() || Node.DYNAMIC_STRING_MATCH.equals(node.name))
                 return;
             switch(node.outgoing.size()){
@@ -168,17 +148,6 @@ public class Path extends ArrayList<Object>{
                     return;
             }
         }
-    }
-
-    public boolean digsIntoRule(){
-        for(Object obj: this){
-            if(obj instanceof Edge){
-                Edge edge = (Edge)obj;
-                if(edge.ruleTarget!=null)
-                    return true;
-            }
-        }
-        return false;
     }
 
     @Override
