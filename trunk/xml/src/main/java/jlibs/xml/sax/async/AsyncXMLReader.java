@@ -54,12 +54,18 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     private XMLFeeder xmlFeeder, feeder;
-    void setFeeder(XMLFeeder feeder){
+    void setFeeder(XMLFeeder feeder) throws IOException{
         if(this.feeder.getParent()==feeder){
-            if(this.feeder.postAction!=null)
-                this.feeder.postAction.run();
+            if(this.feeder.postAction!=null){
+                try{
+                    this.feeder.postAction.run();
+                }catch(Exception ex){
+                    this.feeder.parser.ioError(ex.getMessage());
+                }
+            }
         }
         this.feeder = feeder;
+        elements.freeLock = feeder.elemDepth;
     }
     
     @Override
@@ -244,15 +250,16 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         }
     }
 
-    void hexCode(Chars data) throws SAXException{
-        codePoint(data, 16);
+    private int radix;
+    void hexCode() throws SAXException{
+        radix = 16;
     }
 
-    void asciiCode(Chars data) throws SAXException{
-        codePoint(data, 10);
+    void asciiCode() throws SAXException{
+        radix = 10;
     }
 
-    private void codePoint(Chars data, int radix) throws SAXException{
+    void charReference(Chars data) throws SAXException{
         int cp = Integer.parseInt(data.toString(), radix);
         if(XMLChar.isValid(cp)){
             if(valueStarted)
@@ -303,15 +310,19 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                     fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
                 rule = XMLScanner.RULE_INT_VALUE;
             }else{
-                rule = XMLScanner.RULE_INT_ELEM_CONTENT;
+                rule = XMLScanner.RULE_NEW_ELEM_CONTENT; //RULE_INT_ELEM_CONTENT;
             }
 
             entityStack.push(entity);
             try{
-                entityValue.parse(rule).postAction = new Runnable(){
+                XMLFeeder childFeeder = entityValue.parse(rule);
+                childFeeder.elemDepth = elements.free;
+                childFeeder.postAction = new Runnable(){
                     @Override
                     public void run(){
                         entityStack.pop();
+                        if(elements.free>AsyncXMLReader.this.feeder.elemDepth)
+                            throw new RuntimeException("expected </"+elements.currentElementName()+">");
                     }
                 };
             }catch(IOException ex){
@@ -387,7 +398,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private final DTD _dtd = new DTD(namespaces);
     private DTD dtd ;
     private final Attributes attributes = new Attributes(namespaces);
-    private final Elements elements = new Elements(handler, namespaces, attributes);
+    private final Elements elements = new Elements(this, handler, namespaces, attributes);
 
     void attributesStart(){
         elements.push1(curQName);
@@ -400,9 +411,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void attributesEnd() throws SAXException{
-        String error = elements.push2();
-        if(error!=null)
-            fatalError(error);
+        elements.push2();
     }
 
     void endingElem(){
@@ -410,7 +419,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void elementEnd() throws SAXException{
-        elements.pop();
+        if(elements.pop()){
+            feeder.parser.stop = true;
+            feeder.parser.pop = true;
+        }
+    }
+
+    void rootElementEnd() throws SAXException{
+        if(elements.free>0)
+            fatalError("expected </"+elements.currentElementName()+">");
     }
 
     /*-------------------------------------------------[ PI ]---------------------------------------------------*/
@@ -441,10 +458,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
     
     void characters(Chars data) throws SAXException{
-        if(dtd!=null && dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
-            handler.ignorableWhitespace(data.array(), data.offset(), data.length());
-        else
-            handler.characters(data.array(), data.offset(), data.length());
+        int len = data.length();
+        if(len>0){
+            if(dtd!=null && dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
+                handler.ignorableWhitespace(data.array(), data.offset(), data.length());
+            else
+                handler.characters(data.array(), data.offset(), data.length());
+        }
     }
 
     void cdata(Chars data) throws SAXException{

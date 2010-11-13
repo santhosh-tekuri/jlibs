@@ -64,6 +64,15 @@ public class Node{
         return outgoing.toArray(new Edge[outgoing.size()]);
     }
 
+    public boolean junction(){
+        int incomingCount = incoming.size();
+        for(Edge edge: incoming){
+            if(edge.loop())
+                incomingCount--;
+        }
+        return incomingCount>1;
+    }
+    
     /*-------------------------------------------------[ Layout ]---------------------------------------------------*/
 
     public int row;

@@ -16,6 +16,7 @@
 package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
+import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.util.Range;
@@ -47,6 +48,8 @@ public class State{
 
         Routes routes = new Routes(ruleMethod.rule, fromNode, true);
         
+        if(routes.toString().endsWith("[)]<EOF>"))
+            System.out.print("");
         for(int lookAhead: routes.lookAheads())
             processLookAhead(routes.determinateRoutes(lookAhead));
 
@@ -60,9 +63,44 @@ public class State{
             }
         }
 
-        List<List<Decision>> ruleTargetLists = new ArrayList<List<Decision>>();
-        for(Decision decision: decisions){
-            if(decision.edgeWithRule()!=null){
+        if(useNewAlgo()){
+            Decision indeterminateDecision = null;
+            if(routes.indeterminateRoute!=null)
+                decisions.add(indeterminateDecision=new Decision(this, routes.indeterminateRoute.route()[0], true));
+
+            Decision eofDecision = null;
+            if(routes.routeStartingWithEOF!=null)
+                decisions.add(eofDecision = new Decision(this, routes.routeStartingWithEOF, true));
+
+            List<List<Decision>> ruleTargetLists = new ArrayList<List<Decision>>();
+            for(Decision decision: decisions){
+                if(decision.path.matcher()!=null)
+                    continue;
+                if(decision.matchers.length>1){
+                    boolean endingWithEOF = false;
+                    for(Decision d: decisions){
+                        if(d.matchers.length==decision.matchers.length && d.matchers[decision.matchers.length-1]==null){
+                            endingWithEOF = true;
+                            break;
+                        }
+                    }
+                    if(endingWithEOF)
+                        continue;
+                }
+
+                Decision fallbackDecision = null;
+                for(Decision d: decisions){
+                    if(d.matchers.length==decision.matchers.length && d.fallback){
+                        fallbackDecision = d;
+                        break;
+                    }
+                }
+                if(fallbackDecision!=null){
+                    Matcher lastMatcher = ArrayUtil.getLast(decision.matchers);
+                    if(lastMatcher!=null && lastMatcher.clashesWith(ArrayUtil.getLast(fallbackDecision.matchers)))
+                        continue;
+                }
+
                 boolean listFound = false;
                 for(List<Decision> ruleTargetList: ruleTargetLists){
                     if(decision.path.equals(ruleTargetList.get(0).path)){
@@ -77,37 +115,89 @@ public class State{
                     ruleTargetLists.add(newList);
                 }
             }
-        }
 
-        if(routes.indeterminateRoute!=null)
-            decisions.add(new Decision(this, routes.indeterminateRoute.route()[0]));
-        if(routes.routeStartingWithEOF!=null)
-            decisions.add(new Decision(this, routes.routeStartingWithEOF));
+//            Iterator<List<Decision>> iter = ruleTargetLists.iterator();
+//            while(iter.hasNext()){
+//                if(iter.next().size()==1)
+//                    iter.remove();
+//            }
+            if(routes.indeterminateRoute==null){
+                if(ruleTargetLists.size()==1){
+                    if(eofDecision==null || ruleTargetLists.get(0).contains(eofDecision)){
+                        List<Decision> ruleTargetList = ruleTargetLists.remove(0);
+                        decisions.removeAll(ruleTargetList);
+                        Decision ruleTargetDecision = ruleTargetList.get(ruleTargetList.size()-1);
+                        ruleTargetDecision.matchers = new Matcher[]{ null };
+                        decisions.add(ruleTargetDecision);
+                    }
+                }else if(ruleTargetLists.size()>1 && routes.routeStartingWithEOF==null){
+                    int preferred = ruleTargetLists.size()-1;
+                    for(int i=preferred-1; i>=0; i--){
+                        if(ruleTargetLists.get(i).size()>ruleTargetLists.get(preferred).size())
+                            preferred = i;
+                    }
 
-        if(routes.indeterminateRoute==null && routes.routeStartingWithEOF==null){
-            if(ruleTargetLists.size()==1){
-                Decision lastDecision = decisions.get(decisions.size()-1);
-                assert lastDecision.matchers[0]!=null;
-                
-                List<Decision> ruleTargetList = ruleTargetLists.remove(0);
-                decisions.removeAll(ruleTargetList);
-                Decision ruleTargetDecision = ruleTargetList.get(0);
-                ruleTargetDecision.matchers = new Matcher[]{ null };
-                decisions.add(ruleTargetDecision);
-            }else if(ruleTargetLists.size()>1 && !lookAheadRequired()){
-                int preferred = ruleTargetLists.size()-1;
-                for(int i=preferred-1; i>=0; i--){
-                    if(ruleTargetLists.get(i).size()>ruleTargetLists.get(preferred).size())
-                        preferred = i;
+                    List<Decision> ruleTargetList = ruleTargetLists.remove(preferred);
+                    decisions.removeAll(ruleTargetList);
+                    Decision ruleTargetDecision = ruleTargetList.get(0);
+                    ruleTargetDecision.matchers = new Matcher[]{ null };
+                    decisions.add(ruleTargetDecision);
                 }
+            }
+        }else{
+            List<List<Decision>> ruleTargetLists = new ArrayList<List<Decision>>();
+            for(Decision decision: decisions){
+                if(decision.edgeWithRule()!=null){
+                    boolean listFound = false;
+                    for(List<Decision> ruleTargetList: ruleTargetLists){
+                        if(decision.path.equals(ruleTargetList.get(0).path)){
+                            listFound = true;
+                            ruleTargetList.add(decision);
+                            break;
+                        }
+                    }
+                    if(!listFound){
+                        List<Decision> newList = new ArrayList<Decision>();
+                        newList.add(decision);
+                        ruleTargetLists.add(newList);
+                    }
+                }
+            }
 
-                List<Decision> ruleTargetList = ruleTargetLists.remove(preferred);
-                decisions.removeAll(ruleTargetList);
-                Decision ruleTargetDecision = ruleTargetList.get(0);
-                ruleTargetDecision.matchers = new Matcher[]{ null };
-                decisions.add(ruleTargetDecision);
+            if(routes.indeterminateRoute!=null)
+                decisions.add(new Decision(this, routes.indeterminateRoute.route()[0]));
+            if(routes.routeStartingWithEOF!=null)
+                decisions.add(new Decision(this, routes.routeStartingWithEOF));
+
+            if(routes.indeterminateRoute==null && routes.routeStartingWithEOF==null){
+                if(ruleTargetLists.size()==1){
+                    Decision lastDecision = decisions.get(decisions.size()-1);
+                    assert lastDecision.matchers[0]!=null;
+
+                    List<Decision> ruleTargetList = ruleTargetLists.remove(0);
+                    decisions.removeAll(ruleTargetList);
+                    Decision ruleTargetDecision = ruleTargetList.get(0);
+                    ruleTargetDecision.matchers = new Matcher[]{ null };
+                    decisions.add(ruleTargetDecision);
+                }else if(ruleTargetLists.size()>1 && !lookAheadRequired()){
+                    int preferred = ruleTargetLists.size()-1;
+                    for(int i=preferred-1; i>=0; i--){
+                        if(ruleTargetLists.get(i).size()>ruleTargetLists.get(preferred).size())
+                            preferred = i;
+                    }
+
+                    List<Decision> ruleTargetList = ruleTargetLists.remove(preferred);
+                    decisions.removeAll(ruleTargetList);
+                    Decision ruleTargetDecision = ruleTargetList.get(0);
+                    ruleTargetDecision.matchers = new Matcher[]{ null };
+                    decisions.add(ruleTargetDecision);
+                }
             }
         }
+    }
+
+    private boolean useNewAlgo(){
+        return ruleMethod.rule.name.startsWith("new_elem");
     }
 
     private void processLookAhead(List<Path> routes){
@@ -135,7 +225,7 @@ public class State{
             if(depth<routes.get(0).depth)
                 processLookAhead(group, depth+1);
             if(depth==route.depth){
-                Decision decision = new Decision(this, route);
+                Decision decision = useNewAlgo() ? new Decision(this, route, true) : new Decision(this, route);
 //                if(!decisions.contains(decision))
                     decisions.add(decision);
             }
@@ -201,7 +291,7 @@ public class State{
     }
 
     public String readMethod(){
-        if(readCharacter() && !matchesNewLine())
+        if(!lookAheadRequired() && readCharacter() && !matchesNewLine())
             return "position==limit ? marker : input[position]";
         else
             return "codePoint()";

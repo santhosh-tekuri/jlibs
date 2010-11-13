@@ -63,6 +63,45 @@ public class Decision{
             path.travelWithoutMatching();
     }
 
+    public Decision(State state, Path route, boolean newOne){
+        this.state = state;
+        this.fallback = route.fallback();
+
+        Path paths[] = route.route();
+        matchers = new Matcher[paths.length];
+        for(int i=0; i<matchers.length; i++)
+            matchers[i] = paths[i].matcher();
+        path = paths[0];
+
+        int index;
+        for(index=1; index<path.size(); index++){
+            Object obj = path.get(index);
+            if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.ruleTarget!=null){
+                    index++;
+                    break;
+                }else if(edge.matcher!=null){
+                    path.travelWithoutMatching(true);
+                    index = path.size();
+                    break;
+                }
+            }else if(obj instanceof Node){
+                Node node = (Node)obj;
+                if(node.junction())
+                    break;
+            }
+        }
+
+        if(index!=path.size()){
+            if(path.get(index) instanceof Node){
+            while(index!=path.size()-1)
+                path.remove(index+1);
+            }else
+                System.out.println("");
+        }
+    }
+
     private String ruleID(){
         return "RULE_"+state.ruleMethod.rule.name.toUpperCase();
     }

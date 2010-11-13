@@ -62,6 +62,7 @@ public class XMLFeeder extends Feeder{
         postAction = null;
         iProlog = 0;
         this.prologParser = prologParser;
+        elemDepth = 0;
 
         publicID = is.getPublicId();
         systemID = toURL(is.getSystemId());
@@ -303,4 +304,6 @@ public class XMLFeeder extends Feeder{
             }
         }
     }
+
+    int elemDepth;
 }
