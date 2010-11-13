@@ -24,11 +24,13 @@ import java.util.Arrays;
  * @author Santhosh Kumar T
  */
 class Elements{
+    private final AsyncXMLReader reader;
+    private final SAXDelegate handler;
     private final Namespaces namespaces;
     private final Attributes attributes;
-    private final SAXDelegate handler;
 
-    public Elements(SAXDelegate handler, Namespaces namespaces, Attributes attributes){
+    public Elements(AsyncXMLReader reader, SAXDelegate handler, Namespaces namespaces, Attributes attributes){
+        this.reader = reader;
         this.handler = handler;
         this.namespaces = namespaces;
         this.attributes = attributes;
@@ -36,10 +38,11 @@ class Elements{
 
     private QName qnameStack[] = new QName[15];
     private String uriStack[] = new String[15];
-    private int free = 0;
+    int free = 0;
+    int freeLock = 0;
 
     public void reset(){
-        free = 0;
+        free = freeLock = 0;
     }
 
     public char[] currentElementNameAsCharArray(){
@@ -61,26 +64,27 @@ class Elements{
         attributes.reset();
     }
 
-    public String push2() throws SAXException{
+    public void push2() throws SAXException{
         QName bucket = qnameStack[free-1];
         String error = attributes.fixAttributes(bucket.name);
         if(error!=null)
-            return error;
+            reader.fatalError(error);
 
         String uri = namespaces.getNamespaceURI(bucket.prefix);
         if(uri==null)
-            return "Unbound prefix: "+bucket.prefix;
+            reader.fatalError("Unbound prefix: "+bucket.prefix);
         uriStack[free-1] = uri;
 
         handler.startElement(uri, bucket.localName, bucket.name, attributes.get());
-
-        return null;
     }
 
-    public void pop() throws SAXException{
+    public boolean pop() throws SAXException{
+        if(free==freeLock)
+            reader.fatalError("The element \""+currentElementName()+"\" must start and end within the same entity");
         QName qname = qnameStack[free-1];
         handler.endElement(uriStack[free-1], qname.localName, qname.name);
         free--;
         namespaces.pop();
+        return free==0;
     }
 }

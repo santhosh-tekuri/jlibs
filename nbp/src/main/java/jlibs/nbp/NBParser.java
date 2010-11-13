@@ -44,7 +44,7 @@ public abstract class NBParser{
 
     public final void reset(int rule){
         laLen = 0;
-        stop = false;
+        stop = pop = false;
         marker = EOC;
         start = position = limit = 0;
         offset = lineOffset = 0;
@@ -159,7 +159,7 @@ public abstract class NBParser{
         this.lastChar = parser.lastChar;
     }
 
-    public boolean stop;
+    public boolean stop, pop;
     public final int consume(char chars[], int position, int limit, boolean eof) throws IOException{
         if(SHOW_STATS){
             chunkCount++;
@@ -167,11 +167,14 @@ public abstract class NBParser{
                 System.out.println("chunk["+chunkCount+"] = {"+new String(chars, position, limit-position)+'}');
         }
         try{
-            stop = false;
             input = chars;
             start = this.position = position;
             this.limit = limit;
             marker = eof ? EOF : EOC;
+            do{
+            if(pop)
+                free -= 2;
+            stop = pop = false;
 
             int rule, state;
             do{
@@ -201,6 +204,7 @@ public abstract class NBParser{
 
             if(free==0 && this.position==limit && eof)
                 onSuccessful();
+            }while(pop);
             if(this.position!=position)
                 lastChar = input[this.position-1];
 
@@ -251,7 +255,7 @@ public abstract class NBParser{
     protected int free = 0;
     protected int stack[] = new int[100];
 
-    protected final void ioError(String message) throws IOException{
+    public final void ioError(String message) throws IOException{
         try{
             fatalError(message);
             throw new IOException(message);

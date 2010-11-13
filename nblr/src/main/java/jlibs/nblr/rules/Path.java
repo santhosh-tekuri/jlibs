@@ -150,6 +150,26 @@ public class Path extends ArrayList<Object>{
         }
     }
 
+    public void travelWithoutMatching(boolean newOne){
+        while(true){
+            Node node = destination();
+            if(node.junction() || Node.DYNAMIC_STRING_MATCH.equals(node.name))
+                return;
+            switch(node.outgoing.size()){
+                case 1:
+                    Edge edge = node.outgoing.get(0);
+                    if(edge.matcher==null && edge.ruleTarget==null){
+                        add(edge);
+                        add(edge.target);
+                        break;
+                    }else
+                        return;
+                default:
+                    return;
+            }
+        }
+    }
+
     public boolean digsIntoRule(){
         for(Object obj: this){
             if(obj instanceof Edge){
