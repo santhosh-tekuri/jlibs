@@ -39,7 +39,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  */
 public class State{
     public final RuleMethod ruleMethod;
-    public final Node fromNode;
+    public Node fromNode;
     public final List<Decision> decisions = new ArrayList<Decision>();
 
     public State(RuleMethod ruleMethod, Node fromNode){

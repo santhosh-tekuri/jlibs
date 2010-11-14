@@ -62,6 +62,26 @@ public class RuleMethod{
                 }
             }
         }
+
+        int i = -1;
+        for(State state: states){
+            ++i;
+            state.fromNode.stateID = SyntaxClass.DEBUGGABLE ? state.fromNode.id : i;
+        }
+    }
+
+    public boolean deleteEmptySwitches(){
+        boolean changed = false;
+        for(State state: states){
+            if(state.decisions.size()==1){
+                Decision decision = state.decisions.get(0);
+                if(decision.isEmpty()){
+                    decision.collapse();
+                    changed = true;
+                }
+            }
+        }
+        return changed;
     }
 
     public int maxLookAhead(){
