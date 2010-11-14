@@ -68,7 +68,7 @@ public class Decision{
                 }
             }else if(obj instanceof Node){
                 Node node = (Node)obj;
-                if(node.junction())
+                if(node==state.ruleMethod.rule.node || node.junction())
                     break;
             }
         }
@@ -87,6 +87,43 @@ public class Decision{
 
     private String exiting(String rule, int state){
         return state==-1 ? "" : "exiting("+rule+", "+state+");";
+    }
+    
+    public boolean isEmpty(){
+        if(matchers[0]!=null)
+            return false;
+        for(int i=0; i<path.size(); i++){
+            Object obj = path.get(i);
+            if(obj instanceof Node){
+                Node node = (Node)obj;
+                if(i<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
+                    if(node.action!=null || node.name!=null)
+                        return false;
+                }
+            }else if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                if(edge.matcher!=null || edge.ruleTarget!=null)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public void collapse(){
+        for(Object obj: path){
+            if(obj instanceof Edge){
+                Edge edge = (Edge)obj;
+                for(Edge outgoing: edge.target.outgoing())
+                    outgoing.setSource(edge.source);
+                for(Edge incoming: edge.target.incoming()){
+                    if(incoming!=edge)
+                        incoming.setTarget(edge.source);
+                }
+                if(state.ruleMethod.rule.node==edge.target)
+                    state.ruleMethod.rule.node = edge.source;
+                edge.delete();
+            }
+        }
     }
     
     @Override

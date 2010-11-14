@@ -18,7 +18,6 @@ package jlibs.nblr.codegen.java;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.codegen.RuleMethod;
-import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
@@ -47,21 +46,29 @@ public class SyntaxClass{
             syntax = this.syntax;
         }
 
-        // NOTE: ids of all rules should be computed before calculating Routes
-        for(Rule rule: syntax.rules.values())
-            rule.computeIDS();
+        boolean recompute;
+        do{
+            ruleMethods.clear();
+            recompute = false;
 
-        for(Rule rule: syntax.rules.values()){
-            if(rule.id>=0)
-                ruleMethods.add(new RuleMethod(this, rule));
-        }
-        for(RuleMethod ruleMethod: ruleMethods){
-            int i = -1;
-            for(State state: ruleMethod.states){
-                ++i;
-                state.fromNode.stateID = DEBUGGABLE ? state.fromNode.id : i;
+            // NOTE: ids of all rules should be computed before calculating Routes
+            for(Rule rule: syntax.rules.values())
+                rule.computeIDS();
+
+            for(Rule rule: syntax.rules.values()){
+                if(rule.id>=0){
+                    RuleMethod ruleMethod;
+                    while(true){
+                        ruleMethod = new RuleMethod(this, rule);
+                        if(!ruleMethod.deleteEmptySwitches())
+                            break;
+                        else
+                            recompute = true;
+                    }
+                    ruleMethods.add(ruleMethod);
+                }
             }
-        }
+        }while(recompute);
 
         syntax.computeBufferingStates();
 
