@@ -65,12 +65,7 @@ public class Node{
     }
 
     public boolean junction(){
-        int incomingCount = incoming.size();
-        for(Edge edge: incoming){
-            if(edge.loop())
-                incomingCount--;
-        }
-        return incomingCount>1;
+        return incoming.size()>1;
     }
     
     /*-------------------------------------------------[ Layout ]---------------------------------------------------*/
