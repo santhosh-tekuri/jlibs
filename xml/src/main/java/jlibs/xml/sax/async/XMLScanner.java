@@ -1903,72 +1903,49 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!nmtoken(0))
                         break loop;
                 case 2:
-                    if((ch=codePoint())==EOC)
-                        break loop;
                     handler.attributeEnumValue(buffer.pop(0, 0));
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 8;
-                        continue;
-                    }else if(ch=='|'){
-                        state = 4;
+                    state = 3;
+                case 3:
+                    if((ch=finishAll_WS(codePoint()))==EOC)
+                        break loop;
+                    if(ch=='|'){
+                        state = 5;
                         continue;
                     }else{
-                        state = 3;
+                        state = 4;
                     }
-                case 3:
+                case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch==')'){
                         position++;
                         return true;
                     }else expected(ch, "[)]");
-                case 4:
+                case 5:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='|'){
                         position++;
-                        state = 5;
+                        state = 6;
                     }else expected(ch, "[|]");
-                case 5:
+                case 6:
                     if(finishAll_WS(codePoint())==EOC)
                         break loop;
                     buffer.push();
-                    state = 6;
+                    state = 7;
                     if(!nmtoken(0))
                         break loop;
-                case 6:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    handler.attributeEnumValue(buffer.pop(0, 0));
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 7;
-                    }else if(ch=='|'){
-                        state = 4;
-                        continue;
-                    }else{
-                        state = 3;
-                        continue;
-                    }
                 case 7:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 4;
-                        continue;
-                    }else{
-                        state = 3;
-                        continue;
-                    }
+                    handler.attributeEnumValue(buffer.pop(0, 0));
+                    state = 8;
                 case 8:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 4;
+                        state = 5;
                         continue;
                     }else{
-                        state = 3;
+                        state = 4;
                         continue;
                     }
                 default:
@@ -1992,13 +1969,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                     }else expected(ch, "[(]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 11;
-                        continue;
-                    }else if(ch=='#'){
+                    if(ch=='#'){
                         state = 2;
                         if(!matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
                             break loop;
@@ -2009,65 +1982,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 6;
-                        continue;
-                    }
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
                         state = 5;
                         continue;
                     }
                     if(ch=='%'){
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]==')'){
-                            if(ch=='*'){
-                                resetLookAhead();
-                                state = 3;
-                                continue;
-                            }
-                            consume(FROM_LA);
-                            resetLookAhead();
-                            return true;
-                        }
-                    }
-                    expected(ch, "[|] OR <WS> OR [%] OR [)][*] OR [)]<EOF>");
-                case 3:
-                    if((ch=position==limit ? marker : input[position])==EOC)
-                        break loop;
-                    if(ch==')'){
-                        position++;
-                        state = 4;
-                    }else expected(ch, "[)]");
-                case 4:
-                    if((ch=position==limit ? marker : input[position])==EOC)
-                        break loop;
-                    if(ch=='*'){
-                        position++;
-                        return true;
-                    }else expected(ch, "[*]");
-                case 5:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 6;
-                        continue;
-                    }
-                    if(ch=='%'){
-                        state = 2;
                         if(pe_reference(0))
                             continue;
                         else
@@ -2092,22 +2013,32 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     expected(ch, "<WS> OR [|] OR [%] OR [)][*] OR [)]<EOF>");
-                case 6:
+                case 3:
+                    if((ch=position==limit ? marker : input[position])==EOC)
+                        break loop;
+                    if(ch==')'){
+                        position++;
+                        state = 4;
+                    }else expected(ch, "[)]");
+                case 4:
+                    if((ch=position==limit ? marker : input[position])==EOC)
+                        break loop;
+                    if(ch=='*'){
+                        position++;
+                        return true;
+                    }else expected(ch, "[*]");
+                case 5:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='|'){
                         position++;
-                        state = 7;
+                        state = 6;
                     }else expected(ch, "[|]");
-                case 7:
-                    if((ch=codePoint())==EOC)
+                case 6:
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 10;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 8;
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                        state = 7;
                         if(!name(0))
                             break loop;
                     }else{
@@ -2116,73 +2047,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }
-                case 8:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 9;
-                    }else if(ch=='|'){
-                        state = 6;
-                        continue;
-                    }else if(ch==')'){
-                        state = 3;
-                        continue;
-                    }else{
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 9:
+                case 7:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 6;
+                        state = 5;
                         continue;
                     }else if(ch==')'){
                         state = 3;
                         continue;
                     }else{
-                        state = 8;
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
                     }
-                case 10:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 8;
-                        if(name(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        state = 7;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 11:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='#'){
-                        state = 2;
-                        if(matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        state = 1;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 12:
+                case 8:
                     state = 2;
                     if(matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
                         continue;
@@ -2228,72 +2108,49 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!name(0))
                         break loop;
                 case 4:
-                    if((ch=codePoint())==EOC)
-                        break loop;
                     handler.attributeNotationValue(buffer.pop(0, 0));
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 10;
-                        continue;
-                    }else if(ch=='|'){
-                        state = 6;
+                    state = 5;
+                case 5:
+                    if((ch=finishAll_WS(codePoint()))==EOC)
+                        break loop;
+                    if(ch=='|'){
+                        state = 7;
                         continue;
                     }else{
-                        state = 5;
+                        state = 6;
                     }
-                case 5:
+                case 6:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch==')'){
                         position++;
                         return true;
                     }else expected(ch, "[)]");
-                case 6:
+                case 7:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='|'){
                         position++;
-                        state = 7;
+                        state = 8;
                     }else expected(ch, "[|]");
-                case 7:
+                case 8:
                     if(finishAll_WS(codePoint())==EOC)
                         break loop;
                     buffer.push();
-                    state = 8;
+                    state = 9;
                     if(!name(0))
                         break loop;
-                case 8:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    handler.attributeNotationValue(buffer.pop(0, 0));
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 9;
-                    }else if(ch=='|'){
-                        state = 6;
-                        continue;
-                    }else{
-                        state = 5;
-                        continue;
-                    }
                 case 9:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 6;
-                        continue;
-                    }else{
-                        state = 5;
-                        continue;
-                    }
+                    handler.attributeNotationValue(buffer.pop(0, 0));
+                    state = 10;
                 case 10:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 6;
+                        state = 7;
                         continue;
                     }else{
-                        state = 5;
+                        state = 6;
                         continue;
                     }
                 default:
@@ -2475,24 +2332,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 5;
-                    }else if(ch=='%'){
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        return default_decl(0);
-                    }
-                case 5:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='%'){
-                        state = 4;
                         if(pe_reference(0))
                             continue;
                         else
@@ -2542,13 +2384,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 10;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
                         state = 4;
                         if(!name(0))
@@ -2564,7 +2402,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     handler.dtdAttributesStart(buffer.pop(0, 0));
                     if(ch=='>'){
-                        state = 9;
+                        state = 8;
                         continue;
                     }else{
                         state = 5;
@@ -2582,19 +2420,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 8;
-                        if(att_def(0))
-                            continue;
-                        else
-                            break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
                         state = 7;
+                        if(!att_def(0))
+                            break loop;
                     }else if(ch=='>'){
-                        state = 9;
+                        state = 8;
                         continue;
                     }else{
                         if(pe_reference(0))
@@ -2603,32 +2436,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 7:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 8;
-                        if(!att_def(0))
-                            break loop;
-                    }else if(ch=='>'){
-                        state = 9;
-                        continue;
-                    }else{
-                        state = 6;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 8:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='>'){
-                        state = 9;
+                        state = 8;
                     }else{
                         state = 5;
                         continue;
                     }
-                case 9:
+                case 8:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='>'){
@@ -2636,23 +2452,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.dtdAttributesEnd();
                         return true;
                     }else expected(ch, "[>]");
-                case 10:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        state = 4;
-                        if(name(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        state = 3;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
                 default:
                     throw new Error("impossible state: "+state);
             }
@@ -2674,13 +2473,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                     }else expected(ch, "[(]");
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 16;
-                        continue;
-                    }else if(ch=='('){
+                    if(ch=='('){
                         state = 2;
                         if(!children(0))
                             break loop;
@@ -2695,19 +2490,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 11;
+                        state = 8;
                         continue;
                     }else if(ch==','){
-                        state = 6;
+                        state = 5;
                         continue;
                     }else if(ch==')'){
-                        state = 4;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
                         state = 3;
                     }else{
                         if(pe_reference(0))
@@ -2716,31 +2507,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 11;
-                        continue;
-                    }else if(ch==','){
-                        state = 6;
-                        continue;
-                    }else if(ch==')'){
-                        state = 4;
-                    }else{
-                        state = 2;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch==')'){
                         position++;
-                        state = 5;
+                        state = 4;
                     }else expected(ch, "[)]");
-                case 5:
+                case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='?' || ch=='+' || ch=='*'){
@@ -2749,31 +2522,39 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }else{
                         return true;
                     }
-                case 6:
+                case 5:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch==','){
                         position++;
-                        state = 7;
+                        state = 6;
                     }else expected(ch, "[,]");
-                case 7:
-                    if((ch=codePoint())==EOC)
+                case 6:
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 9;
-                        if(name_cardinality(0))
-                            continue;
-                        else
+                        state = 7;
+                        if(!name_cardinality(0))
                             break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 8;
                     }else if(ch=='('){
-                        state = 9;
-                        if(children(0))
+                        state = 7;
+                        if(!children(0))
+                            break loop;
+                    }else{
+                        if(pe_reference(0))
                             continue;
                         else
                             break loop;
+                    }
+                case 7:
+                    if((ch=finishAll_WS(codePoint()))==EOC)
+                        break loop;
+                    if(ch==','){
+                        state = 5;
+                        continue;
+                    }else if(ch==')'){
+                        state = 3;
+                        continue;
                     }else{
                         if(pe_reference(0))
                             continue;
@@ -2781,35 +2562,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 8:
+                    if((ch=position==limit ? marker : input[position])==EOC)
+                        break loop;
+                    if(ch=='|'){
+                        position++;
+                        state = 9;
+                    }else expected(ch, "[|]");
+                case 9:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 9;
-                        if(!name_cardinality(0))
-                            break loop;
-                    }else if(ch=='('){
-                        state = 9;
+                    if(ch=='('){
+                        state = 10;
                         if(!children(0))
                             break loop;
-                    }else{
-                        state = 7;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 9:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch==','){
-                        state = 6;
-                        continue;
-                    }else if(ch==')'){
-                        state = 4;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 10;
+                        if(!name_cardinality(0))
+                            break loop;
                     }else{
                         if(pe_reference(0))
                             continue;
@@ -2819,125 +2588,19 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 10:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch==','){
-                        state = 6;
+                    if(ch=='|'){
+                        state = 8;
                         continue;
                     }else if(ch==')'){
-                        state = 4;
+                        state = 3;
                         continue;
                     }else{
-                        state = 9;
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
                     }
                 case 11:
-                    if((ch=position==limit ? marker : input[position])==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        position++;
-                        state = 12;
-                    }else expected(ch, "[|]");
-                case 12:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch=='('){
-                        state = 14;
-                        if(children(0))
-                            continue;
-                        else
-                            break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 13;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 14;
-                        if(name_cardinality(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 13:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='('){
-                        state = 14;
-                        if(!children(0))
-                            break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 14;
-                        if(!name_cardinality(0))
-                            break loop;
-                    }else{
-                        state = 12;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 14:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 11;
-                        continue;
-                    }else if(ch==')'){
-                        state = 4;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 15;
-                    }else{
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 15:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='|'){
-                        state = 11;
-                        continue;
-                    }else if(ch==')'){
-                        state = 4;
-                        continue;
-                    }else{
-                        state = 14;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 16:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='('){
-                        state = 2;
-                        if(children(0))
-                            continue;
-                        else
-                            break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 2;
-                        if(name_cardinality(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        state = 1;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 17:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='('){
@@ -3114,13 +2777,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 12;
-                        continue;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
                         state = 4;
                         if(!name(0))
@@ -3132,18 +2791,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 4:
-                    if((ch=codePoint())==EOC)
-                        break loop;
                     handler.dtdElement(buffer.pop(0, 0));
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 6;
-                        continue;
-                    }else{
-                        state = 5;
-                        if(!pe_reference(0))
-                            break loop;
-                    }
+                    state = 5;
                 case 5:
                     if((ch=codePoint())==EOC)
                         break loop;
@@ -3157,28 +2806,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if((ch=codePoint())==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='('){
                         position++;
-                        state = 10;
+                        state = 8;
                         continue;
                     }else if(ch=='E'){
                         handler.notMixed();
-                        state = 8;
-                        if(matchString(RULE_STR_EMPTY, 0, STRING_IDS[-RULE_STR_EMPTY]))
-                            continue;
-                        else
+                        state = 7;
+                        if(!matchString(RULE_STR_EMPTY, 0, STRING_IDS[-RULE_STR_EMPTY]))
                             break loop;
                     }else if(ch=='A'){
-                        state = 8;
-                        if(matchString(RULE_STR_ANY, 0, STRING_IDS[-RULE_STR_ANY]))
-                            continue;
-                        else
-                            break loop;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
                         state = 7;
+                        if(!matchString(RULE_STR_ANY, 0, STRING_IDS[-RULE_STR_ANY]))
+                            break loop;
                     }else{
                         if(pe_reference(0))
                             continue;
@@ -3188,115 +2830,33 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 7:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch=='('){
+                    if(ch=='>'){
                         position++;
-                        state = 10;
-                        continue;
-                    }else if(ch=='E'){
-                        handler.notMixed();
-                        state = 8;
-                        if(!matchString(RULE_STR_EMPTY, 0, STRING_IDS[-RULE_STR_EMPTY]))
-                            break loop;
-                    }else if(ch=='A'){
-                        state = 8;
-                        if(!matchString(RULE_STR_ANY, 0, STRING_IDS[-RULE_STR_ANY]))
-                            break loop;
+                        return true;
                     }else{
-                        state = 6;
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
                     }
                 case 8:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch=='>'){
-                        position++;
-                        return true;
-                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 9;
-                    }else{
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 9:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch=='>'){
-                        position++;
-                        return true;
-                    }else{
-                        state = 8;
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 10:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 11;
-                    }else if(ch=='%'){
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }else if(ch=='#'){
-                        state = 8;
-                        if(mixed(12))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        handler.notMixed();
-                        state = 8;
-                        if(children(17))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 11:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='%'){
-                        state = 10;
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
                     }else if(ch=='#'){
-                        state = 8;
-                        if(mixed(12))
+                        state = 7;
+                        if(mixed(8))
                             continue;
                         else
                             break loop;
                     }else{
                         handler.notMixed();
-                        state = 8;
-                        if(children(17))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 12:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        buffer.push();
-                        state = 4;
-                        if(name(0))
-                            continue;
-                        else
-                            break loop;
-                    }else{
-                        state = 3;
-                        if(pe_reference(0))
+                        state = 7;
+                        if(children(11))
                             continue;
                         else
                             break loop;
@@ -4278,40 +3838,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 3;
                     }else expected(ch, "[\\[]");
                 case 3:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        consume(ch);
-                        state = 4;
-                        continue;
-                    }
-                    if(ch=='%'){
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]=='I'){
-                            if(ch=='G'){
-                                resetLookAhead();
-                                return ignore_sect(0);
-                            }
-                        }
-                    }
-                    resetLookAhead();
-                    return include_sect(0);
-                case 4:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='%'){
-                        state = 3;
                         if(pe_reference(0))
                             continue;
                         else
@@ -4391,16 +3920,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC)
-                    break;
                 buffer.push();
-                if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    consume(ch);
-                    state = 1;
-                }else{
-                    handler.externalEntityValue(buffer.pop(0, 0));
-                    return true;
-                }
+                state = 1;
             case 1:
                 if(finishAll_CHAR(codePoint())==EOC)
                     break;
