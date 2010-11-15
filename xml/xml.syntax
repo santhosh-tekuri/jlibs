@@ -615,75 +615,49 @@
         <node>
             <event name="valueStart"/>
         </node>
+        <node>
+            <buffer/>
+        </node>
         <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
         <node>
             <event name="valueEnd"/>
         </node>
+        <node>
+            <buffer/>
+        </node>
         <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
         <edge source="0" target="1" fallback="false">
             <matcher name="Q"/>
         </edge>
-        <edge source="1" target="2" fallback="false">
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="ATTR_Q_CONTENT"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
             <matcher name="Q"/>
         </edge>
-        <edge source="1" target="1" fallback="false">
-            <rule name="q_value"/>
-        </edge>
-        <edge source="0" target="3" fallback="false">
-            <matcher name="DQ"/>
-        </edge>
-        <edge source="3" target="2" fallback="false">
-            <matcher name="DQ"/>
-        </edge>
-        <edge source="3" target="3" fallback="false">
-            <rule name="dq_value"/>
-        </edge>
-    </rule>
-    <rule name="q_value">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ATTR_Q_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="3" fallback="false">
-            <matcher name="ATTR_Q_CONTENT"/>
-        </edge>
-        <edge source="0" target="5" fallback="false">
+        <edge source="3" target="1" fallback="false">
             <rule name="reference"/>
         </edge>
-    </rule>
-    <rule name="dq_value">
-        <node/>
-        <node>
-            <buffer/>
-        </node>
-        <node/>
-        <node/>
-        <node>
-            <publish name="rawValue" begin="0" end="0"/>
-        </node>
-        <node/>
-        <edge source="0" target="1" fallback="false"/>
-        <edge source="1" target="2" fallback="false"/>
-        <edge source="2" target="3" fallback="false">
-            <matcher name="ATTR_DQ_CONTENT"/>
-        </edge>
-        <edge source="3" target="4" fallback="false"/>
-        <edge source="3" target="3" fallback="false">
-            <matcher name="ATTR_DQ_CONTENT"/>
-        </edge>
         <edge source="0" target="5" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="6" fallback="false">
+            <matcher name="ATTR_DQ_CONTENT"/>
+        </edge>
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="4" fallback="false">
+            <matcher name="DQ"/>
+        </edge>
+        <edge source="7" target="5" fallback="false">
             <rule name="reference"/>
         </edge>
     </rule>
