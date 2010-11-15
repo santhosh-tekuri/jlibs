@@ -146,13 +146,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             case 0:
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
+                buffer.push();
                 if(ch=='n'){
-                    buffer.push();
                     state = 1;
                     if(!matchString(RULE_STR_NO, 0, STRING_IDS[-RULE_STR_NO]))
                         break;
                 }else{
-                    buffer.push();
                     state = 1;
                     if(!matchString(RULE_STR_YES, 0, STRING_IDS[-RULE_STR_YES]))
                         break;
@@ -1982,17 +1981,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 2:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 8;
                         continue;
                     }else if(ch=='|'){
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 4;
                         continue;
                     }else{
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 3;
                     }
                 case 3:
@@ -2021,16 +2018,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 6:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.attributeEnumValue(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 7;
                     }else if(ch=='|'){
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 4;
                         continue;
                     }else{
-                        handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 3;
                         continue;
                     }
@@ -2319,17 +2314,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 10;
                         continue;
                     }else if(ch=='|'){
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 6;
                         continue;
                     }else{
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 5;
                     }
                 case 5:
@@ -2358,16 +2351,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 8:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.attributeNotationValue(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 9;
                     }else if(ch=='|'){
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 6;
                         continue;
                     }else{
-                        handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 5;
                         continue;
                     }
@@ -2661,12 +2652,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
+                    handler.dtdAttributesStart(buffer.pop(0, 0));
                     if(ch=='>'){
-                        handler.dtdAttributesStart(buffer.pop(0, 0));
                         state = 9;
                         continue;
                     }else{
-                        handler.dtdAttributesStart(buffer.pop(0, 0));
                         state = 5;
                     }
                 case 5:
@@ -3241,13 +3231,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.dtdElement(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.dtdElement(buffer.pop(0, 0));
                         consume(ch);
                         state = 6;
                         continue;
                     }else{
-                        handler.dtdElement(buffer.pop(0, 0));
                         state = 5;
                         if(!pe_reference(0))
                             break loop;
@@ -3564,20 +3553,19 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 case 4:
                     if((ch=codePoint())==EOC)
                         break loop;
+                    handler.dtdRoot(buffer.pop(0, 0));
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        handler.dtdRoot(buffer.pop(0, 0));
                         consume(ch);
                         state = 9;
                         continue;
                     }else{
-                        handler.dtdRoot(buffer.pop(0, 0));
                         state = 5;
                     }
                 case 5:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
+                    handler.dtdStart();
                     if(ch=='['){
-                        handler.dtdStart();
                         position++;
                         state = 7;
                         if(int_subset(0))
@@ -3585,7 +3573,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }else{
-                        handler.dtdStart();
                         state = 6;
                     }
                 case 6:
@@ -4530,12 +4517,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             case 0:
                 if((ch=codePoint())==EOC)
                     break;
+                buffer.push();
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
-                    buffer.push();
                     consume(ch);
                     state = 1;
                 }else{
-                    buffer.push();
                     handler.externalEntityValue(buffer.pop(0, 0));
                     return true;
                 }
