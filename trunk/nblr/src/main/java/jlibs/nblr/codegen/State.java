@@ -41,6 +41,7 @@ public class State{
     public final RuleMethod ruleMethod;
     public Node fromNode;
     public final List<Decision> decisions = new ArrayList<Decision>();
+    public final List<IfBlock> ifBlocks = new ArrayList<IfBlock>();
 
     public State(RuleMethod ruleMethod, Node fromNode){
         this.ruleMethod = ruleMethod;
@@ -70,6 +71,7 @@ public class State{
             decisions.add(new Decision(this, routes.routeStartingWithEOF));
 
         optimize();
+        populateIfBlocks();
     }
 
     private void processLookAhead(List<Path> routes){
@@ -174,6 +176,50 @@ public class State{
             decision.computeNextStates(statesVisited, statesPending);
     }
 
+    private void populateIfBlocks(){
+        List<List<IfBlock>> lists = new ArrayList<List<IfBlock>>();
+        int lastLen = 0;
+
+        for(Decision decision: decisions){
+            IfBlock curIf = null;
+            if(lastLen!=decision.matchers.length){
+                lists.add(new ArrayList<IfBlock>());
+                lastLen = decision.matchers.length;
+            }
+
+            for(Matcher matcher: decision.matchers){
+                List<IfBlock> children = curIf==null ? lists.get(lists.size()-1) : curIf.children;
+                IfBlock found = null;
+                if(matcher!=null){
+                    for(IfBlock child: children){
+                        if(matcher.same(child.matcher)){
+                            found = child;
+                            break;
+                        }
+                    }
+                }
+                if(found==null){
+                    found = new IfBlock(this);
+                    found.matcher = matcher;
+                    children.add(found);
+                    found.parent = curIf;
+                }
+                curIf = found;
+            }
+            curIf.path = decision.path;
+
+//            while(curIf.parent!=null)
+//                curIf = curIf.parent;
+//            if(curIf.height()!=decision.matchers.length){
+//                int ht = curIf.height();
+//                throw new ImpossibleException();
+//            }
+        }
+
+        for(List<IfBlock> list: lists)
+            ifBlocks.addAll(list);
+    }
+
     public boolean readCodePoint(){
         for(Decision decision: decisions){
             if(decision.readCodePoint())
@@ -239,6 +285,18 @@ public class State{
     }
 
     public void generate(Printer printer, State nextState){
+        printer.printlns(
+            "case "+fromNode.stateID+":",
+                PLUS
+        );
+        for(IfBlock ifBlock: ifBlocks)
+            ifBlock.generate(printer, nextState);
+        printer.printlns(
+                MINUS
+        );
+    }
+
+    public void generate1(Printer printer, State nextState){
         printer.printlns(
             "case "+fromNode.stateID+":",
                 PLUS
