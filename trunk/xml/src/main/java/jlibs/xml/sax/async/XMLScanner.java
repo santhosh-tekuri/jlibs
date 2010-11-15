@@ -824,7 +824,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\''){
                         handler.valueStart();
                         position++;
-                        state = 2;
+                        state = 3;
                         continue;
                     }else if(ch=='"'){
                         handler.valueStart();
@@ -832,27 +832,39 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                     }else expected(ch, "<Q> OR <DQ>");
                 case 1:
-                    if((ch=position==limit ? marker : input[position])==EOC)
+                    buffer.push();
+                    state = 2;
+                case 2:
+                    if((ch=finishAll_ATTR_DQ_CONTENT(codePoint()))==EOC)
                         break loop;
                     if(ch=='"'){
+                        handler.rawValue(buffer.pop(0, 0));
                         position++;
                         handler.valueEnd();
                         return true;
                     }else{
-                        if(dq_value(0))
+                        handler.rawValue(buffer.pop(0, 0));
+                        state = 1;
+                        if(reference(0))
                             continue;
                         else
                             break loop;
                     }
-                case 2:
-                    if((ch=position==limit ? marker : input[position])==EOC)
+                case 3:
+                    buffer.push();
+                    state = 4;
+                case 4:
+                    if((ch=finishAll_ATTR_Q_CONTENT(codePoint()))==EOC)
                         break loop;
                     if(ch=='\''){
+                        handler.rawValue(buffer.pop(0, 0));
                         position++;
                         handler.valueEnd();
                         return true;
                     }else{
-                        if(q_value(0))
+                        handler.rawValue(buffer.pop(0, 0));
+                        state = 3;
+                        if(reference(0))
                             continue;
                         else
                             break loop;
@@ -865,59 +877,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_Q_VALUE = 18;
-    private boolean q_value(int state) throws Exception{
-        int ch;
-        switch(state){
-            case 0:
-                if((ch=codePoint())==EOC)
-                    break;
-                if(ch!=EOF && ATTR_Q_CONTENT(ch)){
-                    buffer.push();
-                    consume(ch);
-                    state = 1;
-                }else{
-                    return reference(0);
-                }
-            case 1:
-                if(finishAll_ATTR_Q_CONTENT(codePoint())==EOC)
-                    break;
-                handler.rawValue(buffer.pop(0, 0));
-                return true;
-            default:
-                throw new Error("impossible state: "+state);
-        }
-        exiting(RULE_Q_VALUE, state);
-        return false;
-    }
-
-    public static final int RULE_DQ_VALUE = 19;
-    private boolean dq_value(int state) throws Exception{
-        int ch;
-        switch(state){
-            case 0:
-                if((ch=codePoint())==EOC)
-                    break;
-                if(ch!=EOF && ATTR_DQ_CONTENT(ch)){
-                    buffer.push();
-                    consume(ch);
-                    state = 1;
-                }else{
-                    return reference(0);
-                }
-            case 1:
-                if(finishAll_ATTR_DQ_CONTENT(codePoint())==EOC)
-                    break;
-                handler.rawValue(buffer.pop(0, 0));
-                return true;
-            default:
-                throw new Error("impossible state: "+state);
-        }
-        exiting(RULE_DQ_VALUE, state);
-        return false;
-    }
-
-    public static final int RULE_ELEM_ATTRS = 20;
+    public static final int RULE_ELEM_ATTRS = 18;
     private boolean elem_attrs(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -963,7 +923,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_XDECL = 21;
+    public static final int RULE_XDECL = 19;
     private boolean xdecl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1062,7 +1022,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_MISC = 22;
+    public static final int RULE_MISC = 20;
     private boolean misc(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1103,7 +1063,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_SYTEM_LITERAL = 23;
+    public static final int RULE_SYTEM_LITERAL = 21;
     private boolean sytem_literal(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1151,7 +1111,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_PUBID_LITERAL = 24;
+    public static final int RULE_PUBID_LITERAL = 22;
     private boolean pubid_literal(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1199,7 +1159,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_SYSTEM_ID = 25;
+    public static final int RULE_SYSTEM_ID = 23;
     private boolean system_id(int state) throws Exception{
         int ch;
         switch(state){
@@ -1225,7 +1185,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_PUBLIC_ID = 26;
+    public static final int RULE_PUBLIC_ID = 24;
     private boolean public_id(int state) throws Exception{
         int ch;
         switch(state){
@@ -1251,7 +1211,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_NOTATION_DECL = 27;
+    public static final int RULE_NOTATION_DECL = 25;
     private boolean notation_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1351,7 +1311,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_EXTERNAL_ID = 28;
+    public static final int RULE_EXTERNAL_ID = 26;
     private boolean external_id(int state) throws Exception{
         int ch;
         switch(state){
@@ -1383,7 +1343,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_PE_REFERENCE = 29;
+    public static final int RULE_PE_REFERENCE = 27;
     private boolean pe_reference(int state) throws Exception{
         int ch;
         switch(state){
@@ -1412,7 +1372,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_NDATA_DECL = 30;
+    public static final int RULE_NDATA_DECL = 28;
     private boolean ndata_decl(int state) throws Exception{
         int ch;
         switch(state){
@@ -1444,7 +1404,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_PE_DEF = 31;
+    public static final int RULE_PE_DEF = 29;
     private boolean pe_def(int state) throws Exception{
         int ch;
         switch(state){
@@ -1465,7 +1425,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ENTITY_VALUE = 32;
+    public static final int RULE_ENTITY_VALUE = 30;
     private boolean entity_value(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1519,7 +1479,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_Q_ENTITY_VALUE = 33;
+    public static final int RULE_Q_ENTITY_VALUE = 31;
     private boolean q_entity_value(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1560,7 +1520,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_DQ_ENTITY_VALUE = 34;
+    public static final int RULE_DQ_ENTITY_VALUE = 32;
     private boolean dq_entity_value(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1601,7 +1561,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ENTITY_DECL = 35;
+    public static final int RULE_ENTITY_DECL = 33;
     private boolean entity_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1708,7 +1668,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ENTITY_DEF = 36;
+    public static final int RULE_ENTITY_DEF = 34;
     private boolean entity_def(int state) throws Exception{
         int ch;
         switch(state){
@@ -1750,7 +1710,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_TOKENIZED_TYPE = 37;
+    public static final int RULE_TOKENIZED_TYPE = 35;
     private boolean tokenized_type(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1860,7 +1820,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_NMTOKEN = 38;
+    public static final int RULE_NMTOKEN = 36;
     private boolean nmtoken(int state) throws Exception{
         int ch;
         switch(state){
@@ -1882,7 +1842,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ENUMERATION = 39;
+    public static final int RULE_ENUMERATION = 37;
     private boolean enumeration(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -1956,7 +1916,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_MIXED = 40;
+    public static final int RULE_MIXED = 38;
     private boolean mixed(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2076,7 +2036,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_NOTATION_TYPE = 41;
+    public static final int RULE_NOTATION_TYPE = 39;
     private boolean notation_type(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2161,7 +2121,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ENUMERATED_TYPE = 42;
+    public static final int RULE_ENUMERATED_TYPE = 40;
     private boolean enumerated_type(int state) throws Exception{
         int ch;
         switch(state){
@@ -2180,7 +2140,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ATT_TYPE = 43;
+    public static final int RULE_ATT_TYPE = 41;
     private boolean att_type(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2225,7 +2185,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_DEFAULT_DECL = 44;
+    public static final int RULE_DEFAULT_DECL = 42;
     private boolean default_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2295,7 +2255,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ATT_DEF = 45;
+    public static final int RULE_ATT_DEF = 43;
     private boolean att_def(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2350,7 +2310,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ATT_LIST_DECL = 46;
+    public static final int RULE_ATT_LIST_DECL = 44;
     private boolean att_list_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2460,7 +2420,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_CHILDREN = 47;
+    public static final int RULE_CHILDREN = 45;
     private boolean children(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2624,7 +2584,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_NAME_CARDINALITY = 48;
+    public static final int RULE_NAME_CARDINALITY = 46;
     private boolean name_cardinality(int state) throws Exception{
         int ch;
         switch(state){
@@ -2648,7 +2608,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_DECL_SEP = 49;
+    public static final int RULE_DECL_SEP = 47;
     private boolean decl_sep(int state) throws Exception{
         int ch;
         switch(state){
@@ -2673,7 +2633,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_MARKUP_DECL = 50;
+    public static final int RULE_MARKUP_DECL = 48;
     private boolean markup_decl(int state) throws Exception{
         int ch;
         switch(state){
@@ -2743,7 +2703,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ELEMENT_DECL = 51;
+    public static final int RULE_ELEMENT_DECL = 49;
     private boolean element_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2869,7 +2829,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_INT_SUBSET = 52;
+    public static final int RULE_INT_SUBSET = 50;
     private boolean int_subset(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -2975,7 +2935,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_DOCTYPE_DECL = 53;
+    public static final int RULE_DOCTYPE_DECL = 51;
     private boolean doctype_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3083,7 +3043,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_DOCUMENT = 54;
+    public static final int RULE_DOCUMENT = 52;
     private boolean document(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3200,7 +3160,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ELEM = 55;
+    public static final int RULE_ELEM = 53;
     private boolean elem(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3243,7 +3203,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_ELEM_CONTENT = 56;
+    public static final int RULE_ELEM_CONTENT = 54;
     private boolean elem_content(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3425,7 +3385,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_TEXT_DECL = 57;
+    public static final int RULE_TEXT_DECL = 55;
     private boolean text_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3492,7 +3452,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_IGNORE_SECT = 58;
+    public static final int RULE_IGNORE_SECT = 56;
     private boolean ignore_sect(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3591,7 +3551,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_EXT_SUBSET_DECL = 59;
+    public static final int RULE_EXT_SUBSET_DECL = 57;
     private boolean ext_subset_decl(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3811,7 +3771,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_CONDITIONAL_SECT = 60;
+    public static final int RULE_CONDITIONAL_SECT = 58;
     private boolean conditional_sect(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -3870,7 +3830,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_INCLUDE_SECT = 61;
+    public static final int RULE_INCLUDE_SECT = 59;
     private boolean include_sect(int state) throws Exception{
         int ch;
         switch(state){
@@ -3915,7 +3875,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_EXTERNAL_ENTITY_VALUE = 62;
+    public static final int RULE_EXTERNAL_ENTITY_VALUE = 60;
     private boolean external_entity_value(int state) throws Exception{
         int ch;
         switch(state){
@@ -3934,7 +3894,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    public static final int RULE_INT_VALUE = 63;
+    public static final int RULE_INT_VALUE = 61;
     private boolean int_value(int state) throws Exception{
         int ch;
         loop: while(true){
@@ -4053,16 +4013,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return codePoint();
     }
 
-    private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
-        while(ch>=0 && ATTR_Q_CONTENT(ch)){
+    private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
+        while(ch>=0 && ATTR_DQ_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
         return ch;
     }
 
-    private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
-        while(ch>=0 && ATTR_DQ_CONTENT(ch)){
+    private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
+        while(ch>=0 && ATTR_Q_CONTENT(ch)){
             consume(ch);
             ch = codePoint();
         }
@@ -4133,96 +4093,92 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
             case 17:
                 return value(state);
             case 18:
-                return q_value(state);
-            case 19:
-                return dq_value(state);
-            case 20:
                 return elem_attrs(state);
-            case 21:
+            case 19:
                 return xdecl(state);
-            case 22:
+            case 20:
                 return misc(state);
-            case 23:
+            case 21:
                 return sytem_literal(state);
-            case 24:
+            case 22:
                 return pubid_literal(state);
-            case 25:
+            case 23:
                 return system_id(state);
-            case 26:
+            case 24:
                 return public_id(state);
-            case 27:
+            case 25:
                 return notation_decl(state);
-            case 28:
+            case 26:
                 return external_id(state);
-            case 29:
+            case 27:
                 return pe_reference(state);
-            case 30:
+            case 28:
                 return ndata_decl(state);
-            case 31:
+            case 29:
                 return pe_def(state);
-            case 32:
+            case 30:
                 return entity_value(state);
-            case 33:
+            case 31:
                 return q_entity_value(state);
-            case 34:
+            case 32:
                 return dq_entity_value(state);
-            case 35:
+            case 33:
                 return entity_decl(state);
-            case 36:
+            case 34:
                 return entity_def(state);
-            case 37:
+            case 35:
                 return tokenized_type(state);
-            case 38:
+            case 36:
                 return nmtoken(state);
-            case 39:
+            case 37:
                 return enumeration(state);
-            case 40:
+            case 38:
                 return mixed(state);
-            case 41:
+            case 39:
                 return notation_type(state);
-            case 42:
+            case 40:
                 return enumerated_type(state);
-            case 43:
+            case 41:
                 return att_type(state);
-            case 44:
+            case 42:
                 return default_decl(state);
-            case 45:
+            case 43:
                 return att_def(state);
-            case 46:
+            case 44:
                 return att_list_decl(state);
-            case 47:
+            case 45:
                 return children(state);
-            case 48:
+            case 46:
                 return name_cardinality(state);
-            case 49:
+            case 47:
                 return decl_sep(state);
-            case 50:
+            case 48:
                 return markup_decl(state);
-            case 51:
+            case 49:
                 return element_decl(state);
-            case 52:
+            case 50:
                 return int_subset(state);
-            case 53:
+            case 51:
                 return doctype_decl(state);
-            case 54:
+            case 52:
                 return document(state);
-            case 55:
+            case 53:
                 return elem(state);
-            case 56:
+            case 54:
                 return elem_content(state);
-            case 57:
+            case 55:
                 return text_decl(state);
-            case 58:
+            case 56:
                 return ignore_sect(state);
-            case 59:
+            case 57:
                 return ext_subset_decl(state);
-            case 60:
+            case 58:
                 return conditional_sect(state);
-            case 61:
+            case 59:
                 return include_sect(state);
-            case 62:
+            case 60:
                 return external_entity_value(state);
-            case 63:
+            case 61:
                 return int_value(state);
             default:
                 throw new Error("impossible rule: "+stack[free-2]);
