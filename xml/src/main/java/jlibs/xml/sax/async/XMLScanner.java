@@ -151,8 +151,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                     if(!matchString(RULE_STR_NO, 0, STRING_IDS[-RULE_STR_NO]))
                         break;
-                }
-                else {
+                }else{
                     buffer.push();
                     state = 1;
                     if(!matchString(RULE_STR_YES, 0, STRING_IDS[-RULE_STR_YES]))
@@ -188,8 +187,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 5;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         position++;
                         state = 3;
                     }
@@ -271,8 +269,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 5;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         position++;
                         state = 3;
                     }
@@ -370,8 +367,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 5;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         position++;
                         state = 3;
                     }
@@ -426,10 +422,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='-'){
                         buffer.append(input[position++]);
                         state = 3;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 2;
                         continue;
                     }
                     else expected(ch, "<DASH> OR <CHAR>");
@@ -439,8 +433,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='-'){
                         buffer.append(input[position++]);
                         state = 4;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 2;
                         continue;
@@ -474,10 +467,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==']'){
                         buffer.append(input[position++]);
                         state = 1;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 0;
                         continue;
                     }
                     else expected(ch, "<BRACKET_CLOSE> OR <CHAR>");
@@ -487,8 +478,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==']'){
                         buffer.append(input[position++]);
                         state = 2;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 0;
                         continue;
@@ -500,8 +490,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='>'){
                         buffer.append(input[position++]);
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 0;
                         continue;
@@ -572,31 +561,22 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         buffer.append(input[position++]);
                         state = 2;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                         buffer.append(input[position++]);
                         state = 1;
                     }
                     else expected(ch, "[xX] OR <NCNAME_START>");
                 case 1:
-                    if((ch=position==limit ? marker : input[position])==EOC)
+                    if(finishAll_NCNAME_PART()==EOC)
                         break loop;
-                    if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCName(ch)){
-                        buffer.append(input[position++]);
-                        state = 1;
-                        continue;
-                    }
-                    else {
-                        return true;
-                    }
+                    return true;
                 case 2:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='m' || ch=='M'){
                         buffer.append(input[position++]);
                         state = 3;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         continue;
                     }
@@ -606,8 +586,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='l' || ch=='L'){
                         buffer.append(input[position++]);
                         state = 4;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         continue;
                     }
@@ -662,8 +641,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 5;
                         continue;
-                    }
-                    else if(ch=='?'){
+                    }else if(ch=='?'){
                         handler.piTarget(buffer.pop(0, 0));
                         handler.piData();
                         position++;
@@ -689,10 +667,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='?'){
                         buffer.append(input[position++]);
                         state = 7;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 6;
                         continue;
                     }
                     else expected(ch, "[?] OR <CHAR>");
@@ -703,8 +679,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.piData(buffer.pop(0, 1));
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 6;
                         continue;
@@ -758,8 +733,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.prefix(buffer.pop(0, 0));
                     buffer.append(input[position++]);
                     state = 2;
-                }
-                else {
+                }else{
                     buffer.pop(0, 0);
                     handler.qname(buffer.pop(0, 0));
                     return true;
@@ -798,8 +772,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 3;
                         continue;
-                    }
-                    else {
+                    }else{
                         buffer.push();
                         state = 2;
                         if(!name(0))
@@ -822,8 +795,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.hexCode();
                         state = 6;
                         continue;
-                    }
-                    else if(DIGIT(ch)){
+                    }else if(DIGIT(ch)){
                         handler.asciiCode();
                         buffer.push();
                         buffer.append(input[position++]);
@@ -903,8 +875,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 2;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         handler.valueStart();
                         position++;
                         state = 1;
@@ -917,9 +888,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.valueEnd();
                         return true;
-                    }
-                    else {
-                        state = 1;
+                    }else{
                         if(dq_value(0))
                             continue;
                         else
@@ -932,9 +901,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.valueEnd();
                         return true;
-                    }
-                    else {
-                        state = 2;
+                    }else{
                         if(q_value(0))
                             continue;
                         else
@@ -959,8 +926,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     consume(ch);
                     state = 1;
-                }
-                else {
+                }else{
                     return reference(0);
                 }
             case 1:
@@ -986,8 +952,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     consume(ch);
                     state = 1;
-                }
-                else {
+                }else{
                     return reference(0);
                 }
             case 1:
@@ -1028,8 +993,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 4;
-                    }
-                    else {
+                    }else{
                         return true;
                     }
                 case 4:
@@ -1041,8 +1005,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         return true;
                     }
                 default:
@@ -1083,8 +1046,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 6;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 4;
                     }
                 case 4:
@@ -1113,12 +1075,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='?'){
+                    }else if(ch=='?'){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 7;
                     }
                 case 7:
@@ -1136,8 +1096,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 10;
-                    }
-                    else {
+                    }else{
                         state = 4;
                         continue;
                     }
@@ -1147,8 +1106,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='s'){
                         state = 7;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 4;
                         continue;
                     }
@@ -1214,8 +1172,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         buffer.push();
                         state = 2;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         position++;
                         buffer.push();
                         state = 1;
@@ -1228,10 +1185,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.systemID(buffer.pop(0, 0));
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 1;
                         continue;
                     }
                     else expected(ch, "<DQ> OR <CHAR>");
@@ -1242,10 +1197,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.systemID(buffer.pop(0, 0));
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 2;
                         continue;
                     }
                     else expected(ch, "<Q> OR <CHAR>");
@@ -1270,8 +1223,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         buffer.push();
                         state = 2;
                         continue;
-                    }
-                    else if(ch=='\''){
+                    }else if(ch=='\''){
                         position++;
                         buffer.push();
                         state = 1;
@@ -1284,10 +1236,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.publicID(buffer.pop(0, 0));
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         consume(ch);
-                        state = 1;
                         continue;
                     }
                     else expected(ch, "<Q> OR <PUBID_CHAR>");
@@ -1298,10 +1248,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.publicID(buffer.pop(0, 0));
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isPubid(ch)){
                         consume(ch);
-                        state = 2;
                         continue;
                     }
                     else expected(ch, "<DQ> OR <PUBID_CHAR>");
@@ -1425,8 +1373,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(!system_id(0))
                             break loop;
@@ -1450,8 +1397,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 10;
-                    }
-                    else {
+                    }else{
                         state = 8;
                         continue;
                     }
@@ -1461,8 +1407,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='>'){
                         state = 8;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(sytem_literal(0))
                             continue;
@@ -1488,8 +1433,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                     if(!public_id(0))
                         break;
-                }
-                else {
+                }else{
                     return system_id(0);
                 }
             case 1:
@@ -1586,11 +1530,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     break;
                 if(ch=='P'){
                     return external_id(0);
-                }
-                else if(ch=='S'){
+                }else if(ch=='S'){
                     return external_id(0);
-                }
-                else {
+                }else{
                     return entity_value(0);
                 }
             default:
@@ -1614,8 +1556,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 2;
                         continue;
-                    }
-                    else if(ch=='"'){
+                    }else if(ch=='"'){
                         handler.valueStart();
                         handler.entityValue();
                         position++;
@@ -1629,9 +1570,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.valueEnd();
                         return true;
-                    }
-                    else {
-                        state = 1;
+                    }else{
                         if(dq_entity_value(0))
                             continue;
                         else
@@ -1644,9 +1583,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.valueEnd();
                         return true;
-                    }
-                    else {
-                        state = 2;
+                    }else{
                         if(q_entity_value(0))
                             continue;
                         else
@@ -1671,11 +1608,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
                         buffer.push();
                         state = 1;
-                    }
-                    else if(ch=='&'){
+                    }else if(ch=='&'){
                         return reference(0);
-                    }
-                    else {
+                    }else{
                         return pe_reference(0);
                     }
                 case 1:
@@ -1692,8 +1627,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && ENTITY_Q_CONTENT(ch)){
                         state = 1;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.rawValue(buffer.pop(0, 0));
                         return true;
                     }
@@ -1716,11 +1650,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
                         buffer.push();
                         state = 1;
-                    }
-                    else if(ch=='&'){
+                    }else if(ch=='&'){
                         return reference(0);
-                    }
-                    else {
+                    }else{
                         return pe_reference(0);
                     }
                 case 1:
@@ -1737,8 +1669,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && ENTITY_DQ_CONTENT(ch)){
                         state = 1;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.rawValue(buffer.pop(0, 0));
                         return true;
                     }
@@ -1790,8 +1721,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 8;
                         continue;
-                    }
-                    else {
+                    }else{
                         buffer.push();
                         state = 5;
                         if(!ncname(0))
@@ -1879,13 +1809,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                     if(!external_id(0))
                         break;
-                }
-                else if(ch=='S'){
+                }else if(ch=='S'){
                     state = 1;
                     if(!external_id(0))
                         break;
-                }
-                else {
+                }else{
                     return entity_value(0);
                 }
             case 1:
@@ -1894,8 +1822,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                     consume(ch);
                     state = 2;
-                }
-                else {
+                }else{
                     return true;
                 }
             case 2:
@@ -1903,8 +1830,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     break;
                 if(ch=='N'){
                     return ndata_decl(0);
-                }
-                else {
+                }else{
                     return true;
                 }
             default:
@@ -1928,13 +1854,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='I'){
+                    }else if(ch=='I'){
                         position++;
                         state = 2;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         if(!matchString(RULE_STR_NMTOKEN, 0, STRING_IDS[-RULE_STR_NMTOKEN]))
                             break loop;
@@ -1946,8 +1870,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.nmtokensAttribute();
                         return true;
-                    }
-                    else {
+                    }else{
                         handler.nmtokenAttribute();
                         return true;
                     }
@@ -1965,8 +1888,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='R'){
                         position++;
                         state = 4;
-                    }
-                    else {
+                    }else{
                         handler.idAttribute();
                         return true;
                     }
@@ -1993,8 +1915,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.idRefsAttribute();
                         return true;
-                    }
-                    else {
+                    }else{
                         handler.idRefAttribute();
                         return true;
                     }
@@ -2005,8 +1926,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.entityAttribute();
                         return true;
-                    }
-                    else if(ch=='I'){
+                    }else if(ch=='I'){
                         position++;
                         state = 8;
                     }
@@ -2088,13 +2008,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 8;
                         continue;
-                    }
-                    else if(ch=='|'){
+                    }else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 3;
                     }
@@ -2128,13 +2046,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 7;
-                    }
-                    else if(ch=='|'){
+                    }else if(ch=='|'){
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.attributeEnumValue(buffer.pop(0, 0));
                         state = 3;
                         continue;
@@ -2145,8 +2061,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 3;
                         continue;
                     }
@@ -2156,8 +2071,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 3;
                         continue;
                     }
@@ -2189,14 +2103,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 11;
                         continue;
-                    }
-                    else if(ch=='#'){
+                    }else if(ch=='#'){
                         state = 2;
                         if(!matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
                             break loop;
-                    }
-                    else {
-                        state = 1;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2215,7 +2126,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     if(ch=='%'){
-                        state = 2;
                         if(pe_reference(0))
                             continue;
                         else
@@ -2230,8 +2140,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]==')'){
                             if(ch=='*'){
-                                state = 3;
                                 resetLookAhead();
+                                state = 3;
                                 continue;
                             }
                             consume(FROM_LA);
@@ -2257,9 +2167,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     }
                     else expected(ch, "[*]");
                 case 5:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 6;
@@ -2281,8 +2189,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]==')'){
                             if(ch=='*'){
-                                state = 3;
                                 resetLookAhead();
+                                state = 3;
                                 continue;
                             }
                             consume(FROM_LA);
@@ -2306,14 +2214,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 10;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 8;
                         if(!name(0))
                             break loop;
-                    }
-                    else {
-                        state = 7;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2325,17 +2230,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 9;
-                    }
-                    else if(ch=='|'){
+                    }else if(ch=='|'){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 3;
                         continue;
-                    }
-                    else {
-                        state = 8;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2347,12 +2248,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 3;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 8;
                         if(pe_reference(0))
                             continue;
@@ -2368,8 +2267,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(pe_reference(0))
                             continue;
@@ -2385,8 +2283,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         if(pe_reference(0))
                             continue;
@@ -2448,13 +2345,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 10;
                         continue;
-                    }
-                    else if(ch=='|'){
+                    }else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 6;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 5;
                     }
@@ -2488,13 +2383,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         consume(ch);
                         state = 9;
-                    }
-                    else if(ch=='|'){
+                    }else if(ch=='|'){
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 6;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.attributeNotationValue(buffer.pop(0, 0));
                         state = 5;
                         continue;
@@ -2505,8 +2398,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 6;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 5;
                         continue;
                     }
@@ -2516,8 +2408,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 6;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 5;
                         continue;
                     }
@@ -2538,8 +2429,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     break;
                 if(ch=='N'){
                     return notation_type(0);
-                }
-                else {
+                }else{
                     return enumeration(0);
                 }
             default:
@@ -2606,8 +2496,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 2;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         if(!value(0))
                             break loop;
@@ -2624,15 +2513,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='I'){
+                    }else if(ch=='I'){
                         state = 6;
                         if(matchString(RULE_STR_IMPLIED, 0, STRING_IDS[-RULE_STR_IMPLIED]))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 3;
                         if(!matchString(RULE_STR_FIXED, 0, STRING_IDS[-RULE_STR_FIXED]))
                             break loop;
@@ -2699,9 +2586,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 4;
-                    }
-                    else {
-                        state = 3;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2713,15 +2598,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 5;
-                    }
-                    else if(ch=='%'){
-                        state = 4;
+                    }else if(ch=='%'){
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         return default_decl(0);
                     }
                 case 5:
@@ -2733,8 +2615,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         return default_decl(0);
                     }
                 default:
@@ -2776,9 +2657,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 4;
-                    }
-                    else {
-                        state = 3;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2791,15 +2670,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 11;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
                         state = 5;
                         if(!name(0))
                             break loop;
-                    }
-                    else {
-                        state = 4;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2812,8 +2688,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.dtdAttributesStart(buffer.pop(0, 0));
                         state = 10;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.dtdAttributesStart(buffer.pop(0, 0));
                         state = 6;
                     }
@@ -2823,9 +2698,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 7;
-                    }
-                    else {
-                        state = 6;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2840,17 +2713,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 8;
-                    }
-                    else if(ch=='>'){
+                    }else if(ch=='>'){
                         state = 10;
                         continue;
-                    }
-                    else {
-                        state = 7;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2863,12 +2732,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 9;
                         if(!att_def(0))
                             break loop;
-                    }
-                    else if(ch=='>'){
+                    }else if(ch=='>'){
                         state = 10;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(pe_reference(0))
                             continue;
@@ -2880,8 +2747,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(ch=='>'){
                         state = 10;
-                    }
-                    else {
+                    }else{
                         state = 6;
                         continue;
                     }
@@ -2904,8 +2770,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 4;
                         if(pe_reference(0))
                             continue;
@@ -2940,19 +2805,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 16;
                         continue;
-                    }
-                    else if(ch=='('){
+                    }else if(ch=='('){
                         state = 2;
                         if(!children(0))
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 2;
                         if(!name_cardinality(0))
                             break loop;
-                    }
-                    else {
-                        state = 1;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2964,21 +2825,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 11;
                         continue;
-                    }
-                    else if(ch==','){
+                    }else if(ch==','){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 3;
-                    }
-                    else {
-                        state = 2;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -2990,15 +2846,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 11;
                         continue;
-                    }
-                    else if(ch==','){
+                    }else if(ch==','){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         if(pe_reference(0))
                             continue;
@@ -3019,8 +2872,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='?' || ch=='+' || ch=='*'){
                         position++;
                         return true;
-                    }
-                    else {
+                    }else{
                         return true;
                     }
                 case 6:
@@ -3040,20 +2892,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 8;
-                    }
-                    else if(ch=='('){
+                    }else if(ch=='('){
                         state = 9;
                         if(children(0))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
-                        state = 7;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3066,13 +2914,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 9;
                         if(!name_cardinality(0))
                             break loop;
-                    }
-                    else if(ch=='('){
+                    }else if(ch=='('){
                         state = 9;
                         if(!children(0))
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(pe_reference(0))
                             continue;
@@ -3085,17 +2931,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==','){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 10;
-                    }
-                    else {
-                        state = 9;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3107,12 +2949,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==','){
                         state = 6;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 9;
                         if(pe_reference(0))
                             continue;
@@ -3136,20 +2976,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 13;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 14;
                         if(name_cardinality(0))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
-                        state = 12;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3162,13 +2998,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 14;
                         if(!children(0))
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 14;
                         if(!name_cardinality(0))
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 12;
                         if(pe_reference(0))
                             continue;
@@ -3181,17 +3015,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 11;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 15;
-                    }
-                    else {
-                        state = 14;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3203,12 +3033,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='|'){
                         state = 11;
                         continue;
-                    }
-                    else if(ch==')'){
+                    }else if(ch==')'){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 14;
                         if(pe_reference(0))
                             continue;
@@ -3224,15 +3052,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 2;
                         if(name_cardinality(0))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         if(pe_reference(0))
                             continue;
@@ -3248,8 +3074,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         if(name_cardinality(0))
                             continue;
@@ -3278,8 +3103,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch=='?' || ch=='*' || ch=='+'){
                     position++;
                     return true;
-                }
-                else {
+                }else{
                     return true;
                 }
             default:
@@ -3299,8 +3123,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                     consume(ch);
                     state = 1;
-                }
-                else {
+                }else{
                     handler.peReferenceOutsideMarkup();
                     return pe_reference(0);
                 }
@@ -3416,9 +3239,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 4;
-                    }
-                    else {
-                        state = 3;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3431,15 +3252,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 13;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
                         state = 5;
                         if(!name(0))
                             break loop;
-                    }
-                    else {
-                        state = 4;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3453,8 +3271,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 7;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.dtdElement(buffer.pop(0, 0));
                         state = 6;
                         if(!pe_reference(0))
@@ -3466,9 +3283,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 7;
-                    }
-                    else {
-                        state = 6;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3481,28 +3296,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 11;
                         continue;
-                    }
-                    else if(ch=='E'){
+                    }else if(ch=='E'){
                         handler.notMixed();
                         state = 9;
                         if(matchString(RULE_STR_EMPTY, 0, STRING_IDS[-RULE_STR_EMPTY]))
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='A'){
+                    }else if(ch=='A'){
                         state = 9;
                         if(matchString(RULE_STR_ANY, 0, STRING_IDS[-RULE_STR_ANY]))
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 8;
-                    }
-                    else {
-                        state = 7;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3515,19 +3325,16 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 11;
                         continue;
-                    }
-                    else if(ch=='E'){
+                    }else if(ch=='E'){
                         handler.notMixed();
                         state = 9;
                         if(!matchString(RULE_STR_EMPTY, 0, STRING_IDS[-RULE_STR_EMPTY]))
                             break loop;
-                    }
-                    else if(ch=='A'){
+                    }else if(ch=='A'){
                         state = 9;
                         if(!matchString(RULE_STR_ANY, 0, STRING_IDS[-RULE_STR_ANY]))
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 7;
                         if(pe_reference(0))
                             continue;
@@ -3540,13 +3347,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='>'){
                         position++;
                         return true;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 10;
-                    }
-                    else {
-                        state = 9;
+                    }else{
                         if(pe_reference(0))
                             continue;
                         else
@@ -3558,8 +3362,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='>'){
                         position++;
                         return true;
-                    }
-                    else {
+                    }else{
                         state = 9;
                         if(pe_reference(0))
                             continue;
@@ -3572,22 +3375,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         consume(ch);
                         state = 12;
-                    }
-                    else if(ch=='%'){
-                        state = 11;
+                    }else if(ch=='%'){
                         if(pe_reference(0))
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='#'){
+                    }else if(ch=='#'){
                         state = 9;
                         if(mixed(12))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         handler.notMixed();
                         state = 9;
                         if(children(17))
@@ -3604,15 +3403,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else if(ch=='#'){
+                    }else if(ch=='#'){
                         state = 9;
                         if(mixed(12))
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         handler.notMixed();
                         state = 9;
                         if(children(17))
@@ -3630,8 +3427,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 4;
                         if(pe_reference(0))
                             continue;
@@ -3658,13 +3454,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                         if(!decl_sep(0))
                             break loop;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         state = 1;
                         if(!decl_sep(0))
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 1;
                         if(!markup_decl(0))
                             break loop;
@@ -3689,8 +3483,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]=='<'){
                             if(ch=='?'){
-                                state = 0;
                                 resetLookAhead();
+                                state = 0;
                                 continue;
                             }
                         }
@@ -3704,18 +3498,18 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(la[0]=='<'){
                             if(la[1]=='!'){
                                 if(ch=='A'){
-                                    state = 0;
                                     resetLookAhead();
+                                    state = 0;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    state = 0;
                                     resetLookAhead();
+                                    state = 0;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    state = 0;
                                     resetLookAhead();
+                                    state = 0;
                                     continue;
                                 }
                             }
@@ -3731,13 +3525,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(la[1]=='!'){
                                 if(la[2]=='E'){
                                     if(ch=='L'){
-                                        state = 0;
                                         resetLookAhead();
+                                        state = 0;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        state = 0;
                                         resetLookAhead();
+                                        state = 0;
                                         continue;
                                     }
                                 }
@@ -3802,8 +3596,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 11;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.dtdRoot(buffer.pop(0, 0));
                         state = 6;
                     }
@@ -3815,8 +3608,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 8;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.dtdStart();
                         state = 7;
                     }
@@ -3853,13 +3645,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 12;
                         if(!external_id(0))
                             break loop;
-                    }
-                    else if(ch=='S'){
+                    }else if(ch=='S'){
                         state = 12;
                         if(!external_id(0))
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 6;
                         continue;
                     }
@@ -3893,8 +3683,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                state = 2;
                                 resetLookAhead();
+                                state = 2;
                                 continue;
                             }
                         }
@@ -3919,7 +3709,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     resetLookAhead();
-                    state = 0;
                     if(misc(0))
                         continue;
                     else
@@ -3936,14 +3725,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
-                                state = 2;
                                 resetLookAhead();
+                                state = 2;
                                 continue;
                             }
                         }
                     }
                     resetLookAhead();
-                    state = 1;
                     if(misc(0))
                         continue;
                     else
@@ -3956,7 +3744,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=codePoint())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
-                        state = 3;
                         if(misc(0))
                             continue;
                         else
@@ -3972,7 +3759,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(la[0]=='<'){
                             if(ch=='!'){
                                 resetLookAhead();
-                                state = 3;
                                 if(misc(0))
                                     continue;
                                 else
@@ -3980,7 +3766,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             }
                             if(ch=='?'){
                                 resetLookAhead();
-                                state = 3;
                                 if(misc(0))
                                     continue;
                                 else
@@ -4014,8 +3799,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         state = 4;
                         continue;
-                    }
-                    else if(ch=='>'){
+                    }else if(ch=='>'){
                         position++;
                         state = 2;
                     }
@@ -4061,8 +3845,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         buffer.append(input[position++]);
                         state = 8;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 2;
                     }
                 case 2:
@@ -4087,8 +3870,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(ch=='/'){
                                 handler.characters(buffer.pop(0, 0));
                                 consume(FROM_LA);
-                                state = 5;
                                 resetLookAhead();
+                                state = 5;
                                 continue;
                             }
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
@@ -4149,8 +3932,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='/'){
                         position++;
                         state = 4;
-                    }
-                    else if(ch=='>'){
+                    }else if(ch=='>'){
                         position++;
                         handler.attributesEnd();
                         state = 0;
@@ -4199,13 +3981,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==']'){
                         buffer.append(input[position++]);
                         state = 9;
-                    }
-                    else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                    }else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         consume(ch);
                         state = 1;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         continue;
                     }
@@ -4216,13 +3996,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         buffer.append(input[position++]);
                         handler.fatalError("Text may not contain a literal ']]>' sequence");
                         return true;
-                    }
-                    else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                    }else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         consume(ch);
                         state = 1;
                         continue;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         continue;
                     }
@@ -4260,8 +4038,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             continue;
                         else
                             break loop;
-                    }
-                    else {
+                    }else{
                         state = 3;
                     }
                 case 3:
@@ -4330,13 +4107,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         consume(ch);
                         state = 7;
                         continue;
-                    }
-                    else if(ch=='<'){
+                    }else if(ch=='<'){
                         state = 3;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
-                        state = 2;
                         continue;
                     }
                     else expected(ch, "[\\]] OR [<] OR <CHAR>");
@@ -4354,8 +4128,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='!'){
                         consume(ch);
                         state = 5;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         continue;
                     }
@@ -4365,8 +4138,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='['){
                         consume(ch);
                         state = 6;
-                    }
-                    else {
+                    }else{
                         state = 2;
                         continue;
                     }
@@ -4382,12 +4154,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch==']'){
                         consume(ch);
                         state = 8;
-                    }
-                    else if(ch=='<'){
+                    }else if(ch=='<'){
                         state = 3;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 2;
                         continue;
@@ -4399,12 +4169,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='>'){
                         consume(ch);
                         return true;
-                    }
-                    else if(ch=='<'){
+                    }else if(ch=='<'){
                         state = 3;
                         continue;
-                    }
-                    else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
+                    }else if(ch!=EOF && org.apache.xerces.util.XMLChar.isValid(ch)){
                         consume(ch);
                         state = 2;
                         continue;
@@ -4446,8 +4214,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]=='<'){
                             if(ch=='?'){
-                                state = 1;
                                 resetLookAhead();
+                                state = 1;
                                 continue;
                             }
                         }
@@ -4461,23 +4229,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(la[0]=='<'){
                             if(la[1]=='!'){
                                 if(ch=='A'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='['){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                             }
@@ -4493,13 +4261,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(la[1]=='!'){
                                 if(la[2]=='E'){
                                     if(ch=='L'){
-                                        state = 1;
                                         resetLookAhead();
+                                        state = 1;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        state = 1;
                                         resetLookAhead();
+                                        state = 1;
                                         continue;
                                     }
                                 }
@@ -4571,8 +4339,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(laLen==2){
                         if(la[0]=='<'){
                             if(ch=='?'){
-                                state = 1;
                                 resetLookAhead();
+                                state = 1;
                                 continue;
                             }
                         }
@@ -4586,23 +4354,23 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(la[0]=='<'){
                             if(la[1]=='!'){
                                 if(ch=='A'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                                 if(ch=='['){
-                                    state = 1;
                                     resetLookAhead();
+                                    state = 1;
                                     continue;
                                 }
                             }
@@ -4618,13 +4386,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             if(la[1]=='!'){
                                 if(la[2]=='E'){
                                     if(ch=='L'){
-                                        state = 1;
                                         resetLookAhead();
+                                        state = 1;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        state = 1;
                                         resetLookAhead();
+                                        state = 1;
                                         continue;
                                     }
                                 }
@@ -4679,7 +4447,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                     if(ch=='%'){
-                        state = 3;
                         if(pe_reference(0))
                             continue;
                         else
@@ -4702,9 +4469,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     resetLookAhead();
                     return include_sect(0);
                 case 4:
-                    if((ch=codePoint())==EOC)
-                        break loop;
-                    if((ch=finishAll_WS(ch))==EOC)
+                    if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 3;
@@ -4799,8 +4564,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     consume(ch);
                     state = 1;
-                }
-                else {
+                }else{
                     buffer.push();
                     handler.externalEntityValue(buffer.pop(0, 0));
                     return true;
@@ -4828,11 +4592,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         state = 3;
                         continue;
-                    }
-                    else if(ch=='&'){
+                    }else if(ch=='&'){
                         state = 1;
-                    }
-                    else {
+                    }else{
                         return true;
                     }
                 case 1:
@@ -4844,12 +4606,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         state = 3;
-                    }
-                    else if(ch=='&'){
+                    }else if(ch=='&'){
                         state = 1;
                         continue;
-                    }
-                    else {
+                    }else{
                         return true;
                     }
                 case 3:
@@ -4870,12 +4630,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         handler.rawValue(buffer.pop(0, 0));
                         state = 1;
                         continue;
-                    }
-                    else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
+                    }else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         state = 4;
                         continue;
-                    }
-                    else {
+                    }else{
                         handler.rawValue(buffer.pop(0, 0));
                         return true;
                     }

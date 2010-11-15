@@ -20,6 +20,7 @@ import jlibs.core.util.regex.TemplateMatcher;
 
 import javax.lang.model.element.TypeElement;
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,6 +178,10 @@ public class Printer{
         emptyLine(true);
     }
 
+    public void printlnIf(String condition, String... body){
+        printlnIf(condition, Arrays.asList(body));
+    }
+    
     public void printlnIf(String condition, List<String> body){
         printlns(
             "if("+condition+")"+(body.size()>1 ? "{" : ""),
