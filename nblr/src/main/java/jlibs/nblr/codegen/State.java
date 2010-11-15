@@ -41,7 +41,9 @@ public class State{
     public final RuleMethod ruleMethod;
     public Node fromNode;
     public final List<Decision> decisions = new ArrayList<Decision>();
-    public final List<IfBlock> ifBlocks = new ArrayList<IfBlock>();
+
+    public final RootIf rootIF = new RootIf(this);
+    public final List<IfBlock> ifBlocks = rootIF.children;
 
     public State(RuleMethod ruleMethod, Node fromNode){
         this.ruleMethod = ruleMethod;
@@ -207,17 +209,12 @@ public class State{
                 curIf = found;
             }
             curIf.path = decision.path;
-
-//            while(curIf.parent!=null)
-//                curIf = curIf.parent;
-//            if(curIf.height()!=decision.matchers.length){
-//                int ht = curIf.height();
-//                throw new ImpossibleException();
-//            }
         }
 
         for(List<IfBlock> list: lists)
-            ifBlocks.addAll(list);
+            rootIF.children.addAll(list);
+
+        rootIF.computeCommon();
     }
 
     public boolean readCodePoint(){
@@ -289,8 +286,7 @@ public class State{
             "case "+fromNode.stateID+":",
                 PLUS
         );
-        for(IfBlock ifBlock: ifBlocks)
-            ifBlock.generate(printer, nextState);
+        rootIF.generate(printer, nextState);
         printer.printlns(
                 MINUS
         );

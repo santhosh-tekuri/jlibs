@@ -39,6 +39,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 public class IfBlock{
     public Matcher matcher;
     public Path path;
+    protected int common = -1;
 
     public final State state;
     public IfBlock parent;
@@ -106,7 +107,7 @@ public class IfBlock{
         }
     }
 
-    private List<IfBlock> siblings(){
+    public List<IfBlock> siblings(){
         return parent==null ? state.ifBlocks : parent.children;
     }
 
@@ -126,21 +127,18 @@ public class IfBlock{
         }
         return blockStmt.length()==0 ? null : blockStmt;
     }
+
+    protected void generateChildren(Printer printer, State next){
+        if(common!=-1)
+            children.get(0).travelPath(printer, 0, common);
+        for(IfBlock child: children)
+            child.generate(printer, next);
+    }
     
     public void generate(Printer printer, State next){
-        if(state.ruleMethod.rule.name.equals("yes_no"))
-            System.out.print("");
         if(usesFinishAll()){
             useFinishAll(printer);
             return;
-        }
-
-        if(parent==null && state.ifBlocks.get(0)==this && matcher!=null){
-            List<String> body = new ArrayList<String>();
-            if(SyntaxClass.DEBUGGABLE)
-                body.add("handler.currentNode("+state.ruleMethod.rule.id+", "+state.fromNode.stateID+");");
-            body.add(state.breakStatement());
-            printer.printlnIf("(ch="+readMethod()+")==EOC", body);
         }
 
         boolean closeLaLenCheck = false;
@@ -194,10 +192,8 @@ public class IfBlock{
 
         if(path!=null)
             generateBody(printer, next, heightDecreased);
-        else{
-            for(IfBlock child: children)
-                child.generate(printer, next);
-        }
+        else
+            generateChildren(printer, next);
         
         if(blockStmt!=null){
             printer.printlns(MINUS);
@@ -271,7 +267,8 @@ public class IfBlock{
     }
     
     private void generateBody(Printer printer, State next, boolean heightDecreased){
-        boolean checkStop = generatePath(printer);
+        int common = parent==null ? state.rootIF.common : parent.common;
+        boolean checkStop = travelPath(printer, common+1, path.size()-1);
 
         if(parent!=null || heightDecreased)
             printer.println("resetLookAhead();");
@@ -325,21 +322,22 @@ public class IfBlock{
         }
     }
 
-    private boolean generatePath(Printer printer){
+    public boolean travelPath(Printer printer, int from, int to){
         boolean checkStop = false;
 
-        int index = -1;
-        for(Object obj: path){
-            ++index;
+        for(int index=0; index<path.size(); index++){
+             Object obj = path.get(index);
             if(obj instanceof Node){
                 Node node = (Node)obj;
 
                 if(index<path.size()-1 || node.outgoing.size()==0){ // !lastNode || sinkNode
                     if(node.action!=null){
-                        if(SyntaxClass.DEBUGGABLE)
-                            printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.stateID+");");
-                        else
-                            printer.println(node.action.javaCode()+';');
+                        if(index>=from && index<=to){
+                            if(SyntaxClass.DEBUGGABLE)
+                                printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.stateID+");");
+                            else
+                                printer.println(node.action.javaCode()+';');
+                        }
                         if(node.action instanceof EventAction || node.action instanceof PublishAction){
                             if(node.action.toString().startsWith("#"))
                                 checkStop = true;
@@ -347,6 +345,8 @@ public class IfBlock{
                     }
                 }
             }else if(obj instanceof Edge){
+                if(!(index>=from && index<=to))
+                    continue;
                 Edge edge = (Edge)obj;
                 if(edge.ruleTarget!=null){
 //                    RuleTarget ruleTarget = edge.ruleTarget;
