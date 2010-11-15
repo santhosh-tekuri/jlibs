@@ -133,7 +133,7 @@ public class Path extends ArrayList<Object>{
     public void travelWithoutMatching(){
         while(true){
             Node node = destination();
-            if(node.junction() || Node.DYNAMIC_STRING_MATCH.equals(node.name))
+            if(node.junction())
                 return;
             switch(node.outgoing.size()){
                 case 1:
@@ -142,6 +142,10 @@ public class Path extends ArrayList<Object>{
                         add(edge);
                         add(edge.target);
                         break;
+                    }else if(edge.ruleTarget!=null){ // travel only one rule target
+                        add(edge);
+                        add(edge.ruleTarget.node());
+                        return;
                     }else
                         return;
                 default:
