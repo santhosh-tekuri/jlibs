@@ -195,19 +195,21 @@ public class IfBlock{
         else
             generateChildren(printer, next);
         
+        boolean addExpected = parent == null && siblings.indexOf(this) == siblings.size() - 1 && matcher != null;
         if(blockStmt!=null){
             printer.printlns(MINUS);
+            printer.print("}");
+
             int index = siblings.indexOf(this);
             IfBlock nextIF = index==siblings.size()-1 ? null : siblings.get(index+1);
             String nextBlockStmt = nextIF==null ? null : nextIF.blockStatement();
-            if(nextBlockStmt!=null && nextBlockStmt.startsWith("else"))
-                printer.print("}");
+            boolean sameLine;
+            if(nextBlockStmt==null)
+                sameLine = addExpected && !state.lookAheadRequired();
             else
-                printer.println("}");
-//            printer.printlns(
-//                    MINUS,
-//                "}"
-//            );
+                sameLine = nextBlockStmt.startsWith("else");
+            if(!sameLine)
+                printer.println();
         }
         if(closeLaLenCheck){
             printer.printlns(
@@ -215,8 +217,8 @@ public class IfBlock{
                 "}"
             );
         }
-
-        if(parent==null && siblings.indexOf(this)==siblings.size()-1 && matcher!=null){
+        
+        if(addExpected){
             if(!state.lookAheadRequired())
                 printer.print("else ");
             printer.println("expected(ch, \""+ StringUtil.toLiteral(state.expected(), false)+"\");");
