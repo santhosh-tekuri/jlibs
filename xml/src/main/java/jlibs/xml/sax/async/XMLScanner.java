@@ -2146,7 +2146,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         loop: while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='C'){
                         state = 1;
@@ -2161,7 +2161,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     int available0 = limit-position+(marker==EOF ? 1 : 0);
                     if(available0>=2){
                         ch = limit==position+1 ? EOF : input[position+1];
-                        if(input[position+0]=='N'){
+                        if(input[position]=='N'){
                             if(ch=='O'){
                                 return enumerated_type(0);
                             }
@@ -2204,17 +2204,11 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='R'){
-                        state = 7;
-                        if(matchString(RULE_STR_REQUIRED, 0, STRING_IDS[-RULE_STR_REQUIRED]))
-                            continue;
-                        else
-                            break loop;
+                        handler.attributeRequired();
+                        return matchString(RULE_STR_REQUIRED, 0, STRING_IDS[-RULE_STR_REQUIRED]);
                     }else if(ch=='I'){
-                        state = 6;
-                        if(matchString(RULE_STR_IMPLIED, 0, STRING_IDS[-RULE_STR_IMPLIED]))
-                            continue;
-                        else
-                            break loop;
+                        handler.attributeImplied();
+                        return matchString(RULE_STR_IMPLIED, 0, STRING_IDS[-RULE_STR_IMPLIED]);
                     }else{
                         state = 3;
                         if(!matchString(RULE_STR_FIXED, 0, STRING_IDS[-RULE_STR_FIXED]))
@@ -2235,12 +2229,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                 case 5:
                     handler.attributeFixedValue();
-                    return true;
-                case 6:
-                    handler.attributeImplied();
-                    return true;
-                case 7:
-                    handler.attributeRequired();
                     return true;
                 default:
                     throw new Error("impossible state: "+state);
@@ -2633,12 +2621,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC)
-                    break;
                 int available0 = limit-position+(marker==EOF ? 1 : 0);
                 if(available0>=2){
                     ch = limit==position+1 ? EOF : input[position+1];
-                    if(input[position+0]=='<'){
+                    if(input[position]=='<'){
                         if(ch=='?'){
                             return pi(0);
                         }
@@ -2647,7 +2633,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     break;
                 if(available0>=3){
                     ch = limit==position+2 ? EOF : input[position+2];
-                    if(input[position+0]=='<'){
+                    if(input[position]=='<'){
                         if(input[position+1]=='!'){
                             if(ch=='A'){
                                 return att_list_decl(0);
@@ -2664,7 +2650,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     break;
                 if(available0>=4){
                     ch = limit==position+3 ? EOF : input[position+3];
-                    if(input[position+0]=='<'){
+                    if(input[position]=='<'){
                         if(input[position+1]=='!'){
                             if(input[position+2]=='E'){
                                 if(ch=='L'){
@@ -3029,12 +3015,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         loop: while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC)
-                        break loop;
                     int available0 = limit-position+(marker==EOF ? 1 : 0);
                     if(available0>=2){
                         ch = limit==position+1 ? EOF : input[position+1];
-                        if(input[position+0]=='<'){
+                        if(input[position]=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 state = 2;
                                 continue;
@@ -3044,7 +3028,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(available0>=3){
                         ch = limit==position+2 ? EOF : input[position+2];
-                        if(input[position+0]=='<'){
+                        if(input[position]=='<'){
                             if(input[position+1]=='!'){
                                 if(ch=='D'){
                                     state = 1;
@@ -3062,12 +3046,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     else
                         break loop;
                 case 1:
-                    if((ch=codePoint())==EOC)
-                        break loop;
                     int available1 = limit-position+(marker==EOF ? 1 : 0);
                     if(available1>=2){
                         ch = limit==position+1 ? EOF : input[position+1];
-                        if(input[position+0]=='<'){
+                        if(input[position]=='<'){
                             if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                                 state = 2;
                                 continue;
@@ -3188,7 +3170,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 2;
                     }
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='&'){
                         handler.characters(buffer.pop(0, 0));
@@ -3201,7 +3183,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     int available2 = limit-position+(marker==EOF ? 1 : 0);
                     if(available2>=2){
                         ch = limit==position+1 ? EOF : input[position+1];
-                        if(input[position+0]=='<'){
+                        if(input[position]=='<'){
                             if(ch=='/'){
                                 handler.characters(buffer.pop(0, 0));
                                 position++;
@@ -3229,7 +3211,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(available2>=3){
                         ch = limit==position+2 ? EOF : input[position+2];
-                        if(input[position+0]=='<'){
+                        if(input[position]=='<'){
                             if(input[position+1]=='!'){
                                 if(ch=='-'){
                                     handler.characters(buffer.pop(0, 0));
