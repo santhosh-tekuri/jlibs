@@ -1608,9 +1608,11 @@
         <node>
             <event name="attributeRequired"/>
         </node>
+        <node/>
         <node>
             <event name="attributeImplied"/>
         </node>
+        <node/>
         <node/>
         <node/>
         <node>
@@ -1622,22 +1624,24 @@
         <edge source="0" target="2" fallback="false">
             <any chars="#"/>
         </edge>
-        <edge source="2" target="3" fallback="false">
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false">
             <rule name="str_REQUIRED"/>
         </edge>
-        <edge source="2" target="4" fallback="false">
+        <edge source="2" target="5" fallback="false"/>
+        <edge source="5" target="6" fallback="false">
             <rule name="str_IMPLIED"/>
         </edge>
-        <edge source="2" target="5" fallback="false">
+        <edge source="2" target="7" fallback="false">
             <rule name="str_FIXED"/>
         </edge>
-        <edge source="5" target="6" fallback="false">
+        <edge source="7" target="8" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="6" target="6" fallback="false">
+        <edge source="8" target="8" fallback="false">
             <matcher name="WS"/>
         </edge>
-        <edge source="6" target="7" fallback="false">
+        <edge source="8" target="9" fallback="false">
             <rule name="value"/>
         </edge>
     </rule>

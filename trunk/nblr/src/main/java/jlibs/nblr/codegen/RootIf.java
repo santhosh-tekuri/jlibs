@@ -21,6 +21,9 @@ import jlibs.nblr.codegen.java.SyntaxClass;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jlibs.core.annotation.processing.Printer.MINUS;
+import static jlibs.core.annotation.processing.Printer.PLUS;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -79,10 +82,27 @@ public class RootIf extends IfBlock{
         }
         return false;
     }
+
+    private boolean endsWithEOFMatcher(){
+        IfBlock last = children.get(children.size()-1);
+        for(IfBlock block: last){
+            if(block.matcher==null)
+                return true;
+        }
+        return false;
+    }
     
+    private String readMethod(){
+        InputType inputType = analalizeInput();
+        if(inputType.characterOnly() && !inputType.newLine)
+            return "position==limit ? marker : input[position]";
+        else
+            return "codePoint()";
+    }
+
     private void generateRead(Printer printer){
         IfBlock first = children.get(0);
-        if(first.matcher!=null && !first.usesFinishAll()){
+        if(first.matcher!=null && !first.usesFinishAll() && first.height()==1){
             boolean readChar  = true;
             if(lookAheadChars()){
                 readChar = false;
@@ -112,5 +132,27 @@ public class RootIf extends IfBlock{
     public void generate(Printer printer, State next){
         generateRead(printer);
         generateChildren(printer, next);
+    }
+
+    public void fillLookAhead(Printer printer, int prevHeight, int curHeight){
+        String prefix, condition;
+        if(curHeight==prevHeight+1){
+            prefix = "if";
+            condition = "ch!=EOF";
+        }else{
+            prefix = "while";
+            condition = "ch!=EOF && laLen<"+curHeight;
+        }
+        printer.printlns(
+            prefix+"("+condition+"){",
+                PLUS,
+                "if((ch=codePoint())==EOC)",
+                    PLUS,
+                    state.breakStatement(),
+                    MINUS,
+                "addToLookAhead(ch);",
+                MINUS,
+            "}"
+        );
     }
 }

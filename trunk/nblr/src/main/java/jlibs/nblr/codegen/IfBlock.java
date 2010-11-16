@@ -117,14 +117,6 @@ public class IfBlock implements Iterable<IfBlock>{
         return condition;
     }
 
-    public String readMethod(){
-        InputType inputType = state.rootIF.analalizeInput();
-        if(!root.lookAheadRequired() && inputType.characterOnly() && !inputType.newLine)
-            return "position==limit ? marker : input[position]";
-        else
-            return "codePoint()";
-    }
-
     private int depth(){
         int depth = 0;
         IfBlock parent = this.parent;
@@ -170,7 +162,7 @@ public class IfBlock implements Iterable<IfBlock>{
         return parent==null ? state.ifBlocks : parent.children;
     }
 
-    private String blockStatement(){
+    private String blockStatement(boolean heightDecreased){
         List<IfBlock> siblings = siblings();
         int index = siblings.indexOf(this);
         if(state.ifBlocks.get(0).usesFinishAll())
@@ -183,10 +175,10 @@ public class IfBlock implements Iterable<IfBlock>{
             if(blockStmt.length()>0)
                 blockStmt += " ";
             String ch = "ch";
-            if(!children.isEmpty()){
+            if(heightDecreased || !children.isEmpty()){
                 int depth = depth();
                 if(state.rootIF.lookAheadChars())
-                    ch = "input[position+"+depth+"]";
+                    ch = depth==0 ?  "input[position]" : "input[position+"+depth+"]";
                 else
                     ch = "la["+depth+"]";
             }
@@ -217,38 +209,19 @@ public class IfBlock implements Iterable<IfBlock>{
 
             if(curHeight>prevHeight){
                 if(prevHeight==1){
-                    if(state.rootIF.lookAheadChars())
+                    if(root.lookAheadChars())
                         printer.printlns("int "+state.rootIF.available()+" = limit-position+(marker==EOF ? 1 : 0);");
                     else
                         printer.println("addToLookAhead(ch);");
                 }
 
-                if(!state.rootIF.lookAheadChars()){
-                    String prefix, condition;
-                    if(curHeight==prevHeight+1){
-                        prefix = "if";
-                        condition = "ch!=EOF";
-                    }else{
-                        prefix = "while";
-                        condition = "ch!=EOF && laLen<"+curHeight;
-                    }
-                    printer.printlns(
-                        prefix+"("+condition+"){",
-                            PLUS,
-                            "if((ch=codePoint())==EOC)",
-                                PLUS,
-                                state.breakStatement(),
-                                MINUS,
-                            "addToLookAhead(ch);",
-                            MINUS,
-                        "}"
-                    );
-                }
+                if(!root.lookAheadChars())
+                    root.fillLookAhead(printer, prevHeight, curHeight);
                 closeLaLenCheck = true;
-                if(state.rootIF.lookAheadChars()){
+                if(root.lookAheadChars()){
                     String last = "position+"+(curHeight-1);
                     printer.printlns(
-                        "if("+state.rootIF.available()+">="+curHeight+"){",
+                        "if("+root.available()+">="+curHeight+"){",
                             PLUS,
                             "ch = limit=="+last+" ? EOF : input["+last+"];"
                     );
@@ -264,7 +237,7 @@ public class IfBlock implements Iterable<IfBlock>{
 
 
         List<IfBlock> siblings = siblings();
-        String blockStmt = blockStatement();
+        String blockStmt = blockStatement(heightDecreased);
         if(blockStmt!=null){
             printer.printlns(
                 blockStmt+"{",
@@ -284,7 +257,7 @@ public class IfBlock implements Iterable<IfBlock>{
 
             int index = siblings.indexOf(this);
             IfBlock nextIF = index==siblings.size()-1 ? null : siblings.get(index+1);
-            String nextBlockStmt = nextIF==null ? null : nextIF.blockStatement();
+            String nextBlockStmt = nextIF==null ? null : nextIF.blockStatement(heightDecreased);
             boolean sameLine;
             if(nextBlockStmt==null)
                 sameLine = addExpected && !root.lookAheadRequired();
@@ -296,7 +269,7 @@ public class IfBlock implements Iterable<IfBlock>{
         if(closeLaLenCheck){
             printer.printlns(MINUS);
             printer.print("}");
-            if(state.rootIF.lookAheadChars()){
+            if(root.lookAheadChars()){
                 printer.printlns(
                     "else if(marker==EOC)",
                         PLUS,
@@ -358,11 +331,11 @@ public class IfBlock implements Iterable<IfBlock>{
     }
     
     private void generateBody(Printer printer, State next, boolean heightDecreased){
-        int common = parent==null ? state.rootIF.common : parent.common;
+        int common = parent==null ? root.common : parent.common;
         boolean checkStop = travelPath(printer, common+1, path.size()-1);
 
         if(parent!=null || heightDecreased){
-            if(!state.rootIF.lookAheadChars())
+            if(!root.lookAheadChars())
                 printer.println("resetLookAhead();");
         }
 
@@ -459,7 +432,7 @@ public class IfBlock implements Iterable<IfBlock>{
                         }
                         printer.println("consume(ch);"); //"+edge.source.buffering);
                     }else{
-                        if(state.rootIF.lookAheadChars()){
+                        if(root.lookAheadChars()){
                             if(edge.source.buffering== Answer.NO)
                                 printer.println("position++;");
                             else if(edge.source.buffering==Answer.YES)
