@@ -19,13 +19,12 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.codegen.java.SyntaxClass;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public class RootIf extends IfBlock implements Iterable<IfBlock>{
+public class RootIf extends IfBlock{
     public RootIf(State state){
         super(state);
     }
@@ -61,14 +60,51 @@ public class RootIf extends IfBlock implements Iterable<IfBlock>{
         }
     }
     
+    public String available(){
+        return "available"+state.fromNode.stateID;
+    }
+    
+    public boolean lookAheadRequired(){
+        for(IfBlock child: children){
+            if(child.children.size()>0)
+                return true;
+        }
+        return false;    
+    }
+
+    public boolean lookAheadChars(){
+        if(lookAheadRequired()){
+            InputType inputType = analalizeInput();
+            return inputType.characterOnly() && !inputType.newLine;
+        }
+        return false;
+    }
+    
     private void generateRead(Printer printer){
         IfBlock first = children.get(0);
         if(first.matcher!=null && !first.usesFinishAll()){
-            List<String> body = new ArrayList<String>();
-            if(SyntaxClass.DEBUGGABLE)
-                body.add("handler.currentNode("+state.ruleMethod.rule.id+", "+state.fromNode.stateID+");");
-            body.add(state.breakStatement());
-            printer.printlnIf("(ch="+readMethod()+")==EOC", body);
+            boolean readChar  = true;
+            if(lookAheadChars()){
+                readChar = false;
+                for(IfBlock child: children){
+                    if(child.path!=null){
+                        readChar = true;
+                        break;
+                    }
+                }
+            }
+
+            String currentNode = "handler.currentNode("+state.ruleMethod.rule.id+", "+state.fromNode.stateID+");";
+            if(readChar){
+                List<String> body = new ArrayList<String>();
+                if(SyntaxClass.DEBUGGABLE)
+                    body.add(currentNode);
+                body.add(state.breakStatement());
+                printer.printlnIf("(ch="+readMethod()+")==EOC", body);
+            }else{
+                if(SyntaxClass.DEBUGGABLE)
+                    printer.println(currentNode);                
+            }
         }
     }
 
@@ -76,48 +112,5 @@ public class RootIf extends IfBlock implements Iterable<IfBlock>{
     public void generate(Printer printer, State next){
         generateRead(printer);
         generateChildren(printer, next);
-    }
-
-    @Override
-    public Iterator<IfBlock> iterator(){
-        return new Iterator<IfBlock>(){
-            IfBlock block;
-
-            private IfBlock getNext(){
-                if(block==null)
-                    return RootIf.this;
-                if(block.children.size()>0){
-                    return block.children.get(0);
-                }else{
-                    IfBlock block = this.block;
-                    IfBlock next = null;
-                    while(block!=null){
-                        List<IfBlock> siblings = block.siblings();
-                        int index = siblings.indexOf(block);
-                        if(index+1<siblings.size()){
-                            next = siblings.get(index+1);
-                            break;
-                        }
-                        block = block.parent;
-                    }
-                    return next;
-                }
-            }
-
-            @Override
-            public boolean hasNext(){
-                return getNext()!=null;
-            }
-
-            @Override
-            public IfBlock next(){
-                return block = getNext();
-            }
-
-            @Override
-            public void remove(){
-                throw new UnsupportedOperationException();
-            }
-        };
     }
 }

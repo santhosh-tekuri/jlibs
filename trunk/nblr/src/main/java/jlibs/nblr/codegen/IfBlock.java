@@ -28,6 +28,7 @@ import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -36,17 +37,74 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 /**
  * @author Santhosh Kumar T
  */
-public class IfBlock{
+public class IfBlock implements Iterable<IfBlock>{
     public Matcher matcher;
     public Path path;
     protected int common = -1;
 
     public final State state;
+    public final RootIf root;
     public IfBlock parent;
     public final List<IfBlock> children = new ArrayList<IfBlock>();
 
     public IfBlock(State state){
         this.state = state;
+        root = state.rootIF==null ? (RootIf)this : state.rootIF;
+    }
+
+    @Override
+    public Iterator<IfBlock> iterator(){
+        return new Iterator<IfBlock>(){
+            IfBlock block;
+
+            private IfBlock getNext(){
+                if(block==null)
+                    return IfBlock.this;
+                if(block.children.size()>0){
+                    return block.children.get(0);
+                }else{
+                    IfBlock block = this.block;
+                    IfBlock next = null;
+                    while(block!=null){
+                        List<IfBlock> siblings = block.siblings();
+                        int index = siblings.indexOf(block);
+                        if(index+1<siblings.size()){
+                            next = siblings.get(index+1);
+                            break;
+                        }
+                        block = block.parent;
+                    }
+                    return next;
+                }
+            }
+
+            @Override
+            public boolean hasNext(){
+                return getNext()!=null;
+            }
+
+            @Override
+            public IfBlock next(){
+                return block = getNext();
+            }
+
+            @Override
+            public void remove(){
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    protected InputType analalizeInput(){
+        InputType inputType = new InputType();
+        for(IfBlock block: this){
+            if(block.matcher!=null){
+                inputType.codePoint |= block.matcher.clashesWith(Range.SUPPLIMENTAL);
+                inputType.character |= block.matcher.clashesWith(Range.NON_SUPPLIMENTAL);
+                inputType.newLine |= block.matcher.clashesWith(Any.NEW_LINE);
+            }
+        }
+        return inputType;
     }
 
     private static String condition(Matcher matcher, String ch){
@@ -60,7 +118,8 @@ public class IfBlock{
     }
 
     public String readMethod(){
-        if(!state.lookAheadRequired() && state.readCharacter() && !state.matchesNewLine())
+        InputType inputType = state.rootIF.analalizeInput();
+        if(!root.lookAheadRequired() && inputType.characterOnly() && !inputType.newLine)
             return "position==limit ? marker : input[position]";
         else
             return "codePoint()";
@@ -118,12 +177,20 @@ public class IfBlock{
             index--;
 
         String blockStmt = "";
-        if(index!=0 && !state.lookAheadRequired())
+        if(index!=0 && !root.lookAheadRequired())
             blockStmt = "else";
         if(matcher!=null){
             if(blockStmt.length()>0)
                 blockStmt += " ";
-            blockStmt += "if("+condition(matcher, children.isEmpty()?"ch":"la["+depth()+"]")+")";
+            String ch = "ch";
+            if(!children.isEmpty()){
+                int depth = depth();
+                if(state.rootIF.lookAheadChars())
+                    ch = "input[position+"+depth+"]";
+                else
+                    ch = "la["+depth+"]";
+            }
+            blockStmt += "if("+condition(matcher, ch)+")";
         }
         return blockStmt.length()==0 ? null : blockStmt;
     }
@@ -149,33 +216,48 @@ public class IfBlock{
             int curHeight = height();
 
             if(curHeight>prevHeight){
-                if(prevHeight==1)
-                    printer.println("addToLookAhead(ch);");
-                String prefix, condition;
-                if(curHeight==prevHeight+1){
-                    prefix = "if";
-                    condition = "ch!=EOF";
-                }else{
-                    prefix = "while";
-                    condition = "ch!=EOF && laLen<"+curHeight; 
+                if(prevHeight==1){
+                    if(state.rootIF.lookAheadChars())
+                        printer.printlns("int "+state.rootIF.available()+" = limit-position+(marker==EOF ? 1 : 0);");
+                    else
+                        printer.println("addToLookAhead(ch);");
                 }
-                printer.printlns(
-                    prefix+"("+condition+"){",
-                        PLUS,
-                        "if((ch=codePoint())==EOC)",
-                            PLUS,
-                            state.breakStatement(),
-                            MINUS,
-                        "addToLookAhead(ch);",
-                        MINUS,
-                    "}"
-                );
 
+                if(!state.rootIF.lookAheadChars()){
+                    String prefix, condition;
+                    if(curHeight==prevHeight+1){
+                        prefix = "if";
+                        condition = "ch!=EOF";
+                    }else{
+                        prefix = "while";
+                        condition = "ch!=EOF && laLen<"+curHeight;
+                    }
+                    printer.printlns(
+                        prefix+"("+condition+"){",
+                            PLUS,
+                            "if((ch=codePoint())==EOC)",
+                                PLUS,
+                                state.breakStatement(),
+                                MINUS,
+                            "addToLookAhead(ch);",
+                            MINUS,
+                        "}"
+                    );
+                }
                 closeLaLenCheck = true;
-                printer.printlns(
-                    "if(laLen=="+curHeight+"){",
-                        PLUS
-                );
+                if(state.rootIF.lookAheadChars()){
+                    String last = "position+"+(curHeight-1);
+                    printer.printlns(
+                        "if("+state.rootIF.available()+">="+curHeight+"){",
+                            PLUS,
+                            "ch = limit=="+last+" ? EOF : input["+last+"];"
+                    );
+                }else{
+                    printer.printlns(
+                        "if(laLen=="+curHeight+"){",
+                            PLUS
+                    );
+                }
             }else
                 heightDecreased = curHeight<prevHeight;
         }
@@ -205,21 +287,28 @@ public class IfBlock{
             String nextBlockStmt = nextIF==null ? null : nextIF.blockStatement();
             boolean sameLine;
             if(nextBlockStmt==null)
-                sameLine = addExpected && !state.lookAheadRequired();
+                sameLine = addExpected && !root.lookAheadRequired();
             else
                 sameLine = nextBlockStmt.startsWith("else");
             if(!sameLine)
                 printer.println();
         }
         if(closeLaLenCheck){
-            printer.printlns(
-                    MINUS,
-                "}"
-            );
+            printer.printlns(MINUS);
+            printer.print("}");
+            if(state.rootIF.lookAheadChars()){
+                printer.printlns(
+                    "else if(marker==EOC)",
+                        PLUS,
+                        state.breakStatement(),
+                        MINUS
+                );
+            }else
+                printer.println();
         }
         
         if(addExpected){
-            if(!state.lookAheadRequired())
+            if(!root.lookAheadRequired())
                 printer.print("else ");
             printer.println("expected(ch, \""+ StringUtil.toLiteral(state.expected(), false)+"\");");
         }
@@ -265,15 +354,17 @@ public class IfBlock{
     }
 
     private boolean addContinue(State next, Node returnNode){
-        return state.lookAheadRequired() || next==null || returnNode!=next.fromNode;
+        return root.lookAheadRequired() || next==null || returnNode!=next.fromNode;
     }
     
     private void generateBody(Printer printer, State next, boolean heightDecreased){
         int common = parent==null ? state.rootIF.common : parent.common;
         boolean checkStop = travelPath(printer, common+1, path.size()-1);
 
-        if(parent!=null || heightDecreased)
-            printer.println("resetLookAhead();");
+        if(parent!=null || heightDecreased){
+            if(!state.rootIF.lookAheadChars())
+                printer.println("resetLookAhead();");
+        }
 
         Edge edgeWithRule = edgeWithRule();
 
@@ -367,8 +458,24 @@ public class IfBlock{
                             }
                         }
                         printer.println("consume(ch);"); //"+edge.source.buffering);
-                    }else
-                        printer.println("consume(FROM_LA);"); //"+edge.source.buffering);
+                    }else{
+                        if(state.rootIF.lookAheadChars()){
+                            if(edge.source.buffering== Answer.NO)
+                                printer.println("position++;");
+                            else if(edge.source.buffering==Answer.YES)
+                                printer.println("buffer.append(input[position++]);");
+                            else{
+                                printer.printlns(
+                                    "if(buffer.isBuffering())",
+                                        PLUS,
+                                        "buffer.append(input[position]);",
+                                        MINUS,
+                                    "position++;"
+                                );
+                            }
+                        }else
+                            printer.println("consume(FROM_LA);"); //"+edge.source.buffering);
+                    }
                 }
             }
         }
@@ -413,5 +520,14 @@ public class IfBlock{
                 MINUS
         );
     }
+}
 
+class InputType{
+    boolean codePoint;
+    boolean character;
+    boolean newLine;
+
+    public boolean characterOnly(){
+        return character && !codePoint;
+    }
 }
