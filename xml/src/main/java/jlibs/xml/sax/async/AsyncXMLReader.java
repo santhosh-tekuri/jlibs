@@ -461,9 +461,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         int len = data.length();
         if(len>0){
             if(dtd!=null && dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
-                handler.ignorableWhitespace(data.array(), data.offset(), data.length());
+                handler.ignorableWhitespace(data.array(), data.offset(), len);
             else
-                handler.characters(data.array(), data.offset(), data.length());
+                handler.characters(data.array(), data.offset(), len);
         }
     }
 
