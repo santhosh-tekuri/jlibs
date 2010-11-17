@@ -18,7 +18,7 @@ package jlibs.nbp;
 /**
  * @author Santhosh Kumar T
  */
-public class Chars implements CharSequence{
+public final class Chars implements CharSequence{
     private char buff[];
     private int offset;
     private int length;
