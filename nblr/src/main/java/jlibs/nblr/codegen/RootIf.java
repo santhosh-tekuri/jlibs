@@ -78,7 +78,7 @@ public class RootIf extends IfBlock{
     public boolean lookAheadChars(){
         if(lookAheadRequired()){
             InputType inputType = analalizeInput();
-            return inputType.characterOnly() && !inputType.newLine;
+            return inputType.characterOnly() && (!inputType.newLine || !inputType.consumes);
         }
         return false;
     }
@@ -94,7 +94,7 @@ public class RootIf extends IfBlock{
     
     private String readMethod(){
         InputType inputType = analalizeInput();
-        if(inputType.characterOnly() && !inputType.newLine)
+        if(inputType.characterOnly()  && (!inputType.newLine || !inputType.consumes))
             return "position==limit ? marker : input[position]";
         else
             return "codePoint()";

@@ -504,7 +504,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                    consume(ch);
+                    if(buffer.isBuffering())
+                        buffer.append(input[position]);
+                    position++;
                     state = 1;
                 }else expected(ch, "<NAME_START>");
             case 1:
@@ -1922,30 +1924,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         loop: while(true){
             switch(state){
                 case 0:
-                    if((ch=position==limit ? marker : input[position])==EOC)
+                    state = 1;
+                    if(!matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
                         break loop;
-                    if(ch=='('){
-                        consume(ch);
-                        state = 1;
-                    }else expected(ch, "[(]");
                 case 1:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
-                    if(ch=='#'){
-                        state = 2;
-                        if(!matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
-                            break loop;
-                    }else{
-                        if(pe_reference(0))
-                            continue;
-                        else
-                            break loop;
-                    }
-                case 2:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
-                        break loop;
                     if(ch=='|'){
-                        state = 5;
+                        state = 4;
                         continue;
                     }
                     if(ch=='%'){
@@ -1964,7 +1950,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         if(la[0]==')'){
                             if(ch=='*'){
                                 resetLookAhead();
-                                state = 3;
+                                state = 2;
                                 continue;
                             }
                             consume(FROM_LA);
@@ -1973,32 +1959,32 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         }
                     }
                     expected(ch, "<WS> OR [|] OR [%] OR [)][*] OR [)]<EOF>");
-                case 3:
+                case 2:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch==')'){
                         position++;
-                        state = 4;
+                        state = 3;
                     }else expected(ch, "[)]");
-                case 4:
+                case 3:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='*'){
                         position++;
                         return true;
                     }else expected(ch, "[*]");
-                case 5:
+                case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='|'){
                         position++;
-                        state = 6;
+                        state = 5;
                     }else expected(ch, "[|]");
-                case 6:
+                case 5:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
-                        state = 7;
+                        state = 6;
                         if(!name(0))
                             break loop;
                     }else{
@@ -2007,14 +1993,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }
-                case 7:
+                case 6:
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='|'){
-                        state = 5;
+                        state = 4;
                         continue;
                     }else if(ch==')'){
-                        state = 3;
+                        state = 2;
                         continue;
                     }else{
                         if(pe_reference(0))
@@ -2022,12 +2008,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }
-                case 8:
-                    state = 2;
-                    if(matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
-                        continue;
-                    else
-                        break loop;
                 default:
                     throw new Error("impossible state: "+state);
             }
@@ -2775,7 +2755,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }else if(ch=='#'){
                         state = 7;
-                        if(mixed(8))
+                        if(mixed(0))
                             continue;
                         else
                             break loop;
@@ -2801,7 +2781,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         loop: while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 1;
@@ -2817,7 +2797,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 0;
@@ -2827,71 +2807,55 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 0;
                         continue;
                     }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]=='<'){
+                    int available1 = limit-position+(marker==EOF ? 1 : 0);
+                    if(available1>=2){
+                        ch = limit==position+1 ? EOF : input[position+1];
+                        if(input[position]=='<'){
                             if(ch=='?'){
-                                resetLookAhead();
                                 state = 0;
                                 continue;
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==3){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available1>=3){
+                        ch = limit==position+2 ? EOF : input[position+2];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
                                 if(ch=='A'){
-                                    resetLookAhead();
                                     state = 0;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    resetLookAhead();
                                     state = 0;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    resetLookAhead();
                                     state = 0;
                                     continue;
                                 }
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==4){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
-                                if(la[2]=='E'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available1>=4){
+                        ch = limit==position+3 ? EOF : input[position+3];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
+                                if(input[position+2]=='E'){
                                     if(ch=='L'){
-                                        resetLookAhead();
                                         state = 0;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        resetLookAhead();
                                         state = 0;
                                         continue;
                                     }
                                 }
                             }
                         }
-                    }
-                    resetLookAhead();
+                    }else if(marker==EOC)
+                        break loop;
                     return true;
                 default:
                     throw new Error("impossible state: "+state);
@@ -3066,7 +3030,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!elem(0))
                         break loop;
                 case 3:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isSpace(ch)){
                         if(misc(0))
@@ -3074,31 +3038,25 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]=='<'){
+                    int available3 = limit-position+(marker==EOF ? 1 : 0);
+                    if(available3>=2){
+                        ch = limit==position+1 ? EOF : input[position+1];
+                        if(input[position]=='<'){
                             if(ch=='!'){
-                                resetLookAhead();
                                 if(misc(0))
                                     continue;
                                 else
                                     break loop;
                             }
                             if(ch=='?'){
-                                resetLookAhead();
                                 if(misc(0))
                                     continue;
                                 else
                                     break loop;
                             }
                         }
-                    }
-                    resetLookAhead();
+                    }else if(marker==EOC)
+                        break loop;
                     return true;
                 default:
                     throw new Error("impossible state: "+state);
@@ -3401,14 +3359,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll_WS(codePoint()))==EOC)
                         break loop;
                     if(ch=='['){
-                        consume(ch);
+                        position++;
                         state = 2;
                     }else expected(ch, "<WS> OR [\\[]");
                 case 2:
                     if((ch=codePoint())==EOC)
                         break loop;
                     if(ch==']'){
-                        consume(ch);
+                        position++;
                         state = 6;
                         continue;
                     }else if(ch=='<'){
@@ -3421,14 +3379,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                         state = 4;
                     }else expected(ch, "[<]");
                 case 4:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                         state = 5;
                     }else{
                         state = 2;
@@ -3438,7 +3396,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='['){
-                        consume(ch);
+                        position++;
                         state = 2;
                         if(ignore_sect(8))
                             continue;
@@ -3452,7 +3410,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=codePoint())==EOC)
                         break loop;
                     if(ch==']'){
-                        consume(ch);
+                        position++;
                         state = 7;
                     }else if(ch=='<'){
                         state = 3;
@@ -3466,7 +3424,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=finishAll(codePoint(), ']'))==EOC)
                         break loop;
                     if(ch=='>'){
-                        consume(ch);
+                        position++;
                         return true;
                     }else if(ch=='<'){
                         state = 3;
@@ -3493,7 +3451,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         loop: while(true){
             switch(state){
                 case 0:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 1;
@@ -3503,79 +3461,62 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                         continue;
                     }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]=='<'){
+                    int available0 = limit-position+(marker==EOF ? 1 : 0);
+                    if(available0>=2){
+                        ch = limit==position+1 ? EOF : input[position+1];
+                        if(input[position]=='<'){
                             if(ch=='?'){
-                                resetLookAhead();
                                 state = 1;
                                 continue;
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==3){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available0>=3){
+                        ch = limit==position+2 ? EOF : input[position+2];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
                                 if(ch=='A'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='['){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==4){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
-                                if(la[2]=='E'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available0>=4){
+                        ch = limit==position+3 ? EOF : input[position+3];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
+                                if(input[position+2]=='E'){
                                     if(ch=='L'){
-                                        resetLookAhead();
                                         state = 1;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        resetLookAhead();
                                         state = 1;
                                         continue;
                                     }
                                 }
                             }
                         }
-                    }
-                    resetLookAhead();
+                    }else if(marker==EOC)
+                        break loop;
                     return true;
                 case 1:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 2;
@@ -3591,17 +3532,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         else
                             break loop;
                     }
-                    addToLookAhead(ch);
-                    while(ch!=EOF && laLen<3){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==3){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
+                    int available1 = limit-position+(marker==EOF ? 1 : 0);
+                    if(available1>=3){
+                        ch = limit==position+2 ? EOF : input[position+2];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
                                 if(ch=='['){
-                                    resetLookAhead();
                                     state = 2;
                                     if(conditional_sect(0))
                                         continue;
@@ -3610,15 +3546,15 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                                 }
                             }
                         }
-                    }
-                    resetLookAhead();
+                    }else if(marker==EOC)
+                        break loop;
                     state = 2;
                     if(markup_decl(0))
                         continue;
                     else
                         break loop;
                 case 2:
-                    if((ch=codePoint())==EOC)
+                    if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='%'){
                         state = 1;
@@ -3628,76 +3564,59 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                         continue;
                     }
-                    addToLookAhead(ch);
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==2){
-                        if(la[0]=='<'){
+                    int available2 = limit-position+(marker==EOF ? 1 : 0);
+                    if(available2>=2){
+                        ch = limit==position+1 ? EOF : input[position+1];
+                        if(input[position]=='<'){
                             if(ch=='?'){
-                                resetLookAhead();
                                 state = 1;
                                 continue;
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==3){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available2>=3){
+                        ch = limit==position+2 ? EOF : input[position+2];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
                                 if(ch=='A'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='N'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='-'){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                                 if(ch=='['){
-                                    resetLookAhead();
                                     state = 1;
                                     continue;
                                 }
                             }
                         }
-                    }
-                    if(ch!=EOF){
-                        if((ch=codePoint())==EOC)
-                            break loop;
-                        addToLookAhead(ch);
-                    }
-                    if(laLen==4){
-                        if(la[0]=='<'){
-                            if(la[1]=='!'){
-                                if(la[2]=='E'){
+                    }else if(marker==EOC)
+                        break loop;
+                    if(available2>=4){
+                        ch = limit==position+3 ? EOF : input[position+3];
+                        if(input[position]=='<'){
+                            if(input[position+1]=='!'){
+                                if(input[position+2]=='E'){
                                     if(ch=='L'){
-                                        resetLookAhead();
                                         state = 1;
                                         continue;
                                     }
                                     if(ch=='N'){
-                                        resetLookAhead();
                                         state = 1;
                                         continue;
                                     }
                                 }
                             }
                         }
-                    }
-                    resetLookAhead();
+                    }else if(marker==EOC)
+                        break loop;
                     return true;
                 default:
                     throw new Error("impossible state: "+state);
@@ -3716,21 +3635,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='<'){
-                        consume(ch);
+                        position++;
                         state = 1;
                     }else expected(ch, "[<]");
                 case 1:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='!'){
-                        consume(ch);
+                        position++;
                         state = 2;
                     }else expected(ch, "[!]");
                 case 2:
                     if((ch=position==limit ? marker : input[position])==EOC)
                         break loop;
                     if(ch=='['){
-                        consume(ch);
+                        position++;
                         state = 3;
                     }else expected(ch, "[\\[]");
                 case 3:
@@ -3778,7 +3697,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if((ch=finishAll_WS(codePoint()))==EOC)
                     break;
                 if(ch=='['){
-                    consume(ch);
+                    position++;
                     state = 2;
                     if(!ext_subset_decl(0))
                         break;
@@ -3787,21 +3706,21 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch==']'){
-                    consume(ch);
+                    position++;
                     state = 3;
                 }else expected(ch, "[\\]]");
             case 3:
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch==']'){
-                    consume(ch);
+                    position++;
                     state = 4;
                 }else expected(ch, "[\\]]");
             case 4:
                 if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch=='>'){
-                    consume(ch);
+                    position++;
                     return true;
                 }else expected(ch, "[>]");
             default:
