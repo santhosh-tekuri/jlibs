@@ -16,16 +16,12 @@
 package jlibs.nblr;
 
 import jlibs.core.io.FileUtil;
-import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ImpossibleException;
-import jlibs.nblr.actions.BufferAction;
-import jlibs.nblr.actions.ErrorAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.editor.serialize.SyntaxBinding;
 import jlibs.nblr.editor.serialize.SyntaxDocument;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.rules.Answer;
 import jlibs.nblr.rules.Edge;
 import jlibs.nblr.rules.Node;
 import jlibs.nblr.rules.Rule;
@@ -33,7 +29,6 @@ import jlibs.xml.sax.binding.BindingHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.swing.tree.TreePath;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
@@ -109,47 +104,9 @@ public class Syntax{
     }
 
     public void computeBufferingStates(){
+        BufferingDepths depths = new BufferingDepths();
         for(Rule rule: primaryRules())
-            computeBufferingStates(null, rule.node, 0);
-    }
-
-    private void computeBufferingStates(TreePath path, Node node, int bufferDepth){
-        if(path!=null && ArrayUtil.contains(path.getPath(), node))
-            return;
-
-        path = path==null ? new TreePath(node) : path.pathByAddingChild(node);
-        if(node.action instanceof ErrorAction)
-            return;
-        if(node.action instanceof BufferAction)
-            bufferDepth++;
-        else if(node.action instanceof PublishAction)
-            bufferDepth--;
-
-        if(bufferDepth<0)
-            throw new IllegalStateException("invalid buffer state");
-
-        Answer bufferring = bufferDepth>0 ? Answer.YES : Answer.NO;
-        if(node.buffering==null)
-            node.buffering = bufferring;
-        else if(node.buffering!=bufferring)
-            node.buffering = Answer.MAY_BE;
-
-
-        if(node.outgoing.size()>0){
-            for(Edge outgoing: node.outgoing){
-                if(outgoing.ruleTarget!=null){
-                    computeBufferingStates(path.pathByAddingChild(outgoing), outgoing.ruleTarget.node(), bufferDepth);
-                }else if(!outgoing.loop())
-                    computeBufferingStates(path, outgoing.target, bufferDepth);
-            }
-        }else{
-            while(path!=null && !(path.getLastPathComponent() instanceof Edge))
-                path = path.getParentPath();
-            if(path!=null){
-                Node resumeNode = ((Edge)path.getLastPathComponent()).target;
-                computeBufferingStates(path.getParentPath(), resumeNode, bufferDepth);
-            }
-        }
+            depths.calculate(rule);
     }
 
     /*-------------------------------------------------[ Serialization ]---------------------------------------------------*/
@@ -216,6 +173,4 @@ public class Syntax{
         }
         return methods;
     }
-
-
 }
