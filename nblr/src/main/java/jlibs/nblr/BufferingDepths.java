@@ -54,8 +54,6 @@ public class BufferingDepths{
     }
 
     private void set(RuleTarget ruleTarget, int enteringDepth, int exitingDepth){
-        if(enteringDepth!=exitingDepth)
-            System.out.println("");
         Map<Integer, Integer> depths = depths(ruleTarget, true);
         Integer value = depths.get(enteringDepth);
         if(value!=null && !value.equals(exitingDepth))
