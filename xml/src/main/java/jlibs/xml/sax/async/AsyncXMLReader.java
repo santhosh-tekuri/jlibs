@@ -433,8 +433,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ PI ]---------------------------------------------------*/
 
     private String piTarget;
-    void piTarget(Chars data){
+    void piTarget(Chars data) throws SAXException{
         piTarget = data.toString();
+        if(piTarget.equalsIgnoreCase("xml"))
+            fatalError("The processing instruction target matching \"[xX][mM][lL]\" is not allowed");
     }
 
     void piData(Chars piData) throws SAXException{

@@ -381,39 +381,6 @@
         </edge>
         <edge source="1" target="2" fallback="false"/>
     </rule>
-    <rule name="pi_target">
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <node/>
-        <edge source="0" target="1" fallback="false">
-            <any chars="xX"/>
-        </edge>
-        <edge source="1" target="2" fallback="false">
-            <any chars="mM"/>
-        </edge>
-        <edge source="2" target="3" fallback="false">
-            <any chars="lL"/>
-        </edge>
-        <edge source="3" target="4" fallback="false">
-            <matcher name="NCNAME_PART"/>
-        </edge>
-        <edge source="4" target="4" fallback="true">
-            <matcher name="NCNAME_PART"/>
-        </edge>
-        <edge source="4" target="5" fallback="false"/>
-        <edge source="2" target="4" fallback="false"/>
-        <edge source="1" target="4" fallback="false"/>
-        <edge source="0" target="6" fallback="false"/>
-        <edge source="6" target="7" fallback="true">
-            <matcher name="NCNAME_START"/>
-        </edge>
-        <edge source="7" target="4" fallback="false"/>
-    </rule>
     <rule name="pi">
         <node/>
         <node/>
@@ -446,7 +413,7 @@
             <any chars="?"/>
         </edge>
         <edge source="2" target="3" fallback="false">
-            <rule name="pi_target"/>
+            <rule name="ncname"/>
         </edge>
         <edge source="3" target="4" fallback="false"/>
         <edge source="4" target="5" fallback="false">
