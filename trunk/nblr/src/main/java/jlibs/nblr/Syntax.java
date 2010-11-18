@@ -95,7 +95,7 @@ public class Syntax{
         for(Rule r: rules.values()){
             for(Edge edge: r.edges()){
                 if(edge.ruleTarget!=null){
-                    if(edge.ruleTarget.rule!=r)
+                    if(edge.ruleTarget.rule!=r && edge.ruleTarget.node()==edge.ruleTarget.rule.node)
                         primaryRules.remove(edge.ruleTarget.rule);
                 }
             }
@@ -107,6 +107,15 @@ public class Syntax{
         BufferingDepths depths = new BufferingDepths();
         for(Rule rule: primaryRules())
             depths.calculate(rule);
+        List<Rule> list = new ArrayList<Rule>(rules.values());
+        list.removeAll(depths.ruleMap.keySet());
+
+        while(!list.isEmpty()){
+            Rule rule = list.get(0);
+            depths.calculate(rule);
+            list = new ArrayList<Rule>(rules.values());
+            list.removeAll(depths.ruleMap.keySet());
+        }
     }
 
     /*-------------------------------------------------[ Serialization ]---------------------------------------------------*/

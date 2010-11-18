@@ -30,7 +30,7 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class BufferingDepths{
-    private Map<Rule, Map<Node, Map<Integer, Integer>>> ruleMap = new HashMap<Rule, Map<Node, Map<Integer, Integer>>>();
+    public Map<Rule, Map<Node, Map<Integer, Integer>>> ruleMap = new HashMap<Rule, Map<Node, Map<Integer, Integer>>>();
 
     private Map<Integer, Integer> depths(RuleTarget ruleTarget, boolean create){
         Map<Node, Map<Integer, Integer>> nodeMap = ruleMap.get(ruleTarget.rule);

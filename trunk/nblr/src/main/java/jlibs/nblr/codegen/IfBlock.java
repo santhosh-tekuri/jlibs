@@ -103,6 +103,8 @@ public class IfBlock implements Iterable<IfBlock>{
                 inputType.character |= block.matcher.clashesWith(Range.NON_SUPPLIMENTAL);
                 inputType.newLine |= block.matcher.clashesWith(Any.NEW_LINE);
             }
+            if(block.path!=null && block.path.matcher()!=null)
+                inputType.consumes = true;
         }
         return inputType;
     }
@@ -421,38 +423,36 @@ public class IfBlock implements Iterable<IfBlock>{
 //                    printer.println("push(RULE_"+ruleName.toUpperCase()+", "+idAfterRule+", "+id(ruleTarget.node())+");");
                 }else if(edge.matcher!=null){
                     if(parent==null){
-                        if(!matcher.clashesWith(Range.SUPPLIMENTAL) && !matcher.clashesWith(Any.NEW_LINE)){
-                            if(edge.source.buffering== Answer.NO){
-                                printer.println("position++;");
-                                continue;
-                            }else if(edge.source.buffering==Answer.YES){
-                                printer.println("buffer.append(input[position++]);");
-                                continue;
-                            }
-                        }
-                        printer.println("consume(ch);"); //"+edge.source.buffering);
+                        if(!matcher.clashesWith(Range.SUPPLIMENTAL) && !matcher.clashesWith(Any.NEW_LINE))
+                            consumeDirectly(printer, edge);
+                        else
+                            printer.println("consume(ch);"); //"+edge.source.buffering);
                     }else{
-                        if(root.lookAheadChars()){
-                            if(edge.source.buffering== Answer.NO)
-                                printer.println("position++;");
-                            else if(edge.source.buffering==Answer.YES)
-                                printer.println("buffer.append(input[position++]);");
-                            else{
-                                printer.printlns(
-                                    "if(buffer.isBuffering())",
-                                        PLUS,
-                                        "buffer.append(input[position]);",
-                                        MINUS,
-                                    "position++;"
-                                );
-                            }
-                        }else
+                        if(root.lookAheadChars())
+                            consumeDirectly(printer, edge);
+                        else
                             printer.println("consume(FROM_LA);"); //"+edge.source.buffering);
                     }
                 }
             }
         }
         return checkStop;
+    }
+
+    private void consumeDirectly(Printer printer, Edge edge){
+        if(edge.source.buffering== Answer.NO)
+            printer.println("position++;");
+        else if(edge.source.buffering==Answer.YES)
+            printer.println("buffer.append(input[position++]);");
+        else{
+            printer.printlns(
+                "if(buffer.isBuffering())",
+                    PLUS,
+                    "buffer.append(input[position]);",
+                    MINUS,
+                "position++;"
+            );
+        }
     }
 
     /*-------------------------------------------------[ FinishAll ]---------------------------------------------------*/
@@ -499,6 +499,7 @@ class InputType{
     boolean codePoint;
     boolean character;
     boolean newLine;
+    boolean consumes;
 
     public boolean characterOnly(){
         return character && !codePoint;
