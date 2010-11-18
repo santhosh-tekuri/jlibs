@@ -86,7 +86,6 @@
         <range from="、" to="퟿"/>
         <range from="豈" to="﷏"/>
         <range from="ﷰ" to="�"/>
-        <range from="&#65536;" to="&#983039;"/>
     </or>
     <or name="NAME_PART" javaCode="org.apache.xerces.util.XMLChar.isName($codePoint)">
         <matcher name="NAME_START"/>
