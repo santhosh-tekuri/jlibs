@@ -501,14 +501,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC)
+                if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                     consume(ch);
                     state = 1;
                 }else expected(ch, "<NAME_START>");
             case 1:
-                if(finishAll_NAME_PART(codePoint())==EOC)
+                if(finishAll_NAME_PART()==EOC)
                     break;
                 return true;
             default:
@@ -1825,14 +1825,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=codePoint())==EOC)
+                if((ch=position==limit ? marker : input[position])==EOC)
                     break;
                 if(ch!=EOF && org.apache.xerces.util.XMLChar.isName(ch)){
-                    consume(ch);
+                    buffer.append(input[position++]);
                     state = 1;
                 }else expected(ch, "<NAME_PART>");
             case 1:
-                if(finishAll_NAME_PART(codePoint())==EOC)
+                if(finishAll_NAME_PART()==EOC)
                     break;
                 return true;
             default:
@@ -3921,12 +3921,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return codePoint();
     }
 
-    private int finishAll_NAME_PART(int ch) throws IOException{
-        while(ch>=0 && org.apache.xerces.util.XMLChar.isName(ch)){
-            consume(ch);
-            ch = codePoint();
-        }
-        return ch;
+    private int finishAll_NAME_PART() throws IOException{
+        int _position = position;
+        while(position<limit && org.apache.xerces.util.XMLChar.isName(input[position]))
+            ++position;
+        int len = position-_position;
+        if(len>0 && buffer.isBuffering())
+            buffer.append(input, _position, len);
+        return codePoint();
     }
 
     private int finishAll_NCNAME_PART() throws IOException{
