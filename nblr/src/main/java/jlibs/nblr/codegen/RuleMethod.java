@@ -55,7 +55,7 @@ public class RuleMethod{
             state.computeNextStates(statesVisited, statesPending);
             if(statesPending.isEmpty()){
                 for(Node node: rule.nodes()){
-                    if(node.name!=null){
+                    if(node.name!=null && !node.name.equals(Node.DYNAMIC_STRING_MATCH)){
                         if(!statesVisited.contains(node))
                             statesPending.add(node);
                     }

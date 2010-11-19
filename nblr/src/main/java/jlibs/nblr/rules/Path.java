@@ -133,7 +133,7 @@ public class Path extends ArrayList<Object>{
     public void travelWithoutMatching(){
         while(true){
             Node node = destination();
-            if(node.junction())
+            if(node.junction() || (node.name!=null && !node.name.equals(Node.DYNAMIC_STRING_MATCH)))
                 return;
             switch(node.outgoing.size()){
                 case 1:
