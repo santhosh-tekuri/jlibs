@@ -25,6 +25,7 @@ import java.util.List;
 public abstract class Matcher{
     public String name;
     public String javaCode;
+    public int usageCount;
 
     public abstract String toString();
     protected final String _toString(){
@@ -68,7 +69,7 @@ public abstract class Matcher{
     }
     
     public boolean canInline(){
-        return javaCode!=null;
+        return javaCode!=null || usageCount<=1;
     }
 
     protected abstract String __javaCode(String variable);

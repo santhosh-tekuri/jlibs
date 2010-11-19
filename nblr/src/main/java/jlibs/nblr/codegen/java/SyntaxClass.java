@@ -182,15 +182,24 @@ public class SyntaxClass{
             boolean supplemental = matcher.clashesWith(Range.SUPPLIMENTAL);
 
             if(!supplemental && !matcher.clashesWith(Any.NEW_LINE)){
-                condition = matcher._javaCode("input[position]");
+                condition = matcher._javaCode("ch");
                 printer.printlns(
                     "private int finishAll_"+entry.getValue()+"() throws IOException{",
                         PLUS,
                         "int _position = position;",
-                        "while(position<limit && "+condition+")",
+                        "while(position<limit){",
                             PLUS,
-                            "++position;",
+                            "char ch = input[position];",
+                            "if("+condition+")",
+                                PLUS,
+                                "++position;",
+                                MINUS,
+                            "else",
+                                PLUS,
+                                "break;",
+                                MINUS,                
                             MINUS,
+                        "}",
                         "int len = position-_position;",
                         "if(len>0 && buffer.isBuffering())",
                             PLUS,

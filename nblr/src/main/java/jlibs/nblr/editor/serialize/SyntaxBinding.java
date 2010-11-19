@@ -119,6 +119,7 @@ class NotBinding extends Matchers{
 
     @Binding.Finish
     public static Not onFinish(@Temp String name, @Temp String javaCode, @Temp Matcher matcher){
+        matcher.usageCount++;
         Not not = new Not(matcher);
         not.name = name;
         not.javaCode = javaCode;
@@ -140,6 +141,8 @@ class AndBinding extends Matchers{
 
     @Binding.Finish
     public static And onFinish(@Temp String name, @Temp String javaCode, @Temp List<Matcher> matchers){
+        for(Matcher matcher: matchers)
+            matcher.usageCount++;
         And and = new And(matchers.toArray(new Matcher[matchers.size()]));
         and.name = name;
         and.javaCode = javaCode;
@@ -161,6 +164,8 @@ class OrBinding extends Matchers{
 
     @Binding.Finish
     public static Or onFinish(@Temp String name, @Temp String javaCode, @Temp List<Matcher> matchers){
+        for(Matcher matcher: matchers)
+            matcher.usageCount++;
         Or or = new Or(matchers.toArray(new Matcher[matchers.size()]));
         or.name = name;
         or.javaCode = javaCode;
@@ -284,6 +289,8 @@ class EdgeBinding extends Matchers{
         Edge edge = new Edge(null, null);
         edge.ruleTarget = ruleTarget;
         edge.matcher = matcher;
+        if(matcher!=null)
+            matcher.usageCount++;
         return edge;
     }
 }

@@ -1014,29 +1014,57 @@
         <node>
             <event name="entityValue"/>
         </node>
+        <node>
+            <buffer/>
+        </node>
         <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
         <node>
             <event name="valueEnd"/>
         </node>
+        <node>
+            <buffer/>
+        </node>
         <node/>
+        <node>
+            <publish name="rawValue" begin="0" end="0"/>
+        </node>
         <edge source="0" target="1" fallback="false"/>
         <edge source="1" target="2" fallback="false">
             <matcher name="Q"/>
         </edge>
-        <edge source="2" target="3" fallback="false">
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="ENTITY_Q_CONTENT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="5" fallback="false">
             <matcher name="Q"/>
         </edge>
-        <edge source="2" target="2" fallback="false">
-            <rule name="q_entity_value"/>
+        <edge source="4" target="2" fallback="false">
+            <rule name="reference"/>
         </edge>
-        <edge source="1" target="4" fallback="false">
+        <edge source="4" target="2" fallback="false">
+            <rule name="pe_reference"/>
+        </edge>
+        <edge source="1" target="6" fallback="false">
             <matcher name="DQ"/>
         </edge>
-        <edge source="4" target="3" fallback="false">
+        <edge source="6" target="7" fallback="false"/>
+        <edge source="7" target="7" fallback="false">
+            <matcher name="ENTITY_DQ_CONTENT"/>
+        </edge>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="8" target="5" fallback="false">
             <matcher name="DQ"/>
         </edge>
-        <edge source="4" target="4" fallback="false">
-            <rule name="dq_entity_value"/>
+        <edge source="8" target="6" fallback="false">
+            <rule name="reference"/>
+        </edge>
+        <edge source="8" target="6" fallback="false">
+            <rule name="pe_reference"/>
         </edge>
     </rule>
     <rule name="q_entity_value">
