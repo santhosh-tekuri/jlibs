@@ -179,9 +179,10 @@ public class IfBlock implements Iterable<IfBlock>{
             String ch = "ch";
             if(heightDecreased || !children.isEmpty()){
                 int depth = depth();
-                if(state.rootIF.lookAheadChars())
-                    ch = depth==0 ?  "input[position]" : "input[position+"+depth+"]";
-                else
+                if(state.rootIF.lookAheadChars()){
+                    if(!heightDecreased)
+                        ch = depth==0 ?  "input[position]" : "input[position+"+depth+"]";
+                }else
                     ch = "la["+depth+"]";
             }
             blockStmt += "if("+condition(matcher, ch)+")";
@@ -233,8 +234,11 @@ public class IfBlock implements Iterable<IfBlock>{
                             PLUS
                     );
                 }
-            }else
+            }else{
                 heightDecreased = curHeight<prevHeight;
+                if(heightDecreased && matcher!=null && root.lookAheadChars())
+                    printer.println("ch = limit==position ? marker : input[position];");
+            }
         }
 
 
