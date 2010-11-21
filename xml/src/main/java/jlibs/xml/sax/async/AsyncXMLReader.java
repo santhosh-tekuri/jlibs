@@ -19,6 +19,7 @@ import jlibs.nbp.Chars;
 import jlibs.nbp.NBChannel;
 import jlibs.nbp.NBHandler;
 import jlibs.nbp.ReadableCharChannel;
+import jlibs.xml.ClarkName;
 import jlibs.xml.sax.AbstractXMLReader;
 import org.apache.xerces.util.XMLChar;
 import org.xml.sax.InputSource;
@@ -26,10 +27,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.Locator2;
+import org.xml.sax.helpers.AttributesImpl;
 
 import java.io.CharArrayReader;
 import java.io.IOException;
 import java.util.*;
+
+import static javax.xml.XMLConstants.*;
 
 /**
  * @author Santhosh Kumar T
@@ -51,6 +55,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     public AsyncXMLReader(){
         xmlScanner.coelsceNewLines = true;
         encoding = null;
+        elements[0] = elem;
+        namespaces[0] = XMLNS_ATTRIBUTE;
+        namespaces[1] = XMLNS_ATTRIBUTE_NS_URI;
+        namespaces[2] = XML_NS_PREFIX;
+        namespaces[3] = XML_NS_URI;
+        elem.defaultNamespace = "";
     }
 
     private XMLFeeder xmlFeeder, feeder;
@@ -65,7 +75,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             }
         }
         this.feeder = feeder;
-        elements.freeLock = feeder.elemDepth;
+        elemLock = feeder.elemDepth;
     }
     
     @Override
@@ -152,9 +162,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         valueStarted = false;
         entityValue = false;
 
-        namespaces.reset();
-        attributes.reset();
-        elements.reset();
+        elem = elements[0];
+        elemLock = elemDepth = 0;
+        nsFree = 4;
 
         piTarget = null;
         systemID = null;
@@ -171,7 +181,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         peReferenceOutsideMarkup = false;
 
         dtd = null;
-        attributes.dtd = null;
         _dtd.reset();
         dtdElement = null;
         attributeList = null;
@@ -316,13 +325,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             entityStack.push(entity);
             try{
                 XMLFeeder childFeeder = entityValue.parse(rule);
-                childFeeder.elemDepth = elements.free;
+                childFeeder.elemDepth = elemDepth;
                 childFeeder.postAction = new Runnable(){
                     @Override
                     public void run(){
                         entityStack.pop();
-                        if(elements.free>AsyncXMLReader.this.feeder.elemDepth)
-                            throw new RuntimeException("expected </"+elements.currentElementName()+">");
+                        if(elemDepth>AsyncXMLReader.this.feeder.elemDepth)
+                            throw new RuntimeException("expected </"+elem.qname.name+">");
                     }
                 };
             }catch(IOException ex){
@@ -394,40 +403,136 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     /*-------------------------------------------------[ Start Element ]---------------------------------------------------*/
 
-    private final Namespaces namespaces = new Namespaces(handler);
-    private final DTD _dtd = new DTD(namespaces);
+    private String namespaces[] = new String[20];
+    private int nsFree;
+
+    private void declareNamespace(String prefix, String uri) throws SAXException{
+        if(nsFree+2>namespaces.length)
+            namespaces = Arrays.copyOf(namespaces, nsFree<<1);
+        namespaces[nsFree] = prefix;
+        namespaces[nsFree+1] = uri;
+        nsFree += 2;
+        handler.startPrefixMapping(prefix, uri);
+    }
+    
+    public String getNamespaceURI(String prefix){
+        if(prefix.length()==0)
+            return elem.defaultNamespace;
+
+        for(int i=nsFree-2; i>=0; i-=2){
+            if(namespaces[i].equals(prefix))
+                return namespaces[i+1];
+        }
+        return null;
+    }
+    
+    private final DTD _dtd = new DTD(this);
     private DTD dtd ;
-    private final Attributes attributes = new Attributes(namespaces);
-    private final Elements elements = new Elements(this, handler, namespaces, attributes);
+    private final AttributesImpl attrs = new AttributesImpl();
+    private Element elem = new Element();
+    private Element elements[] = new Element[10];
+    private int elemDepth = 0;
+    private int elemLock = 0;
 
     void attributesStart(){
-        elements.push1(curQName);
+        attrs.clear();
+        if(elemDepth==elements.length-1)
+            elements = Arrays.copyOf(elements, elemDepth<<1);
+
+        Element parent = elem;
+        elem = elements[++elemDepth];
+        if(elem==null)
+            elements[elemDepth] = elem = new Element();
+        elem.init(parent, curQName, nsFree);
     }
 
     void attributeEnd() throws SAXException{
-        String error = attributes.addAttribute(elements.currentElementName(), curQName, value);
-        if(error!=null)
-            fatalError(error);
+        String attrName = curQName.name;
+        AttributeType type = dtd==null ? AttributeType.CDATA : dtd.attributeType(elem.qname.name, attrName);
+        String attrValue = type.normalize(value.toString());
+
+        String attrLocalName = curQName.localName;
+        if(attrName.startsWith("xmlns")){
+            if(attrName.length()==5){
+                declareNamespace("", attrValue);
+                elem.defaultNamespace = attrValue;
+                return;
+            }else if(attrName.charAt(5)==':'){
+                if(attrLocalName.equals(XML_NS_PREFIX)){
+                    if(!attrValue.equals(XML_NS_URI))
+                        fatalError("prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI);
+                }else if(attrLocalName.equals(XMLNS_ATTRIBUTE))
+                    fatalError("prefix "+ XMLNS_ATTRIBUTE+" must not be declared");
+                else{
+                    if(attrValue.equals(XML_NS_URI))
+                        fatalError(XML_NS_URI+" must be bound to "+ XML_NS_PREFIX);
+                    else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI))
+                        fatalError(XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE);
+                    else{
+                        if(attrValue.length()==0)
+                            fatalError("No Prefix Undeclaring: "+attrLocalName);
+                        declareNamespace(attrLocalName, attrValue);
+                    }
+                }
+                return;
+            }
+        }
+        attrs.addAttribute(curQName.prefix, attrLocalName, attrName, type.name(), attrValue);
     }
 
     void attributesEnd() throws SAXException{
-        elements.push2();
+        int attrCount = attrs.getLength();
+        if(attrCount>0){
+            for(int i=0; i<attrCount; i++){
+                String prefix = attrs.getURI(i);
+                if(prefix.length()>0){
+                    String uri = getNamespaceURI(prefix);
+                    if(uri==null)
+                        fatalError("Unbound prefix: "+prefix);
+                    attrs.setURI(i, uri);
+                }
+            }
+            if(attrCount>1){
+                for(int i=1; i<attrCount; i++){
+                    if(attrs.getIndex(attrs.getURI(i), attrs.getLocalName(i))<i)
+                        fatalError("Attribute \""+ ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elem.qname.name+"\"");
+                }
+            }
+        }
+        if(dtd!=null)
+            dtd.addMissingAttributes(elem.qname.name, attrs);
+
+        String uri = getNamespaceURI(elem.qname.prefix);
+        if(uri==null)
+            fatalError("Unbound prefix: "+elem.qname.prefix);
+        elem.uri = uri;
+        handler.startElement(uri, elem.qname.localName, elem.qname.name, attrs);
     }
 
     void endingElem(){
-        feeder.parser.dynamicStringToBeMatched = elements.currentElementNameAsCharArray();
+        feeder.parser.dynamicStringToBeMatched = elem.qname.chars;
     }
 
     void elementEnd() throws SAXException{
-        if(elements.pop()){
+        if(elemDepth==elemLock)
+            fatalError("The element \""+elem.qname.name+"\" must start and end within the same entity");
+
+        handler.endElement(elem.uri, elem.qname.localName, elem.qname.name);
+        for(int i=elem.nsStart; i<nsFree; i+=2)
+            handler.endPrefixMapping(namespaces[i]);
+
+        nsFree = elem.nsStart;
+        elem = elements[--elemDepth];        
+
+        if(elemDepth==0){
             feeder.parser.stop = true;
             feeder.parser.pop = true;
         }
     }
 
     void rootElementEnd() throws SAXException{
-        if(elements.free>0)
-            fatalError("expected </"+elements.currentElementName()+">");
+        if(elemDepth>0)
+            fatalError("expected </"+elem.qname.name+">");
     }
 
     /*-------------------------------------------------[ PI ]---------------------------------------------------*/
@@ -462,7 +567,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void characters(Chars data) throws SAXException{
         int len = data.length();
         if(len>0){
-            if(dtd!=null && dtd.nonMixedElements.contains(elements.currentElementName()) && isWhitespace(data))
+            if(dtd!=null && dtd.nonMixedElements.contains(elem.qname.name) && isWhitespace(data))
                 handler.ignorableWhitespace(data.array(), data.offset(), len);
             else
                 handler.characters(data.array(), data.offset(), len);
@@ -507,7 +612,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     /*-------------------------------------------------[ DTD ]---------------------------------------------------*/
 
     void dtdRoot(Chars data){
-        attributes.dtd = dtd = _dtd;
+        dtd = _dtd;
         dtd.root = data.toString();
     }
 
