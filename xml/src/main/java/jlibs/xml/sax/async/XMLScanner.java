@@ -2241,7 +2241,6 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(ch=='>'){
                         position++;
-                        handler.dtdAttributesEnd();
                         return true;
                     }else expected(ch, "[>]");
                 default:

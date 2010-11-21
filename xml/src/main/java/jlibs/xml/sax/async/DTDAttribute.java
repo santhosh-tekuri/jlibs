@@ -15,8 +15,8 @@
 
 package jlibs.xml.sax.async;
 
-import jlibs.xml.sax.SAXDelegate;
 import org.xml.sax.SAXException;
+import org.xml.sax.ext.DeclHandler;
 
 import java.util.List;
 
@@ -36,7 +36,8 @@ public class DTDAttribute{
         return name.startsWith("xmlns") && (name.length()==5 || name.charAt(5)==':');
     }
     
-    void fire(SAXDelegate handler) throws SAXException{
-        handler.attributeDecl(element, name, type.toString(validValues), valueType.mode, value);
+    void fire(DeclHandler handler) throws SAXException{
+        if(handler!=null)
+            handler.attributeDecl(element, name, type.toString(validValues), valueType.mode, value);
     }
 }

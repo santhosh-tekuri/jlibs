@@ -18,18 +18,16 @@ package jlibs.xml.sax.async;
 /**
  * @author Santhosh Kumar T
  */
-public class Element{
-    public Element parent;
+public final class Element{
     public QName qname;
     public String uri;
 
     public int nsStart;
     public String defaultNamespace;
 
-    public void init(Element parent, QName qname, int nsStart){
+    public void init(QName qname, int nsStart, String defaultNamespace){
         this.qname = qname;
-        this.parent = parent;
         this.nsStart = nsStart;
-        defaultNamespace = parent.defaultNamespace;
+        this.defaultNamespace = defaultNamespace;
     }
 }

@@ -20,12 +20,10 @@ import jlibs.nbp.NBChannel;
 import jlibs.nbp.NBHandler;
 import jlibs.nbp.ReadableCharChannel;
 import jlibs.xml.ClarkName;
-import jlibs.xml.sax.AbstractXMLReader;
 import org.apache.xerces.util.XMLChar;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXParseException;
+import org.xml.sax.*;
+import org.xml.sax.ext.DeclHandler;
+import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -34,12 +32,14 @@ import java.io.IOException;
 import java.util.*;
 
 import static javax.xml.XMLConstants.*;
+import static jlibs.xml.sax.SAXFeatures.*;
+import static jlibs.xml.sax.SAXProperties.*;
 
 /**
  * @author Santhosh Kumar T
  */
 @SuppressWarnings({"ThrowableInstanceNeverThrown"})
-public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXException>, Locator2{
+public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>, Locator2{
     private static Map<String, char[]> defaultEntities = new HashMap<String, char[]>();
     static{
         defaultEntities.put("amp",  new char[]{ '&' });
@@ -48,9 +48,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         defaultEntities.put("apos", new char[]{ '\'' });
         defaultEntities.put("quot", new char[]{ '"' });
     }
-
-    private XMLScanner xmlScanner = new XMLScanner(this, XMLScanner.RULE_DOCUMENT);
-    private XMLScanner declScanner = new XMLScanner(this, XMLScanner.RULE_XDECL);
 
     public AsyncXMLReader(){
         xmlScanner.coelsceNewLines = true;
@@ -62,6 +59,95 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         namespaces[3] = XML_NS_URI;
         elem.defaultNamespace = "";
     }
+
+    private ContentHandler contentHandler;
+    @Override
+    public void setContentHandler(ContentHandler contentHandler){
+        this.contentHandler = contentHandler;
+    }
+
+    @Override
+    public ContentHandler getContentHandler(){
+        return contentHandler;
+    }
+
+    private ErrorHandler errorHandler;
+    @Override
+    public void setErrorHandler(ErrorHandler errorHandler){
+        this.errorHandler = errorHandler;
+    }
+
+    @Override
+    public ErrorHandler getErrorHandler(){
+        return errorHandler;
+    }
+
+    private EntityResolver entityResolver;
+    @Override
+    public void setEntityResolver(EntityResolver entityResolver){
+        this.entityResolver = entityResolver;
+    }
+
+    @Override
+    public EntityResolver getEntityResolver(){
+        return entityResolver;
+    }
+
+    private DTDHandler dtdHandler;
+    @Override
+    public void setDTDHandler(DTDHandler dtdHandler){
+        this.dtdHandler = dtdHandler;
+    }
+
+    @Override
+    public DTDHandler getDTDHandler(){
+        return dtdHandler;
+    }
+
+    private LexicalHandler lexicalHandler;
+    private DeclHandler declHandler;
+
+    @Override
+    public boolean getFeature(String name) throws SAXNotRecognizedException, SAXNotSupportedException{
+        if(NAMESPACES.equals(name) || EXTERNAL_GENERAL_ENTITIES.equals(name) || EXTERNAL_PARAMETER_ENTITIES.equals(name))
+            return true;
+        throw new SAXNotSupportedException();
+    }
+
+    @Override
+    public void setFeature(String name, boolean value) throws SAXNotRecognizedException{
+        if((NAMESPACES.equals(name) || EXTERNAL_GENERAL_ENTITIES.equals(name) || EXTERNAL_PARAMETER_ENTITIES.equals(name)) && value)
+            return;
+        throw new SAXNotRecognizedException();
+    }
+
+    @Override
+    public Object getProperty(String name) throws SAXNotRecognizedException, SAXNotSupportedException{
+        if(LEXICAL_HANDLER.equals(name) || LEXICAL_HANDLER_ALT.equals(name))
+            return lexicalHandler;
+        if(DECL_HANDLER.equals(name) || DECL_HANDLER_ALT.equals(name))
+            return declHandler;
+        throw new SAXNotRecognizedException();
+    }
+
+    @Override
+    public void setProperty(String name, Object value) throws SAXNotRecognizedException, SAXNotSupportedException{
+        if(LEXICAL_HANDLER.equals(name) || LEXICAL_HANDLER_ALT.equals(name)){
+            if(value==null || value instanceof LexicalHandler)
+                lexicalHandler = (LexicalHandler)value;
+            else
+                throw new SAXNotSupportedException("value must implement "+LexicalHandler.class);
+        }else if(DECL_HANDLER.equals(name) || DECL_HANDLER_ALT.equals(name)){
+            if(value==null || value instanceof DeclHandler)
+                declHandler = (DeclHandler)value;
+            else
+                throw new SAXNotSupportedException("value must implement "+DeclHandler.class);
+        }
+        throw new SAXNotRecognizedException();
+    }
+
+    private XMLScanner xmlScanner = new XMLScanner(this, XMLScanner.RULE_DOCUMENT);
+    private XMLScanner declScanner = new XMLScanner(this, XMLScanner.RULE_XDECL);
 
     private XMLFeeder xmlFeeder, feeder;
     void setFeeder(XMLFeeder feeder) throws IOException{
@@ -78,15 +164,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         elemLock = feeder.elemDepth;
     }
     
-    @Override
-    public void setFeature(String name, boolean value) throws SAXNotRecognizedException{
-        try{
-            super.setFeature(name, value);
-        } catch(SAXNotRecognizedException e){
-            // ignore
-        }
-    }
-
     public XMLFeeder createFeeder(InputSource inputSource) throws IOException, SAXException{
         xmlScanner.reset();
         declScanner.reset(XMLScanner.RULE_XDECL);
@@ -182,8 +259,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         attributeList = null;
         dtdAttribute = null;
 
-        handler.setDocumentLocator(this);
-        handler.startDocument();
+        if(contentHandler!=null){
+            contentHandler.setDocumentLocator(this);
+            contentHandler.startDocument();
+        }
     }
 
     /*-------------------------------------------------[ XML Decleration ]---------------------------------------------------*/
@@ -269,9 +348,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(XMLChar.isValid(cp)){
             if(valueStarted)
                 value.appendCodePoint(cp);
-            else{
+            else if(contentHandler!=null){
                 char chars[] = Character.toChars(cp);
-                handler.characters(chars, 0, chars.length);
+                contentHandler.characters(chars, 0, chars.length);
             }
         }else
             fatalError("invalid xml character");
@@ -291,8 +370,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(entityContent!=null){
             if(valueStarted)
                 value.append(entityContent);
-            else
-                handler.characters(entityContent, 0, entityContent.length);
+            else if(contentHandler!=null)
+                contentHandler.characters(entityContent, 0, entityContent.length);
         }else{
             EntityValue entityValue = entities.get(entity);
             if(entityValue==null)
@@ -408,7 +487,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         namespaces[nsFree] = prefix;
         namespaces[nsFree+1] = uri;
         nsFree += 2;
-        handler.startPrefixMapping(prefix, uri);
+        if(contentHandler!=null)
+            contentHandler.startPrefixMapping(prefix, uri);
     }
     
     public String getNamespaceURI(String prefix){
@@ -433,11 +513,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(elemDepth==elements.length-1)
             elements = Arrays.copyOf(elements, elemDepth<<1);
 
-        Element parent = elem;
+        String defaultNamespace = elem.defaultNamespace;
         elem = elements[++elemDepth];
         if(elem==null)
             elements[elemDepth] = elem = new Element();
-        elem.init(parent, curQName, nsFree);
+        elem.init(curQName, nsFree, defaultNamespace);
     }
 
     void attributeEnd() throws SAXException{
@@ -512,7 +592,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 fatalError("Unbound prefix: "+elem.qname.prefix);
         }
         elem.uri = uri;
-        handler.startElement(uri, elem.qname.localName, elem.qname.name, attrs);
+        if(contentHandler!=null)
+            contentHandler.startElement(uri, elem.qname.localName, elem.qname.name, attrs);
     }
 
     void endingElem(){
@@ -523,9 +604,11 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(elemDepth==elemLock)
             fatalError("The element \""+elem.qname.name+"\" must start and end within the same entity");
 
-        handler.endElement(elem.uri, elem.qname.localName, elem.qname.name);
-        for(int i=elem.nsStart; i<nsFree; i+=2)
-            handler.endPrefixMapping(namespaces[i]);
+        if(contentHandler!=null){
+            contentHandler.endElement(elem.uri, elem.qname.localName, elem.qname.name);
+            for(int i=elem.nsStart; i<nsFree; i+=2)
+                contentHandler.endPrefixMapping(namespaces[i]);
+        }
 
         nsFree = elem.nsStart;
         elem = elements[--elemDepth];        
@@ -551,11 +634,13 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void piData(Chars piData) throws SAXException{
-        handler.processingInstruction(piTarget, piData.length()>0 ? piData.toString() : "");
+        if(contentHandler!=null)
+            contentHandler.processingInstruction(piTarget, piData.length()>0 ? piData.toString() : "");
     }
 
     void piData() throws SAXException{
-        handler.processingInstruction(piTarget, "");
+        if(contentHandler!=null)
+            contentHandler.processingInstruction(piTarget, "");
     }
 
     /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
@@ -571,23 +656,29 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
     
     void characters(Chars data) throws SAXException{
-        int len = data.length();
-        if(len>0){
-            if(dtd!=null && dtd.nonMixedElements.contains(elem.qname.name) && isWhitespace(data))
-                handler.ignorableWhitespace(data.array(), data.offset(), len);
-            else
-                handler.characters(data.array(), data.offset(), len);
+        if(contentHandler!=null){
+            int len = data.length();
+            if(len>0){
+                if(dtd!=null && dtd.nonMixedElements.contains(elem.qname.name) && isWhitespace(data))
+                    contentHandler.ignorableWhitespace(data.array(), data.offset(), len);
+                else
+                    contentHandler.characters(data.array(), data.offset(), len);
+            }
         }
     }
 
     void cdata(Chars data) throws SAXException{
-        handler.startCDATA();
-        handler.characters(data.array(), data.offset(), data.length());
-        handler.endCDATA();
+        if(lexicalHandler!=null)
+            lexicalHandler.startCDATA();
+        if(contentHandler!=null)
+            contentHandler.characters(data.array(), data.offset(), data.length());
+        if(lexicalHandler!=null)
+            lexicalHandler.endCDATA();
     }
 
     void comment(Chars data) throws SAXException{
-        handler.comment(data.array(), data.offset(), data.length());
+        if(lexicalHandler!=null)
+            lexicalHandler.comment(data.array(), data.offset(), data.length());
     }
 
     @Override
@@ -597,10 +688,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     public void fatalError(SAXParseException ex) throws SAXException{
         try{
-            handler.fatalError(ex);
+            if(errorHandler!=null)
+                errorHandler.fatalError(ex);
             throw ex;
         }finally{
-            handler.endDocument();
+            if(contentHandler!=null)
+                contentHandler.endDocument();
             if(XMLScanner.SHOW_STATS)
                 xmlScanner.printStats();
         }
@@ -609,7 +702,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     @Override
     public void onSuccessful() throws SAXException{
         if(feeder.getParent()==null){
-            handler.endDocument();
+            if(contentHandler!=null)
+                contentHandler.endDocument();
             if(XMLScanner.SHOW_STATS)
                 xmlScanner.printStats();
         }
@@ -633,7 +727,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
 
     void dtdStart() throws SAXException, IOException{
-        handler.startDTD(dtd.root, publicID, systemID);
+        if(lexicalHandler!=null)
+            lexicalHandler.startDTD(dtd.root, publicID, systemID);
         if(publicID!=null || systemID!=null){
             dtd.externalDTD = feeder.resolve(publicID, systemID);
             publicID = systemID = null;
@@ -647,7 +742,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     void notationEnd() throws SAXException, IOException{
         systemID = feeder.resolve(systemID);
-        handler.notationDecl(notationName, publicID, systemID);
+        if(dtdHandler!=null)
+            dtdHandler.notationDecl(notationName, publicID, systemID);
         notationName = null;
         publicID = this.systemID = null;
     }
@@ -665,7 +761,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtd.externalDTD!=null){
             InputSource inputSource = dtd.externalDTD;
             dtd.externalDTD = null;
-            InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+
+            InputSource is = null;
+            if(entityResolver!=null)
+                is = entityResolver.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
 
             XMLScanner dtdScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET_DECL);
             dtdScanner.coelsceNewLines = true;
@@ -674,7 +773,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             feeder.setChild(new XMLFeeder(this, dtdScanner, is==null?inputSource:is, declScanner));
 
         }
-        handler.endDTD();
+        if(lexicalHandler!=null)
+            lexicalHandler.endDTD();
     }
 
     /*-------------------------------------------------[ Entity Definition ]---------------------------------------------------*/
@@ -686,7 +786,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     private boolean unparsedEntity;
     void notationReference(Chars data) throws IOException, SAXException{
-        handler.unparsedEntityDecl(entityName, publicID, feeder.resolve(systemID) , data.toString());
+        if(dtdHandler!=null)
+            dtdHandler.unparsedEntityDecl(entityName, publicID, feeder.resolve(systemID) , data.toString());
         unparsedEntity = true;
     }
 
@@ -733,7 +834,9 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 is.setCharacterStream(wrapWithSpace ? new SpaceWrappedReader(content) : new CharArrayReader(content));
                 return is;
             }else{
-                InputSource is = handler.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
+                InputSource is = null;
+                if(entityResolver!=null)
+                    is = entityResolver.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
                 return is!=null ? is : inputSource;
             }
         }
@@ -884,7 +987,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.DEFAULT;
             dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
-            dtdAttribute.fire(handler);
+            dtdAttribute.fire(declHandler);
         }
         value.setLength(0);
     }
@@ -892,14 +995,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     void attributeRequired() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.REQUIRED;
-            dtdAttribute.fire(handler);
+            dtdAttribute.fire(declHandler);
         }
     }
 
     void attributeImplied() throws SAXException{
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.IMPLIED;
-            dtdAttribute.fire(handler);
+            dtdAttribute.fire(declHandler);
         }
     }
 
@@ -907,10 +1010,10 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtdAttribute!=null){
             dtdAttribute.valueType = AttributeValueType.FIXED;
             dtdAttribute.value = dtdAttribute.type.normalize(value.toString());
-            dtdAttribute.fire(handler);
+            dtdAttribute.fire(declHandler);
         }
         value.setLength(0);
     }
 
     void dtdAttributesEnd(){}
-    }
+}
