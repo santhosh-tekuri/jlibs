@@ -27,14 +27,14 @@ import java.util.Set;
  * @author Santhosh Kumar T
  */
 public class DTD{
+    private AsyncXMLReader reader;
     public String root;
     public Map<String, Map<String, DTDAttribute>> attributes = new HashMap<String, Map<String, DTDAttribute>>();
-    private Namespaces namespaces;
     public Set<String> nonMixedElements = new HashSet<String>();
     public InputSource externalDTD;
 
-    public DTD(Namespaces namespaces){
-        this.namespaces = namespaces;
+    public DTD(AsyncXMLReader reader){
+        this.reader = reader;
     }
 
     public void reset(){
@@ -55,8 +55,8 @@ public class DTD{
         return type;
     }
 
-    public void addMissingAttributes(String element, AttributesImpl attributes){
-        Map<String, DTDAttribute> attList = this.attributes.get(element);
+    public void addMissingAttributes(String elemName, AttributesImpl attributes){
+        Map<String, DTDAttribute> attList = this.attributes.get(elemName);
         if(attList==null)
             return;
         for(DTDAttribute dtdAttr: attList.values()){
@@ -74,7 +74,7 @@ public class DTD{
                             localName = qname.substring(colon+1);
                             String prefix = qname.substring(0, colon);
                             if(prefix.length()>0)
-                                namespaceURI = namespaces.getNamespaceURI(prefix);
+                                namespaceURI = reader.getNamespaceURI(prefix);
                         }
                         attributes.addAttribute(namespaceURI, localName, qname, type.name(), dtdAttr.value);
                     }
