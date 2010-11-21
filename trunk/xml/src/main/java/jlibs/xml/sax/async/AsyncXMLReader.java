@@ -166,16 +166,12 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         elemLock = elemDepth = 0;
         nsFree = 4;
 
-        piTarget = null;
         systemID = null;
         publicID = null;
-        notationName = null;
 
-        entityName = null;
         entities.clear();
         entityStack.clear();
 
-        paramEntityName = null;
         paramEntities.clear();
         paramEntityStack.clear();
         peReferenceOutsideMarkup = false;
@@ -316,7 +312,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
             int rule;
             if(valueStarted){
                 if(entityValue.externalValue)
-                    fatalError("The external entity reference \"&"+entityName+";\" is not permitted in an attribute value.");
+                    fatalError("The external entity reference \"&"+entity+";\" is not permitted in an attribute value.");
                 rule = XMLScanner.RULE_INT_VALUE;
             }else{
                 rule = XMLScanner.RULE_ELEM_CONTENT;
@@ -416,9 +412,6 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     }
     
     public String getNamespaceURI(String prefix){
-        if(prefix.length()==0)
-            return elem.defaultNamespace;
-
         for(int i=nsFree-2; i>=0; i-=2){
             if(namespaces[i].equals(prefix))
                 return namespaces[i+1];
@@ -435,7 +428,8 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
     private int elemLock = 0;
 
     void attributesStart(){
-        attrs.clear();
+        if(attrs.getLength()>0)
+            attrs.clear();
         if(elemDepth==elements.length-1)
             elements = Arrays.copyOf(elements, elemDepth<<1);
 
@@ -448,8 +442,15 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
 
     void attributeEnd() throws SAXException{
         String attrName = curQName.name;
-        AttributeType type = dtd==null ? AttributeType.CDATA : dtd.attributeType(elem.qname.name, attrName);
-        String attrValue = type.normalize(value.toString());
+        String type, attrValue;
+        if(dtd==null){
+            type = "CDATA";
+            attrValue = value.toString();
+        }else{
+            AttributeType attrType = dtd.attributeType(elem.qname.name, attrName);
+            type = attrType.name();
+            attrValue = attrType.normalize(value.toString());
+        }
 
         String attrLocalName = curQName.localName;
         if(attrName.startsWith("xmlns")){
@@ -477,7 +478,7 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
                 return;
             }
         }
-        attrs.addAttribute(curQName.prefix, attrLocalName, attrName, type.name(), attrValue);
+        attrs.addAttribute(curQName.prefix, attrLocalName, attrName, type, attrValue);
     }
 
     void attributesEnd() throws SAXException{
@@ -502,9 +503,14 @@ public class AsyncXMLReader extends AbstractXMLReader implements NBHandler<SAXEx
         if(dtd!=null)
             dtd.addMissingAttributes(elem.qname.name, attrs);
 
-        String uri = getNamespaceURI(elem.qname.prefix);
-        if(uri==null)
-            fatalError("Unbound prefix: "+elem.qname.prefix);
+        String uri;
+        if(elem.qname.prefix.length()==0)
+            uri = elem.defaultNamespace;
+        else{
+            uri = getNamespaceURI(elem.qname.prefix);
+            if(uri==null)
+                fatalError("Unbound prefix: "+elem.qname.prefix);
+        }
         elem.uri = uri;
         handler.startElement(uri, elem.qname.localName, elem.qname.name, attrs);
     }
