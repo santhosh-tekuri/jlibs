@@ -21,16 +21,16 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public enum AttributeType{
-    CDATA,
-    ENUMERATION,
+    NMTOKEN,
+    ENTITY,
     ID,
     IDREF,
-    IDREFS,
-    NMTOKEN,
+    ENUMERATION,
     NMTOKENS,
-    ENTITY,
     ENTITIES,
-    NOTATION;
+    IDREFS,
+    NOTATION,
+    CDATA;
 
     public String normalize(String value){
         switch(this){
