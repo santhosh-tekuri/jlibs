@@ -15,7 +15,7 @@
 
 package jlibs.nblr.editor.debug;
 
-import jlibs.nbp.Buffer;
+import jlibs.nbp.Chars;
 import jlibs.nbp.NBParser;
 
 public abstract class DebuggableNBParser extends NBParser{
@@ -32,7 +32,7 @@ public abstract class DebuggableNBParser extends NBParser{
         return free;
     }
 
-    public Buffer getBuffer(){
+    public Chars getBuffer(){
         return buffer;
     }
 }

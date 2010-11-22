@@ -15,24 +15,80 @@
 
 package jlibs.nbp;
 
+import java.nio.CharBuffer;
+import java.util.Arrays;
+
+import static java.lang.Character.*;
+
 /**
  * @author Santhosh Kumar T
  */
 public final class Chars implements CharSequence{
-    private char buff[];
-    private int offset;
-    private int length;
+    private char buff[] = new char[100];
+    private int count;
 
-    public Chars(char[] buff, int offset, int length){
-        set(buff, offset, length);
+    private int stack[] = new int[50];
+    private int free = 0;
+
+    public boolean isBuffering(){
+        return free>0;
     }
 
-    void set(char[] buff, int offset, int length){
-        this.buff = buff;
-        this.offset = offset;
-        this.length = length;
+    public void push(){
+        if(free>=stack.length)
+            stack = Arrays.copyOf(stack, stack.length<<1);
+        stack[free++] = count;
     }
 
+    private void expandCapacity(int increment){
+        int newCapacity = (buff.length+increment)<<1;
+        if(newCapacity<0)
+            newCapacity = Integer.MAX_VALUE;
+        buff = Arrays.copyOf(buff, newCapacity);
+    }
+
+    public void append(char character){
+        if(count==buff.length)
+            expandCapacity(1);
+        buff[count++] = character;
+    }
+
+    public void append(char chars[], int offset, int len){
+        if(count+len==chars.length)
+            expandCapacity(len);
+        System.arraycopy(chars, offset, buff, count, len);
+        count += len;
+    }
+
+    public void append(int codePoint){
+        if(codePoint<MIN_SUPPLEMENTARY_CODE_POINT){
+            if(count==buff.length)
+                expandCapacity(1);
+            buff[count++] = (char)codePoint;
+        }else{
+            if(count==buff.length-1)
+                expandCapacity(2);
+            int offset = codePoint - MIN_SUPPLEMENTARY_CODE_POINT;
+            buff[count++] = (char)((offset >>> 10) + MIN_HIGH_SURROGATE);
+            buff[count++] = (char)((offset & 0x3ff) + MIN_LOW_SURROGATE);
+        }
+    }
+
+    public Chars pop(int begin, int end){
+        offset = begin + stack[--free];
+        length = count-end;
+        if(free==0)
+            count = 0;
+        return this;
+    }
+
+    public void clear(){
+        free = count = 0;
+    }
+    
+    /*-------------------------------------------------[ CharSequence ]---------------------------------------------------*/
+    
+    private int offset, length;
     public char[] array(){
         return buff;
     }
@@ -61,7 +117,7 @@ public final class Chars implements CharSequence{
             throw new IndexOutOfBoundsException("CharArray index out of range: "+end);
         if(start>end)
             throw new IndexOutOfBoundsException("CharArray index out of range: "+(end-start));
-        return (start==0 && end==length) ? this : new Chars(buff, this.offset+start, end-start);
+        return (start==0 && end==length) ? this : CharBuffer.wrap(buff, this.offset+start, end-start);
     }
 
     @Override

@@ -34,7 +34,7 @@ public abstract class NBParser{
         System.out.println("charCount = " + getCharacterOffset());
     }
 
-    protected final Buffer buffer = new Buffer();
+    protected final Chars buffer = new Chars();
 
     private int startingRule;
     public NBParser(int maxLookAhead, int startingRule){
