@@ -201,7 +201,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                 }else expected(ch, "<ENCODING_START>");
             case 1:
-                if(finishAll_ENCODING_PART()==EOC)
+                if(finishAll_ENCODING_PART())
                     break;
                 handler.encoding(buffer.pop(0, 0));
                 return true;
@@ -290,7 +290,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 3;
                 }else expected(ch, "<DIGIT>");
             case 3:
-                if(finishAll_DIGIT()==EOC)
+                if(finishAll_DIGIT())
                     break;
                 handler.version(buffer.pop(0, 0));
                 return true;
@@ -496,7 +496,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                 }else expected(ch, "<NAME_START>");
             case 1:
-                if(finishAll_NAME_PART()==EOC)
+                if(finishAll_NAME_PART())
                     break;
                 return true;
             default:
@@ -596,7 +596,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                 }else expected(ch, "<NCNAME_START>");
             case 1:
-                if(finishAll_NCNAME_PART()==EOC)
+                if(finishAll_NCNAME_PART())
                     break;
                 return true;
             default:
@@ -688,7 +688,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 4;
                     }else expected(ch, "[x] OR <DIGIT>");
                 case 4:
-                    if(finishAll_DIGIT()==EOC)
+                    if(finishAll_DIGIT())
                         break loop;
                     state = 5;
                 case 5:
@@ -708,7 +708,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 7;
                     }else expected(ch, "<HEX_DIGIT>");
                 case 7:
-                    if(finishAll_HEX_DIGIT()==EOC)
+                    if(finishAll_HEX_DIGIT())
                         break loop;
                     state = 5;
                     continue;
@@ -1703,7 +1703,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 1;
                 }else expected(ch, "<NAME_PART>");
             case 1:
-                if(finishAll_NAME_PART()==EOC)
+                if(finishAll_NAME_PART())
                     break;
                 return true;
             default:
@@ -3668,7 +3668,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return ch;
     }
 
-    private int finishAll_ENCODING_PART() throws IOException{
+    private boolean finishAll_ENCODING_PART() throws IOException{
         int _position = position;
         while(position<limit){
             char ch = input[position];
@@ -3680,10 +3680,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int len = position-_position;
         if(len>0 && buffer.isBuffering())
             buffer.append(input, _position, len);
-        return codePoint();
+        return position==limit && marker==EOC;
     }
 
-    private int finishAll_DIGIT() throws IOException{
+    private boolean finishAll_DIGIT() throws IOException{
         int _position = position;
         while(position<limit){
             char ch = input[position];
@@ -3695,10 +3695,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int len = position-_position;
         if(len>0 && buffer.isBuffering())
             buffer.append(input, _position, len);
-        return codePoint();
+        return position==limit && marker==EOC;
     }
 
-    private int finishAll_NAME_PART() throws IOException{
+    private boolean finishAll_NAME_PART() throws IOException{
         int _position = position;
         while(position<limit){
             char ch = input[position];
@@ -3710,10 +3710,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int len = position-_position;
         if(len>0 && buffer.isBuffering())
             buffer.append(input, _position, len);
-        return codePoint();
+        return position==limit && marker==EOC;
     }
 
-    private int finishAll_NCNAME_PART() throws IOException{
+    private boolean finishAll_NCNAME_PART() throws IOException{
         int _position = position;
         while(position<limit){
             char ch = input[position];
@@ -3725,10 +3725,10 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int len = position-_position;
         if(len>0 && buffer.isBuffering())
             buffer.append(input, _position, len);
-        return codePoint();
+        return position==limit && marker==EOC;
     }
 
-    private int finishAll_HEX_DIGIT() throws IOException{
+    private boolean finishAll_HEX_DIGIT() throws IOException{
         int _position = position;
         while(position<limit){
             char ch = input[position];
@@ -3740,7 +3740,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int len = position-_position;
         if(len>0 && buffer.isBuffering())
             buffer.append(input, _position, len);
-        return codePoint();
+        return position==limit && marker==EOC;
     }
 
     private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
