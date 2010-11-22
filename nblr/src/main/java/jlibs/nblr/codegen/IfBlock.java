@@ -22,7 +22,6 @@ import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.codegen.java.SyntaxClass;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
-import jlibs.nblr.matchers.Not;
 import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
@@ -465,37 +464,19 @@ public class IfBlock implements Iterable<IfBlock>{
         return parent==null && state.ifBlocks.get(0)==this && path!=null && path.size()>1 && edgeWithRule()==null && path.get(0)==path.get(path.size()-1);
     }
 
-    private void useFinishAll(Printer printer){
-        String methodName = state.ruleMethod.syntaxClass.addToFinishAll(matcher);
-
-        String ch = state.readMethod();
-        String methodCall;
-        if(methodName.equals(SyntaxClass.FINISH_ALL) || methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN)){
-            Any any = (Any)(methodName.equals(SyntaxClass.FINISH_ALL_OTHER_THAN) ? ((Not)matcher).delegate : matcher);
-            methodCall = methodName+"("+ch+", "+Matcher.toJava(any.chars[0])+')';
-        }else{
-            if(!matcher.clashesWith(Range.SUPPLIMENTAL) && !matcher.clashesWith(Any.NEW_LINE))
-                ch = "";
-            methodCall = "finishAll_"+methodName+"("+ch+")";
-        }
-
-        boolean returnValueRequired = false;
+    public boolean finishAllReturnValueRequired(){
         for(int i=1; i<state.ifBlocks.size(); i++){
             IfBlock sibling = state.ifBlocks.get(i);
             if(sibling.matcher!=null){
-                returnValueRequired = true;
-                break;
+                return true;
             }
         }
-        if(returnValueRequired)
-            methodCall = "(ch="+methodCall+")";
-
-        printer.printlns(
-            "if("+methodCall+"==EOC)",
-                PLUS,
-                state.breakStatement(),
-                MINUS
-        );
+        return false;
+    }
+    
+    private void useFinishAll(Printer printer){
+        FinishAllMethod method = state.ruleMethod.syntaxClass.addToFinishAll(matcher);
+        method.use(printer, state, finishAllReturnValueRequired());
     }
 }
 

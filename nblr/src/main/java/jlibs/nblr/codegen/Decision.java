@@ -276,7 +276,7 @@ public class Decision{
 
     private void useFinishAll(Printer printer){
         Matcher matcher = matchers[0];
-        String methodName = state.ruleMethod.syntaxClass.addToFinishAll(matcher);
+        String methodName = "";//state.ruleMethod.syntaxClass.addToFinishAll(matcher);
 
         String ch = state.lookAheadRequired() ? "ch" : state.readMethod();
         String methodCall;

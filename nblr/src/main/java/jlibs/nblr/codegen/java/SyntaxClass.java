@@ -17,13 +17,14 @@ package jlibs.nblr.codegen.java;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.nblr.Syntax;
+import jlibs.nblr.codegen.FinishAllMethod;
+import jlibs.nblr.codegen.IfBlock;
 import jlibs.nblr.codegen.RuleMethod;
+import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
-import jlibs.nblr.matchers.Range;
 import jlibs.nblr.rules.Rule;
-import jlibs.nbp.NBParser;
 
 import java.util.*;
 
@@ -72,6 +73,17 @@ public class SyntaxClass{
 
         syntax.computeBufferingStates();
 
+        for(RuleMethod ruleMethod: ruleMethods){
+            for(State state: ruleMethod.states){
+                IfBlock first = state.ifBlocks.get(0);
+                if(first.usesFinishAll()){
+                    FinishAllMethod method = addToFinishAll(first.matcher);
+                    if(first.finishAllReturnValueRequired())
+                        method.returnValueRequired = true;
+                }
+            }
+        }
+
         /*
         // print no of continues used for each rule
         for(RuleMethod ruleMethod: ruleMethods){
@@ -115,10 +127,10 @@ public class SyntaxClass{
     }
 
     private int unnamed_finishAllMethods = 0;
-    private Map<Matcher, String> finishAllMethods = new LinkedHashMap<Matcher, String>();
+    private Map<Matcher, FinishAllMethod> finishAllMethods = new LinkedHashMap<Matcher, FinishAllMethod>();
     public static final String FINISH_ALL = "finishAll";
     public static final String FINISH_ALL_OTHER_THAN = "finishAll_OtherThan";
-    public String addToFinishAll(Matcher matcher){
+    public FinishAllMethod addToFinishAll(Matcher matcher){
         boolean not = false;
         Matcher givenMatcher = matcher;
         if(matcher instanceof Not){
@@ -128,28 +140,29 @@ public class SyntaxClass{
         if(matcher instanceof Any){
             Any any = (Any)matcher;
             if(any.chars!=null && any.chars.length==1)
-                return not ? FINISH_ALL_OTHER_THAN : FINISH_ALL;
+                return new FinishAllMethod(matcher, not ? FINISH_ALL_OTHER_THAN : FINISH_ALL);
         }
         matcher = givenMatcher;
 
-        String name = null;
+        FinishAllMethod method = null;
         if(matcher.name!=null)
-            name = finishAllMethods.get(matcher);
+            method = finishAllMethods.get(matcher);
         else{
-            for(Map.Entry<Matcher, String> entry: finishAllMethods.entrySet()){
+            for(Map.Entry<Matcher, FinishAllMethod> entry: finishAllMethods.entrySet()){
                 if(entry.getKey().same(matcher)){
-                    name = entry.getValue();
+                    method = entry.getValue();
                     break;
                 }
             }
         }
-        if(name==null){
-            name = matcher.name;
+        if(method==null){
+            String name = matcher.name;
             if(name==null)
                 name = String.valueOf(++unnamed_finishAllMethods);
-            finishAllMethods.put(matcher, name);
+            method = new FinishAllMethod(matcher, name);
+            finishAllMethods.put(matcher, method);
         }
-        return name;
+        return method;
     }
 
     public void generate(Printer printer){
@@ -172,58 +185,9 @@ public class SyntaxClass{
     }
 
     private void generateFinishAllMethods(Printer printer){
-        for(Map.Entry<Matcher, String> entry: finishAllMethods.entrySet()){
+        for(FinishAllMethod method: finishAllMethods.values()){
             printer.emptyLine(true);
-            Matcher matcher = entry.getKey();
-            String condition = matcher._javaCode("ch");
-            if(matcher.checkFor(NBParser.EOF) || matcher.checkFor(NBParser.EOC))
-                condition = "ch>=0 && "+condition;
-
-            boolean supplemental = matcher.clashesWith(Range.SUPPLIMENTAL);
-
-            if(!supplemental && !matcher.clashesWith(Any.NEW_LINE)){
-                condition = matcher._javaCode("ch");
-                printer.printlns(
-                    "private int finishAll_"+entry.getValue()+"() throws IOException{",
-                        PLUS,
-                        "int _position = position;",
-                        "while(position<limit){",
-                            PLUS,
-                            "char ch = input[position];",
-                            "if("+condition+")",
-                                PLUS,
-                                "++position;",
-                                MINUS,
-                            "else",
-                                PLUS,
-                                "break;",
-                                MINUS,                
-                            MINUS,
-                        "}",
-                        "int len = position-_position;",
-                        "if(len>0 && buffer.isBuffering())",
-                            PLUS,
-                            "buffer.append(input, _position, len);",
-                            MINUS,
-                        "return codePoint();",
-                        MINUS,
-                    "}"
-                );
-            }else{
-                printer.printlns(
-                    "private int finishAll_"+entry.getValue()+"(int ch) throws IOException{",
-                        PLUS,
-                        "while("+condition+"){",
-                            PLUS,
-                            "consume(ch);",
-                            "ch = codePoint();",
-                            MINUS,
-                        "}",
-                        "return ch;",
-                        MINUS,
-                     "}"
-                );
-            }
+            method.generate(printer);
         }
     }
 
