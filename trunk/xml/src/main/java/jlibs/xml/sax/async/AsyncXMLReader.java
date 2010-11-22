@@ -289,7 +289,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
 
     /*-------------------------------------------------[ QName ]---------------------------------------------------*/
 
-    private QNamePool QNamePool = new QNamePool();
+    private final QNamePool qnamePool = new QNamePool();
     private QName curQName;
     private int prefixLength = 0;
     
@@ -298,7 +298,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     }
 
     void qname(Chars data) throws SAXException{
-        curQName = QNamePool.add(prefixLength, data.array(), data.offset(), data.length());
+        curQName = qnamePool.add(prefixLength, data.array(), data.offset(), data.length());
         prefixLength = 0;
     }
 
