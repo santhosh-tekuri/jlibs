@@ -47,7 +47,7 @@ public abstract class NBParser{
         stop = pop = false;
         marker = EOC;
         start = position = limit = 0;
-        offset = lineOffset = 0;
+        offset = linePosition = 0;
         line = 1;
         lastChar = 'X';
         buffer.clear();
@@ -105,17 +105,17 @@ public abstract class NBParser{
         assert cp!=EOF;
         if(cp=='\r'){
             line++;
-            lineOffset = getCharacterOffset();
+            linePosition = position;
             cp = coelsceNewLines ? '\n' : '\r';
         }else if(cp=='\n'){
-            lineOffset = getCharacterOffset();
+            linePosition = position;
             char lastChar = position==start+1 ? this.lastChar : input[position-2];
             if(lastChar!='\r')
                 line++;
             else if(coelsceNewLines)
                     return;
         }
-        if(buffer.isBuffering())
+        if(buffer.free>0)
             buffer.append(cp);
     }
 
@@ -137,7 +137,7 @@ public abstract class NBParser{
         laLen = 0;
     }
 
-    private int offset, line, lineOffset;
+    private int offset, line, linePosition;
     private char lastChar;
 
     public final int getCharacterOffset(){
@@ -149,13 +149,13 @@ public abstract class NBParser{
     }
 
     public final int getColumnNumber(){
-        return getCharacterOffset()-lineOffset;
+        return position-linePosition;
     }
 
     public final void setLocation(NBParser parser){
         this.offset = parser.offset;
         this.line = parser.line;
-        this.lineOffset = parser.lineOffset;
+        this.linePosition = parser.linePosition;
         this.lastChar = parser.lastChar;
     }
 
@@ -209,6 +209,7 @@ public abstract class NBParser{
                 lastChar = input[this.position-1];
 
             offset += this.position-position;
+            linePosition -= this.position;
             position = this.position;
             start = this.position = 0;
 
@@ -295,7 +296,7 @@ public abstract class NBParser{
             return true;
         else{
             if(marker==EOF)
-                expected(EOF, new String(expected, state, expected.length-state));
+                expected(EOF, new String(expected, state, length-state));
             exiting(RULE_DYNAMIC_STRING_MATCH, state);
             return false;
         }
