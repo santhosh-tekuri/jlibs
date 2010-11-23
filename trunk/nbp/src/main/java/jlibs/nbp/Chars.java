@@ -28,7 +28,7 @@ public final class Chars implements CharSequence{
     private int count;
 
     private int stack[] = new int[50];
-    private int free = 0;
+    int free = 0;
 
     public boolean isBuffering(){
         return free>0;
