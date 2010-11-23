@@ -58,7 +58,7 @@ abstract class TreeSelectionDialog extends JDialog implements TreeSelectionListe
         tree.addMouseListener(new MouseAdapter(){
             @Override
             public void mouseClicked(MouseEvent me){
-                if(me.getClickCount()>1)
+                if(me.getClickCount()>1 && tree.getSelectionPath()!=null)
                     okAction.actionPerformed(null);
             }
         });
