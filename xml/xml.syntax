@@ -2157,7 +2157,7 @@
         <node name="@DYNAMIC_STRING_MATCH"/>
         <node/>
         <node>
-            <event name="#elementEnd"/>
+            <event name="!elementEnd"/>
         </node>
         <node/>
         <node>

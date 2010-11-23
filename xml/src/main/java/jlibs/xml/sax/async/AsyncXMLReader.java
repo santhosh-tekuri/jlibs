@@ -613,10 +613,8 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         nsFree = elem.nsStart;
         elem = elements[--elemDepth];        
 
-        if(elemDepth==0){
-            feeder.parser.stop = true;
+        if(elemDepth==0)
             feeder.parser.pop = true;
-        }
     }
 
     void rootElementEnd() throws SAXException{
