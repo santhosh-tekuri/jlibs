@@ -27,7 +27,7 @@ public class EventAction implements Action{
 
     @Override
     public String javaCode(){
-        String methodName = name.startsWith("#") ? name.substring(1) : name;
+        String methodName = name.startsWith("#") || name.startsWith("!") ? name.substring(1) : name;
         return "handler."+methodName+"()";
     }
 

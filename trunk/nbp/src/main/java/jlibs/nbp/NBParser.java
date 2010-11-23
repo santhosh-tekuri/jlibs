@@ -171,9 +171,7 @@ public abstract class NBParser{
             start = this.position = position;
             this.limit = limit;
             marker = eof ? EOF : EOC;
-            do{
-            if(pop)
-                free -= 2;
+
             stop = pop = false;
 
             int rule, state;
@@ -204,7 +202,7 @@ public abstract class NBParser{
 
             if(free==0 && this.position==limit && eof)
                 onSuccessful();
-            }while(pop);
+
             if(this.position!=position)
                 lastChar = input[this.position-1];
 

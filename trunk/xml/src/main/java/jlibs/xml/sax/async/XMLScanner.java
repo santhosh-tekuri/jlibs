@@ -3071,8 +3071,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         position++;
                         handler.elementEnd();
                         state = 0;
-                        if(stop)
-                            break loop;
+                        if(pop)
+                            return true;
                         continue;
                     }else expected(ch, "<WS> OR [>]");
                 case 7:

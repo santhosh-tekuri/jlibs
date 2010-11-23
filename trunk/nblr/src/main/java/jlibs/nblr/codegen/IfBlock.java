@@ -337,7 +337,7 @@ public class IfBlock implements Iterable<IfBlock>{
     
     private void generateBody(Printer printer, State next, boolean heightDecreased){
         int common = parent==null ? root.common : parent.common;
-        boolean checkStop = travelPath(printer, common+1, path.size()-1);
+        int check = travelPath(printer, common+1, path.size()-1);
 
         if(parent!=null || heightDecreased){
             if(!root.lookAheadChars())
@@ -350,11 +350,13 @@ public class IfBlock implements Iterable<IfBlock>{
 
             Node returnNode = (Node)path.get(path.size()-1);
             if(returnNode.outgoing.size()==0){
-                printer.println("return "+(checkStop?"!stop":"true")+";");
+                printer.println("return "+(check==CHECK_STOP?"!stop":"true")+";");
             }else{
                 setState(printer, returnNode);
-                if(checkStop)
+                if(check==CHECK_STOP)
                     printer.printlnIf("stop", state.breakStatement());
+                else if(check==CHECK_POP)
+                    printer.printlnIf("pop", "return true;");
                 if(addContinue(next, returnNode))
                     printer.println("continue;");
             }
@@ -364,7 +366,7 @@ public class IfBlock implements Iterable<IfBlock>{
             if(!doReturn)
                 setState(printer, returnNode);
 
-            if(checkStop){
+            if(check==CHECK_STOP){
                 printer.printlns(
                     "if(stop){",
                         PLUS,
@@ -373,7 +375,8 @@ public class IfBlock implements Iterable<IfBlock>{
                         MINUS,
                     "}else"
                 );
-            }
+            }else if(check==CHECK_POP)
+                printer.printlnIf("pop", "return true;");
 
             if(doReturn){
                 printer.println("return "+methodCall(edgeWithRule)+";");
@@ -393,8 +396,10 @@ public class IfBlock implements Iterable<IfBlock>{
         }
     }
 
-    public boolean travelPath(Printer printer, int from, int to){
-        boolean checkStop = false;
+    private static int CHECK_STOP = 1;
+    private static int CHECK_POP = 2;
+    public int travelPath(Printer printer, int from, int to){
+        int check = 0;
 
         for(int index=0; index<path.size(); index++){
              Object obj = path.get(index);
@@ -411,7 +416,9 @@ public class IfBlock implements Iterable<IfBlock>{
                         }
                         if(node.action instanceof EventAction || node.action instanceof PublishAction){
                             if(node.action.toString().startsWith("#"))
-                                checkStop = true;
+                                check = CHECK_STOP;
+                            else if(node.action.toString().startsWith("!"))
+                                check = CHECK_POP;
                         }
                     }
                 }
@@ -439,7 +446,7 @@ public class IfBlock implements Iterable<IfBlock>{
                 }
             }
         }
-        return checkStop;
+        return check;
     }
 
     private void consumeDirectly(Printer printer, Edge edge){
