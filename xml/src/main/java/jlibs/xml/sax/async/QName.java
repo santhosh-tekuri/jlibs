@@ -15,12 +15,10 @@
 
 package jlibs.xml.sax.async;
 
-import java.util.Arrays;
-
 /**
  * @author Santhosh Kumar T
  */
-class QName{
+final class QName{
     final String prefix;
     final String localName;
     final String name;
@@ -38,7 +36,7 @@ class QName{
             prefix = name.substring(0, prefixLength);
             localName = name.substring(prefixLength+1);
         }
-        this.chars = Arrays.copyOfRange(buffer, offset, offset+length);
+        System.arraycopy(buffer, offset, chars=new char[length], 0, length);
         this.hash = hash;
         this.next = next;
     }
