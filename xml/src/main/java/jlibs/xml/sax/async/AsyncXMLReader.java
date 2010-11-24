@@ -481,16 +481,6 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     private String namespaces[] = new String[20];
     private int nsFree;
 
-    private void declareNamespace(String prefix, String uri) throws SAXException{
-        if(nsFree+2>namespaces.length)
-            namespaces = Arrays.copyOf(namespaces, nsFree<<1);
-        namespaces[nsFree] = prefix;
-        namespaces[nsFree+1] = uri;
-        nsFree += 2;
-        if(contentHandler!=null)
-            contentHandler.startPrefixMapping(prefix, uri);
-    }
-    
     public String getNamespaceURI(String prefix){
         for(int i=nsFree-2; i>=0; i-=2){
             if(namespaces[i].equals(prefix))
@@ -534,29 +524,37 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
 
         String attrLocalName = curQName.localName;
         if(attrName.startsWith("xmlns")){
+            String nsPrefix = null;
             if(attrName.length()==5){
-                declareNamespace("", attrValue);
+                nsPrefix = "";
                 elem.defaultNamespace = attrValue;
-                return;
             }else if(attrName.charAt(5)==':'){
                 if(attrLocalName.equals(XML_NS_PREFIX)){
                     if(!attrValue.equals(XML_NS_URI))
                         fatalError("prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI);
+                    return;
                 }else if(attrLocalName.equals(XMLNS_ATTRIBUTE))
                     fatalError("prefix "+ XMLNS_ATTRIBUTE+" must not be declared");
-                else{
-                    if(attrValue.equals(XML_NS_URI))
-                        fatalError(XML_NS_URI+" must be bound to "+ XML_NS_PREFIX);
-                    else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI))
-                        fatalError(XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE);
-                    else{
-                        if(attrValue.length()==0)
-                            fatalError("No Prefix Undeclaring: "+attrLocalName);
-                        declareNamespace(attrLocalName, attrValue);
-                    }
-                }
-                return;
+                else if(attrValue.length()==0)
+                    fatalError("No Prefix Undeclaring: "+attrLocalName);
+                else
+                    nsPrefix = attrLocalName;
             }
+            if(nsPrefix!=null){
+                if(attrValue.equals(XML_NS_URI))
+                    fatalError(XML_NS_URI+" must be bound to "+ XML_NS_PREFIX);
+                else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI))
+                    fatalError(XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE);
+
+                if(nsFree+2>namespaces.length)
+                    namespaces = Arrays.copyOf(namespaces, nsFree<<1);
+                namespaces[nsFree] = nsPrefix;
+                namespaces[nsFree+1] = attrValue;
+                nsFree += 2;
+                if(contentHandler!=null)
+                    contentHandler.startPrefixMapping(nsPrefix, attrValue);
+                return;
+            }            
         }
         attrs.addAttribute(curQName.prefix, attrLocalName, attrName, type, attrValue);
     }
