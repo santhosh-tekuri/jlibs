@@ -14,8 +14,8 @@ Because classpath etc informations is embedded inside generated native launcher,
 `JLibs` comes with `JLaunch` scripts which help java developers to overcome these problems.
 
 you will find two script files:<br>
- * [http://code.google.com/p/jlibs/source/browse/trunk/launcher/jlaunch.bat jlaunch.bat] - for windows<br>
- * [http://code.google.com/p/jlibs/source/browse/trunk/launcher/jlaunch.sh jlaunch.sh]  - for `*`nix and mac
+ * [http://code.google.com/p/jlibs/source/browse/trunk/core/bin/launcher/jlaunch.bat jlaunch.bat] - for windows<br>
+ * [http://code.google.com/p/jlibs/source/browse/trunk/core/bin/launcher/jlaunch.sh jlaunch.sh]  - for `*`nix and mac
 
 these script files take a conf file as argument. This conf file contains all the information like classpath, system properties etc.
 
