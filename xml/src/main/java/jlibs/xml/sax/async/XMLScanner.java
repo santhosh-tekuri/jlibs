@@ -96,14 +96,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         int ch;
         switch(state){
             case 0:
-                if((ch=finishAll_WS(codePoint()))==EOC)
+                if((ch=finishAll_WS())==EOC)
                     break;
                 if(ch=='='){
                     position++;
                     state = 1;
                 }else expected(ch, "<WS> OR [=]");
             case 1:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 return true;
             default:
@@ -553,7 +553,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }else expected(ch, "[>]");
                 case 4:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 5;
@@ -770,7 +770,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     state = 2;
                 case 2:
-                    if((ch=finishAll_ATTR_DQ_CONTENT(codePoint()))==EOC)
+                    if((ch=finishAll_ATTR_DQ_CONTENT())==EOC)
                         break loop;
                     if(ch=='"'){
                         handler.rawValue(buffer.pop(0, 0));
@@ -789,7 +789,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     state = 4;
                 case 4:
-                    if((ch=finishAll_ATTR_Q_CONTENT(codePoint()))==EOC)
+                    if((ch=finishAll_ATTR_Q_CONTENT())==EOC)
                         break loop;
                     if(ch=='\''){
                         handler.rawValue(buffer.pop(0, 0));
@@ -834,7 +834,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNCNameStart(ch)){
                         state = 2;
@@ -870,7 +870,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 2;
                     }else expected(ch, "<WS>");
                 case 2:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 3;
                     if(!version_info(0))
@@ -901,7 +901,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         return true;
                     }else expected(ch, "[>]");
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='e'){
                         state = 9;
@@ -920,7 +920,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!sd_decl(0))
                         break loop;
                 case 8:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 4;
                     continue;
@@ -935,7 +935,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                 case 10:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='s'){
                         state = 7;
@@ -982,7 +982,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     resetLookAhead();
                     return pi(0);
                 case 1:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     return true;
                 default:
@@ -1105,7 +1105,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 2;
                 }else expected(ch, "<WS>");
             case 2:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 return sytem_literal(0);
             default:
@@ -1131,7 +1131,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 2;
                 }else expected(ch, "<WS>");
             case 2:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 return pubid_literal(0);
             default:
@@ -1170,7 +1170,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 3;
                     }else expected(ch, "<WS>");
                 case 3:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 4;
@@ -1185,7 +1185,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 5;
                     }else expected(ch, "<WS>");
                 case 5:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='P'){
                         state = 8;
@@ -1199,7 +1199,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 7;
                 case 7:
@@ -1221,7 +1221,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                 case 9:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='>'){
                         state = 7;
@@ -1263,7 +1263,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 2;
                 }else expected(ch, "<WS>");
             case 2:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 return sytem_literal(0);
             default:
@@ -1318,7 +1318,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     state = 2;
                 }else expected(ch, "<WS>");
             case 2:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 buffer.push();
                 state = 3;
@@ -1379,7 +1379,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     state = 2;
                 case 2:
-                    if((ch=finishAll_ENTITY_DQ_CONTENT(codePoint()))==EOC)
+                    if((ch=finishAll_ENTITY_DQ_CONTENT())==EOC)
                         break loop;
                     if(ch=='"'){
                         handler.rawValue(buffer.pop(0, 0));
@@ -1405,7 +1405,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     state = 4;
                 case 4:
-                    if((ch=finishAll_ENTITY_Q_CONTENT(codePoint()))==EOC)
+                    if((ch=finishAll_ENTITY_Q_CONTENT())==EOC)
                         break loop;
                     if(ch=='\''){
                         handler.rawValue(buffer.pop(0, 0));
@@ -1464,7 +1464,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 3;
                     }else expected(ch, "<WS>");
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='%'){
                         position++;
@@ -1485,13 +1485,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 5;
                     }else expected(ch, "<WS>");
                 case 5:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 6;
                     if(!entity_def(0))
                         break loop;
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='>'){
                         position++;
@@ -1506,7 +1506,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 8;
                     }else expected(ch, "<WS>");
                 case 8:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 9;
@@ -1521,13 +1521,13 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 10;
                     }else expected(ch, "<WS>");
                 case 10:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 11;
                     if(!pe_def(0))
                         break loop;
                 case 11:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='>'){
                         position++;
@@ -1570,7 +1570,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return true;
                 }
             case 2:
-                if((ch=finishAll_WS(codePoint()))==EOC)
+                if((ch=finishAll_WS())==EOC)
                     break;
                 if(ch=='N'){
                     return ndata_decl(0);
@@ -1730,7 +1730,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                     }else expected(ch, "[(]");
                 case 1:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 2;
@@ -1740,7 +1740,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.attributeEnumValue(buffer.pop(0, 0));
                     state = 3;
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 5;
@@ -1763,7 +1763,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 6;
                     }else expected(ch, "[|]");
                 case 6:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 7;
@@ -1773,7 +1773,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.attributeEnumValue(buffer.pop(0, 0));
                     state = 8;
                 case 8:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 5;
@@ -1800,7 +1800,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!matchString(RULE_STR_HASH_PCDATA, 0, STRING_IDS[-RULE_STR_HASH_PCDATA]))
                         break loop;
                 case 1:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 4;
@@ -1853,7 +1853,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 5;
                     }else expected(ch, "[|]");
                 case 5:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 6;
@@ -1866,7 +1866,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 4;
@@ -1906,14 +1906,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 2;
                     }else expected(ch, "<WS>");
                 case 2:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='('){
                         position++;
                         state = 3;
                     }else expected(ch, "<WS> OR [(]");
                 case 3:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 4;
@@ -1923,7 +1923,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.attributeNotationValue(buffer.pop(0, 0));
                     state = 5;
                 case 5:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 7;
@@ -1946,7 +1946,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 8;
                     }else expected(ch, "[|]");
                 case 8:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 9;
@@ -1956,7 +1956,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     handler.attributeNotationValue(buffer.pop(0, 0));
                     state = 10;
                 case 10:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 7;
@@ -2074,7 +2074,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 4;
                     }else expected(ch, "<WS>");
                 case 4:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 5;
                     if(!value(0))
@@ -2109,7 +2109,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 2;
                     }else expected(ch, "<WS>");
                 case 2:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 3;
                     if(!att_type(0))
@@ -2127,7 +2127,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 4:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='%'){
                         if(pe_reference(0))
@@ -2179,7 +2179,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
@@ -2215,7 +2215,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 7;
@@ -2267,7 +2267,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 1;
                     }else expected(ch, "[(]");
                 case 1:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='('){
                         state = 2;
@@ -2284,7 +2284,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 2:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 8;
@@ -2324,7 +2324,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 6;
                     }else expected(ch, "[,]");
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         state = 7;
@@ -2341,7 +2341,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 7:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch==','){
                         state = 5;
@@ -2363,7 +2363,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 9;
                     }else expected(ch, "[|]");
                 case 9:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='('){
                         state = 10;
@@ -2380,7 +2380,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 10:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='|'){
                         state = 8;
@@ -2457,7 +2457,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     return pe_reference(0);
                 }
             case 1:
-                if(finishAll_WS(codePoint())==EOC)
+                if(finishAll_WS()==EOC)
                     break;
                 return true;
             default:
@@ -2554,7 +2554,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch!=EOF && org.apache.xerces.util.XMLChar.isNameStart(ch)){
                         buffer.push();
@@ -2583,7 +2583,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='('){
                         position++;
@@ -2605,7 +2605,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 7:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='>'){
                         position++;
@@ -2617,7 +2617,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                             break loop;
                     }
                 case 8:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='%'){
                         if(pe_reference(0))
@@ -2765,7 +2765,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 3;
                     }else expected(ch, "<WS>");
                 case 3:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     buffer.push();
                     state = 4;
@@ -2812,12 +2812,12 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 8;
                     }else expected(ch, "[\\]]");
                 case 8:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 6;
                     continue;
                 case 9:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='P'){
                         state = 10;
@@ -2832,7 +2832,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }
                 case 10:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 5;
                     continue;
@@ -2994,7 +2994,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     buffer.push();
                     state = 1;
                 case 1:
-                    if((ch=finishAll_ELEM_CONTENT_CHAR_NBRACE(codePoint()))==EOC)
+                    if((ch=finishAll_ELEM_CONTENT_CHAR_NBRACE())==EOC)
                         break loop;
                     if(ch==']'){
                         buffer.append(input[position++]);
@@ -3068,7 +3068,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         continue;
                     }else expected(ch, "[>]");
                 case 6:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='>'){
                         position++;
@@ -3148,7 +3148,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 2;
                     }else expected(ch, "<WS>");
                 case 2:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='v'){
                         state = 6;
@@ -3164,7 +3164,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!enc_decl(0))
                         break loop;
                 case 4:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='?'){
                         position++;
@@ -3186,7 +3186,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 7;
                     }else expected(ch, "<WS>");
                 case 7:
-                    if(finishAll_WS(codePoint())==EOC)
+                    if(finishAll_WS()==EOC)
                         break loop;
                     state = 3;
                     continue;
@@ -3208,7 +3208,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(!matchString(RULE_STR_IGNORE, 0, STRING_IDS[-RULE_STR_IGNORE]))
                         break loop;
                 case 1:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='['){
                         position++;
@@ -3504,7 +3504,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         state = 3;
                     }else expected(ch, "[\\[]");
                 case 3:
-                    if((ch=finishAll_WS(codePoint()))==EOC)
+                    if((ch=finishAll_WS())==EOC)
                         break loop;
                     if(ch=='%'){
                         if(pe_reference(0))
@@ -3545,7 +3545,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 if(!matchString(RULE_STR_INCLUDE, 0, STRING_IDS[-RULE_STR_INCLUDE]))
                     break;
             case 1:
-                if((ch=finishAll_WS(codePoint()))==EOC)
+                if((ch=finishAll_WS())==EOC)
                     break;
                 if(ch=='['){
                     position++;
@@ -3589,7 +3589,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 buffer.push();
                 state = 1;
             case 1:
-                if(finishAll_CHAR(codePoint())==EOC)
+                if(finishAll_CHAR()==EOC)
                     break;
                 handler.externalEntityValue(buffer.pop(0, 0));
                 return true;
@@ -3663,7 +3663,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return false;
     }
 
-    private int finishAll_WS(int ch) throws IOException{
+    private int finishAll_WS() throws IOException{
+        int ch;
         while(position<limit){
             ch = input[position];
             if(ch=='\r'){
@@ -3763,7 +3764,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         return position==limit && marker==EOC;
     }
 
-    private int finishAll_ATTR_DQ_CONTENT(int ch) throws IOException{
+    private int finishAll_ATTR_DQ_CONTENT() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
@@ -3803,7 +3805,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    private int finishAll_ATTR_Q_CONTENT(int ch) throws IOException{
+    private int finishAll_ATTR_Q_CONTENT() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
@@ -3843,7 +3846,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    private int finishAll_ENTITY_DQ_CONTENT(int ch) throws IOException{
+    private int finishAll_ENTITY_DQ_CONTENT() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
@@ -3883,7 +3887,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    private int finishAll_ENTITY_Q_CONTENT(int ch) throws IOException{
+    private int finishAll_ENTITY_Q_CONTENT() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
@@ -3923,7 +3928,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    private int finishAll_ELEM_CONTENT_CHAR_NBRACE(int ch) throws IOException{
+    private int finishAll_ELEM_CONTENT_CHAR_NBRACE() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
@@ -3963,7 +3969,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
         }
     }
 
-    private int finishAll_CHAR(int ch) throws IOException{
+    private int finishAll_CHAR() throws IOException{
+        int ch;
         while(true){
             char chars[] = buffer.array();
             int max = position + chars.length-buffer.count;
