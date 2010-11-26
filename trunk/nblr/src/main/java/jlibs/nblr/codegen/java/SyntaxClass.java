@@ -24,6 +24,7 @@ import jlibs.nblr.codegen.State;
 import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
+import jlibs.nblr.rules.Answer;
 import jlibs.nblr.rules.Rule;
 
 import java.util.*;
@@ -78,6 +79,11 @@ public class SyntaxClass{
                 IfBlock first = state.ifBlocks.get(0);
                 if(first.usesFinishAll()){
                     FinishAllMethod method = addToFinishAll(first.matcher);
+                    Answer ans = state.fromNode.buffering;
+                    if(method.buffering==null)
+                        method.buffering = ans;
+                    else if(method.buffering!=ans)
+                        method.buffering = Answer.MAY_BE;
                     if(first.finishAllReturnValueRequired())
                         method.returnValueRequired = true;
                 }

@@ -62,14 +62,14 @@ public abstract class NBParser{
     }
 
     protected char input[];
-    private int start;
+    protected int start;
     protected int position;
     protected int limit;
     protected int marker;
 
     public static final int EOF = -1;
     public static final int EOC = -2;
-    private int increment;
+    protected int increment;
     protected final int codePoint() throws IOException{
         if(position==limit)
             return marker;
@@ -137,8 +137,8 @@ public abstract class NBParser{
         laLen = 0;
     }
 
-    private int offset, line, linePosition;
-    private char lastChar;
+    protected int offset, line, linePosition;
+    protected char lastChar;
 
     public final int getCharacterOffset(){
         return offset + (position-start);

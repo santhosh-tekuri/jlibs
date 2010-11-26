@@ -56,6 +56,7 @@ public class JavaCodeGenerator extends CodeGenerator{
         }
 
         printer.importClass(IOException.class);
+        printer.println("import static java.lang.Character.*;");
         printer.emptyLine(true);
         printer.printClassDoc();
 

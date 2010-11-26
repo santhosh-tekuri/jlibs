@@ -21,6 +21,7 @@ import jlibs.nblr.matchers.Any;
 import jlibs.nblr.matchers.Matcher;
 import jlibs.nblr.matchers.Not;
 import jlibs.nblr.matchers.Range;
+import jlibs.nblr.rules.Answer;
 import jlibs.nbp.NBParser;
 
 import static jlibs.core.annotation.processing.Printer.MINUS;
@@ -33,6 +34,7 @@ public class FinishAllMethod{
     Matcher matcher;
     String methodName;
     public boolean returnValueRequired = false;
+    public Answer buffering;
 
     public FinishAllMethod(Matcher matcher, String methodName){
         this.matcher = matcher;
@@ -72,6 +74,7 @@ public class FinishAllMethod{
 
     public void generate(Printer printer){
         String condition = matcher._javaCode("ch");
+        String _condition = condition;
         if(matcher.checkFor(NBParser.EOF) || matcher.checkFor(NBParser.EOC))
             condition = "ch>=0 && "+condition;
 
@@ -95,17 +98,24 @@ public class FinishAllMethod{
                             "break;",
                             MINUS,
                         MINUS,
-                    "}",
-                    "int len = position-_position;",
-                    "if(len>0 && buffer.isBuffering())",
-                        PLUS,
-                        "buffer.append(input, _position, len);",
-                        MINUS,
+                    "}"
+                );
+                if(buffering!=Answer.NO){
+                    String isBuffering = buffering==Answer.MAY_BE ? " && buffer.isBuffering()" : "";
+                    printer.printlns(
+                        "int len = position-_position;",
+                        "if(len>0"+isBuffering+")",
+                            PLUS,
+                            "buffer.append(input, _position, len);",
+                            MINUS
+                    );
+                }
+                printer.printlns(
                     "return "+returnValue+";",
                     MINUS,
                 "}"
             );
-        }else{
+        }else if(!matcher.clashesWith(Range.NON_SUPPLIMENTAL)){
             printer.printlns(
                 "private int finishAll_"+methodName+"(int ch) throws IOException{",
                     PLUS,
@@ -116,6 +126,173 @@ public class FinishAllMethod{
                         MINUS,
                     "}",
                     "return ch;",
+                    MINUS,
+                 "}"
+            );
+        }else{
+            printer.printlns(
+                "private int finishAll_"+methodName+"(int ch) throws IOException{",
+                    PLUS
+            );
+
+            if(matcher.clashesWith(Range.SUPPLIMENTAL)){
+                printer.printlns(
+                    "while(true){",
+                        PLUS
+                );
+            }
+
+            String max = "limit";
+            if(buffering!=Answer.NO){
+                max = "max";
+                printer.printlns(
+                    "char chars[] = buffer.array();",
+                    "int max = position + chars.length-buffer.count;",
+                    "if(limit<max)",
+                        PLUS,
+                        "max = limit;",
+                        MINUS
+                );
+            }
+            printer.printlns(
+                "while(position<"+max+"){",
+                    PLUS,
+                    "ch = input[position];"
+            );
+
+            boolean addElse = false;
+            if(matcher.clashesWith(new Any('\r'))){
+                printer.printlns(
+                    "if(ch=='\\r'){",
+                        PLUS,
+                        "line++;",
+                        "linePosition = ++position;"
+                );
+
+                if(buffering!=Answer.NO){
+                    if(buffering==Answer.MAY_BE){
+                        printer.printlns(
+                            "if(buffer.isBuffering())",
+                                PLUS
+                        );
+                    }
+                    printer.printlns("chars[buffer.count++] = coelsceNewLines ? '\\n' : '\\r';");
+                    if(buffering==Answer.MAY_BE){
+                        printer.printlns(
+                                MINUS
+                        );
+                    }
+                }
+
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
+                addElse = true;
+            }
+            if(matcher.clashesWith(new Any('\n'))){
+                if(addElse)
+                    printer.print("else ");
+                printer.printlns(
+                    "if(ch=='\\n'){",
+                        PLUS,
+                        "linePosition = ++position;",
+                        "char lastChar = position==start+1 ? this.lastChar : input[position-2];",
+                        "if(lastChar!='\\r')",
+                            PLUS,
+                            "line++;",
+                            MINUS
+                );
+
+                if(buffering!=Answer.NO){
+                    printer.printlns(
+                        "else if(coelsceNewLines)",
+                            PLUS,
+                            "continue;",
+                            MINUS
+                    );
+
+                    if(buffering==Answer.MAY_BE){
+                        printer.printlns(
+                            "if(buffer.isBuffering())",
+                                PLUS
+                        );
+                    }
+                    printer.printlns("chars[buffer.count++] = (char)ch;");
+                    if(buffering==Answer.MAY_BE){
+                        printer.printlns(
+                                MINUS
+                        );
+                    }
+                }
+
+                printer.printlns(
+                        MINUS,
+                    "}"
+                );
+                addElse = true;
+            }
+
+            if(addElse)
+                printer.print("else ");
+            printer.printlns(
+                "if("+_condition+"){",
+                    PLUS
+            );
+            if(buffering!=Answer.NO){
+                if(buffering==Answer.MAY_BE){
+                    printer.printlns(
+                        "if(buffer.isBuffering())",
+                            PLUS
+                    );
+                }
+                printer.printlns("chars[buffer.count++] = (char)ch;");
+                if(buffering==Answer.MAY_BE){
+                    printer.printlns(
+                            MINUS
+                    );
+                }
+            }
+            printer.printlns(
+                    "position++;",
+                    MINUS,
+                "}else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)",
+                    PLUS,
+                    "break;",
+                    MINUS,
+                "else{",
+                    PLUS,
+                    "increment = 1;",
+                    "return ch;",
+                    MINUS,
+                "}"
+            );
+
+            // end inner while
+            printer.printlns(
+                    MINUS,
+                "}"
+            );
+
+            if(matcher.clashesWith(Range.SUPPLIMENTAL)){
+                printer.printlns(
+                    "ch = codePoint();",
+                    "if("+condition+")",
+                        PLUS,
+                        "consume(ch);",
+                        MINUS,
+                    "else",
+                        PLUS,
+                        "return ch;",
+                        MINUS,
+                        MINUS,
+                    "}"
+                );
+            }else
+                printer.println("return codePoint();");
+
+            // end method
+            printer.printlns(
                     MINUS,
                  "}"
             );
