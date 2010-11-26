@@ -54,6 +54,8 @@ public class FinishAllMethod{
         }else{
             if(!matcher.clashesWith(Range.SUPPLIMENTAL) && !matcher.clashesWith(Any.NEW_LINE))
                 ch = "";
+            else if(matcher.clashesWith(Range.NON_SUPPLIMENTAL))
+                ch = "";
             methodCall = "finishAll_"+methodName+"("+ch+")";
         }
 
@@ -131,8 +133,9 @@ public class FinishAllMethod{
             );
         }else{
             printer.printlns(
-                "private int finishAll_"+methodName+"(int ch) throws IOException{",
-                    PLUS
+                "private int finishAll_"+methodName+"() throws IOException{",
+                    PLUS,
+                    "int ch;"
             );
 
             if(matcher.clashesWith(Range.SUPPLIMENTAL)){
