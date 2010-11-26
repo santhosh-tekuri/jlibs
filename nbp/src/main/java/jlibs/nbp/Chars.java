@@ -25,7 +25,7 @@ import static java.lang.Character.*;
  */
 public final class Chars implements CharSequence{
     private char buff[] = new char[100];
-    private int count;
+    public int count;
 
     private int stack[] = new int[50];
     int free = 0;
