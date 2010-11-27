@@ -144,6 +144,10 @@ public class FinishAllMethod{
                         PLUS
                 );
             }
+            printer.printlns(
+                "asciiLoop: while(true){",
+                    PLUS
+            );
 
             String max = "limit";
             if(buffering!=Answer.NO){
@@ -261,7 +265,7 @@ public class FinishAllMethod{
                     MINUS,
                 "}else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)",
                     PLUS,
-                    "break;",
+                    "break asciiLoop;",
                     MINUS,
                 "else{",
                     PLUS,
@@ -273,6 +277,13 @@ public class FinishAllMethod{
 
             // end inner while
             printer.printlns(
+                        MINUS,
+                    "}",
+                    "if(position==limit)",
+                        PLUS,
+                        "return marker;",
+                        MINUS,
+                    "buffer.expandCapacity(1);",
                     MINUS,
                 "}"
             );

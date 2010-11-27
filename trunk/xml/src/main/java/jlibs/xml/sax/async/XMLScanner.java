@@ -3665,26 +3665,31 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
 
     private int finishAll_WS() throws IOException{
         int ch;
-        while(position<limit){
-            ch = input[position];
-            if(ch=='\r'){
-                line++;
-                linePosition = ++position;
-            }
-            else if(ch=='\n'){
-                linePosition = ++position;
-                char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                if(lastChar!='\r')
+        asciiLoop: while(true){
+            while(position<limit){
+                ch = input[position];
+                if(ch=='\r'){
                     line++;
+                    linePosition = ++position;
+                }
+                else if(ch=='\n'){
+                    linePosition = ++position;
+                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                    if(lastChar!='\r')
+                        line++;
+                }
+                else if(org.apache.xerces.util.XMLChar.isSpace(ch)){
+                    position++;
+                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                    break asciiLoop;
+                else{
+                    increment = 1;
+                    return ch;
+                }
             }
-            else if(org.apache.xerces.util.XMLChar.isSpace(ch)){
-                position++;
-            }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                break;
-            else{
-                increment = 1;
-                return ch;
-            }
+            if(position==limit)
+                return marker;
+            buffer.expandCapacity(1);
         }
         return codePoint();
     }
@@ -3767,35 +3772,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_ATTR_DQ_CONTENT() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if((ch!='<' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if((ch!='<' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && (ch!='<' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch)))
@@ -3808,35 +3818,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_ATTR_Q_CONTENT() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if((ch!='<' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if((ch!='<' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && (ch!='<' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch)))
@@ -3849,35 +3864,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_ENTITY_DQ_CONTENT() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if((ch!='%' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if((ch!='%' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && (ch!='%' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch)))
@@ -3890,35 +3910,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_ENTITY_Q_CONTENT() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if((ch!='%' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if((ch!='%' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && (ch!='%' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch)))
@@ -3931,35 +3956,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_ELEM_CONTENT_CHAR_NBRACE() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if((ch!='<' && ch!='&' && ch!=']') && (org.apache.xerces.util.XMLChar.isValid(ch))){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if((ch!='<' && ch!='&' && ch!=']') && (org.apache.xerces.util.XMLChar.isValid(ch))){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && (ch!='<' && ch!='&' && ch!=']') && (org.apache.xerces.util.XMLChar.isValid(ch)))
@@ -3972,35 +4002,40 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     private int finishAll_CHAR() throws IOException{
         int ch;
         while(true){
-            char chars[] = buffer.array();
-            int max = position + chars.length-buffer.count;
-            if(limit<max)
-                max = limit;
-            while(position<max){
-                ch = input[position];
-                if(ch=='\r'){
-                    line++;
-                    linePosition = ++position;
-                    chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
-                }
-                else if(ch=='\n'){
-                    linePosition = ++position;
-                    char lastChar = position==start+1 ? this.lastChar : input[position-2];
-                    if(lastChar!='\r')
+            asciiLoop: while(true){
+                char chars[] = buffer.array();
+                int max = position + chars.length-buffer.count;
+                if(limit<max)
+                    max = limit;
+                while(position<max){
+                    ch = input[position];
+                    if(ch=='\r'){
                         line++;
-                    else if(coelsceNewLines)
-                        continue;
-                    chars[buffer.count++] = '\n';
+                        linePosition = ++position;
+                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                    }
+                    else if(ch=='\n'){
+                        linePosition = ++position;
+                        char lastChar = position==start+1 ? this.lastChar : input[position-2];
+                        if(lastChar!='\r')
+                            line++;
+                        else if(coelsceNewLines)
+                            continue;
+                        chars[buffer.count++] = '\n';
+                    }
+                    else if(org.apache.xerces.util.XMLChar.isValid(ch)){
+                        chars[buffer.count++] = (char)ch;
+                        position++;
+                    }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
+                        break asciiLoop;
+                    else{
+                        increment = 1;
+                        return ch;
+                    }
                 }
-                else if(org.apache.xerces.util.XMLChar.isValid(ch)){
-                    chars[buffer.count++] = (char)ch;
-                    position++;
-                }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
-                    break;
-                else{
-                    increment = 1;
-                    return ch;
-                }
+                if(position==limit)
+                    return marker;
+                buffer.expandCapacity(1);
             }
             ch = codePoint();
             if(ch>=0 && org.apache.xerces.util.XMLChar.isValid(ch))

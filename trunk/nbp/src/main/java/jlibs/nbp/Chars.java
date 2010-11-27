@@ -40,7 +40,7 @@ public final class Chars implements CharSequence{
         stack[free++] = count;
     }
 
-    private void expandCapacity(int increment){
+    public void expandCapacity(int increment){
         int newCapacity = (buff.length+increment)<<1;
         if(newCapacity<0)
             newCapacity = Integer.MAX_VALUE;
