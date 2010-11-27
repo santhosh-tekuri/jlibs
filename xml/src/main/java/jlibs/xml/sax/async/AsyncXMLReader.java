@@ -325,7 +325,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
             char[] chars = data.array();
             int offset = data.offset();
             int length = data.length();
-            for(int i=offset+length-1; i>=0; i--){
+            for(int i=offset; i<length; i++){
                 char ch = chars[i];
                 if(ch=='\n' || ch=='\r' || ch=='\t')
                     chars[i] = ' ';
