@@ -221,7 +221,7 @@ public class FinishAllMethod{
                                 PLUS
                         );
                     }
-                    printer.printlns("chars[buffer.count++] = (char)ch;");
+                    printer.printlns("chars[buffer.count++] = '\\n';");
                     if(buffering==Answer.MAY_BE){
                         printer.printlns(
                                 MINUS

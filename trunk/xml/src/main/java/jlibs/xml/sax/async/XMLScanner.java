@@ -86,7 +86,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     private static boolean ELEM_CONTENT_CHAR(int ch){
-        return (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&');
+        return (ch!='<' && ch!='&') && (org.apache.xerces.util.XMLChar.isValid(ch));
     }
 
     /*-------------------------------------------------[ Rules ]---------------------------------------------------*/
@@ -3785,9 +3785,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
-                else if((org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='"')){
+                else if((ch!='<' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
                     chars[buffer.count++] = (char)ch;
                     position++;
                 }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
@@ -3798,7 +3798,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
             }
             ch = codePoint();
-            if(ch>=0 && (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='"'))
+            if(ch>=0 && (ch!='<' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch)))
                 consume(ch);
             else
                 return ch;
@@ -3826,9 +3826,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
-                else if((org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='\'')){
+                else if((ch!='<' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
                     chars[buffer.count++] = (char)ch;
                     position++;
                 }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
@@ -3839,7 +3839,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
             }
             ch = codePoint();
-            if(ch>=0 && (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!='\''))
+            if(ch>=0 && (ch!='<' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch)))
                 consume(ch);
             else
                 return ch;
@@ -3867,9 +3867,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
-                else if((org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='"')){
+                else if((ch!='%' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch))){
                     chars[buffer.count++] = (char)ch;
                     position++;
                 }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
@@ -3880,7 +3880,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
             }
             ch = codePoint();
-            if(ch>=0 && (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='"'))
+            if(ch>=0 && (ch!='%' && ch!='&' && ch!='"') && (org.apache.xerces.util.XMLChar.isValid(ch)))
                 consume(ch);
             else
                 return ch;
@@ -3908,9 +3908,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
-                else if((org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='\'')){
+                else if((ch!='%' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch))){
                     chars[buffer.count++] = (char)ch;
                     position++;
                 }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
@@ -3921,7 +3921,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
             }
             ch = codePoint();
-            if(ch>=0 && (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='%' && ch!='&' && ch!='\''))
+            if(ch>=0 && (ch!='%' && ch!='&' && ch!='\'') && (org.apache.xerces.util.XMLChar.isValid(ch)))
                 consume(ch);
             else
                 return ch;
@@ -3949,9 +3949,9 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
-                else if((org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!=']')){
+                else if((ch!='<' && ch!='&' && ch!=']') && (org.apache.xerces.util.XMLChar.isValid(ch))){
                     chars[buffer.count++] = (char)ch;
                     position++;
                 }else if(ch>=MIN_HIGH_SURROGATE && ch<=MAX_HIGH_SURROGATE)
@@ -3962,7 +3962,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                 }
             }
             ch = codePoint();
-            if(ch>=0 && (org.apache.xerces.util.XMLChar.isValid(ch)) && (ch!='<' && ch!='&' && ch!=']'))
+            if(ch>=0 && (ch!='<' && ch!='&' && ch!=']') && (org.apache.xerces.util.XMLChar.isValid(ch)))
                 consume(ch);
             else
                 return ch;
@@ -3990,7 +3990,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         line++;
                     else if(coelsceNewLines)
                         continue;
-                    chars[buffer.count++] = (char)ch;
+                    chars[buffer.count++] = '\n';
                 }
                 else if(org.apache.xerces.util.XMLChar.isValid(ch)){
                     chars[buffer.count++] = (char)ch;
