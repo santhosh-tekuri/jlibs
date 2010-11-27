@@ -74,12 +74,12 @@ public abstract class NBParser{
         if(position==limit)
             return marker;
 
-        char ch0 = input[position];
+        int ch0 = input[position];
         if(ch0>=MIN_HIGH_SURROGATE && ch0<=MAX_HIGH_SURROGATE){
             if(position+1==limit)
                 return EOC;
 
-            char ch1 = input[position+1];
+            int ch1 = input[position+1];
             if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
                 increment = 2;
                 return ((ch0 - MIN_HIGH_SURROGATE) << 10) + (ch1 - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
@@ -224,7 +224,7 @@ public abstract class NBParser{
 
     protected abstract boolean callRule(int rule, int state) throws Exception;
 
-    protected final void expected(int ch, String... matchers) throws Exception{
+    protected final Exception expected(int ch, String... matchers){
         String found;
         if(laLen>0)
             found = la[laLen-1]==EOF ? new String(la, 0, laLen-1).concat("<EOF>") : new String(la, 0, laLen);
@@ -242,8 +242,12 @@ public abstract class NBParser{
         }
 
         String message = "Found: '"+found+"' Expected: "+buff.toString();
-        fatalError(message);
-        throw new IOException(message);
+        try{
+            fatalError(message);
+        }catch(Exception ex){
+            return ex;
+        }
+        return new IOException(message);
     }
 
     protected abstract void fatalError(String message) throws Exception;
@@ -286,7 +290,7 @@ public abstract class NBParser{
 
         while(state<length && position<limit){
             if(input[position]!=expected[state])
-                expected(codePoint(), new String(new int[]{ Character.codePointAt(expected, state) }, 0, 1));
+                throw expected(codePoint(), new String(new int[]{ Character.codePointAt(expected, state) }, 0, 1));
             state++;
             position++;
         }
@@ -294,7 +298,7 @@ public abstract class NBParser{
             return true;
         else{
             if(marker==EOF)
-                expected(EOF, new String(expected, state, length-state));
+                throw expected(EOF, new String(expected, state, length-state));
             exiting(RULE_DYNAMIC_STRING_MATCH, state);
             return false;
         }
@@ -310,7 +314,7 @@ public abstract class NBParser{
                     exiting(rule, i);
                     return false;
                 }
-                expected(cp, new String(expected, i, 1));
+                throw expected(cp, new String(expected, i, 1));
             }
             consume(cp);
         }

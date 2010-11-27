@@ -94,7 +94,7 @@ public class RootIf extends IfBlock{
     
     private String readMethod(){
         InputType inputType = analalizeInput();
-        if(inputType.characterOnly()  && (!inputType.newLine || !inputType.consumes))
+        if(inputType.characterOnly())
             return "position==limit ? marker : input[position]";
         else
             return "codePoint()";
@@ -121,6 +121,9 @@ public class RootIf extends IfBlock{
                     body.add(currentNode);
                 body.add(state.breakStatement());
                 printer.printlnIf("(ch="+readMethod()+")==EOC", body);
+                InputType inputType = analalizeInput();
+                if(inputType.characterOnly() && inputType.newLine && inputType.consumes)
+                    printer.println("increment = 1;");
             }else{
                 if(SyntaxClass.DEBUGGABLE)
                     printer.println(currentNode);                
