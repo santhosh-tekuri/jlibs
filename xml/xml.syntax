@@ -29,46 +29,46 @@
     </or>
     <any name="DASH" chars="-"/>
     <and name="ELEM_CONTENT_CHAR">
-        <matcher name="CHAR"/>
         <not>
             <any chars="&lt;&amp;"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ELEM_CONTENT_CHAR_NBRACE">
-        <matcher name="CHAR"/>
         <not>
             <any chars="&lt;&amp;]"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ATTR_Q_CONTENT">
-        <matcher name="CHAR"/>
         <not>
             <any chars="&lt;&amp;'"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ATTR_DQ_CONTENT">
-        <matcher name="CHAR"/>
         <not>
             <any chars="&lt;&amp;&quot;"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ENTITY_CONTENT">
-        <matcher name="CHAR"/>
         <not>
             <any chars="%&amp;"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ENTITY_Q_CONTENT">
-        <matcher name="CHAR"/>
         <not>
             <any chars="%&amp;'"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <and name="ENTITY_DQ_CONTENT">
-        <matcher name="CHAR"/>
         <not>
             <any chars="%&amp;&quot;"/>
         </not>
+        <matcher name="CHAR"/>
     </and>
     <or name="NAME_START" javaCode="org.apache.xerces.util.XMLChar.isNameStart($codePoint)">
         <any chars=":"/>
@@ -97,16 +97,16 @@
         <range from="‿" to="⁀"/>
     </or>
     <and name="NCNAME_START" javaCode="org.apache.xerces.util.XMLChar.isNCNameStart($codePoint)">
-        <matcher name="NAME_START"/>
         <not>
             <any chars=":"/>
         </not>
+        <matcher name="NAME_START"/>
     </and>
     <and name="NCNAME_PART" javaCode="org.apache.xerces.util.XMLChar.isNCName($codePoint)">
-        <matcher name="NAME_PART"/>
         <not>
             <any chars=":"/>
         </not>
+        <matcher name="NAME_PART"/>
     </and>
     <or name="PUBID_CHAR" javaCode="org.apache.xerces.util.XMLChar.isPubid($codePoint)">
         <any chars=" &#13;&#10;"/>
