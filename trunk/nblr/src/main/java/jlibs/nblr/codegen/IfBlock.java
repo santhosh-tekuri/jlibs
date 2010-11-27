@@ -288,7 +288,7 @@ public class IfBlock implements Iterable<IfBlock>{
         if(addExpected){
             if(!root.lookAheadRequired())
                 printer.print("else ");
-            printer.println("expected(ch, \""+ StringUtil.toLiteral(state.expected(), false)+"\");");
+            printer.println("throw expected(ch, \""+ StringUtil.toLiteral(state.expected(), false)+"\");");
         }
     }
 
