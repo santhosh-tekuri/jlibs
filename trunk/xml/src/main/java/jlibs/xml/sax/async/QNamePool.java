@@ -41,8 +41,8 @@ final class QNamePool{
     }
 
     public QName add(int prefixLength, char[] buffer, int offset, int length){
-        int hash = 0;
-        for(int i=0; i<length; i++)
+        int hash = buffer[offset];
+        for(int i=1; i<length; i++)
             hash = 31*hash + buffer[offset+i];
         hash &= 0x7FFFFFF;
 

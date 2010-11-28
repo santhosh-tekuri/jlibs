@@ -31,10 +31,10 @@ public class NBChannel implements ReadableCharChannel{
     public static final int DEFAULT_BUFFER_SIZE = 8192;
 
     private ReadableByteChannel channel;
-    private ByteBuffer byteBuffer;
+    private final ByteBuffer byteBuffer;
     public NBChannel(ReadableByteChannel channel, int bufferSize){
-        this.channel = channel;
         byteBuffer = ByteBuffer.allocate(bufferSize);
+        setChannel(channel);        
     }
 
     public NBChannel(ReadableByteChannel channel){
@@ -45,10 +45,12 @@ public class NBChannel implements ReadableCharChannel{
         this.channel = channel;
         byteBuffer.clear();
         eofSeen = decode = false;
+        fallbackEncoding = Charset.defaultCharset().name();
+        encoding = null;
         decoder = null;
     }
 
-    public String fallbackEncoding = Charset.defaultCharset().name();
+    public String fallbackEncoding;
     public String encoding;
 
     public void setEncoding(String encoding, boolean fallback){
@@ -106,7 +108,7 @@ public class NBChannel implements ReadableCharChannel{
                     int read=channel.read(byteBuffer);
                     if(read==0)
                         break;
-                    else if(read==-1)
+                    else if(read<0)
                         eofSeen = true;
                     decode = true;
                     byteBuffer.flip();
@@ -130,16 +132,16 @@ public class NBChannel implements ReadableCharChannel{
             }
 
             CoderResult cr = decoder.decode(byteBuffer, charBuffer, eofSeen);
-            if(cr.isOverflow()){ // insufficient space in charBuffer
+            if(cr.isOverflow()) // insufficient space in charBuffer
                 break;
-            }else if(cr.isUnderflow()){ // required more bytes
+            else if(cr.isUnderflow()){ // required more bytes
                 if(eofSeen){
                     if(byteBuffer.hasRemaining())
                         break;
                     else{
-                        decode = false;
                         if(charBuffer.position()==pos)
                             return -1;
+                        decode = false;
                         break;
                     }
                 }else{
@@ -164,6 +166,5 @@ public class NBChannel implements ReadableCharChannel{
     public void close() throws IOException{
         channel.close();
         channel = null;
-        byteBuffer.clear();
     }
 }

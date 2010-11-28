@@ -319,19 +319,17 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     }
 
     void rawValue(Chars data){
-        if(entityValue)
-            value.append(data);
-        else{
-            char[] chars = data.array();
-            int offset = data.offset();
-            int length = data.length();
+        char[] chars = data.array();
+        int offset = data.offset();
+        int length = data.length();
+        if(!entityValue){
             for(int i=offset; i<length; i++){
                 char ch = chars[i];
                 if(ch=='\n' || ch=='\r' || ch=='\t')
                     chars[i] = ' ';
             }
-            value.append(chars, offset, length);
         }
+        value.append(chars, offset, length);
     }
 
     private int radix;
@@ -523,7 +521,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         }
 
         String attrLocalName = curQName.localName;
-        if(attrName.startsWith("xmlns")){
+        if(attrName.startsWith("xmlns", 0)){
             String nsPrefix = null;
             if(attrName.length()==5){
                 nsPrefix = "";
@@ -578,20 +576,22 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 }
             }
         }
+
+        QName elemQName = elem.qname;
         if(dtd!=null)
-            dtd.addMissingAttributes(elem.qname.name, attrs);
+            dtd.addMissingAttributes(elemQName.name, attrs);
 
         String uri;
-        if(elem.qname.prefix.length()==0)
+        if(elemQName.prefix.length()==0)
             uri = elem.defaultNamespace;
         else{
-            uri = getNamespaceURI(elem.qname.prefix);
+            uri = getNamespaceURI(elemQName.prefix);
             if(uri==null)
-                fatalError("Unbound prefix: "+elem.qname.prefix);
+                fatalError("Unbound prefix: "+elemQName.prefix);
         }
         elem.uri = uri;
         if(contentHandler!=null)
-            contentHandler.startElement(uri, elem.qname.localName, elem.qname.name, attrs);
+            contentHandler.startElement(uri, elemQName.localName, elemQName.name, attrs);
     }
 
     void endingElem(){
