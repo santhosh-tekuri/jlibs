@@ -149,15 +149,15 @@ public class XMLFeeder extends Feeder{
                 }
             }
 
-            NBChannel channel = new NBChannel(new InputStreamChannel(inputStream));
+            nbChannel.setChannel(new InputStreamChannel(inputStream));
             if(encoding==null)
-                channel.setEncoding("UTF-8", true);
+                nbChannel.setEncoding("UTF-8", true);
             else
-                channel.setEncoding(encoding, false);
-
-            setChannel(channel);
+                nbChannel.setEncoding(encoding, false);
+            setChannel(nbChannel);
         }
     }
+    private NBChannel nbChannel = new NBChannel(null);
 
     // <  6  see if it has prolog
     // ==7   found declared encoding
