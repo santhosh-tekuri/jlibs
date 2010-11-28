@@ -174,18 +174,14 @@ public abstract class NBParser{
 
             stop = pop = false;
 
-            int rule, state;
             do{
                 if(free==0){
-                    int cp = codePoint();
-                    if(cp>=0)
-                        expected(cp, "<EOF>");
+                    if(this.position<limit)
+                        throw expected(codePoint(), "<EOF>");
                     break;
                 }
-                rule = stack[free-2];
-                state = stack[free-1];
                 free -= 2;
-            }while(callRule(rule, state));
+            }while(callRule(stack[free], stack[free+1]));
 
             if(laLen>0)
                 resetLookAhead();
@@ -198,17 +194,15 @@ public abstract class NBParser{
                     stack[free-1] = exitStack[exitFree-1];
                     exitFree -= 2;
                 }while(exitFree!=0);
-            }
-
-            if(free==0 && this.position==limit && eof)
+            }else if(free==0 && this.position==limit && eof)
                 onSuccessful();
 
-            if(this.position!=position)
+            if(this.position!=position){
                 lastChar = input[this.position-1];
-
-            offset += this.position-position;
-            linePosition -= this.position;
-            position = this.position;
+                offset += this.position-position;
+                linePosition -= this.position;
+                position = this.position;
+            }
             start = this.position = 0;
 
             return position;
