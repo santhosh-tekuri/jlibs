@@ -27,6 +27,7 @@ public class Feeder{
     
     public final NBParser parser;
     protected ReadableCharChannel channel;
+    protected final CharBuffer charBuffer = CharBuffer.allocate(DEFAULT_BUFFER_SIZE);
 
     public Feeder(NBParser parser, ReadableCharChannel channel){
         this(parser);
@@ -41,7 +42,7 @@ public class Feeder{
         return channel;
     }
 
-    public void setChannel(ReadableCharChannel channel){
+    public final void setChannel(ReadableCharChannel channel){
         readMore = true;
         this.channel = channel;
         child = null;
@@ -60,26 +61,7 @@ public class Feeder{
         return parent;
     }
 
-    protected final boolean canSendEOF(){
-        return parent==null || this.parser!=parent.parser;
-    }
-
-    /*-------------------------------------------------[ CharBuffer ]---------------------------------------------------*/
-    
-    protected CharBuffer charBuffer = CharBuffer.allocate(DEFAULT_BUFFER_SIZE);
-    protected final boolean feedCharBuffer() throws IOException{
-        int pos = parser.consume(charBuffer.array(), charBuffer.position(), charBuffer.limit(), channel==null && canSendEOF());
-        charBuffer.position(pos);
-        return child!=null;
-    }
-
     /*-------------------------------------------------[ Eating ]---------------------------------------------------*/
-
-    protected final Feeder parent(){
-        if(parent!=null)
-            parent.child = null;
-        return parent;
-    }
 
     public final Feeder feed() throws IOException{
         try{
@@ -99,9 +81,11 @@ public class Feeder{
 
     private boolean readMore = true;
     protected Feeder read() throws IOException{
+        final char[] chars = charBuffer.array();
         if(channel!=null){
             if(!readMore){
-                if(feedCharBuffer())
+                charBuffer.position(parser.consume(chars, charBuffer.position(), charBuffer.limit(), false));
+                if(child!=null)
                     return child;
                 else{
                     charBuffer.compact();
@@ -112,7 +96,8 @@ public class Feeder{
             int read;
             while((read=channel.read(charBuffer))>0){
                 charBuffer.flip();
-                if(feedCharBuffer()){
+                charBuffer.position(parser.consume(chars, charBuffer.position(), charBuffer.limit(), false));
+                if(child!=null){
                     readMore = false;
                     return child;
                 }
@@ -125,12 +110,17 @@ public class Feeder{
             }
         }
         if(channel==null){
-            if(feedCharBuffer())
+            boolean canSendEOF = parent==null || this.parser!=parent.parser;
+            charBuffer.position(parser.consume(chars, charBuffer.position(), charBuffer.limit(), canSendEOF));
+            if(child!=null)
                 return child;
             
-            if(!canSendEOF() && charBuffer.hasRemaining())
+            if(!canSendEOF && charBuffer.hasRemaining())
                     throw new IOException("NotImplemented: remaining "+charBuffer.position());
-            return parent();
+
+            if(parent!=null)
+                parent.child = null;
+            return parent;
         }else
             return this;
     }
