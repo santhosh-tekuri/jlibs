@@ -494,10 +494,12 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     private Element elements[] = new Element[10];
     private int elemDepth = 0;
     private int elemLock = 0;
+    private boolean resolveAttributePrefixes;
 
     void attributesStart(){
         if(attrs.getLength()>0)
             attrs.clear();
+        resolveAttributePrefixes = false;
         if(elemDepth==elements.length-1)
             elements = Arrays.copyOf(elements, elemDepth<<1);
 
@@ -554,12 +556,16 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 return;
             }            
         }
-        attrs.addAttribute(curQName.prefix, attrLocalName, attrName, type, attrValue);
+
+        String prefix = curQName.prefix;
+        if(prefix.length()>0)
+            resolveAttributePrefixes = true;
+        attrs.addAttribute(prefix, attrLocalName, attrName, type, attrValue);
     }
 
     void attributesEnd() throws SAXException{
         int attrCount = attrs.getLength();
-        if(attrCount>0){
+        if(resolveAttributePrefixes){
             for(int i=0; i<attrCount; i++){
                 String prefix = attrs.getURI(i);
                 if(prefix.length()>0){
@@ -569,11 +575,11 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                     attrs.setURI(i, uri);
                 }
             }
-            if(attrCount>1){
-                for(int i=1; i<attrCount; i++){
-                    if(attrs.getIndex(attrs.getURI(i), attrs.getLocalName(i))<i)
-                        fatalError("Attribute \""+ ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elem.qname.name+"\"");
-                }
+        }
+        if(attrCount>1){
+            for(int i=1; i<attrCount; i++){
+                if(attrs.getIndex(attrs.getURI(i), attrs.getLocalName(i))<i)
+                    fatalError("Attribute \""+ ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elem.qname.name+"\"");
             }
         }
 
