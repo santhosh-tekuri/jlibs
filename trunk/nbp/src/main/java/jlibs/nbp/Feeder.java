@@ -74,7 +74,7 @@ public class Feeder{
                 current = next;
             }while(current!=null);
         }catch(CharacterCodingException ex){
-            parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
+            throw parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
         }
         return null;
     }

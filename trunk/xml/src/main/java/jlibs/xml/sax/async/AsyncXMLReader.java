@@ -156,7 +156,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 try{
                     this.feeder.postAction.run();
                 }catch(Exception ex){
-                    this.feeder.parser.ioError(ex.getMessage());
+                    throw this.feeder.parser.ioError(ex.getMessage());
                 }
             }
         }
@@ -269,7 +269,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
 
     void version(Chars data) throws SAXException{
         if(!"1.0".contentEquals(data))
-            fatalError("Unsupported XML Version: "+data);
+            throw fatalError("Unsupported XML Version: "+data);
     }
 
     String encoding;
@@ -351,7 +351,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 contentHandler.characters(chars, 0, chars.length);
             }
         }else
-            fatalError("invalid xml character");
+            throw fatalError("invalid xml character");
     }
 
     private ArrayDeque<String> entityStack = new ArrayDeque<String>();
@@ -373,23 +373,23 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         }else{
             EntityValue entityValue = entities.get(entity);
             if(entityValue==null)
-                fatalError("The entity \""+entity+"\" was referenced, but not declared.");
+                throw fatalError("The entity \""+entity+"\" was referenced, but not declared.");
 
             if(entityValue.unparsed)
-                fatalError("The unparsed entity reference \"&"+entity+";\" is not permitted");
+                throw fatalError("The unparsed entity reference \"&"+entity+";\" is not permitted");
             
             if(standalone==Boolean.TRUE && entityValue.externalDefinition)
-                fatalError("The external entity reference \"&"+entity+";\" is not permitted in standalone document");
+                throw fatalError("The external entity reference \"&"+entity+";\" is not permitted in standalone document");
 
             if(standalone==Boolean.TRUE && entityValue.externalValue)
-                fatalError("The reference to entity \""+entity+"\" declared in an external parsed entity is not permitted in a standalone document");
+                throw fatalError("The reference to entity \""+entity+"\" declared in an external parsed entity is not permitted in a standalone document");
 
             checkRecursion(entityStack, entity, "entity");
 
             int rule;
             if(valueStarted){
                 if(entityValue.externalValue)
-                    fatalError("The external entity reference \"&"+entity+";\" is not permitted in an attribute value.");
+                    throw fatalError("The external entity reference \"&"+entity+";\" is not permitted in an attribute value.");
                 rule = XMLScanner.RULE_INT_VALUE;
             }else{
                 rule = XMLScanner.RULE_ELEM_CONTENT;
@@ -426,16 +426,16 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         final EntityValue entityValue = paramEntities.get(param);
 
         if(entityValue==null)
-            fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+            throw fatalError("The param entity \""+param+"\" was referenced, but not declared.");
 
         if(standalone==Boolean.TRUE && entityValue.externalValue)
-            fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
+            throw fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
 
         checkRecursion(paramEntityStack, param, "parameter entity");
 
         if(valueStarted){
             if(feeder.parser==xmlScanner && feeder.getParent()==null)
-                fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
+                throw fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
 
             if(entityValue.content!=null)
                 value.append(entityValue.content);
@@ -463,7 +463,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 }
             }else{
                 if(feeder.parser==xmlScanner && feeder.getParent()==null)
-                    fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
+                    throw fatalError("The parameter entity reference \"%"+data+";\" cannot occur within markup in the internal subset of the DTD.");
                 feeder.setChild(new XMLFeeder(this, feeder.parser, entityValue.inputSource(true), entityValue.prologParser()));
             }
         }
@@ -531,20 +531,20 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
             }else if(attrName.charAt(5)==':'){
                 if(attrLocalName.equals(XML_NS_PREFIX)){
                     if(!attrValue.equals(XML_NS_URI))
-                        fatalError("prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI);
+                        throw fatalError("prefix "+ XML_NS_PREFIX+" must refer to "+ XML_NS_URI);
                     return;
                 }else if(attrLocalName.equals(XMLNS_ATTRIBUTE))
-                    fatalError("prefix "+ XMLNS_ATTRIBUTE+" must not be declared");
+                    throw fatalError("prefix "+ XMLNS_ATTRIBUTE+" must not be declared");
                 else if(attrValue.length()==0)
-                    fatalError("No Prefix Undeclaring: "+attrLocalName);
+                    throw fatalError("No Prefix Undeclaring: "+attrLocalName);
                 else
                     nsPrefix = attrLocalName;
             }
             if(nsPrefix!=null){
                 if(attrValue.equals(XML_NS_URI))
-                    fatalError(XML_NS_URI+" must be bound to "+ XML_NS_PREFIX);
+                    throw fatalError(XML_NS_URI+" must be bound to "+ XML_NS_PREFIX);
                 else if(attrValue.equals(XMLNS_ATTRIBUTE_NS_URI))
-                    fatalError(XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE);
+                    throw fatalError(XMLNS_ATTRIBUTE_NS_URI+" must be bound to "+ XMLNS_ATTRIBUTE);
 
                 if(nsFree+2>namespaces.length)
                     namespaces = Arrays.copyOf(namespaces, nsFree<<1);
@@ -571,7 +571,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 if(prefix.length()>0){
                     String uri = getNamespaceURI(prefix);
                     if(uri==null)
-                        fatalError("Unbound prefix: "+prefix);
+                        throw fatalError("Unbound prefix: "+prefix);
                     attrs.setURI(i, uri);
                 }
             }
@@ -579,7 +579,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         if(attrCount>1){
             for(int i=1; i<attrCount; i++){
                 if(attrs.getIndex(attrs.getURI(i), attrs.getLocalName(i))<i)
-                    fatalError("Attribute \""+ ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elem.qname.name+"\"");
+                    throw fatalError("Attribute \""+ ClarkName.valueOf(attrs.getURI(i), attrs.getLocalName(i))+"\" was already specified for element \""+elem.qname.name+"\"");
             }
         }
 
@@ -593,7 +593,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         else{
             uri = getNamespaceURI(elemQName.prefix);
             if(uri==null)
-                fatalError("Unbound prefix: "+elemQName.prefix);
+                throw fatalError("Unbound prefix: "+elemQName.prefix);
         }
         elem.uri = uri;
         if(contentHandler!=null)
@@ -606,7 +606,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
 
     void elementEnd() throws SAXException{
         if(elemDepth==elemLock)
-            fatalError("The element \""+elem.qname.name+"\" must start and end within the same entity");
+            throw fatalError("The element \""+elem.qname.name+"\" must start and end within the same entity");
 
         if(contentHandler!=null){
             contentHandler.endElement(elem.uri, elem.qname.localName, elem.qname.name);
@@ -623,7 +623,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
 
     void rootElementEnd() throws SAXException{
         if(elemDepth>0)
-            fatalError("expected </"+elem.qname.name+">");
+            throw fatalError("expected </"+elem.qname.name+">");
     }
 
     /*-------------------------------------------------[ PI ]---------------------------------------------------*/
@@ -632,7 +632,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     void piTarget(Chars data) throws SAXException{
         piTarget = data.toString();
         if(piTarget.equalsIgnoreCase("xml"))
-            fatalError("The processing instruction target matching \"[xX][mM][lL]\" is not allowed");
+            throw fatalError("The processing instruction target matching \"[xX][mM][lL]\" is not allowed");
     }
 
     void piData(Chars piData) throws SAXException{
@@ -684,20 +684,24 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     }
 
     @Override
-    public void fatalError(String message) throws SAXException{
-        fatalError(new SAXParseException(message, this));
+    public SAXException fatalError(String message){
+        return fatalError(new SAXParseException(message, this));
     }
 
-    public void fatalError(SAXParseException ex) throws SAXException{
+    public SAXException fatalError(SAXParseException ex){
         try{
-            if(errorHandler!=null)
-                errorHandler.fatalError(ex);
-            throw ex;
-        }finally{
-            if(contentHandler!=null)
-                contentHandler.endDocument();
-            if(XMLScanner.SHOW_STATS)
-                xmlScanner.printStats();
+            try{
+                if(errorHandler!=null)
+                    errorHandler.fatalError(ex);
+                return ex;
+            }finally{
+                if(contentHandler!=null)
+                    contentHandler.endDocument();
+                if(XMLScanner.SHOW_STATS)
+                    xmlScanner.printStats();
+            }
+        }catch(SAXException e){
+            return ex;
         }
     }
 
@@ -879,7 +883,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
             }
             message.append(" -> ").append(current);
             message.append(')');
-            fatalError(message.toString());
+            throw fatalError(message.toString());
         }
     }
 

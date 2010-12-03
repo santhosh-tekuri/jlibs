@@ -385,8 +385,8 @@ public class Debugger extends JPanel implements NBHandler, Observer{
     }
 
     @Override
-    public void fatalError(String message) throws Exception{
-        throw new IOException(message);
+    public Exception fatalError(String message){
+        return new IOException(message);
     }
 
     @Override
