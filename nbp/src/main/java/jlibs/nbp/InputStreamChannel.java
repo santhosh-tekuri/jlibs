@@ -23,7 +23,7 @@ import java.nio.channels.ReadableByteChannel;
 /**
  * @author Santhosh Kumar T
  */
-public class InputStreamChannel implements ReadableByteChannel{
+public final class InputStreamChannel implements ReadableByteChannel{
     private InputStream is;
     public InputStreamChannel(InputStream is){
         this.is = is;
