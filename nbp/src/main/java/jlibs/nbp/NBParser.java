@@ -83,10 +83,8 @@ public abstract class NBParser{
             if(ch1>=MIN_LOW_SURROGATE && ch1<=MAX_LOW_SURROGATE){
                 increment = 2;
                 return ((ch0 - MIN_HIGH_SURROGATE) << 10) + (ch1 - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
-            }else{
-                ioError("bad surrogate pair");
-                throw new Error("Impossible");
-            }
+            }else
+                throw ioError("bad surrogate pair");
         }else{
             increment = 1;
             return ch0;
@@ -235,16 +233,10 @@ public abstract class NBParser{
             buff.append(matcher);
         }
 
-        String message = "Found: '"+found+"' Expected: "+buff.toString();
-        try{
-            fatalError(message);
-        }catch(Exception ex){
-            return ex;
-        }
-        return new IOException(message);
+        return fatalError("Found: '"+found+"' Expected: "+buff.toString());
     }
 
-    protected abstract void fatalError(String message) throws Exception;
+    protected abstract Exception fatalError(String message);
     protected abstract void onSuccessful() throws Exception;
 
     /*-------------------------------------------------[ Parsing Status ]---------------------------------------------------*/
@@ -252,15 +244,9 @@ public abstract class NBParser{
     protected int free = 0;
     protected int stack[] = new int[100];
 
-    public final void ioError(String message) throws IOException{
-        try{
-            fatalError(message);
-            throw new IOException(message);
-        }catch(IOException ex){
-            throw ex;
-        }catch(Exception ex){
-            throw new IOException(ex);
-        }
+    public final IOException ioError(String message) throws IOException{
+        Exception ex = fatalError(message);
+        return ex instanceof IOException ? (IOException)ex : new IOException(ex);
     }
 
     protected int exitStack[] = new int[100];

@@ -4218,8 +4218,8 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
     }
 
     @Override
-    public void fatalError(String message) throws Exception{
-        handler.fatalError(message);
+    public Exception fatalError(String message){
+        return handler.fatalError(message);
     }
 
     protected final jlibs.xml.sax.async.AsyncXMLReader handler;
