@@ -29,7 +29,7 @@ public class ErrorAction implements Action{
 
     @Override
     public String javaCode(){
-        return "handler.fatalError(\""+ StringUtil.toLiteral(errorMessage, false)+"\")";
+        return "throw handler.fatalError(\""+ StringUtil.toLiteral(errorMessage, false)+"\")";
     }
 
     @Override

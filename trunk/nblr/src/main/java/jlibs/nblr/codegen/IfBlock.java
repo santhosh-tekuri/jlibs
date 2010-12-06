@@ -17,6 +17,7 @@ package jlibs.nblr.codegen;
 
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
+import jlibs.nblr.actions.ErrorAction;
 import jlibs.nblr.actions.EventAction;
 import jlibs.nblr.actions.PublishAction;
 import jlibs.nblr.codegen.java.SyntaxClass;
@@ -339,6 +340,9 @@ public class IfBlock implements Iterable<IfBlock>{
         int common = parent==null ? root.common : parent.common;
         int check = travelPath(printer, common+1, path.size()-1);
 
+        if(check==CHECK_ERROR)
+            return;
+        
         if(parent!=null || heightDecreased){
             if(!root.lookAheadChars())
                 printer.println("resetLookAhead();");
@@ -398,6 +402,7 @@ public class IfBlock implements Iterable<IfBlock>{
 
     private static int CHECK_STOP = 1;
     private static int CHECK_POP = 2;
+    private static int CHECK_ERROR = 3;
     public int travelPath(Printer printer, int from, int to){
         int check = 0;
 
@@ -419,7 +424,8 @@ public class IfBlock implements Iterable<IfBlock>{
                                 check = CHECK_STOP;
                             else if(node.action.toString().startsWith("!"))
                                 check = CHECK_POP;
-                        }
+                        }else if(node.action instanceof ErrorAction)
+                            return CHECK_ERROR;
                     }
                 }
             }else if(obj instanceof Edge){

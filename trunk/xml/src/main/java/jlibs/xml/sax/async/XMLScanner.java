@@ -3144,8 +3144,7 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                         break loop;
                     if(ch=='>'){
                         buffer.append(input[position++]);
-                        handler.fatalError("Text may not contain a literal ']]>' sequence");
-                        return true;
+                        throw handler.fatalError("Text may not contain a literal ']]>' sequence");
                     }else if(ch!=EOF && ELEM_CONTENT_CHAR(ch)){
                         consume(ch);
                         state = 1;
