@@ -134,17 +134,18 @@ public class URLUtil{
 
                 // suggest prefix from path
                 String path = _uri.getPath();
-                StringTokenizer stok = new StringTokenizer(path, "/");
-                while(stok.hasMoreTokens())
-                    prefix = stok.nextToken();
-
+                if(path!=null){
+                    StringTokenizer stok = new StringTokenizer(path, "/");
+                    while(stok.hasMoreTokens())
+                        prefix = stok.nextToken();
+                }
                 if(prefix!=null)
                     return prefix;
                 else{
                     // suggest prefix from host
                     String host = _uri.getHost();
                     if(host!=null){
-                        stok = new StringTokenizer(host, ".");
+                        StringTokenizer stok = new StringTokenizer(host, ".");
                         String curPrefix = null;
                         while(stok.hasMoreTokens()){
                             prefix = curPrefix;
@@ -210,5 +211,6 @@ public class URLUtil{
     
     public static void main(String[] args) throws Exception{
         System.out.println(getQueryParams("http://www.google.co.in/search?hl=en&client=firefox-a&rls=org.mozilla%3Aen-US%3Aofficial&hs=Jvw&q=java%26url+encode&btnG=Search&meta=&aq=f&oq=", null));
+        System.out.println(suggestPrefix(new Properties(), "urn:xxx:yyy"));
     }
 }
