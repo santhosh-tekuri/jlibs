@@ -22,6 +22,7 @@ import org.xml.sax.InputSource;
 import java.io.*;
 import java.net.*;
 import java.nio.CharBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
@@ -71,85 +72,92 @@ public class XMLFeeder extends Feeder{
         if(charStream !=null)
             setChannel(new NBReaderChannel(charStream));
         else{
-            InputStream inputStream = is.getByteStream();
+            ReadableByteChannel byteChannel = null;
             String encoding = is.getEncoding();
-            if(inputStream==null){
-                assert systemID!=null;
 
-                if(systemID.startsWith("file:/")){
-                    try{
-                        inputStream = new FileInputStream(new File(new URI(systemID)));
-                    }catch(URISyntaxException ex){
-                        throw new IOException(ex);
-                    }
-                }else{
-                    URLConnection con = new URL(systemID).openConnection();
-                    if(con instanceof HttpURLConnection){
-                        final HttpURLConnection httpCon = (HttpURLConnection)con;
-
-                        // set request properties
-                        /*
-                        Map<String, String> requestProperties = new HashMap<String, String>();
-                        for(Map.Entry<String, String> entry: requestProperties.entrySet())
-                            httpCon.setRequestProperty(entry.getKey(), entry.getValue());
-                        */
-
-                        // set preference for redirection
-                        XMLEntityManager.setInstanceFollowRedirects(httpCon, true);
-                    }
-                    inputStream = con.getInputStream();
-
-                    String contentType;
-                    String charset = null;
-
-                    // content type will be string like "text/xml; charset=UTF-8" or "text/xml"
-                    String rawContentType = con.getContentType();
-                    // text/xml and application/xml offer only one optional parameter
-                    int index = (rawContentType != null) ? rawContentType.indexOf(';') : -1;
-
-                    if(index!=-1){
-                        // this should be something like "text/xml"
-                        contentType = rawContentType.substring(0, index).trim();
-
-                        // this should be something like "charset=UTF-8", but we want to
-                        // strip it down to just "UTF-8"
-                        charset = rawContentType.substring(index + 1).trim();
-                        if(charset.startsWith("charset=")){
-                            // 8 is the length of "charset="
-                            charset = charset.substring(8).trim();
-                            // strip quotes, if present
-                            if((charset.charAt(0)=='"' && charset.charAt(charset.length()-1)=='"')
-                                || (charset.charAt(0)=='\'' && charset.charAt(charset.length()-1)=='\'')){
-                                charset = charset.substring(1, charset.length() - 1);
-                            }
-                        }
-                    }else
-                        contentType = rawContentType.trim();
-
-                    String detectedEncoding = null;
-                    /**  The encoding of such a resource is determined by:
-                        1 external encoding information, if available, otherwise
-                             -- the most common type of external information is the "charset" parameter of a MIME package
-                        2 if the media type of the resource is text/xml, application/xml, or matches the conventions text/*+xml or application/*+xml as described in XML Media Types [IETF RFC 3023], the encoding is recognized as specified in XML 1.0, otherwise
-                        3 the value of the encoding attribute if one exists, otherwise
-                        4 UTF-8.
-                     **/
-                    if(contentType.equals("text/xml")){
-                        if(charset!=null)
-                            detectedEncoding = charset;
-                        else
-                            detectedEncoding = "US-ASCII"; // see RFC2376 or 3023, section 3.1
-                    }else if(contentType.equals("application/xml")){
-                        if(charset!=null)
-                            detectedEncoding = charset;
-                    }
-
-                    if(detectedEncoding != null)
-                        encoding = detectedEncoding;
-                }
+            if(is instanceof ChannelInputSource){
+                ChannelInputSource channelInputSource = (ChannelInputSource)is;
+                byteChannel = channelInputSource.getChannel();
             }
+            if(byteChannel==null){
+                InputStream inputStream = is.getByteStream();                
+                if(inputStream==null){
+                    assert systemID!=null;
+                    if(systemID.startsWith("file:/")){
+                        try{
+                            inputStream = new FileInputStream(new File(new URI(systemID)));
+                        }catch(URISyntaxException ex){
+                            throw new IOException(ex);
+                        }
+                    }else{
+                        URLConnection con = new URL(systemID).openConnection();
+                        if(con instanceof HttpURLConnection){
+                            final HttpURLConnection httpCon = (HttpURLConnection)con;
 
-            nbChannel.setChannel(new InputStreamChannel(inputStream));
+                            // set request properties
+                            /*
+                            Map<String, String> requestProperties = new HashMap<String, String>();
+                            for(Map.Entry<String, String> entry: requestProperties.entrySet())
+                                httpCon.setRequestProperty(entry.getKey(), entry.getValue());
+                            */
+
+                            // set preference for redirection
+                            XMLEntityManager.setInstanceFollowRedirects(httpCon, true);
+                        }
+                        inputStream = con.getInputStream();
+
+                        String contentType;
+                        String charset = null;
+
+                        // content type will be string like "text/xml; charset=UTF-8" or "text/xml"
+                        String rawContentType = con.getContentType();
+                        // text/xml and application/xml offer only one optional parameter
+                        int index = (rawContentType != null) ? rawContentType.indexOf(';') : -1;
+
+                        if(index!=-1){
+                            // this should be something like "text/xml"
+                            contentType = rawContentType.substring(0, index).trim();
+
+                            // this should be something like "charset=UTF-8", but we want to
+                            // strip it down to just "UTF-8"
+                            charset = rawContentType.substring(index + 1).trim();
+                            if(charset.startsWith("charset=")){
+                                // 8 is the length of "charset="
+                                charset = charset.substring(8).trim();
+                                // strip quotes, if present
+                                if((charset.charAt(0)=='"' && charset.charAt(charset.length()-1)=='"')
+                                    || (charset.charAt(0)=='\'' && charset.charAt(charset.length()-1)=='\'')){
+                                    charset = charset.substring(1, charset.length() - 1);
+                                }
+                            }
+                        }else
+                            contentType = rawContentType.trim();
+
+                        String detectedEncoding = null;
+                        /**  The encoding of such a resource is determined by:
+                            1 external encoding information, if available, otherwise
+                                 -- the most common type of external information is the "charset" parameter of a MIME package
+                            2 if the media type of the resource is text/xml, application/xml, or matches the conventions text/*+xml or application/*+xml as described in XML Media Types [IETF RFC 3023], the encoding is recognized as specified in XML 1.0, otherwise
+                            3 the value of the encoding attribute if one exists, otherwise
+                            4 UTF-8.
+                         **/
+                        if(contentType.equals("text/xml")){
+                            if(charset!=null)
+                                detectedEncoding = charset;
+                            else
+                                detectedEncoding = "US-ASCII"; // see RFC2376 or 3023, section 3.1
+                        }else if(contentType.equals("application/xml")){
+                            if(charset!=null)
+                                detectedEncoding = charset;
+                        }
+
+                        if(detectedEncoding != null)
+                            encoding = detectedEncoding;
+                    }
+                }
+                byteChannel = new InputStreamChannel(inputStream);
+            }
+            nbChannel.setChannel(byteChannel);
             if(encoding==null)
                 nbChannel.setEncoding("UTF-8", true);
             else
