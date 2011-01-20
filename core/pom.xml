@@ -27,6 +27,23 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <configuration>
+                    <tasks>
+                        <mkdir dir="${project.build.testOutputDirectory}"/>
+                    </tasks>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-test-classes-directory</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
                 <configuration>
