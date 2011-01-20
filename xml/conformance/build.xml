@@ -48,6 +48,15 @@
 
     <target name="report" description="Generate Report">
         <xslt style="SAXTest/results.xsl" in="SAXTest/jlibs.xml.sax.async.AsyncXMLReader.xml" out="SAXTest/results.html"/>
+        <xslt style="report.xsl" in="SAXTest/jlibs.xml.sax.async.AsyncXMLReader.xml" out="report.txt"/>
+        <loadfile property="report" srcFile="report.txt"/>
+        <delete file="report.txt"/>
+        <echo>${report}</echo>
+        <echo>Report : SAXTest/results.html</echo>
+        <condition property="success">
+            <contains string="${report}" substring="Failed : 0"/>
+        </condition>
+        <fail message="Some Tests Failed" unless="success"/>
     </target>
     
     <target name="clean">
