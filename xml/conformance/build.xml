@@ -1,11 +1,45 @@
 <project name="SAX-Conformance" default="run">
+    <condition property="prepared">
+        <available file="SAXTest" type="dir"/>
+    </condition>
+
+    <macrodef name="updatesuite">
+        <attribute name="suite"/>
+        <sequential>
+            <copy file="SAXTest/xmlconf/@{suite}" tofile="SAXTest/xmlconf/@{suite}.back"/>
+            <xslt style="include1.0.xsl" in="SAXTest/xmlconf/@{suite}.back" out="SAXTest/xmlconf/@{suite}"/>
+        </sequential>
+    </macrodef>
+
     <target name="run" depends="setup, expected, test"/>
-    <target name="setup">
+    <target name="setup" depends="download, prepare"/>
+    <target name="test" depends="generate, compare, report"/>
+    
+    <target name="download">
         <get src="http://www.cafeconleche.org/SAXTest/SAXTest.zip" dest="SAXTest.zip" usetimestamp="true"/>
         <get src="http://www.w3.org/XML/Test/xmlts20080827.zip" dest="xmlts.zip" usetimestamp="true"/>
-        
+    </target>
+    
+    <target name="prepare" unless="prepared">
         <unzip src="SAXTest.zip" dest="."/>
         <unzip src="xmlts.zip" dest="SAXTest"/>
+        
+        <loadfile srcFile="exclude.txt" property="exclude">
+            <filterchain>
+                <striplinecomments>
+                    <comment value="#"/>
+                </striplinecomments>
+                <ignoreblank/>
+                <prefixlines prefix=","/>
+                <suffixlines suffix=","/>
+            </filterchain>
+        </loadfile>
+        <updatesuite suite="ibm/xml-1.1/ibm_invalid.xml"/>
+        <updatesuite suite="ibm/xml-1.1/ibm_not-wf.xml"/>
+        <updatesuite suite="ibm/xml-1.1/ibm_valid.xml"/>
+        <updatesuite suite="eduni/xml-1.1/xml11.xml"/>
+        <updatesuite suite="eduni/namespaces/1.0/rmt-ns10.xml"/>
+        <updatesuite suite="eduni/namespaces/1.1/rmt-ns11.xml"/>
     </target>
     
     <target name="expected" description="Generates expected output">
@@ -14,8 +48,6 @@
             <fileset dir="SAXTest/results/preexpected"/>
         </copy>        
     </target>
-    
-    <target name="test" depends="generate, compare, report"/>
     
     <target name="generate" description="Generate output from JLibs">
         <java dir="SAXTest" fork="true" failOnError="true" classname="com.elharo.saxtest.ConformanceGenerator" 
