@@ -60,6 +60,16 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         elem.defaultNamespace = "";
     }
 
+    private boolean strict = false;
+
+    public boolean isStrict(){
+        return strict;
+    }
+
+    public void setStrict(boolean strict){
+        this.strict = strict;
+    }
+
     private ContentHandler contentHandler;
     @Override
     public void setContentHandler(ContentHandler contentHandler){
@@ -425,8 +435,12 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         String param = data.toString();
         final EntityValue entityValue = paramEntities.get(param);
 
-        if(entityValue==null)
-            throw fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+        if(entityValue==null){
+            if(strict)
+                throw fatalError("The param entity \""+param+"\" was referenced, but not declared.");
+            else
+                return;
+        }
 
         if(standalone==Boolean.TRUE && entityValue.externalValue)
             throw fatalError("The reference to param entity \""+param+"\" declared in an external parsed entity is not permitted in a standalone document");
@@ -496,7 +510,10 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     private int elemLock = 0;
     private boolean resolveAttributePrefixes;
 
-    void attributesStart(){
+    void attributesStart() throws SAXException{
+        if(curQName.prefix.equals("xmlns"))
+            throw fatalError("Element \""+curQName.name+"\" cannot have \"xmlns\" as its prefix");
+
         if(attrs.getLength()>0)
             attrs.clear();
         resolveAttributePrefixes = false;
