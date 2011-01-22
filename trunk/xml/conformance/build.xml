@@ -40,6 +40,7 @@
         <updatesuite suite="eduni/xml-1.1/xml11.xml"/>
         <updatesuite suite="eduni/namespaces/1.0/rmt-ns10.xml"/>
         <updatesuite suite="eduni/namespaces/1.1/rmt-ns11.xml"/>
+        <updatesuite suite="eduni/errata-2e/errata2e.xml"/>
     </target>
     
     <target name="expected" description="Generates expected output">
@@ -92,12 +93,12 @@
     </target>
     
     <target name="clean">
-        <delete includeEmptyDirs="true">
+        <delete>
             <fileset dir=".">
                 <include name="output.txt"/>
                 <include name="error.txt"/>
-                <include name="SAXTest/**"/>
             </fileset>
         </delete>
+        <delete dir="SAXTest"/>
     </target>
 </project>
