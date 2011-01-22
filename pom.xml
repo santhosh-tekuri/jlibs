@@ -128,6 +128,7 @@
                         <exclude>core/src/main/java/jlibs/core/lang/Noun.java</exclude>
                         <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
                         <exclude>xml/src/main/java/jlibs/xml/sax/async/XMLScanner.java</exclude>
+                        <exclude>xml/conformance/SAXTest/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
