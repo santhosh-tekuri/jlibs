@@ -15,6 +15,8 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.net.SSLUtil;
+
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -26,6 +28,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -43,34 +47,24 @@ public class Proxy implements IOEvent<ServerChannel>{
         server.attach(this);
     }
 
+
     private int count;
     public static SSLEngine createSSLEngine(boolean clientMode) throws IOException{
-        SSLContext sslContext = null;
-        try {
-            char[] passphrase = "dontknow".toCharArray();
-            // First initialize the key and trust material.
-            KeyStore ks = KeyStore.getInstance("JKS");
-            ks.load(new FileInputStream("/Volumes/Backup/projects/jlibs/keystore.ks"), passphrase);
-            sslContext = SSLContext.getInstance("TLS");
-
+        try{
+            SSLContext sslContext = SSLContext.getInstance("TLS");
             if(clientMode){
-                // TrustManager's decide whether to allow connections.
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-                tmf.init(ks);
-                sslContext.init(null, null/*tmf.getTrustManagers()*/, null);
+                sslContext.init(null, null, null);
             }else{
-                // KeyManager's decide which key material to use.
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-                kmf.init(ks, passphrase);
+                kmf.init(SSLUtil.newKeyStore(), SSLUtil.getKeyStorePassword());
                 sslContext.init(kmf.getKeyManagers(), null, null);
             }
+            SSLEngine engine = sslContext.createSSLEngine();
+            engine.setUseClientMode(clientMode);
+            return engine;
         }catch(Exception ex) {
             throw new IOException(ex);
         }
-
-        SSLEngine engine = sslContext.createSSLEngine();
-        engine.setUseClientMode(clientMode);
-        return engine;
     }
 
     @Override
@@ -78,29 +72,39 @@ public class Proxy implements IOEvent<ServerChannel>{
         ClientChannel inboundClient = server.accept(nioSelector);
         if(inboundClient==null)
             return;
-        if(inboundEndpoint.enableSSL)
-            inboundClient.enableSSL(createSSLEngine(false));
         count++;
         ClientChannel outboundClient = nioSelector.newClient();
+        try{
+            System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
 
-        System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
-        ByteBuffer buffer1 = ByteBuffer.allocate(9000);
-        ByteBuffer buffer2 = ByteBuffer.allocate(9000);
+            if(inboundEndpoint.enableSSL)
+                inboundClient.enableSSL(/*createSSLEngine(false)*/);
 
-        ClientListener inboundListener = new ClientListener(" Inbound"+count, buffer1, buffer2, null, outboundClient);
+            ByteBuffer buffer1 = ByteBuffer.allocate(9000);
+            ByteBuffer buffer2 = ByteBuffer.allocate(9000);
 
-        SSLEngine outboundSSLEngine = outboundEndpoint.enableSSL ? createSSLEngine(true) : null;
-        ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, outboundSSLEngine, inboundClient);
+            ClientListener inboundListener = new ClientListener(" Inbound"+count, buffer1, buffer2, null, outboundClient);
 
-        inboundClient.attach(inboundListener);
-        outboundClient.attach(outboundListener);
+            SSLEngine outboundSSLEngine = outboundEndpoint.enableSSL ? createSSLEngine(true) : null;
+            ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, outboundSSLEngine, inboundClient);
 
-        if(outboundClient.connect(outboundEndpoint.address))
-            outboundListener.onConnect(outboundClient);
-        else
-            outboundClient.addInterest(ClientChannel.OP_CONNECT);
+            inboundClient.attach(inboundListener);
+            outboundClient.attach(outboundListener);
 
-        inboundClient.addInterest(ClientChannel.OP_READ);
+            if(outboundClient.connect(outboundEndpoint.address))
+                outboundListener.onConnect(outboundClient);
+            else
+                outboundClient.addInterest(ClientChannel.OP_CONNECT);
+
+            inboundClient.addInterest(ClientChannel.OP_READ);
+        }catch(Exception ex){
+            inboundClient.close();
+            outboundClient.close();
+            if(ex instanceof IOException)
+                throw (IOException)ex;
+            else
+                throw (RuntimeException)ex;
+        }
     }
 
     public static void main(String[] args) throws IOException{
@@ -116,6 +120,7 @@ public class Proxy implements IOEvent<ServerChannel>{
             };
         }
 
+        final List<Proxy> proxies = new ArrayList<Proxy>(args.length);
         for(String arg: args){
             int equal = arg.indexOf("=");
             if(equal==-1)
@@ -123,7 +128,9 @@ public class Proxy implements IOEvent<ServerChannel>{
 
             String inbound = arg.substring(0, equal);
             String outbound = arg.substring(equal+1);
-            new Proxy(new Endpoint(inbound), new Endpoint(outbound)).server.register(nioSelector);
+            Proxy proxy = new Proxy(new Endpoint(inbound), new Endpoint(outbound));
+            proxy.server.register(nioSelector);
+            proxies.add(proxy);
             System.out.println("added proxy: "+inbound+" -> "+outbound);
         }
 
@@ -137,6 +144,13 @@ public class Proxy implements IOEvent<ServerChannel>{
                     nioThread.join();
                 }catch(InterruptedException ex){
                     ex.printStackTrace();
+                }
+                for(Proxy proxy: proxies){
+                    try{
+                        proxy.server.close();
+                    }catch (IOException ex){
+                        ex.printStackTrace();
+                    }
                 }
             }
         });
@@ -191,7 +205,7 @@ class ClientListener implements IOEvent<ClientChannel>{
     public void onConnect(ClientChannel client) throws IOException{
         System.out.println(this+": Connection established");
         if(engine!=null)
-            client.enableSSL(engine);
+            client.enableSSL(/*engine*/);
         client.addInterest(ClientChannel.OP_READ);
     }
 
@@ -247,10 +261,14 @@ class ClientListener implements IOEvent<ClientChannel>{
                         client.close();
                 }
             }
-        }catch(IOException ex){
+        }catch(Exception ex){
             client.close();
             buddy.close();
-            throw ex;
+            if(ex instanceof IOException)
+                throw (IOException)ex;
+            else
+                throw (RuntimeException)ex;
+
         }
         if(client.interests()==0 && buddy.interests()==0){
             System.out.println(this+": closing...");
