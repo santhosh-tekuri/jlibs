@@ -15,19 +15,11 @@
 
 package jlibs.core.nio;
 
-import jlibs.core.net.SSLUtil;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,26 +39,7 @@ public class Proxy implements IOEvent<ServerChannel>{
         server.attach(this);
     }
 
-
     private int count;
-    public static SSLEngine createSSLEngine(boolean clientMode) throws IOException{
-        try{
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            if(clientMode){
-                sslContext.init(null, null, null);
-            }else{
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-                kmf.init(SSLUtil.newKeyStore(), SSLUtil.getKeyStorePassword());
-                sslContext.init(kmf.getKeyManagers(), null, null);
-            }
-            SSLEngine engine = sslContext.createSSLEngine();
-            engine.setUseClientMode(clientMode);
-            return engine;
-        }catch(Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
     @Override
     public void process(NIOSelector nioSelector, ServerChannel server) throws IOException{
         ClientChannel inboundClient = server.accept(nioSelector);
@@ -78,15 +51,13 @@ public class Proxy implements IOEvent<ServerChannel>{
             System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
 
             if(inboundEndpoint.enableSSL)
-                inboundClient.enableSSL(/*createSSLEngine(false)*/);
+                inboundClient.enableSSL();
 
             ByteBuffer buffer1 = ByteBuffer.allocate(9000);
             ByteBuffer buffer2 = ByteBuffer.allocate(9000);
 
-            ClientListener inboundListener = new ClientListener(" Inbound"+count, buffer1, buffer2, null, outboundClient);
-
-            SSLEngine outboundSSLEngine = outboundEndpoint.enableSSL ? createSSLEngine(true) : null;
-            ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, outboundSSLEngine, inboundClient);
+            ClientListener inboundListener = new ClientListener(" Inbound"+count, buffer1, buffer2, false, outboundClient);
+            ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, true, inboundClient);
 
             inboundClient.attach(inboundListener);
             outboundClient.attach(outboundListener);
@@ -157,7 +128,7 @@ public class Proxy implements IOEvent<ServerChannel>{
 
         for(NIOChannel channel: nioSelector){
             try{
-                ((IOEvent)channel.attachment()).process(nioSelector, channel);
+                ((IOEvent<?>)channel.attachment()).process(nioSelector, channel);
             }catch(IOException ex){
                 ex.printStackTrace();
             }
@@ -192,29 +163,25 @@ class Endpoint{
 class ClientListener implements IOEvent<ClientChannel>{
     private String name;
     private ByteBuffer readBuffer, writeBuffer;
-    private SSLEngine engine;
+    private boolean enableSSL;
     private ClientChannel buddy;
-    ClientListener(String name, ByteBuffer readBuffer, ByteBuffer writeBuffer, SSLEngine engine, ClientChannel buddy){
+    ClientListener(String name, ByteBuffer readBuffer, ByteBuffer writeBuffer, boolean enableSSL, ClientChannel buddy){
         this.name = name;
         this.readBuffer = readBuffer;
         this.writeBuffer = writeBuffer;
-        this.engine = engine;
+        this.enableSSL = enableSSL;
         this.buddy = buddy;
     }
 
     public void onConnect(ClientChannel client) throws IOException{
         System.out.println(this+": Connection established");
-        if(engine!=null)
-            client.enableSSL(/*engine*/);
+        if(enableSSL)
+            client.enableSSL();
         client.addInterest(ClientChannel.OP_READ);
     }
 
-    int readCount, writeCount;
-    int lastRead, lastWrote;
-
     @Override
     public void process(NIOSelector nioSelector, ClientChannel client) throws IOException{
-//        System.out.println(this+": isReadable="+isReadable+" isWritable="+isWritable);
         if(client.isTimeout()){
             if(buddy.isOpen() && buddy.isTimeout()){
                 System.out.println(name+" timedout");
@@ -232,13 +199,11 @@ class ClientListener implements IOEvent<ClientChannel>{
             if(client.isReadable()){
                 readBuffer.clear();
                 int read = client.read(readBuffer);
-                lastRead = read;
                 if(read==-1){
                     client.close();
                     if((buddy.interests()&ClientChannel.OP_WRITE)==0)
                         buddy.close();
                 }else if(read>0){
-                    readCount++;
                     if(buddy.isOpen()){
                         readBuffer.flip();
                         buddy.addInterest(SelectionKey.OP_WRITE);
@@ -248,12 +213,10 @@ class ClientListener implements IOEvent<ClientChannel>{
                     client.addInterest(SelectionKey.OP_READ);
             }
             if(client.isWritable()){
-                int wrote = client.write(writeBuffer);
-                lastWrote = wrote;
-                if(writeBuffer.hasRemaining()){
-                    writeCount++;
+                client.write(writeBuffer);
+                if(writeBuffer.hasRemaining())
                     client.addInterest(SelectionKey.OP_WRITE);
-                }else{
+                else{
                     if(buddy.isOpen()){
                         writeBuffer.flip();
                         buddy.addInterest(SelectionKey.OP_READ);
