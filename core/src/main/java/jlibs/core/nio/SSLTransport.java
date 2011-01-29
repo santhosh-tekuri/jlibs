@@ -739,7 +739,7 @@ public class SSLTransport extends Debuggable implements Transport{
         if(outData.hasRemaining()){
             // If this method is called after an exception, we should
             // close the socket regardless having some data to send.
-            assert channelWriteInterestSet : "Data to be sent but no write interest.";
+//            assert channelWriteInterestSet : "Data to be sent but no write interest.";
             if(DEBUG){
                 println("there is some data left to be sent. Waiting: " + outData);
                 println("}");

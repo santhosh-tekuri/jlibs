@@ -15,7 +15,9 @@
 
 package jlibs.core.nio;
 
-import javax.net.ssl.SSLEngine;
+import jlibs.core.net.SSLUtil;
+
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -23,6 +25,10 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 /**
  * @author Santhosh Kumar T
@@ -96,6 +102,36 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
             transport = new SSLTransport(transport, engine);
         else
             throw new ConnectionPendingException();
+    }
+
+    public void enableSSL(SSLParameters sslParameters) throws IOException{
+        if(isConnected()){
+            try {
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                tmf.init(SSLUtil.newTrustStore());
+
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                kmf.init(SSLUtil.newKeyStore(), SSLUtil.getKeyStorePassword());
+
+                sslContext.init(kmf.getKeyManagers(), null , null);
+                SSLEngine engine = sslContext.createSSLEngine();
+                engine.setUseClientMode(acceptedFrom()==null);
+                if(sslParameters!=null)
+                    engine.setSSLParameters(sslParameters);
+                enableSSL(engine);
+            }catch(IOException ex){
+                throw ex;
+            }catch(Exception ex){
+                throw new IOException(ex);
+            }
+        }else
+            throw new ConnectionPendingException();
+    }
+
+    public void enableSSL() throws IOException{
+        enableSSL((SSLParameters)null);
     }
 
     public boolean sslEnabled(){

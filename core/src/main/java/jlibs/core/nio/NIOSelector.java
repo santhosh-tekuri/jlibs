@@ -113,7 +113,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                     return delegate.next();
                 else{
                     if(DEBUG)
-                        println(this+".shutdown");
+                        println(NIOSelector.this+".shutdown");
                     return null;
                 }
             }catch(IOException ex){
