@@ -41,10 +41,12 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
             </plugin>
             <plugin>
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
+                <version>1.2</version>
                 <configuration>
                     <compilerArguments>-d ${project.build.outputDirectory}</compilerArguments>
                 </configuration>
