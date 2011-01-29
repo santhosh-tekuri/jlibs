@@ -128,7 +128,7 @@ public class Proxy implements IOEvent<ServerChannel>{
 
         for(NIOChannel channel: nioSelector){
             try{
-                ((IOEvent<?>)channel.attachment()).process(nioSelector, channel);
+                ((IOEvent)channel.attachment()).process(nioSelector, channel);
             }catch(IOException ex){
                 ex.printStackTrace();
             }
