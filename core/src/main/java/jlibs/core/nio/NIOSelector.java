@@ -132,7 +132,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             shutdownInProgress = true;
             initiateShutdown = false;
             if(DEBUG)
-                println(this+".shutdownInitialized");
+                println(this+".shutdownInitialized: servers="+serverCount()+" connectedClients="+connectedClientsCount()+" connectionPendingClients="+connectionPendingClientsCount());
             while(servers.size()>0)
                 servers.get(0).unregister(this);
         }
@@ -255,6 +255,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             if(hasNext()){
                 ClientChannel channel = head.next;
                 remove(channel);
+                if(DEBUG)
+                    println("channel@"+channel.id+".timeout");
                 return channel;
             }
             throw new NoSuchElementException();
