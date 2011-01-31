@@ -57,7 +57,7 @@ public class Proxy implements IOEvent<ServerChannel>{
             ByteBuffer buffer2 = ByteBuffer.allocate(9000);
 
             ClientListener inboundListener = new ClientListener(" Inbound"+count, buffer1, buffer2, false, outboundClient);
-            ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, true, inboundClient);
+            ClientListener outboundListener = new ClientListener("Outbound"+count, buffer2, buffer1, outboundEndpoint.enableSSL, inboundClient);
 
             inboundClient.attach(inboundListener);
             outboundClient.attach(outboundListener);
