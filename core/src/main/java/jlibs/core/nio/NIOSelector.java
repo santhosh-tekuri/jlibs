@@ -232,6 +232,9 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         protected void remove(ClientChannel channel){
             assert (channel.prev!=null)==(channel.next!=null);
             if(channel.prev!=null){
+                if(current==channel)
+                    current = current.prev;
+
                 channel.prev.next = channel.next;
                 channel.next.prev = channel.prev;
                 channel.prev = channel.next = null;
@@ -240,24 +243,25 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
 
         protected long time;
+        private ClientChannel current;
         public TimeoutIterator reset(){
             time = System.currentTimeMillis()-timeout;
+            current = head;
             return this;
         }
 
         @Override
         public boolean hasNext(){
-            return head.next!=head && head.next.interestTime<time;
+            return current.next!=head && current.next.interestTime<time;
         }
 
         @Override
         public NIOChannel next(){
             if(hasNext()){
-                ClientChannel channel = head.next;
-                remove(channel);
+                current = current.next;
                 if(DEBUG)
-                    println("channel@"+channel.id+".timeout");
-                return channel;
+                    println("channel@"+current.id+".timeout");
+                return current;
             }
             throw new NoSuchElementException();
         }
