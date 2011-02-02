@@ -55,11 +55,11 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
 
     public void shutdown(){
-        if(!shutdownInProgress){
-            initiateShutdown = true;
-            if(DEBUG)
-                println(this+".shutdownRequested");
-        }
+        if(isShutdownPending() || isShutdown())
+            return;
+        initiateShutdown = true;
+        if(DEBUG)
+            println(this+".shutdownRequested");
     }
 
     public boolean isShutdownPending(){
@@ -73,7 +73,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     protected void validate() throws IOException{
         if(isShutdownPending())
             throw new IOException("shutdown in progress");
-        if(isShutdownPending())
+        if(isShutdown())
             throw new IOException("already shutdown");
     }
 
@@ -114,6 +114,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                 else{
                     if(DEBUG)
                         println(NIOSelector.this+".shutdown");
+                    selector.close();
                     return null;
                 }
             }catch(IOException ex){
