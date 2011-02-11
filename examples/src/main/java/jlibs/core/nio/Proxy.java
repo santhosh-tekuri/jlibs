@@ -15,11 +15,14 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.net.Protocols;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +37,7 @@ public class Proxy implements IOEvent<ServerChannel>{
         this.inboundEndpoint = inboundEndpoint;
         this.outboundEndpoint = outboundEndpoint;
 
-        server = new ServerChannel(ServerSocketChannel.open());
+        server = new ServerChannel();
         server.bind(inboundEndpoint.address);
         server.attach(this);
     }
@@ -42,12 +45,14 @@ public class Proxy implements IOEvent<ServerChannel>{
     private int count;
     @Override
     public void process(NIOSelector nioSelector, ServerChannel server) throws IOException{
-        ClientChannel inboundClient = server.accept(nioSelector);
-        if(inboundClient==null)
-            return;
         count++;
-        ClientChannel outboundClient = nioSelector.newClient();
+        ClientChannel inboundClient = null;
+        ClientChannel outboundClient = null;
         try{
+            outboundClient = nioSelector.newClient();
+            inboundClient = server.accept(nioSelector);
+            if(inboundClient==null)
+                return;
             System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
 
             if(inboundEndpoint.enableSSL)
@@ -69,8 +74,10 @@ public class Proxy implements IOEvent<ServerChannel>{
 
             inboundClient.addInterest(ClientChannel.OP_READ);
         }catch(Exception ex){
-            inboundClient.close();
-            outboundClient.close();
+            if(inboundClient!=null)
+                inboundClient.close();
+            if(outboundClient!=null)
+                outboundClient.close();
             if(ex instanceof IOException)
                 throw (IOException)ex;
             else
@@ -81,13 +88,13 @@ public class Proxy implements IOEvent<ServerChannel>{
     public static void main(String[] args) throws IOException{
         System.setErr(System.out);
 
-        final NIOSelector nioSelector = new NIOSelector(5000);
+        final NIOSelector nioSelector = new NIOSelector(1000, 10*1000);
         if(args.length==0){
             args = new String[]{
-                "tcp://localhost:1111=tcp://apigee.com:80",
-                "ssl://localhost:2222=tcp://apigee.com:80",
-                "tcp://localhost:3333=ssl://blog.torproject.org:443",
-                "ssl://localhost:4444=ssl://blog.torproject.org:443",
+                "http://localhost:1111=http://apigee.com",
+                "https://localhost:2222=http://apigee.com",
+                "http://localhost:3333=https://blog.torproject.org",
+                "https://localhost:4444=https://blog.torproject.org",
             };
         }
 
@@ -110,7 +117,7 @@ public class Proxy implements IOEvent<ServerChannel>{
             @Override
             public void run(){
                 System.out.println("shutdown initiated");
-                nioSelector.shutdown();
+                nioSelector.shutdown(false);
                 try{
                     nioThread.join();
                 }catch(InterruptedException ex){
@@ -141,21 +148,14 @@ class Endpoint{
     InetSocketAddress address;
     boolean enableSSL;
 
-    public Endpoint(String str){
-        if(str.startsWith("tcp://")){
-            enableSSL = false;
-            str = str.substring("tcp://".length());
-        }else if(str.startsWith("ssl://")){
-            enableSSL = true;
-            str = str.substring("ssl://".length());
-        }else
-            throw new IllegalArgumentException();
+    public Endpoint(String str) throws MalformedURLException{
+        URL url = new URL(str);
+        enableSSL = url.getProtocol().equals("https");
 
-        int colon = str.indexOf(':');
-        if(colon==-1)
-            throw new IllegalArgumentException();
-        String host = str.substring(0, colon);
-        int port = Integer.parseInt(str.substring(colon+1));
+        String host = url.getHost();
+        int port = url.getPort();
+        if(port==-1)
+            port = Protocols.valueOf(url.getProtocol().toUpperCase()).port();
         address = new InetSocketAddress(host, port);
     }
 }
