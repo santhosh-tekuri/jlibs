@@ -142,6 +142,10 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         transport.addInterest(operation);
     }
 
+    public void removeInterest(int operation) throws IOException{
+        transport.removeInterest(operation);
+    }
+
     public int ready(){
         return transport.ready();
     }
