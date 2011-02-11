@@ -31,13 +31,9 @@ public class ServerChannel extends NIOChannel {
     private static AtomicLong ID_GENERATOR = new AtomicLong();
 
     protected final ServerSocketChannel channel;
-    public ServerChannel(ServerSocketChannel channel) throws IOException{
-        super(ID_GENERATOR.incrementAndGet(), channel);
-        this.channel = channel;
-    }
-
     public ServerChannel() throws IOException{
-        this(ServerSocketChannel.open());
+        super(ID_GENERATOR.incrementAndGet(), ServerSocketChannel.open());
+        this.channel = (ServerSocketChannel)super.channel;
     }
 
     @Override
