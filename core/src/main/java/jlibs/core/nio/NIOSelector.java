@@ -32,13 +32,16 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     protected long id = ID_GENERATOR.incrementAndGet();
     protected final Selector selector;
-    protected final long timeout;
-    private volatile boolean initiateShutdown;
-    private boolean shutdownInProgress;
+    protected final long selectTimeout, socketTimeout;
 
-    public NIOSelector(long timeout) throws IOException{
+    public NIOSelector(long selectTimeout, long socketTimeout) throws IOException{
+        if(selectTimeout<=0)
+            throw new IllegalArgumentException("selectTimeout should be positive");
+        if(socketTimeout<=0)
+            throw new IllegalArgumentException("socketTimeout should be positive");
         selector = Selector.open();
-        this.timeout = timeout;
+        this.selectTimeout = selectTimeout;
+        this.socketTimeout = socketTimeout;
     }
 
     protected long lastClientID;
@@ -54,9 +57,14 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
 
-    public void shutdown(){
+    private volatile boolean force;
+    private volatile boolean initiateShutdown;
+    private boolean shutdownInProgress;
+
+    public void shutdown(boolean force){
         if(isShutdownPending() || isShutdown())
             return;
+        this.force = force;
         initiateShutdown = true;
         if(DEBUG)
             println(this+".shutdownRequested");
@@ -126,9 +134,10 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     /*-------------------------------------------------[ Selection ]---------------------------------------------------*/
 
     protected List<NIOChannel> ready = new LinkedList<NIOChannel>();
-    public Iterator<NIOChannel> select() throws IOException{
+    private Iterator<NIOChannel> select() throws IOException{
         if(ready.size()>0)
             return readyIterator.reset();
+
         if(initiateShutdown){
             shutdownInProgress = true;
             initiateShutdown = false;
@@ -136,9 +145,13 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                 println(this+".shutdownInitialized: servers="+serverCount()+" connectedClients="+connectedClientsCount()+" connectionPendingClients="+connectionPendingClientsCount());
             while(servers.size()>0)
                 servers.get(0).unregister(this);
+            if(force){
+                for(SelectionKey key: selector.keys())
+                    ((NIOChannel)key.attachment()).close();
+            }
         }
 
-        if(selector.select(timeout)>0)
+        if(selector.select(selectTimeout)>0)
             return selectedIterator.reset();
         else
             return timeoutIterator.reset();
@@ -246,7 +259,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         protected long time;
         private ClientChannel current;
         public TimeoutIterator reset(){
-            time = System.currentTimeMillis()-timeout;
+            time = System.currentTimeMillis()-socketTimeout;
             current = head;
             return this;
         }
