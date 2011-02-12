@@ -71,4 +71,9 @@ public class ServerChannel extends NIOChannel {
             nioSelector.servers.remove(this);
         }
     }
+
+    @Override
+    public String toString(){
+        return "ServerChannel@"+id;
+    }
 }
