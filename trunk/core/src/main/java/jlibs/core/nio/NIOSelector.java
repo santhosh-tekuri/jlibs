@@ -36,9 +36,9 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     public NIOSelector(long selectTimeout, long socketTimeout) throws IOException{
         if(selectTimeout<=0)
-            throw new IllegalArgumentException("selectTimeout should be positive");
-        if(socketTimeout<=0)
-            throw new IllegalArgumentException("socketTimeout should be positive");
+            throw new IllegalArgumentException("selectTimeout should be >0");
+        if(socketTimeout<0)
+            throw new IllegalArgumentException("socketTimeout should be >=0");
         selector = Selector.open();
         this.selectTimeout = selectTimeout;
         this.socketTimeout = socketTimeout;
@@ -233,6 +233,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
 
         protected void add(ClientChannel channel){
+            if(socketTimeout==0)
+                return;
             if(channel.prev!=null)
                 remove(channel);
             channel.prev = head.prev;
@@ -244,6 +246,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
 
         protected void remove(ClientChannel channel){
+            if(socketTimeout==0)
+                return;
             assert (channel.prev!=null)==(channel.next!=null);
             if(channel.prev!=null){
                 if(current==channel)
@@ -259,7 +263,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         protected long time;
         private ClientChannel current;
         public TimeoutIterator reset(){
-            time = System.currentTimeMillis()-socketTimeout;
+            if(socketTimeout>0)
+                time = System.currentTimeMillis()-socketTimeout;
             current = head;
             return this;
         }

@@ -164,7 +164,7 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
 
     protected long interestTime;
     public boolean isTimeout(){
-        return interestTime< nioSelector.timeoutIterator.time;
+        return nioSelector.socketTimeout>0 && interestTime<nioSelector.timeoutIterator.time;
     }
 
     @Override
@@ -193,4 +193,9 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     }
 
     protected ClientChannel prev, next;
+
+    @Override
+    public String toString(){
+        return (sslEnabled() ? "SSLClientChannel@" : "ClientChannel@")+id;
+    }
 }
