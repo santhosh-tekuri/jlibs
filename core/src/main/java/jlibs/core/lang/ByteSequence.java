@@ -17,6 +17,7 @@ package jlibs.core.lang;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 /**
  * This class represents a sequence of bytes.
@@ -97,6 +98,14 @@ public class ByteSequence{
     
     public int length(){
         return length;
+    }
+
+    public ByteSequence slice(int offset){
+        return new ByteSequence(buff, this.offset+offset, length-offset);
+    }
+
+    public ByteBuffer toByteBuffer(){
+        return ByteBuffer.wrap(buff, offset, length);
     }
 
     public byte[] toByteArray(boolean clone){
