@@ -172,9 +172,17 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         return transport.process();
     }
 
+    private boolean eof;
+    public boolean isEOF(){
+        return eof;
+    }
+
     @Override
     public int read(ByteBuffer dst) throws IOException{
-        return transport.read(dst);
+        int read = transport.read(dst);
+        if(read==-1)
+            eof = true;
+        return read;
     }
 
     @Override
