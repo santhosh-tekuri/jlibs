@@ -79,7 +79,7 @@ public class Bytes implements Iterable<ByteSequence>{
             if(read<=0)
                 break;
             total += read;
-            add(new ByteSequence(buff.array(), buff.position()-read, buff.position()));
+            add(new ByteSequence(buff.array(), buff.position()-read, read));
             if(buff.hasRemaining())
                 break;
             else
