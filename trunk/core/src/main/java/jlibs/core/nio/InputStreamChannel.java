@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nbp;
+package jlibs.core.nio;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,12 +29,19 @@ public final class InputStreamChannel implements ReadableByteChannel{
         this.is = is;
     }
 
+    private boolean eof;
+    public boolean isEOF(){
+        return eof;
+    }
+
     @Override
     public int read(ByteBuffer buffer) throws IOException{
         int pos = buffer.position();
         int read = is.read(buffer.array(), buffer.arrayOffset()+pos, buffer.remaining());
-        if(read!=-1)
+        if(read>0)
             buffer.position(pos+read);
+        else if(read==-1)
+            eof = true;
         return read;
     }
 
