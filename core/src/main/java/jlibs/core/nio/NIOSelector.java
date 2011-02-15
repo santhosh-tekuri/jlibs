@@ -174,6 +174,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         if(ready.size()>0)
             return readyIterator.reset();
         runTasks();
+        if(ready.size()>0)
+            return readyIterator.reset();
         if(initiateShutdown){
             shutdownInProgress = true;
             initiateShutdown = false;
