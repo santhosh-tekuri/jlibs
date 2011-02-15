@@ -25,6 +25,8 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 
 /**
  * @author Santhosh Kumar T
@@ -105,13 +107,28 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
             try {
                 SSLContext sslContext = SSLContext.getInstance("TLS");
 
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init(SSLUtil.newTrustStore());
+                TrustManager tm[];
+                KeyStore trustStore = SSLUtil.newTrustStore();
+                if(trustStore==null){
+                    tm = new TrustManager[]{
+                       new X509TrustManager() {
+                           public X509Certificate[] getAcceptedIssuers(){
+                               return new X509Certificate[0];
+                           }
+                           public void checkClientTrusted(X509Certificate[] certs, String authType ){}
+                           public void checkServerTrusted(X509Certificate[] certs, String authType ){}
+                       }
+                    };
+                }else{
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    tmf.init(SSLUtil.newTrustStore());
+                    tm = tmf.getTrustManagers();
+                }
 
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                 kmf.init(SSLUtil.newKeyStore(), SSLUtil.getKeyStorePassword());
 
-                sslContext.init(kmf.getKeyManagers(), null , null);
+                sslContext.init(kmf.getKeyManagers(), tm , null);
                 SSLEngine engine = sslContext.createSSLEngine();
                 engine.setUseClientMode(acceptedFrom()==null);
                 if(sslParameters!=null)
