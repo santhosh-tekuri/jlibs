@@ -28,6 +28,13 @@ import java.util.LinkedList;
 public class Bytes implements Iterable<ByteSequence>{
     private LinkedList<ByteSequence> list = new LinkedList<ByteSequence>();
 
+    public int size(){
+        int size = 0;
+        for(ByteSequence seq: list)
+            size += seq.length();
+        return size;
+    }
+
     public boolean isEmpty(){
         if(list.size()==0)
             return true;
@@ -38,11 +45,8 @@ public class Bytes implements Iterable<ByteSequence>{
         return true;
     }
 
-    public int size(){
-        int size = 0;
-        for(ByteSequence seq: list)
-            size += seq.length();
-        return size;
+    public void clear(){
+        list.clear();
     }
 
     public void add(ByteSequence seq){
