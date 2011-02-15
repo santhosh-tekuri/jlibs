@@ -15,7 +15,11 @@
 
 package jlibs.xml.sax.async;
 
-import jlibs.nbp.*;
+import jlibs.core.nio.InputStreamChannel;
+import jlibs.nbp.Feeder;
+import jlibs.nbp.NBChannel;
+import jlibs.nbp.NBParser;
+import jlibs.nbp.NBReaderChannel;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.xml.sax.InputSource;
 
