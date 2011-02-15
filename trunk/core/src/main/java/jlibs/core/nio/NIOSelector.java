@@ -15,6 +15,7 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.lang.Waiter;
 import jlibs.core.util.AbstractIterator;
 
 import java.io.IOException;
@@ -53,6 +54,10 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     @Override
     public String toString(){
         return "NIOSelector@"+id;
+    }
+
+    public void wakeup(){
+        selector.wakeup();
     }
 
     /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
@@ -131,13 +136,44 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
     };
 
+    /*-------------------------------------------------[ Tasks ]---------------------------------------------------*/
+
+    private volatile List<Runnable> tasks = new LinkedList<Runnable>();
+
+    public synchronized void invokeLater(Runnable task){
+        tasks.add(task);
+    }
+
+    public void invokeAndWait(Runnable task) throws InterruptedException{
+        task = new Waiter(task);
+        synchronized(task){
+            invokeLater(task);
+            task.wait();
+        }
+    }
+
+    private void runTasks(){
+        List<Runnable> list;
+        synchronized(this){
+            list = tasks;
+            tasks = new LinkedList<Runnable>();
+        }
+        for(Runnable task: list){
+            try{
+                task.run();
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
     /*-------------------------------------------------[ Selection ]---------------------------------------------------*/
 
     protected List<NIOChannel> ready = new LinkedList<NIOChannel>();
     private Iterator<NIOChannel> select() throws IOException{
         if(ready.size()>0)
             return readyIterator.reset();
-
+        runTasks();
         if(initiateShutdown){
             shutdownInProgress = true;
             initiateShutdown = false;
