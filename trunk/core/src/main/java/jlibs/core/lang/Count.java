@@ -70,9 +70,9 @@ public class Count<T extends Count.Unit> implements Comparable<Count<T>>{
     }
 
     public strictfp double to(T unit){
-        long value = amounts[unit.ordinal()];
+        long value = amounts[units.length-1];
         for(int i=units.length-2; i>=unit.ordinal(); i--)
-            value = amounts[i]+ units[i].count()*amounts[i+1];
+            value = amounts[i]+ units[i].count()*value;
         if(unit.ordinal()>0){
             double before = amounts[0];
             for(int i=1; i<unit.ordinal(); i++)
@@ -113,7 +113,7 @@ public class Count<T extends Count.Unit> implements Comparable<Count<T>>{
                 buff.append(units[i]);
             }
         }
-        return buff.length()==0 ? "0" : buff.toString();
+        return buff.length()==0 ? "0 "+units[0].ordinal() : buff.toString();
     }
 
     /*-------------------------------------------------[ Comparable ]---------------------------------------------------*/
