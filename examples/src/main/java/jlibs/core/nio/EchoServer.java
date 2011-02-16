@@ -25,36 +25,64 @@ import java.net.InetSocketAddress;
  */
 public class EchoServer{
     public static void main(String[] args) throws IOException{
+        boolean ssl = false;
+        String host = "localhost";
+        int port = 1111;
+        for(String arg: args){
+            if(arg.equals("-ssl"))
+                ssl = true;
+            else{
+                try{
+                    port = Integer.parseInt(arg);
+                }catch (NumberFormatException ex){
+                    host = arg;
+                }
+            }
+        }
+
         NIOSelector selector = new NIOSelector(1000, 0);
         ServerChannel server = new ServerChannel();
-        server.bind(new InetSocketAddress(1111));
+        server.bind(new InetSocketAddress(host, port));
+
+        System.out.println("Listening on "+host+":"+port+(ssl?" with SSL":""));
         server.register(selector);
 
         for(NIOChannel channel: selector){
             if(channel instanceof ServerChannel){
                 ClientChannel client = server.accept(selector);
                 if(client!=null){
-                    client.attach(new Bytes());
-                    client.addInterest(ClientChannel.OP_READ);
+                    try{
+                        if(ssl)
+                            client.enableSSL();
+                        client.attach(new Bytes());
+                        client.addInterest(ClientChannel.OP_READ);
+                    }catch (IOException ex){
+                        ex.printStackTrace();
+                        client.close();
+                    }
                 }
             }else{
                 ClientChannel client = (ClientChannel)channel;
                 Bytes bytes = (Bytes)client.attachment();
+                try{
+                    if(client.isWritable()){
+                        bytes.writeTo(client);
+                        if(!bytes.isEmpty())
+                            client.addInterest(ClientChannel.OP_WRITE);
+                        else if(client.isEOF())
+                            client.close();
+                    }
 
-                if(client.isWritable()){
-                    bytes.writeTo(client);
-                    if(!bytes.isEmpty())
-                        client.addInterest(ClientChannel.OP_WRITE);
-                    else if(client.isEOF())
-                        client.close();
-                }
-
-                if(client.isReadable()){
-                    bytes.readFrom(client);
-                    if(!client.isEOF())
-                        client.addInterest(ClientChannel.OP_READ);
-                    if(!bytes.isEmpty())
-                        client.addInterest(ClientChannel.OP_WRITE);
+                    if(client.isReadable()){
+                        bytes.readFrom(client);
+                        if(!client.isEOF())
+                            client.addInterest(ClientChannel.OP_READ);
+                        if(!bytes.isEmpty())
+                            client.addInterest(ClientChannel.OP_WRITE);
+                    }
+                }catch(IOException ex){
+                    ex.printStackTrace();
+                    client.close();
                 }
             }
         }
