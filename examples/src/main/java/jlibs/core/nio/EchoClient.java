@@ -56,20 +56,20 @@ public class EchoClient{
                         int read = System.in.read(buff, 0, 1024);
                         if(read!=-1)
                             bytes.add(new ByteSequence(buff, 0, read));
-                        selector.invokeLater(new Runnable(){
-                            public void run(){
-                                try{
-                                    if(bytes.isEmpty())
-                                        client.shutdownOutput();
-                                    else
-                                        client.addInterest(ClientChannel.OP_WRITE);
-                                }catch(IOException ex){
-                                    ex.printStackTrace();
-                                }
-                            }
-                        });
-                        selector.wakeup();
                         synchronized(bytes){
+                            selector.invokeLater(new Runnable(){
+                                public void run(){
+                                    try{
+                                        if(bytes.isEmpty())
+                                            client.shutdownOutput();
+                                        else
+                                            client.addInterest(ClientChannel.OP_WRITE);
+                                    }catch(IOException ex){
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            });
+                            selector.wakeup();
                             bytes.wait();
                         }
                     }catch(Exception ex){
