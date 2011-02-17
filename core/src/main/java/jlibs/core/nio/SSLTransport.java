@@ -595,18 +595,17 @@ public class SSLTransport extends Debuggable implements Transport{
             appClosed = true;
             if(DEBUG)
                 println("app@"+id()+".close{");
-            if(asyncException!=null){
+            if(asyncException!=null)
                 closeTransport();
-                return;
+            else{
+                if(appReadBuffer.hasRemaining()){
+                    appReadBuffer.position(appReadBuffer.limit());
+                    if(DEBUG)
+                        println("discarding data in appReadBuffer@"+id());
+                }
+                if(!outputShutdown)
+                    shutdownOutput();
             }
-            
-            if(appReadBuffer.hasRemaining()){
-                appReadBuffer.position(appReadBuffer.limit());
-                if(DEBUG)
-                    println("discarding data in appReadBuffer@"+id());
-            }
-            if(!outputShutdown)
-                shutdownOutput();
             if(DEBUG)
                 println("}");
         }
