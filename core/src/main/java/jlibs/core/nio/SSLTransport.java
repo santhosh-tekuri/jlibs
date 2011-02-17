@@ -95,24 +95,30 @@ public class SSLTransport extends Debuggable implements Transport{
     public int read(ByteBuffer dst) throws IOException{
         if(DEBUG)
             println("app@"+id()+".read{");
-        int read = appRead(dst);
-        if(DEBUG){
-            println("return: "+read);
-            println("}");
+        try{
+            int read = appRead(dst);
+            if(DEBUG)
+                println("return: "+read);
+            return read;
+        }finally{
+            if(DEBUG)
+                println("}");
         }
-        return read;
     }
 
     @Override
     public int write(ByteBuffer src) throws IOException{
         if(DEBUG)
             println("app@"+id()+".write{");
-        int wrote = appWrite(src);
-        if(DEBUG){
-            println("return: "+wrote);
-            println("}");
+        try{
+            int wrote = appWrite(src);
+            if(DEBUG)
+                println("return: "+wrote);
+            return wrote;
+        }finally{
+            if(DEBUG)
+                println("}");
         }
-        return wrote;
     }
 
     /*-------------------------------------------------[ Processing ]---------------------------------------------------*/
@@ -278,7 +284,12 @@ public class SSLTransport extends Debuggable implements Transport{
                     return true;
             case CLOSED:
                 assert engine.isInboundDone();
-                client().realChannel().socket().shutdownInput();
+                try{
+                    client().realChannel().socket().shutdownInput();
+                }catch(IOException ex){
+                    if(!client().realChannel().socket().isInputShutdown())
+                        throw ex;
+                }
                 if(appReadWait)
                     enableAppRead();
                 return false;
