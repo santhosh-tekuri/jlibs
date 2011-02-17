@@ -27,8 +27,7 @@ import java.nio.channels.ClosedChannelException;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.NEED_UNWRAP;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.NEED_WRAP;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
 
 /**
@@ -125,7 +124,7 @@ public class SSLTransport extends Debuggable implements Transport{
 
     private void start() throws IOException{
         if(DEBUG)
-            println("app@"+id()+"start{");
+            println("app@"+id()+".start{");
         int ops = transport.interests();
         boolean readWait = (ops&OP_READ)!=0;
         boolean writeWait = (ops&OP_WRITE)!=0;
@@ -202,7 +201,7 @@ public class SSLTransport extends Debuggable implements Transport{
             println(String.format(
                 "%-6s: %-16s %-15s %5d %5d",
                 "wrap",
-                result.getStatus(), result.getHandshakeStatus(),
+                status, hsStatus,
                 result.bytesConsumed(), result.bytesProduced()
             ));
         }
@@ -231,9 +230,7 @@ public class SSLTransport extends Debuggable implements Transport{
         if(engine.isOutboundDone()){
             assert (transport.interests() & OP_WRITE)==0;
             try{
-                if(DEBUG)
-                    println("ssl@"+id()+".shutdownOutput");
-                client().realChannel().socket().shutdownOutput();
+                transport.shutdownOutput();
             }catch(IOException ex){
                 // ignore
             }
@@ -335,6 +332,8 @@ public class SSLTransport extends Debuggable implements Transport{
     private boolean appWriteWait = false;
     private void waitForAppWrite() throws IOException{
         if(!appWriteWait){
+            if(outputShutdown)
+                throw new IOException("output is shutdown for app@"+id());
             appWriteWait = true;
             if(DEBUG)
                 println("app@"+id()+".writeWait");
@@ -396,6 +395,13 @@ public class SSLTransport extends Debuggable implements Transport{
         appWriteReady = true;
     }
 
+    private void notifyAppWrite() throws IOException{
+        if(appWriteWait)
+            enableAppWrite();
+        else if(outputShutdown && !engine.isOutboundDone())
+            closeOutbound();
+    }
+
     @Override
     public int ready(){
         int ops = 0;
@@ -435,13 +441,11 @@ public class SSLTransport extends Debuggable implements Transport{
             }else{
                 hsStatus = NEED_UNWRAP;
                 if(run()){
-                    if(appWriteWait)
-                        enableAppWrite();
+                    notifyAppWrite();
                     if(appReadWait){
                         if(appReadBuffer.hasRemaining())
                             enableAppRead();
                         else{
-                            hsStatus = NEED_UNWRAP;
                             continue;
                         }
                     }
@@ -454,8 +458,7 @@ public class SSLTransport extends Debuggable implements Transport{
     private void channelWrite() throws IOException{
         if(flush()){
             if(run()){
-                if(appWriteWait)
-                    enableAppWrite();
+                notifyAppWrite();
                 if(appReadWait){
                     if(appReadBuffer.hasRemaining())
                         enableAppRead();
@@ -487,7 +490,7 @@ public class SSLTransport extends Debuggable implements Transport{
         validate();
 
         appWriteReady = false;
-        if(initialHandshake || engine.isOutboundDone() || netWriteBuffer.hasRemaining())
+        if(initialHandshake || outputShutdown || netWriteBuffer.hasRemaining())
             return 0;
         int pos = dst.position();
         appWriteBuffer = dst;
@@ -505,7 +508,7 @@ public class SSLTransport extends Debuggable implements Transport{
     @Override
     public boolean process(){
         if(DEBUG)
-            println("app@"+id()+"process{");
+            println("app@"+id()+".process{");
         try{
             int ops = transport.interests();
             boolean readReady = (ops&OP_READ)!=0;
@@ -543,6 +546,34 @@ public class SSLTransport extends Debuggable implements Transport{
         return isAppReady();
     }
 
+    /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
+
+    private boolean outputShutdown;
+    @Override
+    public void shutdownOutput() throws IOException{
+        if(DEBUG)
+            println("app@"+id()+".shutdownOutput{");
+        outputShutdown = true;
+        appWriteWait = appWriteReady = false;
+        if(!netWriteBuffer.hasRemaining() && (engine.isInboundDone() || hsStatus==FINISHED || hsStatus==NOT_HANDSHAKING))
+            closeOutbound();
+        if(DEBUG)
+            println("}");
+    }
+
+    private void closeOutbound() throws IOException{
+        if(DEBUG)
+            println("app@"+id()+".closeOutbound");
+        engine.closeOutbound();
+        hsStatus = NEED_WRAP;
+        channelWrite();
+    }
+
+    @Override
+    public boolean isOutputShutdown(){
+        return outputShutdown;
+    }
+
     /*-------------------------------------------------[ Close ]---------------------------------------------------*/
 
     private boolean appClosed;
@@ -558,15 +589,14 @@ public class SSLTransport extends Debuggable implements Transport{
             asyncException = null;
             appClosed = true;
             if(DEBUG)
-                println("app@"+id()+"close{");
+                println("app@"+id()+".close{");
             if(appReadBuffer.hasRemaining()){
                 appReadBuffer.position(appReadBuffer.limit());
                 if(DEBUG)
                     println("discarding data in appReadBuffer@"+id());
             }
-            engine.closeOutbound();
-            hsStatus = NEED_WRAP;
-            channelWrite();
+            if(!outputShutdown)
+                shutdownOutput();
             if(DEBUG)
                 println("}");
         }

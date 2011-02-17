@@ -109,6 +109,18 @@ public class PlainTransport extends Debuggable implements Transport{
     }
 
     @Override
+    public void shutdownOutput() throws IOException{
+        if(DEBUG)
+            println("channel@"+id()+".shutdownOutput");
+        client.realChannel().socket().shutdownOutput();
+    }
+
+    @Override
+    public boolean isOutputShutdown(){
+        return client.realChannel().socket().isOutputShutdown();
+    }
+
+    @Override
     public boolean isOpen(){
         return client.realChannel().isOpen();
     }
