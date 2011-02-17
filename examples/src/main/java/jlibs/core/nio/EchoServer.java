@@ -77,7 +77,9 @@ public class EchoServer{
                         bytes.readFrom(client);
                         if(!client.isEOF())
                             client.addInterest(ClientChannel.OP_READ);
-                        if(!bytes.isEmpty())
+                        if(bytes.isEmpty())
+                            client.close();
+                        else
                             client.addInterest(ClientChannel.OP_WRITE);
                     }
                 }catch(IOException ex){

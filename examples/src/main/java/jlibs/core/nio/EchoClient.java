@@ -15,6 +15,7 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.lang.ByteSequence;
 import jlibs.core.lang.Bytes;
 import jlibs.core.util.logging.AnsiFormatter;
 
@@ -45,30 +46,32 @@ public class EchoClient{
         final NIOSelector selector = new NIOSelector(1000, 0);
         final ClientChannel client = selector.newClient();
         final Bytes bytes = new Bytes();
+
         Thread readThread = new Thread(new Runnable(){
             @Override
             public void run(){
-                InputStreamChannel in = new InputStreamChannel(System.in);
                 while(true){
-                    try {
-                        bytes.readFrom(in);
-                        if(!bytes.isEmpty()){
-                            selector.invokeLater(new Runnable(){
-                                public void run(){
-                                    try{
+                    try{
+                        byte buff[] = new byte[1024];
+                        int read = System.in.read(buff, 0, 1024);
+                        if(read!=-1)
+                            bytes.add(new ByteSequence(buff, 0, read));
+                        selector.invokeLater(new Runnable(){
+                            public void run(){
+                                try{
+                                    if(bytes.isEmpty())
+                                        client.shutdownOutput();
+                                    else
                                         client.addInterest(ClientChannel.OP_WRITE);
-                                    }catch(IOException ex){
-                                        ex.printStackTrace();
-                                    }
+                                }catch(IOException ex){
+                                    ex.printStackTrace();
                                 }
-                            });
-                            selector.wakeup();
-                            synchronized(bytes){
-                                bytes.wait();
                             }
+                        });
+                        selector.wakeup();
+                        synchronized(bytes){
+                            bytes.wait();
                         }
-                        if(in.isEOF())
-                            return;
                     }catch(Exception ex){
                         ex.printStackTrace();
                     }
