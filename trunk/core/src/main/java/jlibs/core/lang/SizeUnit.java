@@ -18,12 +18,12 @@ package jlibs.core.lang;
 /**
  * @author Santhosh Kumar T
  */
-public enum StorageUnit implements Count.Unit{
+public enum SizeUnit implements Count.Unit{
     BYTES(1024), KB(1024), MB(1024), GB(0);
 
     private int count;
 
-    private StorageUnit(int count){
+    private SizeUnit(int count){
         this.count = count;
     }
 
