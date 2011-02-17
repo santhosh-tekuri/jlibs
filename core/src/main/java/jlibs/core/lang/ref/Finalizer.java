@@ -28,7 +28,7 @@ import java.util.Map;
  * <p>
  * you can tell {@code Finalizer} to execute given {@code runnable} when a particular
  * object gets garbage collected:
- * <pre>
+ * <pre class="prettyprint">
  * Object myObject = ...;
  * Finalizer.INSTANCE.{@link #track(Object, Runnable) track}(myObject, new Runnable(){
  *    public void run(){
@@ -40,7 +40,7 @@ import java.util.Map;
  * {@code Finalizer} creates a {@link java.lang.ref.WeakReference} for the object that needs to
  * be tracked. you can also tell which type of {@link java.lang.ref.Reference} to use as below:
  *
- * <pre>
+ * <pre class="prettyprint">
  * Object myObject = ...;
  * Finalizer.INSTANCE.{@link #track(Object, Class, Runnable) track}(myObject, {@link java.lang.ref.SoftReference}.class, new Runnable(){
  *    public void run(){
@@ -52,7 +52,7 @@ import java.util.Map;
  * All the {@code track(...)} methods return the {@link java.lang.ref.Reference} object created.
  * <p>
  * You can also use {@code Finalizer} as a simple profiler.
- * <pre>
+ * <pre class="prettyprint">
  * Object myObject = ...;
  * Finalizer.INSTANCE.{@link #trackGC(Object, String) trackGC}(myObject, "myObject is garbage collected");
  * </pre>

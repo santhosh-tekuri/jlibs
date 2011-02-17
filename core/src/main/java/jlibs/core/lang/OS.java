@@ -19,12 +19,12 @@ package jlibs.core.lang;
  * This enum contains values for each type of OS.
  * <p>
  * To get the current OS:
- * <pre>
+ * <pre class="prettyprint">
  * OS myos = OS.{@link #get()};
  * System.out.println(myos);
  * </pre>
  * To check whether your OS is windows or unix;
- * <pre>
+ * <pre class="prettyprint">
  * OS myos = OS.get();
  * System.out.println("isWindows: "+myos.{@link #isWindows()});
  * System.out.println("isUnix: "+myos.{@link #isUnix()});
@@ -33,7 +33,7 @@ package jlibs.core.lang;
  * When your OS is not recognized, {@code OS.get()} returns OS.{@link #OTHER}
  * <p>
  * There is another usefult method which might be required rarely;
- * <pre>
+ * <pre class="prettyprint">
  * String osName = System.getProperty("os.name");
  * OS os = OS.{@link #get(String) get}(osName);
  * </pre>
