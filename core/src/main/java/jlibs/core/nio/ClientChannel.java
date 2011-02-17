@@ -95,10 +95,17 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
 
     private Transport transport = new PlainTransport(this);
 
+    private HandshakeCompletedListener handshakeCompletedListener;
+    public void setHandshakeCompletedListener(HandshakeCompletedListener handshakeCompletedListener) {
+        this.handshakeCompletedListener = handshakeCompletedListener;
+    }
+
     public void enableSSL(SSLEngine engine) throws IOException{
-        if(isConnected())
-            transport = new SSLTransport(transport, engine);
-        else
+        if(isConnected()){
+            HandshakeCompletedListener listener = handshakeCompletedListener;
+            listener = null;
+            transport = new SSLTransport(transport, engine, listener);
+        }else
             throw new ConnectionPendingException();
     }
 
