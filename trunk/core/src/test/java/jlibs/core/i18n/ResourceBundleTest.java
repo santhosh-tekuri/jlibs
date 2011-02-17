@@ -57,8 +57,8 @@ public class ResourceBundleTest{
         if(searchFor.length==0)
             Assert.assertNull(errors, "compilation failed with errors:\n"+errors);
         else{
+            errors = errors.replace('\\', '/');
             for(String error: searchFor){
-                error = error.replace('\\', '/');
                 if(errors.indexOf(error)==-1)
                     Assert.fail("[Expected Error] "+error+"\n[Actual Error] "+errors);
             }
