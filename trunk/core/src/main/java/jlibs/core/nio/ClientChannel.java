@@ -207,6 +207,14 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         return transport.write(src);
     }
 
+    public void shutdownOutput() throws IOException{
+        transport.shutdownOutput();
+    }
+
+    public boolean isOutputShutdown(){
+        return transport.isOutputShutdown();
+    }
+
     @Override
     public boolean isOpen(){
         return transport.isOpen();

@@ -32,4 +32,7 @@ interface Transport extends ByteChannel{
     public int ready();
 
     public boolean process();
+
+    public void shutdownOutput() throws IOException;
+    public boolean isOutputShutdown();
 }
