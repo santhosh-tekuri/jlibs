@@ -48,9 +48,12 @@ public class SSLTransport extends Debuggable implements Transport{
     private SSLEngineResult.HandshakeStatus hsStatus;
     private SSLEngineResult.Status status = null;
 
-    public SSLTransport(Transport transport, SSLEngine engine) throws IOException{
+    private HandshakeCompletedListener handshakeCompletedListener;
+
+    public SSLTransport(Transport transport, SSLEngine engine, HandshakeCompletedListener handshakeCompletedListener) throws IOException{
         this.transport = transport;
         this.engine = engine;
+        this.handshakeCompletedListener = handshakeCompletedListener;
 
         SSLSession session = engine.getSession();
 
@@ -168,6 +171,8 @@ public class SSLTransport extends Debuggable implements Transport{
                         if(processUnwrap())
                             continue;
                         return false;
+                    case FINISHED:
+                        handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
                     default:
                         initialHandshake = false;
                         return true;
