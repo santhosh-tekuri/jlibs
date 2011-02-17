@@ -19,7 +19,9 @@ import jlibs.core.net.SSLUtil;
 
 import javax.net.ssl.*;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
@@ -42,6 +44,7 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
             nioSelector.connectedClients++;
         else
             nioSelector.connectionPendingClients++;
+        defaults().apply(socketChannel.socket());
     }
 
     protected ClientChannel(NIOSelector nioSelector, SocketChannel socketChannel, SocketAddress acceptedFrom) throws IOException{
@@ -237,5 +240,23 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     @Override
     public String toString(){
         return (sslEnabled() ? "SSLClientChannel@" : "ClientChannel@")+id;
+    }
+
+    private static final Defaults defaults = new Defaults();
+    public static Defaults defaults(){
+        return defaults;
+    }
+
+    public static class Defaults{
+        public Boolean TCP_NODELAY;
+        public Integer SO_LINGER;
+        private Defaults(){}
+
+        void apply(Socket socket) throws SocketException{
+            if(TCP_NODELAY!=null)
+                socket.setTcpNoDelay(TCP_NODELAY);
+            if(SO_LINGER!=null)
+                socket.setSoLinger(SO_LINGER<0, SO_LINGER);
+        }
     }
 }
