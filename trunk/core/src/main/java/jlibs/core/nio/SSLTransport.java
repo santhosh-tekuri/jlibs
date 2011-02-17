@@ -592,10 +592,14 @@ public class SSLTransport extends Debuggable implements Transport{
     @Override
     public void close() throws IOException{
         if(!appClosed){
-            asyncException = null;
             appClosed = true;
             if(DEBUG)
                 println("app@"+id()+".close{");
+            if(asyncException!=null){
+                closeTransport();
+                return;
+            }
+            
             if(appReadBuffer.hasRemaining()){
                 appReadBuffer.position(appReadBuffer.limit());
                 if(DEBUG)
