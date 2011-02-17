@@ -172,7 +172,8 @@ public class SSLTransport extends Debuggable implements Transport{
                             continue;
                         return false;
                     case FINISHED:
-                        handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
+                        if(handshakeCompletedListener!=null)
+                            handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
                     default:
                         initialHandshake = false;
                         return true;
