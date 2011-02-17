@@ -155,6 +155,7 @@ public class ResourceBundleTest{
     @Test(description="test that documentation is generated in properties file")
     public void testDocumentation() throws IOException{
         String props = IOUtil.pump(Bundle1.class.getResourceAsStream("Bundle.properties"), true).toString();
+        props = props.replace("\r\n", "\n");
         if(props.indexOf("# {0} query\nexecuted=executed {0}")==-1)
             Assert.fail("documentation must be generated for method with no javadoc");
         if(props.indexOf("# {0} time ==> time taken in seconds\ntimeTaken=execution took {0, number} seconds")==-1)
