@@ -15,7 +15,10 @@
 
 package jlibs.core.lang;
 
+import jlibs.core.io.IOUtil;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -80,11 +83,36 @@ public class Bytes implements Iterable<ByteSequence>{
             if(buff==null)
                 buff = ByteBuffer.allocate(1024);
             int read = channel.read(buff);
-            if(read<=0)
+            if(read<=0){
+                if(read<0 && buff.position()==0) // garbage buff
+                    buff = null;
                 break;
+            }
             total += read;
             add(new ByteSequence(buff.array(), buff.position()-read, read));
             if(buff.hasRemaining())
+                break;
+            else
+                buff = null;
+        }
+        return total;
+    }
+
+    public int readFully(InputStream in) throws IOException{
+        int total = 0;
+        while(true){
+            if(buff==null)
+                buff = ByteBuffer.allocate(1024);
+            int read = IOUtil.readFully(in, buff.array(), buff.position(), buff.limit());
+            if(read==0){
+                if(buff.position()==0) // garbage buff
+                    buff = null;
+                break;
+            }
+            buff.position(buff.position()+read);
+            total += read;
+            add(new ByteSequence(buff.array(), buff.position()-read, read));
+            if(buff.hasRemaining()) // eof reached
                 break;
             else
                 buff = null;
