@@ -283,4 +283,12 @@ public class IOUtil{
 	    }
         return n;
     }
+
+    /**
+     * Creates InputStreamReader with detected encoding
+     */
+    public static InputStreamReader createReader(InputStream is) throws IOException{
+        UnicodeInputStream uis = new UnicodeInputStream(is);
+        return uis.bom==null ? new InputStreamReader(uis) : new InputStreamReader(uis, uis.bom.encoding());
+    }
 }
