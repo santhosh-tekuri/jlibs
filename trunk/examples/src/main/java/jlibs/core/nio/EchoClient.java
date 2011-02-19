@@ -15,8 +15,6 @@
 
 package jlibs.core.nio;
 
-import jlibs.core.lang.ByteSequence;
-import jlibs.core.lang.Bytes;
 import jlibs.core.util.logging.AnsiFormatter;
 
 import java.io.IOException;
@@ -45,32 +43,33 @@ public class EchoClient{
 
         final NIOSelector selector = new NIOSelector(1000, 0);
         final ClientChannel client = selector.newClient();
-        final Bytes bytes = new Bytes();
+        final ByteBuffer inBuffer = ByteBuffer.allocate(1024);
 
         Thread readThread = new Thread(new Runnable(){
             @Override
             public void run(){
                 while(true){
                     try{
-                        byte buff[] = new byte[1024];
-                        int read = System.in.read(buff, 0, 1024);
+                        inBuffer.clear();
+                        int read = System.in.read(inBuffer.array(), 0, inBuffer.remaining());
                         if(read!=-1)
-                            bytes.add(new ByteSequence(buff, 0, read));
-                        synchronized(bytes){
+                            inBuffer.position(inBuffer.position()+read);
+                        inBuffer.flip();
+                        synchronized(inBuffer){
                             selector.invokeLater(new Runnable(){
                                 public void run(){
                                     try{
-                                        if(bytes.isEmpty())
-                                            client.shutdownOutput();
-                                        else
+                                        if(inBuffer.hasRemaining())
                                             client.addInterest(ClientChannel.OP_WRITE);
+                                        else
+                                            client.shutdownOutput();
                                     }catch(IOException ex){
                                         ex.printStackTrace();
                                     }
                                 }
                             });
                             selector.wakeup();
-                            bytes.wait();
+                            inBuffer.wait();
                         }
                     }catch(Exception ex){
                         ex.printStackTrace();
@@ -97,13 +96,15 @@ public class EchoClient{
                     client.addInterest(ClientChannel.OP_CONNECT);
             }
             if(client.isWritable()){
-                bytes.writeTo(client);
-                if(bytes.isEmpty()){
-                    synchronized(bytes){
-                        bytes.notifyAll();
-                    }
-                }else
+                client.write(inBuffer);
+                if(inBuffer.hasRemaining())
                     client.addInterest(ClientChannel.OP_WRITE);
+                else{
+                    synchronized(inBuffer){
+                        inBuffer.notifyAll();
+                    }
+                }
+
             }
 
             if(client.isReadable()){
