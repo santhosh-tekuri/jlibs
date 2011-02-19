@@ -45,6 +45,10 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         this.socketTimeout = socketTimeout;
     }
 
+    public NIOSelector(long selectTimeout) throws IOException{
+        this(selectTimeout, 0);
+    }
+
     protected long lastClientID;
     public ClientChannel newClient() throws IOException{
         validate();
@@ -71,6 +75,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             return;
         this.force = force;
         initiateShutdown = true;
+        wakeup();
         if(DEBUG)
             println(this+".shutdownRequested");
     }
