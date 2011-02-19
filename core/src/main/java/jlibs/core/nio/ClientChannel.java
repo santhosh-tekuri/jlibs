@@ -58,6 +58,10 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         next = prev = this;
     }
 
+    public NIOSelector selector(){
+        return nioSelector;
+    }
+
     @Override
     public SocketChannel realChannel(){
         return (SocketChannel)channel;
@@ -99,14 +103,15 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     private Transport transport = new PlainTransport(this);
 
     private HandshakeCompletedListener handshakeCompletedListener;
-    public void setHandshakeCompletedListener(HandshakeCompletedListener handshakeCompletedListener) {
+    public void setHandshakeCompletedListener(HandshakeCompletedListener handshakeCompletedListener){
         this.handshakeCompletedListener = handshakeCompletedListener;
     }
 
     public void enableSSL(SSLEngine engine) throws IOException{
         if(isConnected()){
+            engine.setUseClientMode(acceptedFrom()==null);
             HandshakeCompletedListener listener = handshakeCompletedListener;
-            listener = null;
+            handshakeCompletedListener = null;
             transport = new SSLTransport(transport, engine, listener);
         }else
             throw new ConnectionPendingException();
@@ -140,7 +145,6 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
 
                 sslContext.init(kmf.getKeyManagers(), tm , null);
                 SSLEngine engine = sslContext.createSSLEngine();
-                engine.setUseClientMode(acceptedFrom()==null);
                 if(sslParameters!=null)
                     engine.setSSLParameters(sslParameters);
                 enableSSL(engine);
@@ -166,10 +170,14 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     }
 
     public void addInterest(int operation) throws IOException{
+        if(operation!=OP_CONNECT && operation!=OP_READ && operation!=OP_WRITE)
+            throw new IllegalArgumentException(String.valueOf(operation));
         transport.addInterest(operation);
     }
 
     public void removeInterest(int operation) throws IOException{
+        if(operation!=OP_CONNECT && operation!=OP_READ && operation!=OP_WRITE)
+            throw new IllegalArgumentException(String.valueOf(operation));
         transport.removeInterest(operation);
     }
 
@@ -250,6 +258,8 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     public static class Defaults{
         public Boolean TCP_NODELAY;
         public Integer SO_LINGER;
+        public Integer SO_RCVBUF;
+        public Integer SO_SNDBUF;
         private Defaults(){}
 
         void apply(Socket socket) throws SocketException{
@@ -257,6 +267,10 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
                 socket.setTcpNoDelay(TCP_NODELAY);
             if(SO_LINGER!=null)
                 socket.setSoLinger(SO_LINGER<0, SO_LINGER);
+            if(SO_SNDBUF!=null)
+                socket.setSendBufferSize(SO_SNDBUF);
+            if(SO_RCVBUF!=null)
+                socket.setReceiveBufferSize(SO_RCVBUF);
         }
     }
 }
