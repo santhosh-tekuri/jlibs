@@ -46,13 +46,17 @@ public class Count<T extends Count.Unit> implements Comparable<Count<T>>{
     /*-------------------------------------------------[ Manipulation ]---------------------------------------------------*/
 
     public Count<T> add(long amount, T unit){
-        amounts[unit.ordinal()] += amount;
-        for(int i=unit.ordinal(); i<units.length-1; i++){
-            if(amounts[i]>=units[i].count()){
-                amounts[i+1] += amounts[i] / units[i].count();
-                amounts[i] %= units[i].count();
-            }else
-                break;
+        if(amount<0)
+            throw new IllegalArgumentException("amount '"+amount+"' should be >=0");
+        if(amount>0){
+            amounts[unit.ordinal()] += amount;
+            for(int i=unit.ordinal(); i<units.length-1; i++){
+                if(amounts[i]>=units[i].count()){
+                    amounts[i+1] += amounts[i] / units[i].count();
+                    amounts[i] %= units[i].count();
+                }else
+                    break;
+            }
         }
         return this;
     }
