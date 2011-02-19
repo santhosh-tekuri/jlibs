@@ -16,8 +16,7 @@
 package jlibs.core.nio;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
@@ -27,13 +26,14 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Santhosh Kumar T
  */
-public class ServerChannel extends NIOChannel {
+public class ServerChannel extends NIOChannel{
     private static AtomicLong ID_GENERATOR = new AtomicLong();
 
     protected final ServerSocketChannel channel;
     public ServerChannel() throws IOException{
         super(ID_GENERATOR.incrementAndGet(), ServerSocketChannel.open());
         this.channel = (ServerSocketChannel)super.channel;
+        defaults.apply(channel.socket());
     }
 
     @Override
@@ -41,8 +41,11 @@ public class ServerChannel extends NIOChannel {
         return channel;
     }
 
-    public void bind(InetSocketAddress endpoint) throws IOException{
-        realChannel().socket().bind(endpoint);
+    public void bind(SocketAddress endpoint) throws IOException{
+        if(defaults.BACKLOG!=null)
+            realChannel().socket().bind(endpoint, defaults.BACKLOG);
+        else
+            realChannel().socket().bind(endpoint);
     }
 
     public void bind(SocketAddress endpoint, int backlog) throws IOException{
@@ -54,6 +57,10 @@ public class ServerChannel extends NIOChannel {
         if(socketChannel==null)
             return null;
         return new ClientChannel(nioSelector, socketChannel, realChannel().socket().getLocalSocketAddress());
+    }
+
+    public boolean isRegistered(NIOSelector nioSelector){
+        return channel.keyFor(nioSelector.selector)!=null;
     }
 
     public void register(NIOSelector nioSelector) throws IOException{
@@ -75,5 +82,24 @@ public class ServerChannel extends NIOChannel {
     @Override
     public String toString(){
         return "ServerChannel@"+id;
+    }
+
+    private static final Defaults defaults = new Defaults();
+    public static Defaults defaults(){
+        return defaults;
+    }
+
+    public static class Defaults{
+        public Integer BACKLOG;
+        public Boolean SO_REUSEADDR;
+        public Integer SO_RCVBUF;
+        private Defaults(){}
+
+        void apply(ServerSocket socket) throws SocketException {
+            if(SO_REUSEADDR!=null)
+                socket.setReuseAddress(SO_REUSEADDR);
+            if(SO_RCVBUF!=null)
+                socket.setReceiveBufferSize(SO_RCVBUF);
+        }
     }
 }
