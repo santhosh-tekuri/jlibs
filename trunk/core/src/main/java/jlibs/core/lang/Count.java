@@ -67,6 +67,21 @@ public class Count<T extends Count.Unit> implements Comparable<Count<T>>{
         return this;
     }
 
+    public Count<T> clear(){
+        Arrays.fill(amounts, 0);
+        return this;
+    }
+
+    public Count<T> set(long amount, T unit){
+        if(amount<0)
+            throw new IllegalArgumentException("amount '"+amount+"' should be >=0");
+        return clear().add(amount, unit);
+    }
+
+    public Count<T> set(Count<T> other){
+        return clear().add(other);
+    }
+
     /*-------------------------------------------------[ Getters ]---------------------------------------------------*/
 
     public long get(T unit){
@@ -117,7 +132,7 @@ public class Count<T extends Count.Unit> implements Comparable<Count<T>>{
                 buff.append(units[i]);
             }
         }
-        return buff.length()==0 ? "0 "+units[0].ordinal() : buff.toString();
+        return buff.length()==0 ? "0 "+units[0] : buff.toString();
     }
 
     /*-------------------------------------------------[ Comparable ]---------------------------------------------------*/
