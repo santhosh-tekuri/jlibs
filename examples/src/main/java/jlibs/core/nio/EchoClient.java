@@ -104,7 +104,6 @@ public class EchoClient{
                         inBuffer.notifyAll();
                     }
                 }
-
             }
 
             if(client.isReadable()){
