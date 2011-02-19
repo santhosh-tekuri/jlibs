@@ -18,6 +18,7 @@ package jlibs.core.io;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * @author Santhosh Kumar T
@@ -30,14 +31,13 @@ public class UnicodeInputStream extends FilterInputStream{
         super(delegate);
 
         int len = IOUtil.readFully(delegate, marker);
-        BOM bom = null;
-        if(len==4){
-            bom = BOM.get(marker, true);
-            if(bom!=null)
-                imarker = bom.with().length;
-            else
-                bom = BOM.get(marker, false);
-        }
+        if(len<4)
+            marker = Arrays.copyOf(marker, len);
+        BOM bom = BOM.get(marker, true);
+        if(bom!=null)
+            imarker = bom.with().length;
+        else
+            bom = BOM.get(marker, false);
         this.bom = bom;
         hasBOM = imarker>0;
     }
