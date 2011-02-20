@@ -98,23 +98,27 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     /*-------------------------------------------------[ ShutdownHook ]---------------------------------------------------*/
 
     public void shutdownOnExit(final boolean force){
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            @Override
-            public void run(){
-                try{
-                    NIOSelector.this.shutdown(force);
-                    waitForShutdown();
-                }catch (InterruptedException ex){
-                    ex.printStackTrace();
+        if(!isShutdown()){
+            Runtime.getRuntime().addShutdownHook(new Thread(){
+                @Override
+                public void run(){
+                    try{
+                        NIOSelector.this.shutdown(force);
+                        waitForShutdown();
+                    }catch (InterruptedException ex){
+                        ex.printStackTrace();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     private final Object shutdownLock = new Object();
     public void waitForShutdown() throws InterruptedException{
-        synchronized(shutdownLock){
-            shutdownLock.wait();
+        if(!isShutdown()){
+            synchronized(shutdownLock){
+                shutdownLock.wait();
+            }
         }
     }
 
