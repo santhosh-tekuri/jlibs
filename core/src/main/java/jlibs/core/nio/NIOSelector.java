@@ -95,6 +95,29 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             throw new IOException("already shutdown");
     }
 
+    /*-------------------------------------------------[ ShutdownHook ]---------------------------------------------------*/
+
+    public void shutdownOnExit(final boolean force){
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run(){
+                try{
+                    NIOSelector.this.shutdown(force);
+                    waitForShutdown();
+                }catch (InterruptedException ex){
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private final Object shutdownLock = new Object();
+    public void waitForShutdown() throws InterruptedException{
+        synchronized(shutdownLock){
+            shutdownLock.wait();
+        }
+    }
+
     /*-------------------------------------------------[ Statistics ]---------------------------------------------------*/
 
     protected List<ServerChannel> servers = new ArrayList<ServerChannel>();
@@ -133,6 +156,9 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                     if(DEBUG)
                         println(NIOSelector.this+".shutdown");
                     selector.close();
+                    synchronized(shutdownLock){
+                        shutdownLock.notifyAll();
+                    }
                     return null;
                 }
             }catch(IOException ex){
