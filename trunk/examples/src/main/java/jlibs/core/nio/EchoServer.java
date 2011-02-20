@@ -16,6 +16,7 @@
 package jlibs.core.nio;
 
 import jlibs.core.lang.Bytes;
+import jlibs.core.lang.OS;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,10 +25,31 @@ import java.net.InetSocketAddress;
  * @author Santhosh Kumar T
  */
 public class EchoServer{
+    private static void printUsage(){
+        System.err.println("usage: echo-server."+(OS.get().isUnix()?"sh":"bat")+" [-ssl] [host] port");
+        System.exit(1);
+    }
+
+    private static void accepted(ClientChannel client){
+        System.out.println(client+" accepted from "+((InetSocketAddress)client.realChannel().socket().getRemoteSocketAddress()).getAddress().getHostAddress());
+    }
+
+    private static void close(ClientChannel client){
+        try{
+            client.close();
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        System.out.println(client+" closed");
+    }
+
     public static void main(String[] args) throws IOException{
+        if(args.length==0)
+            printUsage();
+
         boolean ssl = false;
         String host = "localhost";
-        int port = 1111;
+        int port = -1;
         for(String arg: args){
             if(arg.equals("-ssl"))
                 ssl = true;
@@ -39,8 +61,11 @@ public class EchoServer{
                 }
             }
         }
+        if(port==-1)
+            printUsage();
 
         NIOSelector selector = new NIOSelector(1000, 0);
+        selector.shutdownOnExit(false);
         ServerChannel server = new ServerChannel();
         server.bind(new InetSocketAddress(host, port));
 
@@ -51,6 +76,7 @@ public class EchoServer{
             if(channel instanceof ServerChannel){
                 ClientChannel client = server.accept(selector);
                 if(client!=null){
+                    accepted(client);
                     try{
                         if(ssl)
                             client.enableSSL();
@@ -58,7 +84,7 @@ public class EchoServer{
                         client.addInterest(ClientChannel.OP_READ);
                     }catch (IOException ex){
                         ex.printStackTrace();
-                        client.close();
+                        close(client);
                     }
                 }
             }else{
@@ -70,7 +96,7 @@ public class EchoServer{
                         if(!bytes.isEmpty())
                             client.addInterest(ClientChannel.OP_WRITE);
                         else if(client.isEOF())
-                            client.close();
+                            close(client);
                     }
 
                     if(client.isReadable()){
@@ -78,13 +104,13 @@ public class EchoServer{
                         if(!client.isEOF())
                             client.addInterest(ClientChannel.OP_READ);
                         if(bytes.isEmpty())
-                            client.close();
+                            close(client);
                         else
                             client.addInterest(ClientChannel.OP_WRITE);
                     }
                 }catch(IOException ex){
                     ex.printStackTrace();
-                    client.close();
+                    close(client);
                 }
             }
         }

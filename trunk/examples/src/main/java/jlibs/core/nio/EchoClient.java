@@ -15,6 +15,7 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.lang.OS;
 import jlibs.core.util.logging.AnsiFormatter;
 
 import java.io.IOException;
@@ -25,10 +26,18 @@ import java.nio.ByteBuffer;
  * @author Santhosh Kumar T
  */
 public class EchoClient{
+    private static void printUsage(){
+        System.err.println("usage: echo-client."+(OS.get().isUnix()?"sh":"bat")+" [-ssl] [host] port");
+        System.exit(1);
+    }
+
     public static void main(String[] args) throws IOException{
+        if(args.length==0)
+            printUsage();
+
         boolean ssl = false;
         String host = "localhost";
-        int port = 1111;
+        int port = -1;
         for(String arg: args){
             if(arg.equals("-ssl"))
                 ssl = true;
@@ -40,6 +49,9 @@ public class EchoClient{
                 }
             }
         }
+
+        if(port==-1)
+            printUsage();
 
         final NIOSelector selector = new NIOSelector(1000, 0);
         final ClientChannel client = selector.newClient();
@@ -88,6 +100,7 @@ public class EchoClient{
             if(client.isConnectable()){
                 if(client.finishConnect()){
                     System.out.println("connected to "+host+":"+port+(ssl?" with SSL":""));
+                    System.out.println("press CTRL+"+(OS.get().isUnix()?'D':'Z')+" to signal end of input");
                     if(ssl)
                         client.enableSSL();
                     readThread.start();
