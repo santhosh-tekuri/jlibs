@@ -103,8 +103,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                 @Override
                 public void run(){
                     try{
-                        NIOSelector.this.shutdown(force);
-                        waitForShutdown();
+                        shutdownAndWait(force);
                     }catch (InterruptedException ex){
                         ex.printStackTrace();
                     }
@@ -115,10 +114,17 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     private final Object shutdownLock = new Object();
     public void waitForShutdown() throws InterruptedException{
-        if(!isShutdown()){
-            synchronized(shutdownLock){
+        synchronized(shutdownLock){
+            if(!isShutdown())
                 shutdownLock.wait();
-            }
+        }
+    }
+
+    public void shutdownAndWait(boolean force) throws InterruptedException{
+        synchronized(shutdownLock){
+            shutdown(force);
+            if(!isShutdown())
+                shutdownLock.wait();
         }
     }
 
