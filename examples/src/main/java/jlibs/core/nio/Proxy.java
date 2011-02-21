@@ -15,7 +15,10 @@
 
 package jlibs.core.nio;
 
+import jlibs.core.lang.ArrayUtil;
+import jlibs.core.lang.OS;
 import jlibs.core.net.Protocols;
+import jlibs.core.util.CollectionUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -85,19 +88,40 @@ public class Proxy implements IOEvent<ServerChannel>{
         }
     }
 
+    private static void printUsage(){
+        System.err.println("usage: proxy."+(OS.get().isUnix()?"sh":"bat")+" [-samples] source-url=target-url ...");
+        System.err.println("source-url\tserver is started on this");
+        System.err.println("target-url\ttraffic from server is redirected to this");
+        System.err.println("-samples\twill add following sample proxies");
+        for(String sample: samples)
+            System.err.println("\t\t    "+sample);
+        System.err.println();
+        System.err.println("example: \n\tproxy."+(OS.get().isUnix()?"sh":"bat")+" http://localhost:3333=https://blog.torproject.org");
+        System.exit(1);
+    }
+
+    private static final String samples[] = {
+        "http://localhost:1111=http://mvnrepository.com",
+        "https://localhost:2222=http://mvnrepository.com",
+        "http://localhost:3333=https://blog.torproject.org",
+        "https://localhost:4444=https://blog.torproject.org"
+    };
+
     public static void main(String[] args) throws IOException{
+        if(args.length==0)
+            printUsage();
         System.setErr(System.out);
 
-        final NIOSelector nioSelector = new NIOSelector(1000, 10*1000);
-        if(args.length==0){
-            args = new String[]{
-                "http://localhost:1111=http://apigee.com",
-                "https://localhost:2222=http://apigee.com",
-                "http://localhost:3333=https://blog.torproject.org",
-                "https://localhost:4444=https://blog.torproject.org",
-            };
+        int samplesIndex = ArrayUtil.indexOf(args, "-samples");
+        if(samplesIndex!=-1){
+            List<String> list = new ArrayList<String>();
+            CollectionUtil.addAll(list, args);
+            list.remove(samplesIndex);
+            CollectionUtil.addAll(list, samples);
+            args = list.toArray(new String[list.size()]);
         }
 
+        final NIOSelector nioSelector = new NIOSelector(1000, 10*1000);
         final List<Proxy> proxies = new ArrayList<Proxy>(args.length);
         for(String arg: args){
             int equal = arg.indexOf("=");
@@ -112,26 +136,7 @@ public class Proxy implements IOEvent<ServerChannel>{
             System.out.println("added proxy: "+inbound+" -> "+outbound);
         }
 
-        final Thread nioThread = Thread.currentThread();
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            @Override
-            public void run(){
-                System.out.println("shutdown initiated");
-                nioSelector.shutdown(false);
-                try{
-                    nioThread.join();
-                }catch(InterruptedException ex){
-                    ex.printStackTrace();
-                }
-                for(Proxy proxy: proxies){
-                    try{
-                        proxy.server.close();
-                    }catch (IOException ex){
-                        ex.printStackTrace();
-                    }
-                }
-            }
-        });
+        nioSelector.shutdownOnExit(false);
 
         for(NIOChannel channel: nioSelector){
             try{
