@@ -122,7 +122,6 @@ public class Proxy implements IOEvent<ServerChannel>{
         }
 
         final NIOSelector nioSelector = new NIOSelector(1000, 10*1000);
-        final List<Proxy> proxies = new ArrayList<Proxy>(args.length);
         for(String arg: args){
             int equal = arg.indexOf("=");
             if(equal==-1)
@@ -132,7 +131,6 @@ public class Proxy implements IOEvent<ServerChannel>{
             String outbound = arg.substring(equal+1);
             Proxy proxy = new Proxy(new Endpoint(inbound), new Endpoint(outbound));
             proxy.server.register(nioSelector);
-            proxies.add(proxy);
             System.out.println("added proxy: "+inbound+" -> "+outbound);
         }
 
