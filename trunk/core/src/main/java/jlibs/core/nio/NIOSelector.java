@@ -33,15 +33,13 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     protected long id = ID_GENERATOR.incrementAndGet();
     protected final Selector selector;
-    protected final long selectTimeout, socketTimeout;
+    protected final long socketTimeout;
 
     public NIOSelector(long selectTimeout, long socketTimeout) throws IOException{
-        if(selectTimeout<=0)
-            throw new IllegalArgumentException("selectTimeout should be >0");
         if(socketTimeout<0)
             throw new IllegalArgumentException("socketTimeout should be >=0");
         selector = Selector.open();
-        this.selectTimeout = selectTimeout;
+        setSelectTimeout(selectTimeout);
         this.socketTimeout = socketTimeout;
     }
 
@@ -53,6 +51,21 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     public ClientChannel newClient() throws IOException{
         validate();
         return new ClientChannel(this, SocketChannel.open());
+    }
+
+    private long selectTimeout;
+    public long getSelectTimeout(){
+        return selectTimeout;
+    }
+
+    public void setSelectTimeout(long selectTimeout){
+        if(selectTimeout<=0)
+            throw new IllegalArgumentException("selectTimeout should be >0");
+        this.selectTimeout = selectTimeout;
+    }
+
+    public long getSocketTimeout(){
+        return socketTimeout;
     }
 
     @Override
