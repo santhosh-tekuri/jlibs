@@ -68,10 +68,10 @@ public enum LengthUnit implements Count.Unit{
 }
 }}}
 
-we define an enum implementing `Count.Unit` interface.<br>
-The enum constants are ordered from lowest to highest.<br>
-for each enum provider the count to promote to next enum.<br>
-for example `MILLI_METERS(10)` means, 10 millimeters should be promoted to 1 centimeter.
+we define an `enum` implementing `Count.Unit` interface.<br>
+The `enum` constants are ordered from lowest to highest.<br>
+for each `enum` provide the count to promote to next enum.<br>
+for example: `MILLI_METERS(10)` means, 10 millimeters should be promoted to 1 centimeter.
 
 now we are ready to count length:
 {{{
