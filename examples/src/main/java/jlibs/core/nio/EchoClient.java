@@ -53,7 +53,7 @@ public class EchoClient{
         if(port==-1)
             printUsage();
 
-        final NIOSelector selector = new NIOSelector(1000, 0);
+        final NIOSelector selector = new NIOSelector(1000);
         final ClientChannel client = selector.newClient();
         final ByteBuffer inBuffer = ByteBuffer.allocate(1024);
 

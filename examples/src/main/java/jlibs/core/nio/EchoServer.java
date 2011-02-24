@@ -64,7 +64,7 @@ public class EchoServer{
         if(port==-1)
             printUsage();
 
-        NIOSelector selector = new NIOSelector(1000, 0);
+        NIOSelector selector = new NIOSelector(1000);
         selector.shutdownOnExit(false);
         ServerChannel server = new ServerChannel();
         server.bind(new InetSocketAddress(host, port));
