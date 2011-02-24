@@ -18,6 +18,10 @@ package jlibs.core.nio;
 import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.OS;
 import jlibs.core.net.Protocols;
+import jlibs.core.nio.handlers.ClientHandler;
+import jlibs.core.nio.handlers.Operation;
+import jlibs.core.nio.handlers.SelectionHandler;
+import jlibs.core.nio.handlers.ServerHandler;
 import jlibs.core.util.CollectionUtil;
 
 import java.io.IOException;
@@ -32,7 +36,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public class Proxy implements IOEvent<ServerChannel>{
+public class Proxy implements ServerHandler{
     Endpoint inboundEndpoint, outboundEndpoint;
     private ServerChannel server;
 
@@ -47,19 +51,14 @@ public class Proxy implements IOEvent<ServerChannel>{
 
     private int count;
     @Override
-    public void process(NIOSelector nioSelector, ServerChannel server) throws IOException{
+    public void onAccept(ServerChannel channel, ClientChannel inboundClient) throws Exception{
+        System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
         count++;
-        ClientChannel inboundClient = null;
         ClientChannel outboundClient = null;
         try{
-            outboundClient = nioSelector.newClient();
-            inboundClient = server.accept(nioSelector);
-            if(inboundClient==null)
-                return;
-            System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
-
             if(inboundEndpoint.enableSSL)
                 inboundClient.enableSSL();
+            outboundClient = inboundClient.selector().newClient();
 
             ByteBuffer buffer1 = ByteBuffer.allocate(9000);
             ByteBuffer buffer2 = ByteBuffer.allocate(9000);
@@ -70,22 +69,20 @@ public class Proxy implements IOEvent<ServerChannel>{
             inboundClient.attach(inboundListener);
             outboundClient.attach(outboundListener);
 
-            if(outboundClient.connect(outboundEndpoint.address))
-                outboundListener.onConnect(outboundClient);
-            else
-                outboundClient.addInterest(ClientChannel.OP_CONNECT);
-
+            SelectionHandler.connect(outboundClient, outboundEndpoint.address);
             inboundClient.addInterest(ClientChannel.OP_READ);
         }catch(Exception ex){
-            if(inboundClient!=null)
-                inboundClient.close();
             if(outboundClient!=null)
                 outboundClient.close();
-            if(ex instanceof IOException)
-                throw (IOException)ex;
-            else
-                throw (RuntimeException)ex;
+            throw ex;
         }
+    }
+
+    @Override
+    public void onThrowable(NIOChannel channel, Operation operation, Throwable error) throws Exception{
+        error.printStackTrace();
+        if(channel instanceof ClientChannel)
+            channel.close();
     }
 
     private static void printUsage(){
@@ -121,7 +118,8 @@ public class Proxy implements IOEvent<ServerChannel>{
             args = list.toArray(new String[list.size()]);
         }
 
-        final NIOSelector nioSelector = new NIOSelector(1000, 10*1000);
+        ClientChannel.defaults().SO_TIMEOUT = 10*1000L;
+        final NIOSelector nioSelector = new NIOSelector(1000);
         for(String arg: args){
             int equal = arg.indexOf("=");
             if(equal==-1)
@@ -135,15 +133,7 @@ public class Proxy implements IOEvent<ServerChannel>{
         }
 
         nioSelector.shutdownOnExit(false);
-
-        for(NIOChannel channel: nioSelector){
-            try{
-                ((IOEvent)channel.attachment()).process(nioSelector, channel);
-            }catch(IOException ex){
-                ex.printStackTrace();
-            }
-        }
-        System.out.println("finished shutdown");
+        new SelectionHandler(nioSelector).run();
     }
 }
 
@@ -163,7 +153,7 @@ class Endpoint{
     }
 }
 
-class ClientListener implements IOEvent<ClientChannel>{
+class ClientListener implements ClientHandler{
     private String name;
     private ByteBuffer readBuffer, writeBuffer;
     private boolean enableSSL;
@@ -176,6 +166,7 @@ class ClientListener implements IOEvent<ClientChannel>{
         this.buddy = buddy;
     }
 
+    @Override
     public void onConnect(ClientChannel client) throws IOException{
         System.out.println(this+": Connection established");
         if(enableSSL)
@@ -184,10 +175,50 @@ class ClientListener implements IOEvent<ClientChannel>{
     }
 
     @Override
+    public void onIO(ClientChannel client) throws Exception{
+        if(client.isReadable()){
+            readBuffer.clear();
+            int read = client.read(readBuffer);
+            if(read==-1){
+                client.close();
+                if((buddy.interests()&ClientChannel.OP_WRITE)==0)
+                    buddy.close();
+            }else if(read>0){
+                if(buddy.isOpen()){
+                    readBuffer.flip();
+                    buddy.addInterest(SelectionKey.OP_WRITE);
+                }else
+                    client.close();
+            }else
+                client.addInterest(SelectionKey.OP_READ);
+        }
+        if(client.isWritable()){
+            client.write(writeBuffer);
+            if(writeBuffer.hasRemaining())
+                client.addInterest(SelectionKey.OP_WRITE);
+            else{
+                if(buddy.isOpen()){
+                    writeBuffer.flip();
+                    buddy.addInterest(SelectionKey.OP_READ);
+                }else
+                    client.close();
+            }
+        }
+    }
+
+    @Override
+    public void onTimeout(ClientChannel client) throws Exception{
+        if(buddy.isOpen() && buddy.isTimeout()){
+            System.out.println(name+": timedout");
+            client.close();
+            buddy.close();
+        }
+    }
+
     public void process(NIOSelector nioSelector, ClientChannel client) throws IOException{
         if(client.isTimeout()){
             if(buddy.isOpen() && buddy.isTimeout()){
-                System.out.println(name+" timedout");
+                System.out.println(name+": timedout");
                 client.close();
                 buddy.close();
             }
@@ -247,8 +278,12 @@ class ClientListener implements IOEvent<ClientChannel>{
     public String toString(){
         return name;
     }
-}
 
-interface IOEvent<T extends NIOChannel>{
-    public void process(NIOSelector nioSelector, T channel) throws IOException;
+    @Override
+    public void onThrowable(NIOChannel channel, Operation operation, Throwable error) throws Exception{
+        error.printStackTrace();
+        if(channel instanceof ClientChannel)
+            channel.close();
+        buddy.close();
+    }
 }
