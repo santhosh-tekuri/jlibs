@@ -169,6 +169,7 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         return transport.interests();
     }
 
+    protected int heapIndex = -1;
     public void addInterest(int operation) throws IOException{
         if(operation!=OP_CONNECT && operation!=OP_READ && operation!=OP_WRITE)
             throw new IllegalArgumentException(String.valueOf(operation));
@@ -197,9 +198,20 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         return (ready() & OP_WRITE)!=0;
     }
 
-    protected long interestTime;
+    private long timeout = defaults.SO_TIMEOUT!=null && defaults.SO_TIMEOUT>0 ? defaults.SO_TIMEOUT : 0;
+    public long getTimeout(){
+        return timeout;
+    }
+
+    public void setTimeout(long timeout){
+        if(timeout<0)
+            throw new IllegalArgumentException("timeout can't be negative");
+        this.timeout = timeout;
+    }
+
+    protected long timeoutAt = Long.MAX_VALUE;
     public boolean isTimeout(){
-        return nioSelector.socketTimeout>0 && interestTime<nioSelector.timeoutIterator.time;
+        return timeoutAt < nioSelector.timeoutTracker.time;
     }
 
     @Override
@@ -260,6 +272,7 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         public Integer SO_LINGER;
         public Integer SO_RCVBUF;
         public Integer SO_SNDBUF;
+        public Long SO_TIMEOUT;
         private Defaults(){}
 
         void apply(Socket socket) throws SocketException{

@@ -33,18 +33,15 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     protected long id = ID_GENERATOR.incrementAndGet();
     protected final Selector selector;
-    protected final long socketTimeout;
-
-    public NIOSelector(long selectTimeout, long socketTimeout) throws IOException{
-        if(socketTimeout<0)
-            throw new IllegalArgumentException("socketTimeout should be >=0");
-        selector = Selector.open();
-        setSelectTimeout(selectTimeout);
-        this.socketTimeout = socketTimeout;
-    }
 
     public NIOSelector(long selectTimeout) throws IOException{
-        this(selectTimeout, 0);
+        this(selectTimeout, false);
+    }
+
+    public NIOSelector(long selectTimeout, boolean redeliverTimeouts) throws IOException{
+        selector = Selector.open();
+        setSelectTimeout(selectTimeout);
+        timeoutTracker.redeliverTimeouts = redeliverTimeouts;
     }
 
     protected long lastClientID;
@@ -62,10 +59,6 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         if(selectTimeout<=0)
             throw new IllegalArgumentException("selectTimeout should be >0");
         this.selectTimeout = selectTimeout;
-    }
-
-    public long getSocketTimeout(){
-        return socketTimeout;
     }
 
     @Override
@@ -246,7 +239,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         if(selector.select(selectTimeout)>0)
             return selectedIterator.reset();
         else
-            return timeoutIterator.reset();
+            return timeoutTracker.reset();
     }
 
     private ReadyIterator readyIterator = new ReadyIterator();
@@ -285,7 +278,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         public SelectedIterator reset(){
             super.reset();
             keys = selector.selectedKeys().iterator();
-            timeoutIterator.reset();
+            timeoutTracker.reset();
             return this;
         }
 
@@ -298,88 +291,14 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                 if(key.isValid()){
                     if(channel instanceof ClientChannel){
                         ClientChannel client = (ClientChannel)channel;
-                        if(client.isTimeout())
-                            client.interestTime = Long.MAX_VALUE;
-                        timeoutIterator.remove(client);
+                        timeoutTracker.untrack(client);
                     }
                     if(channel.process())
                         return channel;
                 }
             }
-            return timeoutIterator.hasNext() ? timeoutIterator.next() : null;
+            return timeoutTracker.hasNext() ? timeoutTracker.next() : null;
         }
     }
-
-    protected TimeoutIterator timeoutIterator = new TimeoutIterator();
-    class TimeoutIterator implements Iterator<NIOChannel>{
-        private ClientChannel head = new ClientChannel();
-
-        private boolean checkLinks(){
-            ClientChannel channel = head;
-            do{
-                assert channel.next.prev==channel;
-                assert channel.prev.next==channel;
-                channel = channel.next;
-            }while(channel!=head);
-            return true;
-        }
-
-        protected void add(ClientChannel channel){
-            if(socketTimeout==0)
-                return;
-            if(channel.prev!=null)
-                remove(channel);
-            channel.prev = head.prev;
-            channel.next = head;
-            channel.prev.next = channel;
-            channel.next.prev = channel;
-            channel.interestTime = System.currentTimeMillis();
-            assert checkLinks();
-        }
-
-        protected void remove(ClientChannel channel){
-            if(socketTimeout==0)
-                return;
-            assert (channel.prev!=null)==(channel.next!=null);
-            if(channel.prev!=null){
-                if(current==channel)
-                    current = current.prev;
-
-                channel.prev.next = channel.next;
-                channel.next.prev = channel.prev;
-                channel.prev = channel.next = null;
-                assert checkLinks();
-            }
-        }
-
-        protected long time;
-        private ClientChannel current;
-        public TimeoutIterator reset(){
-            if(socketTimeout>0)
-                time = System.currentTimeMillis()-socketTimeout;
-            current = head;
-            return this;
-        }
-
-        @Override
-        public boolean hasNext(){
-            return current.next!=head && current.next.interestTime<time;
-        }
-
-        @Override
-        public NIOChannel next(){
-            if(hasNext()){
-                current = current.next;
-                if(DEBUG)
-                    println("channel@"+current.id+".timeout");
-                return current;
-            }
-            throw new NoSuchElementException();
-        }
-
-        @Override
-        public void remove(){
-            throw new UnsupportedOperationException();
-        }
-    }
+    protected final TimeoutTracker timeoutTracker = new TimeoutTracker();
 }
