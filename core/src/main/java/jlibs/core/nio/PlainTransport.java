@@ -52,7 +52,7 @@ public class PlainTransport extends Debuggable implements Transport{
     @Override
     public void addInterest(int operation) throws IOException{
         client.key.interestOps(interests() | operation);
-        client.nioSelector.timeoutIterator.add(client);
+        client.nioSelector.timeoutTracker.track(client);
         if(DEBUG){
             switch(operation){
                 case SelectionKey.OP_CONNECT:
@@ -71,7 +71,7 @@ public class PlainTransport extends Debuggable implements Transport{
     public void removeInterest(int operation){
         client.key.interestOps(interests()&~operation);
         if(interests()==0)
-            client.nioSelector.timeoutIterator.remove(client);
+            client.nioSelector.timeoutTracker.untrack(client);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class PlainTransport extends Debuggable implements Transport{
                 client.nioSelector.connectedClients--;
             else
                 client.nioSelector.connectionPendingClients--;
-            client.nioSelector.timeoutIterator.remove(client);
+            client.nioSelector.timeoutTracker.untrack(client);
         }
     }
 }
