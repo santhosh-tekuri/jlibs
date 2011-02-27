@@ -52,7 +52,11 @@ public class Bytes implements Iterable<ByteSequence>{
         list.clear();
     }
 
-    public void add(ByteSequence seq){
+    public void prepend(ByteSequence seq){
+        list.add(0, seq);
+    }
+
+    public void append(ByteSequence seq){
         list.add(seq);
     }
 
@@ -89,7 +93,7 @@ public class Bytes implements Iterable<ByteSequence>{
                 break;
             }
             total += read;
-            add(new ByteSequence(buff.array(), buff.position()-read, read));
+            append(new ByteSequence(buff.array(), buff.position() - read, read));
             if(buff.hasRemaining())
                 break;
             else
@@ -111,7 +115,7 @@ public class Bytes implements Iterable<ByteSequence>{
             }
             buff.position(buff.position()+read);
             total += read;
-            add(new ByteSequence(buff.array(), buff.position()-read, read));
+            append(new ByteSequence(buff.array(), buff.position() - read, read));
             if(buff.hasRemaining()) // eof reached
                 break;
             else
