@@ -124,17 +124,9 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
 
                 TrustManager tm[];
                 KeyStore trustStore = SSLUtil.newTrustStore();
-                if(trustStore==null){
-                    tm = new TrustManager[]{
-                       new X509TrustManager() {
-                           public X509Certificate[] getAcceptedIssuers(){
-                               return new X509Certificate[0];
-                           }
-                           public void checkClientTrusted(X509Certificate[] certs, String authType ){}
-                           public void checkServerTrusted(X509Certificate[] certs, String authType ){}
-                       }
-                    };
-                }else{
+                if(trustStore==null)
+                    tm = SSLUtil.DUMMY_TRUST_MANAGERS;
+                else{
                     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                     tmf.init(SSLUtil.newTrustStore());
                     tm = tmf.getTrustManagers();
