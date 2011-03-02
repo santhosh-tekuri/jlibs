@@ -34,7 +34,7 @@ import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
  * @author Santhosh Kumar T
  */
 public class SSLTransport extends Debuggable implements Transport{
-    private Transport transport;
+    protected Transport transport;
     private final SSLEngine engine;
 
     private final ByteBuffer dummy = ByteBuffer.allocate(0);
@@ -549,6 +549,10 @@ public class SSLTransport extends Debuggable implements Transport{
         }
         if(DEBUG)
             println("}");
+
+        if(client().futurePool!=null && transport.interests()==0)
+            client().futurePool._add(client(), client().futurePoolTimeout);
+
         return isAppReady();
     }
 

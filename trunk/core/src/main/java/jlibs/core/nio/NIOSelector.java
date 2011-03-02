@@ -35,13 +35,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     protected final Selector selector;
 
     public NIOSelector(long selectTimeout) throws IOException{
-        this(selectTimeout, false);
-    }
-
-    public NIOSelector(long selectTimeout, boolean redeliverTimeouts) throws IOException{
         selector = Selector.open();
         setSelectTimeout(selectTimeout);
-        timeoutTracker.redeliverTimeouts = redeliverTimeouts;
     }
 
     protected long lastClientID;
@@ -159,7 +154,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         return iterator;
     }
 
-    private Iterator<NIOChannel> iterator = new AbstractIterator<NIOChannel>() {
+    private Iterator<NIOChannel> iterator = new AbstractIterator<NIOChannel>(){
         private Iterator<NIOChannel> delegate = Collections.<NIOChannel>emptyList().iterator();
         @Override
         protected NIOChannel computeNext(){
@@ -189,6 +184,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     public synchronized void invokeLater(Runnable task){
         tasks.add(task);
+        wakeup();
     }
 
     public void invokeAndWait(Runnable task) throws InterruptedException{
@@ -236,7 +232,9 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             }
         }
 
-        if(selector.select(selectTimeout)>0)
+        if(isShutdown())
+            return Collections.<NIOChannel>emptyList().iterator();
+        else if(selector.select(timeoutTracker.isTracking()?selectTimeout:0)>0)
             return selectedIterator.reset();
         else
             return timeoutTracker.reset();

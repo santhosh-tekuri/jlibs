@@ -28,7 +28,6 @@ import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.KeyStore;
-import java.security.cert.X509Certificate;
 
 /**
  * @author Santhosh Kumar T
@@ -100,7 +99,13 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     public static final int OP_WRITE = SelectionKey.OP_WRITE;
     public static final int OP_CONNECT = SelectionKey.OP_CONNECT;
 
-    private Transport transport = new PlainTransport(this);
+    protected Transport transport = new PlainTransport(this);
+    protected PlainTransport plainTransport(){
+        Transport t = transport;
+        while(t instanceof SSLTransport)
+            t = ((SSLTransport)t).transport;
+        return (PlainTransport)t;
+    }
 
     private HandshakeCompletedListener handshakeCompletedListener;
     public void setHandshakeCompletedListener(HandshakeCompletedListener handshakeCompletedListener){
@@ -277,5 +282,12 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
             if(SO_RCVBUF!=null)
                 socket.setReceiveBufferSize(SO_RCVBUF);
         }
+    }
+
+    protected ClientPool pool;
+    protected ClientPool futurePool;
+    protected long futurePoolTimeout;
+    public ClientPool pool(){
+        return pool;
     }
 }

@@ -36,35 +36,15 @@ class TimeoutTracker extends Debuggable implements Iterator<NIOChannel>{
         }
     };
 
-    private ClientChannel head = new ClientChannel();
-
     protected long time;
-    private ClientChannel current;
     public TimeoutTracker reset(){
-        time = System.currentTimeMillis();
-        current = head;
+        if(isTracking())
+            time = System.currentTimeMillis();
         return this;
     }
 
-    private void addToList(ClientChannel channel){
-        assert channel.prev==null && channel.next==null;
-
-        channel.prev = head.prev;
-        channel.next = head;
-        channel.prev.next = channel;
-        channel.next.prev = channel;
-    }
-
-    private void removeFromList(ClientChannel channel){
-        if(channel.prev!=null){ // present in list
-            if(current==channel)
-                current = current.prev;
-
-            channel.prev.next = channel.next;
-            channel.next.prev = channel.prev;
-            channel.prev = channel.next = null;
-        }
-        assert channel.prev==null && channel.next==null;
+    public boolean isTracking(){
+        return heap.size()>0;
     }
 
     public void track(ClientChannel channel){
@@ -76,7 +56,6 @@ class TimeoutTracker extends Debuggable implements Iterator<NIOChannel>{
     }
 
     public void untrack(ClientChannel channel){
-        removeFromList(channel);
         if(channel.heapIndex!=-1){
             ClientChannel removed = heap.removeAt(channel.heapIndex);
             assert removed==channel;
@@ -87,39 +66,21 @@ class TimeoutTracker extends Debuggable implements Iterator<NIOChannel>{
 
     @Override
     public boolean hasNext(){
-        if(current.next!=head)
-            return true;
-        else{
-            ClientChannel root = heap.root();
-            return root!=null && root.timeoutAt<time;
-        }
+        ClientChannel root = heap.root();
+        return root!=null && root.timeoutAt<time;
     }
-
-    protected boolean redeliverTimeouts;
 
     @Override
     public NIOChannel next(){
-        if(current.next!=head){
-            current = current.next;
+        ClientChannel root = heap.root();
+        if(root!=null && root.timeoutAt<time){
+            assert root.heapIndex==0;
+            heap.removeAt(0);
             if(DEBUG)
-                println("channel@"+current.id+".timeout");
-            return current;
-
-        }else{
-            ClientChannel root = heap.root();
-            if(root!=null && root.timeoutAt<time){
-                assert root.heapIndex==0;
-                heap.removeAt(0);
-                if(redeliverTimeouts){
-                    addToList(root);
-                    current = root;
-                }
-                if(DEBUG)
-                    println("channel@"+root.id+".timeout");
-                return root;
-            }else
-                throw new NoSuchElementException();
-        }
+                println("channel@"+root.id+".timeout");
+            return root;
+        }else
+            throw new NoSuchElementException();
     }
 
     @Override
