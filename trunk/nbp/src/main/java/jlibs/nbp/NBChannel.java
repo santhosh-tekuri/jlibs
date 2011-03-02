@@ -40,6 +40,10 @@ public class NBChannel implements ReadableCharChannel{
         this(channel, DEFAULT_BUFFER_SIZE);
     }
 
+    public ReadableByteChannel getChannel(){
+        return channel;
+    }
+
     public void setChannel(ReadableByteChannel channel){
         this.channel = channel;
         byteBuffer.clear();
