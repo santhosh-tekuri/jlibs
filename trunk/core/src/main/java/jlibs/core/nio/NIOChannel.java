@@ -22,7 +22,7 @@ import java.nio.channels.SelectableChannel;
 /**
  * @author Santhosh Kumar T
  */
-public abstract class NIOChannel implements Channel{
+public abstract class NIOChannel extends AttachmentSupport implements Channel{
     protected long id;
     protected final SelectableChannel channel;
     protected NIOChannel(long id, SelectableChannel channel) throws IOException{
@@ -51,17 +51,5 @@ public abstract class NIOChannel implements Channel{
 
     protected boolean process(){
         return true;
-    }
-
-    /*-------------------------------------------------[ Attachment ]---------------------------------------------------*/
-
-    private Object attachment;
-
-    public void attach(Object obj){
-        attachment = obj;
-    }
-
-    public Object attachment(){
-        return attachment;
     }
 }
