@@ -17,6 +17,7 @@ package jlibs.nbp;
 
 import java.io.IOException;
 import java.nio.CharBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.CharacterCodingException;
 
 /**
@@ -47,6 +48,10 @@ public class Feeder{
         this.channel = channel;
         child = null;
         charBuffer.clear();
+    }
+
+    public final ReadableByteChannel byteChannel(){
+        return channel instanceof NBChannel ? ((NBChannel)channel).getChannel() : null;
     }
 
     protected Feeder child;
