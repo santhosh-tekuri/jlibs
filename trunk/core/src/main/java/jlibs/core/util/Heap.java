@@ -43,6 +43,10 @@ public abstract class Heap<E>{
         queue = Arrays.copyOf(queue, newCapacity);
     }
 
+    public int size(){
+        return size;
+    }
+
     public E root(){
         return size==0 ? null : (E)queue[0];
     }
@@ -70,6 +74,12 @@ public abstract class Heap<E>{
             k = parent;
         }
         queue[k] = x; setIndex(x, k);
+    }
+
+    public E get(int i){
+        if(i>=size)
+            return null;
+        return (E)queue[i];
     }
 
     public E removeAt(int i){
