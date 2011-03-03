@@ -138,6 +138,7 @@ public class PlainTransport extends Debuggable implements Transport{
             else
                 client.nioSelector.connectionPendingClients--;
             client.nioSelector.timeoutTracker.untrack(client);
+            (client.pool==null ? client.futurePool : client.pool).remove(client);
         }
     }
 }

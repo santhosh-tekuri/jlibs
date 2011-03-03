@@ -37,7 +37,7 @@ public class ClientPool extends AttachmentSupport{
 
     // should be called in client's thread
     public synchronized void add(ClientChannel client, long timeout){
-        if(client.pool!=null)
+        if(client.pool!=null || client.futurePool!=null)
             throw new IllegalArgumentException("client is already pooled");
         if(client.interests()!=0)
             throw new IllegalArgumentException("client.interests() should be zero");
@@ -78,7 +78,7 @@ public class ClientPool extends AttachmentSupport{
 
     // should be called in client's thread
     public synchronized boolean remove(ClientChannel client){
-        if(client.pool!=this)
+        if(client.pool!=this && client.futurePool!=this)
             throw new IllegalArgumentException("This client doesn't belong to this pool");
         client.pool = client.futurePool = null;
         return removeFromList(client);
