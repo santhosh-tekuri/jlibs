@@ -49,7 +49,7 @@ class TimeoutTracker extends Debuggable implements Iterator<NIOChannel>{
 
     public void track(ClientChannel channel){
         untrack(channel);
-        if(channel.getTimeout()>=0){
+        if(channel.getTimeout()>0){
             channel.timeoutAt = System.currentTimeMillis() + channel.getTimeout();
             heap.add(channel);
         }
