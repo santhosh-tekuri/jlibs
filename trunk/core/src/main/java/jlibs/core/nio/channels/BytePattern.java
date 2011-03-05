@@ -21,11 +21,11 @@ package jlibs.core.nio.channels;
  *
  * @author Santhosh Kumar T
  */
-public class BytePatternMatcher{
-    private byte[] pattern;
-    private int[] failure;
+public class BytePattern{
+    protected byte[] pattern;
+    protected int[] failure;
 
-    public BytePatternMatcher(byte... pattern){
+    public BytePattern(byte... pattern){
         this.pattern = pattern;
 
          // Computes the failure function using a boot-strapping process,
@@ -41,16 +41,26 @@ public class BytePatternMatcher{
         }
     }
 
-    private int j = 0;
-    public boolean matches(byte nextByte){
-        while(j>0 && pattern[j]!=nextByte)
-            j = failure[j - 1];
-        if(pattern[j]==nextByte)
-            j++;
-        return j==pattern.length;
-    }
+    public class Matcher{
+        private int j = 0;
+        public boolean matches(byte nextByte){
+            while(j>0 && pattern[j]!=nextByte)
+                j = failure[j - 1];
+            if(pattern[j]==nextByte)
+                j++;
+            return matched();
+        }
 
-    public void reset(){
-        j = 0;
+        public boolean matched(){
+            return j==pattern.length;
+        }
+
+        public void reset(){
+            j = 0;
+        }
+
+        public BytePattern pattern(){
+            return BytePattern.this;
+        }
     }
 }
