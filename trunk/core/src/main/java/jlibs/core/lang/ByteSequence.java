@@ -104,6 +104,10 @@ public class ByteSequence{
         return new ByteSequence(buff, this.offset+offset, length-offset);
     }
 
+    public ByteSequence slice(int offset, int length){
+        return new ByteSequence(buff, this.offset+offset, length);
+    }
+
     public ByteBuffer toByteBuffer(){
         return ByteBuffer.wrap(buff, offset, length);
     }
