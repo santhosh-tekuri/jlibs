@@ -22,11 +22,11 @@ import java.nio.ByteBuffer;
  * @author Santhosh Kumar T
  */
 public class PatternInputChannel extends FilterInputChannel{
-    private BytePatternMatcher matcher;
+    private BytePattern.Matcher matcher;
 
-    public PatternInputChannel(InputChannel delegate, byte[] pattern){
+    public PatternInputChannel(InputChannel delegate, BytePattern pattern){
         super(delegate);
-        matcher = new BytePatternMatcher(pattern);
+        matcher = pattern.new Matcher();
     }
 
     @Override
