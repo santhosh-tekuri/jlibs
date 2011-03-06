@@ -227,8 +227,13 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             while(servers.size()>0)
                 servers.get(0).unregister(this);
             if(force){
-                for(SelectionKey key: selector.keys())
-                    ((NIOChannel)key.attachment()).close();
+                for(SelectionKey key: selector.keys()){
+                    try{
+                        ((NIOChannel)key.attachment()).close();
+                    }catch(IOException ex){
+                        ex.printStackTrace();
+                    }
+                }
             }
         }
 
