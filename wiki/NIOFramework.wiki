@@ -1,0 +1,325 @@
+#summary NIO Framework with SSL and Timeouts
+#labels NIO
+
+==NOTE: following API is work in progress. You can try it by source checkout==
+
+JLib's NIO Framework simplifies Java NIO Framework and provides few additonal features like
+ssl, timeout etc.
+
+I assume that you are familar with Java NIO Framework.
+
+We always start by creating `NIOSelector`.
+{{{
+import jlibs.core.nio;
+
+long selectTimeout = 1000; // 1 sec
+NIOSelector selector = new NIOSelector(selectTimeout);
+}}}
+---------
+*Starting Server*
+
+now we will start a server on a port;
+{{{
+ServerChannel server = new ServerChannel();
+server.bind(new InetSocketAddress(host, port));
+server.register(selector);
+}}}
+`ServerChannel`'s can be registered with multiple `NIOSelector`s.<br>
+`NIOSelector` notifes when client is ready to be accepted.
+---------
+*Connecting to Remote Endpoint*
+
+to connect to a remote endpoint:
+{{{
+ClientChannel client = selector.newClient();
+boolean connected = client.connect(new InetSocketAddress(host, port));
+if(!connected)
+    client.addInterest(ClientChannel.OP_CONNECT);
+client.addInterest(ClientChannel.OP_WRITE);
+}}}
+`ClientChannel`s are always registered with a `NIOSelector`. So `ClientChannel` has no public constructor.<br>
+You have to use 'NIOSelector.newClient()' to create one.
+
+you can get the selector with which `ClientChannel` is registered using `client.selector()`
+---------
+*Selection Process*
+
+now we start the selection process:
+{{{
+for(NIOChannel channel: selector){
+    if(channel instanceof ServerChannel){
+        ClientChannel client = server.accept(selector);
+        if(client!=null){
+            ...
+        }
+    }else{
+        ClientChannel client = (ClientChannel)channel;
+        if(client.isTimeout()){ // timeout occurred
+            ...
+        }else{
+            if(client.isConnectable()){
+                boolean connected = client.finishConnect());
+                if(connected){
+                    ...
+                }
+            }
+            if(client.isReadable(){
+                client.read(buffer);
+                ...
+            }
+            if(client.isWritable()){
+                client.write(buffer);
+                ...
+            }
+        }
+    }    
+}
+}}}
+
+`NIOSelector` implements `Iterable<NIOChannel>`, So you can use it with for-each loop.<br>
+Both `ServerChannel` and `ClientChannel` extend `NIOChannel`.<br>
+Here the for-loop iterates indefinetly, until selector is shutdown explicitly.
+---------
+*Shutdown*
+
+You can shutdown selector from any thread:
+{{{
+boolean force = false;
+selector.shutdown(force);
+}}}
+when shutdown is called, the selector unregistes all `ServerChannel`s registered with it.<br>
+So it no longer accepts any new clients.
+
+What happens to the `ClientChannel`s that are registered with this selector ?<br>
+if we asked to shutdown forcefully, all those `ClientChannel`s will be closed by the selector,<br>
+otherwise, the above for-each loop, continues until all `ClientChannel`s are closed explicitly.
+
+you can query the shutdown progress with following methods:
+{{{
+selector.isShutdownPending();
+selector.isShutdown();
+}}}
+
+to block the current thread till selector is shutdown:
+{{{
+selector.waitForShutdown();
+}}}
+
+to initiate shutdown and block till shutdown:
+{{{
+selector.shutdownAndWait(force);
+}}}
+
+to shutdown selector on jvm exit:
+{{{
+selector.shutdownOnExit(force);
+}}}
+---------
+*Load*
+
+you can get network traffic currently the selector is handling:
+{{{
+int numberOfServersRegistered = selector.serverCount();
+int numberOfConnectedClients = selector.connectedClientsCount();
+int numberOfConnectionPendingClients = selector.connectionPendingClients();
+}}}
+---------
+*Interests*
+
+Once the `ClientChannel`'s interest is ready, that interest is cleared. <br>
+i.e, let us say we are interested to read:
+{{{
+client.addInterest(ClientChannel.OP_READ);
+}}}
+when client is ready to read:
+{{{
+if(client.isReadable()){
+    client.read(buffer);
+    ...
+
+    // NOTE: if we are interested in reading more, we should do
+    client.addInterest(ClientChannel.OP_READ);
+}
+}}}
+---------
+*Attachment*
+
+`NIOChannel` supports the attachment of arbitrary object. An object can be attached via the attach<br>
+method and then later retrieved via the attachment method. This attachment can be used to represent<br>
+state of a higher-level protocol and handle readiness notifications in order to implement that protocol.
+{{{
+Object obj = ...;
+nioChannel.attach(obj);
+assert obj==nioChannel.attachment();
+}}}
+---------
+*SSL*
+
+you can enable SSL on a `ClientChannel`:
+{{{
+client.enableSSL();
+}}}
+The above method uses JSSE System Properties to configure SSL.
+
+If you want to customize specific SSL Parameters:
+{{{
+import javax.net.ssl.SSLParameters;
+
+SSLParameters params = new SSLParameters();
+params.setNeedClientAuth(true);
+client.enableSSL(params);
+}}}
+
+If you want to completely configure SSL your self:
+{{{
+SSLEngine engine = ...;
+client.enableSSL(engine);
+}}}
+
+`client.sslEnabled()` tells whether ssl is enabled or not.
+
+Note that you can enable ssl, only after the connection is established,<br>
+otherwise it throws `ConnectionPendingException`.
+
+you can get notified on handshake completion using:
+{{{
+client.setHandshakeCompletedListener(new HandshakeCompletedListener(){
+    @Override
+    public void handshakeCompleted(HandshakeCompletedEvent event){
+        ...
+    }
+})
+}}}
+`HandshakeCompletedListener` has to be set before enabling ssl.
+---------
+*Multi Threading*
+
+methods like adding/removing interest should be done in the same thread in which<br>
+selection process is executing. If you want to do it from some other thread, you<br>
+can post a runnable to selector with following methods:
+{{{
+selector.invokeLater(runnable);
+selector.invokeAndWait(runnable);
+}}}
+The selector is waken up, when you post a runnable, so that it is executed as soon as<br>
+possible.
+---------
+*Defaults*
+
+You can configure defaults for all newly created `ServerChannel`s as follows:
+{{{
+ServerChannel.defaults().BACKLOG = 100;
+ServerChannel.defaults().SO_REUSEADDR = Boolean.TRUE;
+}}}
+
+same can be done for all newly created `ClientChannel`s as follows:
+{{{
+ClientChannel.defaults().TCP_NODELAY = Boolean.FALSE;
+ClientChannel.defaults().SO_LINGER = -1; // negative number to disable
+ClientChannel.defaults().SO_TIMEOUT = 2*60*1000; // 2 minutes
+}}}
+if an option value is null, then the default value is not modified.
+
+You can also configure timeout for a specific `ClientChannel`:
+{{{
+client.setTimeout(5*60*1000); // 5 minutes
+}}}
+---------
+*Misc*
+
+You can find whether a `ClientChannel` is an accepted or explicitly-connected channel as follows:
+{{{
+InetSocketAddress address = client.acceptedFrom(); // address is null if it is explicitly connected
+}}}
+
+You can get the real channel that an` NIOChannel` wraps:
+{{{
+ServerSocketChannel serverChannel = server.realChannel();
+SocketChannel clientChannel = client.realChannel();
+}}}
+
+`client.isEOF()` tells whether end of input already reached or not.<br>
+`client.shutdownOutput()` used to signal that we have nothing more to write.
+---------
+*Echo Server/Client*
+
+You can find the implementation of simple `EchoServer` and `EchoClient` using the above API.
+
+to start EchoServer on port 1111:
+{{{
+./echo-server.sh 1111
+}}}
+
+if you want secured EchoServer, then do:
+{{{
+./echo-server.sh -ssl 1111
+}}}
+
+to connect to EchoServer running on same host:
+{{{
+./echo-client.sh 1111
+}}}
+
+if the EchoServer is secured:
+{{{
+./echo-client.sh -ssl 1111
+}}}
+
+whatever you type in EchoClient is echoed back.<br>
+to signal end of input, press Ctrl+D (Ctrl+Z on windows).
+
+You can use EchoClient to make simple HTTP Requests.<br>
+for example to request http://mvnrepository.com do:
+{{{
+./echo-client.sh mvnrepository.com 80
+}}}
+
+now type the following, followed by empty line:
+{{{
+GET / HTTP/1.1
+Host: mvnrepository.com
+}}}
+You will see the raw http response on your console.
+
+to request https://github.com
+{{{
+./echo-client.sh -ssl github.com 443
+}}}
+
+now type the following, followed by empty line:
+{{{
+GET / HTTP/1.1
+Host: github.com
+}}}
+You will see the raw http response on your console.
+---------
+*TCP Proxy*
+
+You can find the implementation of simple TCPProxy the above API.
+
+to start proxy:
+{{{
+./proxy.sh http://localhost:1111=http://mvnrepository.com
+}}}
+
+the above arguments specify to start server on localhost port 1111,<br>
+and all traffic is redirected to mvnrepository.com port 10.
+
+now you can open http://localhost:1111 in your webbrowser and you will see<br>
+pages from mvnrepository.com
+
+to create secured proxy to mvnrepository.com:
+{{{
+./proxy.sh https://localhost:2222=http://mvnrepository.com
+}}}
+
+this proxy might not work with all http sites as most of the sites do Host<br>
+header validation.
+
+to play with sample proxies:
+{{{
+./proxy.sh -samples
+}}}
+
+this will start 4 sample proxies for each mediation
+http->http, http->https, https->http, https->http
