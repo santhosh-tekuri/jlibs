@@ -15,62 +15,21 @@
 
 package jlibs.core.nio;
 
-import jlibs.core.nio.channels.InputChannel;
-import jlibs.core.nio.channels.OutputChannel;
-import jlibs.core.nio.channels.OutputHandler;
-import jlibs.core.nio.handlers.Operation;
 import jlibs.core.nio.handlers.ServerHandler;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
 
 /**
  * @author Santhosh Kumar T
  */
 public class HttpProxy implements ServerHandler{
     @Override
-    public void onAccept(ServerChannel channel, ClientChannel client) throws Exception{
+    public void onAccept(ServerChannel server, ClientChannel client){
         new HttpMessageReader(client);
     }
 
     @Override
-    public void onThrowable(NIOChannel channel, Operation operation, Throwable error) throws Exception {
-        error.printStackTrace();
-        if(channel instanceof ClientChannel)
-            channel.close();
-    }
-}
-
-class HttpMessageWriter implements OutputHandler{
-    InputChannel input;
-    ByteBuffer buffer;
-
-    @Override
-    public void onWrite(OutputChannel output) throws Exception{
-        if(buffer==null)
-            output.close();
-        else
-            output.write(buffer);
-
-        buffer = null;
-
-        if(output.status()==OutputChannel.Status.NEEDS_OUTPUT)
-            output.addStatusInterest();
-        else
-            input.addInterest();
-    }
-
-    @Override
-    public void onTimeout(OutputChannel output) throws Exception{
-        System.out.println("output timeout occurred");
-    }
-
-    @Override
-    public void onError(OutputChannel output, Throwable error) throws Exception{
-        output.client().close();
-    }
-
-    @Override
-    public void onStatus(OutputChannel output) throws Exception{
-        input.addInterest();
+    public void onAcceptFailure(ServerChannel server, IOException ex){
+        ex.printStackTrace();
     }
 }

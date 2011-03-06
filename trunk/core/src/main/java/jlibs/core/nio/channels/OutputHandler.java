@@ -15,12 +15,14 @@
 
 package jlibs.core.nio.channels;
 
+import java.io.IOException;
+
 /**
  * @author Santhosh Kumar T
  */
 public interface OutputHandler{
-    public void onWrite(OutputChannel output) throws Exception;
-    public void onTimeout(OutputChannel output) throws Exception;
-    public void onError(OutputChannel output, Throwable error) throws Exception;
-    public void onStatus(OutputChannel output) throws Exception;
+    public void onWrite(OutputChannel output);
+    public void onTimeout(OutputChannel output);
+    public void onIOException(OutputChannel output, IOException ex);
+    public void onStatus(OutputChannel output);
 }

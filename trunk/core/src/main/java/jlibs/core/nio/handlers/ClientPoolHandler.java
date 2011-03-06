@@ -21,5 +21,5 @@ import jlibs.core.nio.ClientChannel;
  * @author Santhosh Kumar T
  */
 public interface ClientPoolHandler{
-    public void onTimeout(ClientChannel client) throws Exception;
+    public void onTimeout(ClientChannel client);
 }

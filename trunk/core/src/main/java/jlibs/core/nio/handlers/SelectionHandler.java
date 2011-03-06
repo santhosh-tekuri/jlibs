@@ -17,6 +17,7 @@ package jlibs.core.nio.handlers;
 
 import jlibs.core.nio.*;
 
+import java.io.IOException;
 import java.net.SocketAddress;
 
 /**
@@ -29,14 +30,6 @@ public class SelectionHandler implements Runnable{
         this.selector = selector;
     }
 
-    private void onException(ChannelHandler handler, NIOChannel channel, Operation operation, Throwable ex){
-        try{
-            handler.onThrowable(channel, operation, ex);
-        }catch(Throwable e){
-            handleException(e);
-        }
-    }
-
     protected void handleException(Throwable ex){
         ex.printStackTrace();
     }
@@ -47,13 +40,16 @@ public class SelectionHandler implements Runnable{
             if(channel instanceof ServerChannel){
                 ServerChannel server = (ServerChannel)channel;
                 ServerHandler handler = (ServerHandler)channel.attachment();
-                ClientChannel client = null;
-                try {
-                    client = server.accept(selector);
-                    if(client!=null)
-                        handler.onAccept(server, client);
-                }catch(Throwable ex){
-                    onException(handler, client != null ? client : server, Operation.ACCEPT, ex);
+                try{
+                    try{
+                        ClientChannel client = server.accept(selector);
+                        if(client!=null)
+                            handler.onAccept(server, client);
+                    }catch(IOException ex){
+                        handler.onAcceptFailure(server, ex);
+                    }
+                }catch(Throwable thr){
+                    handleException(thr);
                 }
             }else{
                 ClientChannel client = (ClientChannel)channel;
@@ -66,7 +62,7 @@ public class SelectionHandler implements Runnable{
                         try{
                             handler.onTimeout(client);
                         }catch(Throwable ex){
-                            onException(handler, client, Operation.TIMEOUT, ex);
+                            handleException(ex);
                         }
                     }else{
                         try{
@@ -78,21 +74,25 @@ public class SelectionHandler implements Runnable{
                 }else{
                     if(client.isConnectable()){
                         try{
-                            if(client.finishConnect())
-                                handler.onConnect(client);
-                            else{
-                                client.addInterest(ClientChannel.OP_CONNECT);
-                                continue;
+                            try{
+                                if(client.finishConnect())
+                                    handler.onConnect(client);
+                                else{
+                                    client.addInterest(ClientChannel.OP_CONNECT);
+                                    continue;
+                                }
+                            }catch(IOException ex){
+                                handler.onConnectFailure(client, ex);
                             }
-                        }catch(Throwable ex){
-                            onException(handler, client, Operation.CONNECT, ex);
+                        }catch(Throwable thr){
+                            handleException(thr);
                         }
                     }
                     if(client.isReadable() || client.isWritable()){
-                        try {
+                        try{
                             handler.onIO(client);
                         }catch(Throwable ex){
-                            onException(handler, client, Operation.IO, ex);
+                            handleException(ex);
                         }
                     }
                 }
@@ -100,7 +100,7 @@ public class SelectionHandler implements Runnable{
         }
     }
 
-    public static void connect(ClientChannel client, SocketAddress remote) throws Exception{
+    public static void connect(ClientChannel client, SocketAddress remote) throws IOException{
         ClientHandler handler = (ClientHandler)client.attachment();
         if(client.connect(remote))
             handler.onConnect(client);

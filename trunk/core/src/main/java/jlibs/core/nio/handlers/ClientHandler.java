@@ -17,11 +17,15 @@ package jlibs.core.nio.handlers;
 
 import jlibs.core.nio.ClientChannel;
 
+import java.io.IOException;
+
 /**
  * @author Santhosh Kumar T
  */
-public interface ClientHandler extends ChannelHandler{
-    public void onConnect(ClientChannel client) throws Exception;
-    public void onIO(ClientChannel client) throws Exception;
-    public void onTimeout(ClientChannel client) throws Exception;
+public interface ClientHandler{
+    public void onConnect(ClientChannel client);
+    public void onConnectFailure(ClientChannel client, IOException ex);
+
+    public void onIO(ClientChannel client);
+    public void onTimeout(ClientChannel client);
 }

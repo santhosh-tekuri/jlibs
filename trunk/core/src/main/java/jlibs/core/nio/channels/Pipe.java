@@ -15,6 +15,7 @@
 
 package jlibs.core.nio.channels;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 
@@ -39,68 +40,73 @@ public class Pipe{
     }
 
     private ByteBuffer buffer = ByteBuffer.allocate(1024);
-    public void start(){
+    public void start() throws IOException{
         IOHandler ioHandler = new IOHandler();
         input.setHandler(ioHandler);
         output.setHandler(ioHandler);
-        try{
-            input.addInterest();
-        }catch(Throwable thr){
-            try{
-                handler.onError(this, input, thr);
-            }catch(Throwable error){
-                error.printStackTrace();
-            }
-        }
+        input.addInterest();
     }
 
     private class IOHandler implements InputHandler, OutputHandler{
         @Override
-        public void onRead(InputChannel input) throws Exception{
-            buffer.clear();
-            int read = input.read(buffer);
-            if(read==-1)
-                handler.finished(Pipe.this);
-            else if(read==0)
-                input.addInterest();
-            else if(read>0){
-                buffer.flip();
-                output.addWriteInterest();
+        public void onRead(InputChannel input){
+            Channel current = input;
+            try{
+                buffer.clear();
+                int read = input.read(buffer);
+                if(read==-1)
+                    handler.finished(Pipe.this);
+                else if(read==0)
+                    input.addInterest();
+                else if(read>0){
+                    buffer.flip();
+                    current = output;
+                    output.addWriteInterest();
+                }
+            }catch(IOException ex){
+                handler.onIOException(Pipe.this, current, ex);
             }
         }
 
         @Override
-        public void onTimeout(InputChannel input) throws Exception{
+        public void onTimeout(InputChannel input){
             handler.onTimeout(Pipe.this, input);
         }
 
         @Override
-        public void onError(InputChannel input, Throwable error) throws Exception{
-            handler.onError(Pipe.this, input, error);
+        public void onWrite(OutputChannel output){
+            try{
+                output.write(buffer);
+            }catch(IOException ex){
+                handler.onIOException(Pipe.this, output, ex);
+            }
+            try{
+                if(output.status()==OutputChannel.Status.NEEDS_OUTPUT)
+                    output.addStatusInterest();
+                else
+                    input.addInterest();
+            }catch(IOException ex){
+                handler.onIOException(Pipe.this, input, ex);
+            }
         }
 
         @Override
-        public void onWrite(OutputChannel output) throws Exception{
-            output.write(buffer);
-            if(output.status()==OutputChannel.Status.NEEDS_OUTPUT)
-                output.addStatusInterest();
-            else
-                input.addInterest();
-        }
-
-        @Override
-        public void onTimeout(OutputChannel output) throws Exception{
+        public void onTimeout(OutputChannel output){
             handler.onTimeout(Pipe.this, output);
         }
 
         @Override
-        public void onError(OutputChannel output, Throwable error) throws Exception{
-            handler.onError(Pipe.this, output, error);
+        public void onIOException(OutputChannel output, IOException ex){
+            handler.onIOException(Pipe.this, output, ex);
         }
 
         @Override
-        public void onStatus(OutputChannel output) throws Exception{
-            input.addInterest();
+        public void onStatus(OutputChannel output){
+            try{
+                input.addInterest();
+            }catch(IOException ex){
+                handler.onIOException(Pipe.this, input, ex);
+            }
         }
     }
 
@@ -110,8 +116,8 @@ public class Pipe{
     }
 
     private interface Handler{
-        public void onTimeout(Pipe pipe, Channel channel) throws Exception;
-        public void onError(Pipe pipe, Channel channel, Throwable error) throws Exception;
-        public void finished(Pipe pipe) throws Exception;
+        public void onTimeout(Pipe pipe, Channel channel);
+        public void onIOException(Pipe pipe, Channel channel, IOException ex);
+        public void finished(Pipe pipe);
     }
 }

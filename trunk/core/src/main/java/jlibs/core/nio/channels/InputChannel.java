@@ -47,17 +47,8 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     public final void addInterest() throws IOException{
         if(activateInterest())
             client.addInterest(ClientChannel.OP_READ);
-        else if(handler!=null){
-            try{
-                handler.onRead(this);
-            }catch(Throwable ex){
-                try{
-                    handler.onError(this, ex);
-                }catch(Throwable ex1){
-                    throw ex1 instanceof IOException ? (IOException)ex1 : new IOException(ex1);
-                }
-            }
-        }
+        else if(handler!=null)
+            handler.onRead(this);
     }
 
     protected boolean activateInterest(){

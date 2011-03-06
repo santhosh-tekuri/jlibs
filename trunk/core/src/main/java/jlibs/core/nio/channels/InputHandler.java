@@ -19,7 +19,6 @@ package jlibs.core.nio.channels;
  * @author Santhosh Kumar T
  */
 public interface InputHandler{
-    public void onRead(InputChannel input) throws Exception;
-    public void onTimeout(InputChannel input) throws Exception;
-    public void onError(InputChannel input, Throwable error) throws Exception;
+    public void onRead(InputChannel input);
+    public void onTimeout(InputChannel input);
 }
