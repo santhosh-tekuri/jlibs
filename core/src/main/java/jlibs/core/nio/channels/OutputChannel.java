@@ -19,6 +19,7 @@ import jlibs.core.nio.AttachmentSupport;
 import jlibs.core.nio.ClientChannel;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
 /**
@@ -39,8 +40,17 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
         return client;
     }
 
-    private boolean interested;
-    public final void addInterest() throws IOException{
+    private boolean statusInterested;
+    public final void addStatusInterest(){
+        statusInterested = true;
+    }
+
+    public final void removeStatusInterest(){
+        statusInterested = false;
+    }
+
+    private boolean writeInterested;
+    public final void addWriteInterest() throws IOException{
         if(status()!=Status.NEEDS_OUTPUT){
             if(handler!=null){
                 try{
@@ -54,13 +64,13 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
                 }
             }
         }else
-            interested = true;
+            writeInterested = true;
     }
 
     protected abstract boolean activateInterest();
 
-    public void removeInterest() throws IOException{
-        interested = false;
+    public void removeWriteInterest() throws IOException{
+        writeInterested = false;
         if(status()!=Status.NEEDS_OUTPUT)
             client.removeInterest(ClientChannel.OP_WRITE);
     }
@@ -69,6 +79,18 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public void setHandler(OutputHandler handler){
         this.handler = handler;
     }
+
+    @Override
+    public final int write(ByteBuffer src) throws IOException{
+        if(src.remaining()==0 || status()==Status.NEEDS_OUTPUT)
+            return 0;
+        int wrote = onWrite(src);
+        if(wrote>0)
+            onWrite();
+        return wrote;
+    }
+
+    protected abstract int onWrite(ByteBuffer src) throws IOException;
 
     private boolean closed;
 
@@ -80,7 +102,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     @Override
     public final void close() throws IOException{
         closed = true;
-        interested = false;
+        writeInterested = false;
         doClose();
         onWrite();
     }
@@ -102,18 +124,21 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public abstract Status status();
     protected void notifyCompleted(Status earlierStatus, Status curStatus){
         IOChannelHandler handler = (IOChannelHandler)client.attachment();
-        try{
-            if(earlierStatus!=curStatus && handler.output.handler!=null)
-                handler.output.handler.onStatus(handler.output);
-        }catch(Throwable error){
+        if(handler.output.statusInterested){
+            handler.output.statusInterested = false;
             try{
-                handler.output.handler.onError(handler.output, error);
-            }catch(Throwable error1){
-                error1.printStackTrace();
+                if(earlierStatus!=curStatus && handler.output.handler!=null)
+                    handler.output.handler.onStatus(handler.output);
+            }catch(Throwable error){
+                try{
+                    handler.output.handler.onError(handler.output, error);
+                }catch(Throwable error1){
+                    error1.printStackTrace();
+                }
             }
         }
-        if(handler.output.interested){
-            handler.output.interested = false;
+        if(handler.output.writeInterested){
+            handler.output.writeInterested = false;
             try{
                 if(handler.output.handler!=null)
                     handler.output.handler.onWrite(handler.output);
@@ -127,5 +152,5 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
         }
     }
 
-    enum Status{ NEEDS_INPUT, NEEDS_OUTPUT, COMPLETED }
+    public enum Status{ NEEDS_INPUT, NEEDS_OUTPUT, COMPLETED }
 }

@@ -33,16 +33,12 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
     private ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
 
     @Override
-    public int write(ByteBuffer src) throws IOException{
-        if(writeBuffer.hasRemaining())
-            return 0;
-
+    protected int onWrite(ByteBuffer src) throws IOException{
         int wrote = 0;
         if(deflater.needsInput()){
             wrote = src.remaining();
             deflater.setInput(src.array(), src.arrayOffset()+src.position(), wrote);
         }
-        onWrite();
         return wrote;
     }
 
@@ -67,7 +63,7 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
 
     @Override
     protected Status selfStatus(){
-        return writeBuffer.hasRemaining() && (deflater.needsInput() || deflater.finished()) ? Status.COMPLETED : Status.NEEDS_OUTPUT;
+        return !writeBuffer.hasRemaining() && (deflater.needsInput() || deflater.finished()) ? Status.COMPLETED : Status.NEEDS_OUTPUT;
     }
 
     @Override

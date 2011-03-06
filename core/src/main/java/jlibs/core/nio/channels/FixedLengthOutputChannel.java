@@ -15,7 +15,6 @@
 
 package jlibs.core.nio.channels;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -35,32 +34,35 @@ public class FixedLengthOutputChannel extends FilterOutputChannel{
         return super.activateInterest() || length>0;
     }
 
-    @Override
-    public int write(ByteBuffer dst) throws IOException{
-        Status earlierStatus = status();
-        if(length==0)
-            throw new EOFException();
-        int toBeRead = (int)Math.min(length, dst.remaining());
-        int givenLimit = dst.limit();
-        dst.limit(dst.position()+toBeRead);
-        int wrote;
-        try{
-            wrote = delegate.write(dst);
-        }finally{
-            dst.limit(givenLimit);
-        }
-        if(wrote>0)
-            length -= wrote;
+    private ByteBuffer writeBuffer;
 
-        notifyCompleted(earlierStatus, status());
-        return wrote;
+    @Override
+    protected int onWrite(ByteBuffer src) throws IOException{
+        if(length==0)
+            return 0;
+        int toBeWritten = (int)Math.min(length, src.remaining());
+        int limit = src.position()+toBeWritten;
+
+        writeBuffer = src.duplicate();
+        writeBuffer.limit(limit);
+
+        src.position(limit);
+        length -= toBeWritten;
+
+        return toBeWritten;
     }
 
     @Override
-    protected void doWritePending() throws IOException{}
+    protected void doWritePending() throws IOException{
+        if(writeBuffer!=null){
+            client.write(writeBuffer);
+            if(!writeBuffer.hasRemaining())
+                writeBuffer = null;
+        }
+    }
 
     @Override
     protected Status selfStatus(){
-        return Status.COMPLETED;
+        return writeBuffer==null ? Status.COMPLETED : Status.NEEDS_OUTPUT;
     }
 }
