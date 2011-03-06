@@ -53,15 +53,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public final void addWriteInterest() throws IOException{
         if(status()!=Status.NEEDS_OUTPUT){
             if(handler!=null){
-                try{
-                    handler.onWrite(this);
-                }catch(Throwable ex){
-                    try{
-                        handler.onError(this, ex);
-                    }catch(Throwable ex1){
-                        throw ex1 instanceof IOException ? (IOException)ex1 : new IOException(ex1);
-                    }
-                }
+                handler.onWrite(this);
             }
         }else
             writeInterested = true;
@@ -126,29 +118,13 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
         IOChannelHandler handler = (IOChannelHandler)client.attachment();
         if(handler.output.statusInterested){
             handler.output.statusInterested = false;
-            try{
-                if(earlierStatus!=curStatus && handler.output.handler!=null)
-                    handler.output.handler.onStatus(handler.output);
-            }catch(Throwable error){
-                try{
-                    handler.output.handler.onError(handler.output, error);
-                }catch(Throwable error1){
-                    error1.printStackTrace();
-                }
-            }
+            if(earlierStatus!=curStatus && handler.output.handler!=null)
+                handler.output.handler.onStatus(handler.output);
         }
         if(handler.output.writeInterested){
             handler.output.writeInterested = false;
-            try{
-                if(handler.output.handler!=null)
-                    handler.output.handler.onWrite(handler.output);
-            }catch(Throwable error){
-                try{
-                    handler.output.handler.onError(handler.output, error);
-                }catch(Throwable error1){
-                    error1.printStackTrace();
-                }
-            }
+            if(handler.output.handler!=null)
+                handler.output.handler.onWrite(handler.output);
         }
     }
 

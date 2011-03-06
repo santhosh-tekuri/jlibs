@@ -19,7 +19,6 @@ import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.OS;
 import jlibs.core.net.Protocols;
 import jlibs.core.nio.handlers.ClientHandler;
-import jlibs.core.nio.handlers.Operation;
 import jlibs.core.nio.handlers.SelectionHandler;
 import jlibs.core.nio.handlers.ServerHandler;
 import jlibs.core.util.CollectionUtil;
@@ -51,8 +50,8 @@ public class Proxy implements ServerHandler{
 
     private int count;
     @Override
-    public void onAccept(ServerChannel channel, ClientChannel inboundClient) throws Exception{
-        System.out.println(" Inbound"+count+": client"+inboundClient.id+" accepted");
+    public void onAccept(ServerChannel server, ClientChannel inboundClient){
+        System.out.println(" Inbound" + count + ": client" + inboundClient.id + " accepted");
         count++;
         ClientChannel outboundClient = null;
         try{
@@ -71,18 +70,20 @@ public class Proxy implements ServerHandler{
 
             SelectionHandler.connect(outboundClient, outboundEndpoint.address);
             inboundClient.addInterest(ClientChannel.OP_READ);
-        }catch(Exception ex){
-            if(outboundClient!=null)
-                outboundClient.close();
-            throw ex;
+        }catch(IOException ex){
+            ex.printStackTrace();
+            try{
+                if(outboundClient!=null)
+                    outboundClient.close();
+            }catch(IOException ignore){
+                ignore.printStackTrace();
+            }
         }
     }
 
     @Override
-    public void onThrowable(NIOChannel channel, Operation operation, Throwable error) throws Exception{
-        error.printStackTrace();
-        if(channel instanceof ClientChannel)
-            channel.close();
+    public void onAcceptFailure(ServerChannel server, IOException ex){
+        ex.printStackTrace();
     }
 
     private static void printUsage(){
@@ -167,69 +168,25 @@ class ClientListener implements ClientHandler{
     }
 
     @Override
-    public void onConnect(ClientChannel client) throws IOException{
-        System.out.println(this+": Connection established");
-        if(enableSSL)
-            client.enableSSL();
-        client.addInterest(ClientChannel.OP_READ);
-    }
-
-    @Override
-    public void onIO(ClientChannel client) throws Exception{
-        if(client.isReadable()){
-            readBuffer.clear();
-            int read = client.read(readBuffer);
-            if(read==-1){
-                client.close();
-                if((buddy.interests()&ClientChannel.OP_WRITE)==0)
-                    buddy.close();
-            }else if(read>0){
-                if(buddy.isOpen()){
-                    readBuffer.flip();
-                    buddy.addInterest(SelectionKey.OP_WRITE);
-                }else
-                    client.close();
-            }else
-                client.addInterest(SelectionKey.OP_READ);
-        }
-        if(client.isWritable()){
-            client.write(writeBuffer);
-            if(writeBuffer.hasRemaining())
-                client.addInterest(SelectionKey.OP_WRITE);
-            else{
-                if(buddy.isOpen()){
-                    writeBuffer.flip();
-                    buddy.addInterest(SelectionKey.OP_READ);
-                }else
-                    client.close();
-            }
-        }
-    }
-
-    @Override
-    public void onTimeout(ClientChannel client) throws Exception{
-        if(buddy.isOpen() && buddy.isTimeout()){
-            System.out.println(name+": timedout");
-            client.close();
-            buddy.close();
-        }
-    }
-
-    public void process(NIOSelector nioSelector, ClientChannel client) throws IOException{
-        if(client.isTimeout()){
-            if(buddy.isOpen() && buddy.isTimeout()){
-                System.out.println(name+": timedout");
-                client.close();
-                buddy.close();
-            }
-        }
+    public void onConnect(ClientChannel client){
         try{
-            if(client.isConnectable()){
-                if(client.finishConnect())
-                    onConnect(client);
-                else
-                    return;
-            }
+            System.out.println(this+": Connection established");
+            if(enableSSL)
+                client.enableSSL();
+            client.addInterest(ClientChannel.OP_READ);
+        }catch(IOException ex){
+            cleanup(client, ex);
+        }
+    }
+
+    @Override
+    public void onConnectFailure(ClientChannel client, IOException ex){
+        cleanup(client, ex);
+    }
+
+    @Override
+    public void onIO(ClientChannel client){
+        try{
             if(client.isReadable()){
                 readBuffer.clear();
                 int read = client.read(readBuffer);
@@ -258,19 +215,16 @@ class ClientListener implements ClientHandler{
                         client.close();
                 }
             }
-        }catch(Exception ex){
-            client.close();
-            buddy.close();
-            if(ex instanceof IOException)
-                throw (IOException)ex;
-            else
-                throw (RuntimeException)ex;
-
+        }catch(IOException ex){
+            cleanup(client, ex);
         }
-        if(client.interests()==0 && buddy.interests()==0){
-            System.out.println(this+": closing...");
-            client.close();
-            buddy.close();
+    }
+
+    @Override
+    public void onTimeout(ClientChannel client){
+        if(buddy.isOpen() && buddy.isTimeout()){
+            System.out.println(name + ": timedout");
+            cleanup(client, null);
         }
     }
 
@@ -279,11 +233,18 @@ class ClientListener implements ClientHandler{
         return name;
     }
 
-    @Override
-    public void onThrowable(NIOChannel channel, Operation operation, Throwable error) throws Exception{
-        error.printStackTrace();
-        if(channel instanceof ClientChannel)
-            channel.close();
-        buddy.close();
+    private void cleanup(ClientChannel client, IOException ex){
+        if(ex!=null)
+            ex.printStackTrace();
+        try{
+            client.close();
+        }catch(IOException ignore){
+            ignore.printStackTrace();
+        }
+        try{
+            buddy.close();
+        }catch(IOException ignore){
+            ignore.printStackTrace();
+        }
     }
 }

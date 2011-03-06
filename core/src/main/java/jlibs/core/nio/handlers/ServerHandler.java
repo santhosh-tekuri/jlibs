@@ -18,9 +18,12 @@ package jlibs.core.nio.handlers;
 import jlibs.core.nio.ClientChannel;
 import jlibs.core.nio.ServerChannel;
 
+import java.io.IOException;
+
 /**
  * @author Santhosh Kumar T
  */
-public interface ServerHandler extends ChannelHandler{
-    public void onAccept(ServerChannel channel, ClientChannel client) throws Exception;
+public interface ServerHandler{
+    public void onAccept(ServerChannel server, ClientChannel client);
+    public void onAcceptFailure(ServerChannel server, IOException ex);
 }

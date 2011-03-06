@@ -32,77 +32,64 @@ public class HttpMessageReader implements InputHandler{
     public static final BytePattern PATTERN_HEADERS_END = new BytePattern(new byte[]{'\r', '\n', '\r', '\n'});
     public static final BytePattern PATTERN_LINE_END = new BytePattern(new byte[]{'\r', '\n'});
 
-    public HttpMessageReader(ClientChannel client) throws IOException{
+    public HttpMessageReader(ClientChannel client){
         InputChannel input = new PatternInputChannel(new ClientInputChannel(client), PATTERN_HEADERS_END);
         input.setHandler(this);
-        try{
-            listener.onStart(input);
-        }catch(Throwable error){
-            try{
-                listener.onError(input, error);
-            }catch(Throwable ex){
-                ex.printStackTrace();
-            }
-        }
+        listener.onStart(input);
     }
 
     ByteBuffer buffer = ByteBuffer.allocate(1024);
     HTTPMessageListener listener = new HTTPMessageListener();
 
     @Override
-    public void onRead(InputChannel input) throws Exception{
-        if(buffer==null)
+    public void onRead(InputChannel input){
+        if(buffer==null){
             listener.onBody(input);
-        else{
+            return;
+        }
+        try{
             while((input.read(buffer))>0){
                 if(!buffer.hasRemaining())
                     buffer = ByteBuffer.wrap(Arrays.copyOf(buffer.array(), buffer.capacity()+100), buffer.capacity(), 100);
             }
             if(input.isEOF()){
                 input = ((FilterInputChannel)input).unwrap();
-                try{
-                    byte array[] = buffer.array();
-                    int pos = 0;
-                    BytePattern.Matcher matcher = PATTERN_LINE_END.new Matcher();
-                    while(!matcher.matches(array[pos++]));
-                    listener.onLine(new ByteSequence(array, 0, pos), input);
-                    if(!input.client().isOpen() || !input.isOpen())
-                        return;
-                    listener.onHeaders(new ByteSequence(array, pos, buffer.position()-pos), input);
-                    buffer = null;
-                }catch(Throwable error){
-                    try{
-                        listener.onError(input, error);
-                    }catch(Throwable ex){
-                        ex.printStackTrace();
-                    }
-                }
+                byte array[] = buffer.array();
+                int pos = 0;
+                BytePattern.Matcher matcher = PATTERN_LINE_END.new Matcher();
+                while(!matcher.matches(array[pos++]));
+                listener.onLine(new ByteSequence(array, 0, pos), input);
+                if(!input.client().isOpen() || !input.isOpen())
+                    return;
+                listener.onHeaders(new ByteSequence(array, pos, buffer.position()-pos), input);
+                buffer = null;
             }else
                 input.addInterest();
+        }catch(IOException ex){
+            listener.onIOException(input, ex);
         }
     }
 
     @Override
-    public void onTimeout(InputChannel input) throws Exception{
+    public void onTimeout(InputChannel input){
         listener.onTimeout(input);
-    }
-
-    @Override
-    public void onError(InputChannel input, Throwable error) throws Exception{
-        listener.onError(input, error);
     }
 }
 
 class HTTPMessageListener{
-    public void onStart(InputChannel input) throws Exception{
-        input.addInterest();
+    public void onStart(InputChannel input){
+        try{
+            input.addInterest();
+        }catch(IOException ex){
+            onIOException(input, ex);
+        }
     }
 
-    public void onLine(ByteSequence seq, InputChannel input) throws Exception{
+    public void onLine(ByteSequence seq, InputChannel input){
         System.out.println("Line: "+seq.slice(0, seq.length()-2));
     }
 
-    public void onHeaders(ByteSequence seq, InputChannel input) throws Exception{
+    public void onHeaders(ByteSequence seq, InputChannel input){
         DefaultHeadersInfo info = new DefaultHeadersInfo();
         HttpHeaderIterator iter = new HttpHeaderIterator(seq);
         seq = null;
@@ -124,35 +111,47 @@ class HTTPMessageListener{
             input = new GZipInputChannel(input);
 
         body = ByteBuffer.allocate(1024);
-        input.addInterest();
-    }
-
-    ByteBuffer body;
-    public void onBody(InputChannel input) throws Exception{
-        while(true){
-            int read = input.read(body);
-            if(read==-1){
-                System.out.println("\n-------------------------------------------------------------");
-                body = null;
-                return;
-            }
-            if(read>0){
-                System.out.write(body.array(), 0, body.position());
-                body.clear();
-            }else{
-                input.addInterest();
-                break;
-            }
+        try{
+            input.addInterest();
+        }catch(IOException ex){
+            onIOException(input, ex);
         }
     }
 
-    public void onTimeout(InputChannel input) throws Exception{
+    ByteBuffer body;
+    public void onBody(InputChannel input){
+        try{
+            while(true){
+                int read = input.read(body);
+                if(read==-1){
+                    System.out.println("\n-------------------------------------------------------------");
+                    body = null;
+                    return;
+                }
+                if(read>0){
+                    System.out.write(body.array(), 0, body.position());
+                    body.clear();
+                }else{
+                    input.addInterest();
+                    break;
+                }
+            }
+        }catch(IOException ex){
+            onIOException(input, ex);
+        }
+    }
+
+    public void onTimeout(InputChannel input){
         System.out.println("input timeout occurred");
     }
 
-    public void onError(InputChannel input, Throwable error) throws Exception{
-        error.printStackTrace();
-        input.client().close();
+    public void onIOException(InputChannel input, IOException ex){
+        ex.printStackTrace();
+        try{
+            input.client().close();
+        }catch(IOException ignore){
+            ignore.printStackTrace();
+        }
     }
 }
 
