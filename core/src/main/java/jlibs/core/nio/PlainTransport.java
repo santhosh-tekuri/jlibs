@@ -131,8 +131,8 @@ public class PlainTransport extends Debuggable implements Transport{
             println("channel@"+id()+".close");
         boolean wasOpen = isOpen();
         boolean wasConnected = client.isConnected();
-        client.realChannel().close();
         if(wasOpen){
+            client.realChannel().close();
             if(wasConnected)
                 client.nioSelector.connectedClients--;
             else
