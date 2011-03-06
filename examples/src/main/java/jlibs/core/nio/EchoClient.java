@@ -80,7 +80,6 @@ public class EchoClient{
                                     }
                                 }
                             });
-                            selector.wakeup();
                             inBuffer.wait();
                         }
                     }catch(Exception ex){
