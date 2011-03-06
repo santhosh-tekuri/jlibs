@@ -79,8 +79,10 @@ public class GZipInputChannel extends InflaterInputChannel{
             }
             if(canRead(UINT+UINT)){
                 readUInt();
-                if(readUInt()!=bytesWritten)
+                if(readUInt()!=isize)
                     throw new IOException("Corrupt GZIP trailer");
+                if(from<readBuffer.position())
+                    delegate.unread(readBuffer.array(), from, readBuffer.position()-from, false);
                 readBuffer = null;
                 state++;
             }else
@@ -172,16 +174,17 @@ public class GZipInputChannel extends InflaterInputChannel{
                 }else
                     state++;
             case STATE_CONTENT:
-                inflater.setInput(readBuffer.array(), from, readBuffer.position()-from);
+                if(from<readBuffer.position())
+                    inflater.setInput(readBuffer.array(), from, readBuffer.position()-from);
                 return super.doRead(dst);
         }
         throw new ImpossibleException();
     }
 
-    private long bytesWritten;
+    private long isize;
     @Override
     protected void inflateFinished(){
-        bytesWritten = inflater.getBytesWritten() & 0xffffffffL;
+        isize = inflater.getBytesWritten() & 0xffffffffL; // rfc1952; ISIZE is the input size modulo 2^32
         from = 0;
         if(inflater.getRemaining()>0){
             readBuffer.limit(readBuffer.position());

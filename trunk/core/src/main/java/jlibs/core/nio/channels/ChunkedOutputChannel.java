@@ -36,21 +36,18 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
     private boolean lastChunk;
 
     @Override
-    public int write(ByteBuffer src) throws IOException{
+    protected int onWrite(ByteBuffer src) throws IOException{
         int wrote = src.remaining();
-        if(wrote>0){
-            writeBuffer = src.duplicate();
-            src.position(src.limit());
+        writeBuffer = src.duplicate();
+        src.position(src.limit());
 
-            chunkStart.clear();
-            chunkStart.put(Integer.toString(wrote, 16).getBytes(IOUtil.US_ASCII));
-            notifyChunk(wrote);
-            chunkStart.put(chunkEnd);
-            chunkStart.flip();
+        chunkStart.clear();
+        chunkStart.put(Integer.toString(wrote, 16).getBytes(IOUtil.US_ASCII));
+        notifyChunk(wrote);
+        chunkStart.put(chunkEnd);
+        chunkStart.flip();
 
-            chunkEnd.clear();
-        }
-        onWrite();
+        chunkEnd.clear();
         return wrote;
     }
 

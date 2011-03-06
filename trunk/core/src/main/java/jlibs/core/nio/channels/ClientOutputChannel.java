@@ -33,18 +33,27 @@ public class ClientOutputChannel extends OutputChannel{
         return true;
     }
 
+    private ByteBuffer writeBuffer;
+
     @Override
-    public int write(ByteBuffer dst) throws IOException{
-        int wrote = client.write(dst);
-        notifyCompleted(Status.COMPLETED, Status.COMPLETED);
+    protected int onWrite(ByteBuffer src) throws IOException{
+        int wrote = src.remaining();
+        writeBuffer = src.duplicate();
+        src.position(src.limit());
         return wrote;
     }
 
     @Override
-    protected void writePending() throws IOException{}
+    protected void writePending() throws IOException{
+        if(writeBuffer!=null){
+            client.write(writeBuffer);
+            if(!writeBuffer.hasRemaining())
+                writeBuffer = null;
+        }
+    }
 
     @Override
     public Status status(){
-        return Status.COMPLETED;
+        return writeBuffer==null ? Status.COMPLETED : Status.NEEDS_OUTPUT;
     }
 }
