@@ -23,7 +23,7 @@ import java.nio.channels.SelectableChannel;
  * @author Santhosh Kumar T
  */
 public abstract class NIOChannel extends AttachmentSupport implements Channel{
-    protected long id;
+    protected final long id;
     protected final SelectableChannel channel;
     protected NIOChannel(long id, SelectableChannel channel) throws IOException{
         this.id = id;
@@ -33,6 +33,11 @@ public abstract class NIOChannel extends AttachmentSupport implements Channel{
 
     protected NIOChannel(){
         channel = null;
+        id = -1;
+    }
+
+    public long id(){
+        return id;
     }
 
     public SelectableChannel realChannel(){

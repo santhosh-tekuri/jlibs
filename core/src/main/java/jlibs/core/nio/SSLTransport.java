@@ -77,11 +77,6 @@ public class SSLTransport extends Debuggable implements Transport{
     }
 
     @Override
-    public void id(long newID){
-        transport.id(newID);
-    }
-
-    @Override
     public ClientChannel client(){
         return transport.client();
     }

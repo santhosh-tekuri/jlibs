@@ -31,12 +31,16 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     private static AtomicLong ID_GENERATOR = new AtomicLong();
 
-    protected long id = ID_GENERATOR.incrementAndGet();
+    protected final long id = ID_GENERATOR.incrementAndGet();
     protected final Selector selector;
 
     public NIOSelector(long selectTimeout) throws IOException{
         selector = Selector.open();
         setSelectTimeout(selectTimeout);
+    }
+
+    public long id(){
+        return id;
     }
 
     protected long lastClientID;

@@ -23,7 +23,6 @@ import java.nio.channels.ByteChannel;
  */
 interface Transport extends ByteChannel{
     public long id();
-    public void id(long newID);
     public ClientChannel client();
 
     public int interests();
