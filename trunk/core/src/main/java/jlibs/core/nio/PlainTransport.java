@@ -35,11 +35,6 @@ public class PlainTransport extends Debuggable implements Transport{
     }
 
     @Override
-    public void id(long newID){
-        client.id = newID;
-    }
-
-    @Override
     public ClientChannel client(){
         return client;
     }
