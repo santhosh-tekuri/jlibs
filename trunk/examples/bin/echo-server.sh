@@ -1,3 +1,3 @@
 #!/bin/sh
 
-`dirname $0`/launcher/jlaunch.sh `dirname $0`/examples.conf jlibs.core.nio.EchoServer $*
+`dirname $0`/launcher/jlaunch.sh `dirname $0`/examples.conf jlibs.examples.core.nio.EchoServer $*
