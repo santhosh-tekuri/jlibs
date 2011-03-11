@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
+import java.util.zip.ZipException;
 
 /**
  * @author Santhosh Kumar T
@@ -69,7 +70,8 @@ public class InflaterInputChannel extends FilterInputChannel{
             }
             return uncompressed;
         }catch(DataFormatException ex){
-            throw new IOException(ex);
+            String s = ex.getMessage();
+            throw (ZipException)new ZipException(s!=null ? s : "Invalid ZLIB data format").initCause(ex);
         }
     }
 
