@@ -98,7 +98,7 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
         return eof;
     }
 
-    private Bytes unread;
+    protected Bytes unread;
     public final void unread(byte buff[], int offset, int length, boolean clone){
         if(length==0)
             return;
