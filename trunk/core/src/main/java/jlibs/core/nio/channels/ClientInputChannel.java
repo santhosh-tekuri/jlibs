@@ -15,6 +15,9 @@
 
 package jlibs.core.nio.channels;
 
+import jlibs.core.lang.ByteSequence;
+import jlibs.core.lang.Bytes;
+import jlibs.core.lang.ImpossibleException;
 import jlibs.core.nio.ClientChannel;
 
 import java.io.IOException;
@@ -36,5 +39,23 @@ public class ClientInputChannel extends InputChannel{
     @Override
     protected int doRead(ByteBuffer dst) throws IOException{
         return client.read(dst);
+    }
+
+    public boolean isBroken() throws IOException{
+        if(isEOF())
+            return true;
+        ByteBuffer dst = ByteBuffer.allocate(1);
+        switch(client.read(dst)){
+            case -1:
+                return true;
+            case 1:
+                if(unread==null)
+                    unread = new Bytes();
+                unread.append(new ByteSequence(dst.array(), 0, 1));
+            case 0:
+                return false;
+            default:
+                throw new ImpossibleException();
+        }
     }
 }
