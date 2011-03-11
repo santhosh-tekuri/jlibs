@@ -19,10 +19,7 @@ import jlibs.core.lang.ImpossibleException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.Inflater;
+import java.util.zip.*;
 
 /**
  * @author Santhosh Kumar T
@@ -80,7 +77,7 @@ public class GZipInputChannel extends InflaterInputChannel{
             if(canRead(UINT+UINT)){
                 readUInt();
                 if(readUInt()!=isize)
-                    throw new IOException("Corrupt GZIP trailer");
+                    throw new ZipException("Corrupt GZIP trailer");
                 if(from<readBuffer.position())
                     delegate.unread(readBuffer.array(), from, readBuffer.position()-from, false);
                 readBuffer = null;
@@ -97,14 +94,14 @@ public class GZipInputChannel extends InflaterInputChannel{
             case STATE_GZIP_MAGIC:
                 if(canRead(USHORT)){
                     if(readUShort()!=GZIPInputStream.GZIP_MAGIC)
-                        throw new IOException("Not in GZIP format");
+                        throw new ZipException("Not in GZIP format");
                     state++;
                 }else
                     return 0;
             case STATE_COMPRESSION_METHOD:
                 if(canRead(UBYTE)){
                     if(readUByte()!=Deflater.DEFLATED)
-                        throw new IOException("Unsupported compression method");
+                        throw new ZipException("Unsupported compression method");
                     state++;
                 }else
                     return 0;
@@ -167,7 +164,7 @@ public class GZipInputChannel extends InflaterInputChannel{
                         int crcValue = (int)crc.getValue() & 0xffff;
                         int x = readUShort();
                         if(crcValue!=x)
-                            throw new IOException("Corrupt GZIP header");
+                            throw new ZipException("Corrupt GZIP header");
                         state++;
                     }else
                         return 0;
@@ -209,7 +206,7 @@ public class GZipInputChannel extends InflaterInputChannel{
     private int readUByte() throws IOException{
         int b = readBuffer.get(from++) & 0xff;
         if(b<-1 || b>255)
-            throw new IOException("read() returned value out of range -1..255: " + b);
+            throw new ZipException("read() returned value out of range -1..255: " + b);
         return b;
     }
 
