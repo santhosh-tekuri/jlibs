@@ -16,9 +16,9 @@
 package jlibs.xml;
 
 import jlibs.core.lang.StringUtil;
+import jlibs.core.util.NonNullIterator;
 
-import java.util.Stack;
-import java.util.StringTokenizer;
+import java.util.Iterator;
 
 /**
  * This class contains utilties to work with ClarkName.
@@ -58,7 +58,7 @@ import java.util.StringTokenizer;
  * {@code ClarkName} provides handy method to split such paths.
  * <pre class="prettyprint">
  * String clarkPath = "{http://namespace1}elem1/{http://namespace2}elem2/{http://namespace1}elem3";
- * String clarkNames[] = ClarkName.splitPath(clarkPath);
+ * Iterator<String> clarkNames = ClarkName.iterator(clarkPath);
  * </pre>
  * 
  * @author Santhosh Kumar T
@@ -95,7 +95,7 @@ public class ClarkName{
     }
 
     /**
-     * Splits given {@code clarkPath} into {@code clarkNames}.
+     * Tokenizes given {@code clarkPath} into {@code clarkNames}.
      * <p>
      * {@code clarkPath} is a sequence of {@code clarkNames} separated by {@code /}.<br>
      * Example:
@@ -103,26 +103,34 @@ public class ClarkName{
      * {http://namespace1}elem1/{http://namespace2}elem2/{http://namespace1}elem3
      * </pre>
      *
-     * @param clarkPath clarkPath to be split
+     * @param clarkPath clarkPath to be tokenized
      *
-     * @return {@code String} array containing the {@code clarkNames}
+     * @return {@code String} Iterator containing the {@code clarkNames}
      */
-    public static String[] splitPath(String clarkPath){
-        Stack<String> tokens = new Stack<String>();
-        boolean foundNamespace = false;
-        StringTokenizer stok = new StringTokenizer(clarkPath, "/", true);
-        while(stok.hasMoreTokens()){
-            String token = stok.nextToken();
-            if(foundNamespace)
-                token = tokens.pop() + token;
+    public static Iterator<String> iterator(final String clarkPath){
+        return new NonNullIterator<String>(){
+            int from = 0;
+            @Override
+            protected String findNext(){
+                if(from==clarkPath.length())
+                    return null;
 
-            if(token.charAt(0)=='{')
-                foundNamespace = true;
-            if(token.indexOf('}')!=-1)
-                foundNamespace = false;
-            if(foundNamespace || !token.equals("/"))
-                tokens.push(token);
-        }
-        return tokens.toArray(new String[tokens.size()]);
+                int searchFrom = from;
+                if(clarkPath.charAt(from)=='{'){
+                    searchFrom = clarkPath.indexOf('}', from);
+                    if(searchFrom==-1)
+                        throw new IllegalArgumentException("no matching brace for brace at "+from);
+                }
+                int slash = clarkPath.indexOf('/', searchFrom);
+                int curFrom = from;
+                if(slash==-1){
+                    from = clarkPath.length();
+                    return clarkPath.substring(curFrom);
+                }else{
+                    from = slash+1;
+                    return clarkPath.substring(curFrom, slash);
+                }
+            }
+        };
     }
 }
