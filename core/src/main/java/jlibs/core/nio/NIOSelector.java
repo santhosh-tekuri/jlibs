@@ -16,7 +16,8 @@
 package jlibs.core.nio;
 
 import jlibs.core.lang.Waiter;
-import jlibs.core.util.AbstractIterator;
+import jlibs.core.util.EmptyIterator;
+import jlibs.core.util.NonNullIterator;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -158,10 +159,10 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         return iterator;
     }
 
-    private Iterator<NIOChannel> iterator = new AbstractIterator<NIOChannel>(){
+    private Iterator<NIOChannel> iterator = new NonNullIterator<NIOChannel>(){
         private Iterator<NIOChannel> delegate = Collections.<NIOChannel>emptyList().iterator();
         @Override
-        protected NIOChannel computeNext(){
+        protected NIOChannel findNext(){
             try{
                 while(!isShutdown() && !delegate.hasNext())
                     delegate = select();
@@ -242,7 +243,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
 
         if(isShutdown())
-            return Collections.<NIOChannel>emptyList().iterator();
+            return EmptyIterator.instance();
         else if(selector.select(timeoutTracker.isTracking()?selectTimeout:0)>0)
             return selectedIterator.reset();
         else
@@ -278,7 +279,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     }
 
     private SelectedIterator selectedIterator = new SelectedIterator();
-    private class SelectedIterator extends AbstractIterator<NIOChannel>{
+    private class SelectedIterator extends NonNullIterator<NIOChannel>{
         private Iterator<SelectionKey> keys;
 
         @Override
@@ -290,7 +291,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
 
         @Override
-        protected NIOChannel computeNext(){
+        protected NIOChannel findNext(){
             while(keys.hasNext()){
                 SelectionKey key = keys.next();
                 keys.remove();
