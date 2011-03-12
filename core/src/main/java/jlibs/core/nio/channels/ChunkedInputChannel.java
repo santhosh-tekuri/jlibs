@@ -16,7 +16,9 @@
 package jlibs.core.nio.channels;
 
 import jlibs.core.io.IOUtil;
+import jlibs.core.lang.ByteSequence;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -25,72 +27,119 @@ import java.util.Arrays;
  * @author Santhosh Kumar T
  */
 public class ChunkedInputChannel extends FilterInputChannel{
-    private int chunkLength = -1;
-    private FixedLengthInputChannel fixedLengthInputChannel;
-    private boolean crlfRead = true;
-
     public ChunkedInputChannel(InputChannel delegate){
         super(delegate);
     }
 
     @Override
     protected boolean activateInterest(){
-        return super.activateInterest() && !(fixedLengthInputChannel==null && crlfRead && chunkLength==0);
+        return super.activateInterest() && state!=FINISHED;
     }
 
+    private static final int CHUNK_START = 0;
+    private static final int CHUNK_CONTENT = 1;
+    private static final int CHUNK_END = 2;
+    private static final int FINISHED = 3;
+
+    private int state = CHUNK_START;
+    private int chunkLength = -1;
+    private InputChannel contentInputChannel;
+
     private ByteBuffer crlfBuffer = ByteBuffer.allocate(2);
-    private ByteBuffer lenBuffer;
+    private ByteBuffer lenBuffer, trailerBuffer;
+
     @Override
     protected int doRead(ByteBuffer dst) throws IOException{
         int pos = dst.position();
-        do{
-            if(fixedLengthInputChannel==null){
-                if(!crlfRead){
+
+        loop:
+        while(state!=FINISHED){
+            switch(state){
+                case CHUNK_START:
+                    if(lenBuffer==null)
+                        lenBuffer = ByteBuffer.allocate(100);
+                    if(delegate.read(lenBuffer)==-1)
+                        break loop;
+                    String chunkStr = getChunkLength();
+                    if(chunkStr==null){
+                        if(!lenBuffer.hasRemaining())
+                            lenBuffer = ByteBuffer.wrap(Arrays.copyOf(lenBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
+                        break loop;
+                    }
+                    int semicolon = chunkStr.indexOf(';');
+                    String lenStr = semicolon==-1 ? chunkStr : chunkStr.substring(0, semicolon);
+                    chunkLength = Integer.parseInt(lenStr, 16);
+                    if(listener!=null)
+                        listener.onChunk(chunkLength, semicolon==-1?null:chunkStr.substring(semicolon+1));
+                    if(chunkLength>0){
+                        IOChannelHandler handler = (IOChannelHandler)client.attachment();
+                        InputChannel oldInput = handler.input;
+                        contentInputChannel = new FixedLengthInputChannel(delegate, chunkLength);
+                        handler.input = oldInput;
+                    }
+                    if(lenBuffer.hasRemaining()){
+                        delegate.unread(lenBuffer.array(), lenBuffer.position(), lenBuffer.remaining(), false);
+                        lenBuffer = null;
+                    }else
+                        lenBuffer.clear();
+                    if(contentInputChannel==null){
+                        state = CHUNK_END;
+                        break;
+                    }else
+                        state = CHUNK_CONTENT;
+                case CHUNK_CONTENT:
+                    if(chunkLength==0){
+                        if(trailerBuffer==null)
+                            trailerBuffer = ByteBuffer.allocate(250);
+                        while(contentInputChannel.read(trailerBuffer)>0)
+                            trailerBuffer = ByteBuffer.wrap(Arrays.copyOf(trailerBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
+                        if(contentInputChannel.isEOF()){
+                            contentInputChannel = null;
+                            if(listener!=null)
+                                listener.onTrailer(new ByteSequence(trailerBuffer.array(), 0, trailerBuffer.position()));
+                            trailerBuffer = null;
+                            state = FINISHED;
+                        }
+                        break loop;
+                    }else{
+                        int read = contentInputChannel.read(dst);
+                        if(read==-1){
+                            contentInputChannel = null;
+                            state = CHUNK_END;
+                        }else
+                            break loop;
+                    }
+                case CHUNK_END:
                     if(delegate.read(crlfBuffer)==-1)
-                        return -1;
-
+                        throw new EOFException();
                     if(crlfBuffer.hasRemaining())
-                        return 0;
-                    crlfRead = true;
-                    crlfBuffer.clear();
-                }
-                if(chunkLength==0)
-                    return -1;
-                if(lenBuffer==null)
-                    lenBuffer = ByteBuffer.allocate(100);
-                if(delegate.read(lenBuffer)==-1)
-                    return -1;
-                String chunkStr = getChunkLength();
-                if(chunkStr==null){
-                    if(!lenBuffer.hasRemaining())
-                        lenBuffer = ByteBuffer.wrap(Arrays.copyOf(lenBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
-                    return 0;
-                }
-                int semicolon = chunkStr.indexOf(';');
-                String lenStr = semicolon==-1 ? chunkStr : chunkStr.substring(0, semicolon);
-                chunkLength = Integer.parseInt(lenStr, 16);
-                if(listener!=null){
-                    listener.onChunk(chunkLength, semicolon==-1?null:chunkStr.substring(semicolon+1));
-                }
-                crlfRead = false;
-                if(chunkLength>0){
-                    IOChannelHandler handler = (IOChannelHandler)client.attachment();
-                    InputChannel oldInput = handler.input;
-                    fixedLengthInputChannel = new FixedLengthInputChannel(delegate, chunkLength);
-                    handler.input = oldInput;
-                }
-                if(lenBuffer.hasRemaining()){
-                    delegate.unread(lenBuffer.array(), lenBuffer.position(), lenBuffer.remaining(), false);
-                    lenBuffer = null;
-                }else
-                    lenBuffer.clear();
+                        break loop;
+                    if(crlfBuffer.array()[0]!='\r' || crlfBuffer.array()[1]!='\n'){
+                        if(chunkLength>0)
+                            throw new IOException("chunk should end with '\\r\\n'");
+                        else{
+                            delegate.unread(crlfBuffer.array(), 0, 2, false);
+                            contentInputChannel = new PatternInputChannel(delegate, new BytePattern(new byte[]{ '\r', '\n', '\r', '\n' }));
+                            state = CHUNK_CONTENT;
+                            break;
+                        }
+                    }else{
+                        if(chunkLength==0){
+                            state = FINISHED;
+                            break loop;
+                        }else{
+                            crlfBuffer.clear();
+                            state = CHUNK_START;
+                        }
+                    }
             }
-            int read = fixedLengthInputChannel==null ? -1 : fixedLengthInputChannel.read(dst);
-            if(read==-1)
-                fixedLengthInputChannel = null;
-        }while(fixedLengthInputChannel==null);
+        }
 
-        return dst.position()-pos;
+        int read = dst.position()-pos;
+        if(read==0)
+            return state==FINISHED ? -1 : 0;
+        else
+            return read;
     }
 
     private String getChunkLength(){
@@ -109,7 +158,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
 
     @Override
     public long pending(){
-        return super.pending() + (fixedLengthInputChannel!=null ? fixedLengthInputChannel.pending() : 0);
+        return super.pending() + (contentInputChannel !=null ? contentInputChannel.pending() : 0);
     }
 
     private Listener listener;
@@ -124,5 +173,6 @@ public class ChunkedInputChannel extends FilterInputChannel{
 
     interface Listener{
         public void onChunk(int len, String extension);
+        public void onTrailer(ByteSequence seq);
     }
 }
