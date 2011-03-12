@@ -24,8 +24,8 @@ import java.util.zip.*;
 /**
  * @author Santhosh Kumar T
  */
-public class GZipInputChannel extends InflaterInputChannel{
-    public GZipInputChannel(InputChannel delegate){
+public class GZIPInputChannel extends InflaterInputChannel{
+    public GZIPInputChannel(InputChannel delegate){
         super(delegate, new Inflater(true));
     }
 
