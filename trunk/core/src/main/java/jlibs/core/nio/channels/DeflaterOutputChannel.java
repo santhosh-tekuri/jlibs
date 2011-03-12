@@ -23,10 +23,15 @@ import java.util.zip.Deflater;
  * @author Santhosh Kumar T
  */
 public class DeflaterOutputChannel extends FilterOutputChannel{
-    private Deflater deflater = new Deflater();
+    protected Deflater deflater = new Deflater();
 
     public DeflaterOutputChannel(OutputChannel delegate){
+        this(delegate, new Deflater());
+    }
+
+    protected DeflaterOutputChannel(OutputChannel delegate, Deflater deflater){
         super(delegate);
+        this.deflater = deflater;
         writeBuffer.limit(0);
     }
 
