@@ -25,31 +25,31 @@ import java.util.NoSuchElementException;
  * @author Santhosh Kumar T
  */
 public abstract class AbstractIterator<T> implements Iterator<T>{
-    private T next;
-    private boolean eof;
+    protected static final Object NO_MORE_ELEMENTS = new Object();
 
-    protected abstract T computeNext();
+    private Object next;
+
+    protected abstract Object computeNext();
 
     protected AbstractIterator<T> reset(){
         next = null;
-        eof = false;
         return this;
     }
 
     @Override
     public final boolean hasNext(){
-        if(!eof && next==null){
+        if(next==NO_MORE_ELEMENTS)
+            return false;
+        if(next==null)
             next = computeNext();
-            if(next==null)
-                eof = true;
-        }
-        return !eof;
+        return next!=NO_MORE_ELEMENTS;
     }
 
     @Override
+    @SuppressWarnings({"unchecked"})
     public final T next(){
         if(hasNext()){
-            T current = next;
+            T current = (T)next;
             next = null;
             return current;
         }else

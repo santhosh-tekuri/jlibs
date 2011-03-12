@@ -110,7 +110,7 @@ class HTTPMessageListener{
         if(info.isDeflate())
             input = new InflaterInputChannel(input);
         else if(info.isGZip())
-            input = new GZipInputChannel(input);
+            input = new GZIPInputChannel(input);
 
         body = ByteBuffer.allocate(1024);
         try{
