@@ -26,10 +26,11 @@ import java.net.SocketAddress;
 /**
  * @author Santhosh Kumar T
  */
-public class SelectionHandler implements Runnable{
+public class NIOThread extends Thread{
     public final NIOSelector selector;
 
-    public SelectionHandler(NIOSelector selector){
+    public NIOThread(NIOSelector selector){
+        super("NIOThread@"+selector.id());
         this.selector = selector;
     }
 
@@ -99,6 +100,16 @@ public class SelectionHandler implements Runnable{
                 }
             }
         }
+    }
+
+    public static NIOThread current(){
+        Thread thread = Thread.currentThread();
+        return thread instanceof NIOThread ? (NIOThread)thread : null;
+    }
+
+    public static NIOSelector selector(){
+        NIOThread thread = current();
+        return thread==null ? null : thread.selector;
     }
 
     public static void connect(ClientChannel client, SocketAddress remote) throws IOException{
