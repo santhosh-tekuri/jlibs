@@ -100,12 +100,6 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     public static final int OP_CONNECT = SelectionKey.OP_CONNECT;
 
     protected Transport transport = new PlainTransport(this);
-    protected PlainTransport plainTransport(){
-        Transport t = transport;
-        while(t instanceof SSLTransport)
-            t = ((SSLTransport)t).transport;
-        return (PlainTransport)t;
-    }
 
     private HandshakeCompletedListener handshakeCompletedListener;
     public void setHandshakeCompletedListener(HandshakeCompletedListener handshakeCompletedListener){
@@ -284,10 +278,18 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
         }
     }
 
-    protected ClientPool pool;
-    protected ClientPool futurePool;
-    protected long futurePoolTimeout;
-    public ClientPool pool(){
-        return pool;
+    // -ve=notPooled; 0=pooled; +ve=waitingToPool
+    protected long poolFlag = -1;
+
+    public void addToPool(long timeout){
+        selector().pool.add(this, timeout);
+    }
+
+    public boolean isPooled(){
+        return poolFlag==0;
+    }
+
+    public boolean removeFromPool(){
+        return nioSelector.pool().remove(this);
     }
 }

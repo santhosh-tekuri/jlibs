@@ -309,4 +309,9 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         }
     }
     protected final TimeoutTracker timeoutTracker = new TimeoutTracker();
+
+    protected final ClientPool pool = new ClientPool(this);
+    public ClientPool pool(){
+        return pool;
+    }
 }

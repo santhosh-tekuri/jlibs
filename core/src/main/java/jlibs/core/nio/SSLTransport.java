@@ -545,8 +545,8 @@ public class SSLTransport extends Debuggable implements Transport{
         if(DEBUG)
             println("}");
 
-        if(client().futurePool!=null && transport.interests()==0)
-            client().futurePool._add(client(), client().futurePoolTimeout);
+        if(client().poolFlag>0 && client().key.interestOps()==0)
+            client().selector().pool().track(client());
 
         return isAppReady();
     }

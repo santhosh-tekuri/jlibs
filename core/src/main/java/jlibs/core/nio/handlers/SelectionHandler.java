@@ -15,7 +15,10 @@
 
 package jlibs.core.nio.handlers;
 
-import jlibs.core.nio.*;
+import jlibs.core.nio.ClientChannel;
+import jlibs.core.nio.NIOChannel;
+import jlibs.core.nio.NIOSelector;
+import jlibs.core.nio.ServerChannel;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -55,18 +58,16 @@ public class SelectionHandler implements Runnable{
                 ClientChannel client = (ClientChannel)channel;
                 ClientHandler handler = (ClientHandler)channel.attachment();
                 if(client.isTimeout()){
-                    ClientPool pool = client.pool();
-                    if(pool!=null && !pool.remove(client))
-                        pool = null;
-                    if(pool==null){
+                    if(client.isPooled()){
+                        client.removeFromPool();
                         try{
-                            handler.onTimeout(client);
+                            ((ClientPoolHandler)client.selector().pool().attachment()).onTimeout(client);
                         }catch(Throwable ex){
                             handleException(ex);
                         }
                     }else{
                         try{
-                            ((ClientPoolHandler)pool.attachment()).onTimeout(client);
+                            handler.onTimeout(client);
                         }catch(Throwable ex){
                             handleException(ex);
                         }
