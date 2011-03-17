@@ -22,7 +22,7 @@ import jlibs.core.nio.ClientChannel;
 import jlibs.core.nio.NIOSelector;
 import jlibs.core.nio.ServerChannel;
 import jlibs.core.nio.handlers.ClientHandler;
-import jlibs.core.nio.handlers.SelectionHandler;
+import jlibs.core.nio.handlers.NIOThread;
 import jlibs.core.nio.handlers.ServerHandler;
 import jlibs.core.util.CollectionUtil;
 
@@ -71,7 +71,7 @@ public class Proxy implements ServerHandler{
             inboundClient.attach(inboundListener);
             outboundClient.attach(outboundListener);
 
-            SelectionHandler.connect(outboundClient, outboundEndpoint.address);
+            NIOThread.connect(outboundClient, outboundEndpoint.address);
             inboundClient.addInterest(ClientChannel.OP_READ);
         }catch(IOException ex){
             ex.printStackTrace();
@@ -137,7 +137,7 @@ public class Proxy implements ServerHandler{
         }
 
         nioSelector.shutdownOnExit(false);
-        new SelectionHandler(nioSelector).run();
+        new NIOThread(nioSelector).run();
     }
 }
 
