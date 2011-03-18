@@ -49,12 +49,16 @@ public class SSLUtil{
         return password!=null ? password.toCharArray() : null;
     }
 
-    public static KeyStore newKeyStore() throws SSLException{
-        String location = getKeyStoreLocation();
-        if(location!=null)
-            return newKeyStore(getKeyStoreType(), location, getKeyStorePassword());
-        else
-            return null;
+    private static KeyStore defaultKeyStore[];
+    public static KeyStore defaultKeyStore() throws SSLException{
+        if(defaultKeyStore==null){
+            String location = getKeyStoreLocation();
+            if(location!=null)
+                defaultKeyStore = new KeyStore[]{ newKeyStore(getKeyStoreType(), location, getKeyStorePassword()) };
+            else
+                defaultKeyStore = new KeyStore[]{ null };
+        }
+        return defaultKeyStore[0];
     }
 
     public static String getTrustStoreType(){
@@ -70,12 +74,16 @@ public class SSLUtil{
         return password!=null ? password.toCharArray() : null;
     }
 
-    public static KeyStore newTrustStore() throws SSLException{
-        String location = getTrustStoreLocation();
-        if(location!=null)
-            return newKeyStore(getTrustStoreType(), location, getTrustStorePassword());
-        else
-            return null;
+    private static KeyStore defaultTrustStore[];
+    public static KeyStore defaultTrustStore() throws SSLException{
+        if(defaultTrustStore==null){
+            String location = getTrustStoreLocation();
+            if(location!=null)
+                defaultTrustStore = new KeyStore[]{ newKeyStore(getTrustStoreType(), location, getTrustStorePassword()) };
+            else
+                defaultTrustStore = new KeyStore[]{ null };
+        }
+        return defaultTrustStore[0];
     }
 
     public static final TrustManager DUMMY_TRUST_MANAGERS[] = new TrustManager[]{

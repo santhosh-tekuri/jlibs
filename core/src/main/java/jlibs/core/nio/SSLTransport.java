@@ -155,6 +155,10 @@ public class SSLTransport extends Debuggable implements Transport{
         try{
             while(true){
                 switch(hsStatus){
+                    case FINISHED:
+                        if(handshakeCompletedListener!=null)
+                            handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
+                        break;
                     case NEED_TASK:
                         processNeedTask();
                         continue;
@@ -166,13 +170,9 @@ public class SSLTransport extends Debuggable implements Transport{
                         if(processUnwrap())
                             continue;
                         return false;
-                    case FINISHED:
-                        if(handshakeCompletedListener!=null)
-                            handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
-                    default:
-                        initialHandshake = false;
-                        return true;
                 }
+                initialHandshake = false;
+                return true;
             }
         }finally{
             if(engine.isInboundDone() && engine.isOutboundDone() && !netWriteBuffer.hasRemaining())
@@ -181,12 +181,18 @@ public class SSLTransport extends Debuggable implements Transport{
     }
 
     private void processNeedTask(){
-        if(DEBUG)
-            println("running tasks");
         Runnable task;
         while((task=engine.getDelegatedTask())!=null)
             task.run();
         hsStatus = engine.getHandshakeStatus();
+        if(DEBUG){
+            println(String.format(
+                "%-6s: %-16s %-15s %5d %5d",
+                "tasks",
+                "OK", hsStatus,
+                0, 0
+            ));
+        }
     }
 
     private boolean processWrap() throws IOException{
