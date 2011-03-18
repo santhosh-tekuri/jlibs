@@ -122,17 +122,17 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
                 SSLContext sslContext = SSLContext.getInstance("TLS");
 
                 TrustManager tm[];
-                KeyStore trustStore = SSLUtil.newTrustStore();
+                KeyStore trustStore = SSLUtil.defaultTrustStore();
                 if(trustStore==null)
                     tm = SSLUtil.DUMMY_TRUST_MANAGERS;
                 else{
                     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                    tmf.init(SSLUtil.newTrustStore());
+                    tmf.init(SSLUtil.defaultTrustStore());
                     tm = tmf.getTrustManagers();
                 }
 
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                kmf.init(SSLUtil.newKeyStore(), SSLUtil.getKeyStorePassword());
+                kmf.init(SSLUtil.defaultKeyStore(), SSLUtil.getKeyStorePassword());
 
                 sslContext.init(kmf.getKeyManagers(), tm , null);
                 SSLEngine engine = sslContext.createSSLEngine();
