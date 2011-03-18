@@ -64,8 +64,9 @@ public class PlainTransport extends Debuggable implements Transport{
 
     @Override
     public void removeInterest(int operation){
-        client.key.interestOps(interests()&~operation);
-        if(interests()==0)
+        int newInterests = interests()&~operation;
+        client.key.interestOps(newInterests);
+        if(newInterests==0)
             client.nioSelector.timeoutTracker.untrack(client);
     }
 
@@ -76,14 +77,15 @@ public class PlainTransport extends Debuggable implements Transport{
 
     @Override
     public boolean process(){
-        int ops = client.key.interestOps();
-        if(client.isConnectable())
-            ops &= ~SelectionKey.OP_CONNECT;
-        if(client.isReadable())
-            ops &= ~SelectionKey.OP_READ;
-        if(client.isWritable())
-            ops &= ~SelectionKey.OP_WRITE;
-        client.key.interestOps(ops);
+        int ready = client.key.readyOps();
+        int interests = client.key.interestOps();
+        if((ready & SelectionKey.OP_CONNECT)!=0)
+            interests &= ~SelectionKey.OP_CONNECT;
+        if((ready & SelectionKey.OP_READ)!=0)
+            interests &= ~SelectionKey.OP_READ;
+        if((ready & SelectionKey.OP_WRITE)!=0)
+            interests &= ~SelectionKey.OP_WRITE;
+        client.key.interestOps(interests);
         return true;
     }
 
@@ -124,9 +126,8 @@ public class PlainTransport extends Debuggable implements Transport{
     public void close() throws IOException{
         if(DEBUG)
             println("channel@"+id()+".close");
-        boolean wasOpen = isOpen();
-        boolean wasConnected = client.isConnected();
-        if(wasOpen){
+        if(isOpen()){
+            boolean wasConnected = client.isConnected();
             client.realChannel().close();
             if(wasConnected)
                 client.nioSelector.connectedClients--;
