@@ -214,16 +214,13 @@ public class SSLTransport extends Debuggable implements Transport{
         }
 
         switch(status){
-            case BUFFER_OVERFLOW: // not enough room in netWriteBuffer
             case BUFFER_UNDERFLOW: // Nothing to wrap: no data was present in appWriteBuffer
+            case BUFFER_OVERFLOW: // not enough room in netWriteBuffer
                 throw new ImpossibleException();
-            case OK:
-                return flush();
-            case CLOSED:
-                assert engine.isOutboundDone();
+            default: // OK or CLOSED
+                assert status!=SSLEngineResult.Status.CLOSED || engine.isOutboundDone();
                 return flush();
         }
-        throw new ImpossibleException();
     }
 
     private boolean flush() throws IOException{
