@@ -244,10 +244,14 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
         if(isShutdown())
             return EmptyIterator.instance();
-        else if(selector.select(timeoutTracker.isTracking()?selectTimeout:0)>0)
-            return selectedIterator.reset();
-        else
-            return timeoutTracker.reset();
+        else{
+            if(DEBUG)
+                System.out.println("-------------------------[SELECT]-------------------------");
+            if(selector.select(timeoutTracker.isTracking()?selectTimeout:0)>0)
+                return selectedIterator.reset();
+            else
+                return timeoutTracker.reset();
+            }
     }
 
     private ReadyIterator readyIterator = new ReadyIterator();
