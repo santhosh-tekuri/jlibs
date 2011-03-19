@@ -17,7 +17,8 @@ package jlibs.core.nio;
 
 import jlibs.core.net.SSLUtil;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -27,7 +28,6 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.security.KeyStore;
 
 /**
  * @author Santhosh Kumar T
@@ -119,23 +119,7 @@ public class ClientChannel extends NIOChannel implements ByteChannel{
     public void enableSSL(SSLParameters sslParameters) throws IOException{
         if(isConnected()){
             try {
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-
-                TrustManager tm[];
-                KeyStore trustStore = SSLUtil.defaultTrustStore();
-                if(trustStore==null)
-                    tm = SSLUtil.DUMMY_TRUST_MANAGERS;
-                else{
-                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                    tmf.init(SSLUtil.defaultTrustStore());
-                    tm = tmf.getTrustManagers();
-                }
-
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                kmf.init(SSLUtil.defaultKeyStore(), SSLUtil.getKeyStorePassword());
-
-                sslContext.init(kmf.getKeyManagers(), tm , null);
-                SSLEngine engine = sslContext.createSSLEngine();
+                SSLEngine engine = SSLUtil.defaultContext().createSSLEngine();
                 if(sslParameters!=null)
                     engine.setSSLParameters(sslParameters);
                 enableSSL(engine);
