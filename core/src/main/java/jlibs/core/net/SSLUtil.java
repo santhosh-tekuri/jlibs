@@ -15,10 +15,9 @@
 
 package jlibs.core.net;
 
-import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.FileInputStream;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 
@@ -95,4 +94,30 @@ public class SSLUtil{
            public void checkServerTrusted(X509Certificate[] certs, String authType){}
        }
     };
+
+    public static SSLContext newContext(KeyStore keyStore, char[] keyStorePassword, KeyStore trustStore) throws SSLException, GeneralSecurityException{
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+
+        TrustManager tm[];
+        if(trustStore==null)
+            tm = SSLUtil.DUMMY_TRUST_MANAGERS;
+        else{
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(SSLUtil.defaultTrustStore());
+            tm = tmf.getTrustManagers();
+        }
+
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(keyStore, keyStorePassword);
+
+        sslContext.init(kmf.getKeyManagers(), tm , null);
+        return sslContext;
+    }
+
+    private static SSLContext defaultContext;
+    public static SSLContext defaultContext() throws SSLException, GeneralSecurityException{
+        if(defaultContext==null)
+            defaultContext = newContext(SSLUtil.defaultKeyStore(), SSLUtil.getKeyStorePassword(), SSLUtil.defaultTrustStore());
+        return defaultContext;
+    }
 }
