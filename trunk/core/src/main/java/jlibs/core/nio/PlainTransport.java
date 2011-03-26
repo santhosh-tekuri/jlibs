@@ -22,7 +22,7 @@ import java.nio.channels.SelectionKey;
 /**
  * @author Santhosh Kumar T
  */
-public class PlainTransport extends Debuggable implements Transport{
+public class PlainTransport extends Transport{
     private final ClientChannel client;
 
     public PlainTransport(ClientChannel client){
@@ -73,6 +73,11 @@ public class PlainTransport extends Debuggable implements Transport{
     @Override
     public int ready(){
         return client.key.isValid() ? client.key.readyOps() : 0;
+    }
+
+    @Override
+    public boolean updateReadyInterests(){
+        throw new UnsupportedOperationException();
     }
 
     @Override
