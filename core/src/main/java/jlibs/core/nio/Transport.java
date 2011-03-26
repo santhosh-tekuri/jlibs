@@ -21,17 +21,20 @@ import java.nio.channels.ByteChannel;
 /**
  * @author Santhosh Kumar T
  */
-interface Transport extends ByteChannel{
-    public long id();
-    public ClientChannel client();
+abstract class Transport extends Debuggable implements ByteChannel{
+    protected Transport parent;
 
-    public int interests();
-    public void addInterest(int operation) throws IOException;
-    public void removeInterest(int operation) throws IOException;
-    public int ready();
+    public abstract long id();
+    public abstract ClientChannel client();
 
-    public boolean process();
+    public abstract int interests();
+    public abstract void addInterest(int operation) throws IOException;
+    public abstract void removeInterest(int operation) throws IOException;
+    public abstract int ready();
+    public abstract boolean updateReadyInterests();
 
-    public void shutdownOutput() throws IOException;
-    public boolean isOutputShutdown();
+    public abstract boolean process();
+
+    public abstract void shutdownOutput() throws IOException;
+    public abstract boolean isOutputShutdown();
 }

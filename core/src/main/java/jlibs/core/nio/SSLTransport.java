@@ -16,6 +16,7 @@
 package jlibs.core.nio;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.core.lang.NotImplementedException;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
@@ -27,13 +28,13 @@ import java.nio.channels.ClosedChannelException;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.NEED_UNWRAP;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.NEED_WRAP;
 
 /**
  * @author Santhosh Kumar T
  */
-public class SSLTransport extends Debuggable implements Transport{
+public final class SSLTransport extends Transport{
     protected Transport transport;
     private final SSLEngine engine;
 
@@ -52,6 +53,8 @@ public class SSLTransport extends Debuggable implements Transport{
 
     public SSLTransport(Transport transport, SSLEngine engine, HandshakeCompletedListener handshakeCompletedListener) throws IOException{
         this.transport = transport;
+        transport.parent = this;
+
         this.engine = engine;
         this.handshakeCompletedListener = handshakeCompletedListener;
 
@@ -81,45 +84,6 @@ public class SSLTransport extends Debuggable implements Transport{
         return transport.client();
     }
 
-    private void validate() throws IOException{
-        if(asyncException!=null)
-            throw new IOException("ASYNC_EXCEPTION: "+asyncException.getMessage(), asyncException);
-        if(appClosed)
-            throw new ClosedChannelException();
-    }
-
-    @Override
-    public int read(ByteBuffer dst) throws IOException{
-        if(DEBUG)
-            println("app@"+id()+".read{");
-        try{
-            int read = appRead(dst);
-            if(DEBUG)
-                println("return: "+read);
-            return read;
-        }finally{
-            if(DEBUG)
-                println("}");
-        }
-    }
-
-    @Override
-    public int write(ByteBuffer src) throws IOException{
-        if(DEBUG)
-            println("app@"+id()+".write{");
-        try{
-            int wrote = appWrite(src);
-            if(DEBUG)
-                println("return: "+wrote);
-            return wrote;
-        }finally{
-            if(DEBUG)
-                println("}");
-        }
-    }
-
-    /*-------------------------------------------------[ Processing ]---------------------------------------------------*/
-
     private void start() throws IOException{
         if(DEBUG)
             println("app@"+id()+".start{");
@@ -132,16 +96,8 @@ public class SSLTransport extends Debuggable implements Transport{
             transport.removeInterest(OP_WRITE);
 
         engine.beginHandshake();
-        switch(hsStatus=engine.getHandshakeStatus()){
-            case NEED_UNWRAP:
-                channelRead();
-                break;
-            case NEED_WRAP:
-                channelWrite();
-                break;
-            default:
-                assert false;
-        }
+        hsStatus = engine.getHandshakeStatus();
+        run();
 
         if(readWait)
             addInterest(OP_READ);
@@ -155,10 +111,24 @@ public class SSLTransport extends Debuggable implements Transport{
         try{
             while(true){
                 switch(hsStatus){
+                    case NOT_HANDSHAKING:
                     case FINISHED:
-                        if(handshakeCompletedListener!=null)
+                        if(hsStatus== SSLEngineResult.HandshakeStatus.FINISHED && handshakeCompletedListener!=null)
                             handshakeCompletedListener.handshakeCompleted(new HandshakeCompletedEvent(client(), engine.getSession()));
-                        break;
+                        boolean wasInitialHandShake = initialHandshake;
+                        initialHandshake = false;
+                        if(shutdownOutputRequested && !engine.isOutboundDone()){
+                            if(DEBUG)
+                                println("app@"+id()+".closeOutbound");
+                            engine.closeOutbound();
+                            hsStatus = NEED_WRAP;
+                            continue;
+                        }
+                        if(wasInitialHandShake && appReadWait && !appReadReady()){
+                            hsStatus = NEED_UNWRAP;
+                            continue;
+                        }
+                        return true;
                     case NEED_TASK:
                         processNeedTask();
                         continue;
@@ -171,8 +141,6 @@ public class SSLTransport extends Debuggable implements Transport{
                             continue;
                         return false;
                 }
-                initialHandshake = false;
-                return true;
             }
         }finally{
             if(engine.isInboundDone() && engine.isOutboundDone() && !netWriteBuffer.hasRemaining())
@@ -187,12 +155,82 @@ public class SSLTransport extends Debuggable implements Transport{
         hsStatus = engine.getHandshakeStatus();
         if(DEBUG){
             println(String.format(
-                "%-6s: %-16s %-15s %5d %5d",
-                "tasks",
-                "OK", hsStatus,
-                0, 0
+                "%-6s: %5d %5d %-16s %-15s",
+                "TASK",
+                0, 0,
+                "OK", hsStatus
             ));
         }
+    }
+
+    private boolean eofRead;
+    private boolean processUnwrap() throws IOException{
+        assert !appReadBuffer.hasRemaining();
+
+        if(!netReadBuffer.hasRemaining() || status==SSLEngineResult.Status.BUFFER_UNDERFLOW){
+            netReadBuffer.compact();
+            int read = transport.read(netReadBuffer);
+            netReadBuffer.flip();
+            if(read==0){
+                transport.addInterest(OP_READ);
+                return false;
+            }else if(read==-1){
+                eofRead = true;
+                try{
+                    engine.closeInbound();
+                }catch(SSLException ex){
+                    // peer's close_notify is not received yet
+                }
+                status = SSLEngineResult.Status.CLOSED;
+                hsStatus = engine.getHandshakeStatus();
+                return false;
+            }
+        }
+
+        assert netReadBuffer.hasRemaining();
+        appReadBuffer.clear();
+        SSLEngineResult result = engine.unwrap(netReadBuffer, appReadBuffer);
+        appReadBuffer.flip();
+        hsStatus = result.getHandshakeStatus();
+        status = result.getStatus();
+
+        if(DEBUG){
+            println(String.format(
+                "%-6s: %5d %5d %-16s %-15s",
+                "UNWRAP",
+                result.bytesConsumed(), result.bytesProduced(),
+                result.getStatus(), result.getHandshakeStatus()
+            ));
+        }
+
+        switch(status){
+            case BUFFER_UNDERFLOW: // not enough data in netReadBuffer
+                transport.addInterest(OP_READ);
+                return false;
+            case BUFFER_OVERFLOW: // not enough room in appReadBuffer
+                throw new ImpossibleException();
+            case OK:
+                if(appReadBuffer.hasRemaining()){
+                    if(appClosed){
+                        if(DEBUG)
+                            println("discarding data in appReadBuffer@"+id());
+                        appReadBuffer.position(appReadBuffer.limit());
+                        return true;
+                    }
+                    return false;
+                }else
+                    return true;
+            case CLOSED:
+                assert engine.isInboundDone();
+                try{
+                    client().realChannel().socket().shutdownInput();
+                }catch(IOException ex){
+                    if(!client().realChannel().socket().isInputShutdown())
+                        throw ex;
+                }
+                return false;
+        }
+        throw new ImpossibleException();
     }
 
     private boolean processWrap() throws IOException{
@@ -206,28 +244,25 @@ public class SSLTransport extends Debuggable implements Transport{
 
         if(DEBUG){
             println(String.format(
-                "%-6s: %-16s %-15s %5d %5d",
-                "wrap",
-                status, hsStatus,
-                result.bytesConsumed(), result.bytesProduced()
+                "%-6s: %5d %5d %-16s %-15s",
+                "WRAP",
+                result.bytesConsumed(), result.bytesProduced(),
+                status, hsStatus
             ));
         }
 
-        switch(status){
-            case BUFFER_UNDERFLOW: // Nothing to wrap: no data was present in appWriteBuffer
-            case BUFFER_OVERFLOW: // not enough room in netWriteBuffer
-                throw new ImpossibleException();
-            default: // OK or CLOSED
-                assert status!=SSLEngineResult.Status.CLOSED || engine.isOutboundDone();
-                return flush();
-        }
+        assert status!=SSLEngineResult.Status.BUFFER_UNDERFLOW; // Nothing to wrap: no data was present in appWriteBuffer
+        assert status!=SSLEngineResult.Status.BUFFER_OVERFLOW; // not enough room in netWriteBuffer
+        assert status!=SSLEngineResult.Status.CLOSED || engine.isOutboundDone();
+
+        return flush();
     }
 
     private boolean flush() throws IOException{
         if(netWriteBuffer.hasRemaining()){
             transport.write(netWriteBuffer);
             if(netWriteBuffer.hasRemaining()){
-                waitForChannelWrite();
+                transport.addInterest(OP_WRITE);
                 return false;
             }
         }
@@ -242,111 +277,20 @@ public class SSLTransport extends Debuggable implements Transport{
         return true;
     }
 
-    private boolean processUnwrap() throws IOException{
-        assert !appReadBuffer.hasRemaining();
-        if(!netReadBuffer.hasRemaining()){
-            waitForChannelRead();
-            return false;
-        }
+    private IOException asyncException;
 
-        appReadBuffer.clear();
-        SSLEngineResult result = engine.unwrap(netReadBuffer, appReadBuffer);
-        appReadBuffer.flip();
-        hsStatus = result.getHandshakeStatus();
-        status = result.getStatus();
 
-        if(DEBUG){
-            println(String.format(
-                "%-6s: %-16s %-15s %5d %5d",
-                "unwrap",
-                result.getStatus(), result.getHandshakeStatus(),
-                result.bytesConsumed(), result.bytesProduced()
-            ));
-        }
-
-        switch(status){
-            case BUFFER_OVERFLOW: // not enough room in appReadBuffer
-                throw new ImpossibleException();
-            case BUFFER_UNDERFLOW: // not enough data in netReadBuffer
-                waitForChannelRead();
-                return false;
-            case OK:
-                if(appReadBuffer.hasRemaining()){
-                    if(appClosed){
-                        if(DEBUG)
-                            println("discarding data in appReadBuffer@"+id());
-                        appReadBuffer.position(appReadBuffer.limit());
-                        return true;
-                    }
-                    if(appReadWait)
-                        enableAppRead();
-                    return false;
-                }else
-                    return true;
-            case CLOSED:
-                assert engine.isInboundDone();
-                try{
-                    client().realChannel().socket().shutdownInput();
-                }catch(IOException ex){
-                    if(!client().realChannel().socket().isInputShutdown())
-                        throw ex;
-                }
-                if(appReadWait)
-                    enableAppRead();
-                return false;
-        }
-        throw new ImpossibleException();
+    private void validate() throws IOException{
+        if(asyncException!=null)
+            throw new IOException("ASYNC_EXCEPTION: "+asyncException.getMessage(), asyncException);
+        if(appClosed)
+            throw new ClosedChannelException();
     }
 
-    /*-------------------------------------------------[ Wait ]---------------------------------------------------*/
+    /*-------------------------------------------------[ interests ]---------------------------------------------------*/
 
-    private boolean channelReadWait = false;
-    private void waitForChannelRead() throws IOException{
-        if(!channelReadWait){
-            channelReadWait = true;
-            transport.addInterest(OP_READ);
-        }
-    }
-
-    private boolean channelWriteWait = false;
-    private void waitForChannelWrite() throws IOException{
-        if(!channelWriteWait){
-            channelWriteWait = true;
-            transport.addInterest(OP_WRITE);
-        }
-    }
-
-    private boolean appReadWait = false;
-    private void waitForAppRead() throws IOException{
-        if(!appReadWait){
-            appReadWait = true;
-            if(DEBUG)
-                println("app@" + id() + ".readWait");
-            if(engine.isInboundDone())
-                enableAppRead();
-            else if(!initialHandshake){
-                if(appReadBuffer.hasRemaining())
-                    enableAppRead();
-                else
-                    channelRead();
-            }
-        }
-    }
-
-    private boolean appWriteWait = false;
-    private void waitForAppWrite() throws IOException{
-        if(!appWriteWait){
-            if(outputShutdown)
-                throw new IOException("output is shutdown for app@"+id());
-            appWriteWait = true;
-            if(DEBUG)
-                println("app@"+id()+".writeWait");
-            if(!initialHandshake){
-                if(!appWriteBuffer.hasRemaining())
-                    enableAppWrite();
-            }
-        }
-    }
+    private boolean appReadWait;
+    private boolean appWriteWait;
 
     @Override
     public int interests(){
@@ -358,21 +302,28 @@ public class SSLTransport extends Debuggable implements Transport{
         return ops;
     }
 
+    private boolean addedToReadyList;
     @Override
-    public void addInterest(int interest) throws IOException{
+    public void addInterest(int operation) throws IOException{
         if(DEBUG)
-            println("app@"+id()+".register{");
-
+            println("app@"+id()+"."+(operation==OP_READ?"read":"write")+"Wait{");
         validate();
-
-        if(interest==OP_READ)
-            waitForAppRead();
-
-        if(interest==OP_WRITE)
-            waitForAppWrite();
-
-        if(isAppReady())
-            client().nioSelector.ready.add(client());
+        if(!appReadWait && operation==OP_READ){
+            appReadWait = true;
+            if(!initialHandshake && !appReadReady()){
+                hsStatus = SSLEngineResult.HandshakeStatus.NEED_UNWRAP;
+                run();
+            }
+        }
+        if(!appWriteWait && operation==OP_WRITE){
+            if(isOutputShutdown())
+                throw new IOException("output is shutdown for app@"+id());
+            appWriteWait = true;
+        }
+        if(!addedToReadyList && appReady()){
+            client().nioSelector.ready.add(this);
+            addedToReadyList = true;
+        }
         if(DEBUG)
             println("}");
     }
@@ -380,134 +331,53 @@ public class SSLTransport extends Debuggable implements Transport{
     @Override
     public void removeInterest(int operation) throws IOException{
         validate();
-        throw new UnsupportedOperationException();
+        throw new NotImplementedException();
     }
 
-    /*-------------------------------------------------[ Ready ]---------------------------------------------------*/
+    /*-------------------------------------------------[ ready ]---------------------------------------------------*/
 
-    private boolean appReadReady = false;
-    private void enableAppRead(){
-        if(DEBUG)
-            println("app@"+id()+".readReady");
-        appReadReady = true;
+    private Boolean appReadReady(){
+        return !appClosed && (asyncException!=null || engine.isInboundDone() || appReadBuffer.hasRemaining());
     }
 
-    private boolean appWriteReady = false;
-    private void enableAppWrite(){
-        if(DEBUG)
-            println("app@"+id()+".writeReady");
-        appWriteReady = true;
+    private boolean appWriteReady(){
+        return !appClosed && (asyncException!=null || (!initialHandshake && !isOutputShutdown() && !netWriteBuffer.hasRemaining()));
     }
 
-    private void notifyAppWrite() throws IOException{
-        if(appWriteWait)
-            enableAppWrite();
-        else if(outputShutdown && !engine.isOutboundDone())
-            closeOutbound();
+    private boolean appReady(){
+        return (appReadWait && appReadReady()) || (appWriteWait && appWriteReady());
     }
 
     @Override
     public int ready(){
-        int ops = 0;
-        if(appReadReady)
-            ops |= OP_READ;
-        if(appWriteReady)
-            ops |= OP_WRITE;
-        return ops;
+        int ops = appReadReady ? OP_READ : 0;
+        return appWriteReady ? ops|OP_WRITE : ops;
     }
 
-    private boolean isAppReady(){
-        if(appReadReady)
-            appReadWait = false;
-        if(appWriteReady)
-            appWriteWait = false;
-        return !appClosed && (appReadReady || appWriteReady);
+    private boolean appReadReady, appWriteReady;
+
+    @Override
+    public boolean updateReadyInterests(){
+        addedToReadyList = false;
+        if(appReadWait){
+            if(appReadReady=appReadReady())
+                appReadWait = false;
+        }else
+            appReadReady = false;
+        if(appWriteWait){
+            if(appWriteReady=appWriteReady())
+                appWriteWait = false;
+        }else
+            appWriteReady = false;
+
+        if(DEBUG){
+            if(appReadReady || appWriteReady)
+                println("app@"+id()+"."+(appReadReady?"Read":"")+(appWriteReady?"Write":"")+"Ready");
+        }
+        return appReadReady || appWriteReady;
     }
 
     /*-------------------------------------------------[ IO ]---------------------------------------------------*/
-
-    private void channelRead() throws IOException{
-        while(true){
-            netReadBuffer.compact();
-            int read = status==BUFFER_UNDERFLOW ? 0 : netReadBuffer.position();
-            read += transport.read(netReadBuffer);
-            netReadBuffer.flip();
-            if(read==0)
-                waitForChannelRead();
-            else if(read==-1){
-                try{
-                    engine.closeInbound();
-                }catch(SSLException ex){
-                    // peer's close_notify is not received yet
-                }
-                if(appReadWait)
-                    enableAppRead();
-            }else{
-                hsStatus = NEED_UNWRAP;
-                if(run()){
-                    notifyAppWrite();
-                    if(appReadWait){
-                        if(appReadBuffer.hasRemaining())
-                            enableAppRead();
-                        else{
-                            continue;
-                        }
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    private void channelWrite() throws IOException{
-        if(flush()){
-            if(run()){
-                notifyAppWrite();
-                if(appReadWait){
-                    if(appReadBuffer.hasRemaining())
-                        enableAppRead();
-                }
-            }
-        }
-    }
-
-    private int appRead(ByteBuffer dst) throws IOException{
-        validate();
-
-        appReadReady = false;
-        if(appReadBuffer.hasRemaining()){
-            int limit = Math.min(appReadBuffer.remaining(), dst.remaining());
-            if(dst.hasArray()){
-                System.arraycopy(appReadBuffer.array(), appReadBuffer.position(), dst.array(), dst.position(), limit);
-                appReadBuffer.position(appReadBuffer.position()+limit);
-                dst.position(dst.position()+limit);
-            }else{
-                for(int i=0; i<limit; i++)
-                    dst.put(appReadBuffer.get());
-            }
-            return limit;
-        }else
-            return engine.isInboundDone() ? -1 : 0;
-    }
-
-    private int appWrite(ByteBuffer dst) throws IOException{
-        validate();
-
-        appWriteReady = false;
-        if(initialHandshake || outputShutdown || netWriteBuffer.hasRemaining())
-            return 0;
-        int pos = dst.position();
-        appWriteBuffer = dst;
-        try{
-            hsStatus = NEED_WRAP;
-            run();
-            return dst.position()-pos;
-        }finally{
-            appWriteBuffer = dummy;
-        }
-    }
-
-    private IOException asyncException;
 
     @Override
     public boolean process(){
@@ -517,33 +387,26 @@ public class SSLTransport extends Debuggable implements Transport{
             int ops = transport.interests();
             boolean readReady = (ops&OP_READ)!=0;
             boolean writeReady = (ops&OP_WRITE)!=0;
-            if(readReady){
-                channelReadWait = false;
-                transport.removeInterest(OP_READ);
-            }
-            if(writeReady){
-                channelWriteWait = false;
-                transport.removeInterest(OP_WRITE);
-            }
-
             if(readReady)
-                channelRead();
-            if(transport.isOpen() && writeReady) // to check key validity
-                channelWrite();
-            if(engine.isInboundDone() && engine.isOutboundDone() && !netWriteBuffer.hasRemaining())
-                closeTransport();
+                transport.removeInterest(OP_READ);
+            if(writeReady)
+                transport.removeInterest(OP_WRITE);
+
+            if(writeReady){ // to check key validity
+                hsStatus = SSLEngineResult.HandshakeStatus.NEED_WRAP;
+                run();
+            }
+            if(readReady){
+                hsStatus = SSLEngineResult.HandshakeStatus.NEED_UNWRAP;
+                run();
+            }
         }catch(IOException ex){
             if(DEBUG)
                 println("Async Exception: "+ex.getMessage());
             if(appClosed)
                 closeTransport();
-            else{
+            else
                 asyncException = ex;
-                if(appReadWait)
-                    enableAppRead();
-                if(appWriteWait)
-                    enableAppWrite();
-            }
         }
         if(DEBUG)
             println("}");
@@ -551,35 +414,99 @@ public class SSLTransport extends Debuggable implements Transport{
         if(client().poolFlag>0 && client().key.interestOps()==0)
             client().selector().pool().track(client());
 
-        return isAppReady();
+        return updateReadyInterests();
     }
 
-    /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
+    public int read(ByteBuffer dst) throws IOException{
+        if(DEBUG)
+            println("app@"+id()+".read{");
 
-    private boolean outputShutdown;
+        validate();
+        int read;
+        try{
+            if(appReadBuffer.hasRemaining()){
+                int limit = Math.min(appReadBuffer.remaining(), dst.remaining());
+                if(dst.hasArray()){
+                    System.arraycopy(appReadBuffer.array(), appReadBuffer.position(), dst.array(), dst.position(), limit);
+                    appReadBuffer.position(appReadBuffer.position()+limit);
+                    dst.position(dst.position()+limit);
+                }else{
+                    for(int i=0; i<limit; i++)
+                        dst.put(appReadBuffer.get());
+                }
+                read = limit;
+            }else
+                read = engine.isInboundDone() ? -1 : 0;
+            if(DEBUG)
+                println("return: "+read);
+            return read;
+        }finally{
+            if(DEBUG)
+                println("}");
+        }
+    }
+
+    public int write(ByteBuffer dst) throws IOException{
+        if(DEBUG)
+            println("app@"+id()+".write{");
+
+        validate();
+        if(isOutputShutdown())
+            throw new IOException("output is shutdown for app@"+id());
+
+        int pos = dst.position();
+        try{
+            if(!initialHandshake && !netWriteBuffer.hasRemaining()){
+                appWriteBuffer = dst;
+                hsStatus = NEED_WRAP;
+                run();
+            }
+            if(DEBUG)
+                println("return: "+(dst.position()-pos));
+            return dst.position()-pos;
+        }finally{
+            appWriteBuffer = dummy;
+            if(DEBUG)
+                println("}");
+        }
+    }
+
+    /*-------------------------------------------------[ shutdown-output ]---------------------------------------------------*/
+
+    private boolean shutdownOutputRequested;
+
     @Override
     public void shutdownOutput() throws IOException{
+        if(appClosed)
+            throw new ClosedChannelException();
+        if(!isOutputShutdown())
+            _shutdownOutput();
+    }
+
+    private void _shutdownOutput() throws IOException{
         if(DEBUG)
             println("app@"+id()+".shutdownOutput{");
-        outputShutdown = true;
         appWriteWait = appWriteReady = false;
-        if(!netWriteBuffer.hasRemaining() && (engine.isInboundDone() || hsStatus==FINISHED || hsStatus==NOT_HANDSHAKING))
-            closeOutbound();
+
+        boolean appClosed = this.appClosed;
+        this.appClosed = false;
+        boolean canShutdown = appWriteReady();
+        this.appClosed = appClosed;
+        if(canShutdown){
+            if(DEBUG)
+                println("app@"+id()+".closeOutbound");
+            engine.closeOutbound();
+            hsStatus = NEED_WRAP;
+            run();
+        }else
+            shutdownOutputRequested = true;
         if(DEBUG)
             println("}");
     }
 
-    private void closeOutbound() throws IOException{
-        if(DEBUG)
-            println("app@"+id()+".closeOutbound");
-        engine.closeOutbound();
-        hsStatus = NEED_WRAP;
-        channelWrite();
-    }
-
     @Override
     public boolean isOutputShutdown(){
-        return outputShutdown;
+        return shutdownOutputRequested || engine.isOutboundDone();
     }
 
     /*-------------------------------------------------[ Close ]---------------------------------------------------*/
@@ -594,10 +521,11 @@ public class SSLTransport extends Debuggable implements Transport{
     @Override
     public void close() throws IOException{
         if(!appClosed){
+            appReadWait = appWriteWait = false;
             appClosed = true;
             if(DEBUG)
                 println("app@"+id()+".close{");
-            if(asyncException!=null)
+            if(eofRead || asyncException!=null)
                 closeTransport();
             else{
                 if(appReadBuffer.hasRemaining()){
@@ -605,8 +533,8 @@ public class SSLTransport extends Debuggable implements Transport{
                     if(DEBUG)
                         println("discarding data in appReadBuffer@"+id());
                 }
-                if(!outputShutdown)
-                    shutdownOutput();
+                if(!isOutputShutdown())
+                    _shutdownOutput();
             }
             if(DEBUG)
                 println("}");

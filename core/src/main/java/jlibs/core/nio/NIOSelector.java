@@ -217,7 +217,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     /*-------------------------------------------------[ Selection ]---------------------------------------------------*/
 
-    protected List<NIOChannel> ready = new LinkedList<NIOChannel>();
+    protected List<Transport> ready = new LinkedList<Transport>();
     private Iterator<NIOChannel> select() throws IOException{
         if(ready.size()>0)
             return readyIterator.reset();
@@ -255,30 +255,28 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     }
 
     private ReadyIterator readyIterator = new ReadyIterator();
-    private class ReadyIterator implements Iterator<NIOChannel>{
-        private int count;
+    private class ReadyIterator extends NonNullIterator<NIOChannel>{
         public ReadyIterator reset(){
-            count = ready.size();
+            super.reset();
             return this;
         }
 
         @Override
-        public boolean hasNext(){
-            return count>0;
-        }
-
-        @Override
-        public NIOChannel next(){
-            if(count==0)
-                throw new NoSuchElementException();
-            NIOChannel channel = ready.remove(0);
-            count--;
-            return channel;
-        }
-
-        @Override
-        public void remove(){
-            throw new UnsupportedOperationException();
+        protected NIOChannel findNext(){
+            while(!ready.isEmpty()){
+                Transport transport = ready.remove(0);
+                while(true){
+                    transport.updateReadyInterests();
+                    if(transport.parent!=null){
+                        if(transport.parent.process())
+                            transport = transport.parent;
+                        else
+                            break;
+                    }else
+                        return transport.client();
+                }
+            }
+            return null;
         }
     }
 
