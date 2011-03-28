@@ -29,6 +29,16 @@ import java.util.LinkedList;
  * @author Santhosh Kumar T
  */
 public class Bytes implements Iterable<ByteSequence>{
+    public static final int CHUNK_SIZE = 1024*4; // 4K
+
+    public Bytes(int chunkSize){
+        this.chunkSize = chunkSize;
+    }
+
+    public Bytes(){
+        this(CHUNK_SIZE);
+    }
+
     private LinkedList<ByteSequence> list = new LinkedList<ByteSequence>();
 
     public int size(){
@@ -81,11 +91,12 @@ public class Bytes implements Iterable<ByteSequence>{
     }
 
     private ByteBuffer buff;
+    private int chunkSize;
     public int readFrom(ReadableByteChannel channel) throws IOException{
         int total = 0;
         while(true){
             if(buff==null)
-                buff = ByteBuffer.allocate(1024);
+                buff = ByteBuffer.allocate(chunkSize);
             int read = channel.read(buff);
             if(read<=0){
                 if(read<0 && buff.position()==0) // garbage buff
@@ -106,7 +117,7 @@ public class Bytes implements Iterable<ByteSequence>{
         int total = 0;
         while(true){
             if(buff==null)
-                buff = ByteBuffer.allocate(1024);
+                buff = ByteBuffer.allocate(chunkSize);
             int read = IOUtil.readFully(in, buff.array(), buff.position(), buff.limit());
             if(read==0){
                 if(buff.position()==0) // garbage buff
