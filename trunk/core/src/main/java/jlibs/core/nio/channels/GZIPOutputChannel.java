@@ -74,11 +74,11 @@ public class GZIPOutputChannel extends DeflaterOutputChannel{
     @Override
     protected Status selfStatus(){
         if(header!=null && header.position()==0)
-            return Status.COMPLETED;
+            return super.selfStatus();
         else if(trailer!=null)
             return Status.NEEDS_OUTPUT;
         else
-            return  super.selfStatus();
+            return super.selfStatus();
     }
 
     @Override
