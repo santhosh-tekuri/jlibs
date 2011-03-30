@@ -102,21 +102,25 @@ public class NIOThread extends Thread{
         }
     }
 
-    public static NIOThread current(){
+    public static NIOThread currentThread(){
         Thread thread = Thread.currentThread();
         return thread instanceof NIOThread ? (NIOThread)thread : null;
     }
 
-    public static NIOSelector selector(){
-        NIOThread thread = current();
+    public static NIOSelector currentSelector(){
+        NIOThread thread = currentThread();
         return thread==null ? null : thread.selector;
     }
 
-    public static void connect(ClientChannel client, SocketAddress remote) throws IOException{
+    public static void connect(ClientChannel client, SocketAddress remote){
         ClientHandler handler = (ClientHandler)client.attachment();
-        if(client.connect(remote))
-            handler.onConnect(client);
-        else
-            client.addInterest(ClientChannel.OP_CONNECT);
+        try{
+            if(client.connect(remote))
+                handler.onConnect(client);
+            else
+                client.addInterest(ClientChannel.OP_CONNECT);
+        }catch(IOException ex){
+            handler.onConnectFailure(client, ex);
+        }
     }
 }
