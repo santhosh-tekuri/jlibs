@@ -39,11 +39,13 @@ public abstract class FilterOutputChannel extends OutputChannel{
 
     protected abstract void doWritePending() throws IOException;
     protected final void writePending() throws IOException {
-        doWritePending();
+        if(delegate.status()==Status.NEEDS_OUTPUT)
+            delegate.writePending();
+        if(delegate.status()!=Status.NEEDS_OUTPUT)
+            doWritePending();
         if(selfStatus()==Status.COMPLETED){
             if(!isOpen())
                 delegate.close();
-            delegate.writePending();
         }
     }
 
