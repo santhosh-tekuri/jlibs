@@ -305,7 +305,8 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                     }
                     if(channel.process())
                         return channel;
-                }
+                }else if(channel instanceof ServerChannel)
+                    servers.remove(channel);
             }
             return timeoutTracker.hasNext() ? timeoutTracker.next() : null;
         }
