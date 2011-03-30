@@ -40,14 +40,7 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
         int wrote = src.remaining();
         writeBuffer = src.duplicate();
         src.position(src.limit());
-
-        chunkStart.clear();
-        chunkStart.put(Integer.toString(wrote, 16).getBytes(IOUtil.US_ASCII));
         notifyChunk(wrote);
-        chunkStart.put(chunkEnd);
-        chunkStart.flip();
-
-        chunkEnd.clear();
         return wrote;
     }
 
@@ -76,14 +69,7 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
 
             lastChunk = true;
             writeBuffer = null;
-
-            chunkStart.clear();
-            chunkStart.put((byte)0);
             notifyChunk(0);
-            chunkStart.put(chunkEnd);
-            chunkStart.flip();
-
-            chunkEnd.clear();
         }
     }
 
@@ -103,6 +89,8 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
     }
 
     private void notifyChunk(int len){
+        chunkStart.clear();
+        chunkStart.put(Integer.toString(len, 16).getBytes(IOUtil.US_ASCII));
         if(listener!=null){
             String extension = listener.onChunk(len);
             if(extension!=null){
@@ -110,6 +98,9 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
                 chunkStart.put(extension.getBytes(IOUtil.US_ASCII));
             }
         }
+        chunkStart.put(chunkEnd.array());
+        chunkStart.flip();
+        chunkEnd.clear();
     }
 
     interface Listener{
