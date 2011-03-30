@@ -15,6 +15,7 @@
 
 package jlibs.core.nio.channels;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -40,7 +41,8 @@ public class PatternInputChannel extends FilterInputChannel{
             return -1;
         int pos = dst.position();
 
-        delegate.read(dst);
+        if(delegate.read(dst)==-1)
+            throw new EOFException();
 
         int iLast = dst.position();
         for(int i=pos; i<iLast; i++){
