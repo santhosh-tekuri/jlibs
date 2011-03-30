@@ -43,6 +43,7 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
         if(deflater.needsInput()){
             wrote = src.remaining();
             deflater.setInput(src.array(), src.arrayOffset()+src.position(), wrote);
+            src.position(src.limit());
         }
         return wrote;
     }
@@ -58,7 +59,7 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
                 deflater.end();
                 break;
             }
-            if(deflater.needsInput())
+            if(isOpen() && deflater.needsInput())
                 break;
             int compressed = deflater.deflate(writeBuffer.array(), 0, writeBuffer.capacity());
             writeBuffer.position(0);
@@ -68,7 +69,7 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
 
     @Override
     protected Status selfStatus(){
-        return !writeBuffer.hasRemaining() && (deflater.needsInput() || deflater.finished()) ? Status.COMPLETED : Status.NEEDS_OUTPUT;
+        return !writeBuffer.hasRemaining() && ((isOpen() && deflater.needsInput()) || deflater.finished()) ? Status.COMPLETED : Status.NEEDS_OUTPUT;
     }
 
     @Override
