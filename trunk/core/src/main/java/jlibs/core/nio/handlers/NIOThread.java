@@ -26,7 +26,7 @@ import java.net.SocketAddress;
 /**
  * @author Santhosh Kumar T
  */
-public class NIOThread extends Thread{
+public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler{
     public final NIOSelector selector;
 
     public NIOThread(NIOSelector selector){
@@ -100,6 +100,12 @@ public class NIOThread extends Thread{
                 }
             }
         }
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable ex){
+        handleException(ex);
+        new NIOThread(((NIOThread)t).selector).start();
     }
 
     public static NIOThread currentThread(){
