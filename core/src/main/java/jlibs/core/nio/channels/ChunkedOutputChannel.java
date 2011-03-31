@@ -106,7 +106,7 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
         chunkStart.flip();
     }
 
-    interface Listener{
+    public interface Listener{
         public String onChunk(int len);
     }
 }
