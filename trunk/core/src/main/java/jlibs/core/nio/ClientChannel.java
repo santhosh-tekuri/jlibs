@@ -28,15 +28,18 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Santhosh Kumar T
  */
 public class ClientChannel extends NIOChannel implements ByteChannel{
+    private static AtomicLong ID_GENERATOR = new AtomicLong();
+
     protected final NIOSelector nioSelector;
     protected final SelectionKey key;
     protected ClientChannel(NIOSelector nioSelector, SocketChannel socketChannel) throws IOException{
-        super(++nioSelector.lastClientID, socketChannel);
+        super(ID_GENERATOR.incrementAndGet(), socketChannel);
         key = realChannel().register(nioSelector.selector, 0, this);
         this.nioSelector = nioSelector;
         if(isConnected())

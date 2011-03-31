@@ -44,7 +44,6 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         return id;
     }
 
-    protected long lastClientID;
     public ClientChannel newClient() throws IOException{
         validate();
         return new ClientChannel(this, SocketChannel.open());
