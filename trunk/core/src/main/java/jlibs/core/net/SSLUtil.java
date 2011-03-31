@@ -17,8 +17,11 @@ package jlibs.core.net;
 
 import javax.net.ssl.*;
 import java.io.FileInputStream;
+import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 /**
@@ -95,7 +98,7 @@ public class SSLUtil{
        }
     };
 
-    public static SSLContext newContext(KeyStore keyStore, char[] keyStorePassword, KeyStore trustStore) throws SSLException, GeneralSecurityException{
+    public static SSLContext newContext(KeyStore keyStore, char[] keyStorePassword, String keyAlias, KeyStore trustStore) throws SSLException, GeneralSecurityException{
         SSLContext sslContext = SSLContext.getInstance("TLS");
 
         TrustManager tm[];
@@ -109,6 +112,15 @@ public class SSLUtil{
 
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         kmf.init(keyStore, keyStorePassword);
+        KeyManager km[] = kmf.getKeyManagers();
+        if(keyAlias!=null){
+            for(int i=0; i<km.length; i++){
+                if(km[i] instanceof X509ExtendedKeyManager)
+                    km[i] = new ExtendedAliasKeyManager(km[i], keyAlias);
+                else if(km[i] instanceof X509KeyManager)
+                    km[i] = new AliasKeyManager(km[i], keyAlias);
+            }
+        }
 
         sslContext.init(kmf.getKeyManagers(), tm , null);
         return sslContext;
@@ -117,7 +129,96 @@ public class SSLUtil{
     private static SSLContext defaultContext;
     public static SSLContext defaultContext() throws SSLException, GeneralSecurityException{
         if(defaultContext==null)
-            defaultContext = newContext(SSLUtil.defaultKeyStore(), SSLUtil.getKeyStorePassword(), SSLUtil.defaultTrustStore());
+            defaultContext = newContext(SSLUtil.defaultKeyStore(), SSLUtil.getKeyStorePassword(), null, SSLUtil.defaultTrustStore());
         return defaultContext;
+    }
+
+    private static String chooseAlias(X509KeyManager mgr, String serverKeyAlias, String keyType){
+        PrivateKey key = mgr.getPrivateKey(serverKeyAlias);
+        if(key!=null){
+            if(key.getAlgorithm().equals(keyType))
+                return serverKeyAlias;
+            else
+                return null;
+        }else
+            return null;
+    }
+
+    // http://svn.apache.org/repos/asf/mina/ftpserver/trunk/core/src/main/java/org/apache/ftpserver/ssl/impl/ExtendedAliasKeyManager.java
+    private static final class ExtendedAliasKeyManager extends X509ExtendedKeyManager{
+        private X509ExtendedKeyManager delegate;
+        private String serverKeyAlias;
+
+        public ExtendedAliasKeyManager(KeyManager mgr, String keyAlias){
+            this.delegate = (X509ExtendedKeyManager) mgr;
+            this.serverKeyAlias = keyAlias;
+        }
+
+        public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket){
+            return delegate.chooseClientAlias(keyType, issuers, socket);
+        }
+
+        public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket){
+            return chooseAlias(delegate, serverKeyAlias, keyType);
+        }
+
+        public X509Certificate[] getCertificateChain(String alias){
+            return delegate.getCertificateChain(alias);
+        }
+
+        public String[] getClientAliases(String keyType, Principal[] issuers){
+            return delegate.getClientAliases(keyType, issuers);
+        }
+
+        public String[] getServerAliases(String keyType, Principal[] issuers){
+            return delegate.getServerAliases(keyType, issuers);
+        }
+
+        public PrivateKey getPrivateKey(String alias){
+            return delegate.getPrivateKey(alias);
+        }
+
+        public String chooseEngineClientAlias(String[] keyType, Principal[] issuers, SSLEngine engine){
+            return delegate.chooseEngineClientAlias(keyType, issuers, engine);
+        }
+
+        public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine){
+            return chooseAlias(delegate, serverKeyAlias, keyType);
+        }
+    }
+
+    // http://svn.apache.org/repos/asf/mina/ftpserver/trunk/core/src/main/java/org/apache/ftpserver/ssl/impl/AliasKeyManager.java
+    private static final class AliasKeyManager implements X509KeyManager{
+        private X509KeyManager delegate;
+        private String serverKeyAlias;
+
+        public AliasKeyManager(KeyManager mgr, String keyAlias){
+            this.delegate = (X509KeyManager) mgr;
+            this.serverKeyAlias = keyAlias;
+        }
+
+        public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket){
+            return delegate.chooseClientAlias(keyType, issuers, socket);
+        }
+
+        public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket){
+            return chooseAlias(delegate, serverKeyAlias, keyType);
+        }
+
+        public X509Certificate[] getCertificateChain(String alias){
+            return delegate.getCertificateChain(alias);
+        }
+
+        public String[] getClientAliases(String keyType, Principal[] issuers){
+            return delegate.getClientAliases(keyType, issuers);
+        }
+
+        public String[] getServerAliases(String keyType, Principal[] issuers){
+            return delegate.getServerAliases(keyType, issuers);
+        }
+
+        public PrivateKey getPrivateKey(String alias){
+            return delegate.getPrivateKey(alias);
+        }
     }
 }
