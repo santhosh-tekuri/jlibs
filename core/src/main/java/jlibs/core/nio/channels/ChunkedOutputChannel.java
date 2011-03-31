@@ -99,9 +99,11 @@ public class ChunkedOutputChannel extends FilterOutputChannel{
             }
         }
         chunkStart.put(chunkEnd.array());
-        chunkStart.flip();
-        if(len>0)
+        if(len==0)
+            chunkStart.put(chunkEnd.array());
+        else
             chunkEnd.clear();
+        chunkStart.flip();
     }
 
     interface Listener{
