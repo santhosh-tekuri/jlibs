@@ -171,7 +171,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
         this.listener = listener;
     }
 
-    interface Listener{
+    public interface Listener{
         public void onChunk(int len, String extension);
         public void onTrailer(ByteSequence seq);
     }
