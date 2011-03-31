@@ -143,11 +143,11 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         return servers.size();
     }
 
-    public long connectionPendingClientsCount(){
+    public long connectionPendingClientCount(){
         return connectionPendingClients;
     }
 
-    public long connectedClientsCount(){
+    public long connectedClientCount(){
         return connectedClients;
     }
 
@@ -227,7 +227,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
             shutdownInProgress = true;
             initiateShutdown = false;
             if(DEBUG)
-                println(this+".shutdownInitialized: servers="+serverCount()+" connectedClients="+connectedClientsCount()+" connectionPendingClients="+connectionPendingClientsCount());
+                println(this+".shutdownInitialized: servers="+serverCount()+" connectedClients="+connectedClients+" connectionPendingClients="+connectionPendingClients);
             while(servers.size()>0)
                 servers.get(0).unregister(this);
             if(force){
