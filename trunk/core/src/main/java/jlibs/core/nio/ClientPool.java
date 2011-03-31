@@ -144,7 +144,7 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         return new NonNullIterator<Entry>(){
             @Override
             protected Entry findNext(){
-                return entries.next();
+                return entries.hasNext() ? entries.next() : null;
             }
         };
     }
