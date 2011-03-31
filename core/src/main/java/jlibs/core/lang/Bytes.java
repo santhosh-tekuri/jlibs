@@ -60,6 +60,7 @@ public class Bytes implements Iterable<ByteSequence>{
 
     public void clear(){
         list.clear();
+        buff = null;
     }
 
     public void prepend(ByteSequence seq){
