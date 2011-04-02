@@ -67,6 +67,8 @@ public class InflaterInputChannel extends FilterInputChannel{
                 inflateFinished();
                 inflater.end();
                 inflater = null;
+                if(uncompressed==0)
+                    uncompressed = -1;
             }
             return uncompressed;
         }catch(DataFormatException ex){
