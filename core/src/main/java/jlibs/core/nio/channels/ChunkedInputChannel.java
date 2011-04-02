@@ -102,8 +102,8 @@ public class ChunkedInputChannel extends FilterInputChannel{
                         }
                         break loop;
                     }else{
-                        int read = contentInputChannel.read(dst);
-                        if(read==-1){
+                        while(contentInputChannel.read(dst)>0);
+                        if(contentInputChannel.isEOF()){
                             contentInputChannel = null;
                             state = CHUNK_END;
                         }else
