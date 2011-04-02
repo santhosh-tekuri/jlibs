@@ -61,6 +61,12 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         client.poolFlag = 0;
     }
 
+    public Entry entry(SocketAddress remote){
+        if(size==0)
+            return null;
+        return map.get(remote);
+    }
+
     public ClientChannel remove(SocketAddress remote){
         if(size==0)
             return null;
