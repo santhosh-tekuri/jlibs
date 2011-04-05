@@ -26,18 +26,18 @@ import java.nio.channels.WritableByteChannel;
  * @author Santhosh Kumar T
  */
 public abstract class OutputChannel extends AttachmentSupport implements WritableByteChannel{
-    protected final ClientChannel client;
+    protected final NIOSupport nioSupport;
 
-    protected OutputChannel(ClientChannel client){
-        this.client = client;
-        IOChannelHandler handler = (IOChannelHandler)client.attachment();
+    protected OutputChannel(NIOSupport nioSupport){
+        this.nioSupport = nioSupport;
+        IOChannelHandler handler = nioSupport.attachment() instanceof IOChannelHandler ? (IOChannelHandler)nioSupport.attachment() : null;
         if(handler==null)
-            client.attach(handler=new IOChannelHandler());
+            nioSupport.attach(handler=new IOChannelHandler());
         handler.output = this;
     }
 
     public final ClientChannel client(){
-        return client;
+        return nioSupport.client();
     }
 
     private boolean statusInterested;
@@ -50,7 +50,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     }
 
     private boolean writeInterested;
-    public final void addWriteInterest() throws IOException{
+    public final void addWriteInterest(){
         if(status()!=Status.NEEDS_OUTPUT){
             if(handler!=null){
                 handler.onWrite(this);
@@ -64,7 +64,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public void removeWriteInterest() throws IOException{
         writeInterested = false;
         if(status()!=Status.NEEDS_OUTPUT)
-            client.removeInterest(ClientChannel.OP_WRITE);
+            nioSupport.removeInterest();
     }
 
     protected OutputHandler handler;
@@ -107,7 +107,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
             writePending();
         Status curStatus = status();
         if(curStatus==Status.NEEDS_OUTPUT)
-            client.addInterest(ClientChannel.OP_WRITE);
+            nioSupport.addInterest();
         else
             notifyCompleted(earlierStatus, curStatus);
     }
@@ -115,7 +115,7 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     protected abstract void writePending() throws IOException;
     public abstract Status status();
     protected void notifyCompleted(Status earlierStatus, Status curStatus){
-        IOChannelHandler handler = (IOChannelHandler)client.attachment();
+        IOChannelHandler handler = (IOChannelHandler)nioSupport.attachment();
         if(handler.output.statusInterested){
             handler.output.statusInterested = false;
             if(earlierStatus!=curStatus && handler.output.handler!=null)

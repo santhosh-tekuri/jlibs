@@ -55,7 +55,7 @@ public class FixedLengthOutputChannel extends FilterOutputChannel{
     @Override
     protected void doWritePending() throws IOException{
         if(writeBuffer!=null){
-            client.write(writeBuffer);
+            delegate.write(writeBuffer);
             if(!writeBuffer.hasRemaining())
                 writeBuffer = null;
         }

@@ -25,7 +25,11 @@ import java.nio.ByteBuffer;
  */
 public class ClientOutputChannel extends OutputChannel{
     public ClientOutputChannel(ClientChannel client){
-        super(client);
+        this(new DefaultNIOSupport(client, ClientChannel.OP_WRITE));
+    }
+
+    public ClientOutputChannel(NIOSupport nioSupport){
+        super(nioSupport);
     }
 
     @Override
@@ -46,7 +50,7 @@ public class ClientOutputChannel extends OutputChannel{
     @Override
     protected void writePending() throws IOException{
         if(writeBuffer!=null){
-            client.write(writeBuffer);
+            nioSupport.process(writeBuffer);
             if(!writeBuffer.hasRemaining())
                 writeBuffer = null;
         }
