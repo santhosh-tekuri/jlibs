@@ -34,10 +34,8 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
 
     protected InputChannel(NIOSupport nioSupport){
         this.nioSupport = nioSupport;
-        IOChannelHandler handler = nioSupport.attachment() instanceof IOChannelHandler ? (IOChannelHandler)nioSupport.attachment() : null;
-        if(handler==null)
-            nioSupport.attach(handler=new IOChannelHandler());
-        handler.input = this;
+        nioSupport.attachHandler();
+        nioSupport.setInput(this);
     }
 
     public final ClientChannel client(){
