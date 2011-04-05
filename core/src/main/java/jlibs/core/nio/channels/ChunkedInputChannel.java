@@ -91,7 +91,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
                         if(trailerBuffer==null)
                             trailerBuffer = ByteBuffer.allocate(250);
                         while(contentInputChannel.read(trailerBuffer)>0)
-                            trailerBuffer = ByteBuffer.wrap(Arrays.copyOf(trailerBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
+                            trailerBuffer = ByteBuffer.wrap(Arrays.copyOf(trailerBuffer.array(), trailerBuffer.capacity()+100), trailerBuffer.position(), 100);
                         if(contentInputChannel.isEOF()){
                             contentInputChannel = null;
                             if(listener!=null)
