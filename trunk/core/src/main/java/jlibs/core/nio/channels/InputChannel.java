@@ -30,23 +30,23 @@ import java.util.Iterator;
  * @author Santhosh Kumar
  */
 public abstract class InputChannel extends AttachmentSupport implements ReadableByteChannel{
-    protected final ClientChannel client;
+    protected final NIOSupport nioSupport;
 
-    protected InputChannel(ClientChannel client){
-        this.client = client;
-        IOChannelHandler handler = client.attachment() instanceof IOChannelHandler ? (IOChannelHandler)client.attachment() : null;
+    protected InputChannel(NIOSupport nioSupport){
+        this.nioSupport = nioSupport;
+        IOChannelHandler handler = nioSupport.attachment() instanceof IOChannelHandler ? (IOChannelHandler)nioSupport.attachment() : null;
         if(handler==null)
-            client.attach(handler=new IOChannelHandler());
+            nioSupport.attach(handler=new IOChannelHandler());
         handler.input = this;
     }
 
     public final ClientChannel client(){
-        return client;
+        return nioSupport.client();
     }
 
     public final void addInterest() throws IOException{
         if(activateInterest())
-            client.addInterest(ClientChannel.OP_READ);
+            nioSupport.addInterest();
         else if(handler!=null)
             handler.onRead(this);
     }
@@ -56,7 +56,7 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     }
 
     public void removeInterest() throws IOException{
-        client.removeInterest(ClientChannel.OP_READ);
+        nioSupport.removeInterest();
     }
 
     protected InputHandler handler;
@@ -124,7 +124,7 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     }
 
     @Override
-    public final void close() throws IOException{
+    public void close(){
         closed = true;
         unread = null;
     }

@@ -24,7 +24,7 @@ public abstract class FilterOutputChannel extends OutputChannel{
     protected OutputChannel delegate;
 
     public FilterOutputChannel(OutputChannel delegate){
-        super(delegate.client);
+        super(delegate.nioSupport);
         this.delegate = delegate;
         setHandler(delegate.handler);
         delegate.setHandler(null);

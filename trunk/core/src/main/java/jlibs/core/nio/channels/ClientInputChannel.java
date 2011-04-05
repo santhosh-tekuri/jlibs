@@ -28,7 +28,11 @@ import java.nio.ByteBuffer;
  */
 public class ClientInputChannel extends InputChannel{
     public ClientInputChannel(ClientChannel client){
-        super(client);
+        this(new DefaultNIOSupport(client, ClientChannel.OP_READ));
+    }
+
+    public ClientInputChannel(NIOSupport nioSupport){
+        super(nioSupport);
     }
 
     @Override
@@ -38,14 +42,14 @@ public class ClientInputChannel extends InputChannel{
 
     @Override
     protected int doRead(ByteBuffer dst) throws IOException{
-        return client.read(dst);
+        return nioSupport.process(dst);
     }
 
     public boolean isBroken() throws IOException{
         if(isEOF())
             return true;
         ByteBuffer dst = ByteBuffer.allocate(1);
-        switch(client.read(dst)){
+        switch(nioSupport.process(dst)){
             case -1:
                 return true;
             case 1:

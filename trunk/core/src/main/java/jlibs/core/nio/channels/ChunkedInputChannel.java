@@ -72,7 +72,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
                     if(listener!=null)
                         listener.onChunk(chunkLength, semicolon==-1?null:chunkStr.substring(semicolon+1));
                     if(chunkLength>0){
-                        IOChannelHandler handler = (IOChannelHandler)client.attachment();
+                        IOChannelHandler handler = (IOChannelHandler)nioSupport.attachment();
                         InputChannel oldInput = handler.input;
                         contentInputChannel = new FixedLengthInputChannel(delegate, chunkLength);
                         handler.input = oldInput;
