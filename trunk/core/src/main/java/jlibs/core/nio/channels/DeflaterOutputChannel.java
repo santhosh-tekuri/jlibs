@@ -73,6 +73,15 @@ public class DeflaterOutputChannel extends FilterOutputChannel{
     }
 
     @Override
+    protected void onIOException(){
+        try{
+            deflater.end();
+        }catch(Exception ignore){
+            // ignore
+        }
+    }
+
+    @Override
     protected void doClose() throws IOException{
         deflater.finish();
     }
