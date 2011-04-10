@@ -18,7 +18,6 @@ package jlibs.core.nio.channels;
 import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ByteSequence;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -58,12 +57,14 @@ public class ChunkedInputChannel extends FilterInputChannel{
                 case CHUNK_START:
                     if(lenBuffer==null)
                         lenBuffer = ByteBuffer.allocate(100);
-                    if(delegate.read(lenBuffer)==-1)
+                    if(delegate.read(lenBuffer)<=0)
                         break loop;
                     String chunkStr = getChunkLength();
                     if(chunkStr==null){
-                        if(!lenBuffer.hasRemaining())
+                        if(!lenBuffer.hasRemaining()){
                             lenBuffer = ByteBuffer.wrap(Arrays.copyOf(lenBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
+                            break;
+                        }
                         break loop;
                     }
                     int semicolon = chunkStr.indexOf(';');
@@ -110,7 +111,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
                     }
                 case CHUNK_END:
                     if(delegate.read(crlfBuffer)==-1)
-                        throw new EOFException();
+                        break loop;
                     if(crlfBuffer.hasRemaining())
                         break loop;
                     if(crlfBuffer.array()[0]!='\r' || crlfBuffer.array()[1]!='\n'){
@@ -135,9 +136,16 @@ public class ChunkedInputChannel extends FilterInputChannel{
         }
 
         int read = dst.position()-pos;
-        if(read==0)
+        if(read==0){
+            if(state==FINISHED)
+                return -1;
+            else if(delegate.isEOF()){
+                if(state==CHUNK_START || state==CHUNK_END)
+                    return -1;
+            }else
+                return 0;
             return state==FINISHED ? -1 : 0;
-        else
+        }else
             return read;
     }
 
