@@ -85,13 +85,20 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
                 unread = null;
         }
         int read = 0;
-        if(dst.hasRemaining())
-            read = doRead(dst);
+        if(dst.hasRemaining()){
+            try{
+                read = doRead(dst);
+            }catch(IOException ex){
+                onIOException();
+                throw ex;
+            }
+        }
         int result = dst.position() == pos && read == -1 ? -1 : dst.position() - pos;
         eof = result==-1;
         return result;
     }
     protected abstract int doRead(ByteBuffer dst) throws IOException;
+    protected void onIOException(){}
     public boolean isEOF(){
         return eof;
     }

@@ -74,13 +74,19 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public final int write(ByteBuffer src) throws IOException{
         if(src.remaining()==0 || status()==Status.NEEDS_OUTPUT)
             return 0;
-        int wrote = onWrite(src);
-        if(wrote>0)
-            onWrite();
-        return wrote;
+        try{
+            int wrote = onWrite(src);
+            if(wrote>0)
+                onWrite();
+            return wrote;
+        }catch(IOException ex){
+            onIOException();
+            throw ex;
+        }
     }
 
     protected abstract int onWrite(ByteBuffer src) throws IOException;
+    protected void onIOException(){}
 
     private boolean closed;
 

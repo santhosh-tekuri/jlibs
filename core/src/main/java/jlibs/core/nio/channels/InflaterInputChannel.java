@@ -77,6 +77,16 @@ public class InflaterInputChannel extends FilterInputChannel{
         }
     }
 
+    @Override
+    protected void onIOException(){
+        try{
+            inflater.end();
+        }catch(Exception ignore){
+            // ignore
+        }
+        inflater = null;
+    }
+
     protected void inflateFinished(){
         if(inflater.getRemaining()>0)
             delegate.unread(readBuffer.array(), readBuffer.position()-inflater.getRemaining(), inflater.getRemaining(), false);
