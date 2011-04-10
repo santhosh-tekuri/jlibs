@@ -17,6 +17,7 @@ package jlibs.core.nio.channels;
 
 import jlibs.core.lang.ImpossibleException;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.zip.*;
@@ -72,7 +73,8 @@ public class GZIPInputChannel extends InflaterInputChannel{
         if(state==STATE_TRAILER){
             if(!canRead(UINT+UINT)){
                 readBuffer.limit(UINT+UINT);
-                delegate.read(readBuffer);
+                if(delegate.read(readBuffer)==-1)
+                    throw new EOFException();
             }
             if(canRead(UINT+UINT)){
                 readUInt();
@@ -96,40 +98,58 @@ public class GZIPInputChannel extends InflaterInputChannel{
                     if(readUShort()!=GZIPInputStream.GZIP_MAGIC)
                         throw new ZipException("Not in GZIP format");
                     state++;
-                }else
+                }else{
+                    if(delegate.isEOF())
+                        throw new EOFException();
                     return 0;
+                }
             case STATE_COMPRESSION_METHOD:
                 if(canRead(UBYTE)){
                     if(readUByte()!=Deflater.DEFLATED)
                         throw new ZipException("Unsupported compression method");
                     state++;
-                }else
+                }else{
+                    if(delegate.isEOF())
+                        throw new EOFException();
                     return 0;
+                }
             case STATE_FLAG:
                 if(canRead(UBYTE)){
                     flag = readUByte();
                     state++;
-                }else
+                }else{
+                    if(delegate.isEOF())
+                        throw new EOFException();
                     return 0;
+                }
             case STATE_MTIME_XFL_OS:
                 if(canRead(6)){
                     from += 6;
                     state++;
-                }else
+                }else{
+                    if(delegate.isEOF())
+                        throw new EOFException();
                     return 0;
+                }
             case STATE_SKIP_EXTRA:
                 if((flag&FEXTRA)==FEXTRA){
                     if(extraLen==-1){
                         if(canRead(USHORT))
                             extraLen = readUShort();
-                        else
+                        else{
+                            if(delegate.isEOF())
+                                throw new EOFException();
                             return 0;
+                        }
                     }
                     if(canRead(extraLen)){
                         from += extraLen;
                         state++;
-                    }else
+                    }else{
+                        if(delegate.isEOF())
+                            throw new EOFException();
                         return 0;
+                    }
                 }else
                     state++;
             case STATE_SKIP_FNAME:
@@ -140,8 +160,11 @@ public class GZIPInputChannel extends InflaterInputChannel{
                             break;
                         }
                     }
-                    if(state==STATE_SKIP_FNAME)
+                    if(state==STATE_SKIP_FNAME){
+                        if(delegate.isEOF())
+                            throw new EOFException();
                         return 0;
+                    }
                 }else
                     state++;
             case STATE_SKIP_FCOMMENT:
@@ -152,8 +175,11 @@ public class GZIPInputChannel extends InflaterInputChannel{
                             break;
                         }
                     }
-                    if(state==STATE_SKIP_FCOMMENT)
+                    if(state==STATE_SKIP_FCOMMENT){
+                        if(delegate.isEOF())
+                            throw new EOFException();
                         return 0;
+                    }
                 }else
                     state++;
             case STATE_SKIP_FHCRC:
@@ -166,8 +192,11 @@ public class GZIPInputChannel extends InflaterInputChannel{
                         if(crcValue!=x)
                             throw new ZipException("Corrupt GZIP header");
                         state++;
-                    }else
+                    }else{
+                        if(delegate.isEOF())
+                            throw new EOFException();
                         return 0;
+                    }
                 }else
                     state++;
             case STATE_CONTENT:
