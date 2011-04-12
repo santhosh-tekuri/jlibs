@@ -30,11 +30,6 @@ public abstract class FilterInputChannel extends InputChannel{
         delegate.attach(null);
     }
 
-    @Override
-    public long pending(){
-        return super.pending() + delegate.pending();
-    }
-
     public InputChannel unwrap(){
         delegate.setHandler(handler);
         this.setHandler(null);
