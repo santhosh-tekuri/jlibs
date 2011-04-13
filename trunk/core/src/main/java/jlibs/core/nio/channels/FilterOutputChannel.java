@@ -63,4 +63,9 @@ public abstract class FilterOutputChannel extends OutputChannel{
         attach(null);
         return delegate;
     }
+
+    @Override
+    public String toString(){
+        return getClass().getSimpleName()+'('+delegate+')';
+    }
 }

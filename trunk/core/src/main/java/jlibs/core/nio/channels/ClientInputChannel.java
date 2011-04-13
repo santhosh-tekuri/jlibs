@@ -62,4 +62,9 @@ public class ClientInputChannel extends InputChannel{
                 throw new ImpossibleException();
         }
     }
+
+    @Override
+    public String toString(){
+        return getClass().getSimpleName()+'('+nioSupport.client()+')';
+    }
 }
