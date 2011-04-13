@@ -37,4 +37,9 @@ public abstract class FilterInputChannel extends InputChannel{
         attach(null);
         return delegate;
     }
+
+    @Override
+    public String toString(){
+        return getClass().getSimpleName()+'('+delegate+')';
+    }
 }

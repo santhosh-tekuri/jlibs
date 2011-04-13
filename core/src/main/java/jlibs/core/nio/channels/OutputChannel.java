@@ -132,5 +132,10 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
         }
     }
 
+    @Override
+    public String toString(){
+        return getClass().getSimpleName()+'('+nioSupport.client()+')';
+    }
+
     public enum Status{ NEEDS_INPUT, NEEDS_OUTPUT, COMPLETED }
 }
