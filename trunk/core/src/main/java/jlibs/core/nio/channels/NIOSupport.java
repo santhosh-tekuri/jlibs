@@ -100,7 +100,7 @@ class IOChannelHandler implements ClientHandler{
     public void onConnect(ClientChannel client){}
 
     @Override
-    public void onConnectFailure(ClientChannel client, IOException ex){
+    public void onConnectFailure(ClientChannel client, Exception ex){
         ex.printStackTrace();
         try{
             client.close();

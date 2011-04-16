@@ -183,7 +183,7 @@ class ClientListener implements ClientHandler{
     }
 
     @Override
-    public void onConnectFailure(ClientChannel client, IOException ex){
+    public void onConnectFailure(ClientChannel client, Exception ex){
         cleanup(client, ex);
     }
 
@@ -236,7 +236,7 @@ class ClientListener implements ClientHandler{
         return name;
     }
 
-    private void cleanup(ClientChannel client, IOException ex){
+    private void cleanup(ClientChannel client, Exception ex){
         if(ex!=null)
             ex.printStackTrace();
         try{

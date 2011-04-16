@@ -32,6 +32,7 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
     public NIOThread(NIOSelector selector){
         super("NIOThread@"+selector.id());
         this.selector = selector;
+        setUncaughtExceptionHandler(this);
     }
 
     protected void handleException(Throwable ex){
@@ -47,10 +48,13 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
                 try{
                     try{
                         ClientChannel client = server.accept(selector);
-                        if(client!=null)
+                        if(client!=null){
                             handler.onAccept(server, client);
+                            runTask();
+                        }
                     }catch(IOException ex){
                         handler.onAcceptFailure(server, ex);
+                        runTask();
                     }
                 }catch(Throwable thr){
                     handleException(thr);
@@ -63,12 +67,14 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
                         client.removeFromPool();
                         try{
                             ((ClientPoolHandler)client.selector().pool().attachment()).onTimeout(client);
+                            runTask();
                         }catch(Throwable ex){
                             handleException(ex);
                         }
                     }else{
                         try{
                             handler.onTimeout(client);
+                            runTask();
                         }catch(Throwable ex){
                             handleException(ex);
                         }
@@ -77,14 +83,16 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
                     if(client.isConnectable()){
                         try{
                             try{
-                                if(client.finishConnect())
+                                if(client.finishConnect()){
                                     handler.onConnect(client);
-                                else{
+                                    runTask();
+                                }else{
                                     client.addInterest(ClientChannel.OP_CONNECT);
                                     continue;
                                 }
                             }catch(IOException ex){
                                 handler.onConnectFailure(client, ex);
+                                runTask();
                             }
                         }catch(Throwable thr){
                             handleException(thr);
@@ -93,12 +101,26 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
                     if(client.isReadable() || client.isWritable()){
                         try{
                             handler.onIO(client);
+                            runTask();
                         }catch(Throwable ex){
                             handleException(ex);
                         }
                     }
                 }
             }
+        }
+    }
+
+    private Runnable task;
+    public void setTask(Runnable task){
+        this.task = task;
+    }
+
+    public void runTask(){
+        while(task!=null){
+            Runnable task = this.task;
+            this.task = null;
+            task.run();
         }
     }
 
@@ -125,7 +147,7 @@ public class NIOThread extends Thread implements Thread.UncaughtExceptionHandler
                 handler.onConnect(client);
             else
                 client.addInterest(ClientChannel.OP_CONNECT);
-        }catch(IOException ex){
+        }catch(Exception ex){
             handler.onConnectFailure(client, ex);
         }
     }
