@@ -18,8 +18,8 @@ package jlibs.core.lang.ref;
 import jlibs.core.lang.ImpossibleException;
 
 import java.lang.ref.*;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class provides guaranteed finalization for java objects.
@@ -94,7 +94,7 @@ public class Finalizer extends ReferenceQueue implements Runnable{
         }
     }
 
-    private Map<Reference, Runnable> tracked = new HashMap<Reference, Runnable>();
+    private Map<Reference, Runnable> tracked = new ConcurrentHashMap<Reference, Runnable>();
 
     /**
      * tracks the given {@code obj} using {@link java.lang.ref.WeakReference}.<br>
