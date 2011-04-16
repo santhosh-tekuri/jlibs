@@ -35,6 +35,7 @@ public abstract class FilterInputChannel extends InputChannel{
         this.setHandler(null);
         delegate.attach(attachment());
         attach(null);
+        nioSupport.setInput(delegate);
         return delegate;
     }
 

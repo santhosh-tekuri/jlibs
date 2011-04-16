@@ -130,6 +130,8 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
             if(output.handler!=null)
                 output.handler.onWrite(output);
         }
+        if(output==this && !isOpen() && curStatus==Status.COMPLETED) // favor GC
+            nioSupport.setOutput(null);
     }
 
     @Override

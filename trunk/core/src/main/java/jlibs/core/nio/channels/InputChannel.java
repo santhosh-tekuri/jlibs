@@ -132,5 +132,6 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     public void close(){
         closed = true;
         unread = null;
+        nioSupport.setInput(null);
     }
 }
