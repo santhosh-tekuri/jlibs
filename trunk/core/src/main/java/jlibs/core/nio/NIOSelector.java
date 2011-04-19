@@ -163,11 +163,16 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
         @Override
         protected NIOChannel findNext(){
             try{
-                while(!isShutdown() && !delegate.hasNext())
+                runTasks();
+                while(!isShutdown() && !delegate.hasNext()){
+                    runTasks();
                     delegate = select();
+                }
+                runTasks();
                 if(delegate.hasNext())
                     return delegate.next();
                 else{
+                    assert isShutdown();
                     if(DEBUG)
                         println(NIOSelector.this+".shutdown");
                     selector.close();
@@ -200,16 +205,18 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
     }
 
     private void runTasks(){
-        List<Runnable> list;
-        synchronized(this){
-            list = tasks;
-            tasks = new LinkedList<Runnable>();
-        }
-        for(Runnable task: list){
-            try{
-                task.run();
-            }catch(Exception ex){
-                ex.printStackTrace();
+        while(tasks.size()>0){
+            List<Runnable> list;
+            synchronized(this){
+                list = tasks;
+                tasks = new LinkedList<Runnable>();
+            }
+            for(Runnable task: list){
+                try{
+                    task.run();
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
             }
         }
     }
@@ -218,9 +225,6 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
 
     protected List<Transport> ready = new LinkedList<Transport>();
     private Iterator<NIOChannel> select() throws IOException{
-        if(ready.size()>0)
-            return readyIterator.reset();
-        runTasks();
         if(ready.size()>0)
             return readyIterator.reset();
         if(initiateShutdown){
@@ -250,7 +254,7 @@ public class NIOSelector extends Debuggable implements Iterable<NIOChannel>{
                 return selectedIterator.reset();
             else
                 return timeoutTracker.reset();
-            }
+        }
     }
 
     private ReadyIterator readyIterator = new ReadyIterator();
