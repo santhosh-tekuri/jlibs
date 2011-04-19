@@ -120,6 +120,8 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     public abstract Status status();
     protected void notifyCompleted(Status earlierStatus, Status curStatus){
         OutputChannel output = nioSupport.getOutput();
+        if(output==this && !isOpen() && curStatus==Status.COMPLETED) // favor GC
+            nioSupport.setOutput(null);
         if(output.statusInterested){
             output.statusInterested = false;
             if(earlierStatus!=curStatus && output.handler!=null)
@@ -130,8 +132,6 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
             if(output.handler!=null)
                 output.handler.onWrite(output);
         }
-        if(output==this && !isOpen() && curStatus==Status.COMPLETED) // favor GC
-            nioSupport.setOutput(null);
     }
 
     @Override
