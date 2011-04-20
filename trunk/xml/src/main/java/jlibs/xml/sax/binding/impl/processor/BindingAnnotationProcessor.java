@@ -36,7 +36,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import static jlibs.core.annotation.processing.Printer.*;
+import static jlibs.core.annotation.processing.Printer.MINUS;
+import static jlibs.core.annotation.processing.Printer.PLUS;
 
 /**
  * @author Santhosh Kumar T
@@ -122,6 +123,8 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
         pw.importClass(Attributes.class);
         pw.importClass(SAXException.class);
         pw.importClass(QName.class);
+        if(ModelUtil.isInnerClass(clazz))
+            pw.importClass(clazz);
         pw.println();
 
         pw.printClassDoc();
