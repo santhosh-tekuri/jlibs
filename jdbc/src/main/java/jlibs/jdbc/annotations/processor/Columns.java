@@ -289,16 +289,19 @@ class Columns extends ArrayList<ColumnProperty>{
     }
 
     private void generateDAO(Printer printer){
+        TypeElement extendClass = (TypeElement)((DeclaredType)ModelUtil.getAnnotationValue(printer.clazz, Table.class, "extend")).asElement();
+
         printer.printPackage();
 
         printer.importClass(ImpossibleException.class);
         printer.importPackage(DAO.class);
         printer.importPackage(Connection.class);
         printer.importClass(DataSource.class);
+        if(ModelUtil.isInnerClass(extendClass))
+            printer.importClass(extendClass);
         printer.println();
 
         printer.printClassDoc();
-        TypeElement extendClass = (TypeElement)((DeclaredType)ModelUtil.getAnnotationValue(printer.clazz, Table.class, "extend")).asElement();
         printer.print("public class "+printer.generatedClazz +" extends "+extendClass.getQualifiedName());
         if(extendClass.getQualifiedName().contentEquals(DAO.class.getName()))
             printer.println("<"+printer.clazz.getSimpleName()+'>');
