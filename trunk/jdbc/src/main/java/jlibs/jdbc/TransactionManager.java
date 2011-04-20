@@ -25,6 +25,8 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>{
+    private static final boolean debug = Boolean.getBoolean("jlibs.jdbc.debug");
+
     private static final TransactionManager INSTANCE = new TransactionManager();
     private TransactionManager(){}
 
@@ -74,7 +76,8 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
         Connection con = transactions.remove(ds);
         con.commit();
         con.setAutoCommit(true);
-        System.out.println("committed");
+        if(debug)
+            System.out.println("committed");
     }
 
     private static void rollback(DataSource ds) throws SQLException{
@@ -82,7 +85,8 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
         Connection con = transactions.remove(ds);
         con.rollback();
         con.setAutoCommit(true);
-        System.out.println("rolledback");
+        if(debug)
+            System.out.println("rolledback");
     }
 
     public static <R> R run(DataSource ds, Transaction<R> transaction) throws DAOException{
@@ -93,7 +97,8 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
         if(con==null){
             try{
                 con = single ? ds.getConnection() : start(ds);
-                System.out.println(single ? "newConnection" : "newTransaction");
+                if(debug)
+                    System.out.println(single ? "newConnection" : "newTransaction");
             }catch(SQLException ex){
                 throw new DAOException(ex);
             }
@@ -122,7 +127,8 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
                 }
                 try{
                     con.close();
-                    System.out.println("closed");
+                    if(debug)
+                        System.out.println("closed");
                 }catch(SQLException e){
                     if(ex==null)
                         ex = e;

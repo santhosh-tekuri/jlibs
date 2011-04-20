@@ -24,6 +24,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class JDBC{
+    private static final boolean debug = Boolean.getBoolean("jlibs.jdbc.debug");
+
     public final DataSource dataSource;
 
     public JDBC(DataSource dataSource){
@@ -56,7 +58,8 @@ public class JDBC{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
             @Override
             public T run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+                if(debug)
+                    System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = con.prepareStatement(query);
                 stmt.setMaxRows(1);
                 setParams(stmt, params);
@@ -82,7 +85,8 @@ public class JDBC{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+                if(debug)
+                    System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = con.prepareStatement(query);
                 stmt.setMaxRows(maxRows);
                 for(int i=0; i<params.length; i++)
@@ -104,7 +108,8 @@ public class JDBC{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<Integer>(){
             @Override
             public Integer run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+                if(debug)
+                    System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = null;
                 try{
                     stmt = con.prepareStatement(query);
@@ -122,7 +127,8 @@ public class JDBC{
         return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
             @Override
             public T run(Connection con) throws SQLException{
-                System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+                if(debug)
+                    System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = null;
                 try{
                     stmt = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
