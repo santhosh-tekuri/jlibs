@@ -158,6 +158,10 @@ public class Printer{
         println("import "+ clazz.getName()+';');
     }
 
+    public void importClass(TypeElement clazz){
+        println("import "+ModelUtil.toString(clazz.asType(), true)+";");
+    }
+
     public void importPackage(Class clazz){
         Package pakage = clazz.getPackage();
         if(pakage!=null)

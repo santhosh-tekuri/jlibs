@@ -60,6 +60,10 @@ public class ModelUtil{
         return ((PackageElement)elem).getQualifiedName().toString();
     }
 
+    public static boolean isInnerClass(TypeElement elem){
+        return !(elem.getEnclosingElement() instanceof PackageElement);
+    }
+
     public static boolean isPrimitive(TypeMirror mirror){
         switch(mirror.getKind()){
             case ARRAY:
