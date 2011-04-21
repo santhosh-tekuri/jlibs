@@ -22,7 +22,7 @@ public abstract class FilterInputChannel extends InputChannel{
     protected InputChannel delegate;
 
     public FilterInputChannel(InputChannel delegate){
-        super(delegate.nioSupport);
+        super(delegate.client, delegate.nioSupport);
         this.delegate = delegate;
         setHandler(delegate.handler);
         delegate.setHandler(null);
@@ -35,7 +35,7 @@ public abstract class FilterInputChannel extends InputChannel{
         this.setHandler(null);
         delegate.attach(attachment());
         attach(null);
-        nioSupport.setInput(delegate);
+        clientHandler().input = delegate;
         return delegate;
     }
 

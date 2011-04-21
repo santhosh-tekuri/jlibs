@@ -44,7 +44,7 @@ public class Pipe{
         IOHandler ioHandler = new IOHandler();
         input.setHandler(ioHandler);
         output.setHandler(ioHandler);
-        input.addInterest();
+        ioHandler.onRead(input);
     }
 
     private class IOHandler implements InputHandler, OutputHandler{
@@ -52,16 +52,29 @@ public class Pipe{
         public void onRead(InputChannel input){
             Channel current = input;
             try{
-                buffer.clear();
-                int read = input.read(buffer);
-                if(read==-1)
-                    handler.finished(Pipe.this);
-                else if(read==0)
-                    input.addInterest();
-                else if(read>0){
-                    buffer.flip();
-                    current = output;
-                    output.addWriteInterest();
+                while(true){
+                    buffer.clear();
+                    int read = input.read(buffer);
+                    if(read==-1){
+                        input.close();
+                        output.close();
+                        if(output.status()==OutputChannel.Status.NEEDS_OUTPUT)
+                            output.addStatusInterest();
+                        else
+                            handler.finished(Pipe.this);
+                        return;
+                    }else if(read==0){
+                        input.addInterest();
+                        return;
+                    }else if(read>0){
+                        buffer.flip();
+                        current = output;
+                        output.write(buffer);
+                        if(output.status()==OutputChannel.Status.NEEDS_OUTPUT){
+                            output.addWriteInterest();
+                            return;
+                        }
+                    }
                 }
             }catch(IOException ex){
                 handler.onIOException(Pipe.this, current, ex);
@@ -75,19 +88,7 @@ public class Pipe{
 
         @Override
         public void onWrite(OutputChannel output){
-            try{
-                output.write(buffer);
-            }catch(IOException ex){
-                handler.onIOException(Pipe.this, output, ex);
-            }
-            try{
-                if(output.status()==OutputChannel.Status.NEEDS_OUTPUT)
-                    output.addStatusInterest();
-                else
-                    input.addInterest();
-            }catch(IOException ex){
-                handler.onIOException(Pipe.this, input, ex);
-            }
+            onRead(input);
         }
 
         @Override
@@ -102,11 +103,7 @@ public class Pipe{
 
         @Override
         public void onStatus(OutputChannel output){
-            try{
-                input.addInterest();
-            }catch(IOException ex){
-                handler.onIOException(Pipe.this, input, ex);
-            }
+            handler.finished(Pipe.this);
         }
     }
 
@@ -115,7 +112,7 @@ public class Pipe{
         this.handler = handler;
     }
 
-    private interface Handler{
+    public interface Handler{
         public void onTimeout(Pipe pipe, Channel channel);
         public void onIOException(Pipe pipe, Channel channel, IOException ex);
         public void finished(Pipe pipe);

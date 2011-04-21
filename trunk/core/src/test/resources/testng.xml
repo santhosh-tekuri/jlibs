@@ -5,6 +5,7 @@
     	<classes>
     		<class name="jlibs.core.graph.sequences.SequenceTestFactory"/>
             <class name="jlibs.core.i18n.ResourceBundleTest"/>
+            <class name="jlibs.core.nio.channels.SampleTest"/>
 	    </classes>
 	</test>
 </suite>

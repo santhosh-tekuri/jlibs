@@ -19,6 +19,7 @@ import jlibs.core.lang.ByteSequence;
 import jlibs.core.lang.Bytes;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.nio.ClientChannel;
+import jlibs.core.nio.SelectableByteChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,11 +29,11 @@ import java.nio.ByteBuffer;
  */
 public class ClientInputChannel extends InputChannel{
     public ClientInputChannel(ClientChannel client){
-        this(new DefaultNIOSupport(client, ClientChannel.OP_READ));
+        this(client, DefaultNIOSupport.INSTANCE);
     }
 
-    public ClientInputChannel(NIOSupport nioSupport){
-        super(nioSupport);
+    public ClientInputChannel(SelectableByteChannel client, NIOSupport nioSupport){
+        super(client, nioSupport);
     }
 
     @Override
@@ -42,14 +43,14 @@ public class ClientInputChannel extends InputChannel{
 
     @Override
     protected int doRead(ByteBuffer dst) throws IOException{
-        return nioSupport.process(dst);
+        return client.read(dst);
     }
 
     public boolean isBroken() throws IOException{
         if(isEOF())
             return true;
         ByteBuffer dst = ByteBuffer.allocate(1);
-        switch(nioSupport.process(dst)){
+        switch(client.read(dst)){
             case -1:
                 return true;
             case 1:
@@ -65,6 +66,6 @@ public class ClientInputChannel extends InputChannel{
 
     @Override
     public String toString(){
-        return getClass().getSimpleName()+'('+nioSupport.client()+')';
+        return getClass().getSimpleName()+'('+client+')';
     }
 }

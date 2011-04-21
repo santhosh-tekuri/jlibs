@@ -19,10 +19,12 @@ import jlibs.core.lang.ByteSequence;
 import jlibs.core.lang.Bytes;
 import jlibs.core.nio.AttachmentSupport;
 import jlibs.core.nio.ClientChannel;
+import jlibs.core.nio.SelectableByteChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SelectionKey;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -30,21 +32,28 @@ import java.util.Iterator;
  * @author Santhosh Kumar
  */
 public abstract class InputChannel extends AttachmentSupport implements ReadableByteChannel{
+    protected final SelectableByteChannel client;
     protected final NIOSupport nioSupport;
 
-    protected InputChannel(NIOSupport nioSupport){
+    protected InputChannel(SelectableByteChannel client, NIOSupport nioSupport){
+        this.client = client;
         this.nioSupport = nioSupport;
-        nioSupport.attachHandler();
-        nioSupport.setInput(this);
+        if(!(client.attachment() instanceof IOChannelHandler))
+            client.attach(nioSupport.createHandler());
+        clientHandler().input = this;
     }
 
     public final ClientChannel client(){
-        return nioSupport.client();
+        return (ClientChannel)client;
+    }
+
+    protected IOChannelHandler clientHandler(){
+        return (IOChannelHandler)client.attachment();
     }
 
     public final void addInterest() throws IOException{
         if(activateInterest())
-            nioSupport.addInterest();
+            client.addInterest(SelectionKey.OP_READ);
         else if(handler!=null)
             handler.onRead(this);
     }
@@ -54,7 +63,7 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     }
 
     public void removeInterest() throws IOException{
-        nioSupport.removeInterest();
+        client.removeInterest(SelectionKey.OP_READ);
     }
 
     protected InputHandler handler;
@@ -132,6 +141,6 @@ public abstract class InputChannel extends AttachmentSupport implements Readable
     public void close(){
         closed = true;
         unread = null;
-        nioSupport.setInput(null);
+        clientHandler().input = null;
     }
 }

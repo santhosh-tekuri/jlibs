@@ -73,9 +73,9 @@ public class ChunkedInputChannel extends FilterInputChannel{
                     if(listener!=null)
                         listener.onChunk(chunkLength, semicolon==-1?null:chunkStr.substring(semicolon+1));
                     if(chunkLength>0){
-                        InputChannel oldInput = nioSupport.getInput();
+                        InputChannel oldInput = clientHandler().input;
                         contentInputChannel = new FixedLengthInputChannel(delegate, chunkLength);
-                        nioSupport.setInput(oldInput);
+                        clientHandler().input = oldInput;
                     }
                     if(lenBuffer.hasRemaining()){
                         delegate.unread(lenBuffer.array(), lenBuffer.position(), lenBuffer.remaining(), false);
