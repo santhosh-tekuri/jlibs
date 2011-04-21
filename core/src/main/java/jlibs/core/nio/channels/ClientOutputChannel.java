@@ -16,6 +16,7 @@
 package jlibs.core.nio.channels;
 
 import jlibs.core.nio.ClientChannel;
+import jlibs.core.nio.SelectableByteChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,11 +26,11 @@ import java.nio.ByteBuffer;
  */
 public class ClientOutputChannel extends OutputChannel{
     public ClientOutputChannel(ClientChannel client){
-        this(new DefaultNIOSupport(client, ClientChannel.OP_WRITE));
+        this(client, DefaultNIOSupport.INSTANCE);
     }
 
-    public ClientOutputChannel(NIOSupport nioSupport){
-        super(nioSupport);
+    public ClientOutputChannel(SelectableByteChannel client, NIOSupport nioSupport){
+        super(client, nioSupport);
     }
 
     @Override
@@ -50,7 +51,7 @@ public class ClientOutputChannel extends OutputChannel{
     @Override
     protected void writePending() throws IOException{
         if(writeBuffer!=null){
-            nioSupport.process(writeBuffer);
+            client.write(writeBuffer);
             if(!writeBuffer.hasRemaining())
                 writeBuffer = null;
         }

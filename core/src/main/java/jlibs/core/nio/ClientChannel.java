@@ -24,7 +24,6 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -33,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Santhosh Kumar T
  */
-public class ClientChannel extends NIOChannel implements ByteChannel{
+public class ClientChannel extends NIOChannel implements SelectableByteChannel{
     private static AtomicLong ID_GENERATOR = new AtomicLong();
 
     protected final NIOSelector nioSelector;
