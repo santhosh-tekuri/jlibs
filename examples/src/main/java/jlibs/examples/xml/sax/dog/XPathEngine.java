@@ -43,8 +43,8 @@ public abstract class XPathEngine{
     }
 
     @SuppressWarnings({"unchecked"})
-    public List<NodeItem> translate(Object result, NamespaceContext nsContext){
-        List<NodeItem> nodeList = new ArrayList<NodeItem>();
+    public List<?> translate(Object result, NamespaceContext nsContext){
+        List nodeList = new ArrayList<NodeItem>();
 
         if(result instanceof NodeList){
             NodeList nodeSet = (NodeList)result;
@@ -56,15 +56,17 @@ public abstract class XPathEngine{
         }else{
             if(result instanceof List){
                 for(Object obj: (Collection)result){
-                    NodeItem item;
+                    Object item;
                     if(obj instanceof Node)
                         item = new NodeItem((Node)obj, nsContext);
                     else if(obj instanceof net.sf.saxon.om.NodeInfo){
                         net.sf.saxon.om.NodeInfo info = (net.sf.saxon.om.NodeInfo)obj;
                         Node node = (Node)((net.sf.saxon.dom.NodeWrapper)info.getParent()).getUnderlyingNode();
                         item = new NodeItem(node, info.getLocalPart(), info.getStringValue(), nsContext);
-                    }else
-                        throw new ImpossibleException();
+                    }else if(obj instanceof NodeList)
+                        item = translate(obj, nsContext);
+                    else
+                        throw new ImpossibleException(obj.getClass().getName());
                     nodeList.add(item);
                 }
             }
