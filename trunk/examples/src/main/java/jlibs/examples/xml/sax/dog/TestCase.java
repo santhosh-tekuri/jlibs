@@ -71,7 +71,7 @@ public class TestCase{
 
     public void translateDOMResult(int test){
         Object obj = jdkResult.get(test);
-        List<NodeItem> result = domEngine.translate(obj, resultNSContext);
+        List<?> result = domEngine.translate(obj, resultNSContext);
         jdkResult.set(test, result);
 
         xpaths.get(test).hasAttributes = has(result, NodeItem.ATTRIBUTE);

@@ -82,7 +82,7 @@ public class SaxonEngine extends XPathEngine {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public List<NodeItem> translate(Object result, NamespaceContext nsContext){
+    public List<?> translate(Object result, NamespaceContext nsContext){
         List nodeList = (List)result;
         int i = 0;
         for(Object item: nodeList){
