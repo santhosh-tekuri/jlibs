@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           abc:sdf="sdjfkdjkf"
-           targetNamespace="http://www.w3schools.com"
            xmlns="http://www.w3schools.com"
            xmlns:abc="http://www.w3schools.com"
+           abc:sdf="sdjfkdjkf"
            elementFormDefault="qualified"
            name="rootname"
+           targetNamespace="http://www.w3schools.com"
         >
 
     <xs:element name="testElement">
