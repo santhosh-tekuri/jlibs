@@ -74,4 +74,8 @@ public abstract class XPathEngine{
 
         return nodeList;
     }
+
+    public boolean equals(Object myNode, Node dogNode){
+        return DOMUtil.equals((Node)myNode, dogNode);
+    }
 }

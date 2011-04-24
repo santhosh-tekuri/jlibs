@@ -48,6 +48,10 @@ public final class XMLDog{
     public final XPathFunctionResolver functionResolver;
     private final XPathParser parser;
 
+    public XMLDog(NamespaceContext nsContext){
+        this(nsContext, null, null);
+    }
+
     public XMLDog(NamespaceContext nsContext, XPathVariableResolver variableResolver, XPathFunctionResolver functionResolver){
         this.nsContext = nsContext;
         this.variableResolver = variableResolver;
@@ -81,11 +85,16 @@ public final class XMLDog{
         return compiledExpr;
     }
 
+    private boolean documentResult;
     private void addXPath(Expression compiledExpr) throws SAXPathException{
         expressions.add(compiledExpr);
 
         assert compiledExpr.scope()!=Scope.LOCAL;
         assert compiledExpr.scope()!=Scope.GLOBAL || compiledExpr instanceof Literal;
+
+        if(compiledExpr.scope()==Scope.GLOBAL && compiledExpr.resultType==DataType.NODESET)
+            documentResult = true;
+
         if(compiledExpr.scope()==Scope.DOCUMENT){
             List<Expression> docExpressions = this.docExpressions;
             int id = docExpressions.size();
@@ -137,9 +146,8 @@ public final class XMLDog{
         return docExpressions.size();
     }
 
-    @SuppressWarnings({"unchecked"})
     public Event createEvent(){
-        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size());
+        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size(), documentResult);
     }
 
     /*-------------------------------------------------[ Sniff ]---------------------------------------------------*/

@@ -21,9 +21,11 @@ import jlibs.examples.xml.sax.dog.XPathInfo;
 import net.sf.saxon.xpath.JAXPXPathStaticContext;
 import net.sf.saxon.xpath.XPathEvaluator;
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import javax.xml.transform.SourceLocator;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public class JDKEngine extends XPathEngine {
+public class JDKEngine extends XPathEngine{
     private final XPathFactory factory;
 
     public JDKEngine(XPathFactory factory){
@@ -66,7 +68,18 @@ public class JDKEngine extends XPathEngine {
             xpathObj.setXPathVariableResolver(testCase.variableResolver);
             xpathObj.setXPathFunctionResolver(testCase.functionResolver);
             xpathObj.setNamespaceContext(testCase.nsContext);
-            results.add(xpathObj.evaluate(xpathInfo.xpath, doc, xpathInfo.resultType));
+
+            if(xpathInfo.forEach==null)
+                results.add(xpathObj.evaluate(xpathInfo.xpath, doc, xpathInfo.resultType));
+            else{
+                List<Object> list = new ArrayList<Object>();
+                NodeList nodeList = (NodeList)xpathObj.evaluate(xpathInfo.forEach, doc, XPathConstants.NODESET);
+                for(int i=0; i<nodeList.getLength(); i++){
+                    Object context = nodeList.item(i);
+                    list.add(xpathObj.evaluate(xpathInfo.xpath, context, xpathInfo.resultType));
+                }
+                results.add(list);
+            }
         }
         return results;
     }
