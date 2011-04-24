@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<root a="1" _a="2">
+<root _a="2" a="1">
   <b>1</b>
   <_b>2</_b>
 </root>
