@@ -35,7 +35,7 @@ public class XPathConformanceTest{
         System.out.println("-----------------------------------------------------------------------");
         System.out.println("useSTAX: "+TestCase.useSTAX+"\t useXMLBuilder: "+TestCase.useXMLBuilder);
 //        System.out.println("Press <ENTER> to run tests.....");
-        System.in.read();
+//        System.in.read();
 
         int failed = 0;
         for(TestCase testCase: testSuite.testCases){
