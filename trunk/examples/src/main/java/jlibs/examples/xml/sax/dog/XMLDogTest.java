@@ -21,6 +21,8 @@ import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.XPathResults;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.sniff.DOMBuilder;
+import jlibs.xml.sax.dog.sniff.Event;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -35,15 +37,24 @@ import java.util.List;
  */
 public class XMLDogTest{
     public static void main(String[] args) throws Exception{
-        if(args.length!=1){
-            System.out.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" <xml-file>");
+        boolean createDOM = false;
+        String file = null;
+        for(String arg: args){
+            if("-dom".equals(arg))
+                createDOM = true;
+            else
+                file = arg;
+        }
+
+        if(file==null){
+            System.out.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] <xml-file>");
             System.exit(1);
         }
 
         System.out.println("Namespaces:");
 
         final DefaultNamespaceContext nsContext = new DefaultNamespaceContext();
-        SAXUtil.newSAXParser(true, false, false).parse(new InputSource(args[0]), new DefaultHandler(){
+        SAXUtil.newSAXParser(true, false, false).parse(new InputSource(file), new DefaultHandler(){
             @Override
             public void startPrefixMapping(String prefix, String uri) throws SAXException{
                 if(uri.length()>0 && prefix.length()==0)
@@ -95,7 +106,13 @@ public class XMLDogTest{
         System.out.println("=========================================");
         System.out.println();
         long time = System.nanoTime();
-        XPathResults results = dog.sniff(new InputSource(args[0]));
+
+        Event event = dog.createEvent();
+        if(createDOM)
+            event.setXMLBuilder(new DOMBuilder());
+        XPathResults results = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
+        dog.sniff(event, new InputSource(file));
+
         time = System.nanoTime() - time;
         results.print(expressions, System.out);
         System.out.println("Evaluated in "+(long)(time*1E-06)+" milliseconds");
