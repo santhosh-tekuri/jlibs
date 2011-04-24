@@ -42,7 +42,7 @@ public final class Event extends EvaluationListener{
     private EventID.ConstraintEntry listenersArray[][];
 
     @SuppressWarnings({"unchecked"})
-    public Event(NamespaceContext givenNSContext, List<Expression> exprList, int noOfConstraints){
+    public Event(NamespaceContext givenNSContext, List<Expression> exprList, int noOfConstraints, boolean documentRequired){
         this.givenNSContext = givenNSContext;
         this.exprList = exprList;
 
@@ -50,6 +50,8 @@ public final class Event extends EvaluationListener{
         results = new Object[noOfXPaths];
         listeners = new List[noOfXPaths];
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
+        if(documentRequired)
+            docNodeItem = nodeItem = new NodeItem();
     }
 
     public NamespaceContext getNamespaceContext(){
@@ -275,12 +277,42 @@ public final class Event extends EvaluationListener{
 
     /*-------------------------------------------------[ NodeItem ]---------------------------------------------------*/
 
-    private NodeItem nodeItem = NodeItem.NODEITEM_DOCUMENT;
+    private NodeItem nodeItem;
 
     public NodeItem nodeItem(){
         if(nodeItem==null)
             nodeItem = new NodeItem(this);
         return nodeItem;
+    }
+
+    /*-------------------------------------------------[ XMLBuilder ]---------------------------------------------------*/
+
+    private XMLBuilder xmlBuilder = null;
+    private NodeItem docNodeItem;
+    public NodeItem documentNodeItem(){
+        return docNodeItem;
+    }
+
+    public void setXMLBuilder(XMLBuilder xmlBuilder){
+        this.xmlBuilder = xmlBuilder;
+    }
+
+    @SuppressWarnings({"SimplifiableIfStatement"})
+    private boolean isXMLRequired(){
+        if(xmlBuilder==null)
+            return false;
+        else if(xmlBuilder.active)
+            return true;
+        else
+            return xmlBuilder.active = nodeItem!=null;
+    }
+
+    private void notifyXMLBuilder(){
+        if(isXMLRequired()){
+            Object xml = xmlBuilder.onEvent(this);
+            if(nodeItem!=null)
+                nodeItem.xml = xml;
+        }
     }
 
     /*-------------------------------------------------[ Results ]---------------------------------------------------*/
@@ -289,6 +321,7 @@ public final class Event extends EvaluationListener{
     private int pendingExpressions;
 
     public static final RuntimeException STOP_PARSING = new RuntimeException("STOP_PARSING");
+    private boolean stopped;
 
     @Override
     public void finished(Evaluation evaluation){
@@ -309,8 +342,12 @@ public final class Event extends EvaluationListener{
             }
         }
 
-        if(--pendingExpressions==0 && tailInfo!=null)
-            throw STOP_PARSING;
+        if(--pendingExpressions==0 && tailInfo!=null){
+            tailInfo = null;
+            if(xmlBuilder==null)
+                throw STOP_PARSING;
+            stopped = true;
+        }
     }
 
     private final List<EvaluationListener> listeners[];
@@ -349,6 +386,16 @@ public final class Event extends EvaluationListener{
     
     /*-------------------------------------------------[ OnEvent ]---------------------------------------------------*/
 
+    void setData(int type, String namespaceURI, String localName, String qualifiedName, String value){
+        nodeItem = null;
+
+        this.type = type;
+        this.namespaceURI = namespaceURI;
+        this.localName = localName;
+        this.qualifiedName = qualifiedName;
+        this.value = value;
+    }
+
     private void onEvent(int type, String namespaceURI, String localName, String qualifiedName, String value){
         nodeItem = null;
         order++;
@@ -359,7 +406,7 @@ public final class Event extends EvaluationListener{
         this.qualifiedName = qualifiedName;
         this.value = value;
 
-        if(type!=NodeType.ELEMENT)
+        if(!stopped && type!=NodeType.ELEMENT)
             fireEvent();
     }
 
@@ -389,56 +436,81 @@ public final class Event extends EvaluationListener{
         }
         current.listenersAdded();
         firePush();
+        if(isXMLRequired())
+            nodeItem.xml = xmlBuilder.onStartDocument();
     }
 
     public void onEndDocument(){
-        pop();
+        if(!stopped)
+            pop();
         assert pendingExpressions==0;
         assert tailInfo==null;
+        if(xmlBuilder!=null)
+            xmlBuilder.onEndDocument();
     }
 
     public void onStartElement(String uri, String localName, String qualifiedName, String lang){
         onEvent(NodeType.ELEMENT, uri, localName, qualifiedName, null);
 
-        Info info = new Info();
-        info.elem = qname(uri, localName);
-        info.elemntPos = tailInfo.updateElementPosition(info.elem);
-        info.lang = lang!=null ? lang : language();
+        if(!stopped){
+            Info info = new Info();
+            info.elem = qname(uri, localName);
+            info.elemntPos = tailInfo.updateElementPosition(info.elem);
+            info.lang = lang!=null ? lang : language();
 
-        push(info);
-        fireEvent();
-        firePush();
+            push(info);
+            fireEvent();
+        }
+        if(!stopped)
+            firePush();
+        if(isXMLRequired()){
+            Object xml = xmlBuilder.onStartElement(uri, localName, qualifiedName);
+            if(nodeItem!=null)
+                nodeItem.xml = xml;
+        }
     }
 
     public void onEndElement(){
-        pop();
+        if(!stopped)
+            pop();
+        if(xmlBuilder!=null && xmlBuilder.active)
+            xmlBuilder.onEndElement();
     }
 
     public void onText(){
         if(buff.length()>0){
-            tailInfo.textCount++;
-            if(interestedInText)
+            if(!stopped)
+                tailInfo.textCount++;
+            if(xmlBuilder!=null || interestedInText)
                 onEvent(NodeType.TEXT, "", "", "", null);
+            notifyXMLBuilder();
             buff.setLength(0);
         }
     }
 
     public void onComment(char[] ch, int start, int length){
-        tailInfo.commentCount++;
+        if(!stopped)
+            tailInfo.commentCount++;
         onEvent(NodeType.COMMENT, "", "", "", new String(ch, start, length));
+        notifyXMLBuilder();
     }
 
     public void onPI(String target, String data){
-        tailInfo.updatePIPosition(target);
+        if(!stopped)
+            tailInfo.updatePIPosition(target);
         onEvent(NodeType.PI, "", target, target, data);
+        notifyXMLBuilder();
     }
 
     public void onAttributes(Attributes attrs){
         if(interestedInAttributes){
             int len = attrs.getLength();
-            for(int i=0; i<len; i++)
+            for(int i=0; i<len; i++){
                 onEvent(NodeType.ATTRIBUTE, attrs.getURI(i), attrs.getLocalName(i), attrs.getQName(i), attrs.getValue(i));
-        }
+                notifyXMLBuilder();
+            }
+        }else if(xmlBuilder!=null && xmlBuilder.active)
+            xmlBuilder.onAttributes(this, attrs);
     }
 
     public void onAttributes(XMLStreamReader reader){
@@ -452,8 +524,10 @@ public final class Event extends EvaluationListener{
                 if(uri==null)
                     uri = "";
                 onEvent(NodeType.ATTRIBUTE, uri, localName, qname, reader.getAttributeValue(i));
+                notifyXMLBuilder();
             }
-        }
+        }else if(xmlBuilder!=null && xmlBuilder.active)
+            xmlBuilder.onAttributes(this, reader);
     }
 
     public void onNamespaces(MyNamespaceSupport nsSupport){
@@ -463,8 +537,10 @@ public final class Event extends EvaluationListener{
                 String prefix = prefixes.nextElement();
                 String uri = nsSupport.getURI(prefix);
                 onEvent(NodeType.NAMESPACE, "", prefix, prefix, uri);
+                notifyXMLBuilder();
             }
-        }
+        }else if(xmlBuilder!=null && xmlBuilder.active)
+            xmlBuilder.onNamespaces(this, nsSupport);
     }
 
     /*-------------------------------------------------[ Stack ]---------------------------------------------------*/
@@ -570,7 +646,7 @@ public final class Event extends EvaluationListener{
     public final StringBuilder buff = new StringBuilder(500);
 
     public void appendText(char[] ch, int start, int length){
-        if(interestedInText)
+        if(xmlBuilder!=null || interestedInText)
             buff.append(ch, start, length);
         else if(buff.length()==0)
             buff.append('x');

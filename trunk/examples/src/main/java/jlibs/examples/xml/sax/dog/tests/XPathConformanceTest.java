@@ -25,11 +25,18 @@ public class XPathConformanceTest{
     private boolean printAllResults = false;
     private TestSuite testSuite;
 
-    public XPathConformanceTest(TestSuite testSuite){
+    public XPathConformanceTest(TestSuite testSuite, boolean useSTAX, boolean useXMLBuilder){
         this.testSuite = testSuite;
+        TestCase.useSTAX = useSTAX;
+        TestCase.useXMLBuilder = useXMLBuilder;
     }
 
     public void run() throws Exception{
+        System.out.println("-----------------------------------------------------------------------");
+        System.out.println("useSTAX: "+TestCase.useSTAX+"\t useXMLBuilder: "+TestCase.useXMLBuilder);
+//        System.out.println("Press <ENTER> to run tests.....");
+        System.in.read();
+
         int failed = 0;
         for(TestCase testCase: testSuite.testCases){
             testCase.usingDOM();
@@ -60,7 +67,17 @@ public class XPathConformanceTest{
         }catch(AssertionError err){
             // assertions are enabled
         }
+
         TestSuite testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathConformanceTest(testSuite).run();
+        new XPathConformanceTest(testSuite, false, false).run();
+
+        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
+        new XPathConformanceTest(testSuite, false, true).run();
+
+        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
+        new XPathConformanceTest(testSuite, true, false).run();
+
+        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
+        new XPathConformanceTest(testSuite, true, true).run();
     }
 }

@@ -15,7 +15,6 @@
 
 package jlibs.xml.sax.dog;
 
-import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
@@ -24,6 +23,8 @@ import jlibs.xml.sax.dog.sniff.Event;
 import javax.xml.namespace.NamespaceContext;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -50,12 +51,21 @@ public class XPathResults extends EvaluationListener{
         return event.getNamespaceContext();
     }
 
+    @SuppressWarnings({"unchecked"})
     public Object getResult(Expression expr){
         if(expr.scope()==Scope.DOCUMENT)
             return results[expr.id];
         else{
             assert expr.scope()==Scope.GLOBAL;
-            return expr.getResult();
+            Object result = expr.getResult();
+            if(expr.resultType==DataType.NODESET){
+                List<NodeItem> list = (List<NodeItem>)result;
+                if(list.size()==1)
+                    return Collections.singletonList(event.documentNodeItem());
+                else
+                    return result;
+            }else
+                return expr.getResult();
         }
     }
 

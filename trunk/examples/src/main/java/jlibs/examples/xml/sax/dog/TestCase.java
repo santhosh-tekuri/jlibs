@@ -21,7 +21,10 @@ import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.XPathResults;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.sniff.DOMBuilder;
+import jlibs.xml.sax.dog.sniff.Event;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
+import org.w3c.dom.Node;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFunctionResolver;
@@ -31,7 +34,8 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class TestCase{
-    static final boolean useSTAX = false;
+    public static boolean useSTAX = false;
+    public static boolean useXMLBuilder = false;
     public static XPathEngine domEngine =
 //            new JDKEngine(new com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl());
 //            new JDKEngine(new org.apache.xpath.jaxp.XPathFactoryImpl());
@@ -60,7 +64,11 @@ public class TestCase{
             expressions[i] = xpathInfo.forEach==null ? dog.addXPath(xpathInfo.xpath) : dog.addForEach(xpathInfo.forEach, xpathInfo.xpath);
         }
 
-        XPathResults dogResults = dog.sniff(file, useSTAX);
+        Event event = dog.createEvent();
+        if(useXMLBuilder)
+            event.setXMLBuilder(new DOMBuilder());
+        XPathResults dogResults = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
+        dog.sniff(event, file, useSTAX);
         resultNSContext = (DefaultNamespaceContext)dogResults.getNamespaceContext();
 
         dogResult = new ArrayList<Object>(xpaths.size());
@@ -178,6 +186,9 @@ public class TestCase{
                     dogLocation = dogLocation.substring(dogLocation.lastIndexOf('/'));
                 }
                 if(!jdkLocation.equals(dogLocation))
+                    return false;
+
+                if(useXMLBuilder && !domEngine.equals(jdkNodeItem.xml, (Node)dogNodeItem.xml))
                     return false;
             }else{
                 if(!jdkItem.equals(dogItem))
