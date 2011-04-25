@@ -44,83 +44,60 @@ public class DOMBuilder extends XMLBuilder{
     private Node curNode;
 
     @Override
-    public Object onStartDocument(){
+    protected Object onStartDocument(){
         return curNode = document;
     }
 
     @Override
-    public Object onStartElement(String uri, String localName, String qualifiedName){
-        if(active){
-            Element element = document.createElementNS(uri, qualifiedName);
-            if(curNode!=null)
-                curNode.appendChild(element);
-            return curNode = element;
-        }
-        return curNode;
+    protected Object onStartElement(String uri, String localName, String qualifiedName){
+        Element element = document.createElementNS(uri, qualifiedName);
+        if(curNode!=null)
+            curNode.appendChild(element);
+        return curNode = element;
     }
 
     @Override
-    public Object onEvent(Event event){
+    protected Object onEvent(Event event){
         switch(event.type()){
             case NodeType.ATTRIBUTE:
-                Attr attr = null;
-                if(active){
-                    attr = document.createAttributeNS(event.namespaceURI(), event.qualifiedName());
-                    attr.setNodeValue(event.value());
-                    if(curNode!=null)
-                        ((Element)curNode).setAttributeNodeNS(attr);
-                }
+                Attr attr = document.createAttributeNS(event.namespaceURI(), event.qualifiedName());
+                attr.setNodeValue(event.value());
+                if(curNode!=null)
+                    ((Element)curNode).setAttributeNodeNS(attr);
                 return attr;
             case NodeType.COMMENT:
-                Comment comment =null;
-                if(active){
-                    comment = document.createComment(event.value());
-                    if(curNode!=null)
-                        curNode.appendChild(comment);
-                }
+                Comment comment = document.createComment(event.value());
+                if(curNode!=null)
+                    curNode.appendChild(comment);
                 return comment;
             case NodeItem.PI:
-                ProcessingInstruction pi = null;
-                if(active){
-                    pi = document.createProcessingInstruction(event.localName(), event.value());
-                    if(curNode!=null)
-                        curNode.appendChild(pi);
-                }
+                ProcessingInstruction pi = document.createProcessingInstruction(event.localName(), event.value());
+                if(curNode!=null)
+                    curNode.appendChild(pi);
                 return pi;
             case NodeItem.TEXT:
-                Text text = null;
-                if(active){
-                    text = document.createTextNode(event.value());
-                    if(curNode!=null)
-                        curNode.appendChild(text);
-                }
+                Text text = document.createTextNode(event.value());
+                if(curNode!=null)
+                    curNode.appendChild(text);
                 return text;
             case NodeItem.NAMESPACE:
-                attr = null;
-                if(active){
-                    String qname = event.localName().length()==0 ? "xmlns" : "xmlns:"+event.localName();
-                    attr = document.createAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, qname);
-                    attr.setNodeValue(event.value());
-                    if(curNode!=null)
-                        ((Element)curNode).setAttributeNodeNS(attr);
-                }
+                String qname = event.localName().length()==0 ? "xmlns" : "xmlns:"+event.localName();
+                attr = document.createAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, qname);
+                attr.setNodeValue(event.value());
+                if(curNode!=null)
+                    ((Element)curNode).setAttributeNodeNS(attr);
                 return attr;
         }
         throw new ImpossibleException("event.type: "+event.type());
     }
 
     @Override
-    public Object onEndElement(){
-        if(curNode!=null){
-            curNode = curNode.getParentNode();
-            if(curNode==null)
-                active = false;
-        }
-        return curNode;
+    protected Object onEndElement(){
+        return curNode = curNode.getParentNode();
     }
 
     @Override
-    public void onEndDocument(){
+    protected void onEndDocument(){
         document = null;
     }
 }
