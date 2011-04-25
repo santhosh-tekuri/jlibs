@@ -308,11 +308,13 @@ public final class Event extends EvaluationListener{
     }
 
     private void notifyXMLBuilder(){
-        if(isXMLRequired()){
-            Object xml = xmlBuilder.onEvent(this);
-            if(nodeItem!=null)
-                nodeItem.xml = xml;
-        }
+        if(xmlBuilder==null)
+            return;
+        else if(!xmlBuilder.active && nodeItem==null)
+            return;
+        Object xml = xmlBuilder.onEvent(this);
+        if(nodeItem!=null)
+            nodeItem.xml = xml;
     }
 
     /*-------------------------------------------------[ Results ]---------------------------------------------------*/
@@ -438,6 +440,8 @@ public final class Event extends EvaluationListener{
         firePush();
         if(isXMLRequired())
             nodeItem.xml = xmlBuilder.onStartDocument();
+        else if(stopped)
+            throw STOP_PARSING;
     }
 
     public void onEndDocument(){
@@ -467,14 +471,17 @@ public final class Event extends EvaluationListener{
             Object xml = xmlBuilder.onStartElement(uri, localName, qualifiedName);
             if(nodeItem!=null)
                 nodeItem.xml = xml;
-        }
+        }else if(stopped)
+            throw STOP_PARSING;
     }
 
     public void onEndElement(){
         if(!stopped)
             pop();
-        if(xmlBuilder!=null && xmlBuilder.active)
-            xmlBuilder.onEndElement();
+        if(xmlBuilder!=null && xmlBuilder.active){
+            if(xmlBuilder.doEndElement()==null && stopped)
+                throw STOP_PARSING;
+        }
     }
 
     public void onText(){
