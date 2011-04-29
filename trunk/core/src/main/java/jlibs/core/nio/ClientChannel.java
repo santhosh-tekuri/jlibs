@@ -268,7 +268,13 @@ public class ClientChannel extends NIOChannel implements SelectableByteChannel{
     protected long poolFlag = -1;
 
     public void addToPool(long timeout){
-        selector().pool.add(this, timeout);
+        addToPool(realChannel().socket().getRemoteSocketAddress(), timeout);
+    }
+
+    private SocketAddress poolAddress;
+    public void addToPool(SocketAddress address, long timeout){
+        poolAddress = address;
+        selector().pool.add(this, address, timeout);
     }
 
     public boolean isPooled(){
@@ -276,6 +282,6 @@ public class ClientChannel extends NIOChannel implements SelectableByteChannel{
     }
 
     public boolean removeFromPool(){
-        return nioSelector.pool().remove(this);
+        return nioSelector.pool().remove(this, poolAddress);
     }
 }

@@ -140,7 +140,7 @@ public class PlainTransport extends Transport{
                 client.nioSelector.connectionPendingClients--;
             client.nioSelector.timeoutTracker.untrack(client);
             if(client.poolFlag>=0)
-                client.selector().pool().remove(client);
+                client.removeFromPool();
         }
     }
 }
