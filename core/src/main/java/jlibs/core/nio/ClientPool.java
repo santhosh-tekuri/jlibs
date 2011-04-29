@@ -37,7 +37,7 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         return "ClientPool@"+selector.id;
     }
 
-    protected void add(ClientChannel client, long timeout){
+    protected void add(ClientChannel client, SocketAddress address, long timeout){
         if(timeout<=0)
             throw new IllegalArgumentException("invalid timeout: "+timeout);
         if(client.poolFlag>=0)
@@ -50,7 +50,7 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         client.poolFlag = timeout;
         if(client.key.interestOps()==0)
             track(client);
-        addToList(client);
+        addToList(client, address);
     }
 
     protected void track(ClientChannel client){
@@ -76,10 +76,9 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         return list.remove();
     }
 
-    protected boolean remove(ClientChannel client){
+    protected boolean remove(ClientChannel client, SocketAddress address){
         if(client.poolFlag<0)
             return false;
-        SocketAddress address = client.realChannel().socket().getRemoteSocketAddress();
         Entry list = map.get(address);
         list.remove(client);
         return true;
@@ -165,8 +164,7 @@ public class ClientPool extends AttachmentSupport implements Iterable<ClientPool
         return list==null ? 0 : list.size();
     }
 
-    private void addToList(ClientChannel channel){
-        SocketAddress address = channel.realChannel().socket().getRemoteSocketAddress();
+    private void addToList(ClientChannel channel, SocketAddress address){
         Entry list = map.get(address);
         if(list==null)
             map.put(address, list=new Entry(address));
