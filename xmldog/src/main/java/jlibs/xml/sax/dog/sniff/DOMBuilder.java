@@ -49,8 +49,8 @@ public class DOMBuilder extends XMLBuilder{
     }
 
     @Override
-    protected Object onStartElement(String uri, String localName, String qualifiedName){
-        Element element = document.createElementNS(uri, qualifiedName);
+    protected Object onStartElement(Event event){
+        Element element = document.createElementNS(event.namespaceURI(), event.qualifiedName());
         if(curNode!=null)
             curNode.appendChild(element);
         return curNode = element;
@@ -99,5 +99,25 @@ public class DOMBuilder extends XMLBuilder{
     @Override
     protected void onEndDocument(){
         document = null;
+    }
+
+    @Override
+    protected void clearCurNode(){
+        curNode = null;
+    }
+
+    @Override
+    protected void removeFromParent(Object node){
+        if(node instanceof Attr){
+            Attr attr = (Attr)node;
+            Element owner = attr.getOwnerElement();
+            if(owner!=null)
+                owner.removeAttributeNode(attr);
+        }else{
+            Node child = (Node)node;
+            Node parent = child.getParentNode();
+            if(parent!=null)
+                parent.removeChild(child);
+        }
     }
 }

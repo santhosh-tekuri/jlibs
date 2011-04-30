@@ -22,4 +22,8 @@ public interface NodeSetListener{
     public void mayHit();
     public void discard(long order);
     public void finished();
+
+    public interface Support{
+        public void setNodeSetListener(NodeSetListener nodeSetListener);
+    }
 }
