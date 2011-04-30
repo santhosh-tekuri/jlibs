@@ -17,6 +17,7 @@ package jlibs.xml.sax.dog.sniff;
 
 import jlibs.core.lang.NotImplementedException;
 import jlibs.xml.DefaultNamespaceContext;
+import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
 import jlibs.xml.sax.dog.Scope;
@@ -24,6 +25,7 @@ import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.StaticEvaluation;
+import jlibs.xml.sax.dog.expr.nodset.NodeSetListener;
 import jlibs.xml.sax.dog.expr.nodset.PositionTracker;
 import jlibs.xml.sax.dog.expr.nodset.StringEvaluation;
 import jlibs.xml.sax.dog.path.EventID;
@@ -37,7 +39,7 @@ import java.util.*;
 /**
  * @author Santhosh Kumar T
  */
-public final class Event extends EvaluationListener{
+public final class Event extends EvaluationListener implements NodeSetListener{
     private List<Expression> exprList;
     private EventID.ConstraintEntry listenersArray[][];
 
@@ -317,6 +319,21 @@ public final class Event extends EvaluationListener{
             nodeItem.xml = xml;
     }
 
+    /*-------------------------------------------------[ NodeSetListener ]---------------------------------------------------*/
+
+    @Override
+    public void mayHit(){
+        nodeItem.refCount++;
+    }
+
+    @Override
+    public void discard(long order){
+        xmlBuilder.discard(order);
+    }
+
+    @Override
+    public void finished(){}
+
     /*-------------------------------------------------[ Results ]---------------------------------------------------*/
 
     private final Object results[];
@@ -432,6 +449,8 @@ public final class Event extends EvaluationListener{
                 results[i] = result;
                 Evaluation eval = (Evaluation)result;
                 eval.addListener(this);
+                if(xmlBuilder!=null && expression.resultType==DataType.NODESET && eval instanceof NodeSetListener.Support)
+                    ((Support)eval).setNodeSetListener(this);
                 eval.start();
             }else
                 finished(new StaticEvaluation<Expression>(expression, order, result));
@@ -439,7 +458,7 @@ public final class Event extends EvaluationListener{
         current.listenersAdded();
         firePush();
         if(isXMLRequired())
-            nodeItem.xml = xmlBuilder.onStartDocument();
+            nodeItem.xml = xmlBuilder.doStartDocument(nodeItem);
         else if(stopped)
             throw STOP_PARSING;
     }
@@ -450,7 +469,7 @@ public final class Event extends EvaluationListener{
         assert pendingExpressions==0;
         assert tailInfo==null;
         if(xmlBuilder!=null)
-            xmlBuilder.onEndDocument();
+            xmlBuilder.doEndDocument();
     }
 
     public void onStartElement(String uri, String localName, String qualifiedName, String lang){
@@ -468,7 +487,7 @@ public final class Event extends EvaluationListener{
         if(!stopped)
             firePush();
         if(isXMLRequired()){
-            Object xml = xmlBuilder.onStartElement(uri, localName, qualifiedName);
+            Object xml = xmlBuilder.doStartElement(this, nodeItem);
             if(nodeItem!=null)
                 nodeItem.xml = xml;
         }else if(stopped)

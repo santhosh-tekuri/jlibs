@@ -43,10 +43,12 @@ public class NodeItem implements NodeType{
     public final String namespaceURI;
     public final String qualifiedName;
 
+    public long order;
     public int refCount;
     public Object xml;
 
     public NodeItem(){
+        order = 0;
         type = DOCUMENT;
         location = "/";
         value = null;
@@ -56,6 +58,7 @@ public class NodeItem implements NodeType{
     }
 
     public NodeItem(Event event){
+        order = event.order();
         type = event.type();
         location = event.location();
         value = event.value();

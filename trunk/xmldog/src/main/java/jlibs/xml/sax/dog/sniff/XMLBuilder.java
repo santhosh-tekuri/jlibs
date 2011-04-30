@@ -15,12 +15,16 @@
 
 package jlibs.xml.sax.dog.sniff;
 
+import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.xml.sax.Attributes;
 
 import javax.xml.stream.XMLStreamReader;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
@@ -32,17 +36,33 @@ public abstract class XMLBuilder{
     boolean active = false;
 
     protected abstract Object onStartDocument();
-    protected abstract Object onStartElement(String uri, String localName, String qualifiedName);
-    protected abstract Object onEvent(Event event);
-    protected abstract Object onEndElement();
-    protected abstract void onEndDocument();
+    Object doStartDocument(NodeItem nodeItem){
+        stack.add(nodeItem);
+        return onStartDocument();
+    }
 
+    protected abstract Object onStartElement(Event event);
+    Object doStartElement(Event event, NodeItem nodeItem){
+        stack.add(nodeItem);
+        return onStartElement(event);
+    }
+
+    protected abstract Object onEvent(Event event);
+
+    protected abstract Object onEndElement();
     Object doEndElement(){
         assert active;
+        stack.remove(stack.size()-1);
         Object node = onEndElement();
         if(node==null)
             active = false;
         return node;
+    }
+
+    protected abstract void onEndDocument();
+    void doEndDocument(){
+        stack = null;
+        onEndDocument();
     }
 
     public void onAttributes(Event event, Attributes attrs){
@@ -79,4 +99,39 @@ public abstract class XMLBuilder{
             onEvent(event);
         }
     }
+
+    private List<NodeItem> stack = new ArrayList<NodeItem>();
+    void discard(long order){
+        Iterator<NodeItem> iter = stack.iterator();
+        boolean first = true;
+        while(iter.hasNext()){
+            NodeItem nodeItem = iter.next();
+            if(nodeItem!=null){
+                if(nodeItem.order==order){
+                    if(--nodeItem.refCount>0) // no xml to be dicarded
+                        return;
+                    if(first){
+                        /* detach from first decendant nodeitem */
+                        nodeItem.xml = null;
+                        while(iter.hasNext()){
+                            nodeItem = iter.next();
+                            if(nodeItem!=null){
+                                if(nodeItem.xml!=null)
+                                    removeFromParent(nodeItem.xml);
+                                return;
+                            }
+                        }
+
+                        /* comes here only when no descendant nodeitem was there */
+                        clearCurNode();
+                        active = false;
+                    }
+                    return;
+                }
+                first = false;
+            }
+        }
+    }
+    protected abstract void clearCurNode();
+    protected abstract void removeFromParent(Object node);
 }

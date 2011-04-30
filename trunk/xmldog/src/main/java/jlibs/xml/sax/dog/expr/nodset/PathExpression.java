@@ -110,7 +110,7 @@ public class PathExpression extends Expression{
     }
 }
 
-final class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListener{
+final class PathEvaluation extends Evaluation<PathExpression> implements NodeSetListener, NodeSetListener.Support{
     private Event event;
 
     private PositionTracker positionTracker;
@@ -172,7 +172,7 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
             }else if(predicateResult==null){
                 Evaluation predicateEvaluation = event.evaluation;
                 Object resultItem = expression.relativeExpression.getResult(event);
-                if(nodeSetListener!=null){
+                if(nodeSetListener!=null && !(nodeSetListener instanceof Event)){ // nodeSetListener will be event if xmlBuilder is set
                     if(resultItem instanceof LocationEvaluation)
                         ((LocationEvaluation)resultItem).nodeSetListener = evalInfo;
                     else
@@ -326,6 +326,11 @@ final class PathEvaluation extends Evaluation<PathExpression> implements NodeSet
     }
 
     private NodeSetListener nodeSetListener;
+
+    @Override
+    public void setNodeSetListener(NodeSetListener nodeSetListener){
+        this.nodeSetListener = nodeSetListener;
+    }
 }
 
 final class EvaluationInfo extends Evaluation<PathExpression.HitExpression> implements NodeSetListener{

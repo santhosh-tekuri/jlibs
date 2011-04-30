@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * @author Santhosh Kumar T
  */
-public final class LocationEvaluation extends AxisListener<LocationExpression>{
+public final class LocationEvaluation extends AxisListener<LocationExpression> implements NodeSetListener.Support{
     private final Event event;
     private final EventID eventID;
     private final int index;
@@ -393,4 +393,9 @@ public final class LocationEvaluation extends AxisListener<LocationExpression>{
     }
 
     public NodeSetListener nodeSetListener;
+
+    @Override
+    public void setNodeSetListener(NodeSetListener nodeSetListener){
+        this.nodeSetListener = nodeSetListener;
+    }
 }
