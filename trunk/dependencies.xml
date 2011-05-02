@@ -33,7 +33,12 @@
         <dependency repository="${ibiblio.repository}" groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
     </target>
 
-    <target name="jlibs-examples" depends="jlibs-jdbc, jlibs-swing, jlibs-xmldog" description="download dependencies reqd by jibs-xmldog">
+    <target name="jlibs-nblr" description="download dependencies reqd by jibs-nblr">
+        <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-openide-util" version="RELEASE65BETA"/>
+        <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-netbeans-api-visual" version="RELEASE65BETA"/>
+    </target>
+
+    <target name="jlibs-examples" depends="jlibs-jdbc, jlibs-swing, jlibs-xmldog, jlibs-nblr" description="download dependencies reqd by jibs-xmldog">
         <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon" version="9.0.0.2"/>
         <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon-dom" version="9.0.0.2"/>
         <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon-xpath" version="9.0.0.2"/>
