@@ -26,6 +26,8 @@ import java.util.Arrays;
  * @author Santhosh Kumar T
  */
 public class ChunkedInputChannel extends FilterInputChannel{
+    public static int MAX_CHUNK_LENGTH_TOKEN_SIZE = 18;
+
     public ChunkedInputChannel(InputChannel delegate){
         super(delegate);
     }
@@ -56,13 +58,16 @@ public class ChunkedInputChannel extends FilterInputChannel{
             switch(state){
                 case CHUNK_START:
                     if(lenBuffer==null)
-                        lenBuffer = ByteBuffer.allocate(100);
+                        lenBuffer = ByteBuffer.allocate(Math.min(MAX_CHUNK_LENGTH_TOKEN_SIZE, 100));
                     if(delegate.read(lenBuffer)<=0)
                         break loop;
                     String chunkStr = getChunkLength();
                     if(chunkStr==null){
                         if(!lenBuffer.hasRemaining()){
-                            lenBuffer = ByteBuffer.wrap(Arrays.copyOf(lenBuffer.array(), lenBuffer.capacity()+100), lenBuffer.position(), 100);
+                            if(lenBuffer.capacity()>=MAX_CHUNK_LENGTH_TOKEN_SIZE)
+                                throw new ChunkException("Chunk line token exceeded "+MAX_CHUNK_LENGTH_TOKEN_SIZE+" bytes");
+                            int newCapacity = Math.min(MAX_CHUNK_LENGTH_TOKEN_SIZE, lenBuffer.capacity()+100);
+                            lenBuffer = ByteBuffer.wrap(Arrays.copyOf(lenBuffer.array(), newCapacity), lenBuffer.position(), newCapacity-lenBuffer.capacity());
                             break;
                         }
                         break loop;
