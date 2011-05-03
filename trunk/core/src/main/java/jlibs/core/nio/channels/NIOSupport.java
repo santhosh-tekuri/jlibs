@@ -20,6 +20,9 @@ import jlibs.core.nio.handlers.ClientHandler;
 
 import java.io.IOException;
 
+import static jlibs.core.nio.ClientChannel.OP_READ;
+import static jlibs.core.nio.ClientChannel.OP_WRITE;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -70,9 +73,10 @@ final class DefaultNIOSupport implements NIOSupport{
 
         @Override
         public void onTimeout(ClientChannel client){
-            if(client.isReadable() && input!=null)
+            int interests = client.interests();
+            if((interests&OP_READ)!=0 && input!=null)
                 input.handler.onTimeout(input);
-            if(client.isWritable() && output!=null)
+            if((interests&OP_WRITE)!=0 && output!=null)
                 output.handler.onTimeout(output);
         }
     }
