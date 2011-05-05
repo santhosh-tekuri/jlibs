@@ -26,7 +26,7 @@ import java.util.Arrays;
  * @author Santhosh Kumar T
  */
 public class ChunkedInputChannel extends FilterInputChannel{
-    public static int MAX_CHUNK_LENGTH_TOKEN_SIZE = 18;
+    public static int MAX_CHUNK_LENGTH_TOKEN_SIZE = 100;
 
     public ChunkedInputChannel(InputChannel delegate){
         super(delegate);
@@ -74,7 +74,11 @@ public class ChunkedInputChannel extends FilterInputChannel{
                     }
                     int semicolon = chunkStr.indexOf(';');
                     String lenStr = semicolon==-1 ? chunkStr : chunkStr.substring(0, semicolon);
-                    chunkLength = Integer.parseInt(lenStr, 16);
+                    try{
+                        chunkLength = Integer.parseInt(lenStr, 16);
+                    }catch(NumberFormatException ex){
+                        throw new ChunkException("not Hex-Integer: "+lenStr);
+                    }
                     if(listener!=null)
                         listener.onChunk(chunkLength, semicolon==-1?null:chunkStr.substring(semicolon+1));
                     if(chunkLength>0){
@@ -121,7 +125,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
                         break loop;
                     if(crlfBuffer.array()[0]!='\r' || crlfBuffer.array()[1]!='\n'){
                         if(chunkLength>0)
-                            throw new IOException("chunk should end with '\\r\\n'");
+                            throw new ChunkException("chunk should end with '\\r\\n'");
                         else{
                             delegate.unread(crlfBuffer.array(), 0, 2, false);
                             contentInputChannel = new PatternInputChannel(delegate, new BytePattern(new byte[]{ '\r', '\n', '\r', '\n' }));
@@ -184,7 +188,7 @@ public class ChunkedInputChannel extends FilterInputChannel{
     }
 
     public interface Listener{
-        public void onChunk(int len, String extension);
-        public void onTrailer(ByteSequence seq);
+        public void onChunk(int len, String extension) throws ChunkException;
+        public void onTrailer(ByteSequence seq) throws ChunkException;
     }
 }
