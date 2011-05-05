@@ -26,6 +26,8 @@ public class FixedLengthOutputChannel extends FilterOutputChannel{
 
     public FixedLengthOutputChannel(OutputChannel delegate, long length){
         super(delegate);
+        if(length<0)
+            throw new IllegalArgumentException("negative length: "+length);
         this.length = length;
     }
 
