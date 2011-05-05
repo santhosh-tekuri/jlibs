@@ -27,6 +27,8 @@ public class FixedLengthInputChannel extends FilterInputChannel{
 
     public FixedLengthInputChannel(InputChannel delegate, long length){
         super(delegate);
+        if(length<0)
+            throw new IllegalArgumentException("negative length: "+length);
         this.length = length;
     }
 
