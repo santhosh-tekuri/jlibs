@@ -1,4 +1,4 @@
-#summary NIO Framework with SSL and Timeouts
+#summary NIO Framework with SSL, Timeouts and Pooling
 #labels NIO
 
 ==NOTE: following API is work in progress. You can try it by source checkout==
@@ -191,6 +191,59 @@ client.setHandshakeCompletedListener(new HandshakeCompletedListener(){
 })
 }}}
 `HandshakeCompletedListener` has to be set before enabling ssl.
+---------
+*Pooling*
+
+`NIOSelector` supports pooling of `ClientChannel`s.
+{{{
+long poolTimeout = 2*60*1000; // 2min
+client.addToPool(poolTimeout);
+}}}
+Only the connected `ClientChannel`s can be pooled. When adding to pool<br>
+you must specify the amount of time to keep in pool. Here the client is <br>
+added to the pool of `NIOSelector` who created it.
+
+`ClientChannel` when added to pool, it is added into a bucket whose key is the<br>
+`SocketAddress` to which it is connected. But you can also use any `SocketAddress`<br>
+as key while adding to pool as below:
+{{{
+SocketAddress address = ...;
+client.addToPool(address, poolTimeout);
+}}}
+
+To get a `ClientChannel` from the pool:
+{{{
+SocketAddress address = ...;
+ClientChannel client = selector.pool().remove(address);
+if(client==null)
+    System.out.println("no client is available in pool for :"+address);
+}}}
+If a `ClientChannel` is not removed from pool, within the poolTimeout specified,<br>
+then, that `ClientChannel` gets timed-out.
+
+to distinguish between io-timeout and pool-timeout:
+{{{
+if(client.isTimeout()){ // timeout occurred
+    if(client.isPooled()){ // pool timeout
+        client.removeFromPool(); // you must remove it from pool        
+        // handle pool timeout here
+    }else{
+        // handle io timeout here
+    }
+}
+}}}
+
+You can find the statistics related to Pooling as below:
+{{{
+int noOfPooledClients = selector.pool().size();
+
+SocketAddress google = new InetSocketAddress("www.google.com", 80);
+int noOfGoogleClients = selector.pool().size(google);
+
+// to iterator through all pool buckets
+for(ClientPool.Entry entry: selector.pool())
+    System.out.println(entry.address()+" --> "+entry.size());
+}}}
 ---------
 *Multi Threading*
 
