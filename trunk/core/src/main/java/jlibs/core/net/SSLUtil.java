@@ -106,7 +106,7 @@ public class SSLUtil{
             tm = SSLUtil.DUMMY_TRUST_MANAGERS;
         else{
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(SSLUtil.defaultTrustStore());
+            tmf.init(trustStore);
             tm = tmf.getTrustManagers();
         }
 
