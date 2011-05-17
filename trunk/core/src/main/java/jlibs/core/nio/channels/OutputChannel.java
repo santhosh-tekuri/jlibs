@@ -128,18 +128,17 @@ public abstract class OutputChannel extends AttachmentSupport implements Writabl
     protected abstract void writePending() throws IOException;
     public abstract Status status();
     protected void notifyCompleted(Status earlierStatus, Status curStatus){
-        OutputChannel output = clientHandler().output;
-        if(output==this && !isOpen() && curStatus==Status.COMPLETED) // favor GC
+        if(clientHandler().output==this && !isOpen() && curStatus==Status.COMPLETED) // favor GC
             clientHandler().output = null;
-        if(output.statusInterested){
-            output.statusInterested = false;
-            if(earlierStatus!=curStatus && output.handler!=null)
-                output.handler.onStatus(output);
+        if(statusInterested){
+            statusInterested = false;
+            if(earlierStatus!=curStatus && handler!=null)
+                handler.onStatus(this);
         }
-        if(output.writeInterested){
-            output.writeInterested = false;
-            if(output.handler!=null)
-                output.handler.onWrite(output);
+        if(writeInterested){
+            writeInterested = false;
+            if(handler!=null && isOpen())
+                handler.onWrite(this);
         }
     }
 
