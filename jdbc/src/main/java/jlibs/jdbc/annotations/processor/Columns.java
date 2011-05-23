@@ -297,8 +297,8 @@ class Columns extends ArrayList<ColumnProperty>{
         printer.importPackage(DAO.class);
         printer.importPackage(Connection.class);
         printer.importClass(DataSource.class);
-        if(ModelUtil.isInnerClass(extendClass))
-            printer.importClass(extendClass);
+        if(ModelUtil.isInnerClass(printer.clazz))
+            printer.importClass(printer.clazz);
         printer.println();
 
         printer.printClassDoc();
