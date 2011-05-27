@@ -32,7 +32,7 @@ class TimeoutTracker extends Debuggable implements Iterator<NIOChannel>{
 
         @Override
         protected int compare(ClientChannel client1, ClientChannel client2){
-            return client1.timeoutAt<client2.timeoutAt ? +1 : (client1.timeoutAt==client2.timeoutAt?0:-1);
+            return client1.timeoutAt<client2.timeoutAt ? -1 : (client1.timeoutAt==client2.timeoutAt?0:+1);
         }
     };
 
