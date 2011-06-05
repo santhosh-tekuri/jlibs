@@ -49,6 +49,14 @@ abstract class ColumnProperty<E extends Element>{
         return columnName.length()==0 ? StringUtil.underscore(propertyName()) : columnName;
     }
 
+    public String columnName(boolean quoted){
+        String columnName = columnName();
+        if(quoted)
+            return String.format("jdbc.quote(\"%s\")", StringUtil.toLiteral(columnName, true));
+        else
+            return StringUtil.toLiteral(columnName, true);
+    }
+
     public boolean primary(){
         return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "primary");
     }

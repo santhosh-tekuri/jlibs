@@ -19,7 +19,6 @@ import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
 import jlibs.jdbc.annotations.processor.TableAnnotationProcessor;
 
-import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,17 +32,17 @@ public abstract class DAO<T> implements RowMapper<T>{
     public final JDBC jdbc;
     public final TableMetaData table;
 
-    public DAO(DataSource dataSource, TableMetaData table){
-        jdbc = new JDBC(dataSource);
+    public DAO(JDBC jdbc, TableMetaData table){
+        this.jdbc = jdbc;
         this.table = table;
         buildQueries();
     }
 
     @SuppressWarnings({"unchecked"})
-    public static <T> DAO<T> create(Class<T> clazz, DataSource dataSource){
+    public static <T> DAO<T> create(Class<T> clazz, JDBC jdbc){
         try{
             Class tableClass = ModelUtil.findClass(clazz, TableAnnotationProcessor.FORMAT);
-            return (DAO<T>)tableClass.getConstructor(DataSource.class).newInstance(dataSource);
+            return (DAO<T>)tableClass.getConstructor(JDBC.class).newInstance(jdbc);
         }catch(ClassNotFoundException ex){
             throw new RuntimeException(ex);
         } catch(InstantiationException ex){

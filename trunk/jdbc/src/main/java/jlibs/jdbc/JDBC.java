@@ -27,9 +27,37 @@ public class JDBC{
     private static final boolean debug = Boolean.getBoolean("jlibs.jdbc.debug");
 
     public final DataSource dataSource;
+    public final String quoteString;
+
+    public static String getQuoteString(DataSource dataSource){
+        Connection con = null;
+        try{
+            con = dataSource.getConnection();
+            String str = con.getMetaData().getIdentifierQuoteString();
+            return " ".equals(str) ? null : str;
+        }catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }finally{
+            try{
+                if(con!=null)
+                    con.close();
+            }catch(SQLException ignore){
+                ignore.printStackTrace();
+            }
+        }
+    }
 
     public JDBC(DataSource dataSource){
+        this(dataSource, null);
+    }
+
+    public JDBC(DataSource dataSource, String quoteString){
         this.dataSource = dataSource;
+        this.quoteString = quoteString;
+    }
+
+    public String quote(String identifier){
+        return quoteString==null ? identifier : quoteString+identifier+quoteString;
     }
 
     public <T> T processFirst(ResultSet rs, RowMapper<T> rowMapper) throws SQLException{

@@ -65,7 +65,7 @@ public class WhereMethod extends DMLMethod{
             boolean primitive = ModelUtil.isPrimitive(param.asType());
             if(paramName.indexOf('_')==-1){
                 ColumnProperty column = getColumn(param);
-                where.add(column.columnName()+"=?");
+                where.add("\"+"+column.columnName(true)+"+\"=?");
                 params.add(column.toNativeTypeCode(paramName));
                 if(!primitive)
                     CollectionUtil.addAll(code,
@@ -73,7 +73,7 @@ public class WhereMethod extends DMLMethod{
                             PLUS
                     );
                 CollectionUtil.addAll(code,
-                    "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
+                    "__conditions.add("+where.get(where.size()-1).substring(2)+"\");",
                     "__params.add("+column.toNativeTypeCode(paramName)+");"
                 );
                 if(!primitive)
@@ -90,7 +90,7 @@ public class WhereMethod extends DMLMethod{
 
                 String hintValue = HINTS.get(hint);
                 if(hintValue!=null){
-                    where.add(column.columnName()+hintValue);
+                    where.add("\"+"+column.columnName(true)+"+\""+hintValue);
                     params.add(column.toNativeTypeCode(paramName));
                     if(!primitive)
                         CollectionUtil.addAll(code,
@@ -98,7 +98,7 @@ public class WhereMethod extends DMLMethod{
                                 PLUS
                         );
                     CollectionUtil.addAll(code,
-                        "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
+                        "__conditions.add("+where.get(where.size()-1).substring(2)+"\");",
                         "__params.add("+column.toNativeTypeCode(paramName)+");"
                     );
                     if(!primitive)
@@ -116,7 +116,7 @@ public class WhereMethod extends DMLMethod{
                         throw new AnnotationError(method, "the next parameter of "+paramName+" must be to_"+propertyName);
                     if(param.asType()!=nextParam.asType())
                         throw new AnnotationError(method, paramName+" and "+nextParamName+" must be of same type");
-                    where.add(column.columnName()+" BETWEEN ? and ?");
+                    where.add("\"+"+column.columnName(true)+"+\" BETWEEN ? and ?");
                     params.add(column.toNativeTypeCode(paramName));
                     params.add(column.toNativeTypeCode(nextParamName));
                     if(!primitive || !nextPrimitive){
@@ -134,7 +134,7 @@ public class WhereMethod extends DMLMethod{
                         );
                     }
                     CollectionUtil.addAll(code,
-                        "__conditions.add(\""+StringUtil.toLiteral(where.get(where.size()-1), false)+"\");",
+                        "__conditions.add("+where.get(where.size()-1).substring(2)+"\");",
                         "__params.add("+column.toNativeTypeCode(paramName)+");",
                         "__params.add("+column.toNativeTypeCode(nextParamName)+");"
                     );
@@ -177,7 +177,7 @@ public class WhereMethod extends DMLMethod{
 
             if(orderByPhrase.length()>0){
                 CollectionUtil.addAll(code,
-                    "__query += \""+StringUtil.toLiteral(orderByPhrase, false)+"\";"
+                    "__query += \""+orderByPhrase+"\";"
                 );
             }
             
@@ -211,7 +211,7 @@ public class WhereMethod extends DMLMethod{
                 if(column==null)
                     throw new AnnotationError(method, mirror, "invalid column property: "+columnProperty);
                 Order order = Order.valueOf(((VariableElement)ModelUtil.getAnnotationValue(method, orderByMirror, "order")).getSimpleName().toString());
-                orderByList.add(column.columnName()+' '+order.keyword);
+                orderByList.add("\"+"+column.columnName(true)+"+\" "+order.keyword);
             }
         }catch(AnnotationError ex){
             // ignore

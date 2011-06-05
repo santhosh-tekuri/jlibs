@@ -58,7 +58,7 @@ class InsertMethod extends DMLMethod{
         for(VariableElement param : method.getParameters()){
             ColumnProperty column = getColumn(param);
 
-            columnNames.add(column.columnName());
+            columnNames.add("\"+"+column.columnName(true)+"+\"");
             columnValues.add("?");
             params.add(column.toNativeTypeCode(column.propertyName()));
         }
@@ -81,7 +81,7 @@ class InsertMethod extends DMLMethod{
                 if(column.primary()){
                     if(ModelUtil.getParameter(method, column.propertyName())==null)
                         throw new AnnotationError(method, "column property '"+column.propertyName()+"' is missing in arguments.");
-                    where.add(column.columnName()+"=?");
+                    where.add("\"+"+column.columnName(true)+"+\"=?");
                     params.add(column.propertyName());
                 }
             }
@@ -95,7 +95,7 @@ class InsertMethod extends DMLMethod{
             String generatedKeyType = ModelUtil.toString(autoColumn.propertyType(), true);
             return new String[]{
                 generatedKeyType+" __generatedKey = ("+generatedKeyType+')'+insertQuery+';',
-                "return first(\"WHERE "+autoColumn.columnName()+"=?\", __generatedKey);"
+                "return first(\"WHERE \"+"+autoColumn.columnName(true)+"+\"=?\", __generatedKey);"
             };
         }
     }

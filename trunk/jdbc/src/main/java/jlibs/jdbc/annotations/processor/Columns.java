@@ -61,7 +61,14 @@ class Columns extends ArrayList<ColumnProperty>{
             tableName = Noun.pluralize(StringUtil.underscore(clazz.getSimpleName().toString()));
         this.tableName = tableName;
     }
-    
+
+    public String tableName(boolean quoted){
+        if(quoted)
+            return String.format("jdbc.quote(\"%s\")", StringUtil.toLiteral(tableName, true));
+        else
+            return StringUtil.toLiteral(tableName, true);
+    }
+
     public ColumnProperty findByProperty(String propertyName){
         for(ColumnProperty prop: this){
             if(prop.propertyName().equals(propertyName))
@@ -81,6 +88,11 @@ class Columns extends ArrayList<ColumnProperty>{
     public String columnName(String propertyName){
         ColumnProperty column = findByProperty(propertyName);
         return column!=null ? column.columnName() : null;
+    }
+
+    public String columnName(String propertyName, boolean quoted){
+        ColumnProperty column = findByProperty(propertyName);
+        return column!=null ? column.columnName(quoted) : null;
     }
 
     public String propertyName(String columnName){
@@ -132,9 +144,9 @@ class Columns extends ArrayList<ColumnProperty>{
 
     public void generateConstructor(Printer printer){
         printer.printlns(
-            "public "+printer.generatedClazz+"(DataSource dataSource){",
+            "public "+printer.generatedClazz+"(JDBC jdbc){",
                 PLUS,
-                "super(dataSource, new TableMetaData(\""+StringUtil.toLiteral(tableName, false)+"\",",
+                "super(jdbc, new TableMetaData(jdbc.quote(\""+StringUtil.toLiteral(tableName, false)+"\"),",
                     PLUS
         );
         int i = 0;
@@ -142,7 +154,7 @@ class Columns extends ArrayList<ColumnProperty>{
             printer.println(
                     "new ColumnMetaData(" ,
                     "\""+StringUtil.toLiteral(column.propertyName(), false)+"\", ",
-                    "\""+StringUtil.toLiteral(column.columnName(), false)+"\", ",
+                    "jdbc.quote(\""+StringUtil.toLiteral(column.columnName(), false)+"\"), ",
                     JavaType.class.getSimpleName()+'.'+column.javaType().name()+", ",
                     SQLType.class.getSimpleName()+'.'+column.sqlType().name()+", ",
                     column.primary()+", ",
