@@ -16,6 +16,7 @@
 package jlibs.examples.jdbc;
 
 import jlibs.jdbc.DAO;
+import jlibs.jdbc.JDBC;
 import jlibs.jdbc.Transaction;
 import jlibs.jdbc.TransactionManager;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -34,7 +35,9 @@ public class DB{
     static{
         DATA_SOURCE = new BasicDataSource();
  	    DATA_SOURCE.setUrl("jdbc:hsqldb:file:examples/db/demo");
-        EMPLOYEES = (EmployeeDAO) DAO.create(Employee.class, DATA_SOURCE);
+
+        JDBC jdbc = new JDBC(DATA_SOURCE);
+        EMPLOYEES = (EmployeeDAO) DAO.create(Employee.class, jdbc);
     }
 
     public static void main(String[] args) throws Exception{
@@ -88,7 +91,7 @@ public class DB{
 
         emp.setAge(10);
         EMPLOYEES.upsert(emp);
-        assert EMPLOYEES.first("where id=?", 0).getAge()==10;
+        assert EMPLOYEES.first("where id=?", 1).getAge()==10;
         emp.id = -1;
         emp.setLastName("KUMAR");
         EMPLOYEES.upsert(emp);

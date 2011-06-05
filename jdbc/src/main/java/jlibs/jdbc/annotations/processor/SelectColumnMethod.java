@@ -17,7 +17,6 @@ package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
 import jlibs.jdbc.IncorrectResultSizeException;
@@ -56,6 +55,11 @@ public class SelectColumnMethod extends WhereMethod{
                 public String columnName(){
                     String value = ModelUtil.getAnnotationValue(method, mirror, "expression");
                     return replacePropertiesWithColumns(value); 
+                }
+
+                @Override
+                public String columnName(boolean quoted){
+                    return '"'+columnName()+'"';
                 }
 
                 @Override
@@ -102,11 +106,11 @@ public class SelectColumnMethod extends WhereMethod{
 
         String columnType = ModelUtil.toString(column.propertyType(), true);
         CharSequence[] sequences = sql();
-        String sql = String.format("SELECT %s FROM %s %s", column.columnName(), columns.tableName, sequences[0]);
+        String sql = String.format("SELECT \"+%s+\" FROM \"+%s+\" %s", column.columnName(true), columns.tableName(true), sequences[0]);
         List<String> code = new ArrayList<String>();
         String methodName = methodName();
         CollectionUtil.addAll(code,
-            String.format("jdbc.select%s(\"%s\", new RowMapper<%s>(){", methodName, StringUtil.toLiteral(sql, true), columnType),
+            String.format("jdbc.select%s(\"%s\", new RowMapper<%s>(){", methodName, sql, columnType),
                 PLUS,
                 String.format("public %s newRecord(ResultSet rs) throws SQLException{", columnType),
                     PLUS

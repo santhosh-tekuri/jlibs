@@ -53,7 +53,7 @@ class UpdateMethod extends WhereMethod{
             String paramName = param.getSimpleName().toString();
             if(paramName.indexOf('_')==-1){
                 ColumnProperty column = getColumn(param);
-                set.add(column.columnName()+"=?");
+                set.add("\"+"+column.columnName(true)+"+\"=?");
                 params.add(column.toNativeTypeCode(paramName));
                 iter.remove();
             }

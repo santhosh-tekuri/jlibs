@@ -84,7 +84,7 @@ public class UpsertMethod extends UpdateMethod{
             String paramName = param.getSimpleName().toString();
             if(paramName.indexOf('_')==-1){
                 ColumnProperty column = getColumn(param);
-                columnNames.add(column.columnName());
+                columnNames.add("\"+"+column.columnName(true)+"+\"");
                 columnValues.add("?");
                 params.add(paramName);
             }else{
@@ -94,7 +94,7 @@ public class UpsertMethod extends UpdateMethod{
                 ColumnProperty column = getColumn(param, propertyName);
 
                 if("where".equals(hint) || "is".equals(hint)){
-                    columnNames.add(column.columnName());
+                    columnNames.add("\"+"+column.columnName(true)+"+\"");
                     columnValues.add("?");
                     params.add(paramName);
                 }else

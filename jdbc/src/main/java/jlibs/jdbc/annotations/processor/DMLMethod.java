@@ -18,7 +18,6 @@ package jlibs.jdbc.annotations.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.ArrayUtil;
-import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.regex.TemplateMatcher;
 import jlibs.jdbc.JavaType;
@@ -166,7 +165,7 @@ abstract class DMLMethod{
         CharSequence params = sequences[1];
 
         if(!query.toString().contains("__query"))
-            query = '"'+ StringUtil.toLiteral(query, false)+'"';
+            query = '"'+ query.toString()+'"';
         if(methodName.indexOf('(')==-1)
             methodName = methodName+'(';
         String code = methodName+query;
@@ -196,10 +195,10 @@ abstract class DMLMethod{
         return matcher.replace(sql, new TemplateMatcher.VariableResolver(){
             @Override
             public String resolve(String propertyName){
-                String columnName = columns.columnName(propertyName);
+                String columnName = columns.columnName(propertyName, true);
                 if(columnName==null)
                     throw new AnnotationError(method, mirror, "unknown property: "+propertyName);
-                return columnName;
+                return "\"+"+columnName+"+\"";
             }
         });
     }

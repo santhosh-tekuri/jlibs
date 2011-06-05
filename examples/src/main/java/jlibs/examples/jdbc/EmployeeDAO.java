@@ -16,20 +16,20 @@
 package jlibs.examples.jdbc;
 
 import jlibs.jdbc.DAO;
+import jlibs.jdbc.JDBC;
 import jlibs.jdbc.Order;
 import jlibs.jdbc.TableMetaData;
 import jlibs.jdbc.annotations.*;
 import jlibs.jdbc.paging.Paging;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
 public abstract class EmployeeDAO extends DAO<Employee> {
-    public EmployeeDAO(DataSource dataSource, TableMetaData table){
-        super(dataSource, table);
+    public EmployeeDAO(JDBC jdbc, TableMetaData table){
+        super(jdbc, table);
     }
 
     @Select(column="grade")
