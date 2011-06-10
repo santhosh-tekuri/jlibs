@@ -34,4 +34,5 @@ public @interface Column{
     String name() default "";
     boolean primary() default false;
     boolean auto() default false;
+    boolean nativeType() default false;
 }

@@ -38,7 +38,8 @@ public enum JavaType{
     TIME        (Time.class,        SQLType.TIME                                                ),
     TIMESTAMP   (Timestamp.class,   SQLType.TIMESTAMP                                           ),
     CLOB        (Clob.class,        SQLType.CLOB                                                ),
-    BLOB        (Blob.class,        SQLType.BLOB                                                );
+    BLOB        (Blob.class,        SQLType.BLOB                                                ),
+    OTHER       (Object.class,      SQLType.OTHER                                               );
 
     public final Class clazz;
     public final SQLType[] sqlTypes;

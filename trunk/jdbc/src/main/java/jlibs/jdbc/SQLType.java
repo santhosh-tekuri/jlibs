@@ -42,7 +42,8 @@ public enum SQLType{
 	LONGVARBINARY   (Types.LONGVARBINARY),
     BLOB            (Types.BLOB),
     CLOB            (Types.CLOB),
-    BOOLEAN         (Types.BOOLEAN)
+    BOOLEAN         (Types.BOOLEAN),
+    OTHER           (Types.OTHER)
 
 //	NULL		=   0;
 //	OTHER		= 1111;
