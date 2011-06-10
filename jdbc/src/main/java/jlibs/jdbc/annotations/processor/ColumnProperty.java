@@ -65,6 +65,10 @@ abstract class ColumnProperty<E extends Element>{
         return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "auto");
     }
 
+    public boolean nativeType(){
+        return (Boolean)ModelUtil.getAnnotationValue((Element)element, annotation, "nativeType");
+    }
+
     protected AnnotationMirror typeMapperMirror(){
         return ModelUtil.getAnnotationMirror(element, TypeMapper.class);
     }
@@ -88,7 +92,9 @@ abstract class ColumnProperty<E extends Element>{
         else if(primitiveWrapper){
             String type = ModelUtil.toString(propertyType, false);
             return ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
-        }else
+        }else if(javaType()==JavaType.OTHER)
+            return Object.class.getName();
+        else
             return ModelUtil.toString(propertyType, false);
     }
 
@@ -96,7 +102,11 @@ abstract class ColumnProperty<E extends Element>{
         try{
             Class propertyType = Class.forName(ModelUtil.toString(javaTypeMirror(), true));
             propertyType = ClassUtil.unbox(propertyType);
-            return JavaType.valueOf(propertyType);
+            JavaType javaType = JavaType.valueOf(propertyType);
+            if(javaType==null)
+                return nativeType() ? JavaType.OTHER : null;
+            else
+                return javaType;
         }catch(ClassNotFoundException ex){
             return null;
         }
