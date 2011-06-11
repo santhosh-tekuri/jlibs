@@ -34,7 +34,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -308,7 +307,6 @@ class Columns extends ArrayList<ColumnProperty>{
         printer.importClass(ImpossibleException.class);
         printer.importPackage(DAO.class);
         printer.importPackage(Connection.class);
-        printer.importClass(DataSource.class);
         if(ModelUtil.isInnerClass(printer.clazz))
             printer.importClass(printer.clazz);
         printer.println();
