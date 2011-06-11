@@ -48,7 +48,7 @@ public class JDBC{
     }
 
     public JDBC(DataSource dataSource){
-        this(dataSource, null);
+        this(dataSource, getQuoteString(dataSource));
     }
 
     public JDBC(DataSource dataSource, String quoteString){
