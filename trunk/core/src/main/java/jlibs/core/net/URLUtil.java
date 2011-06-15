@@ -20,7 +20,10 @@ import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -30,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 /**
  * @author Santhosh Kumar T
@@ -99,9 +101,10 @@ public class URLUtil{
             encoding = IOUtil.UTF_8.name();
 
         String query = new URI(uri).getRawQuery();
-        String params[] = Pattern.compile("&", Pattern.LITERAL).split(query);
-        Map<String, String> map = new HashMap<String, String>(params.length);
-        for(String param: params){
+        Map<String, String> map = new HashMap<String, String>();
+        StringTokenizer params = new StringTokenizer(query, "&;");
+        while(params.hasMoreTokens()){
+            String param = params.nextToken();
             int equal = param.indexOf('=');
             String name = param.substring(0, equal);
             String value = param.substring(equal+1);
