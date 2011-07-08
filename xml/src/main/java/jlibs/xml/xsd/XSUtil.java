@@ -16,11 +16,12 @@
 package jlibs.xml.xsd;
 
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
-import jlibs.core.lang.StringUtil;
-import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.StringList;
-import org.apache.xerces.xs.XSObject;
 import org.apache.xerces.xs.XSAttributeUse;
+import org.apache.xerces.xs.XSModel;
+import org.apache.xerces.xs.XSObject;
+
+import javax.xml.namespace.QName;
 
 /**
  * @author Santhosh Kumar T
@@ -36,14 +37,14 @@ public class XSUtil{
         return nsSupport;
     }
 
-    public static String getQName(XSObject obj, MyNamespaceSupport nsSupport){
+    public static QName getQName(XSObject obj, MyNamespaceSupport nsSupport){
         if(obj instanceof XSAttributeUse)
             obj = ((XSAttributeUse)obj).getAttrDeclaration();
         
         if(obj.getName()==null)
-            return "";
-        String ns = obj.getNamespace();
-        String prefix = nsSupport.findPrefix(ns==null ? "" : ns);
-        return StringUtil.isEmpty(prefix) ? obj.getName() : prefix+':'+obj.getName();
+            return new QName("");
+        String ns = obj.getNamespace()==null ? "" : obj.getNamespace();
+        String prefix = nsSupport.findPrefix(ns);
+        return new QName(ns, obj.getName(), prefix);
     }
 }

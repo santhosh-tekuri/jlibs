@@ -16,9 +16,13 @@
 package jlibs.xml.xsd.display;
 
 import jlibs.core.graph.visitors.PathReflectionVisitor;
+import jlibs.xml.Namespaces;
+import jlibs.xml.XMLUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.xsd.XSUtil;
 import org.apache.xerces.xs.*;
+
+import javax.xml.namespace.QName;
 
 /**
  * @author Santhosh Kumar T
@@ -63,6 +67,10 @@ public class XSDisplayValueVisitor extends PathReflectionVisitor<Object, String>
     }
 
     protected String process(XSSimpleTypeDefinition simpleType){
+        QName qname = XSUtil.getQName(simpleType, nsSupport);
+        if(Namespaces.URI_XSD.equals(qname.getNamespaceURI()))
+            return XMLUtil.getQName(qname);
+
         XSObjectList facets = simpleType.getMultiValueFacets();
         StringBuilder buff = new StringBuilder();
         for(int i=0; i<facets.getLength(); i++){
@@ -72,7 +80,7 @@ public class XSDisplayValueVisitor extends PathReflectionVisitor<Object, String>
                     StringList list = facet.getLexicalFacetValues();
                     for(int j=0; j<list.getLength(); j++){
                         if(j!=0)
-                            buff.append("|");
+                            buff.append('|');
                         buff.append(list.item(j));
                     }
             }
@@ -112,6 +120,6 @@ public class XSDisplayValueVisitor extends PathReflectionVisitor<Object, String>
             }
         }
 
-        return XSUtil.getQName(simpleType, nsSupport);
+        return XMLUtil.getQName(qname);
     }
 }
