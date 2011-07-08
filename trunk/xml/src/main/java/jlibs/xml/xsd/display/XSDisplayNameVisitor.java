@@ -15,9 +15,10 @@
 
 package jlibs.xml.xsd.display;
 
+import jlibs.core.graph.visitors.PathReflectionVisitor;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.StringUtil;
-import jlibs.core.graph.visitors.PathReflectionVisitor;
+import jlibs.xml.XMLUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import jlibs.xml.xsd.XSUtil;
 import org.apache.xerces.xs.*;
@@ -44,7 +45,7 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
     }
 
     protected String process(XSObject obj){
-        return XSUtil.getQName(obj, nsSupport);
+        return XMLUtil.getQName(XSUtil.getQName(obj, nsSupport));
     }
 
     private String addCardinal(String str){
