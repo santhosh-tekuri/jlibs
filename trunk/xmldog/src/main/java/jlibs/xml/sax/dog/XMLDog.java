@@ -95,46 +95,43 @@ public final class XMLDog{
         if(compiledExpr.scope()==Scope.GLOBAL && compiledExpr.resultType==DataType.NODESET)
             documentResult = true;
 
-        if(compiledExpr.scope()==Scope.DOCUMENT){
-            List<Expression> docExpressions = this.docExpressions;
-            int id = docExpressions.size();
-            ArrayDeque<Expression> tempStack = this.tempStack;
-            tempStack.addLast(compiledExpr);
-            while(!tempStack.isEmpty()){
-                Expression expr = tempStack.pollLast();
+        if(compiledExpr.scope()==Scope.DOCUMENT)
+            searchDocExpressions(compiledExpr, compiledExpr);
+    }
 
-                if(expr.scope()==Scope.DOCUMENT){
-                    expr.id = id++;
-                    docExpressions.add(expr);
-                }
+    private void searchDocExpressions(Expression userExpr, Expression expr){
+        if(expr.scope()==Scope.DOCUMENT){
+            expr.id = docExpressions.size();
+            docExpressions.add(expr);
+            if(expr!=userExpr)
+                expr.storeResult = true;
+        }
 
-                if(expr instanceof LocationExpression){
-                    for(Step step: ((LocationExpression)expr).locationPath.steps){
-                        Expression predicate = step.predicateSet.getPredicate();
-                        if(predicate!=null){
-                            if(predicate.scope()!=Scope.GLOBAL)
-                                tempStack.addLast(predicate);  
-                            for(PositionalPredicate positionPredicate=step.predicateSet.headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next){
-                                if(positionPredicate.predicate.scope()!=Scope.GLOBAL)
-                                    tempStack.addLast(positionPredicate.predicate);
-                            }
-                        }
+        if(expr instanceof LocationExpression){
+            for(Step step: ((LocationExpression)expr).locationPath.steps){
+                Expression predicate = step.predicateSet.getPredicate();
+                if(predicate!=null){
+                    if(predicate.scope()!=Scope.GLOBAL)
+                        searchDocExpressions(userExpr, predicate);
+                    for(PositionalPredicate positionPredicate=step.predicateSet.headPositionalPredicate; positionPredicate!=null; positionPredicate=positionPredicate.next){
+                        if(positionPredicate.predicate.scope()!=Scope.GLOBAL)
+                            searchDocExpressions(userExpr, positionPredicate.predicate);
                     }
-                }else if(expr instanceof FunctionCall){
-                    FunctionCall functionCall = (FunctionCall)expr;
-                    for(Expression member: functionCall.members){
-                        if(member.scope()!=Scope.GLOBAL)
-                            tempStack.add(member);
-                    }
-                }else if(expr instanceof PathExpression){
-                    PathExpression pathExpr = (PathExpression)expr;
-                    if(pathExpr.union.predicateSet.getPredicate()!=null)
-                        tempStack.add(pathExpr.union.predicateSet.getPredicate());
-                    for(Expression context: pathExpr.contexts)
-                        tempStack.add(context);
-                    tempStack.add(pathExpr.relativeExpression);
                 }
             }
+        }else if(expr instanceof FunctionCall){
+            FunctionCall functionCall = (FunctionCall)expr;
+            for(Expression member: functionCall.members){
+                if(member.scope()!=Scope.GLOBAL)
+                    searchDocExpressions(userExpr, member);
+            }
+        }else if(expr instanceof PathExpression){
+            PathExpression pathExpr = (PathExpression)expr;
+            if(pathExpr.union.predicateSet.getPredicate()!=null)
+                searchDocExpressions(userExpr, pathExpr.union.predicateSet.getPredicate());
+            for(Expression context: pathExpr.contexts)
+                searchDocExpressions(userExpr, context);
+            searchDocExpressions(userExpr, pathExpr.relativeExpression);
         }
     }
 
