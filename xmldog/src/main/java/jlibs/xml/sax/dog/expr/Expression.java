@@ -50,6 +50,12 @@ public abstract class Expression{
     public final DataType resultType;
     protected int scope;
 
+    /**
+     * tells whether Event should store the result of this expression
+     * Note: this is used only for doc scope expression
+     */
+    public boolean storeResult;
+
     public Expression(int scope, DataType resultType){
         this.scope = scope;
         this.resultType = resultType;

@@ -350,7 +350,9 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
         int id = evaluation.expression.id;
         assert results[id]==null || results[id]==evaluation; // null for StaticEvaluation
-        results[id] = evaluation.getResult();
+
+//        store result if this doc expression is used in some predicate
+        results[id] = evaluation.expression.storeResult ? evaluation.getResult() : null;
 
         List<EvaluationListener> listeners = this.listeners[id];
         if(listeners!=null){
