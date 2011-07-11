@@ -122,7 +122,7 @@ public class SSLUtil{
             }
         }
 
-        sslContext.init(kmf.getKeyManagers(), tm , null);
+        sslContext.init(km, tm , null);
         return sslContext;
     }
 
