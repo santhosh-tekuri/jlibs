@@ -126,8 +126,7 @@
                     	<exclude>**/src/main/resources/META-INF/services/*</exclude>
                     	<exclude>**/src/test/resources/**</exclude>
                     	<exclude>**/*.conf</exclude>
-                    	<exclude>examples/bin/**</exclude>
-                    	<exclude>nblr/bin/**</exclude>
+                    	<exclude>*/bin/**</exclude>
                         <exclude>**/prettify.*</exclude>
                         <exclude>core/src/main/java/jlibs/core/lang/Noun.java</exclude>
                         <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
