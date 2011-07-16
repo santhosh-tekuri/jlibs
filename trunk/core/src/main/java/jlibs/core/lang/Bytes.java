@@ -19,6 +19,8 @@ import jlibs.core.io.IOUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -28,11 +30,17 @@ import java.util.LinkedList;
 /**
  * @author Santhosh Kumar T
  */
-public class Bytes implements Iterable<ByteSequence>{
+public class Bytes implements Iterable<ByteSequence>, Serializable{
     public static final int CHUNK_SIZE = 1024*4; // 4K
 
     public Bytes(int chunkSize){
         this.chunkSize = chunkSize;
+    }
+
+    public Bytes(Bytes that) {
+        for (ByteSequence byteSequence : that) {
+            append(byteSequence.copy());
+        }
     }
 
     public Bytes(){
@@ -91,8 +99,54 @@ public class Bytes implements Iterable<ByteSequence>{
         }
     }
 
-    private ByteBuffer buff;
+    public int getBytes(int offset, byte dest[], int destOffset, int destLength){
+        ByteSequence seq = null;
+        Iterator<ByteSequence> iter = iterator();
+        while(iter.hasNext()){
+            seq = iter.next();
+            offset -= seq.length();
+            if(offset==0){
+                seq = null;
+                break;
+            }else if(offset<0){
+                seq = seq.slice(seq.length()+offset);
+                break;
+            }
+        }
+        int filled = 0;
+        do{
+            if(seq!=null){
+                int min = Math.min(destLength-filled, seq.length());
+                System.arraycopy(seq.buffer(), seq.offset(), dest, destOffset+filled, min);
+                filled += min;
+            }
+            if(iter.hasNext())
+                seq = iter.next();
+            else
+                break;
+        }while(filled<destLength);
+
+        return filled;
+    }
+    private transient ByteBuffer buff;
     private int chunkSize;
+
+    public ByteSequence readChunk(ReadableByteChannel channel) throws IOException{
+        if(buff==null)
+            buff = ByteBuffer.allocate(chunkSize);
+        int read = channel.read(buff);
+        if(read<=0){
+            if(read<0 && buff.position()==0) // garbage buff
+                buff = null;
+            return null;
+        }
+        ByteSequence seq = new ByteSequence(buff.array(), buff.position() - read, read);
+        append(seq);
+        if(!buff.hasRemaining())
+            buff = null;
+        return seq;
+    }
+
     public int readFrom(ReadableByteChannel channel) throws IOException{
         int total = 0;
         while(true){
@@ -152,5 +206,59 @@ public class Bytes implements Iterable<ByteSequence>{
             }
         }
         return total;
+    }
+
+    public InputStream createInputStream(){
+        return new InputStream(){
+            int contentOffset;
+
+            @Override
+            public int read() throws IOException{
+                byte b[] = new byte[1];
+                int len = read(b, 0, 1);
+                return len==1 ? (b[0]&0xff) : -1;
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException{
+                int read = getBytes(contentOffset, b, off, len);
+                if(read==0)
+                    return -1;
+                contentOffset += read;
+                return read;
+            }
+
+            @Override
+            public int available() throws IOException{
+                return size()-contentOffset;
+            }
+        };
+    }
+
+    public OutputStream createOutputStream(){
+        return new OutputStream(){
+            @Override
+            public void write(int b) throws IOException{
+                write(new byte[]{ (byte)b }, 0, 1);
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException{
+                byte array[] = new byte[len];
+                System.arraycopy(b, off, array, 0, len);
+                append(new ByteSequence(array));
+            }
+
+            @Override
+            public void close(){}
+        };
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder buff = new StringBuilder();
+        for(ByteSequence seq: this)
+            buff.append(seq);
+        return buff.toString();
     }
 }
