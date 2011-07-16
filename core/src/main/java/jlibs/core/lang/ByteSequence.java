@@ -16,15 +16,17 @@
 package jlibs.core.lang;
 
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 /**
  * This class represents a sequence of bytes.
  * 
  * @author Santhosh Kumar T
  */
-public class ByteSequence{
+public class ByteSequence implements Serializable{
     private byte buff[];
     private int offset;
     private int length;
@@ -126,6 +128,10 @@ public class ByteSequence{
         return new ByteArrayInputStream(buffer(), offset(), length());
     }
 
+    public String toString(Charset charset){
+        return new String(buff, offset, length, charset);
+    }
+
     public String toString(String charset) throws UnsupportedEncodingException{
         return new String(buff, offset, length, charset);
     }
@@ -133,5 +139,9 @@ public class ByteSequence{
     @Override
     public String toString(){
         return new String(buff, offset, length);
+    }
+
+    public ByteSequence copy() {
+        return new ByteSequence(toByteArray(true), 0, length);
     }
 }
