@@ -18,6 +18,9 @@ package jlibs.core.io;
 import jlibs.core.lang.CharArray;
 
 import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Arrays;
 
 /**
  * This is an extension of {@link java.io.CharArrayWriter}.
@@ -34,11 +37,37 @@ public class CharArrayWriter2 extends CharArrayWriter{
         super(initialSize);
     }
 
+    public CharArrayWriter2(Reader reader, int readBuffSize, boolean close) throws IOException{
+        super(readBuffSize);
+        readFrom(reader, readBuffSize, close);
+    }
+
     /**
      * Returns the input data as {@link CharArray}.<br>
      * Note that the internal buffer is not copied.
      */
     public CharArray toCharSequence(){
         return new CharArray(buf, 0, size());
+    }
+
+    public int readFrom(Reader reader, int readBuffSize, boolean close) throws IOException{
+        int oldSize = size();
+        try{
+            while(true){
+                int bufAvailable = buf.length-size();
+                if(bufAvailable<readBuffSize){
+                    buf = Arrays.copyOf(buf, size() + readBuffSize);
+                    bufAvailable = readBuffSize;
+                }
+                int read = reader.read(buf, size(), bufAvailable);
+                if(read==-1)
+                    return size()-oldSize;
+                else
+                    count += read;
+            }
+        }finally{
+            if(close)
+                reader.close();
+        }
     }
 }
