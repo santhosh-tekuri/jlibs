@@ -90,6 +90,9 @@ public class DefaultNamespaceContext implements NamespaceContext{
 
     @Override
     public String getNamespaceURI(String prefix){
+        if(prefix==null)
+            throw new IllegalArgumentException("prefix is null");
+
         if(prefix.length()==0)
             return defaultURI;
         return prefix2uriMap.get(prefix);
@@ -97,6 +100,9 @@ public class DefaultNamespaceContext implements NamespaceContext{
 
     @Override
     public String getPrefix(String namespaceURI){
+        if(namespaceURI==null)
+            throw new IllegalArgumentException("namespaceURI is null");
+
         if(defaultURI.equals(namespaceURI))
             return XMLConstants.DEFAULT_NS_PREFIX;
         return uri2prefixMap.get(namespaceURI);
