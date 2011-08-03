@@ -28,6 +28,8 @@ import java.util.BitSet;
  * @author Santhosh Kumar T
  */
 public class DOMUtil{
+    /*-------------------------------------------------[ Builder ]---------------------------------------------------*/
+
     public static DocumentBuilder newDocumentBuilder(boolean nsAware, boolean validating) throws ParserConfigurationException{
         return newDocumentBuilder(nsAware, validating, false, false);
     }
@@ -41,24 +43,43 @@ public class DOMUtil{
         return factory.newDocumentBuilder();
     }
 
+    /*-------------------------------------------------[ Namespace ]---------------------------------------------------*/
+
     public static boolean isNamespaceDeclaration(Attr attr){
         return Namespaces.URI_XMLNS.equals(attr.getNamespaceURI());
     }
 
-    public static int getPosition(Element elem){
-        int pos = 1;
-        NodeList list = elem.getParentNode().getChildNodes();
-        for(int i=0; i<list.getLength(); i++){
-            Node node = list.item(i);
-            if(node==elem)
-                break;
-            if(node instanceof Element
-                    && Util.equals(node.getNamespaceURI(), elem.getNamespaceURI())
-                    && node.getLocalName().equals(elem.getLocalName()))
-                pos++;
+    public static Attr findNamespaceDeclarationForPrefix(Node node, String prefix){
+        while(node!=null){
+            NamedNodeMap attrs = node.getAttributes();
+            if(attrs!=null){
+                for(int i=attrs.getLength()-1; i>=0; i--){
+                    Attr attr = (Attr)attrs.item(i);
+                    if(isNamespaceDeclaration(attr) && prefix.equals(attr.getLocalName()))
+                        return attr;
+                }
+            }
+            node = node.getParentNode();
         }
-        return pos;
+        return null;
     }
+
+    public static Attr findNamespaceDeclarationForURI(Node node, String uri){
+        while(node!=null){
+            NamedNodeMap attrs = node.getAttributes();
+            if(attrs!=null){
+                for(int i=attrs.getLength()-1; i>=0; i--){
+                    Attr attr = (Attr)attrs.item(i);
+                    if(isNamespaceDeclaration(attr) && uri.equals(attr.getNodeValue()))
+                        return attr;
+                }
+            }
+            node = node.getParentNode();
+        }
+        return null;
+    }
+
+    /*-------------------------------------------------[ Equality ]---------------------------------------------------*/
 
     public static boolean equals(Node node1, Node node2){
         if(node1==node2)
@@ -225,5 +246,22 @@ public class DOMUtil{
         }
 
         return true;
+    }
+
+    /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
+
+    public static int getPosition(Element elem){
+        int pos = 1;
+        NodeList list = elem.getParentNode().getChildNodes();
+        for(int i=0; i<list.getLength(); i++){
+            Node node = list.item(i);
+            if(node==elem)
+                break;
+            if(node instanceof Element
+                    && Util.equals(node.getNamespaceURI(), elem.getNamespaceURI())
+                    && node.getLocalName().equals(elem.getLocalName()))
+                pos++;
+        }
+        return pos;
     }
 }
