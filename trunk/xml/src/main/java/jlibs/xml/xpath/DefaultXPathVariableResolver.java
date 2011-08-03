@@ -15,10 +15,10 @@
 
 package jlibs.xml.xpath;
 
-import javax.xml.xpath.XPathVariableResolver;
 import javax.xml.namespace.QName;
-import java.util.Map;
+import javax.xml.xpath.XPathVariableResolver;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
@@ -36,10 +36,15 @@ public class DefaultXPathVariableResolver implements XPathVariableResolver{
         this.map = map;
     }
 
-    public void defineVariable(QName variableName, Object value){
+    public DefaultXPathVariableResolver defineVariable(QName variableName, Object value){
         map.put(variableName, value);
+        return this;
     }
     
+    public DefaultXPathVariableResolver defineVariable(String variableName, Object value){
+        return defineVariable(new QName(variableName), value);
+    }
+
     @Override
     public Object resolveVariable(QName variableName){
         return map.get(variableName);
