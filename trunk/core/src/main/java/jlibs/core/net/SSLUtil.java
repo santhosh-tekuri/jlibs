@@ -17,6 +17,7 @@ package jlibs.core.net;
 
 import javax.net.ssl.*;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -28,6 +29,35 @@ import java.security.cert.X509Certificate;
  * @author Santhosh Kumar Tekuti
  */
 public class SSLUtil{
+    public static boolean isClientHello(byte firstByte){
+        return firstByte==0x80 // TLS Client hello
+                || firstByte==0x16; // SSL version 2 compatible hello
+    }
+
+    public static X509Certificate[] getX509CertificateChain(String host, int port) throws GeneralSecurityException, IOException{
+        final X509Certificate[][] result = new X509Certificate[1][];
+        TrustManager savingTM = new X509TrustManager(){
+           public X509Certificate[] getAcceptedIssuers(){
+               return new X509Certificate[0];
+           }
+           public void checkClientTrusted(X509Certificate[] chain, String authType){}
+           public void checkServerTrusted(X509Certificate[] chain, String authType){
+               result[0] = chain;
+           }
+        };
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[]{ savingTM }, null);
+        SSLSocketFactory factory = sslContext.getSocketFactory();
+        SSLSocket socket = (SSLSocket)factory.createSocket(host, port);
+        try{
+            socket.startHandshake();
+        }finally{
+            socket.close();
+        }
+        return result[0];
+    }
+
     public static KeyStore newKeyStore(String type, String file, char password[]) throws SSLException{
         try{
             KeyStore ks = KeyStore.getInstance(type==null ? KeyStore.getDefaultType() : type);
@@ -93,8 +123,8 @@ public class SSLUtil{
            public X509Certificate[] getAcceptedIssuers(){
                return new X509Certificate[0];
            }
-           public void checkClientTrusted(X509Certificate[] certs, String authType){}
-           public void checkServerTrusted(X509Certificate[] certs, String authType){}
+           public void checkClientTrusted(X509Certificate[] chain, String authType){}
+           public void checkServerTrusted(X509Certificate[] chain, String authType){}
        }
     };
 
