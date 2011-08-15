@@ -63,7 +63,7 @@ public class DOMNamespaceContext implements NamespaceContext{
         return new Iterator(node);
     }
 
-    public class Iterator implements java.util.Iterator<String>{
+    public static class Iterator implements java.util.Iterator<String>{
         private Node node;
         private Set<String> prefixes = new HashSet<String>();
         private int attrIndex = -1;
