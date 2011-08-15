@@ -44,11 +44,7 @@ public class URLUtil{
      * The <code>URISyntaxException</code> is rethrown as <code>IllegalArgumentException</code>
      */
     public static URI toURI(String str){
-        try{
-            return new URI(str);
-        }catch(URISyntaxException ex){
-            throw new IllegalArgumentException(ex);
-        }
+        return URI.create(str);
     }
 
     /**
@@ -57,11 +53,7 @@ public class URLUtil{
      * The <code>URISyntaxException</code> is rethrown as <code>IllegalArgumentException</code>
      */
     public static URI toURI(URL url){
-        try{
-            return url.toURI();
-        }catch(URISyntaxException ex){
-            throw new IllegalArgumentException(ex);
-        }
+        return URI.create(url.toString());
     }
 
     public static URL toURL(String systemID){
@@ -84,6 +76,24 @@ public class URLUtil{
         }catch(URISyntaxException ex){
             throw new ImpossibleException(ex);
         }
+    }
+
+    public static URI resolve(String base, String child){
+        URI childURI = URI.create(child);
+        if(childURI.isAbsolute())
+            return childURI;
+        if(base==null)
+            base = new File("temp.txt").getAbsolutePath();
+        return toURI(toURL(base)).resolve(childURI);
+    }
+
+    public static URI relativize(String base, String child){
+        if(base==null)
+            base = new File("temp.txt").getAbsolutePath();
+        int slash = base.lastIndexOf('/');
+        if(slash!=-1)
+            base = base.substring(0, slash+1);
+        return toURI(toURL(base)).relativize(URI.create(child));
     }
 
     /**
