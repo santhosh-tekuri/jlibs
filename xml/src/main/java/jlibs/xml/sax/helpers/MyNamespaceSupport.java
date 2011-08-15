@@ -56,7 +56,7 @@ public class MyNamespaceSupport extends NamespaceSupport{
      * <p>If more than one prefix is currently mapped to the same
      * URI, this method will make an arbitrary selection;
      *
-     * <p>Unlike {@link #getPrefix} this method, this returns empty
+     * <p>Unlike {@link #getPrefix(String)} this method, this returns empty
      * prefix if the given uri is bound to default prefix.
      */
     public String findPrefix(String uri){
@@ -73,10 +73,21 @@ public class MyNamespaceSupport extends NamespaceSupport{
         return prefix;
     }
 
+    public String findURI(String prefix){
+        if(prefix==null)
+            return "";
+        String uri = getURI(prefix);
+        if(uri==null){
+            if(prefix.isEmpty())
+                return "";
+        }
+        return uri;
+    }
+
     /**
      * generated a new prefix and binds it to given uri.
      *
-     * <p>you can customize the generated prefix using {@link #suggestPrefix}
+     * <p>you can customize the generated prefix using {@link #suggestPrefix(String, String)}
      */
     public String declarePrefix(String uri){
         String prefix = findPrefix(uri);
@@ -111,6 +122,21 @@ public class MyNamespaceSupport extends NamespaceSupport{
         return super.getPrefixes();
     }
 
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public Enumeration<String> getDeclaredPrefixes(){
+        return super.getDeclaredPrefixes();
+    }
+
+    public boolean isDeclaredPrefix(String prefix){
+        Enumeration declaredPrefixes = getDeclaredPrefixes();
+        while(declaredPrefixes.hasMoreElements()){
+            if(prefix.equals(declaredPrefixes.nextElement()))
+                return true;
+        }
+        return false;
+    }
+
     public QName toQName(String qname){
         String prefix = "";
         String localName = qname;
@@ -121,7 +147,17 @@ public class MyNamespaceSupport extends NamespaceSupport{
             localName = qname.substring(colon+1);
         }
 
-        return new QName(getURI(prefix), localName, prefix);
+        String uri = findURI(prefix);
+        if(uri==null)
+            throw new IllegalArgumentException("prefix \""+prefix+"\" is not bound to any uri");
+        return new QName(uri, localName, prefix);
+    }
+
+    public String toQName(String uri, String localName){
+        String prefix = findPrefix(uri);
+        if(prefix==null)
+            throw new IllegalArgumentException("no prefix found for uri \""+uri+"\"");
+        return "".equals(prefix) ? localName : prefix+':'+localName;
     }
 
     /*-------------------------------------------------[ SAX Population ]---------------------------------------------------*/
@@ -139,6 +175,14 @@ public class MyNamespaceSupport extends NamespaceSupport{
             needNewContext = false;
         }
         declarePrefix(prefix, uri);
+    }
+
+    public String startPrefixMapping(String uri){
+        if(needNewContext){
+            pushContext();
+            needNewContext = false;
+        }
+        return declarePrefix(uri);
     }
 
     public void startElement(){
