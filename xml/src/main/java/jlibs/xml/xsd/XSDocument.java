@@ -64,7 +64,10 @@ public class XSDocument extends Namespaces{
      */
     public XSDocument startSchema(String targetNamespace) throws SAXException{
         xml.startElement(URI_XSD, "schema");
-        xml.addAttribute("targetNamespace", targetNamespace);
+        if(targetNamespace!=null && !targetNamespace.isEmpty()){
+            xml.declarePrefix(targetNamespace);
+            xml.addAttribute("targetNamespace", targetNamespace);
+        }
         return this;
     }
 
