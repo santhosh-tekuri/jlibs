@@ -56,10 +56,10 @@ public class Namespaces{
     public static final String URI_XMLNS   = XMLConstants.XMLNS_ATTRIBUTE_NS_URI;
 
     /** Schema namespace as defined by XSD **/
-    public static final String URI_XSD   = "http://www.w3.org/2001/XMLSchema";                         //NOI18N
+    public static final String URI_XSD   = XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
     /** Instance namespace as defined by XSD **/
-    public static final String URI_XSI   = "http://www.w3.org/2001/XMLSchema-instance";                //NOI18N
+    public static final String URI_XSI   = XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI;
 
     /** Namespace used by XSL Documents */
     public static final String URI_XSL   = "http://www.w3.org/1999/XSL/Transform";                     //NOI18N
@@ -77,14 +77,23 @@ public class Namespaces{
     /** WSDL namespace for WSDL MIME binding **/
     public static final String URI_MIME = "http://schemas.xmlsoap.org/wsdl/mime/"; //NOI18N
 
-    /**	WSDL namespace for WSDL SOAP binding **/
+    /**	WSDL namespace for WSDL SOAP 1.1 binding **/
     public static final String URI_SOAP = "http://schemas.xmlsoap.org/wsdl/soap/"; //NOI18N
+
+    /**	WSDL namespace for WSDL SOAP 1.2 binding **/
+    public static final String URI_SOAP12 = "http://schemas.xmlsoap.org/wsdl/soap12/"; //NOI18N
+
+    /** Envelope namespace as defined by SOAP 1.1 **/
+    public static final String URI_SOAPENV = "http://schemas.xmlsoap.org/soap/envelope/"; //NOI18N
+
+    /** Envelope namespace as defined by SOAP 1.2 **/
+    public static final String URI_SOAP12ENV = "http://www.w3.org/2003/05/soap-envelope"; //NOI18N
 
     /** Encoding namespace as defined by SOAP 1.1 **/
     public static final String URI_SOAPENC = "http://schemas.xmlsoap.org/soap/encoding/"; //NOI18N
 
-    /** Envelope namespace as defined by SOAP 1.1 **/
-    public static final String URI_SOAPENV = "http://schemas.xmlsoap.org/soap/envelope/"; //NOI18N
+    /** Encoding namespace as defined by SOAP 1.2 **/
+    public static final String URI_SOAP12ENC = "http://www.w3.org/2003/05/soap-encoding"; //NOI18N
 
     /*-------------------------------------------------[ Suggestions ]---------------------------------------------------*/
 
