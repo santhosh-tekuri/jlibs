@@ -81,7 +81,7 @@ public class DOMNamespaceContext implements NamespaceContext{
                     for(++attrIndex; attrIndex<length; attrIndex++){
                         Attr attr = (Attr)attrs.item(attrIndex);
                         if(DOMUtil.isNamespaceDeclaration(attr) && !prefixes.contains(attr.getLocalName()))
-                            break;
+                            return;
                     }
                 }
                 node = node.getParentNode();
