@@ -17,12 +17,22 @@ package jlibs.xml.dom;
 
 import jlibs.core.lang.Util;
 import jlibs.xml.Namespaces;
+import jlibs.xml.sax.SAXDelegate;
+import jlibs.xml.xsl.TransformerUtil;
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 import java.util.BitSet;
+
+import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE;
 
 /**
  * @author Santhosh Kumar T
@@ -250,6 +260,115 @@ public class DOMUtil{
 
     /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
 
+    public static void toSAX(Node root, SAXDelegate handler) throws SAXException{
+        DOMLocator locator = new DOMLocator();
+
+        switch(root.getNodeType()){
+            case Node.DOCUMENT_NODE:
+                break;
+            case Node.ELEMENT_NODE:
+                handler.setDocumentLocator(locator);
+                handler.startDocument();
+                if(root.getParentNode()!=null){
+                    DOMNamespaceContext.Iterator iter = new DOMNamespaceContext.Iterator(root.getParentNode());
+                    while(iter.hasNext())
+                        handler.startPrefixMapping(iter.next(), iter.getNamespaceURI());
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Node must be Document or Element");
+        }
+
+        Node node = root;
+        AttributesImpl attrs = new AttributesImpl();
+        while(node!=null){
+            locator.node = node;
+            switch(node.getNodeType()){
+                case Node.DOCUMENT_NODE:
+                    handler.setDocumentLocator(locator);
+                    handler.startDocument();
+                    break;
+                case Node.DOCUMENT_TYPE_NODE:
+                    DocumentType docType = (DocumentType)node;
+                    handler.startDTD(docType.getName(), docType.getPublicId(), docType.getSystemId());
+                    break;
+                case Node.ELEMENT_NODE:
+                    attrs.clear();
+                    NamedNodeMap nodeAttrs = node.getAttributes();
+                    if(nodeAttrs!=null){
+                        for(int i=nodeAttrs.getLength()-1; i>=0; i--){
+                            Node attr = nodeAttrs.item(i);
+                            if(XMLNS_ATTRIBUTE.equals(attr.getNodeName()))
+                                handler.startPrefixMapping("", attr.getNodeValue());
+                            else if(XMLNS_ATTRIBUTE.equals(attr.getPrefix()))
+                                handler.startPrefixMapping(attr.getLocalName(), attr.getNodeValue());
+                            else
+                                attrs.addAttribute(attr.getNamespaceURI(), attr.getLocalName(), attr.getNodeName(), "CDATA", attr.getNodeValue());
+                        }
+                    }
+                    handler.startElement(node.getNamespaceURI(), node.getLocalName(), node.getNodeName(), attrs);
+                    break;
+                case Node.TEXT_NODE:
+                    char chars[] = node.getNodeValue().toCharArray();
+                    handler.characters(chars, 0, chars.length);
+                    break;
+                case Node.CDATA_SECTION_NODE:
+                    chars = node.getNodeValue().toCharArray();
+                    handler.startCDATA();
+                    handler.characters(chars, 0, chars.length);
+                    handler.endCDATA();
+                    break;
+                case Node.PROCESSING_INSTRUCTION_NODE:
+                    ProcessingInstruction pi = (ProcessingInstruction)node;
+                    handler.processingInstruction(pi.getTarget(), pi.getData());
+                    break;
+                case Node.COMMENT_NODE:
+                    chars = node.getNodeValue().toCharArray();
+                    handler.comment(chars, 0, chars.length);
+            }
+            NodeList children = node.getChildNodes();
+            if(children!=null && children.getLength()>0)
+                node = children.item(0);
+            else{
+                while(true){
+                    locator.node = node;
+                    switch(node.getNodeType()){
+                        case Node.ELEMENT_NODE:
+                            handler.endElement(node.getNamespaceURI(), node.getLocalName(), node.getNodeName());
+                            NamedNodeMap nodeAttrs = node.getAttributes();
+                            if(nodeAttrs!=null){
+                                for(int i=nodeAttrs.getLength()-1; i>=0; i--){
+                                    Node attr = nodeAttrs.item(i);
+                                    if(XMLNS_ATTRIBUTE.equals(attr.getNodeName()))
+                                        handler.endPrefixMapping("");
+                                    else if(XMLNS_ATTRIBUTE.equals(attr.getPrefix()))
+                                        handler.endPrefixMapping(attr.getLocalName());
+                                }
+                            }
+                            break;
+                        case Node.DOCUMENT_TYPE_NODE:
+                            handler.endDTD();
+                            break;
+                    }
+                    if(node==root){
+                        if(root.getNodeType()==Node.ELEMENT_NODE && root.getParentNode()!=null){
+                            DOMNamespaceContext.Iterator iter = new DOMNamespaceContext.Iterator(root.getParentNode());
+                            while(iter.hasNext())
+                                handler.endPrefixMapping(iter.next());
+                        }
+                        handler.endDocument();
+                        return;
+                    }
+                    if(node.getNextSibling()!=null){
+                        node = node.getNextSibling();
+                        break;
+                    }else
+                        node = node.getParentNode();
+                }
+            }
+        }
+    }
+
     public static int getPosition(Element elem){
         int pos = 1;
         NodeList list = elem.getParentNode().getChildNodes();
@@ -263,5 +382,20 @@ public class DOMUtil{
                 pos++;
         }
         return pos;
+    }
+
+    public static void main(String[] args) throws Exception{
+        String file = "/Volumes/Backup/projects/office/trunk/fountainhead/gateway/testsuites/newregression/messagevalidation/resources/anothergsearch.wsdl";
+        Document doc = newDocumentBuilder(true, false, false, false).parse(file);
+        SAXDelegate delegate = new SAXDelegate();
+        TransformerHandler handler = TransformerUtil.newTransformerHandler(null, true, 0, null);
+        delegate.setHandler(handler);
+        DOMResult result = new DOMResult();
+        handler.setResult(result);
+        Node node = doc;
+        node = doc.getDocumentElement().getElementsByTagNameNS("http://schemas.xmlsoap.org/wsdl/", "binding").item(0);
+        toSAX(node, delegate);
+        node = result.getNode();
+        TransformerUtil.newTransformer(null, true, 0, null).transform(new DOMSource(node), new StreamResult(System.out));
     }
 }
