@@ -1,0 +1,94 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://tempuri.org"
+            targetNamespace="http://tempuri.org" elementFormDefault="qualified">
+    <xsd:element name="PurchaseOrder" type="tns:PurchaseOrderType"/>
+    <xsd:complexType name="PurchaseOrderType">
+        <xsd:sequence>
+            <xsd:element name="ShipTo" type="tns:Address" maxOccurs="2"/>
+            <xsd:element name="BillTo" type="tns:Address"/>
+            <xsd:element name="Items" type="tns:ItemsList"/>
+            <xsd:element ref="tns:Details" maxOccurs="2"/>
+            <xsd:any namespace="##local" processContents="lax"/>
+            <xsd:any namespace="##any" processContents="lax"/>
+            <xsd:any namespace="##targetNamespace" processContents="lax"/>
+            <xsd:any namespace="##other" processContents="lax"/>
+            <xsd:any namespace="abc def" processContents="lax"/>
+        </xsd:sequence>
+        <xsd:attribute name="OrderDate" type="xsd:date"/>
+        <xsd:anyAttribute namespace="##other" processContents="strict"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="Address" abstract="true">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string"/>
+            <xsd:element name="street" type="tns:streetType"/>
+            <xsd:element name="city" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="USAddress">
+        <xsd:complexContent>
+            <xsd:extension base="tns:Address">
+                <xsd:sequence>
+                    <xsd:element name="state" type="tns:stateType"/>
+                    <xsd:element name="zip" type="tns:zipUnion"/>
+                </xsd:sequence>
+                <xsd:attribute name="country" type="xsd:NMTOKEN" fixed="US"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:simpleType name="zipIntType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="101101"/>
+            <xsd:maxExclusive value="909909"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="streetType">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="13"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="stateType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="WA"/>
+            <xsd:enumeration value="OR"/>
+            <xsd:enumeration value="CA"/>
+            <xsd:enumeration value="NY"/>
+            <xsd:enumeration value="FL"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="ItemsList">
+        <xsd:list>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="I001"/>
+                    <xsd:enumeration value="I002"/>
+                    <xsd:enumeration value="I003"/>
+                    <xsd:enumeration value="I004"/>
+                    <xsd:enumeration value="I005"/>
+                    <xsd:enumeration value="I006"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:list>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="zipUnion">
+        <xsd:union memberTypes="tns:stateType tns:zipIntType"/>
+    </xsd:simpleType>
+
+    <xsd:element name="Details" abstract="true"/>
+    <xsd:element name="ShipDetails" type="tns:sDetailsType" substitutionGroup="tns:Details"/>
+    <xsd:element name="BillDetails" type="tns:bDetailsType" substitutionGroup="tns:Details"/>
+
+    <xsd:complexType name="sDetailsType">
+        <xsd:attribute name="GiftWrap" default="false" type="xsd:boolean"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="bDetailsType">
+        <xsd:attribute name="PaymentType" default="Credit" type="xsd:string"/>
+    </xsd:complexType>
+
+</xsd:schema>
