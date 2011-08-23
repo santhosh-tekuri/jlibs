@@ -1,12 +1,13 @@
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://tempuri.org"
-            targetNamespace="http://tempuri.org" elementFormDefault="qualified">
-    <xsd:element name="PurchaseOrder" type="tns:PurchaseOrderType"/>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://tempuri.org" xmlns="http://tempuri.org"
+            elementFormDefault="qualified">
+    <xsd:element name="PurchaseOrder" type="PurchaseOrderType"/>
     <xsd:complexType name="PurchaseOrderType">
         <xsd:sequence>
-            <xsd:element name="ShipTo" type="tns:Address" maxOccurs="2"/>
-            <xsd:element name="BillTo" type="tns:Address"/>
-            <xsd:element name="Items" type="tns:ItemsList"/>
-            <xsd:element ref="tns:Details" maxOccurs="2"/>
+            <xsd:element name="ShipTo" type="Address" maxOccurs="2"/>
+            <xsd:element name="BillTo" type="Address"/>
+            <xsd:element name="Items" type="ItemsList"/>
+            <xsd:element ref="Details" maxOccurs="2"/>
             <xsd:any namespace="##local" processContents="lax"/>
             <xsd:any namespace="##any" processContents="lax"/>
             <xsd:any namespace="##targetNamespace" processContents="lax"/>
@@ -20,17 +21,17 @@
     <xsd:complexType name="Address" abstract="true">
         <xsd:sequence>
             <xsd:element name="name" type="xsd:string"/>
-            <xsd:element name="street" type="tns:streetType"/>
+            <xsd:element name="street" type="streetType"/>
             <xsd:element name="city" type="xsd:string"/>
         </xsd:sequence>
     </xsd:complexType>
 
     <xsd:complexType name="USAddress">
         <xsd:complexContent>
-            <xsd:extension base="tns:Address">
+            <xsd:extension base="Address">
                 <xsd:sequence>
-                    <xsd:element name="state" type="tns:stateType"/>
-                    <xsd:element name="zip" type="tns:zipUnion"/>
+                    <xsd:element name="state" type="stateType"/>
+                    <xsd:element name="zip" type="zipUnion"/>
                 </xsd:sequence>
                 <xsd:attribute name="country" type="xsd:NMTOKEN" fixed="US"/>
             </xsd:extension>
@@ -76,12 +77,12 @@
     </xsd:simpleType>
 
     <xsd:simpleType name="zipUnion">
-        <xsd:union memberTypes="tns:stateType tns:zipIntType"/>
+        <xsd:union memberTypes="stateType zipIntType"/>
     </xsd:simpleType>
 
     <xsd:element name="Details" abstract="true"/>
-    <xsd:element name="ShipDetails" type="tns:sDetailsType" substitutionGroup="tns:Details"/>
-    <xsd:element name="BillDetails" type="tns:bDetailsType" substitutionGroup="tns:Details"/>
+    <xsd:element name="ShipDetails" type="sDetailsType" substitutionGroup="Details"/>
+    <xsd:element name="BillDetails" type="bDetailsType" substitutionGroup="Details"/>
 
     <xsd:complexType name="sDetailsType">
         <xsd:attribute name="GiftWrap" default="false" type="xsd:boolean"/>
