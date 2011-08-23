@@ -31,15 +31,19 @@ public abstract class ReflectionVisitor<E, R> implements Visitor<E, R>{
     private Sequence<Class<?>> seq;
 
     private void sort(){
-        for(Method method: getClass().getDeclaredMethods()){
-            if(method.getName().equals("process")){
-                Class<?>[] params = method.getParameterTypes();
-                if(params.length==1){
-                    methodMap.put(params[0], method);
-                    method.setAccessible(true);
+        Class clazz = getClass();
+        do{
+            for(Method method: clazz.getDeclaredMethods()){
+                if(method.getName().equals("process")){
+                    Class<?>[] params = method.getParameterTypes();
+                    if(params.length==1 && !methodMap.containsKey(params[0])){
+                        methodMap.put(params[0], method);
+                        method.setAccessible(true);
+                    }
                 }
             }
-        }
+            clazz = clazz.getSuperclass();
+        }while(clazz!=null);
 
         seq = new IterableSequence<Class<?>>(ClassSorter.sort(methodMap.keySet()));
     }
