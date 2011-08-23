@@ -103,40 +103,64 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
         String str;
         switch(wildcard.getConstraintType()){
             case XSWildcard.NSCONSTRAINT_ANY :
-                str = "<*:*>";
+                str = "*:*";
                 break;
             case XSWildcard.NSCONSTRAINT_LIST:
                 StringBuilder buff = new StringBuilder();
                 StringList list = wildcard.getNsConstraintList();
                 for(int i=0; i<list.getLength(); i++){
+                    String item = list.item(i);
+                    if(item==null)
+                        item = "";
                     if(buff.length()>0)
                         buff.append('|');
-                    buff.append(nsSupport.findPrefix(list.item(i)));
+                    String prefix = nsSupport.findPrefix(item);
+                    if(prefix!=null)
+                        buff.append(prefix);
+                    else
+                        buff.append('{').append(item).append('}');
                 }
-                if(buff.length()==0)
-                    str = "<*>";
+                if(buff.toString().equals("{}"))
+                    str = "*";
                 else
-                    str = "<"+buff+":*>";
+                    str = buff+":*";
                 break;
             case XSWildcard.NSCONSTRAINT_NOT:
                 buff = new StringBuilder();
                 list = wildcard.getNsConstraintList();
                 for(int i=0; i<list.getLength(); i++){
-                    String prefix = nsSupport.findPrefix(list.item(i));
-                    if(!StringUtil.isEmpty(prefix)){
-                        if(buff.length()>0)
-                            buff.append(',');
+                    String item = list.item(i);
+                    if(item==null)
+                        item = "";
+                    String prefix = nsSupport.findPrefix(item);
+                    if(buff.length()>0)
+                        buff.append(',');
+                    if(!StringUtil.isEmpty(prefix))
                         buff.append(prefix);
+                    else{
+                        buff.append('{').append(item).append('}');
                     }
                 }
-                if(buff.toString().indexOf(",")==-1)
-                    str = "<!"+buff+":*>";
+                if(!buff.toString().contains(","))
+                    str = "!"+buff+":*";
                 else
-                    str = "<!("+buff+"):*>";
+                    str = "!("+buff+"):*";
                 break;
             default:
                 throw new ImpossibleException("Invalid Constraint: "+wildcard.getConstraintType());
         }
+
+        boolean attribute = false;
+        if(path.getParentPath().getElement() instanceof XSElementDeclaration){
+            XSElementDeclaration elem = (XSElementDeclaration)path.getParentPath().getElement();
+            if(((XSComplexTypeDefinition)elem.getTypeDefinition()).getAttributeWildcard()==wildcard)
+                attribute = true;
+        }
+        if(attribute)
+            str = '@'+str;
+        else
+            str = '<'+str+'>';
+
         return addCardinal(str);
     }
 }
