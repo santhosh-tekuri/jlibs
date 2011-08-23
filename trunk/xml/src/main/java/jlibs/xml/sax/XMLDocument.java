@@ -74,6 +74,7 @@ public class XMLDocument{
     /*-------------------------------------------------[ Namespaces ]---------------------------------------------------*/
 
     private MyNamespaceSupport nsSupport = new MyNamespaceSupport();
+    private boolean needsNewContext = true;
 
     public void suggestPrefix(String prefix, String uri){
         nsSupport.suggestPrefix(prefix, uri);
@@ -81,12 +82,21 @@ public class XMLDocument{
 
     public String declarePrefix(String uri){
         String prefix = nsSupport.findPrefix(uri);
-        if(prefix==null)
+        if(prefix==null){
+            if(needsNewContext){
+                nsSupport.pushContext();
+                needsNewContext = false;
+            }
             prefix = nsSupport.declarePrefix(uri);
+        }
         return prefix;
     }
 
     public boolean declarePrefix(String prefix, String uri){
+        if(needsNewContext){
+            nsSupport.pushContext();
+            needsNewContext = false;
+        }
         return nsSupport.declarePrefix(prefix, uri);
     }
 
@@ -147,7 +157,10 @@ public class XMLDocument{
     private void finishStartElement() throws SAXException{
         if(elem!=null){
             startPrefixMapping(nsSupport);
-            nsSupport.pushContext();
+            if(needsNewContext)
+                nsSupport.pushContext();
+            else
+                needsNewContext = true;
 
             elemStack.push(elem);
             xml.startElement(elem.getNamespaceURI(), elem.getLocalPart(), toString(elem), attrs);
@@ -250,6 +263,7 @@ public class XMLDocument{
 
         endPrefixMapping(nsSupport);
         nsSupport.popContext();
+        needsNewContext = true;
         return this;
     }
 
