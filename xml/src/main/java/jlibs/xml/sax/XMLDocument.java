@@ -156,11 +156,11 @@ public class XMLDocument{
 
     private void finishStartElement() throws SAXException{
         if(elem!=null){
-            startPrefixMapping(nsSupport);
             if(needsNewContext)
                 nsSupport.pushContext();
             else
                 needsNewContext = true;
+            startPrefixMapping(nsSupport);
 
             elemStack.push(elem);
             xml.startElement(elem.getNamespaceURI(), elem.getLocalPart(), toString(elem), attrs);
@@ -225,7 +225,7 @@ public class XMLDocument{
         if(elem==null)
             throw new SAXException("no start element found to associate this attribute");
         if(value!=null)
-            attrs.addAttribute(uri, name, toQName(uri, name), "CDATA", value);
+            attrs.addAttribute(uri==null?"":uri, name, toQName(uri, name), "CDATA", value);
         return this;
     }
 
