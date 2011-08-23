@@ -25,6 +25,12 @@ join() {
         if [ -n "$RESULT" ]; then
             RESULT=$RESULT$SEPARATOR
         fi
+        if [ -n "$SECTION_PREFIX" ]; then
+            linedir=`dirname $line`
+            linename=`basename $line`
+            confdir=`dirname $FILE`
+            line=`cd $confdir; cd $linedir; echo \`pwd\`/$linename`
+        fi
         RESULT=$RESULT$PREFIX$line
     fi
 }
@@ -179,8 +185,8 @@ fi
 if [ ! -r "$1" ]; then
     echo "$1" not found
 else
-    FILE=`cd \`dirname $1\`;echo \`pwd\`/\`basename $1\`` # absolute path to conf file
-    cd `dirname $FILE`
+    DIR=`dirname $1`
+    FILE=$1
     readFile
     shift;
     exec $JAVA_CMD -Dpid=$$ $CMD $*
