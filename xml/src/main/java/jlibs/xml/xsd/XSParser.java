@@ -15,20 +15,22 @@
 
 package jlibs.xml.xsd;
 
+import jlibs.core.lang.ImpossibleException;
+import org.apache.xerces.dom.DOMInputImpl;
+import org.apache.xerces.dom.DOMXSImplementationSourceImpl;
 import org.apache.xerces.impl.Constants;
-import org.apache.xerces.impl.xs.XSImplementationImpl;
 import org.apache.xerces.impl.xs.SchemaGrammar;
+import org.apache.xerces.impl.xs.XSImplementationImpl;
 import org.apache.xerces.impl.xs.XSModelImpl;
 import org.apache.xerces.impl.xs.util.StringListImpl;
 import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
-import org.apache.xerces.dom.DOMXSImplementationSourceImpl;
-import org.apache.xerces.dom.DOMInputImpl;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.LSResourceResolver;
-import jlibs.core.lang.ImpossibleException;
+
+import java.util.Arrays;
 
 /**
  * @author Santhosh Kumar T
@@ -62,11 +64,17 @@ public class XSParser{
     }
 
     public XSModel parse(String uri){
-        return xsLoader.loadURI(uri);
+        XSModel xsModel = xsLoader.loadURI(uri);
+        if(xsModel==null)
+            throw new RuntimeException("Couldn't load XMLSchema from "+uri);
+        return xsModel;
     }
 
     public XSModel parse(String... uris){
-        return xsLoader.loadURIList(new StringListImpl(uris, uris.length));
+        XSModel xsModel = xsLoader.loadURIList(new StringListImpl(uris, uris.length));
+        if(xsModel==null)
+            throw new RuntimeException("Couldn't load XMLSchema from "+ Arrays.asList(uris));
+        return xsModel;
     }
 
     /**
