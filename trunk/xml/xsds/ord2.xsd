@@ -1,0 +1,20 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://example.org/ord"
+            xmlns:tns="http://example.org/ord"
+            xmlns:note="http://www.w3schools.com"
+            targetNamespace="http://example.org/ord">
+
+  <xsd:import namespace="http://www.w3schools.com" schemaLocation="note.xsd"/>
+  <xsd:simpleType name="OrderNumType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+    <xsd:complexType name="OrderType1">
+      <xsd:sequence>
+        <xsd:element name="name" type="tns:OrderNumType"/>
+        <xsd:element name="number" type="xsd:integer"/>
+        <xsd:element ref="note:anyElement"/>
+      </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>
