@@ -24,6 +24,7 @@ import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.OS;
+import jlibs.core.util.CollectionUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.xml.Namespaces;
 import jlibs.xml.sax.XMLDocument;
@@ -34,6 +35,7 @@ import org.xml.sax.SAXException;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -692,7 +694,41 @@ public class XSInstance{
                 rootElement = new QName(elem.getNamespace(), elem.getName());
             }
         }
-        new XSInstance().generate(xsModel, rootElement, new XMLDocument(new StreamResult(System.out), true, 4, null));
+
+        XSInstance xsInstance = new XSInstance();
+        InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("xsd-instance.properties");
+        if(is!=null){
+            Properties props = CollectionUtil.readProperties(is, null);
+            String value = props.getProperty("minimumElementsGenerated");
+            if(value!=null)
+                xsInstance.minimumElementsGenerated = Integer.parseInt(value);
+            value = props.getProperty("maximumElementsGenerated");
+            if(value!=null)
+                xsInstance.maximumElementsGenerated = Integer.parseInt(value);
+            value = props.getProperty("minimumElementsGenerated");
+            if(value!=null)
+                xsInstance.minimumListItemsGenerated = Integer.parseInt(value);
+            value = props.getProperty("maximumListItemsGenerated");
+            if(value!=null)
+                xsInstance.maximumListItemsGenerated = Integer.parseInt(value);
+
+            value = props.getProperty("generateOptionalElements");
+            if(value!=null)
+                xsInstance.generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+            value = props.getProperty("generateOptionalAttributes");
+            if(value!=null)
+                xsInstance.generateOptionalAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+            value = props.getProperty("generateFixedAttributes");
+            if(value!=null)
+                xsInstance.generateFixedAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+            value = props.getProperty("generateOptionalElements");
+            if(value!=null)
+                xsInstance.generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+            value = props.getProperty("generateDefaultAttributes");
+            if(value!=null)
+                xsInstance.generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        }
+        xsInstance.generate(xsModel, rootElement, new XMLDocument(new StreamResult(System.out), true, 4, null));
         System.out.println();
     }
 }
