@@ -245,6 +245,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
     }
 
     private void consume(Event event){
+        assert lastStep;
         Object resultItem = expression.getResultItem(event);
         if(resultItem instanceof Evaluation){
             Evaluation eval = (Evaluation)resultItem;
