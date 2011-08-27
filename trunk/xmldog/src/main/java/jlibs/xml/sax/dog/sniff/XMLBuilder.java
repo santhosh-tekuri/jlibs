@@ -50,9 +50,11 @@ public abstract class XMLBuilder{
     protected abstract Object onEvent(Event event);
 
     protected abstract Object onEndElement();
-    Object doEndElement(){
+    Object doEndElement(Event event){
         assert active;
-        stack.remove(stack.size()-1);
+        NodeItem finishedNode = stack.remove(stack.size()-1);
+        if(finishedNode!=null)
+            event.finishedXMLBuild(finishedNode);
         Object node = onEndElement();
         if(node==null)
             active = false;
@@ -60,7 +62,12 @@ public abstract class XMLBuilder{
     }
 
     protected abstract void onEndDocument();
-    void doEndDocument(){
+    void doEndDocument(Event event){
+        if(!stack.isEmpty()){
+            NodeItem finishedNode = stack.remove(stack.size()-1);
+            if(finishedNode!=null)
+                event.finishedXMLBuild(finishedNode);
+        }
         stack = null;
         onEndDocument();
     }

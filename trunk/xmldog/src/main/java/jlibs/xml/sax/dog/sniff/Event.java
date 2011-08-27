@@ -16,15 +16,13 @@
 package jlibs.xml.sax.dog.sniff;
 
 import jlibs.core.lang.NotImplementedException;
+import jlibs.core.util.LongTreeMap;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
 import jlibs.xml.sax.dog.Scope;
-import jlibs.xml.sax.dog.expr.Evaluation;
-import jlibs.xml.sax.dog.expr.EvaluationListener;
-import jlibs.xml.sax.dog.expr.Expression;
-import jlibs.xml.sax.dog.expr.StaticEvaluation;
+import jlibs.xml.sax.dog.expr.*;
 import jlibs.xml.sax.dog.expr.nodset.NodeSetListener;
 import jlibs.xml.sax.dog.expr.nodset.PositionTracker;
 import jlibs.xml.sax.dog.expr.nodset.StringEvaluation;
@@ -50,7 +48,9 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
         int noOfXPaths = exprList.size();
         results = new Object[noOfXPaths];
+        instantResults = new LongTreeMap[noOfXPaths];
         listeners = new List[noOfXPaths];
+        instantListenersCount = new int[noOfXPaths];
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
         if(documentRequired)
             docNodeItem = nodeItem = new NodeItem();
@@ -315,8 +315,10 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         else if(!xmlBuilder.active && nodeItem==null)
             return;
         Object xml = xmlBuilder.onEvent(this);
-        if(nodeItem!=null)
+        if(nodeItem!=null){
             nodeItem.xml = xml;
+            nodeItem.xmlBuilt = true;
+        }
     }
 
     /*-------------------------------------------------[ NodeSetListener ]---------------------------------------------------*/
@@ -337,6 +339,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     /*-------------------------------------------------[ Results ]---------------------------------------------------*/
 
     private final Object results[];
+    private final LongTreeMap<Object> instantResults[];
     private int pendingExpressions;
 
     public static final RuntimeException STOP_PARSING = new RuntimeException("STOP_PARSING");
@@ -345,7 +348,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     @Override
     public void finished(Evaluation evaluation){
         assert evaluation.expression.scope()==Scope.DOCUMENT;
-        assert evaluation.getResult()!=null : "evaluation result shouldn't be null";
+        assert hasInstantListener(evaluation.expression) ? evaluation.getResult()==null : evaluation.getResult()!=null;
         assert pendingExpressions>0;
 
         int id = evaluation.expression.id;
@@ -371,7 +374,38 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         }
     }
 
+    public static final Object DUMMY_VALUE = new Object();
+
+    public void onInstantResult(Expression expression, NodeItem nodeItem){
+        LongTreeMap<Object> result = instantResults[expression.id];
+        if(result==null){
+            instantResults[expression.id] = result = new LongTreeMap<Object>();
+            result.put(nodeItem.order, DUMMY_VALUE);
+        }else if(result.put(nodeItem.order, DUMMY_VALUE)!=null)
+            return;
+
+        if(xmlBuilder==null || nodeItem.xmlBuilt)
+            fireInstantResult(expression, nodeItem);
+    }
+
+    private void fireInstantResult(Expression expression, NodeItem nodeItem){
+        List<EvaluationListener> listeners = this.listeners[expression.id];
+        for(EvaluationListener listener: listeners){
+            if(!listener.disposed && listener instanceof InstantEvaluationListener)
+                ((InstantEvaluationListener)listener).onNodeHit(expression, nodeItem);
+        }
+    }
+
+    public void finishedXMLBuild(NodeItem nodeItem){
+        nodeItem.xmlBuilt = true;
+        for(int i=0; i<instantResults.length; i++){
+            if(instantResults[i]!=null && instantResults[i].get(nodeItem.order)!=null)
+                fireInstantResult(exprList.get(i), nodeItem);
+        }
+    }
+
     private final List<EvaluationListener> listeners[];
+    private final int instantListenersCount[];
 
     public Evaluation addListener(Expression expr, EvaluationListener evaluationListener){
         int id = expr.id;
@@ -380,6 +414,8 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         if(listeners==null)
             this.listeners[id] = listeners=new ArrayList<EvaluationListener>();
         listeners.add(evaluationListener);
+        if(expr.resultType==DataType.NODESET && evaluationListener instanceof InstantEvaluationListener)
+            instantListenersCount[id]++;
 
         Object value = results[id];
         if(value instanceof Evaluation)
@@ -394,10 +430,15 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
     public void removeListener(Expression expr, EvaluationListener evaluationListener){
         List<EvaluationListener> listeners = this.listeners[expr.id];
-        if(listeners!=null)
-            listeners.remove(evaluationListener);
-        else
+        if(listeners!=null){
+            if(listeners.remove(evaluationListener))
+                instantListenersCount[expr.id]--;
+        }else
             evaluationListener.disposed = true;
+    }
+
+    public boolean hasInstantListener(Expression expr){
+        return expr.scope()==Scope.DOCUMENT && instantListenersCount[expr.id]>0;
     }
 
     public Object result(Expression expr){
@@ -471,7 +512,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         assert pendingExpressions==0;
         assert tailInfo==null;
         if(xmlBuilder!=null)
-            xmlBuilder.doEndDocument();
+            xmlBuilder.doEndDocument(this);
     }
 
     public void onStartElement(String uri, String localName, String qualifiedName, String lang){
@@ -500,7 +541,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         if(!stopped)
             pop();
         if(xmlBuilder!=null && xmlBuilder.active){
-            if(xmlBuilder.doEndElement()==null && stopped)
+            if(xmlBuilder.doEndElement(this)==null && stopped)
                 throw STOP_PARSING;
         }
     }

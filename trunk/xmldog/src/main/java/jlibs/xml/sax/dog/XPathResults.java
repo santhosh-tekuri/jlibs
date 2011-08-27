@@ -71,17 +71,17 @@ public class XPathResults extends EvaluationListener{
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/
 
-    private void print(PrintStream out, String xpath, Object result){
+    public static void print(PrintStream out, String xpath, Object result){
         out.printf("XPath: %s%n", xpath);
         print(out, result, 2);
     }
 
-    private void printIndent(PrintStream out, int indent){
+    private static void printIndent(PrintStream out, int indent){
         for(int i=0; i<indent; i++)
             out.print(" ");
     }
     
-    private void print(PrintStream out, Object result, int indent){
+    private static void print(PrintStream out, Object result, int indent){
         if(result instanceof Collection){
             int i = 0;
             Collection c = (Collection)result;
