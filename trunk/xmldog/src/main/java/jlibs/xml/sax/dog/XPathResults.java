@@ -101,7 +101,11 @@ public class XPathResults extends EvaluationListener{
             }
         }else{
             printIndent(out, indent);
-            out.printf("%s\n", result);
+            if(result instanceof NodeItem)
+                ((NodeItem)result).printTo(out);
+            else
+                out.print(result);
+            out.println();
         }
     }
 

@@ -15,6 +15,8 @@
 
 package jlibs.xml.sax.dog;
 
+import jlibs.core.io.IOUtil;
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMNavigator;
 import jlibs.xml.sax.dog.sniff.Event;
@@ -28,7 +30,9 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
 /**
  * @author Santhosh Kumar T
@@ -108,19 +112,29 @@ public class NodeItem implements NodeType{
         xml = node;
     }
 
-    @Override
-    public String toString(){
+    public void printTo(PrintStream out){
         if(xml instanceof Node){
-            StringWriter sw = new StringWriter();
-            sw.write(location);
-            sw.write("\n");
+            out.println(location);
             try{
                 Transformer transformer = TransformerUtil.newTransformer(null, true, 0, null);
-                transformer.transform(new DOMSource((Node)xml), new StreamResult(sw));
+                transformer.transform(new DOMSource((Node)xml), new StreamResult(out));
             }catch(TransformerException ex){
                 throw new RuntimeException(ex);
             }
-            return sw.toString();
+        }else
+            out.print(location);
+    }
+
+    @Override
+    public String toString(){
+        if(xml instanceof Node){
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            printTo(new PrintStream(bout, true));
+            try{
+                return bout.toString(IOUtil.UTF_8.name());
+            }catch(UnsupportedEncodingException ex){
+                throw new ImpossibleException(ex);
+            }
         }else
             return location;
     }

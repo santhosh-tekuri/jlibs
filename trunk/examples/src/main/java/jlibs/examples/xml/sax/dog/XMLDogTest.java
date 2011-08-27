@@ -125,7 +125,8 @@ public class XMLDogTest{
                 int nodeCounts[] = new int[dog.getDocumentXPathsCount()];
                 @Override
                 public void onNodeHit(Expression expression, NodeItem nodeItem){
-                    System.out.println("xpath: "+expression.getXPath()+" result["+ ++nodeCounts[expression.id]+"] : "+nodeItem);
+                    System.out.print("XPath: "+expression.getXPath()+" Node["+ ++nodeCounts[expression.id]+"]: ");
+                    nodeItem.printTo(System.out);
                     System.out.println();
                 }
 
@@ -133,7 +134,7 @@ public class XMLDogTest{
                 public void finished(Evaluation evaluation){
                     Object result = evaluation.getResult();
                     if(result==null)
-                        System.out.println("finished :"+evaluation.expression.getXPath());
+                        System.out.println("Finished: "+evaluation.expression.getXPath());
                     else
                         XPathResults.print(System.out, evaluation.expression.getXPath(), result);
                     System.out.println();
