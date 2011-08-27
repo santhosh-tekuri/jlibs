@@ -17,6 +17,7 @@ package jlibs.xml.sax.dog.expr.nodset;
 
 import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
+import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.Expression;
@@ -44,6 +45,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
     private Boolean predicateResult = Boolean.TRUE;
 
     private PositionTracker positionTracker;
+    private int predicateChain = -1;
 
     protected LocationEvaluation(LocationExpression expression, int stepIndex, Event event, EventID eventID){
         super(expression, event.order());
@@ -76,6 +78,15 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
     public void start(){
         assert predicateResult!=Boolean.FALSE;
         assert !finished;
+
+        if(event.hasInstantListener(expression)){
+            if(listener instanceof LocationEvaluation)
+                predicateChain = ((LocationEvaluation)listener).predicateChain;
+            else
+                predicateChain = 0;
+            if(predicateEvaluation!=null)
+                predicateChain++;
+        }
 
         if(predicateEvaluation!=null){
             Expression predicate = predicateEvaluation.expression;
@@ -252,6 +263,9 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
             stringEvaluations.add(eval);
             eval.addListener(this);
             eval.start();
+        }else if(predicateChain==0){
+            event.onInstantResult(expression, (NodeItem)resultItem);
+            resultItem = Event.DUMMY_VALUE;
         }
         assert resultItem!=null : "ResultItem should be non-null";
         result.put(event.order(), resultItem);
@@ -269,6 +283,10 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
             }
         }
 
+        if(predicateChain==0){
+            event.onInstantResult(expression, (NodeItem)resultItem);
+            resultItem = Event.DUMMY_VALUE;
+        }
         result.put(order, resultItem);
         consumedResult();
 
@@ -288,6 +306,8 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
         }
 
         if(size>0){
+            if(predicateChain==0)
+                fireInstantResult(childResult);
             if(result.size()>0){
                 if(nodeSetListener !=null){
                     for(LongTreeMap.Entry<Object> entry = childResult.firstEntry(); entry!=null ; entry = entry.next()){
@@ -320,11 +340,34 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
             pendingEvaluationTail = prev;
     }
 
+    private void fireInstantResult(LongTreeMap<Object> result){
+        LongTreeMap.Entry<Object> entry = result.firstEntry();
+        while(entry!=null){
+            if(entry.value instanceof NodeItem){
+                event.onInstantResult(expression, (NodeItem)entry.value);
+                entry.value = Event.DUMMY_VALUE;
+            }
+            entry = entry.next();
+        }
+    }
+
+    private void decreasePredicateChain(){
+        predicateChain--;
+        for(LinkableEvaluation pendingEval=pendingEvaluationHead; pendingEval!=null; pendingEval=pendingEval.next){
+            if(pendingEval instanceof LocationEvaluation)
+                ((LocationEvaluation)pendingEval).decreasePredicateChain();
+        }
+        if(predicateChain==0)
+            fireInstantResult(result);
+    }
+
     @Override
     public final void finished(Evaluation evaluation){
         assert !finished : "can't consume evaluation result after finish";
 
         if(evaluation==predicateEvaluation){
+            if(predicateChain!=-1)
+                decreasePredicateChain();
             predicateResult = (Boolean)evaluation.getResult();
             assert predicateResult!=null : "evaluation result should be non-null";
             if(predicateResult==Boolean.FALSE){
@@ -388,6 +431,9 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
 
     private Object finalResult;
     public Object getResult(){
+        if(index==0 && predicateChain==0)
+            return null;
+
         if(finalResult==null)
             finalResult = expression.getResult(result);
         return finalResult;

@@ -18,9 +18,14 @@ package jlibs.examples.xml.sax.dog;
 import jlibs.core.lang.OS;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.dog.NodeItem;
+import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.XPathResults;
+import jlibs.xml.sax.dog.expr.Evaluation;
+import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
 import jlibs.xml.sax.dog.sniff.DOMBuilder;
 import jlibs.xml.sax.dog.sniff.Event;
 import org.xml.sax.InputSource;
@@ -38,16 +43,19 @@ import java.util.List;
 public class XMLDogTest{
     public static void main(String[] args) throws Exception{
         boolean createDOM = false;
+        boolean instantResults = false;
         String file = null;
         for(String arg: args){
             if("-dom".equals(arg))
                 createDOM = true;
+            if("-instantResults".equals(arg))
+                instantResults = true;
             else
                 file = arg;
         }
 
         if(file==null){
-            System.out.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] <xml-file>");
+            System.out.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] -instantResults <xml-file>");
             System.exit(1);
         }
 
@@ -81,7 +89,7 @@ public class XMLDogTest{
             }
         });
 
-        XMLDog dog = new XMLDog(nsContext, null, null);
+        final XMLDog dog = new XMLDog(nsContext, null, null);
         List<Expression> expressions = new ArrayList<Expression>();
 
         System.out.println();
@@ -110,11 +118,40 @@ public class XMLDogTest{
         Event event = dog.createEvent();
         if(createDOM)
             event.setXMLBuilder(new DOMBuilder());
-        XPathResults results = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
+
+        EvaluationListener listener;
+        if(instantResults){
+            listener = new InstantEvaluationListener(){
+                int nodeCounts[] = new int[dog.getDocumentXPathsCount()];
+                @Override
+                public void onNodeHit(Expression expression, NodeItem nodeItem){
+                    System.out.println("xpath: "+expression.getXPath()+" result["+ ++nodeCounts[expression.id]+"] : "+nodeItem);
+                    System.out.println();
+                }
+
+                @Override
+                public void finished(Evaluation evaluation){
+                    Object result = evaluation.getResult();
+                    if(result==null)
+                        System.out.println("finished :"+evaluation.expression.getXPath());
+                    else
+                        XPathResults.print(System.out, evaluation.expression.getXPath(), result);
+                    System.out.println();
+                }
+            };
+            for(Expression expr: dog.getXPaths()){
+                if(expr.scope()==Scope.DOCUMENT)
+                    event.addListener(expr, listener);
+                else
+                    XPathResults.print(System.out, expr.getXPath(), expr.getResult());
+            }
+        }else
+            listener = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
         dog.sniff(event, new InputSource(file));
 
         time = System.nanoTime() - time;
-        results.print(expressions, System.out);
+        if(listener instanceof XPathResults)
+            ((XPathResults)listener).print(expressions, System.out);
         System.out.println("Evaluated in "+(long)(time*1E-06)+" milliseconds");
     }
 }

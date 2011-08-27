@@ -46,6 +46,7 @@ public class NodeItem implements NodeType{
     public long order;
     public int refCount;
     public Object xml;
+    public boolean xmlBuilt;
 
     public NodeItem(){
         order = 0;
