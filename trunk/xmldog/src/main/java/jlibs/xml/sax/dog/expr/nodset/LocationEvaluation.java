@@ -78,7 +78,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
         assert !finished;
 
         if(predicateEvaluation!=null){
-            Expression predicate = expression.locationPath.steps[index-1].predicateSet.getPredicate();
+            Expression predicate = predicateEvaluation.expression;
             if(predicate.scope()!=Scope.DOCUMENT)
                 predicateEvaluation.start();
         }
@@ -177,7 +177,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
         if(predicateResult!=null && (index!=0 || (stringEvaluations==null || stringEvaluations.size()==0)))
             finished();
         else if(result.size()==0 && predicateResult==null){ // when result is empty, there is no need to wait for predicateEvaluation to finish
-            Expression predicate = expression.locationPath.steps[index-1].predicateSet.getPredicate();
+            Expression predicate = predicateEvaluation.expression;
             if(predicate.scope()!=Scope.DOCUMENT)
                 predicateEvaluation.removeListener(this);
             else
