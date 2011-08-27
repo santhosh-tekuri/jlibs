@@ -15,6 +15,7 @@
 
 package jlibs.examples.xml.sax.dog;
 
+import jlibs.core.net.URLUtil;
 import jlibs.xml.sax.helpers.NamespaceSupportReader;
 import jlibs.xml.sax.helpers.SAXHandler;
 import org.xml.sax.Attributes;
@@ -32,8 +33,8 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class TestSuite{
-    public static final String DEFAULT_TEST_SUITE = "../resources/xpaths.xml";
-    
+    public static final String DEFAULT_TEST_SUITE = URLUtil.toSystemID(ClassLoader.getSystemClassLoader().getResource("."))+"/../resources/xpaths.xml";
+
     public List<TestCase> testCases = new ArrayList<TestCase>();
     public int total;
 
