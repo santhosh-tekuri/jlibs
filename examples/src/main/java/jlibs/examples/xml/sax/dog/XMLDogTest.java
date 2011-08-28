@@ -92,7 +92,7 @@ public class XMLDogTest{
         List<Expression> expressions = new ArrayList<Expression>();
 
         System.out.println();
-        System.out.println("XPaths: ");
+        System.out.println("XPaths: (press CTRL+"+(OS.get().isUnix()?'D':'Z')+" after all xpaths are specified)");
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
         String line;
         while((line=console.readLine())!=null){
@@ -108,9 +108,9 @@ public class XMLDogTest{
                 break;
         }
 
-        System.out.println("=========================================");
-        System.out.println("|          XPath-Results                |");
-        System.out.println("=========================================");
+        System.out.println("+----------------------------------------+");
+        System.out.println("|              XPath-Results             |");
+        System.out.println("+----------------------------------------+");
         System.out.println();
         long time = System.nanoTime();
 
