@@ -86,14 +86,18 @@ public final class XMLDog{
     }
 
     private boolean documentResult;
+    @SuppressWarnings({"unchecked"})
     private void addXPath(Expression compiledExpr) throws SAXPathException{
         expressions.add(compiledExpr);
 
         assert compiledExpr.scope()!=Scope.LOCAL;
         assert compiledExpr.scope()!=Scope.GLOBAL || compiledExpr instanceof Literal;
 
-        if(compiledExpr.scope()==Scope.GLOBAL && compiledExpr.resultType==DataType.NODESET)
-            documentResult = true;
+        if(compiledExpr.scope()==Scope.GLOBAL && compiledExpr.resultType==DataType.NODESET){
+            List<NodeItem> result = (List<NodeItem>)compiledExpr.getResult();
+            if(result.size()==1 && result.get(0).type==NodeType.DOCUMENT)
+                documentResult = true;
+        }
 
         if(compiledExpr.scope()==Scope.DOCUMENT)
             searchDocExpressions(compiledExpr, compiledExpr);
