@@ -437,8 +437,8 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
     private final List<EvaluationListener> listeners[];
     private final int instantListenersCount[];
-
     public Evaluation addListener(Expression expr, EvaluationListener evaluationListener){
+        assert expr.scope()==Scope.DOCUMENT;
         int id = expr.id;
 
         List<EvaluationListener> listeners = this.listeners[id];
