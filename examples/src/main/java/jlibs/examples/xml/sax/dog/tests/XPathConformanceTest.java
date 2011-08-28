@@ -25,15 +25,16 @@ public class XPathConformanceTest{
     private boolean printAllResults = false;
     private TestSuite testSuite;
 
-    public XPathConformanceTest(TestSuite testSuite, boolean useSTAX, boolean useXMLBuilder){
-        this.testSuite = testSuite;
+    public XPathConformanceTest(String args[], boolean useSTAX, boolean useXMLBuilder, boolean useInstantResults) throws Exception{
+        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
         TestCase.useSTAX = useSTAX;
         TestCase.useXMLBuilder = useXMLBuilder;
+        TestCase.useInstantResults = useInstantResults;
     }
 
     public void run() throws Exception{
         System.out.println("-----------------------------------------------------------------------");
-        System.out.println("useSTAX: "+TestCase.useSTAX+"\t useXMLBuilder: "+TestCase.useXMLBuilder);
+        System.out.println("useSTAX: "+TestCase.useSTAX+"\t useXMLBuilder: "+TestCase.useXMLBuilder+"\t useInstantResults: "+TestCase.useInstantResults);
 //        System.out.println("Press <ENTER> to run tests.....");
 //        System.in.read();
 
@@ -68,16 +69,16 @@ public class XPathConformanceTest{
             // assertions are enabled
         }
 
-        TestSuite testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathConformanceTest(testSuite, false, false).run();
+        new XPathConformanceTest(args, false, false, false).run();
+        new XPathConformanceTest(args, false, false, true).run();
 
-        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathConformanceTest(testSuite, false, true).run();
+        new XPathConformanceTest(args, false, true, false).run();
+        new XPathConformanceTest(args, false, true, true).run();
 
-        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathConformanceTest(testSuite, true, false).run();
+        new XPathConformanceTest(args, true, false, false).run();
+        new XPathConformanceTest(args, true, false, true).run();
 
-        testSuite = args.length==0 ? new TestSuite() : new TestSuite(args[0]);
-        new XPathConformanceTest(testSuite, true, true).run();
+        new XPathConformanceTest(args, true, true, false).run();
+        new XPathConformanceTest(args, true, true, true).run();
     }
 }
