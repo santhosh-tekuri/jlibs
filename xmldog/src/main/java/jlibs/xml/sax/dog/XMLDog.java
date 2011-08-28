@@ -16,8 +16,10 @@
 package jlibs.xml.sax.dog;
 
 import jlibs.core.lang.ImpossibleException;
+import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.Literal;
+import jlibs.xml.sax.dog.expr.StaticEvaluation;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.nodset.LocationExpression;
 import jlibs.xml.sax.dog.expr.nodset.PathExpression;
@@ -38,6 +40,7 @@ import javax.xml.xpath.XPathFunctionResolver;
 import javax.xml.xpath.XPathVariableResolver;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -164,31 +167,42 @@ public final class XMLDog{
 
     /*-------------------------------------------------[ Sniff ]---------------------------------------------------*/
 
-    public void sniff(Event event, String uri, boolean useSTAX) throws XPathException{
-        if(docExpressions.size()>0){
+    public void sniff(Event event, InputSource source, boolean useSTAX) throws XPathException{
+        EvaluationListener listener = event.getListener();
+        if(listener!=null){
+            for(Expression expr: globalExpressions)
+                listener.finished(new StaticEvaluation<Expression>(expr, -1, expr.getResult()));
+        }
+        if(!docExpressions.isEmpty()){
             if(useSTAX)
-                new STAXEngine(event, parser.langInterested).start(uri);
+                new STAXEngine(event, parser.langInterested).start(source);
             else
-                new SAXEngine(event, parser.langInterested).start(uri);
+                new SAXEngine(event, parser.langInterested).start(source);
+        }
+        if(listener!=null && !documentResultExpressions.isEmpty()){
+            List<NodeItem> result = Collections.singletonList(event.documentNodeItem());
+            for(Expression expr: documentResultExpressions)
+                listener.finished(new StaticEvaluation<Expression>(expr, 0, result));
         }
     }
 
-    public XPathResults sniff(String uri, boolean useSTAX) throws XPathException{
+    public XPathResults sniff(InputSource source, boolean useSTAX) throws XPathException{
         Event event = createEvent();
-        XPathResults results = new XPathResults(event, getDocumentXPathsCount(), expressions);
-        sniff(event, uri, useSTAX);
+        XPathResults results = new XPathResults(event);
+        event.setListener(results);
+        sniff(event, source, useSTAX);
         return results;
     }
 
-    public void sniff(Event event, InputSource is) throws XPathException{
-        if(docExpressions.size()>0)
-            new SAXEngine(event, parser.langInterested).start(is);
+    public void sniff(Event event, InputSource source) throws XPathException{
+        sniff(event, source, false);
     }
 
-    public XPathResults sniff(InputSource is) throws XPathException{
+    public XPathResults sniff(InputSource source) throws XPathException{
         Event event = createEvent();
-        XPathResults results = new XPathResults(event, getDocumentXPathsCount(), expressions);
-        sniff(event, is);
+        XPathResults results = new XPathResults(event);
+        event.setListener(results);
+        sniff(event, source);
         return results;
     }
 }

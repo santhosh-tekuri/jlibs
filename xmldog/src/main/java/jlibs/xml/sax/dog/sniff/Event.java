@@ -435,6 +435,19 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         }
     }
 
+    private EvaluationListener listener;
+    public void setListener(EvaluationListener listener){
+        if(this.listener!=null)
+            throw new IllegalStateException("EvaluationListener can be set only once");
+        this.listener = listener;
+        for(Expression expr: exprList)
+            addListener(expr, this.listener);
+    }
+
+    public EvaluationListener getListener(){
+        return listener;
+    }
+
     private final List<EvaluationListener> listeners[];
     private final int instantListenersCount[];
     public Evaluation addListener(Expression expr, EvaluationListener evaluationListener){
