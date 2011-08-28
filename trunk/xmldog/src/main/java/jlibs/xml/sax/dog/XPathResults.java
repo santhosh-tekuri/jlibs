@@ -23,28 +23,23 @@ import jlibs.xml.sax.dog.sniff.Event;
 import javax.xml.namespace.NamespaceContext;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
 public class XPathResults extends EvaluationListener{
     private Event event;
-    private Object results[];
+    private Map<Expression, Object> results = new HashMap<Expression, Object>();
 
-    public XPathResults(Event event, int documentXPathsCount, Iterable<Expression> expressions){
+    public XPathResults(Event event){
         this.event = event;
-        results = new Object[documentXPathsCount];
-        for(Expression expr: expressions){
-            if(expr.scope()==Scope.DOCUMENT)
-                event.addListener(expr, this);
-        }
     }
 
     @Override
     public void finished(Evaluation evaluation){
-        results[evaluation.expression.id] = evaluation.getResult();
+        results.put(evaluation.expression, evaluation.getResult());
     }
 
     public NamespaceContext getNamespaceContext(){
@@ -53,20 +48,7 @@ public class XPathResults extends EvaluationListener{
 
     @SuppressWarnings({"unchecked"})
     public Object getResult(Expression expr){
-        if(expr.scope()==Scope.DOCUMENT)
-            return results[expr.id];
-        else{
-            assert expr.scope()==Scope.GLOBAL;
-            Object result = expr.getResult();
-            if(expr.resultType==DataType.NODESET){
-                List<NodeItem> list = (List<NodeItem>)result;
-                if(list.size()==1 && list.get(0).type==NodeType.DOCUMENT)
-                    return Collections.singletonList(event.documentNodeItem());
-                else
-                    return result;
-            }else
-                return result;
-        }
+        return results.get(expr);
     }
 
     /*-------------------------------------------------[ Printing ]---------------------------------------------------*/

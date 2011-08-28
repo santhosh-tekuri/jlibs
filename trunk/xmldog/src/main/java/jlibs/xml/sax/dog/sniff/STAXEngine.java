@@ -17,13 +17,15 @@ package jlibs.xml.sax.dog.sniff;
 
 import jlibs.xml.Namespaces;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import org.xml.sax.InputSource;
 
 import javax.xml.stream.XMLInputFactory;
-import static javax.xml.stream.XMLStreamConstants.*;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPathException;
-import java.io.InputStream;
+
+import static javax.xml.stream.XMLStreamConstants.*;
 
 /**
  * @author Santhosh Kumar T
@@ -48,10 +50,14 @@ public final class STAXEngine{
         return factory;
     }
 
-    public void start(String systemID) throws XPathException{
+    public void start(InputSource is) throws XPathException{
         XMLStreamReader reader = null;
         try{
-            reader = getFactory().createXMLStreamReader(systemID, (InputStream)null);
+            StreamSource source = new StreamSource();
+            source.setSystemId(is.getSystemId());
+            source.setInputStream(is.getByteStream());
+            source.setReader(is.getCharacterStream());
+            reader = getFactory().createXMLStreamReader(source);
             int eventType = reader.getEventType();
             MyNamespaceSupport nsSupport = new MyNamespaceSupport();
             Event event = this.event;
