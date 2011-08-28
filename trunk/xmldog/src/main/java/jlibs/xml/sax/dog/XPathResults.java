@@ -60,12 +60,12 @@ public class XPathResults extends EvaluationListener{
             Object result = expr.getResult();
             if(expr.resultType==DataType.NODESET){
                 List<NodeItem> list = (List<NodeItem>)result;
-                if(list.size()==1)
+                if(list.size()==1 && list.get(0).type==NodeType.DOCUMENT)
                     return Collections.singletonList(event.documentNodeItem());
                 else
                     return result;
             }else
-                return expr.getResult();
+                return result;
         }
     }
 
