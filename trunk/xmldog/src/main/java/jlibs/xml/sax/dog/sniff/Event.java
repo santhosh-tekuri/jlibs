@@ -23,6 +23,7 @@ import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
 import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.*;
+import jlibs.xml.sax.dog.expr.nodset.NodeSet;
 import jlibs.xml.sax.dog.expr.nodset.NodeSetListener;
 import jlibs.xml.sax.dog.expr.nodset.PositionTracker;
 import jlibs.xml.sax.dog.expr.nodset.StringEvaluation;
@@ -49,6 +50,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         int noOfXPaths = exprList.size();
         results = new Object[noOfXPaths];
         instantResults = new LongTreeMap[noOfXPaths];
+        pendingInstantResults = new int[noOfXPaths];
         listeners = new List[noOfXPaths];
         instantListenersCount = new int[noOfXPaths];
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
@@ -318,6 +320,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         if(nodeItem!=null){
             nodeItem.xml = xml;
             nodeItem.xmlBuilt = true;
+            finishedXMLBuild(nodeItem);
         }
     }
 
@@ -340,6 +343,8 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
     private final Object results[];
     private final LongTreeMap<Object> instantResults[];
+    private final int pendingInstantResults[];
+    private final BitSet finished = new BitSet();
     private int pendingExpressions;
 
     public static final RuntimeException STOP_PARSING = new RuntimeException("STOP_PARSING");
@@ -355,17 +360,28 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         assert results[id]==null || results[id]==evaluation; // null for StaticEvaluation
 
 //        store result if this doc expression is used in some predicate
-        results[id] = evaluation.expression.storeResult ? evaluation.getResult() : null;
-
+        boolean needEvaluation = false;
+        finished.set(id);
         List<EvaluationListener> listeners = this.listeners[id];
         if(listeners!=null){
-            this.listeners[id] = null;
+            boolean hasPendingInstantResults = pendingInstantResults[id]!=0;
+            boolean clearListeners = true;
             for(EvaluationListener listener: listeners){
-                if(!listener.disposed)
+                if(!listener.disposed){
+                    if(listener instanceof InstantEvaluationListener && hasPendingInstantResults){
+                        clearListeners = false;
+                        continue;
+                    }
                     listener.finished(evaluation);
+                }
             }
+            if(clearListeners)
+                this.listeners[id] = null;
+            else
+                needEvaluation = true;
         }
-
+        if(!needEvaluation)
+            results[id] = evaluation.expression.storeResult ? evaluation.getResult() : null;
         if(--pendingExpressions==0 && tailInfo!=null){
             tailInfo = null;
             if(xmlBuilder==null)
@@ -386,6 +402,8 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
         if(xmlBuilder==null || nodeItem.xmlBuilt)
             fireInstantResult(expression, nodeItem);
+        else
+            pendingInstantResults[expression.id]++;
     }
 
     private void fireInstantResult(Expression expression, NodeItem nodeItem){
@@ -399,8 +417,21 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     public void finishedXMLBuild(NodeItem nodeItem){
         nodeItem.xmlBuilt = true;
         for(int i=0; i<instantResults.length; i++){
-            if(instantResults[i]!=null && instantResults[i].get(nodeItem.order)!=null)
+            if(instantResults[i]!=null && instantResults[i].get(nodeItem.order)!=null){
                 fireInstantResult(exprList.get(i), nodeItem);
+                pendingInstantResults[i]--;
+                if(finished.get(i)){
+                    List<EvaluationListener> listeners = this.listeners[i];
+                    if(listeners!=null){
+                        this.listeners[i] = null;
+                        for(EvaluationListener listener: listeners){
+                            if(!listener.disposed && listener instanceof InstantEvaluationListener)
+                                listener.finished((Evaluation)results[i]);
+                        }
+                        results[i] = null;
+                    }
+                }
+            }
         }
     }
 
@@ -414,7 +445,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         if(listeners==null)
             this.listeners[id] = listeners=new ArrayList<EvaluationListener>();
         listeners.add(evaluationListener);
-        if(expr.resultType==DataType.NODESET && evaluationListener instanceof InstantEvaluationListener)
+        if(supportsInstantResults(expr) && evaluationListener instanceof InstantEvaluationListener)
             instantListenersCount[id]++;
 
         Object value = results[id];
@@ -431,14 +462,20 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     public void removeListener(Expression expr, EvaluationListener evaluationListener){
         List<EvaluationListener> listeners = this.listeners[expr.id];
         if(listeners!=null){
-            if(listeners.remove(evaluationListener))
-                instantListenersCount[expr.id]--;
+            if(listeners.remove(evaluationListener)){
+                if(supportsInstantResults(expr) && evaluationListener instanceof InstantEvaluationListener)
+                    instantListenersCount[expr.id]--;
+            }
         }else
             evaluationListener.disposed = true;
     }
 
+    private boolean supportsInstantResults(Expression expr){
+        return expr instanceof NodeSet;
+    }
+
     public boolean hasInstantListener(Expression expr){
-        return expr.scope()==Scope.DOCUMENT && instantListenersCount[expr.id]>0;
+        return supportsInstantResults(expr) && instantListenersCount[expr.id]>0;
     }
 
     public Object result(Expression expr){
