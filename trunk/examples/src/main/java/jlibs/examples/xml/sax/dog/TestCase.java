@@ -15,12 +15,14 @@
 
 package jlibs.examples.xml.sax.dog;
 
+import jlibs.core.util.LongTreeMap;
 import jlibs.examples.xml.sax.dog.engines.SaxonEngine;
 import jlibs.xml.DefaultNamespaceContext;
-import jlibs.xml.sax.dog.NodeItem;
-import jlibs.xml.sax.dog.XMLDog;
-import jlibs.xml.sax.dog.XPathResults;
+import jlibs.xml.sax.dog.*;
+import jlibs.xml.sax.dog.expr.Evaluation;
+import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
+import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
 import jlibs.xml.sax.dog.sniff.DOMBuilder;
 import jlibs.xml.sax.dog.sniff.Event;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
@@ -36,6 +38,7 @@ import java.util.*;
 public class TestCase{
     public static boolean useSTAX = false;
     public static boolean useXMLBuilder = false;
+    public static boolean useInstantResults = false;
     public static XPathEngine domEngine =
 //            new JDKEngine(new com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl());
 //            new JDKEngine(new org.apache.xpath.jaxp.XPathFactoryImpl());
@@ -57,7 +60,7 @@ public class TestCase{
 
     public List<Object> dogResult;
     public List<Object> usingXMLDog() throws Exception{
-        XMLDog dog = new XMLDog(nsContext, variableResolver, functionResolver);
+        final XMLDog dog = new XMLDog(nsContext, variableResolver, functionResolver);
         Expression expressions[] = new Expression[xpaths.size()];
         for(int i=0; i<xpaths.size(); i++){
             XPathInfo xpathInfo = xpaths.get(i);
@@ -67,13 +70,61 @@ public class TestCase{
         Event event = dog.createEvent();
         if(useXMLBuilder)
             event.setXMLBuilder(new DOMBuilder());
-        XPathResults dogResults = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
-        dog.sniff(event, file, useSTAX);
-        resultNSContext = (DefaultNamespaceContext)dogResults.getNamespaceContext();
 
         dogResult = new ArrayList<Object>(xpaths.size());
-        for(Expression expr: expressions)
-            dogResult.add(dogResults.getResult(expr));
+        final Object instantResults[] = new Object[dog.getDocumentXPathsCount()];
+        EvaluationListener listener;
+        if(useInstantResults){
+            listener = new InstantEvaluationListener(){
+                @Override
+                public void onNodeHit(Expression expression, NodeItem nodeItem){
+                    LongTreeMap<NodeItem> map = (LongTreeMap<NodeItem>)instantResults[expression.id];
+                    if(map==null)
+                        instantResults[expression.id] = map = new LongTreeMap<NodeItem>();
+                    map.put(nodeItem.order, nodeItem);
+                }
+
+                @Override
+                public void finished(Evaluation evaluation){
+                    Object result = evaluation.getResult();
+                    if(result==null){
+                        if(instantResults[evaluation.expression.id]==null)
+                            instantResults[evaluation.expression.id] = new LongTreeMap<NodeItem>();
+                    }else
+                        instantResults[evaluation.expression.id] = result;
+                }
+            };
+            for(Expression expr: dog.getXPaths()){
+                if(expr.scope()==Scope.DOCUMENT){
+                    event.addListener(expr, listener);
+                    dogResult.add(null);
+                }else
+                    dogResult.add(expr.getResult());
+            }
+            dog.sniff(event, file, useSTAX);
+            int i=0;
+            for(Expression expr: expressions){
+                if(expr.scope()==Scope.DOCUMENT){
+                    Object result = instantResults[expr.id];
+                    if(result instanceof LongTreeMap)
+                        result = new ArrayList(((LongTreeMap)result).values());
+                    dogResult.set(i, result);
+                }else if(useXMLBuilder){
+                    if(expr.resultType==DataType.NODESET){
+                        List<NodeItem> list = (List<NodeItem>)expr.getResult();
+                        if(list.size()==1 && list.get(0).type==NodeType.DOCUMENT)
+                            dogResult.set(i, Collections.singletonList(event.documentNodeItem()));
+                    }
+                }
+                i++;
+            }
+        }else{
+            XPathResults dogResults = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
+            dog.sniff(event, file, useSTAX);
+            for(Expression expr: expressions)
+                dogResult.add(dogResults.getResult(expr));
+        }
+        resultNSContext = (DefaultNamespaceContext)event.getNamespaceContext();
         return dogResult;
     }
 
