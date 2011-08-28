@@ -18,10 +18,7 @@ package jlibs.examples.xml.sax.dog;
 import jlibs.core.lang.OS;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.sax.dog.NodeItem;
-import jlibs.xml.sax.dog.Scope;
-import jlibs.xml.sax.dog.XMLDog;
-import jlibs.xml.sax.dog.XPathResults;
+import jlibs.xml.sax.dog.*;
 import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
@@ -35,6 +32,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -143,13 +141,30 @@ public class XMLDogTest{
             for(Expression expr: dog.getXPaths()){
                 if(expr.scope()==Scope.DOCUMENT)
                     event.addListener(expr, listener);
-                else
-                    XPathResults.print(System.out, expr.getXPath(), expr.getResult());
+                else{
+                    Object result = expr.getResult();
+                    if(expr.resultType==DataType.NODESET){
+                        List<NodeItem> list = (List<NodeItem>)result;
+                        if(list.size()==1 && list.get(0).type==NodeType.DOCUMENT)
+                            continue;
+                    }
+                    XPathResults.print(System.out, expr.getXPath(), result);
+                }
             }
         }else
             listener = new XPathResults(event, dog.getDocumentXPathsCount(), dog.getXPaths());
         dog.sniff(event, new InputSource(file));
-
+        if(instantResults){
+            for(Expression expr: dog.getXPaths()){
+                if(expr.scope()!=Scope.DOCUMENT){
+                    if(expr.resultType==DataType.NODESET){
+                        List<NodeItem> list = (List<NodeItem>)expr.getResult();
+                        if(list.size()==1 && list.get(0).type==NodeType.DOCUMENT)
+                            XPathResults.print(System.out, expr.getXPath(), Collections.singletonList(event.documentNodeItem()));
+                    }
+                }
+            }
+        }
         time = System.nanoTime() - time;
         if(listener instanceof XPathResults)
             ((XPathResults)listener).print(expressions, System.out);
