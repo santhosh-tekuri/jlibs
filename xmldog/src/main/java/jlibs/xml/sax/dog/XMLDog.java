@@ -15,6 +15,7 @@
 
 package jlibs.xml.sax.dog;
 
+import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.Literal;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
@@ -61,6 +62,8 @@ public final class XMLDog{
 
     private final List<Expression> expressions = new ArrayList<Expression>();
     private final List<Expression> docExpressions = new ArrayList<Expression>();
+    private final List<Expression> globalExpressions = new ArrayList<Expression>();
+    private final List<Expression> documentResultExpressions = new ArrayList<Expression>();
     private final ArrayDeque<Expression> tempStack = new ArrayDeque<Expression>();
 
     public Expression addXPath(String xpath) throws SAXPathException{
@@ -85,22 +88,30 @@ public final class XMLDog{
         return compiledExpr;
     }
 
-    private boolean documentResult;
     @SuppressWarnings({"unchecked"})
     private void addXPath(Expression compiledExpr) throws SAXPathException{
         expressions.add(compiledExpr);
 
-        assert compiledExpr.scope()!=Scope.LOCAL;
-        assert compiledExpr.scope()!=Scope.GLOBAL || compiledExpr instanceof Literal;
-
-        if(compiledExpr.scope()==Scope.GLOBAL && compiledExpr.resultType==DataType.NODESET){
-            List<NodeItem> result = (List<NodeItem>)compiledExpr.getResult();
-            if(result.size()==1 && result.get(0).type==NodeType.DOCUMENT)
-                documentResult = true;
+        switch(compiledExpr.scope()){
+            case Scope.DOCUMENT:
+                searchDocExpressions(compiledExpr, compiledExpr);
+                break;
+            case Scope.GLOBAL:
+                assert compiledExpr instanceof Literal;
+                boolean documentResult = false;
+                if(compiledExpr.resultType==DataType.NODESET){
+                    List<NodeItem> result = (List<NodeItem>)compiledExpr.getResult();
+                    if(result.size()==1 && result.get(0).type==NodeType.DOCUMENT)
+                        documentResult = true;
+                }
+                if(documentResult)
+                    documentResultExpressions.add(compiledExpr);
+                else
+                    globalExpressions.add(compiledExpr);
+                break;
+            default:
+                throw new ImpossibleException("scope of "+compiledExpr.getXPath()+" can't be"+compiledExpr.scope());
         }
-
-        if(compiledExpr.scope()==Scope.DOCUMENT)
-            searchDocExpressions(compiledExpr, compiledExpr);
     }
 
     private void searchDocExpressions(Expression userExpr, Expression expr){
@@ -148,7 +159,7 @@ public final class XMLDog{
     }
 
     public Event createEvent(){
-        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size(), documentResult);
+        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size(), !documentResultExpressions.isEmpty());
     }
 
     /*-------------------------------------------------[ Sniff ]---------------------------------------------------*/
