@@ -366,8 +366,6 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
         assert !finished : "can't consume evaluation result after finish";
 
         if(evaluation==predicateEvaluation){
-            if(predicateChain!=-1)
-                decreasePredicateChain();
             predicateResult = (Boolean)evaluation.getResult();
             assert predicateResult!=null : "evaluation result should be non-null";
             if(predicateResult==Boolean.FALSE){
@@ -382,8 +380,12 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
                     stringEvaluations = null;
                 }
                 resultPrepared();
-            }else if(resultPrepared)
-                finished();
+            }else{
+                if(predicateChain!=-1)
+                    decreasePredicateChain();
+                if(resultPrepared)
+                    finished();
+            }
         }else if(evaluation instanceof PredicateEvaluation){
             PredicateEvaluation predicateEvaluation = (PredicateEvaluation)evaluation;
             remove(predicateEvaluation);
