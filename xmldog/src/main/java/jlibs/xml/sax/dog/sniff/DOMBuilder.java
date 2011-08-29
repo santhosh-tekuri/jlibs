@@ -120,4 +120,9 @@ public class DOMBuilder extends XMLBuilder{
                 parent.removeChild(child);
         }
     }
+
+    @Override
+    protected boolean hasParent(){
+        return curNode.getParentNode()!=null;
+    }
 }

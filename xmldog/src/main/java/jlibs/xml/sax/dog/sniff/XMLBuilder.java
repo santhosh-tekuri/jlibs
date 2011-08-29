@@ -98,7 +98,7 @@ public abstract class XMLBuilder{
 
     public void onNamespaces(Event event, MyNamespaceSupport nsSupport){
         assert active;
-        Enumeration<String> prefixes = nsSupport.getPrefixes();
+        Enumeration<String> prefixes = hasParent() ? nsSupport.getDeclaredPrefixes() : nsSupport.getPrefixes();
         while(prefixes.hasMoreElements()){
             String prefix = prefixes.nextElement();
             String uri = nsSupport.getURI(prefix);
@@ -141,4 +141,5 @@ public abstract class XMLBuilder{
     }
     protected abstract void clearCurNode();
     protected abstract void removeFromParent(Object node);
+    protected abstract boolean hasParent();
 }
