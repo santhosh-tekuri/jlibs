@@ -53,6 +53,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         pendingInstantResults = new int[noOfXPaths];
         listeners = new List[noOfXPaths];
         instantListenersCount = new int[noOfXPaths];
+        finished = new BitSet(noOfXPaths);
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
         if(documentRequired)
             docNodeItem = nodeItem = new NodeItem();
@@ -344,7 +345,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     private final Object results[];
     private final LongTreeMap<Object> instantResults[];
     private final int pendingInstantResults[];
-    private final BitSet finished = new BitSet();
+    private final BitSet finished;
     private int pendingExpressions;
 
     public static final RuntimeException STOP_PARSING = new RuntimeException("STOP_PARSING");
@@ -420,7 +421,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
             if(instantResults[i]!=null && instantResults[i].get(nodeItem.order)!=null){
                 fireInstantResult(exprList.get(i), nodeItem);
                 pendingInstantResults[i]--;
-                if(finished.get(i)){
+                if(finished.get(i) && pendingInstantResults[i]==0){
                     List<EvaluationListener> listeners = this.listeners[i];
                     if(listeners!=null){
                         this.listeners[i] = null;
