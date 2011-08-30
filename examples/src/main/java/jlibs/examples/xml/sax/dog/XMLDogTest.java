@@ -43,18 +43,24 @@ public class XMLDogTest{
     public static void main(String[] args) throws Exception{
         boolean createDOM = false;
         boolean instantResults = false;
+        final boolean printResults;
+
+        boolean _printResults = true;
         String file = null;
         for(String arg: args){
             if("-dom".equals(arg))
                 createDOM = true;
             if("-instantResults".equals(arg))
                 instantResults = true;
+            if("-dontPrintResults".equals(arg))
+                _printResults = false;
             else
                 file = arg;
         }
+        printResults = _printResults;
 
         if(file==null){
-            System.out.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] -instantResults <xml-file>");
+            System.err.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] -instantResults -dontPrintResults <xml-file>");
             System.exit(1);
         }
 
@@ -124,19 +130,23 @@ public class XMLDogTest{
                 int nodeCounts[] = new int[dog.getDocumentXPathsCount()];
                 @Override
                 public void onNodeHit(Expression expression, NodeItem nodeItem){
-                    System.out.print("XPath: "+expression.getXPath()+" Node["+ ++nodeCounts[expression.id]+"]: ");
-                    nodeItem.printTo(System.out);
-                    System.out.println();
+                    if(printResults){
+                        System.out.print("XPath: "+expression.getXPath()+" Node["+ ++nodeCounts[expression.id]+"]: ");
+                        nodeItem.printTo(System.out);
+                        System.out.println();
+                    }
                 }
 
                 @Override
                 public void finished(Evaluation evaluation){
                     Object result = evaluation.getResult();
-                    if(result==null)
-                        System.out.println("Finished: "+evaluation.expression.getXPath());
-                    else
-                        XPathResults.print(System.out, evaluation.expression.getXPath(), result);
-                    System.out.println();
+                    if(printResults){
+                        if(result==null)
+                            System.out.println("Finished: "+evaluation.expression.getXPath());
+                        else
+                            XPathResults.print(System.out, evaluation.expression.getXPath(), result);
+                        System.out.println();
+                    }
                 }
             };
         }else
@@ -144,8 +154,10 @@ public class XMLDogTest{
         event.setListener(listener);
         dog.sniff(event, new InputSource(file));
         time = System.nanoTime() - time;
-        if(listener instanceof XPathResults)
+        if(printResults && listener instanceof XPathResults)
             ((XPathResults)listener).print(expressions, System.out);
-        System.out.println("Evaluated in "+(long)(time*1E-06)+" milliseconds");
+        System.err.println("Evaluated in "+(long)(time*1E-06)+" milliseconds");
+        if(printResults && instantResults)
+            System.err.println("Note: the above duration include the time to print results.");
     }
 }
