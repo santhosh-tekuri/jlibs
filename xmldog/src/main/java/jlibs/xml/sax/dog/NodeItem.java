@@ -33,6 +33,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.BitSet;
 
 /**
  * @author Santhosh Kumar T
@@ -138,4 +139,15 @@ public class NodeItem implements NodeType{
         }else
             return location;
     }
+
+    /**
+     * This field is used only in instantResults mode;
+     * This field tells which expressions has hit this node.
+     * if ith bit is set, it means the doc-expression whose id is i
+     * has hit this node.
+     *
+     * This is used not to notify same node in an expression's result
+     * more than once
+     */
+    public BitSet expressions;
 }
