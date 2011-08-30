@@ -16,7 +16,6 @@
 package jlibs.xml.sax.dog.sniff;
 
 import jlibs.core.lang.NotImplementedException;
-import jlibs.core.util.LongTreeMap;
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.NodeItem;
@@ -49,7 +48,6 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
         int noOfXPaths = exprList.size();
         results = new Object[noOfXPaths];
-        instantResults = new LongTreeMap[noOfXPaths];
         pendingInstantResults = new int[noOfXPaths];
         listeners = new List[noOfXPaths];
         instantListenersCount = new int[noOfXPaths];
@@ -343,7 +341,6 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     /*-------------------------------------------------[ Results ]---------------------------------------------------*/
 
     private final Object results[];
-    private final LongTreeMap<Object> instantResults[];
     private final int pendingInstantResults[];
     private final BitSet finished;
     private int pendingExpressions;
@@ -394,12 +391,14 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     public static final Object DUMMY_VALUE = new Object();
 
     public void onInstantResult(Expression expression, NodeItem nodeItem){
-        LongTreeMap<Object> result = instantResults[expression.id];
-        if(result==null){
-            instantResults[expression.id] = result = new LongTreeMap<Object>();
-            result.put(nodeItem.order, DUMMY_VALUE);
-        }else if(result.put(nodeItem.order, DUMMY_VALUE)!=null)
+        BitSet bitSet = nodeItem.expressions;
+        if(bitSet==null){
+            nodeItem.expressions = bitSet = new BitSet();
+            bitSet.set(expression.id);
+        }else if(bitSet.get(expression.id))
             return;
+        else
+            bitSet.set(expression.id);
 
         if(xmlBuilder==null || nodeItem.xmlBuilt)
             fireInstantResult(expression, nodeItem);
@@ -417,22 +416,29 @@ public final class Event extends EvaluationListener implements NodeSetListener{
 
     public void finishedXMLBuild(NodeItem nodeItem){
         nodeItem.xmlBuilt = true;
-        for(int i=0; i<instantResults.length; i++){
-            if(instantResults[i]!=null && instantResults[i].get(nodeItem.order)!=null){
-                fireInstantResult(exprList.get(i), nodeItem);
-                pendingInstantResults[i]--;
-                if(finished.get(i) && pendingInstantResults[i]==0){
-                    List<EvaluationListener> listeners = this.listeners[i];
-                    if(listeners!=null){
-                        this.listeners[i] = null;
-                        for(EvaluationListener listener: listeners){
-                            if(!listener.disposed && listener instanceof InstantEvaluationListener)
-                                listener.finished((Evaluation)results[i]);
-                        }
-                        results[i] = null;
+        BitSet bitSet = nodeItem.expressions;
+        if(bitSet==null)
+            return;
+
+        int i=0;
+        while(true){
+            i = bitSet.nextSetBit(i);
+            if(i==-1)
+                return;
+            fireInstantResult(exprList.get(i), nodeItem);
+            pendingInstantResults[i]--;
+            if(finished.get(i) && pendingInstantResults[i]==0){
+                List<EvaluationListener> listeners = this.listeners[i];
+                if(listeners!=null){
+                    this.listeners[i] = null;
+                    for(EvaluationListener listener: listeners){
+                        if(!listener.disposed && listener instanceof InstantEvaluationListener)
+                            listener.finished((Evaluation)results[i]);
                     }
+                    results[i] = null;
                 }
             }
+            i++;
         }
     }
 
