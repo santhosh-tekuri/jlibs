@@ -41,6 +41,10 @@ import java.util.BitSet;
 public class NodeItem implements NodeType{
     public static final NodeItem NODEITEM_DOCUMENT = new NodeItem();
 
+    /**
+     * This field tells the type of this NodeItem.
+     * It is one of the constants in NodeType other than ANY, MAX
+     */
     public final int type;
     public final String location; // unique xpath
     public final String value;
@@ -48,9 +52,30 @@ public class NodeItem implements NodeType{
     public final String namespaceURI;
     public final String qualifiedName;
 
-    public long order;
+    public final long order;
+
+    /**
+     * This field tells how many expressions have hit or might hit
+     * this NodeItem. This is incremented by Event. and decremented by
+     * XMLBuilder.
+     *
+     * This field is used to decide whether xml needs be built for this
+     * NodeItem or not. If refCount becomes zero before xml is completely
+     * built, then the xml object built so far is discarded.
+     */
     public int refCount;
+
+    /**
+     * This field holds the in-memory xml representation of this node item.
+     * This could be DOM Node or XOM Node etc based on which type of
+     * XMLBuilder is being used.
+     */
     public Object xml;
+
+    /**
+     * This field tells if the value of field `xml` is completely built
+     * or not.
+     */
     public boolean xmlBuilt;
 
     public NodeItem(){
@@ -75,6 +100,7 @@ public class NodeItem implements NodeType{
 
     // used only for testing purposes
     public NodeItem(Node node, NamespaceContext nsContext){
+        order = -100; // not used
         if(node instanceof Attr && Namespaces.URI_XMLNS.equals(node.getNamespaceURI()))
             type = NAMESPACE;
         else if(node.getNodeType()==NamespaceNode.NAMESPACE_NODE)
@@ -92,6 +118,7 @@ public class NodeItem implements NodeType{
 
     // used only for testing purposes
     public NodeItem(int type, String location, String value, String localName, String namespaceURI, String qualifiedName){
+        order = -100; // not used
         this.type = type;
         this.location = location;
         this.value = value;
@@ -102,6 +129,7 @@ public class NodeItem implements NodeType{
 
     // used only for testing purposes
     public NodeItem(Node node, String prefix, String uri, NamespaceContext nsContext){
+        order = -100; // not used
         type = NAMESPACE;
 
         location = new DOMNavigator().getXPath(node, nsContext)+"/namespace::"+prefix;
