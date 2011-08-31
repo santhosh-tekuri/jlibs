@@ -415,7 +415,7 @@ public class IfBlock implements Iterable<IfBlock>{
                     if(node.action!=null){
                         if(index>=from && index<=to){
                             if(SyntaxClass.DEBUGGABLE)
-                                printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.stateID+");");
+                                printer.println("handler.execute("+state.ruleMethod.rule.id+", "+node.id+");");
                             else
                                 printer.println(node.action.javaCode()+';');
                         }
