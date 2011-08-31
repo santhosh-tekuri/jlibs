@@ -723,15 +723,14 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     protected void finishHandler(){
         if(booleanProperty(HANDLER_IS_CLASS)){
+            printer.emptyLine(true);
             printer.printlns(
                     "@Override",
                     "public void fatalError(String message) throws E{",
                         PLUS,
                         "throw new Exception(message);",
                         MINUS,
-                    "}",
-                    MINUS,
-                "}"
+                    "}"
             );
         }
         printer.printlns(
