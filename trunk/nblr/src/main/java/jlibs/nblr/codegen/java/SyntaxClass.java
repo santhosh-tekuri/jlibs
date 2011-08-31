@@ -62,7 +62,7 @@ public class SyntaxClass{
                     RuleMethod ruleMethod;
                     while(true){
                         ruleMethod = new RuleMethod(this, rule);
-                        if(!ruleMethod.deleteEmptySwitches())
+                        if(DEBUGGABLE || !ruleMethod.deleteEmptySwitches())
                             break;
                         else
                             recompute = true;
