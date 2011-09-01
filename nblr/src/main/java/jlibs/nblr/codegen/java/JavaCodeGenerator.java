@@ -681,16 +681,9 @@ public class JavaCodeGenerator extends CodeGenerator{
             );
         }
 
-        String keyWord, suffix;
-        if(booleanProperty(HANDLER_IS_CLASS)){
-            keyWord = "class";
-            suffix = "implements";
-        }else{
-            keyWord = "interface";
-            suffix = " extends ";
-        }
+        String keyWord = booleanProperty(HANDLER_IS_CLASS) ? "class" : "interface";
         printer.printlns(
-            "public "+keyWord+" "+className[1]+"<E extends Exception>"+suffix+"<E>{",
+            "public "+keyWord+" "+className[1]+"<E extends Exception>{",
                 PLUS
         );
     }
