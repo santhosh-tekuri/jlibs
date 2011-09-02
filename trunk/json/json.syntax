@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<syntax>
+    <any name="WS" chars=" &#9;&#10;&#13;"/>
+    <range name="DIGIT" from="0" to="9"/>
+    <range name="NON_ZERO" from="1" to="9"/>
+    <or name="HEX_DIGIT">
+        <matcher name="DIGIT"/>
+        <range from="a" to="f"/>
+        <range from="A" to="F"/>
+    </or>
+    <or name="UNESCAPED">
+        <range from=" " to=" "/>
+        <range from="#" to="["/>
+        <range from="]" to="&#1114111;"/>
+    </or>
+    <any name="EXPONENT" chars="eE"/>
+    <string-rule name="trueRule" string="true"/>
+    <string-rule name="falseRule" string="false"/>
+    <string-rule name="nullRule" string="null"/>
+    <rule name="number">
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="decimal"/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <publish name="number" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false">
+            <any chars="-"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <matcher name="NON_ZERO"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="."/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+        <edge source="5" target="6" fallback="false"/>
+        <edge source="6" target="7" fallback="false">
+            <any chars="eE"/>
+        </edge>
+        <edge source="7" target="8" fallback="false">
+            <any chars="+-"/>
+        </edge>
+        <edge source="8" target="9" fallback="false">
+            <matcher name="DIGIT"/>
+        </edge>
+        <edge source="9" target="8" fallback="false"/>
+        <edge source="9" target="10" fallback="false"/>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="6" target="10" fallback="false"/>
+        <edge source="5" target="4" fallback="false"/>
+        <edge source="3" target="2" fallback="false"/>
+        <edge source="3" target="6" fallback="false"/>
+        <edge source="1" target="11" fallback="false">
+            <any chars="0"/>
+        </edge>
+        <edge source="11" target="3" fallback="false"/>
+    </rule>
+    <rule name="string">
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node>
+            <publish name="rawString" begin="0" end="0"/>
+        </node>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <any chars="&quot;"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="4" target="2" fallback="false">
+            <rule name="escaped"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <any chars="&quot;"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="UNESCAPED"/>
+        </edge>
+    </rule>
+    <rule name="escaped">
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <publish name="hexString" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node>
+            <buffer/>
+        </node>
+        <node>
+            <publish name="escapeChar" begin="0" end="0"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <any chars="\"/>
+        </edge>
+        <edge source="2" target="3" fallback="false">
+            <any chars="u"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="6" target="7" fallback="false">
+            <matcher name="HEX_DIGIT"/>
+        </edge>
+        <edge source="7" target="8" fallback="false"/>
+        <edge source="2" target="9" fallback="false"/>
+        <edge source="9" target="10" fallback="false">
+            <any chars="&quot;\/bfnrt"/>
+        </edge>
+        <edge source="10" target="11" fallback="false"/>
+        <edge source="11" target="12" fallback="false"/>
+        <edge source="12" target="13" fallback="false"/>
+        <edge source="13" target="8" fallback="false"/>
+    </rule>
+    <rule name="value">
+        <node/>
+        <node>
+            <event name="valueStart"/>
+        </node>
+        <node>
+            <event name="trueValue"/>
+        </node>
+        <node/>
+        <node>
+            <event name="valueEnd"/>
+        </node>
+        <node>
+            <event name="falseValue"/>
+        </node>
+        <node>
+            <event name="nullValue"/>
+        </node>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <rule name="trueRule"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="3" target="4" fallback="false"/>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="5" fallback="false">
+            <rule name="falseRule"/>
+        </edge>
+        <edge source="5" target="3" fallback="false"/>
+        <edge source="1" target="6" fallback="false">
+            <rule name="nullRule"/>
+        </edge>
+        <edge source="6" target="3" fallback="false"/>
+        <edge source="1" target="3" fallback="false">
+            <rule name="number"/>
+        </edge>
+        <edge source="1" target="3" fallback="false">
+            <rule name="string"/>
+        </edge>
+        <edge source="1" target="3" fallback="false">
+            <rule name="array"/>
+        </edge>
+        <edge source="1" target="3" fallback="false">
+            <rule name="object"/>
+        </edge>
+        <edge source="0" target="0" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="array">
+        <node/>
+        <node>
+            <event name="arrayStart"/>
+        </node>
+        <node/>
+        <node/>
+        <node>
+            <event name="arrayEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="["/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <rule name="value"/>
+        </edge>
+        <edge source="3" target="2" fallback="false">
+            <any chars=","/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars="]"/>
+        </edge>
+    </rule>
+    <rule name="object">
+        <node/>
+        <node>
+            <event name="objectStart"/>
+        </node>
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <node>
+            <event name="objectEnd"/>
+        </node>
+        <edge source="0" target="1" fallback="false">
+            <any chars="{"/>
+        </edge>
+        <edge source="1" target="2" fallback="false"/>
+        <edge source="2" target="3" fallback="false">
+            <rule name="string"/>
+        </edge>
+        <edge source="3" target="4" fallback="false">
+            <any chars=":"/>
+        </edge>
+        <edge source="4" target="5" fallback="false">
+            <rule name="value"/>
+        </edge>
+        <edge source="5" target="2" fallback="false">
+            <any chars=","/>
+        </edge>
+        <edge source="5" target="6" fallback="false">
+            <any chars="}"/>
+        </edge>
+        <edge source="3" target="3" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+    <rule name="json">
+        <node/>
+        <node/>
+        <node/>
+        <node/>
+        <edge source="0" target="1" fallback="false"/>
+        <edge source="1" target="2" fallback="false">
+            <rule name="object"/>
+        </edge>
+        <edge source="2" target="3" fallback="false"/>
+        <edge source="2" target="2" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+        <edge source="1" target="2" fallback="false">
+            <rule name="array"/>
+        </edge>
+        <edge source="0" target="0" fallback="false">
+            <matcher name="WS"/>
+        </edge>
+    </rule>
+</syntax>
