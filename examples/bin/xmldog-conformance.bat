@@ -1,3 +1,3 @@
 @ECHO OFF
-CALL launcher\jlaunch.bat examples.conf jlibs.examples.xml.sax.dog.tests.XPathConformanceTest %*
+CALL %~p0launcher\jlaunch.bat %~p0examples.conf jlibs.examples.xml.sax.dog.tests.XPathConformanceTest %*
 PAUSE
