@@ -37,9 +37,7 @@ SHIFT
 GOTO :loop.start
 :loop.end
 
-pushd "%CONF_DIR%"
 %CMD%
-popd
 GOTO :end
 
 :processline
@@ -61,7 +59,12 @@ IF "%FIRST_CHAR%" == "#" GOTO end
 
 REM join the line to result
 IF DEFINED RESULT SET RESULT=%RESULT%%SEPARATOR%
-SET RESULT=%RESULT%"%PREFIX%%~1"
+IF "%SECTION_PREFIX%"=="" (
+	SET RESULT=%RESULT%"%PREFIX%%~1"
+) ELSE (
+	call :abs.path %~1
+	SET RESULT=%RESULT%"%PREFIX%%ABS_PATH%"
+)
 GOTO end
 
 :option
@@ -135,6 +138,14 @@ SET RESULT=
 SET SECTION_PREFIX=
 SET PREFIX=
 SET SEPARATOR= 
+GOTO end
+
+:abs.path
+pushd .
+rem echo cding to %CONF_DIR%
+cd %CONF_DIR%
+SET ABS_PATH=%~f1
+popd
 GOTO end
 
 :processresult
