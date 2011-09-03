@@ -1,3 +1,3 @@
 @ECHO OFF
-CALL launcher\jlaunch.bat examples.conf jlibs.examples.xml.xsd.XSDOutlinePanelTest %*
+CALL %~p0launcher\jlaunch.bat %~p0examples.conf jlibs.examples.xml.xsd.XSDOutlinePanelTest %*
 PAUSE

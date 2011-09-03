@@ -1,3 +1,3 @@
 @ECHO OFF
-CALL launcher\jlaunch.bat examples.conf jlibs.examples.core.nio.EchoClient %*
+CALL %~p0launcher\jlaunch.bat %~p0examples.conf jlibs.examples.core.nio.EchoClient %*
 PAUSE

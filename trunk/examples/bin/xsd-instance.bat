@@ -1,3 +1,3 @@
 @ECHO OFF
-CALL launcher\jlaunch.bat examples.conf jlibs.xml.xsd.XSInstance %*
+CALL %~p0launcher\jlaunch.bat %~p0examples.conf jlibs.xml.xsd.XSInstance %*
 PAUSE
