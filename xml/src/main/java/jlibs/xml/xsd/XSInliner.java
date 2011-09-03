@@ -57,6 +57,8 @@ public class XSInliner extends SAXDelegate{
         setHandler(handler);
         handler.setResult(result);
         this.outputSystemID = outputSystemID==null ? input.getSystemId() : outputSystemID;
+        if(this.outputSystemID!=null)
+            this.outputSystemID = URLUtil.toURL(this.outputSystemID).toString();
         parse(input);
 
         Document doc = (Document)result.getNode();
@@ -326,7 +328,7 @@ public class XSInliner extends SAXDelegate{
             String xsdFiles[] = Arrays.copyOfRange(args, 1, args.length);
             source = XSInliner.include(targetNamespace, xsdFiles);
         }
-        Document doc = new XSInliner().inline(source);
+        Document doc = new XSInliner().inline(source, "temp.xsd");
         TransformerUtil.newTransformer(null, true, 0, null)
                 .transform(new DOMSource(doc), new StreamResult(System.out));
         System.out.println();
