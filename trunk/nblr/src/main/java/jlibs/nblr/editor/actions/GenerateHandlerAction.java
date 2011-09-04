@@ -20,29 +20,32 @@ import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.PrintWriter;
 
 /**
  * @author Santhosh Kumar T
  */
-public class GenerateHandlerAction extends AbstractAction{
-    private RuleScene scene;
+public class GenerateHandlerAction extends GenerateJavaFileAction{
     public GenerateHandlerAction(RuleScene scene){
-        super("Generate Consumer...");
-        this.scene = scene;
+        super("Generate Consumer...", scene);
     }
 
     @Override
-    public void actionPerformed(ActionEvent ae){
-        JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
-        codeGenerator.properties.put(JavaCodeGenerator.HANDLER_CLASS_NAME, "UntitledHandler");
+    protected boolean askConfirmation(JavaCodeGenerator codeGenerator){
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Class ?");
         if(response==JOptionPane.YES_OPTION)
             codeGenerator.properties.put(JavaCodeGenerator.HANDLER_IS_CLASS, "true");
         else if(response!=JOptionPane.NO_OPTION)
-            return;
-        Printer printer = new Printer(new PrintWriter(System.out, true));
+            return false;
+        return true;
+    }
+
+    @Override
+    protected String classPropertyName(){
+        return JavaCodeGenerator.HANDLER_CLASS_NAME;
+    }
+
+    @Override
+    protected void generateJavaFile(JavaCodeGenerator codeGenerator, Printer printer){
         codeGenerator.generateConsumer(printer);
     }
 }

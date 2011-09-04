@@ -16,47 +16,37 @@
 package jlibs.nblr.editor.actions;
 
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.io.FileUtil;
-import jlibs.core.util.CollectionUtil;
 import jlibs.nblr.codegen.java.JavaCodeGenerator;
 import jlibs.nblr.editor.RuleScene;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.*;
 
 /**
  * @author Santhosh Kumar T
  */
-public class GenerateParserAction extends AbstractAction{
-    private RuleScene scene;
+public class GenerateParserAction extends GenerateJavaFileAction{
     public GenerateParserAction(RuleScene scene){
-        super("Generate Parser...");
+        super("Generate Parser...", scene);
         this.scene = scene;
     }
 
     @Override
-    public void actionPerformed(ActionEvent ae){
-        JavaCodeGenerator codeGenerator = new JavaCodeGenerator(scene.getSyntax());
-        if(scene.file!=null){
-            File propsFile = new File(scene.file.getParentFile(), FileUtil.getName(scene.file.getName())+".properties");
-            try{
-                if(propsFile.exists())
-                    CollectionUtil.readProperties(new FileInputStream(propsFile), codeGenerator.properties);
-                else
-                    codeGenerator.properties.store(new FileOutputStream(propsFile), "Properties for "+scene.file.getName());
-            }catch (IOException ex){
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(scene.getView(), ex.getMessage());
-            }
-        }
-        
+    protected boolean askConfirmation(JavaCodeGenerator codeGenerator){
         int response = JOptionPane.showConfirmDialog(scene.getView(), "Generate Debuggable Parser ?");
         if(response==JOptionPane.YES_OPTION)
             codeGenerator.setDebuggable();
         else if(response!=JOptionPane.NO_OPTION)
-            return;
-        Printer printer = new Printer(new PrintWriter(System.out, true));
+            return false;
+        return true;
+    }
+
+    @Override
+    protected String classPropertyName(){
+        return JavaCodeGenerator.PARSER_CLASS_NAME;
+    }
+
+    @Override
+    protected void generateJavaFile(JavaCodeGenerator codeGenerator, Printer printer){
         codeGenerator.generateParser(printer);
     }
 }
