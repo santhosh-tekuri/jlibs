@@ -40,4 +40,17 @@ public class JavaUtil{
         "void", "volatile",
         "while"
     );
+
+    public static boolean isIdentifier(CharSequence seq){
+        int len = seq.length();
+        if(len==0)
+            return false;
+        if(!Character.isJavaIdentifierStart(seq.charAt(0)))
+            return false;
+        for(int i=1; i<len; i++){
+            if(!Character.isJavaIdentifierPart(seq.charAt(i)))
+                return false;
+        }
+        return true;
+    }
 }
