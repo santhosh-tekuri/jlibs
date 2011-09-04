@@ -15,6 +15,7 @@
 
 package jlibs.nblr.editor;
 
+import jlibs.core.lang.JavaUtil;
 import jlibs.core.lang.OS;
 import jlibs.nblr.Syntax;
 import jlibs.nblr.editor.debug.Debugger;
@@ -305,6 +306,10 @@ public class NBLREditor extends JFrame{
                     JOptionPane.showMessageDialog(NBLREditor.this, "Rule with name '"+ruleName+"' already exists");
                     return;
                 }
+                if(JavaUtil.KEYWORDS.contains(ruleName)){
+                    JOptionPane.showMessageDialog(NBLREditor.this, "Rule name cannot be java keyword");
+                    return;
+                }
 
                 Rule rule = new Rule();
                 rule.node = new Node();
@@ -334,6 +339,11 @@ public class NBLREditor extends JFrame{
                         JOptionPane.showMessageDialog(NBLREditor.this, "Rule with name '"+newName+"' already exists");
                         return;
                     }
+                    if(JavaUtil.KEYWORDS.contains(newName)){
+                        JOptionPane.showMessageDialog(NBLREditor.this, "Rule name cannot be java keyword");
+                        return;
+                    }
+
                     rule.name = newName;
                     Rule rules[] = syntax.rules.values().toArray(new Rule[syntax.rules.size()]);
                     syntax.rules.clear();
