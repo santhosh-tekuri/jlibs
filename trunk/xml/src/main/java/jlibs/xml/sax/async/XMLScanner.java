@@ -3814,14 +3814,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }
@@ -3860,14 +3860,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }
@@ -3906,14 +3906,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }
@@ -3952,14 +3952,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }
@@ -3998,14 +3998,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }
@@ -4044,14 +4044,14 @@ public final class XMLScanner extends jlibs.nbp.NBParser{
                     if(ch=='\r'){
                         line++;
                         linePosition = ++position;
-                        chars[buffer.count++] = coelsceNewLines ? '\n' : '\r';
+                        chars[buffer.count++] = coalesceNewLines ? '\n' : '\r';
                     }
                     else if(ch=='\n'){
                         linePosition = ++position;
                         char lastChar = position==start+1 ? this.lastChar : input[position-2];
                         if(lastChar!='\r')
                             line++;
-                        else if(coelsceNewLines)
+                        else if(coalesceNewLines)
                             continue;
                         chars[buffer.count++] = '\n';
                     }

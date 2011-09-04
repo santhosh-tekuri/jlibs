@@ -50,7 +50,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
     }
 
     public AsyncXMLReader(){
-        xmlScanner.coelsceNewLines = true;
+        xmlScanner.coalesceNewLines = true;
         encoding = null;
         elements[0] = elem;
         namespaces[0] = XMLNS_ATTRIBUTE;
@@ -790,7 +790,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 is = entityResolver.resolveEntity(inputSource.getPublicId(), inputSource.getSystemId());
 
             XMLScanner dtdScanner = new XMLScanner(this, XMLScanner.RULE_EXT_SUBSET_DECL);
-            dtdScanner.coelsceNewLines = true;
+            dtdScanner.coalesceNewLines = true;
             encoding = null;
             declScanner.reset(XMLScanner.RULE_TEXT_DECL);
             feeder.setChild(new XMLFeeder(this, dtdScanner, is==null?inputSource:is, declScanner));
@@ -877,7 +877,7 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
         public XMLFeeder parse(int rule) throws IOException, SAXException{
             XMLScanner scanner = new XMLScanner(AsyncXMLReader.this, rule);
             XMLScanner prologParser = prologParser();
-            scanner.coelsceNewLines = externalValue;
+            scanner.coalesceNewLines = externalValue;
 
             XMLFeeder childFeeder = new XMLFeeder(AsyncXMLReader.this, scanner, inputSource(false), prologParser);
             feeder.setChild(childFeeder);
