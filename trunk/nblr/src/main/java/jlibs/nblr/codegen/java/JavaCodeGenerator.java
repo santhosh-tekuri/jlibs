@@ -26,6 +26,7 @@ import jlibs.nblr.matchers.Not;
 import jlibs.nblr.rules.*;
 import jlibs.nbp.NBParser;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -42,7 +43,7 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     @Override
     protected void printTitleComment(String title){
-        printer.println("/*-------------------------------------------------[ "+title+" ]---------------------------------------------------*/");
+        printer.println("/*-------------------------------------------------[ " + title + " ]---------------------------------------------------*/");
     }
 
     @Override
@@ -688,10 +689,16 @@ public class JavaCodeGenerator extends CodeGenerator{
         );
     }
 
+    private String consumerMethodModifier(){
+        String parserPackage = className(stringProperty(PARSER_CLASS_NAME))[0];
+        String consumerPackage = className(stringProperty(HANDLER_CLASS_NAME))[0];
+        return parserPackage.equals(consumerPackage) ? "protected" : "public";
+    }
+
     protected void addPublishMethod(String name){
         if(booleanProperty(HANDLER_IS_CLASS)){
             printer.printlns(
-                "public void "+name+"(Chars data){",
+                consumerMethodModifier()+" void "+name+"(Chars data){",
                     PLUS,
                         "System.out.println(\""+name+"(\\\"\"+data+\"\\\")\");",
                     MINUS,
@@ -704,7 +711,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     protected void addEventMethod(String name){
         if(booleanProperty(HANDLER_IS_CLASS)){
             printer.printlns(
-                "public void "+name+"(){",
+                consumerMethodModifier()+" void "+name+"(){",
                     PLUS,
                         "System.out.println(\""+name+"\");",
                     MINUS,
@@ -767,6 +774,7 @@ public class JavaCodeGenerator extends CodeGenerator{
     private static final String PARSER_SUPER_CLASS = "PARSER_SUPER_CLASS";
     public static final String HANDLER_CLASS_NAME = "HANDLER_CLASS_NAME";
     public static final String HANDLER_IS_CLASS = "HANDLER_IS_CLASS";
+    public static final String SOURCE_DIR = "SOURCE_DIR";
 
     public static final Properties DEFAULTS = new Properties();
     static{
@@ -776,6 +784,8 @@ public class JavaCodeGenerator extends CodeGenerator{
 
         DEFAULTS.put(HANDLER_CLASS_NAME, "UntitledHandler");
         DEFAULTS.put(HANDLER_IS_CLASS, "false");
+
+        DEFAULTS.put(SOURCE_DIR, "src");
     }
     public final Properties properties = new Properties(DEFAULTS);
     private final Properties debugProperties = new Properties(properties);
@@ -790,6 +800,11 @@ public class JavaCodeGenerator extends CodeGenerator{
 
     private boolean booleanProperty(String name){
         return "true".equals(stringProperty(name));
+    }
+
+    public File fileProperty(String name){
+        String className = stringProperty(name);
+        return new File(stringProperty(SOURCE_DIR), className.replace('.', '/')+".java");
     }
 
     public void setDebuggable(){
