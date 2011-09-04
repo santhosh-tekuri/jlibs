@@ -91,7 +91,7 @@ public abstract class NBParser{
         }
     }
 
-    public boolean coelsceNewLines = false;
+    public boolean coalesceNewLines = false;
     protected static final int FROM_LA = -2;
     protected final void consume(int cp){
         if(cp==FROM_LA){
@@ -104,13 +104,13 @@ public abstract class NBParser{
         if(cp=='\r'){
             line++;
             linePosition = position;
-            cp = coelsceNewLines ? '\n' : '\r';
+            cp = coalesceNewLines ? '\n' : '\r';
         }else if(cp=='\n'){
             linePosition = position;
             char lastChar = position==start+1 ? this.lastChar : input[position-2];
             if(lastChar!='\r')
                 line++;
-            else if(coelsceNewLines)
+            else if(coalesceNewLines)
                     return;
         }
         if(buffer.free>0)

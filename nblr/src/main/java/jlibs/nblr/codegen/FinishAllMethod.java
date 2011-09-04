@@ -183,7 +183,7 @@ public class FinishAllMethod{
                                 PLUS
                         );
                     }
-                    printer.printlns("chars[buffer.count++] = coelsceNewLines ? '\\n' : '\\r';");
+                    printer.printlns("chars[buffer.count++] = coalesceNewLines ? '\\n' : '\\r';");
                     if(buffering==Answer.MAY_BE){
                         printer.printlns(
                                 MINUS
@@ -213,7 +213,7 @@ public class FinishAllMethod{
 
                 if(buffering!=Answer.NO){
                     printer.printlns(
-                        "else if(coelsceNewLines)",
+                        "else if(coalesceNewLines)",
                             PLUS,
                             "continue;",
                             MINUS
