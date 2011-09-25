@@ -37,9 +37,11 @@ public class Bytes implements Iterable<ByteSequence>, Serializable{
         this.chunkSize = chunkSize;
     }
 
-    public Bytes(Bytes that) {
-        for (ByteSequence byteSequence : that) {
-            append(byteSequence.copy());
+    public Bytes(Bytes that, boolean deepCopy){
+        for (ByteSequence seq: that){
+            if(deepCopy)
+                seq = seq.copy();
+            append(seq);
         }
     }
 
