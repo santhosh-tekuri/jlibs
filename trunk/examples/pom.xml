@@ -112,18 +112,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <repository>
-            <id>saxon</id>
-            <name>Saxon Repository</name>
-            <url>http://svn.apache.org/repos/asf/tuscany/maven/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
