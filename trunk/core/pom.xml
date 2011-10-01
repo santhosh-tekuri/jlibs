@@ -27,37 +27,14 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.3</version>
-                <configuration>
-                    <tasks>
-                        <mkdir dir="${project.build.testOutputDirectory}"/>
-                    </tasks>
-                </configuration>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <executions>
                     <execution>
-                        <id>create-test-classes-directory</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>validate</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <version>1.2</version>
-                <configuration>
-                    <compilerArguments>-d ${project.build.testOutputDirectory}</compilerArguments>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>process</id>
-                        <goals>
-                            <goal>process-test</goal>
-                        </goals>
-                        <phase>generate-test-sources</phase>
+                        <id>default-compile</id>
+                        <configuration>
+                            <proc>none</proc>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
