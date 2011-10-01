@@ -56,7 +56,6 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-                    <compilerArgument>-proc:none</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>
@@ -126,13 +125,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <pluginRepositories>
-        <pluginRepository>
-          <id>maven-annotation-plugin</id>
-          <url>http://maven-annotation-plugin.googlecode.com/svn/trunk/mavenrepo</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <repositories>
         <repository>
