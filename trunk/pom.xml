@@ -73,6 +73,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <revisionOnScmFailure>unknown</revisionOnScmFailure>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>

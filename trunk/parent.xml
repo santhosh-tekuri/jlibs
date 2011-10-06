@@ -84,6 +84,7 @@
                 </executions>
                 <configuration>
                     <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+                    <revisionOnScmFailure>unknown</revisionOnScmFailure>
                 </configuration>
             </plugin>
             <plugin>
