@@ -34,6 +34,8 @@ public class Bytes implements Iterable<ByteSequence>, Serializable{
     public static final int CHUNK_SIZE = 1024*4; // 4K
 
     public Bytes(int chunkSize){
+        if(chunkSize<=0)
+            throw new IllegalArgumentException("chunkSize: "+chunkSize);
         this.chunkSize = chunkSize;
     }
 
