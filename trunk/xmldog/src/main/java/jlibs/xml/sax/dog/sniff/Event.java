@@ -554,8 +554,15 @@ public final class Event extends EvaluationListener implements NodeSetListener{
                 if(xmlBuilder!=null && expression.resultType==DataType.NODESET && eval instanceof NodeSetListener.Support)
                     ((Support)eval).setNodeSetListener(this);
                 eval.start();
-            }else
-                finished(new StaticEvaluation<Expression>(expression, order, result));
+            }else{
+                Evaluation eval;
+                if(expression.resultType==DataType.NODESET && hasInstantListener(expression)){
+                    onInstantResult(expression, nodeItem);
+                    results[i] = eval = new StaticEvaluation<Expression>(expression, order, null);
+                }else
+                    eval = new StaticEvaluation<Expression>(expression, order, result);
+                finished(eval);
+            }
         }
         current.listenersAdded();
         firePush();
