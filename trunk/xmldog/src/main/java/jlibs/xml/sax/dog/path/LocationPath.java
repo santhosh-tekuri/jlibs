@@ -75,10 +75,7 @@ public final class LocationPath extends Predicated{
     }
 
     public int enlargedScope(){
-        if(scope==Scope.DOCUMENT && steps.length==0)
-            return Scope.GLOBAL;
-        else
-            return scope;
+        return scope;
     }
 
     public Expression typeCast(DataType dataType){
