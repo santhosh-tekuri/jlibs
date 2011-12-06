@@ -17,9 +17,7 @@ package jlibs.xml.sax.dog.expr.nodset;
 
 import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.DataType;
-import jlibs.xml.sax.dog.Scope;
 import jlibs.xml.sax.dog.expr.Expression;
-import jlibs.xml.sax.dog.expr.Literal;
 import jlibs.xml.sax.dog.path.LocationPath;
 import jlibs.xml.sax.dog.sniff.Event;
 
@@ -46,7 +44,7 @@ public abstract class LocationExpression extends Expression{
     }
 
     @Override
-    public final Object getResult(Event event){
+    public Object getResult(Event event){
         if(locationPath.steps.length==0)
             return getResultItem(event);
         else
@@ -80,13 +78,6 @@ public abstract class LocationExpression extends Expression{
                 else
                     return result.firstEntry().value;
         }
-    }
-
-    @Override
-    public Expression simplify(){
-        if(locationPath.scope==Scope.DOCUMENT && locationPath.steps.length==0)
-            return new Literal(getResult(), resultType);
-        return super.simplify();
     }
 
     protected abstract String getName();
