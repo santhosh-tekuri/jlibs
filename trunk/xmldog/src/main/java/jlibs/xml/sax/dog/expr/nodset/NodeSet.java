@@ -33,21 +33,27 @@ public final class NodeSet extends LocationExpression{
 
     @Override
     public Object getResult(){
-        if(locationPath==LocationPath.IMPOSSIBLE)
-            return rawResult ? new LongTreeMap() : Collections.EMPTY_LIST;
-        else{
-            if(rawResult){
-                LongTreeMap<NodeItem> result = new LongTreeMap<NodeItem>();
-                result.put(0, NodeItem.NODEITEM_DOCUMENT);
-                return result;
-            }else
-                return Collections.singletonList(NodeItem.NODEITEM_DOCUMENT);
-        }
+        assert locationPath==LocationPath.IMPOSSIBLE;
+        return rawResult ? new LongTreeMap() : Collections.EMPTY_LIST;
     }
 
     @Override
     protected Object getResultItem(Event event){
         return event.nodeItem();
+    }
+
+    @Override
+    public Object getResult(Event event){
+        if(locationPath.steps.length==0){
+            NodeItem nodeItem = event.nodeItem();
+            if(rawResult){
+                LongTreeMap<NodeItem> result = new LongTreeMap<NodeItem>();
+                result.put(nodeItem.order, nodeItem);
+                return result;
+            }else
+                return Collections.singletonList(nodeItem);
+        }else
+            return super.getResult(event);
     }
 
     @Override
