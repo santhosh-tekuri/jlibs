@@ -15,11 +15,46 @@
 
 package jlibs.xml.sax.dog.expr;
 
+import jlibs.xml.sax.dog.DataType;
 import jlibs.xml.sax.dog.NodeItem;
+import jlibs.xml.sax.dog.expr.nodset.PathExpression;
+
+import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
 public abstract class InstantEvaluationListener extends EvaluationListener{
     public abstract void onNodeHit(Expression expression, NodeItem nodeItem);
+
+    public abstract void finishedNodeSet(Expression expression);
+    public abstract void onResult(Expression expression, Object result);
+
+    @Override
+    public final void finished(Evaluation evaluation){
+        Expression expression = evaluation.expression;
+        if(expression.getXPath()==null)
+            return;
+
+        Object result = evaluation.getResult();
+        boolean isNodeSet;
+        if(expression.resultType==DataType.NODESET){
+            if(expression instanceof PathExpression)
+                isNodeSet = !((PathExpression)expression).forEach;
+            else
+                isNodeSet = true;
+        }else
+            isNodeSet = false;
+
+        if(result==null){
+            finishedNodeSet(expression);
+        }else{
+            if(isNodeSet){
+                for(NodeItem nodeItem: (List<NodeItem>)result)
+                    onNodeHit(expression, nodeItem);
+                finishedNodeSet(expression);
+            }else
+                onResult(expression, result);
+        }
+    }
 }

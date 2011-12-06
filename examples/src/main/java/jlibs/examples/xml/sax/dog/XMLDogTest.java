@@ -21,7 +21,6 @@ import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.XPathResults;
-import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.EvaluationListener;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
@@ -138,13 +137,14 @@ public class XMLDogTest{
                 }
 
                 @Override
-                public void finished(Evaluation evaluation){
-                    Object result = evaluation.getResult();
+                public void finishedNodeSet(Expression expression){
+                    System.out.println("Finished Nodeset: "+expression.getXPath());
+                }
+
+                @Override
+                public void onResult(Expression expression, Object result){
                     if(printResults){
-                        if(result==null)
-                            System.out.println("Finished: "+evaluation.expression.getXPath());
-                        else
-                            XPathResults.print(System.out, evaluation.expression.getXPath(), result);
+                        XPathResults.print(System.out, expression.getXPath(), result);
                         System.out.println();
                     }
                 }

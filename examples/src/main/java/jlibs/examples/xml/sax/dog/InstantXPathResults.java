@@ -17,7 +17,6 @@ package jlibs.examples.xml.sax.dog;
 
 import jlibs.core.util.LongTreeMap;
 import jlibs.xml.sax.dog.NodeItem;
-import jlibs.xml.sax.dog.expr.Evaluation;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
 
@@ -47,17 +46,17 @@ public class InstantXPathResults extends InstantEvaluationListener{
     }
 
     @Override
-    public void finished(Evaluation evaluation){
-        Object result = evaluation.getResult();
-        if(result==null){
-            if(instantResults[evaluation.expression.id]==null)
-                results.put(evaluation.expression, Collections.<Object>emptyList());
-            else{
-                LongTreeMap<NodeItem> map = (LongTreeMap<NodeItem>)instantResults[evaluation.expression.id];
-                results.put(evaluation.expression, new ArrayList(map.values()));
-            }
-        }else
-            results.put(evaluation.expression, result);
+    public void finishedNodeSet(Expression expression){
+        LongTreeMap<NodeItem> map = (LongTreeMap<NodeItem>)instantResults[expression.id];
+        if(map==null)
+            results.put(expression, Collections.<Object>emptyList());
+        else
+            results.put(expression, new ArrayList(map.values()));
+    }
+
+    @Override
+    public void onResult(Expression expression, Object result){
+        results.put(expression, result);
     }
 
     public Object getResult(Expression expr){
