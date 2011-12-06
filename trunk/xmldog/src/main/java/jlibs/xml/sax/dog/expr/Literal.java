@@ -44,17 +44,9 @@ public final class Literal extends Expression{
 
     @SuppressWarnings({"unchecked"})
     public void rawResultRequired(){
-        if(resultType== DataType.NODESET && literal instanceof List){
-            List list = (List)literal;
-            if(list.size()==0)
-                literal = new LongTreeMap();
-            else{
-                assert list.size()==1;
-                assert list.get(0)== NodeItem.NODEITEM_DOCUMENT;
-                LongTreeMap treeMap = new LongTreeMap();
-                treeMap.put(0, list.get(0));
-                literal = treeMap;
-            }
+        if(resultType==DataType.NODESET && literal instanceof List){
+            assert ((List)literal).isEmpty();
+            literal = new LongTreeMap();
         }
     }
     
