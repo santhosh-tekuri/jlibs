@@ -39,8 +39,6 @@ import java.util.BitSet;
  * @author Santhosh Kumar T
  */
 public class NodeItem implements NodeType{
-    public static final NodeItem NODEITEM_DOCUMENT = new NodeItem();
-
     /**
      * This field tells the type of this NodeItem.
      * It is one of the constants in NodeType other than ANY, MAX
