@@ -40,7 +40,6 @@ import javax.xml.xpath.XPathFunctionResolver;
 import javax.xml.xpath.XPathVariableResolver;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -66,7 +65,6 @@ public final class XMLDog{
     private final List<Expression> expressions = new ArrayList<Expression>();
     private final List<Expression> docExpressions = new ArrayList<Expression>();
     private final List<Expression> globalExpressions = new ArrayList<Expression>();
-    private final List<Expression> documentResultExpressions = new ArrayList<Expression>();
     private final ArrayDeque<Expression> tempStack = new ArrayDeque<Expression>();
 
     public Expression addXPath(String xpath) throws SAXPathException{
@@ -101,16 +99,7 @@ public final class XMLDog{
                 break;
             case Scope.GLOBAL:
                 assert compiledExpr instanceof Literal;
-                boolean documentResult = false;
-                if(compiledExpr.resultType==DataType.NODESET){
-                    List<NodeItem> result = (List<NodeItem>)compiledExpr.getResult();
-                    if(result.size()==1 && result.get(0).type==NodeType.DOCUMENT)
-                        documentResult = true;
-                }
-                if(documentResult)
-                    documentResultExpressions.add(compiledExpr);
-                else
-                    globalExpressions.add(compiledExpr);
+                globalExpressions.add(compiledExpr);
                 break;
             default:
                 throw new ImpossibleException("scope of "+compiledExpr.getXPath()+" can't be"+compiledExpr.scope());
@@ -162,7 +151,7 @@ public final class XMLDog{
     }
 
     public Event createEvent(){
-        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size(), !documentResultExpressions.isEmpty());
+        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size());
     }
 
     /*-------------------------------------------------[ Sniff ]---------------------------------------------------*/
@@ -178,11 +167,6 @@ public final class XMLDog{
                 new STAXEngine(event, parser.langInterested).start(source);
             else
                 new SAXEngine(event, parser.langInterested).start(source);
-        }
-        if(listener!=null && !documentResultExpressions.isEmpty()){
-            List<NodeItem> result = Collections.singletonList(event.documentNodeItem());
-            for(Expression expr: documentResultExpressions)
-                listener.finished(new StaticEvaluation<Expression>(expr, 0, result));
         }
     }
 

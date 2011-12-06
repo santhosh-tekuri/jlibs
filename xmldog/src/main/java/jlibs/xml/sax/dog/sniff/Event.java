@@ -42,7 +42,7 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     private EventID.ConstraintEntry listenersArray[][];
 
     @SuppressWarnings({"unchecked"})
-    public Event(NamespaceContext givenNSContext, List<Expression> exprList, int noOfConstraints, boolean documentRequired){
+    public Event(NamespaceContext givenNSContext, List<Expression> exprList, int noOfConstraints){
         this.givenNSContext = givenNSContext;
         this.exprList = exprList;
 
@@ -53,8 +53,6 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         instantListenersCount = new int[noOfXPaths];
         finished = new BitSet(noOfXPaths);
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
-        if(documentRequired)
-            docNodeItem = nodeItem = new NodeItem();
     }
 
     public NamespaceContext getNamespaceContext(){
@@ -291,10 +289,6 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     /*-------------------------------------------------[ XMLBuilder ]---------------------------------------------------*/
 
     private XMLBuilder xmlBuilder = null;
-    private NodeItem docNodeItem;
-    public NodeItem documentNodeItem(){
-        return docNodeItem;
-    }
 
     public void setXMLBuilder(XMLBuilder xmlBuilder){
         this.xmlBuilder = xmlBuilder;
