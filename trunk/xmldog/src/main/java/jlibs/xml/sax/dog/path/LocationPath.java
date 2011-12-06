@@ -74,10 +74,6 @@ public final class LocationPath extends Predicated{
         super.addPredicate(predicate);
     }
 
-    public int enlargedScope(){
-        return scope;
-    }
-
     public Expression typeCast(DataType dataType){
         LocationExpression expr = _typeCast(dataType);
         if(contexts.size()>0)

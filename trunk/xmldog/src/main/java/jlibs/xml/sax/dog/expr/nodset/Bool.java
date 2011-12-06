@@ -27,7 +27,7 @@ import jlibs.xml.sax.dog.sniff.Event;
  */
 public final class Bool extends LocationExpression{
     public Bool(LocationPath locationPath){
-        super(locationPath.enlargedScope(), locationPath, DataType.BOOLEAN, false, false);
+        super(locationPath.scope, locationPath, DataType.BOOLEAN, false, false);
     }
 
     @Override

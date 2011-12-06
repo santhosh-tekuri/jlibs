@@ -28,7 +28,7 @@ import java.util.Collections;
  */
 public final class NodeSet extends LocationExpression{
     public NodeSet(LocationPath locationPath){
-        super(locationPath.enlargedScope(), locationPath, DataType.NODESET, true, false);
+        super(locationPath.scope, locationPath, DataType.NODESET, true, false);
     }
 
     @Override

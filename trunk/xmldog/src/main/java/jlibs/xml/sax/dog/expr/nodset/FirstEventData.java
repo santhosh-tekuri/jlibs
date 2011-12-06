@@ -26,7 +26,7 @@ import jlibs.xml.sax.dog.path.LocationPath;
  */
 public abstract class FirstEventData extends LocationExpression{
     public FirstEventData(LocationPath locationPath){
-        super(locationPath.enlargedScope(), locationPath, DataType.STRING, false, true);
+        super(locationPath.scope, locationPath, DataType.STRING, false, true);
     }
 
     @Override
