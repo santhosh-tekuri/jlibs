@@ -144,11 +144,44 @@ public class NodeItem implements NodeType{
     public void printTo(PrintStream out){
         if(xml instanceof Node){
             out.println(location);
-            try{
-                Transformer transformer = TransformerUtil.newTransformer(null, true, 0, null);
-                transformer.transform(new DOMSource((Node)xml), new StreamResult(out));
-            }catch(TransformerException ex){
-                throw new RuntimeException(ex);
+            Node node = (Node)xml;
+            switch(node.getNodeType()){
+                case Node.ATTRIBUTE_NODE:
+                    out.print(node.getNodeName());
+                    out.print("=\"");
+                    out.print(node.getNodeValue().replace("\"", "&quot;"));
+                    out.print("\"");
+                    break;
+                case NodeType.NAMESPACE:
+                    out.print("xmlns:");
+                    out.print(node.getLocalName());
+                    out.print("=\"");
+                    out.print(node.getNodeValue().replace("\"", "&quot;"));
+                    out.print("\"");
+                    break;
+                case Node.TEXT_NODE:
+                case Node.CDATA_SECTION_NODE:
+                    out.print(node.getTextContent());
+                    break;
+                case Node.COMMENT_NODE:
+                    out.print("<!--");
+                    out.print(node.getNodeValue());
+                    out.print("-->");
+                    break;
+                case Node.PROCESSING_INSTRUCTION_NODE:
+                    out.print("<?");
+                    out.print(node.getNodeName());
+                    out.print(' ');
+                    out.print(node.getNodeValue());
+                    out.print("?>");
+                    break;
+                default:
+                    try{
+                        Transformer transformer = TransformerUtil.newTransformer(null, true, 0, null);
+                        transformer.transform(new DOMSource((Node)xml), new StreamResult(out));
+                    }catch(TransformerException ex){
+                        throw new RuntimeException(ex);
+                    }
             }
         }else
             out.print(location);
