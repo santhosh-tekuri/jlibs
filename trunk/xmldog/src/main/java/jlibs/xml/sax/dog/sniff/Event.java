@@ -407,6 +407,8 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     }
 
     private void fireInstantResult(Expression expression, NodeItem nodeItem){
+        if(expression.getXPath()==null) // non-user given absolute xpath
+            return;
         List<EvaluationListener> listeners = this.listeners[expression.id];
         for(EvaluationListener listener: listeners){
             if(!listener.disposed && listener instanceof InstantEvaluationListener)
