@@ -1,0 +1,58 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="condition" abstract="true"/>
+    
+    <xs:element name="field" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="javaRegex">
+                    <xs:attribute name="name" type="xs:NCName" use="required"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="message" substitutionGroup="condition" type="javaRegex"/>
+    <xs:element name="index" substitutionGroup="condition" type="xs:nonPositiveInteger"/>
+
+
+    <xs:element name="and" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="condition" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="or" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="condition" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="not" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="condition"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="following" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="condition"/>
+            </xs:sequence>
+            <xs:attribute name="includeSelf" type="xs:boolean" default="false"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="preceding" substitutionGroup="condition">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="condition"/>
+            </xs:sequence>
+            <xs:attribute name="includeSelf" type="xs:boolean" default="false"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="javaRegex">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+</xs:schema>
