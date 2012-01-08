@@ -1,0 +1,27 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="header">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="pattern" type="javaRegex"/>
+                <xs:element name="field" minOccurs="1" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:attribute name="group" type="xs:positiveInteger" use="required"/>
+                        <xs:attribute name="name" type="xs:NCName" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+        <xs:key name="groupKey">
+            <xs:selector xpath="field"/>
+            <xs:field xpath="@group"/>
+        </xs:key>
+        <xs:key name="nameKey">
+            <xs:selector xpath="field"/>
+            <xs:field xpath="@name"/>
+        </xs:key>
+    </xs:element>
+
+    <xs:simpleType name="javaRegex">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+</xs:schema>
