@@ -66,7 +66,7 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
                     Printer pw = null;
                     try{
                         pw = Printer.get(c, Visitor.Implement.class, FORMAT);
-                        boolean implementing = Environment.get().getTypeUtils().isAssignable(elem.asType(), Environment.get().getElementUtils().getTypeElement(Visitor.class.getCanonicalName()).asType());
+                        boolean implementing = ModelUtil.isAssignable(elem.asType(), Visitor.class);
                         boolean isFinal = c.getModifiers().contains(Modifier.FINAL);
                         if(!isFinal && implementing)
                             generateExtendingClass(classes, pw);
