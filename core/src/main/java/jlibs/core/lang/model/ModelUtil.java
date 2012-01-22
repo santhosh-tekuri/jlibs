@@ -54,6 +54,11 @@ public class ModelUtil{
             return null;
     }
 
+    public static boolean isAssignable(TypeMirror type, Class clazz){
+        TypeMirror superType = Environment.get().getElementUtils().getTypeElement(clazz.getCanonicalName()).asType();
+        return Environment.get().getTypeUtils().isAssignable(type, superType);
+    }
+
     public static String getPackage(Element elem){
         while(!(elem instanceof PackageElement))
             elem = elem.getEnclosingElement();
