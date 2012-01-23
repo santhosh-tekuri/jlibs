@@ -34,4 +34,7 @@ public interface DBBundle{
 
     @Message("executing {0}")
     public String executing(String query);
+
+    @Message("Database connection to host {0} is lost")
+    public UncheckedException connectionLost(String host);
 }

@@ -28,6 +28,7 @@ import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.tools.FileObject;
@@ -186,8 +187,28 @@ class Interfaces{
         AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Message.class);
         if(mirror==null)
             throw new AnnotationError(method, Message.class.getName()+" annotation is missing on this method");
-        if(!String.class.getName().equals(ModelUtil.toString(method.getReturnType(), true)))
-            throw new AnnotationError(method, "method annotated with "+Message.class.getName()+" must return java.lang.String");
+        if(!ModelUtil.isAssignable(method.getReturnType(), String.class)){
+            if(!ModelUtil.isAssignable(method.getReturnType(), Throwable.class)){
+                throw new AnnotationError(method, "method annotated with "+Message.class.getName()+
+                        " must return java.lang.String or a subclass of java.lang.Throwable");
+            }
+            Element element = ((DeclaredType)method.getReturnType()).asElement();
+            boolean foundValidConstructor = false;
+            for(ExecutableElement constructor: ElementFilter.constructorsIn(element.getEnclosedElements())){
+                List<? extends VariableElement> params = constructor.getParameters();
+                if(params.size()==2){
+                    if(ModelUtil.isAssignable(params.get(0).asType(), String.class)
+                        && ModelUtil.isAssignable(params.get(1).asType(), String.class)){
+                        foundValidConstructor = true;
+                        break;
+                    }
+                }
+            }
+            if(!foundValidConstructor){
+                String className = ModelUtil.toString(method.getReturnType(), false);
+                throw new AnnotationError(method, "Constructor "+className+"(String errorCode, String message) not found");
+            }
+        }
 
         String signature = ModelUtil.signature(method, false);
         for(ExecutableElement m : entries.values()){
@@ -238,7 +259,12 @@ class Interfaces{
                 ExecutableElement method = entry.getValue();
 
                 printer.println("@Override");
-                printer.print("public String "+method.getSimpleName()+"(");
+                
+                boolean returnsException = ModelUtil.isAssignable(method.getReturnType(), Throwable.class);
+                String returnType = returnsException
+                                        ? ModelUtil.toString(method.getReturnType(), false)
+                                        : "String" ;
+                printer.print("public "+returnType+" "+method.getSimpleName()+"(");
 
                 int i = 0;
                 StringBuilder params = new StringBuilder();
@@ -257,7 +283,28 @@ class Interfaces{
 
                 printer.println("){");
                 printer.indent++;
-                printer.println("return MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+");");
+                
+                String message = "MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+")";
+                if(returnsException){
+                    String prefix = printer.generatedPakage;
+                    String option = Environment.get().getOptions().get("ResourceBundle.ignorePackageCount");
+                    int packageIgnoreCount = option==null ? 2 : Integer.parseInt(option);
+                    if(packageIgnoreCount==-1)
+                        prefix = "";
+                    else{
+                        for(int j=0; j<packageIgnoreCount; j++){
+                            int dot = prefix.indexOf(".");
+                            if(dot==-1)
+                                break;
+                            prefix = prefix.substring(dot+1);
+                        }
+                    }
+                    String errorCode = StringUtil.capitalize(key);
+                    if(!prefix.isEmpty())
+                        errorCode = prefix+"."+errorCode;
+                    printer.println(" return new "+returnType+"(\""+errorCode+"\", "+message+");");
+                }else
+                    printer.println("return MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+");");
                 printer.indent--;
                 printer.println("}");
             }
