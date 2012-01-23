@@ -88,7 +88,7 @@ public class ResourceBundleTest{
     @Test(description="method with @Message must return String")
     public void invalidMethodReturn(){
         assertErrors(compile("/i18n/InvalidMethodReturnBundle.java"),
-            "i18n/InvalidMethodReturnBundle.java:14: method annotated with jlibs.core.util.i18n.Message must return java.lang.String\n" +
+            "i18n/InvalidMethodReturnBundle.java:14: method annotated with jlibs.core.util.i18n.Message must return java.lang.String or a subclass of java.lang.Throwable\n" +
                     "    public Date lastSucussfullLogin(Date date);\n" +
                     "                ^"
         );
