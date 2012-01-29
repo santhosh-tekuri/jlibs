@@ -1,5 +1,5 @@
+#summary Generating Sample XML for given XMLSchema
 #labels xsd,xml
-#Generating Sample XML for given XMLSchema
 
 You can find command line utility `xsd-instance.sh` in `jlibs/bin` directory.
 
