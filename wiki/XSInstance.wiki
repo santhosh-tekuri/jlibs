@@ -1,0 +1,62 @@
+#labels xsd,xml
+#Generating Sample XML for given XMLSchema
+
+You can find command line utility `xsd-instance.sh` in `jlibs/bin` directory.
+
+{{{
+xsd-instance.sh <xsd-file> [root-element]
+}}}
+
+for example:
+{{{
+xsd-instance.sh purchase-order.xsd {http://jlibs.org}PurchaseOrder
+}}}
+
+here `root-element` is optional. If not specified, It will guess root-element<br>
+from the given schema. It it finds multiple root elements in schema, then it <br>
+prompts to chose one among them.
+
+you can configure various options in `jlibs/bin/xsd-instance.properties`
+{{{
+minimumElementsGenerated=2
+maximumElementsGenerated=4
+minimumListItemsGenerated=2
+maximumListItemsGenerated=4
+
+# for following properties value can be always/never/random
+generateOptionalElements=always
+generateOptionalAttributes=always
+generateFixedAttributes=always
+generateDefaultAttributes=always
+}}}
+------------------------------------------------------------------------------------------------------------------------------
+===Programmatic Usage===
+
+First you parse the schema file as follows:
+{{{
+import jlibs.xml.xsd.XSParser;
+import org.apache.xerces.xs.*;
+
+XSModel xsModel = new XSParser().parse(args[0]);
+}}}
+
+Create an instanceof `XSInstance` and configure various options
+{{{
+import jlibs.xml.xsd.XSInstance;
+
+XSInstance xsInstance = new XSInstance();
+xsInstance.minimumElementsGenerated = 2;
+xsInstance.maximumElementsGenerated = 4;
+xsInstance.generateOptionalElements = Boolean.TRUE; // null means random
+}}}
+
+now genreate the sample xml as follows:
+{{{
+import jlibs.xml.sax.XMLDocument;
+
+QName rootElement = new QName("http://jlibs.org", "PurchaseOrder");
+XMLDocument sampleXml = new XMLDocument(new StreamResult(System.out), true, 4, null);
+xsInstance.generate(xsModel, rootElement, sampleXml);
+}}}
+
+Your comments are appreciated;
