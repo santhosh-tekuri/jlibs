@@ -30,6 +30,7 @@
     
     <modules> 
         <module>core</module> 
+        <module>greplog</module>
         <module>nbp</module>
         <module>jdbc</module> 
         <module>xml</module>
