@@ -37,7 +37,7 @@ First you parse the schema file as follows:
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.*;
 
-XSModel xsModel = new XSParser().parse(args[0]);
+XSModel xsModel = new XSParser().parse("purchangeOrder.xsd");
 }}}
 
 Create an instanceof `XSInstance` and configure various options
