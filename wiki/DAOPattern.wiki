@@ -181,6 +181,9 @@ JDBC jdbc = new JDBC(DATA_SOURCE, "\"");
 }}}
 If the second argument is null, then identifiers are not quoted.
 
+if system property `jlibs.jdbc.debug` is set to `true`, then all the sql queries executed by `JDBC`<br>
+will be logged to `System.out`. This will be useful for debugging.
+
 We created class `DB` with constants to all DAO's.
 {{{
 EMPLOYEES = DAO.create(Employee.class, jdbc);
