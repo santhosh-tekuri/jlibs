@@ -164,14 +164,26 @@ public class DB{
     
     static{
         DATA_SOURCE = new BasicDataSource();
- 	    DATA_SOURCE.setUrl("jdbc:mysql://localhost/test");
-        EMPLOYEES = DAO.create(Employee.class, DATA_SOURCE);
+        DATA_SOURCE.setUrl("jdbc:mysql://localhost/test");
+        JDBC jdbc = new JDBC(DATA_SOURCE);
+        EMPLOYEES = DAO.create(Employee.class, jdbc);
     }
 }
 }}}
+{{{
+JDBC jdbc = new JDBC(DATA_SOURCE);
+}}}
+`JDBC` is the class which executes the sql statements against the specified `DATA_SOURCE`.<br>
+By default `JDBC` finds the `quoteString` from `DatabaseMetaData` and uses it to quote identifiers<br>
+like table name, column name etc. If you want to hardcode the `quoteString`, you can do:
+{{{
+JDBC jdbc = new JDBC(DATA_SOURCE, "\"");
+}}}
+If the second argument is null, then identifiers are not quoted.
+
 We created class `DB` with constants to all DAO's.
 {{{
-EMPLOYEES = DAO.create(Employee.class, DATA_SOURCE);
+EMPLOYEES = DAO.create(Employee.class, jdbc);
 }}}
 The above line creates DAO for `Employee` pojo on given `javax.sql.DataSource`.<br>
 `jlibs.jdbc.DAO` is an abstract base class for all DAO's.<br>
