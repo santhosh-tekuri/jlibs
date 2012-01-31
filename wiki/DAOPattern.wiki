@@ -85,6 +85,14 @@ public void setFirstName(String firstName){
 }
 }}}
 
+If you are using database specific sql type then set `nativeType` to `true`:
+{{{
+import org.postgresql.util.PGmoney;
+
+@Column(nativeType=true)
+public PGmoney salary;
+}}}
+
 A class with `@Table` annotation must have atleast one member with `@Column` annotation.<br>
 Otherwize you will get compilation error.
 
