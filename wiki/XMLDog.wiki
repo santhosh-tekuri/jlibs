@@ -73,9 +73,8 @@ Below is the actual result Type for each resultType returned by `XPath`:
         COMMENT, PI, DOCUMENT, ELEMENT, ATTRIBUTE, NAMESPACE, TEXT;
 `NodeItem.location`:
     returns unique xpath to the xml node. ex: `/xs:schema[1]/xs:complexType[1]/@name`<br>
-    the prefixes in this xpath can be resolved using `results.getNamespaceContext()`
+    the prefixes in this xpath can be resolved using `results.getNamespaceContext()`<br>
     this can be used to create DOM, in case you need it.
-
 `NodeItem.value`, `NodeItem.localName`, `NodeItem.namespaceURI`, `NodeItem.qualifiedName`:
     return value/localName/namespaceURI/qualifiedName of the xml node it represens.
 
@@ -83,7 +82,7 @@ Below is the actual result Type for each resultType returned by `XPath`:
 
 `XPathResults` has handy print method to print results to given `java.io.PrintStream`:
 {{{
-results.print(System.out);
+results.print(dog.getExpressions(), System.out);
 }}}
 will print:
 {{{
@@ -134,6 +133,87 @@ java.lang.UnsupportedOperationException: unsupported axis: parent
 
 This will be very useful. for example you can first try using `XMLDog` and if it throws `UnsupportedOperationException`,<br>
 then you can fallback to use `DOM`
+---------------------------------------------------------------------------------------------------------------------------------------------------
+*DOM Results*
+
+By default `XMLDog` does not construct dom nodes for results.<br>
+You can configure for DOM results as follows:
+{{{
+import package jlibs.xml.sax.dog.sniff.Event;
+
+Event event = dog.createEvent();
+event.setXMLBuilder(new DOMBuilder());
+XPathResults results = dog.sniff(event, new InputSource("note.xml"));
+
+List<NodeItem> items = (List<NodeItem>)results.getResult(xpath1)
+}}}
+
+you can get the dom node for a given `NodeItem` as follows:
+{{{
+NodeItem item = ...
+org.w3c.dom.Node domNode = (org.w3c.dom.Node)item.xml;
+}}}
+
+Note that, dom nodes are created only for portions of xml which are hit by xpaths.
+
+`Event.setXMLBuilder(...)` takes an argument of type `jlibs.xml.sax.dog.sniff.XMLBuilder`.<br>
+So if you want `JDom` to be construction instead of `DOM`, write an implementation of `XMLBuilder`<br>
+which constructs `JDom` and use it.
+---------------------------------------------------------------------------------------------------------------------------------------------------
+*Instant Results*
+
+`XPathResults` object holds results of all xpaths in memory. This might not be feasible always.<br>
+
+Let us say, you are searching employees.xml for employees with more that 5 years of experience.<br>
+if employees.xml has 10000 employees and there are more than 5000 employees who match this criteria.<br>
+Holding 5000 employees in memory may cause `OutOfMemoryError`.
+
+To solve this problem, you register your own `InstantEvaluationListener` with `Event`. Then your listener<br>
+will be notified as soon as an employee with specified criteria is found. Thus you can process that employee<br>
+and discard it.
+
+{{{
+import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
+
+Event event = dog.createEvent();
+event.setXMLBuilder(new DOMBuilder());
+event.setListener(new InstantEvaluationListener(){
+    @Override
+    public void onNodeHit(Expression expression, NodeItem nodeItem){
+        org.w3c.dom.Node node = (org.w3c.dom.Node)nodeItem.xml;
+        System.out.println("XPath: "+expression.getXPath()+" has hit: "+node);
+    }
+
+    @Override
+    public void finishedNodeSet(Expression expression){
+        System.out.println("Finished Nodeset: "+expression.getXPath());
+    }
+
+    @Override
+    public void onResult(Expression expression, Object result){
+        // this method is called only for xpaths which returns primitive result
+        // i.e result will be one of String, Boolean, Double
+        System.out.println("XPath: "+expression.getXPath()+" result: "+result);
+    }
+});
+dog.sniff(event, new InputSource("note.xml"), false/*useSTAX*/); // this version sniff method returns void
+}}}
+---------------------------------------------------------------------------------------------------------------------------------------------------
+You can use variables and custom functions in xpath.
+For this you have to use following constructor:
+{{{
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.xpath.XPathVariableResolver;
+import javax.xml.xpath.XPathFunctionResolver;
+
+NamespaceContext nsContext = ...;
+XPathVariableResolver variableResolver = ...;
+XPathFunctionResolver functionResolver = ...;
+
+XMLDog dog = new XMLDogContext(nsContext, variableResolver, functionResolver);
+}}}
+
+Note that functions are not supposed to expect arguments of type `NodeSet`
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 *Conformance*
 
@@ -197,9 +277,6 @@ The source code of testcase is [http://code.google.com/p/jlibs/source/browse/tru
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 *Future:*
- * variable resolution
- * custom functions
- * listening for xpath results. With this you can get results of an xpath as soon as its evaluation is finished. You don't need to wait until all xpaths are evaluated.
  * ability to specify min number of items required in NODESET 
 
 I am looking forward to know, who are interested in `XMLDog`, and why/where you are using. This will give me some boost-up to add more features. Because it takes most of my free time.
