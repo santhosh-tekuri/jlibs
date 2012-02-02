@@ -221,9 +221,12 @@ The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.sax.
 
 You can look [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/resources/xpaths.xml here], to see the type of xpaths it has been tested.
 
+You can find `xmldog-conformance.sh/xmldog-conformance.bat` in jlibs installation,<br>
+---------------------------------------------------------------------------------------------------------------------------------------------------
 *Performance:*
 
-You can find `xmldog.sh/xmldog.bat` in jlibs installation, which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
+You can find `xmldog-performance.sh/xmldog-performance.bat` in jlibs installation,<br>
+which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
 This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/resources/xpaths.xml xpaths.xml] from jlibs installation.
 
 Here is sample output of this performance test;
