@@ -215,6 +215,12 @@ XMLDog dog = new XMLDogContext(nsContext, variableResolver, functionResolver);
 
 Note that functions are not supposed to expect arguments of type `NodeSet`
 ---------------------------------------------------------------------------------------------------------------------------------------------------
+*Command Line Utility*
+
+You can find `xmldog.sh/xmldog.bat` in $JLIBS_HOME/bin directory
+
+This will be usefull to play with `XMLDog` with various xml documents/xpaths
+---------------------------------------------------------------------------------------------------------------------------------------------------
 *Conformance*
 
 The XMLDog results conforms to the XPath-Spec. It is coverted by `jlibs.xml.sax.dog.tests.XPathConformanceTest`
