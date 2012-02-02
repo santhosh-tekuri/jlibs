@@ -59,7 +59,7 @@ public class XMLDogTest{
         printResults = _printResults;
 
         if(file==null){
-            System.err.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] -instantResults -dontPrintResults <xml-file>");
+            System.err.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] [-instantResults] [-dontPrintResults] <xml-file>");
             System.exit(1);
         }
 
