@@ -233,7 +233,7 @@ You can find `xmldog-conformance.sh/xmldog-conformance.bat` in jlibs installatio
 
 You can find `xmldog-performance.sh/xmldog-performance.bat` in jlibs installation,<br>
 which can be used to test `XMLDog` perfomace against `Xalan` that is shipped with JDK.<br>
-This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/xmldog/resources/xpaths.xml xpaths.xml] from jlibs installation.
+This test reads config from [http://code.google.com/p/jlibs/source/browse/trunk/examples/resources/xpaths.xml xpaths.xml] from jlibs installation.
 
 Here is sample output of this performance test;
 {{{
