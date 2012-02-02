@@ -24,7 +24,6 @@ public class UncheckedException extends RuntimeException{
     public UncheckedException(String errorCode, String message){
         super(message);
         this.errorCode = errorCode;
-        printStackTrace();
     }
     
     public String getErrorCode(){
