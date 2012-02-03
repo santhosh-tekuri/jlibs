@@ -29,8 +29,9 @@
     </licenses>
     
     <modules> 
-        <module>core</module> 
+        <module>core</module>
         <module>greplog</module>
+        <module>wadl</module>
         <module>nbp</module>
         <module>jdbc</module> 
         <module>xml</module>
@@ -135,6 +136,8 @@
                         <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
                         <exclude>xml/src/main/java/jlibs/xml/sax/async/XMLScanner.java</exclude>
                         <exclude>xml/conformance/SAXTest/**</exclude>
+                        <exclude>json/src/main/java/jlibs/json/parser/JSONScanner.java</exclude>
+                        <exclude>json/src/main/java/jlibs/json/parser/JSONParser.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
