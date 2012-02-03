@@ -137,42 +137,7 @@ public class URLUtil{
     }
 
     public static String suggestPrefix(Properties suggested, String uri){
-        String prefix = suggested.getProperty(uri);
-        if(prefix!=null)
-            return prefix;
-        else{
-            try{
-                URI _uri = new URI(uri);
-
-                // suggest prefix from path
-                String path = _uri.getPath();
-                if(path!=null){
-                    StringTokenizer stok = new StringTokenizer(path, "/");
-                    while(stok.hasMoreTokens())
-                        prefix = stok.nextToken();
-                }
-                if(prefix!=null)
-                    return prefix;
-                else{
-                    // suggest prefix from host
-                    String host = _uri.getHost();
-                    if(host!=null){
-                        StringTokenizer stok = new StringTokenizer(host, ".");
-                        String curPrefix = null;
-                        while(stok.hasMoreTokens()){
-                            prefix = curPrefix;
-                            curPrefix = stok.nextToken();
-                        }
-                    }
-
-                    if(prefix!=null)
-                        return prefix;
-                }
-            }catch(URISyntaxException ignore){
-                // xml spec doesn't guarantee that namespace uri should be valid uri
-            }
-        }
-        return "ns";
+        return suggested.getProperty(uri, "ns");
     }
 
     private static SSLContext sc;
