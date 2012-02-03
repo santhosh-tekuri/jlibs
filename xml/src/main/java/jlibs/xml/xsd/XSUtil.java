@@ -95,6 +95,8 @@ public class XSUtil{
         WalkerUtil.walk(new PreorderWalker(model, navigator), new Processor<Object>(){
             @Override
             public boolean preProcess(Object elem, Path path){
+                if(path.getRecursionDepth()>0)
+                    return false;
                 if(elements.size()>1 && path.getLength()>2){
                     XSElementDeclaration elemDecl = (XSElementDeclaration)elem;
                     if(elemDecl.getAbstract()){
