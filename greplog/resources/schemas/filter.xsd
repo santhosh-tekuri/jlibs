@@ -4,9 +4,9 @@
     <xs:element name="field" substitutionGroup="condition">
         <xs:complexType>
             <xs:simpleContent>
-                <xs:restriction base="javaRegex">
+                <xs:extension base="javaRegex">
                     <xs:attribute name="name" type="xs:NCName" use="required"/>
-                </xs:restriction>
+                </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
