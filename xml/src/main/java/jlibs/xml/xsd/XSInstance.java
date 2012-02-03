@@ -49,6 +49,7 @@ public class XSInstance{
     public int maximumElementsGenerated = 4;
     public int minimumListItemsGenerated = 2;
     public int maximumListItemsGenerated = 4;
+    public int maximumRecursionDepth = 2;
     public Boolean generateOptionalElements = Boolean.TRUE;
     public Boolean generateOptionalAttributes = Boolean.TRUE;
     public Boolean generateFixedAttributes = Boolean.TRUE;
@@ -192,6 +193,8 @@ public class XSInstance{
         private Processor<XSElementDeclaration> elemProcessor = new Processor<XSElementDeclaration>(){
             @Override
             public boolean preProcess(XSElementDeclaration elem, Path path){
+                if(path.getRecursionDepth()>2)
+                    return false;
                 try{
                     doc.startElement(elem.getNamespace(), elem.getName());
                     return true;
@@ -202,6 +205,8 @@ public class XSInstance{
 
             @Override
             public void postProcess(XSElementDeclaration elem, Path path){
+                if(path.getRecursionDepth()>2)
+                    return;
                 try{
                     XSSimpleTypeDefinition simpleType = null;
                     if(elem.getTypeDefinition().getTypeCategory()==XSTypeDefinition.SIMPLE_TYPE)
@@ -354,6 +359,7 @@ public class XSInstance{
             return enums;
         }
 
+
         private String generateSampleValue(XSSimpleTypeDefinition simpleType, String hint){
             if(simpleType.getBuiltInKind()==XSConstants.LIST_DT){
                 XSSimpleTypeDefinition itemType = simpleType.getItemType();
@@ -431,20 +437,13 @@ public class XSInstance{
 
             if("double".equals(name)
                     || "decimal".equals(name)
-                    || name.endsWith("integer"))
-                return new Range(simpleType).randomDouble();
-            if("float".equals(name))
-                return new Range(simpleType).randomFloat();
-
-            if(name.endsWith("long"))
-                return new Range(simpleType).randomLong();
-            if(name.endsWith("int"))
-                return new Range(simpleType).randomInt();
-            if(name.endsWith("short"))
-                return new Range(simpleType).randomShort();
-            if(name.endsWith("byte"))
-                return new Range(simpleType).randomByte();
-
+                    || "float".equals(name)
+                    || name.endsWith("integer")
+                    || name.endsWith("int")
+                    || name.endsWith("long")
+                    || name.endsWith("short")
+                    || name.endsWith("byte"))
+                return new Range(simpleType).randomNumber();
 
             if("date".equals(name))
                 return new SimpleDateFormat(XSD_DATE_FORMAT).format(new Date());
@@ -565,100 +564,36 @@ public class XSInstance{
                 return str;
             }
 
-            public String randomDouble(){
-                double min = Double.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Double.parseDouble(minInclusive);
-                if(minExclusive!=null)
-                    min = Double.parseDouble(minExclusive)+1;
+            public String randomNumber(){
+                if(fractionDigits==0){
+                    long min = Long.MIN_VALUE;
+                    if(minInclusive!=null)
+                        min = Long.parseLong(minInclusive);
+                    if(minExclusive!=null)
+                        min = Long.parseLong(minExclusive)+1;
 
-                double max = Double.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Double.parseDouble(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Double.parseDouble(maxExclusive)-1;
+                    long max = Long.MAX_VALUE;
+                    if(maxInclusive!=null)
+                        max = Long.parseLong(maxInclusive);
+                    if(maxExclusive!=null)
+                        max = Long.parseLong(maxExclusive)-1;
 
-                return applyDigits(RandomUtil.random(min, max));
-            }
+                    return applyDigits(RandomUtil.random(min, max));
+                }else{
+                    double min = Double.MIN_VALUE;
+                    if(minInclusive!=null)
+                        min = Double.parseDouble(minInclusive);
+                    if(minExclusive!=null)
+                        min = Double.parseDouble(minExclusive)+1;
 
-            public String randomFloat(){
-                float min = Float.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Float.parseFloat(minInclusive);
-                if(minExclusive!=null)
-                    min = Float.parseFloat(minExclusive)+1;
+                    double max = Double.MAX_VALUE;
+                    if(maxInclusive!=null)
+                        max = Double.parseDouble(maxInclusive);
+                    if(maxExclusive!=null)
+                        max = Double.parseDouble(maxExclusive)-1;
 
-                float max = Float.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Float.parseFloat(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Float.parseFloat(maxExclusive)-1;
-
-                return applyDigits(RandomUtil.random(min, max));
-            }
-
-            public String randomLong(){
-                long min = Long.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Long.parseLong(minInclusive);
-                if(minExclusive!=null)
-                    min = Long.parseLong(minExclusive)+1;
-
-                long max = Long.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Long.parseLong(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Long.parseLong(maxExclusive)-1;
-
-                return applyDigits(RandomUtil.random(min, max));
-            }
-
-            public String randomInt(){
-                int min = Integer.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Integer.parseInt(minInclusive);
-                if(minExclusive!=null)
-                    min = Integer.parseInt(minExclusive)+1;
-
-                int max = Integer.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Integer.parseInt(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Integer.parseInt(maxExclusive)-1;
-
-                return applyDigits(RandomUtil.random(min, max));
-            }
-
-            public String randomShort(){
-                short min = Short.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Short.parseShort(minInclusive);
-                if(minExclusive!=null)
-                    min = (short)(Short.parseShort(minExclusive)+1);
-
-                short max = Short.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Short.parseShort(maxInclusive);
-                if(maxExclusive!=null)
-                    max = (short)(Short.parseShort(maxExclusive)-1);
-
-                return applyDigits(RandomUtil.random(min, max));
-            }
-
-            public String randomByte(){
-                byte min = Byte.MIN_VALUE;
-                if(minInclusive!=null)
-                    min = Byte.parseByte(minInclusive);
-                if(minExclusive!=null)
-                    min = (byte)(Byte.parseByte(minExclusive)+1);
-
-                byte max = Byte.MAX_VALUE;
-                if(maxInclusive!=null)
-                    max = Byte.parseByte(maxInclusive);
-                if(maxExclusive!=null)
-                    max = (byte)(Byte.parseByte(maxExclusive)-1);
-
-                return applyDigits(RandomUtil.random(min, max));
+                    return applyDigits(RandomUtil.random(min, max));
+                }
             }
         }
     }
@@ -711,6 +646,9 @@ public class XSInstance{
             value = props.getProperty("maximumListItemsGenerated");
             if(value!=null)
                 xsInstance.maximumListItemsGenerated = Integer.parseInt(value);
+            value = props.getProperty("maximumRecursionDepth");
+            if(value!=null)
+                xsInstance.maximumRecursionDepth = Integer.parseInt(value);
 
             value = props.getProperty("generateOptionalElements");
             if(value!=null)

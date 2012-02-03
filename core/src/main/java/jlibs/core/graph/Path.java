@@ -15,6 +15,8 @@
 
 package jlibs.core.graph;
 
+import java.util.IdentityHashMap;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -95,6 +97,17 @@ public final class Path{
             path = path.parentPath;
         }
         return array;
+    }
+
+    public int getRecursionDepth(){
+        int depth = -1;
+        Path path = this;
+        for(int i=getLength(); i>0; i--){
+            if(path.elem==elem)
+                depth++;
+            path = path.parentPath;
+        }
+        return depth;
     }
 
     public String toString(){
