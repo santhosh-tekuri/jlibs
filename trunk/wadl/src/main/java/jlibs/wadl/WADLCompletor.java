@@ -10,17 +10,15 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class WADLCompletor implements Completor{
-    private List<Path> roots;
-    public WADLCompletor(List<Path> roots){
-        this.roots = roots;
+    private WADLTerminal terminal;
+    public WADLCompletor(WADLTerminal terminal){
+        this.terminal = terminal;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public int complete(String buffer, int cursor, List candidates){
-        Path path = null;
-        if(roots.size()==1)
-            path = roots.get(0);
+        Path path = terminal.getCurrentPath();
 
         int from = 0;
         int to = findArgument(buffer, from, ' ');
@@ -48,13 +46,20 @@ public class WADLCompletor implements Completor{
         }
     }
     
-    private void fillPathCandidates(List<String> candidates, String token, List<Path> args){
-        for(Path arg: args){
-            if(arg.name.startsWith(token)){
-                if(arg.children.isEmpty())
-                    candidates.add(arg.name+' ');
-                else
-                    candidates.add(arg.name+'/');
+    private void fillPathCandidates(List<String> candidates, String token, Path current){
+        for(Path child: current.children){
+            if(child.name.startsWith(token)){
+                if(child.children.isEmpty())
+                    candidates.add(child.name+' ');
+                else{
+                    String candidate = child.name;
+                    while(child.resource!=null && child.children.size()==1){
+                        child = child.children.get(0);
+                        candidate += "/"+child.name;
+                    }
+                    candidate += child.children.isEmpty() ? ' ' : '/';
+                    candidates.add(candidate);
+                }
             }
         }
     }
@@ -69,17 +74,22 @@ public class WADLCompletor implements Completor{
             assert buffer.charAt(to)=='/';
             String token = buffer.substring(from, to);
             Path child = null;
-            for(Path c: path.children){
-                if(c.name.equals(token)){
-                    child = c;
-                    break;
+            if(token.equals(".."))
+                child = path.parent;
+            else{
+                for(Path c: path.children){
+                    if(c.name.equals(token)){
+                        child = c;
+                        break;
+                    }
                 }
             }
-            assert child!=null;
+            if(child==null)
+                return -1;
             return completePath(buffer, cursor, candidates, child, to);
         }
         String arg = buffer.substring(from, Math.min(to, cursor));
-        fillPathCandidates(candidates, arg, path.children);
+        fillPathCandidates(candidates, arg, path);
         return from;
     }
 }
