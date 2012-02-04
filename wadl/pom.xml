@@ -16,6 +16,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>jlibs-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <version>0.9.9</version>

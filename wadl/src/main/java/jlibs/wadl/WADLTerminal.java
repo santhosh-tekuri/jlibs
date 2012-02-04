@@ -1,5 +1,6 @@
 package jlibs.wadl;
 
+import jlibs.core.lang.Ansi;
 import jlibs.wadl.model.Application;
 import jlibs.wadl.model.Resource;
 import jlibs.wadl.model.Resources;
@@ -11,8 +12,9 @@ import javax.xml.bind.JAXBContext;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static jlibs.core.lang.Ansi.*;
 
 /**
  * @author Santhosh Kumar T
@@ -64,11 +66,36 @@ public class WADLTerminal{
         this.currentPath = currentPath;
     }
 
+    private static Ansi PLAIN = new Ansi(Attribute.BRIGHT, Color.WHITE, Color.BLUE);
+    private static Ansi VARIABLE = new Ansi(Attribute.BRIGHT, Color.YELLOW, Color.BLUE);
     public String getPrompt(){
         if(currentPath==null)
-            return "[WADL] ";
-        else
-            return "["+currentPath+"] ";
+            return "[?]";
+        else{
+            StringBuilder buff = new StringBuilder();
+            buff.append(PLAIN.colorize("["));
+
+            Deque<Path> stack = new ArrayDeque<Path>();
+            Path path = currentPath;
+            while(path!=null){
+                stack.push(path);
+                path = path.parent;
+            }
+            boolean first = true;
+            while(!stack.isEmpty()){
+                if(first)
+                    first = false;
+                else
+                    buff.append(PLAIN.colorize("/"));
+                path = stack.pop();
+                if(path.variable()==null)
+                    buff.append(PLAIN.colorize(path.name));
+                else
+                    buff.append(VARIABLE.colorize(path.name));
+            }
+            buff.append(PLAIN.colorize("]"));
+            return buff.toString();
+        }
     }
 
     public void start() throws IOException{
@@ -81,7 +108,7 @@ public class WADLTerminal{
         console.setCompletionHandler(completionHandler);
 
         String line;
-        while((line=console.readLine(getPrompt()))!=null){
+        while((line=console.readLine(getPrompt()+" "))!=null){
             line = line.trim();
             if(line.length()>0){
                 if(line.equals("exit") || line.equals("quit"))
