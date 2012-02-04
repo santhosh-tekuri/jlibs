@@ -9,6 +9,7 @@ import jline.ConsoleReader;
 
 import javax.xml.bind.JAXBContext;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +18,10 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class WADLTerminal{
-    public static void main(String[] args) throws Exception{
-        String file = "/Users/santhosh/Desktop/enterprise-gateway-wadl.xml";
-        JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
-        Application app = (Application)jc.createUnmarshaller().unmarshal(new FileInputStream(file));
-        
-        List<Path> roots = new ArrayList<Path>();
-        for(Resources resources: app.getResources()){
+    private List<Path> roots = new ArrayList<Path>();
+
+    public WADLTerminal(Application application){
+        for(Resources resources: application.getResources()){
             URI base = URI.create(resources.getBase());
             String url = base.getScheme()+"://"+base.getHost();
             if(base.getPort()!=-1)
@@ -44,10 +42,16 @@ public class WADLTerminal{
             for(Resource resource: resources.getResource())
                 root.add(resource.getPath()).resource = resource;
         }
-        
+
         for(Path root: roots)
             print(root);
+    }
 
+    public List<Path> getRoots(){
+        return roots;
+    }
+
+    public void start() throws IOException{
         ConsoleReader console = new ConsoleReader();
         WADLCompletor completor = new WADLCompletor(roots);
         console.addCompletor(completor);
@@ -63,6 +67,13 @@ public class WADLTerminal{
                     return;
             }
         }
+    }
+
+    public static void main(String[] args) throws Exception{
+        String file = "/Users/santhosh/Desktop/enterprise-gateway-wadl.xml";
+        JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
+        Application application = (Application)jc.createUnmarshaller().unmarshal(new FileInputStream(file));
+        new WADLTerminal(application).start();
     }
     
     private static void print(Path path){
