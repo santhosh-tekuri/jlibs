@@ -81,4 +81,32 @@ public class Path{
         }
         return path;
     }
+    
+    public Path get(String pathString){
+        Path path = this;
+        StringTokenizer stok = new StringTokenizer(pathString, "/");
+        while(stok.hasMoreTokens()){
+            String token = stok.nextToken();
+            if(token.equals(".."))
+                path = path.parent;
+            else{
+                for(Path child: path.children){
+                    if(child.name.equals(token)){
+                        path = child;
+                        break;
+                    }
+                }
+            }
+            if(path==null)
+                return null;
+        }
+        return path;
+    }
+    
+    public Path getRoot(){
+        Path path = this;
+        while(path.parent!=null)
+            path = path.parent;
+        return path;
+    }
 }

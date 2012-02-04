@@ -43,6 +43,9 @@ public class WADLTerminal{
                 root.add(resource.getPath()).resource = resource;
         }
 
+        if(roots.size()==1)
+            currentPath = roots.get(0);
+
         for(Path root: roots)
             print(root);
     }
@@ -50,21 +53,40 @@ public class WADLTerminal{
     public List<Path> getRoots(){
         return roots;
     }
+    
+    private Path currentPath;
+
+    public Path getCurrentPath(){
+        return currentPath;
+    }
+
+    public void setCurrentPath(Path currentPath){
+        this.currentPath = currentPath;
+    }
+
+    public String getPrompt(){
+        if(currentPath==null)
+            return "[WADL] ";
+        else
+            return "["+currentPath+"] ";
+    }
 
     public void start() throws IOException{
         ConsoleReader console = new ConsoleReader();
-        WADLCompletor completor = new WADLCompletor(roots);
+        WADLCompletor completor = new WADLCompletor(this);
         console.addCompletor(completor);
+        Command command = new Command(this);
 
         CandidateListCompletionHandler completionHandler = new CandidateListCompletionHandler();
         console.setCompletionHandler(completionHandler);
 
         String line;
-        while((line=console.readLine("[WADL] "))!=null){
+        while((line=console.readLine(getPrompt()))!=null){
             line = line.trim();
             if(line.length()>0){
                 if(line.equals("exit") || line.equals("quit"))
                     return;
+                command.run(line);
             }
         }
     }
