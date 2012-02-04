@@ -10,7 +10,6 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class WADLCompletor implements Completor{
-    public Path currentPath;
     private List<Path> roots;
     public WADLCompletor(List<Path> roots){
         this.roots = roots;
