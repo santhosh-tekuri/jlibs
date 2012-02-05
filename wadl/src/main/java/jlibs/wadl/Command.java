@@ -1,6 +1,8 @@
 package jlibs.wadl;
 
-import jlibs.core.io.IOPump;
+import jlibs.core.io.FileUtil;
+import jlibs.core.io.IOUtil;
+import jlibs.core.lang.JavaProcessBuilder;
 import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.wadl.model.*;
@@ -26,7 +28,6 @@ import java.util.StringTokenizer;
  */
 public class Command{
     private WADLTerminal terminal;
-    private Editor editor = new Editor();
 
     public Command(WADLTerminal terminal){
         this.terminal = terminal;
@@ -38,14 +39,9 @@ public class Command{
         String arg1 = args.get(0);
         if(arg1.equals("import"))
             importWADL(args.get(1));
-        else if(arg1.equals("cd")){
-            Path path = terminal.getCurrentPath();
-            if(args.size()==1)
-                path = path.getRoot();
-            else
-                path = path.get(args.get(1));
-            terminal.setCurrentPath(path);
-        }else if(arg1.equals("set")){
+        else if(arg1.equals("cd"))
+            cd(args.size()==1 ? null : args.get(1));
+        else if(arg1.equals("set")){
             for(String arg: args){
                 int equals = arg.indexOf('=');
                 if(equals!=-1){
@@ -74,6 +70,36 @@ public class Command{
         return args;
     }
     
+    private void cd(String pathString){
+        Path path = terminal.getCurrentPath();
+        if(pathString==null)
+            path = path.getRoot();
+        else{
+            StringTokenizer stok = new StringTokenizer(pathString, "/");
+            while(stok.hasMoreTokens()){
+                String token = stok.nextToken();
+                if(token.equals(".."))
+                    path = path.parent;
+                else{
+                    for(Path child: path.children){
+                        String variable = child.variable();
+                        if(variable!=null){
+                            terminal.getVariables().put(variable, token);
+                            path = child;
+                            break;
+                        }else if(child.name.equals(token)){
+                            path = child;
+                            break;
+                        }
+                    }
+                }
+                if(path==null)
+                    return;
+            }
+        }
+        terminal.setCurrentPath(path);
+    }
+
     private void importWADL(String systemID) throws Exception{
         JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
         Application application = (Application)jc.createUnmarshaller().unmarshal(URLUtil.toURL(systemID));
@@ -109,17 +135,24 @@ public class Command{
                     root = root.add(base.getPath());
             }
             root.schema = schema;
-            for(Resource resource: resources.getResource()){
-                Path child = root.add(resource.getPath());
-                if(child.resource==null)
-                    child.resource = resource;
-                else
-                    child.resource.getMethodOrResource().addAll(resource.getMethodOrResource());
-            }
+            for(Resource resource: resources.getResource())
+                importResource(resource, root);
         }
         terminal.setCurrentPath(root);
     }
     
+    private void importResource(Resource resource, Path path){
+        path = path.add(resource.getPath());
+        if(path.resource==null)
+            path.resource = resource;
+        else
+            path.resource.getMethodOrResource().addAll(resource.getMethodOrResource());
+        for(Object obj: resource.getMethodOrResource()){
+            if(obj instanceof Resource)
+                importResource((Resource)obj, path);
+        }
+    }
+
     private void server(String server){
         for(Path root: terminal.getRoots()){
             if(root.name.equalsIgnoreCase(server)){
@@ -181,7 +214,7 @@ public class Command{
         HttpURLConnection con = (HttpURLConnection)url.openConnection();
         con.setRequestMethod(method.getName());
 
-        String payload = null;
+        File payload = null;
         Request request = method.getRequest();
         if(request!=null){
             if(!request.getRepresentation().isEmpty()){
@@ -190,58 +223,31 @@ public class Command{
                     con.addRequestProperty("Content-Type", rep.getMediaType());
                 if(rep.getElement()!=null){
                     XSInstance xsInstance = new XSInstance();
-                    StringWriter writer = new StringWriter();
-                    XMLDocument xml = new XMLDocument(new StreamResult(writer), true, 4, null);
+                    payload = new File("temp.xml");
+                    XMLDocument xml = new XMLDocument(new StreamResult(payload), true, 4, null);
                     xsInstance.generate(terminal.getCurrentPath().getSchema(), rep.getElement(), xml);
-                    payload = writer.toString();
                 }
             }
         }
 
-        if(payload!=null)
-            editor.show(payload, "text/xml");
-
-        String command = "tty vi "+payload;
-        final Process process = Runtime.getRuntime().exec(command);
-        new Thread(new IOPump(process.getInputStream(), System.out, false, false).asRunnable()).start();
-        OutputStream dummy = new OutputStream(){
-            @Override
-            public void write(int b) throws IOException{}
-
-            @Override
-            public void write(byte[] b) throws IOException{}
-
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException{}
-        };
-        new Thread(new IOPump(process.getErrorStream(), dummy, false, false).asRunnable()).start();
-        OutputStream out = new OutputStream(){
-            private OutputStream delegate = process.getOutputStream();
-            @Override
-            public void write(int b) throws IOException{
-                delegate.write(b);
-                delegate.flush();
-            }
-
-            @Override
-            public void write(byte[] b) throws IOException{
-                delegate.write(b);
-                delegate.flush();
-            }
-
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException{
-                delegate.write(b, off, len);
-                delegate.flush();
-            }
-        };
-        new Thread(new IOPump(System.in, out, false, false).asRunnable()).start();
-        process.waitFor();
+        if(payload!=null){
+            JavaProcessBuilder processBuilder = new JavaProcessBuilder();
+            StringTokenizer stok = new StringTokenizer(System.getProperty("java.class.path"), FileUtil.PATH_SEPARATOR);
+            while(stok.hasMoreTokens())
+                processBuilder.classpath(stok.nextToken());
+            processBuilder.mainClass(Editor.class.getName());
+            processBuilder.arg(payload.getAbsolutePath());
+            processBuilder.arg("text/xml");
+            processBuilder.launch(DUMMY_OUTPUT, DUMMY_OUTPUT).waitFor();
+            if(!payload.exists())
+                return;
+        }
 
         if(payload!=null)
             con.setDoOutput(true);
         con.connect();
-        con.getOutputStream().write(payload.getBytes());
+        if(payload!=null)
+            IOUtil.pump(new FileInputStream(payload), con.getOutputStream(), true, false);
 
         System.out.println(con.getResponseCode()+" "+con.getResponseMessage());
         System.out.println();
@@ -254,4 +260,13 @@ public class Command{
         while((line=reader.readLine())!=null)
             System.out.println(line);
     }
+
+    private static final OutputStream DUMMY_OUTPUT = new OutputStream(){
+        @Override
+        public void write(int b) throws IOException{}
+        @Override
+        public void write(byte[] b) throws IOException{}
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException{}
+    };
 }

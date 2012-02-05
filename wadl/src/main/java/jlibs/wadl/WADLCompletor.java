@@ -100,6 +100,10 @@ public class WADLCompletor implements Completor{
     
     private void fillPathCandidates(List<String> candidates, String token, Path current){
         for(Path child: current.children){
+            if(child.variable()!=null){
+                candidates.clear();
+                return;
+            }
             if(child.name.startsWith(token)){
                 if(child.children.isEmpty())
                     candidates.add(child.name+' ');
@@ -130,7 +134,7 @@ public class WADLCompletor implements Completor{
                 child = path.parent;
             else{
                 for(Path c: path.children){
-                    if(c.name.equals(token)){
+                    if(c.variable()!=null || c.name.equals(token)){
                         child = c;
                         break;
                     }
