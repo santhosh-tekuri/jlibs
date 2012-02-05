@@ -13,7 +13,7 @@ import java.io.*;
  * @author Santhosh Kumar T
  */
 public class Editor extends JFrame{
-    private RSyntaxTextArea textArea = new RSyntaxTextArea(30, 150);
+    private RSyntaxTextArea textArea = new RSyntaxTextArea(30, 100);
     
     public Editor(final File file, String syntax) throws Exception{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -25,7 +25,7 @@ public class Editor extends JFrame{
         pack();
         setLocationRelativeTo(null);
 
-        String actionName = "save-and-quit";;
+        String actionName = "save-and-quit";
         textArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.META_MASK), actionName);
         textArea.getActionMap().put(actionName, new AbstractAction(){
             @Override

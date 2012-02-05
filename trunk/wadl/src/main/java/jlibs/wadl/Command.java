@@ -7,19 +7,24 @@ import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.wadl.model.*;
 import jlibs.wadl.runtime.Path;
+import jlibs.xml.sax.AnsiHandler;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.XSInstance;
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.XSModel;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.awt.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -165,6 +170,8 @@ public class Command{
     
     private void send(List<String> args) throws Exception{
         Path path = terminal.getCurrentPath();
+        if(args.size()>1)
+            path = path.get(args.get(1));
         if(path.resource==null){
             System.err.println("resource not found");
             return;
@@ -185,37 +192,30 @@ public class Command{
             return;
         }
 
-        StringBuilder buff = new StringBuilder();
-        Deque<Path> stack = terminal.getCurrentPath().getStack();
-        boolean first = true;
-        while(!stack.isEmpty()){
-            if(first){
-                first = false;
-                if(terminal.getTarget()!=null){
-                    stack.pop();
-                    buff.append(terminal.getTarget());
-                    continue;
-                }
-            }else
-                buff.append('/');
-            path = stack.pop();
-            if(path.variable()==null)
-                buff.append(path.name);
-            else{
-                String value = terminal.getVariables().get(path.variable());
-                if(value==null){
-                    System.err.println("unresolved variable: "+path.variable());
-                    return;
-                }
-                buff.append(value);
-            }
-        }
-        URL url = new URL(buff.toString());
-        HttpURLConnection con = (HttpURLConnection)url.openConnection();
-        con.setRequestMethod(method.getName());
+        String url = terminal.getURL();
+        if(args.size()>1)
+            url = url+"/"+args.get(1);
+
+        HttpURLConnection con;
 
         File payload = null;
         Request request = method.getRequest();
+        if(request!=null){
+            StringBuilder queryString = new StringBuilder();
+            for(Param param: request.getParam()){
+                if(param.getStyle()==ParamStyle.QUERY){
+                    if(queryString.length()>0)
+                        queryString.append('&');
+                    queryString.append(param.getName());
+                    queryString.append('=');
+                    String value = param.getFixed(); //todo
+                    queryString.append(value);
+                }
+            }
+            if(queryString.length()>0)
+                url += "?"+queryString;
+        }
+        con = (HttpURLConnection)new URL(url).openConnection();
         if(request!=null){
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size()-1));
@@ -225,10 +225,11 @@ public class Command{
                     XSInstance xsInstance = new XSInstance();
                     payload = new File("temp.xml");
                     XMLDocument xml = new XMLDocument(new StreamResult(payload), true, 4, null);
-                    xsInstance.generate(terminal.getCurrentPath().getSchema(), rep.getElement(), xml);
+                    xsInstance.generate(path.getSchema(), rep.getElement(), xml);
                 }
             }
         }
+        con.setRequestMethod(method.getName());
 
         if(payload!=null){
             JavaProcessBuilder processBuilder = new JavaProcessBuilder();
@@ -255,10 +256,41 @@ public class Command{
         InputStream in = con.getErrorStream();
         if(in==null)
             in = con.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        String line;
-        while((line=reader.readLine())!=null)
-            System.out.println(line);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        IOUtil.pump(in, bout, true, true);
+        if (bout.size() == 0)
+            return;
+        if(isXML(con.getContentType())){
+            PrintStream sysErr = System.err;
+            System.setErr(new PrintStream(new ByteArrayOutputStream()));
+            try {
+                TransformerFactory factory = TransformerFactory.newInstance();
+                Transformer transformer = factory.newTransformer();
+                transformer.transform(new StreamSource(new ByteArrayInputStream(bout.toByteArray())), new SAXResult(new AnsiHandler()));
+                transformer.reset();
+                return;
+            } catch (Exception ex) {
+                // ignore
+            } finally {
+                System.setErr(sysErr);
+            }
+        }
+        System.out.println(bout);
+        System.out.println();
+    }
+
+    public static boolean isXML(String contentType) {
+        if(contentType==null)
+            return false;
+        int semicolon = contentType.indexOf(';');
+        if(semicolon!=-1)
+            contentType = contentType.substring(0, semicolon);
+        if("text/xml".equalsIgnoreCase(contentType))
+            return true;
+        else if(contentType.startsWith("application/"))
+            return contentType.endsWith("application/xml") || contentType.endsWith("+xml");
+        else 
+            return false;
     }
 
     private static final OutputStream DUMMY_OUTPUT = new OutputStream(){

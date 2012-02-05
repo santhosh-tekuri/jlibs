@@ -54,11 +54,15 @@ public class WADLCompletor implements Completor{
                 for(Object obj: path.resource.getMethodOrResource()){
                     if(obj instanceof Method){
                         String method = ((Method)obj).getName().toUpperCase();
-                        if(!available.contains(method))
+                        if(method.startsWith(arg.toUpperCase()))
                             available.add(method);
                     }
                 }
             }
+
+            fillCandidates(candidates, arg, available);
+            if(candidates.isEmpty())
+                available.addAll(Arrays.asList("GET", "PUT", "POST", "DELETE"));
             fillCandidates(candidates, arg, available);
             return from;
         }else{
@@ -78,8 +82,26 @@ public class WADLCompletor implements Completor{
                         candidates.add(root.name+" ");
                 }
                 return candidates.isEmpty() ? -1 : to+1;
-            }else
+            }else{
+                Path path = terminal.getCurrentPath();
+                if(path.resource!=null){
+                    Method method = null;
+                    for(Object obj: path.resource.getMethodOrResource()){
+                        if(obj instanceof Method){
+                            String m = ((Method)obj).getName();
+                            if(arg.equalsIgnoreCase(m)){
+                                method = (Method)obj;
+                                break;
+                            }
+                        }
+                    }
+                    if(method==null)
+                        return -1;
+                    return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
+                }
+
                 return -1;
+            }
         }
     }
     
