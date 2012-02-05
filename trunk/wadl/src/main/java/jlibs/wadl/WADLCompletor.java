@@ -1,6 +1,7 @@
 package jlibs.wadl;
 
 import jlibs.core.lang.StringUtil;
+import jlibs.wadl.model.Method;
 import jlibs.wadl.runtime.Path;
 import jline.Completor;
 
@@ -18,30 +19,66 @@ public class WADLCompletor implements Completor{
     @Override
     @SuppressWarnings("unchecked")
     public int complete(String buffer, int cursor, List candidates){
-        Path path = terminal.getCurrentPath();
-
         int from = 0;
         int to = findArgument(buffer, from, ' ');
         String arg = buffer.substring(from, Math.min(to, cursor));
         if(arg.isEmpty() || cursor<=to){
             List<String> available = new ArrayList<String>();
             available.add("cd");
-            while(path!=null){
-                String var = path.variable();
-                if(var!=null && !terminal.getVariables().containsKey(var)){
-                    available.add("set");
-                    break;
+
+            if(!arg.isEmpty() && "import".startsWith(arg))
+                available.add("import");
+
+            if(!arg.isEmpty() && "server".startsWith(arg))
+                available.add("server");
+
+            if(!arg.isEmpty() && "set".startsWith(arg))
+                available.add("set");
+            else{
+                Path path = terminal.getCurrentPath();
+                while(path!=null){
+                    String var = path.variable();
+                    if(var!=null && !terminal.getVariables().containsKey(var)){
+                        available.add("set");
+                        break;
+                    }
+                    path = path.parent;
                 }
-                path = path.parent;
+            }
+
+            if(!arg.isEmpty() && "target".startsWith(arg))
+                available.add("target");
+
+            Path path = terminal.getCurrentPath();
+            if(path.resource!=null){
+                for(Object obj: path.resource.getMethodOrResource()){
+                    if(obj instanceof Method){
+                        String method = ((Method)obj).getName().toUpperCase();
+                        if(!available.contains(method))
+                            available.add(method);
+                    }
+                }
             }
             fillCandidates(candidates, arg, available);
             return from;
         }else{
             if(arg.equals("cd"))
-                return completePath(buffer, cursor, candidates, path, to);
+                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
             else if(arg.equals("set"))
-                return completeVariable(buffer, cursor, candidates, path, to);
-            else
+                return completeVariable(buffer, cursor, candidates, terminal.getCurrentPath(), to);
+            else if(arg.equals("server")){
+                String token = buffer.substring(to+1, cursor);
+                if(token.contains(" "))
+                    return -1;
+                Path currentRoot = terminal.getCurrentPath();
+                if(currentRoot!=null)
+                    currentRoot = currentRoot.getRoot();
+                for(Path root: terminal.getRoots()){
+                    if(root!=currentRoot && root.name.startsWith(token))
+                        candidates.add(root.name+" ");
+                }
+                return candidates.isEmpty() ? -1 : to+1;
+            }else
                 return -1;
         }
     }
@@ -56,7 +93,7 @@ public class WADLCompletor implements Completor{
     
     private void fillCandidates(List<String> candidates, String token, List<String> args){
         for(String arg: args){
-            if(arg.startsWith(token))
+            if(arg.toLowerCase().startsWith(token.toLowerCase()))
                 candidates.add(arg+' ');
         }
     }

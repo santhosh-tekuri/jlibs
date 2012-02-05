@@ -1,56 +1,21 @@
 package jlibs.wadl;
 
 import jlibs.core.lang.Ansi;
-import jlibs.wadl.model.Application;
-import jlibs.wadl.model.Resource;
-import jlibs.wadl.model.Resources;
 import jlibs.wadl.runtime.Path;
 import jline.CandidateListCompletionHandler;
 import jline.ConsoleReader;
 
-import javax.xml.bind.JAXBContext;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.util.*;
 
-import static jlibs.core.lang.Ansi.*;
+import static jlibs.core.lang.Ansi.Attribute;
+import static jlibs.core.lang.Ansi.Color;
 
 /**
  * @author Santhosh Kumar T
  */
 public class WADLTerminal{
     private List<Path> roots = new ArrayList<Path>();
-
-    public WADLTerminal(Application application){
-        for(Resources resources: application.getResources()){
-            URI base = URI.create(resources.getBase());
-            String url = base.getScheme()+"://"+base.getHost();
-            if(base.getPort()!=-1)
-                url += ':'+base.getPort();
-            Path root = null;
-            for(Path path: roots){
-                if(path.name.equals(url)){
-                    root = path;
-                    break;
-                }
-            }
-            if(root==null){
-                root = new Path(null, url, false);
-                roots.add(root);
-                if(base.getPath()!=null && !base.getPath().isEmpty())
-                    root.add(base.getPath());
-            }
-            for(Resource resource: resources.getResource())
-                root.add(resource.getPath()).resource = resource;
-        }
-
-        if(roots.size()==1)
-            currentPath = roots.get(0);
-
-        for(Path root: roots)
-            print(root);
-    }
 
     public List<Path> getRoots(){
         return roots;
@@ -64,6 +29,16 @@ public class WADLTerminal{
 
     public void setCurrentPath(Path currentPath){
         this.currentPath = currentPath;
+    }
+    
+    private String target;
+
+    public String getTarget(){
+        return target;
+    }
+
+    public void setTarget(String target){
+        this.target = target;
     }
 
     private LinkedHashMap<String, String> variables = new LinkedHashMap<String, String>();
@@ -88,9 +63,14 @@ public class WADLTerminal{
             }
             boolean first = true;
             while(!stack.isEmpty()){
-                if(first)
+                if(first){
                     first = false;
-                else
+                    if(target!=null){
+                        stack.pop();
+                        buff.append(PLAIN.colorize(target));
+                        continue;
+                    }
+                }else
                     buff.append(PLAIN.colorize("/"));
                 path = stack.pop();
                 if(path.variable()==null)
@@ -116,22 +96,29 @@ public class WADLTerminal{
         CandidateListCompletionHandler completionHandler = new CandidateListCompletionHandler();
         console.setCompletionHandler(completionHandler);
 
+        try{
+            command.run("import /Users/santhosh/Desktop/enterprise-gateway-wadl.xml");
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+
         String line;
         while((line=console.readLine(getPrompt()+" "))!=null){
             line = line.trim();
             if(line.length()>0){
                 if(line.equals("exit") || line.equals("quit"))
                     return;
-                command.run(line);
+                try{
+                    command.run(line);
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
             }
         }
     }
 
     public static void main(String[] args) throws Exception{
-        String file = "/Users/santhosh/Desktop/enterprise-gateway-wadl.xml";
-        JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
-        Application application = (Application)jc.createUnmarshaller().unmarshal(new FileInputStream(file));
-        new WADLTerminal(application).start();
+        new WADLTerminal().start();
     }
     
     private static void print(Path path){
