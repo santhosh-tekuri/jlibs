@@ -1,6 +1,7 @@
 package jlibs.wadl.runtime;
 
 import jlibs.wadl.model.Resource;
+import org.apache.xerces.xs.XSModel;
 
 import java.util.*;
 
@@ -13,6 +14,7 @@ public class Path{
 
     public final String name;
     public Resource resource;
+    public XSModel schema;
 
     public Path(Path parent, String name, boolean variable){
         this.parent = parent;
@@ -108,5 +110,25 @@ public class Path{
         while(path.parent!=null)
             path = path.parent;
         return path;
+    }
+    
+    public Deque<Path> getStack(){
+        Deque<Path> stack = new ArrayDeque<Path>();
+        Path path = this;
+        while(path!=null){
+            stack.push(path);
+            path = path.parent;
+        }
+        return stack;
+    }
+    
+    public XSModel getSchema(){
+        Path path = this;
+        while(path!=null){
+            if(path.schema!=null)
+                return path.schema;
+            path = path.parent;
+        }
+        return null;
     }
 }

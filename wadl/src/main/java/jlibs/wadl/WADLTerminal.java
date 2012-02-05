@@ -55,13 +55,9 @@ public class WADLTerminal{
             StringBuilder buff = new StringBuilder();
             buff.append(PLAIN.colorize("["));
 
-            Deque<Path> stack = new ArrayDeque<Path>();
-            Path path = currentPath;
-            while(path!=null){
-                stack.push(path);
-                path = path.parent;
-            }
+            Deque<Path> stack = currentPath.getStack();
             boolean first = true;
+            Path path;
             while(!stack.isEmpty()){
                 if(first){
                     first = false;

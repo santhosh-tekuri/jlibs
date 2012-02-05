@@ -77,7 +77,7 @@ public class XSInstance{
 
     public void generate(XSModel xsModel, QName rootElement, XMLDocument doc){
         String namespace = rootElement.getNamespaceURI();
-        XSElementDeclaration root = xsModel.getElementDeclaration(rootElement.getLocalPart(), namespace.isEmpty() ? null : namespace);
+        XSElementDeclaration root = xsModel.getElementDeclaration(rootElement.getLocalPart(), namespace);
         if(root==null)
             throw new IllegalArgumentException("Element "+rootElement+" is not found");
 
