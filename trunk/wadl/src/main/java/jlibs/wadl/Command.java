@@ -26,6 +26,15 @@ public class Command{
             else
                 path = path.get(args.get(1));
             terminal.setCurrentPath(path);
+        }else if(arg1.equals("set")){
+            for(String arg: args){
+                int equals = arg.indexOf('=');
+                if(equals!=-1){
+                    String var = arg.substring(0, equals);
+                    String value = arg.substring(equals+1);
+                    terminal.getVariables().put(var, value);
+                }
+            }
         }
     }
     

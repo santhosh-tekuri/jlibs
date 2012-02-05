@@ -1,10 +1,10 @@
 package jlibs.wadl;
 
+import jlibs.core.lang.StringUtil;
 import jlibs.wadl.runtime.Path;
 import jline.Completor;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -24,10 +24,25 @@ public class WADLCompletor implements Completor{
         int to = findArgument(buffer, from, ' ');
         String arg = buffer.substring(from, Math.min(to, cursor));
         if(arg.isEmpty() || cursor<=to){
-            fillCandidates(candidates, arg, Collections.singletonList("cd"));
+            List<String> available = new ArrayList<String>();
+            available.add("cd");
+            while(path!=null){
+                String var = path.variable();
+                if(var!=null && !terminal.getVariables().containsKey(var)){
+                    available.add("set");
+                    break;
+                }
+                path = path.parent;
+            }
+            fillCandidates(candidates, arg, available);
             return from;
         }else{
-            return completePath(buffer, cursor, candidates, path, to);
+            if(arg.equals("cd"))
+                return completePath(buffer, cursor, candidates, path, to);
+            else if(arg.equals("set"))
+                return completeVariable(buffer, cursor, candidates, path, to);
+            else
+                return -1;
         }
     }
     
@@ -53,7 +68,7 @@ public class WADLCompletor implements Completor{
                     candidates.add(child.name+' ');
                 else{
                     String candidate = child.name;
-                    while(child.resource!=null && child.children.size()==1){
+                    while(child.resource==null && child.children.size()==1){
                         child = child.children.get(0);
                         candidate += "/"+child.name;
                     }
@@ -91,5 +106,56 @@ public class WADLCompletor implements Completor{
         String arg = buffer.substring(from, Math.min(to, cursor));
         fillPathCandidates(candidates, arg, path);
         return from;
+    }
+    
+    private int completeVariable(String buffer, int cursor, List<String> candidates, Path path, int to){
+        Deque<Path> stack = new ArrayDeque<Path>();
+        while(path!=null){
+            stack.push(path);
+            path = path.parent;
+        }
+        
+        Set<String> assigned = new LinkedHashSet<String>();
+        Set<String> unAssigned = new LinkedHashSet<String>();
+        while(!stack.isEmpty()){
+            path = stack.pop();
+            String var = path.variable();
+            if(var!=null){
+                if(terminal.getVariables().containsKey(var))
+                    assigned.add(var);
+                else
+                    unAssigned.add(var);
+            }
+        }
+
+        String tokens[] = StringUtil.getTokens(buffer.substring(to+1, cursor), " ", true);
+        for(String token: tokens){
+            int equals = token.indexOf('=');
+            if(equals!=-1){
+                String var = token.substring(0, equals);
+                unAssigned.remove(var);
+                assigned.remove(var);
+            }
+        }
+
+        String token = tokens.length==0 ? "" : tokens[tokens.length-1];
+        int equals = token.indexOf('=');
+        if(equals!=-1){
+            if(buffer.charAt(cursor-1)==' ')
+                token = "";
+            else
+                return -1;
+        }
+        for(String var: unAssigned){
+            if(var.startsWith(token))
+                candidates.add(var+'=');
+        }
+        if(candidates.isEmpty()){
+            for(String var: assigned){
+                if(var.startsWith(token))
+                    candidates.add(var+'=');
+            }
+        }
+        return candidates.isEmpty() ? -1 : cursor-token.length();
     }
 }

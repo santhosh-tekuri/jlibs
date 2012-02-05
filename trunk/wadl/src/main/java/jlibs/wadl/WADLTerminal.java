@@ -66,8 +66,13 @@ public class WADLTerminal{
         this.currentPath = currentPath;
     }
 
+    private LinkedHashMap<String, String> variables = new LinkedHashMap<String, String>();
+    public Map<String, String> getVariables(){
+        return variables;
+    }
+
     private static Ansi PLAIN = new Ansi(Attribute.BRIGHT, Color.WHITE, Color.BLUE);
-    private static Ansi VARIABLE = new Ansi(Attribute.BRIGHT, Color.YELLOW, Color.BLUE);
+    private static Ansi VARIABLE = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLUE);
     public String getPrompt(){
         if(currentPath==null)
             return "[?]";
@@ -90,8 +95,12 @@ public class WADLTerminal{
                 path = stack.pop();
                 if(path.variable()==null)
                     buff.append(PLAIN.colorize(path.name));
-                else
-                    buff.append(VARIABLE.colorize(path.name));
+                else{
+                    String value = variables.get(path.variable());
+                    if(value==null)
+                        value = path.name;
+                    buff.append(VARIABLE.colorize(value));
+                }
             }
             buff.append(PLAIN.colorize("]"));
             return buff.toString();
