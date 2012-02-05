@@ -13,6 +13,7 @@ public class Path{
     public final List<Path> children = new ArrayList<Path>();
 
     public final String name;
+    public String value;
     public Resource resource;
     public XSModel schema;
 
@@ -93,7 +94,7 @@ public class Path{
                 path = path.parent;
             else{
                 for(Path child: path.children){
-                    if(child.name.equals(token)){
+                    if(child.variable()!=null || child.name.equals(token)){
                         path = child;
                         break;
                     }
