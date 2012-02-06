@@ -7,8 +7,9 @@ import jline.ConsoleReader;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 
 import static jlibs.core.lang.Ansi.Attribute;
 import static jlibs.core.lang.Ansi.Color;
@@ -42,11 +43,6 @@ public class WADLTerminal{
 
     public void setTarget(String target){
         this.target = target;
-    }
-
-    private LinkedHashMap<String, String> variables = new LinkedHashMap<String, String>();
-    public Map<String, String> getVariables(){
-        return variables;
     }
 
     private static Ansi PROMPT[][] ={
@@ -83,7 +79,7 @@ public class WADLTerminal{
                 if(path.variable()==null)
                     buff.append(PROMPT[index][0].colorize(path.name));
                 else{
-                    String value = variables.get(path.variable());
+                    String value = path.value;
                     if(value==null)
                         value = path.name;
                     buff.append(PROMPT[index][1].colorize(value));
@@ -113,12 +109,11 @@ public class WADLTerminal{
             if(path.variable()==null)
                 buff.append(path.name);
             else{
-                String value = getVariables().get(path.variable());
-                if(value==null){
+                if(path.value==null){
                     System.err.println("unresolved variable: "+path.variable());
                     return null;
                 }
-                buff.append(value);
+                buff.append(path.value);
             }
         }
         return buff.toString();

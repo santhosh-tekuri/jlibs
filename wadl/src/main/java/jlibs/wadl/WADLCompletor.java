@@ -37,8 +37,7 @@ public class WADLCompletor implements Completor{
             else{
                 Path path = terminal.getCurrentPath();
                 while(path!=null){
-                    String var = path.variable();
-                    if(var!=null && !terminal.getVariables().containsKey(var)){
+                    if(path.variable()!=null && path.value==null){
                         available.add("set");
                         break;
                     }
@@ -184,7 +183,7 @@ public class WADLCompletor implements Completor{
             path = stack.pop();
             String var = path.variable();
             if(var!=null){
-                if(terminal.getVariables().containsKey(var))
+                if(path.value!=null)
                     assigned.add(var);
                 else
                     unAssigned.add(var);

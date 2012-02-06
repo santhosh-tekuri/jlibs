@@ -25,10 +25,14 @@ public class Path{
     }
 
     public String variable(){
-        if(name!=null && name.startsWith("{") && name.endsWith("}"))
+        if(name.startsWith("{") && name.endsWith("}"))
             return name.substring(1, name.length()-1);
         else
             return null;
+    }
+    
+    public String resolve(){
+        return variable()==null ? name : value;
     }
     
     public String toString(Path from){

@@ -48,13 +48,24 @@ public class Command{
         else if(arg1.equals("cd"))
             return cd(args.size()==1 ? null : args.get(1));
         else if(arg1.equals("set")){
+            Properties vars = new Properties();
             for(String arg: args){
                 int equals = arg.indexOf('=');
                 if(equals!=-1){
                     String var = arg.substring(0, equals);
                     String value = arg.substring(equals+1);
-                    terminal.getVariables().put(var, value);
+                    vars.setProperty(var, value);
                 }
+            }
+            Path path = terminal.getCurrentPath();
+            while(path!=null){
+                String var = path.variable();
+                if(var!=null){
+                    String value = vars.getProperty(var);
+                    if(value!=null)
+                        path.value = value;
+                }
+                path = path.parent;
             }
         }else if(arg1.equals("target")){
             if(args.size()==1)
@@ -93,7 +104,7 @@ public class Command{
                     for(Path child: path.children){
                         String variable = child.variable();
                         if(variable!=null){
-                            terminal.getVariables().put(variable, token);
+                            child.value = token;
                             p = child;
                             break;
                         }else if(child.name.equals(token)){
@@ -204,12 +215,11 @@ public class Command{
             if(p.variable()==null)
                 stack.push(p.name);
             else{
-                String value = terminal.getVariables().get(p.variable());
-                if(value==null){
+                if(p.value==null){
                     System.err.println("unresolved variable: "+p.variable());
                     return null;
                 }
-                stack.push(value);
+                stack.push(p.value);
             }
             p = p.parent;
         }
