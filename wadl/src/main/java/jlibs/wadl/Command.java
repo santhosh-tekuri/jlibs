@@ -64,10 +64,10 @@ public class Command{
         }else if(arg1.equals("server")){
             server(args.get(1));
         }else
-            send(args);
+            return send(args);
         return true;
     }
-    
+
     private List<String> getArguments(String command){
         List<String> args = new ArrayList<String>();
         StringTokenizer stok = new StringTokenizer(command, " ");
@@ -75,7 +75,7 @@ public class Command{
             args.add(stok.nextToken());
         return args;
     }
-    
+
     private boolean cd(String pathString){
         Path path = terminal.getCurrentPath();
         if(pathString==null)
@@ -125,7 +125,7 @@ public class Command{
             if(!includes.isEmpty())
                 schema = new XSParser().parse(includes.toArray(new String[includes.size()]));
         }
-        
+
         Path root = null;
         for(Resources resources: application.getResources()){
             URI base = URI.create(resources.getBase());
@@ -151,7 +151,7 @@ public class Command{
         }
         terminal.setCurrentPath(root);
     }
-    
+
     private void importResource(Resource resource, Path path){
         path = path.add(resource.getPath());
         if(path.resource==null)
@@ -173,7 +173,7 @@ public class Command{
             }
         }
     }
-    
+
     private HttpURLConnection prepareSend(List<String> args) throws Exception{
         Path path = terminal.getCurrentPath();
         if(args.size()>1)
@@ -297,23 +297,26 @@ public class Command{
     private static final Ansi SUCCESS = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLACK);
     private static final Ansi FAILURE = new Ansi(Attribute.BRIGHT, Color.RED, Color.BLACK);
 
-    private void send(List<String> args) throws Exception{
+    private boolean send(List<String> args) throws Exception{
         HttpURLConnection con = prepareSend(args);
         if(con==null)
-            return;
+            return false;
 
         Ansi result = con.getResponseCode()/100==2 ? SUCCESS : FAILURE;
         result.outln(con.getResponseCode()+" "+con.getResponseMessage());
         System.out.println();
 
+        boolean success = true;
         InputStream in = con.getErrorStream();
         if(in==null)
             in = con.getInputStream();
+        else
+            success = false;
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         IOUtil.pump(in, bout, true, true);
         if (bout.size() == 0)
-            return;
+            return success;
         if(isXML(con.getContentType())){
             PrintStream sysErr = System.err;
             System.setErr(new PrintStream(new ByteArrayOutputStream()));
@@ -322,7 +325,7 @@ public class Command{
                 Transformer transformer = factory.newTransformer();
                 transformer.transform(new StreamSource(new ByteArrayInputStream(bout.toByteArray())), new SAXResult(new AnsiHandler()));
                 transformer.reset();
-                return;
+                return success;
             } catch (Exception ex) {
                 // ignore
             } finally {
@@ -331,6 +334,7 @@ public class Command{
         }
         System.out.println(bout);
         System.out.println();
+        return success;
     }
 
     public static boolean isXML(String contentType) {
@@ -343,7 +347,7 @@ public class Command{
             return true;
         else if(contentType.startsWith("application/"))
             return contentType.endsWith("application/xml") || contentType.endsWith("+xml");
-        else 
+        else
             return false;
     }
 
