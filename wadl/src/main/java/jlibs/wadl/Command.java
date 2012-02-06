@@ -248,9 +248,11 @@ public class Command{
             url += "?"+queryString;
         
         con = (HttpURLConnection)new URL(url).openConnection();
+        populateHeaders(con, path.resource.getParam());
 
         File payload = null;
         if(request!=null){
+            populateHeaders(con, request.getParam());
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size()-1));
                 if(rep.getMediaType()!=null)
@@ -290,12 +292,23 @@ public class Command{
     private void populateQueryString(StringBuilder queryString, List<Param> params){
         for(Param param: params){
             if(param.getStyle()==ParamStyle.QUERY){
-                if(queryString.length()>0)
-                    queryString.append('&');
-                queryString.append(param.getName());
-                queryString.append('=');
-                String value = param.getFixed(); //todo
-                queryString.append(value);
+                if(param.getFixed()!=null){
+                    if(queryString.length()>0)
+                        queryString.append('&');
+                    queryString.append(param.getName());
+                    queryString.append('=');
+                    queryString.append(param.getFixed());
+                }
+            }
+        }
+    }
+    
+    private void populateHeaders(HttpURLConnection con, List<Param> params){
+        for(Param param: params){
+            if(param.getStyle()==ParamStyle.HEADER){
+                if(param.getFixed()!=null){
+                    con.addRequestProperty(param.getName(), param.getFixed());
+                }
             }
         }
     }
