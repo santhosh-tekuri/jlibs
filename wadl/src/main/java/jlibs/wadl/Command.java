@@ -140,7 +140,7 @@ public class Command{
                 }
             }
             if(root==null){
-                root = new Path(null, url, false);
+                root = new Path(null, url);
                 terminal.getRoots().add(root);
                 if(base.getPath()!=null && !base.getPath().isEmpty())
                     root = root.add(base.getPath());
