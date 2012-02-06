@@ -138,6 +138,7 @@
                         <exclude>xml/conformance/SAXTest/**</exclude>
                         <exclude>json/src/main/java/jlibs/json/parser/JSONScanner.java</exclude>
                         <exclude>json/src/main/java/jlibs/json/parser/JSONParser.java</exclude>
+                        <exclude>wadl/src/main/java/jlibs/wadl/model/*.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
