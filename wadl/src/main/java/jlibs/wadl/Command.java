@@ -2,6 +2,7 @@ package jlibs.wadl;
 
 import jlibs.core.io.FileUtil;
 import jlibs.core.io.IOUtil;
+import jlibs.core.lang.Ansi;
 import jlibs.core.lang.JavaProcessBuilder;
 import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
@@ -19,14 +20,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.awt.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
+
+import static jlibs.core.lang.Ansi.Attribute;
+import static jlibs.core.lang.Ansi.Color;
 
 /**
  * @author Santhosh Kumar T
@@ -45,7 +46,7 @@ public class Command{
         if(arg1.equals("import"))
             importWADL(args.get(1));
         else if(arg1.equals("cd"))
-            cd(args.size()==1 ? null : args.get(1));
+            return cd(args.size()==1 ? null : args.get(1));
         else if(arg1.equals("set")){
             for(String arg: args){
                 int equals = arg.indexOf('=');
@@ -75,7 +76,7 @@ public class Command{
         return args;
     }
     
-    private void cd(String pathString){
+    private boolean cd(String pathString){
         Path path = terminal.getCurrentPath();
         if(pathString==null)
             path = path.getRoot();
@@ -83,26 +84,31 @@ public class Command{
             StringTokenizer stok = new StringTokenizer(pathString, "/");
             while(stok.hasMoreTokens()){
                 String token = stok.nextToken();
-                if(token.equals(".."))
-                    path = path.parent;
-                else{
+                Path p = null;
+                if(token.equals("."))
+                    p = path;
+                else if(token.equals(".."))
+                    p = path.parent;
+                else if(!token.equals(".")){
                     for(Path child: path.children){
                         String variable = child.variable();
                         if(variable!=null){
                             terminal.getVariables().put(variable, token);
-                            path = child;
+                            p = child;
                             break;
                         }else if(child.name.equals(token)){
-                            path = child;
+                            p = child;
                             break;
                         }
                     }
                 }
-                if(path==null)
-                    return;
+                if(p==null)
+                    return false;
+                path = p;
             }
         }
         terminal.setCurrentPath(path);
+        return true;
     }
 
     private void importWADL(String systemID) throws Exception{
@@ -168,13 +174,13 @@ public class Command{
         }
     }
     
-    private void send(List<String> args) throws Exception{
+    private HttpURLConnection prepareSend(List<String> args) throws Exception{
         Path path = terminal.getCurrentPath();
         if(args.size()>1)
             path = path.get(args.get(1));
-        if(path.resource==null){
+        if(path==null || path.resource==null){
             System.err.println("resource not found");
-            return;
+            return null;
         }
 
         Method method = null;
@@ -189,12 +195,47 @@ public class Command{
         }
         if(method==null){
             System.err.println("unsupported method: "+args.get(0));
-            return;
+            return null;
+        }
+
+        Deque<String> stack = new ArrayDeque<String>();
+        Path p = terminal.getCurrentPath();
+        while(p.parent!=null){
+            if(p.variable()==null)
+                stack.push(p.name);
+            else{
+                String value = terminal.getVariables().get(p.variable());
+                if(value==null){
+                    System.err.println("unresolved variable: "+p.variable());
+                    return null;
+                }
+                stack.push(value);
+            }
+            p = p.parent;
         }
 
         String url = terminal.getURL();
-        if(args.size()>1)
-            url = url+"/"+args.get(1);
+        if(args.size()>1){
+            StringTokenizer stok = new StringTokenizer(args.get(1), "/");
+            while(stok.hasMoreTokens()){
+                String token = stok.nextToken();
+                if(token.equals(".."))
+                    stack.removeLast();
+                else if(!token.equals("."))
+                    stack.addLast(token);
+            }
+            StringBuilder buf = new StringBuilder();
+            if(terminal.getTarget()!=null)
+                buf.append(terminal.getTarget());
+            else
+                buf.append(terminal.getCurrentPath().getRoot());
+            while(!stack.isEmpty()){
+                if(buf.length()>0)
+                    buf.append('/');
+                buf.append(stack.pop());
+            }
+            url = buf.toString();
+        }
 
         HttpURLConnection con;
 
@@ -229,6 +270,7 @@ public class Command{
                 }
             }
         }
+        con.addRequestProperty("Connection", "close");
         con.setRequestMethod(method.getName());
 
         if(payload!=null){
@@ -241,7 +283,7 @@ public class Command{
             processBuilder.arg("text/xml");
             processBuilder.launch(DUMMY_OUTPUT, DUMMY_OUTPUT).waitFor();
             if(!payload.exists())
-                return;
+                return null;
         }
 
         if(payload!=null)
@@ -249,13 +291,25 @@ public class Command{
         con.connect();
         if(payload!=null)
             IOUtil.pump(new FileInputStream(payload), con.getOutputStream(), true, false);
+        return con;
+    }
 
-        System.out.println(con.getResponseCode()+" "+con.getResponseMessage());
+    private static final Ansi SUCCESS = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLACK);
+    private static final Ansi FAILURE = new Ansi(Attribute.BRIGHT, Color.RED, Color.BLACK);
+
+    private void send(List<String> args) throws Exception{
+        HttpURLConnection con = prepareSend(args);
+        if(con==null)
+            return;
+
+        Ansi result = con.getResponseCode()/100==2 ? SUCCESS : FAILURE;
+        result.outln(con.getResponseCode()+" "+con.getResponseMessage());
         System.out.println();
 
         InputStream in = con.getErrorStream();
         if(in==null)
             in = con.getInputStream();
+
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         IOUtil.pump(in, bout, true, true);
         if (bout.size() == 0)

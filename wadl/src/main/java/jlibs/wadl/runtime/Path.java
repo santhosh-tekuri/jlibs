@@ -90,18 +90,22 @@ public class Path{
         StringTokenizer stok = new StringTokenizer(pathString, "/");
         while(stok.hasMoreTokens()){
             String token = stok.nextToken();
-            if(token.equals(".."))
-                path = path.parent;
+            Path p = null;
+            if(token.equals("."))
+                p = path;
+            else if(token.equals(".."))
+                p = path.parent;
             else{
                 for(Path child: path.children){
                     if(child.variable()!=null || child.name.equals(token)){
-                        path = child;
+                        p = child;
                         break;
                     }
                 }
             }
-            if(path==null)
+            if(p==null)
                 return null;
+            path = p;
         }
         return path;
     }

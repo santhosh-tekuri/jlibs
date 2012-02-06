@@ -49,14 +49,22 @@ public class WADLTerminal{
         return variables;
     }
 
-    private static Ansi PLAIN = new Ansi(Attribute.BRIGHT, Color.WHITE, Color.BLUE);
-    private static Ansi VARIABLE = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLUE);
-    public String getPrompt(){
+    private static Ansi PROMPT[][] ={
+        {
+            new Ansi(Attribute.BRIGHT, Color.WHITE, Color.BLUE),
+            new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLUE)
+        },
+        {
+            new Ansi(Attribute.BRIGHT, Color.WHITE, Color.RED),
+            new Ansi(Attribute.BRIGHT, Color.GREEN, Color.RED)
+        }
+    };
+    public String getPrompt(int index){
         if(currentPath==null)
             return "[?]";
         else{
             StringBuilder buff = new StringBuilder();
-            buff.append(PLAIN.colorize("["));
+            buff.append(PROMPT[index][0].colorize("["));
 
             Deque<Path> stack = currentPath.getStack();
             boolean first = true;
@@ -66,22 +74,22 @@ public class WADLTerminal{
                     first = false;
                     if(target!=null){
                         stack.pop();
-                        buff.append(PLAIN.colorize(target));
+                        buff.append(PROMPT[index][0].colorize(target));
                         continue;
                     }
                 }else
-                    buff.append(PLAIN.colorize("/"));
+                    buff.append(PROMPT[index][0].colorize("/"));
                 path = stack.pop();
                 if(path.variable()==null)
-                    buff.append(PLAIN.colorize(path.name));
+                    buff.append(PROMPT[index][0].colorize(path.name));
                 else{
                     String value = variables.get(path.variable());
                     if(value==null)
                         value = path.name;
-                    buff.append(VARIABLE.colorize(value));
+                    buff.append(PROMPT[index][1].colorize(value));
                 }
             }
-            buff.append(PLAIN.colorize("]"));
+            buff.append(PROMPT[index][0].colorize("]"));
             return buff.toString();
         }
     }
@@ -125,15 +133,17 @@ public class WADLTerminal{
         console.setCompletionHandler(completionHandler);
 
         String line;
-        while((line=console.readLine(getPrompt()+" "))!=null){
+        int promptIndex = 0;
+        while((line=console.readLine(getPrompt(promptIndex)+" "))!=null){
             line = line.trim();
             if(line.length()>0){
                 if(line.equals("exit") || line.equals("quit"))
                     return;
                 try{
-                    command.run(line);
+                    promptIndex = command.run(line) ? 0 : 1;
                 }catch(Exception ex){
                     ex.printStackTrace();
+                    promptIndex = 1;
                 }
             }
         }
