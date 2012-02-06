@@ -17,7 +17,7 @@ public class Path{
     public Resource resource;
     public XSModel schema;
 
-    public Path(Path parent, String name, boolean variable){
+    public Path(Path parent, String name){
         this.parent = parent;
         if(parent!=null)
             parent.children.add(this);
@@ -25,7 +25,7 @@ public class Path{
     }
 
     public String variable(){
-        if(name.startsWith("{") && name.endsWith("}"))
+        if(name!=null && name.startsWith("{") && name.endsWith("}"))
             return name.substring(1, name.length()-1);
         else
             return null;
@@ -69,7 +69,7 @@ public class Path{
                     }
                 }
                 if(childPath==null)
-                    childPath = new Path(path, token, true);
+                    childPath = new Path(path, token);
             }else{
                 for(Path child: path.children){
                     if(child.variable()==null && child.name.equals(token)){
@@ -78,7 +78,7 @@ public class Path{
                     }
                 }
                 if(childPath==null)
-                    childPath = new Path(path, token, false);
+                    childPath = new Path(path, token);
             }
             path = childPath;
         }
