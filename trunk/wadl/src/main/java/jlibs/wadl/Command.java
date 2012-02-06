@@ -238,25 +238,18 @@ public class Command{
         }
 
         HttpURLConnection con;
+        
+        StringBuilder queryString = new StringBuilder();
+        populateQueryString(queryString, path.resource.getParam());
+        Request request = method.getRequest();
+        if(request!=null)
+            populateQueryString(queryString, request.getParam());
+        if(queryString.length()>0)
+            url += "?"+queryString;
+        
+        con = (HttpURLConnection)new URL(url).openConnection();
 
         File payload = null;
-        Request request = method.getRequest();
-        if(request!=null){
-            StringBuilder queryString = new StringBuilder();
-            for(Param param: request.getParam()){
-                if(param.getStyle()==ParamStyle.QUERY){
-                    if(queryString.length()>0)
-                        queryString.append('&');
-                    queryString.append(param.getName());
-                    queryString.append('=');
-                    String value = param.getFixed(); //todo
-                    queryString.append(value);
-                }
-            }
-            if(queryString.length()>0)
-                url += "?"+queryString;
-        }
-        con = (HttpURLConnection)new URL(url).openConnection();
         if(request!=null){
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size()-1));
@@ -294,6 +287,19 @@ public class Command{
         return con;
     }
 
+    private void populateQueryString(StringBuilder queryString, List<Param> params){
+        for(Param param: params){
+            if(param.getStyle()==ParamStyle.QUERY){
+                if(queryString.length()>0)
+                    queryString.append('&');
+                queryString.append(param.getName());
+                queryString.append('=');
+                String value = param.getFixed(); //todo
+                queryString.append(value);
+            }
+        }
+    }
+    
     private static final Ansi SUCCESS = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLACK);
     private static final Ansi FAILURE = new Ansi(Attribute.BRIGHT, Color.RED, Color.BLACK);
 
