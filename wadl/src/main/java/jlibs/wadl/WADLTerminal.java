@@ -33,8 +33,13 @@ import static jlibs.core.lang.Ansi.Color;
  * @author Santhosh Kumar T
  */
 public class WADLTerminal{
+    public final ConsoleReader console;
     private final Command command = new Command(this);
     private List<Path> roots = new ArrayList<Path>();
+
+    public WADLTerminal() throws IOException{
+        this.console = new ConsoleReader();
+    }
 
     public List<Path> getRoots(){
         return roots;
@@ -104,7 +109,6 @@ public class WADLTerminal{
     }
 
     public void start() throws IOException{
-        ConsoleReader console = new ConsoleReader();
         WADLCompletor completor = new WADLCompletor(this);
         console.addCompletor(completor);
 

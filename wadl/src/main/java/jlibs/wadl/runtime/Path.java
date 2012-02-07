@@ -17,6 +17,7 @@ package jlibs.wadl.runtime;
 
 import jlibs.core.io.IOUtil;
 import jlibs.core.util.RandomUtil;
+import jlibs.wadl.Authenticator;
 import jlibs.wadl.model.*;
 import org.apache.xerces.xs.XSModel;
 
@@ -37,6 +38,7 @@ public class Path{
     public String value;
     public Resource resource;
     public XSModel schema;
+    public Authenticator authenticator;
 
     public Path(Path parent, String name){
         this.parent = parent;
@@ -167,6 +169,16 @@ public class Path{
         return null;
     }
     
+    public Authenticator getAuthenticator(){
+        Path path = this;
+        while(path!=null){
+            if(path.authenticator!=null)
+                return path.authenticator;
+            path = path.parent;
+        }
+        return null;
+    }
+
     public HttpURLConnection execute(Method method, Map<String, List<String>> vars, File payload) throws Exception{
         String url = toString();
 
@@ -191,6 +203,10 @@ public class Path{
         }
         con.addRequestProperty("Connection", "close");
         con.setRequestMethod(method.getName());
+
+        Authenticator authenticator = getAuthenticator();
+        if(authenticator!=null)
+            authenticator.authenticate(con);
 
         if(payload!=null)
             con.setDoOutput(true);
