@@ -217,20 +217,18 @@ public class WADLCompletor implements Completor{
     }
 
     private int completePath(String buffer, int cursor, List<String>candidates, Path path, int to){
+        int from = to+1;
+        int slash = buffer.substring(from).lastIndexOf('/');
+        if(slash!=-1){
+            slash = from+slash;
+            String pathString = buffer.substring(to+1, slash);
+            path = path.get(pathString);
+            from = slash+1;
+        }
         if(path.children.isEmpty())
             return -1;
 
-        int from = to+1;
-        to = findArgument(buffer, from, '/');
-        if(to<buffer.length()){
-            assert buffer.charAt(to)=='/';
-            String token = buffer.substring(from, to);
-            Path child = path.get(token);
-            if(child==null)
-                return -1;
-            return completePath(buffer, cursor, candidates, child, to);
-        }
-        String arg = buffer.substring(from, Math.min(to, cursor));
+        String arg = buffer.substring(from, cursor);
         fillPathCandidates(candidates, arg, path);
         return from;
     }
