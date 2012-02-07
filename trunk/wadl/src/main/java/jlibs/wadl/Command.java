@@ -38,7 +38,10 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 import static jlibs.core.lang.Ansi.Attribute;
 import static jlibs.core.lang.Ansi.Color;
@@ -102,33 +105,8 @@ public class Command{
         Path path = terminal.getCurrentPath();
         if(pathString==null)
             path = path.getRoot();
-        else{
-            StringTokenizer stok = new StringTokenizer(pathString, "/");
-            while(stok.hasMoreTokens()){
-                String token = stok.nextToken();
-                Path p = null;
-                if(token.equals("."))
-                    p = path;
-                else if(token.equals(".."))
-                    p = path.parent;
-                else if(!token.equals(".")){
-                    for(Path child: path.children){
-                        String variable = child.variable();
-                        if(variable!=null){
-                            child.value = token;
-                            p = child;
-                            break;
-                        }else if(child.name.equals(token)){
-                            p = child;
-                            break;
-                        }
-                    }
-                }
-                if(p==null)
-                    return false;
-                path = p;
-            }
-        }
+        else
+            path = path.get(pathString);
         terminal.setCurrentPath(path);
         return true;
     }
@@ -219,43 +197,8 @@ public class Command{
             return null;
         }
 
-        Deque<String> stack = new ArrayDeque<String>();
-        Path p = terminal.getCurrentPath();
-        while(p.parent!=null){
-            if(p.variable()==null)
-                stack.push(p.name);
-            else{
-                if(p.value==null){
-                    System.err.println("unresolved variable: "+p.variable());
-                    return null;
-                }
-                stack.push(p.value);
-            }
-            p = p.parent;
-        }
+        String url = path.toString();
 
-        String url = terminal.getURL();
-        if(args.size()>1){
-            StringTokenizer stok = new StringTokenizer(args.get(1), "/");
-            while(stok.hasMoreTokens()){
-                String token = stok.nextToken();
-                if(token.equals(".."))
-                    stack.removeLast();
-                else if(!token.equals("."))
-                    stack.addLast(token);
-            }
-            StringBuilder buf = new StringBuilder();
-            buf.append(terminal.getCurrentPath().getRoot().resolve());
-            while(!stack.isEmpty()){
-                if(buf.length()>0)
-                    buf.append('/');
-                buf.append(stack.pop());
-            }
-            url = buf.toString();
-        }
-
-        HttpURLConnection con;
-        
         StringBuilder queryString = new StringBuilder();
         populateQueryString(queryString, path.resource.getParam());
         Request request = method.getRequest();
@@ -263,8 +206,8 @@ public class Command{
             populateQueryString(queryString, request.getParam());
         if(queryString.length()>0)
             url += "?"+queryString;
-        
-        con = (HttpURLConnection)new URL(url).openConnection();
+
+        HttpURLConnection con = (HttpURLConnection)new URL(url).openConnection();
         populateHeaders(con, path.resource.getParam());
 
         File payload = null;

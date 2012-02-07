@@ -63,7 +63,7 @@ public class Path{
             if(path.name!=null){
                 if(buff.length()>0)
                     buff.append('/');
-                buff.append(path.name);
+                buff.append(path.resolve());
             }
         }
         return buff.length()==0 ? "/" : buff.toString();
@@ -116,7 +116,12 @@ public class Path{
                 p = path.parent;
             else{
                 for(Path child: path.children){
-                    if(child.variable()!=null || child.name.equals(token)){
+                    String variable = child.variable();
+                    if(variable!=null){
+                        child.value = token;
+                        p = child;
+                        break;
+                    }else if(child.name.equals(token)){
                         p = child;
                         break;
                     }
@@ -128,7 +133,7 @@ public class Path{
         }
         return path;
     }
-    
+
     public Path getRoot(){
         Path path = this;
         while(path.parent!=null)
