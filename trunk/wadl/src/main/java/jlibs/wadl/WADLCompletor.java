@@ -51,6 +51,9 @@ public class WADLCompletor implements Completor{
             List<String> available = new ArrayList<String>();
             available.add("cd");
 
+            if(!arg.isEmpty() && "authenticate".startsWith(arg))
+                available.add("authenticate");
+
             if(!arg.isEmpty() && "import".startsWith(arg))
                 available.add("import");
 
@@ -90,7 +93,14 @@ public class WADLCompletor implements Completor{
             fillCandidates(candidates, arg, available);
             return from;
         }else{
-            if(arg.equals("cd"))
+            if(arg.equals("authenticate")){
+                String token = buffer.substring(to+1, cursor);
+                List<String> available = new ArrayList<String>();
+                available.add("basic");
+                available.add("oauth");
+                fillCandidates(candidates, token, available);
+                return candidates.isEmpty() ? -1 : to+1;
+            }else if(arg.equals("cd"))
                 return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
             else if(arg.equals("set"))
                 return completeVariable(buffer, cursor, candidates, terminal.getCurrentPath(), to);
@@ -192,10 +202,8 @@ public class WADLCompletor implements Completor{
                 candidates.clear();
                 for(String resourceName: fetchResourceNames(current)){
                     if(resourceName.startsWith(token)){
-                        if(child.children.isEmpty())
-                            candidates.add(resourceName);
-                        else
-                            candidates.add(resourceName+"/");
+                        char terminator = child.children.isEmpty() ? ' ' : '/';
+                        candidates.add(resourceName+terminator);
                     }
                 }
                 return;

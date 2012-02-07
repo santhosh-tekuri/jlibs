@@ -84,6 +84,10 @@ public class Command{
             terminal.getCurrentPath().getRoot().value = args.size()==1 ? null : args.get(1);
         else if(arg1.equals("server")){
             server(args.get(1));
+        }else if(arg1.equals("authenticate")){
+            if(args.size()==1)
+                return false;
+            authenticate(args.get(1), args.subList(2, args.size()));
         }else
             return send(args);
         return true;
@@ -283,6 +287,29 @@ public class Command{
             return contentType.endsWith("application/xml") || contentType.endsWith("+xml");
         else
             return false;
+    }
+
+    public boolean authenticate(String type, List<String> args) throws IOException{
+        if(type.equalsIgnoreCase(BasicAuthenticator.TYPE)){
+            String user;
+            if(!args.isEmpty())
+                user = args.remove(0);
+            else
+                user = terminal.console.readLine("Login: ");
+            if(user==null)
+                return false;
+
+            String passwd;
+
+            if(!args.isEmpty())
+                passwd = args.remove(0);
+            else
+                passwd = terminal.console.readLine("Password: ", (char)0);
+
+            terminal.getCurrentPath().getRoot().authenticator = new BasicAuthenticator(user, passwd);
+            return true;
+        }else
+            throw new RuntimeException("Unsupported authentication: "+type);
     }
 
     private static final OutputStream DUMMY_OUTPUT = new OutputStream(){
