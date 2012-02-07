@@ -29,7 +29,6 @@ import jlibs.xml.xsd.XSInstance;
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.XSModel;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
@@ -138,8 +137,7 @@ public class Command{
     }
 
     private void importWADL(String systemID) throws Exception{
-        JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
-        Application application = (Application)jc.createUnmarshaller().unmarshal(URLUtil.toURL(systemID));
+        Application application = new WADLReader().read(systemID);
 
         XSModel schema = null;
         if(application.getGrammars()!=null){
@@ -184,6 +182,7 @@ public class Command{
             path.resource = resource;
         else
             path.resource.getMethodOrResource().addAll(resource.getMethodOrResource());
+
         for(Object obj: resource.getMethodOrResource()){
             if(obj instanceof Resource)
                 importResource((Resource)obj, path);
