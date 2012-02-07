@@ -81,12 +81,9 @@ public class Command{
                 }
                 path = path.parent;
             }
-        }else if(arg1.equals("target")){
-            if(args.size()==1)
-                terminal.setTarget(null);
-            else
-                terminal.setTarget(args.get(1));
-        }else if(arg1.equals("server")){
+        }else if(arg1.equals("target"))
+            terminal.getCurrentPath().getRoot().value = args.size()==1 ? null : args.get(1);
+        else if(arg1.equals("server")){
             server(args.get(1));
         }else
             return send(args);
@@ -193,7 +190,6 @@ public class Command{
         for(Path root: terminal.getRoots()){
             if(root.name.equalsIgnoreCase(server)){
                 terminal.setCurrentPath(root);
-                terminal.setTarget(null);
                 return;
             }
         }
@@ -249,10 +245,7 @@ public class Command{
                     stack.addLast(token);
             }
             StringBuilder buf = new StringBuilder();
-            if(terminal.getTarget()!=null)
-                buf.append(terminal.getTarget());
-            else
-                buf.append(terminal.getCurrentPath().getRoot());
+            buf.append(terminal.getCurrentPath().getRoot().resolve());
             while(!stack.isEmpty()){
                 if(buf.length()>0)
                     buf.append('/');

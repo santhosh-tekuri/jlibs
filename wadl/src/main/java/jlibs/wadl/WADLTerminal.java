@@ -50,16 +50,6 @@ public class WADLTerminal{
         this.currentPath = currentPath;
     }
     
-    private String target;
-
-    public String getTarget(){
-        return target;
-    }
-
-    public void setTarget(String target){
-        this.target = target;
-    }
-
     private static Ansi PROMPT[][] ={
         {
             new Ansi(Attribute.BRIGHT, Color.WHITE, Color.BLUE),
@@ -81,24 +71,16 @@ public class WADLTerminal{
             boolean first = true;
             Path path;
             while(!stack.isEmpty()){
-                if(first){
+                if(first)
                     first = false;
-                    if(target!=null){
-                        stack.pop();
-                        buff.append(PROMPT[index][0].colorize(target));
-                        continue;
-                    }
-                }else
+                else
                     buff.append(PROMPT[index][0].colorize("/"));
                 path = stack.pop();
-                if(path.variable()==null)
+
+                if(path.value==null)
                     buff.append(PROMPT[index][0].colorize(path.name));
-                else{
-                    String value = path.value;
-                    if(value==null)
-                        value = path.name;
-                    buff.append(PROMPT[index][1].colorize(value));
-                }
+                else
+                    buff.append(PROMPT[index][1].colorize(path.value));
             }
             buff.append(PROMPT[index][0].colorize("]"));
             return buff.toString();
@@ -111,25 +93,12 @@ public class WADLTerminal{
         Deque<Path> stack = path.getStack();
         boolean first = true;
         while(!stack.isEmpty()){
-            if(first){
+            if(first)
                 first = false;
-                if(getTarget()!=null){
-                    stack.pop();
-                    buff.append(getTarget());
-                    continue;
-                }
-            }else
+            else
                 buff.append('/');
             path = stack.pop();
-            if(path.variable()==null)
-                buff.append(path.name);
-            else{
-                if(path.value==null){
-                    System.err.println("unresolved variable: "+path.variable());
-                    return null;
-                }
-                buff.append(path.value);
-            }
+            buff.append(path.resolve());
         }
         return buff.toString();
     }

@@ -47,7 +47,7 @@ public class Path{
     }
     
     public String resolve(){
-        return variable()==null ? name : value;
+        return value!=null ? value : name;
     }
     
     public String toString(Path from){
