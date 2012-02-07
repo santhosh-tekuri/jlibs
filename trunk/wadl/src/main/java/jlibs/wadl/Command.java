@@ -103,8 +103,13 @@ public class Command{
             path = path.getRoot();
         else
             path = path.get(pathString);
-        terminal.setCurrentPath(path);
-        return true;
+        if(path==null){
+            System.err.println("no such resource");
+            return false;
+        }else{
+            terminal.setCurrentPath(path);
+            return true;
+        }
     }
 
     private void importWADL(String systemID) throws Exception{
