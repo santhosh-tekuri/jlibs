@@ -17,9 +17,19 @@ package jlibs.wadl;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.wadl.model.Method;
+import jlibs.wadl.model.Param;
+import jlibs.wadl.model.Representation;
+import jlibs.wadl.model.Response;
 import jlibs.wadl.runtime.Path;
+import jlibs.xml.dom.DOMUtil;
 import jline.Completor;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+import java.net.HttpURLConnection;
 import java.util.*;
 
 /**
@@ -133,11 +143,61 @@ public class WADLCompletor implements Completor{
                 candidates.add(arg+' ');
         }
     }
+
+    private List<String> fetchResourceNames(Path current){
+        if(current.resource==null)
+            return Collections.emptyList();
+        
+        for(Object item: current.resource.getMethodOrResource()){
+            if(item instanceof Method){
+                Method method = (Method)item;
+                if(method.getName().equalsIgnoreCase("GET")){
+                    for(Response response: method.getResponse()){
+                        for(Representation rep: response.getRepresentation()){
+                            if(Command.isXML(rep.getMediaType())){
+                                for(Param param: rep.getParam()){
+                                    if(param.getPath()!=null)
+                                        return fetchResourceNames(current, method, param.getPath());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
     
+    private List<String> fetchResourceNames(Path current, Method method, String xpath){
+        try{
+            HttpURLConnection con = current.execute(method, new HashMap<String, List<String>>(), null);
+            if(con.getResponseCode()==200){
+                Document doc = DOMUtil.newDocumentBuilder(true, false).parse(con.getInputStream());
+                XPathExpression expr = XPathFactory.newInstance().newXPath().compile(xpath);
+                NodeList nodeSet = (NodeList)expr.evaluate(doc, XPathConstants.NODESET);
+                List<String> resourceNames = new ArrayList<String>();
+                for(int i=0; i<nodeSet.getLength(); i++)
+                    resourceNames.add(nodeSet.item(i).getTextContent());
+                return resourceNames;
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return Collections.emptyList();
+    }
+
     private void fillPathCandidates(List<String> candidates, String token, Path current){
         for(Path child: current.children){
             if(child.variable()!=null){
                 candidates.clear();
+                for(String resourceName: fetchResourceNames(current)){
+                    if(resourceName.startsWith(token)){
+                        if(child.children.isEmpty())
+                            candidates.add(resourceName);
+                        else
+                            candidates.add(resourceName+"/");
+                    }
+                }
                 return;
             }
             if(child.name.startsWith(token)){
@@ -165,17 +225,7 @@ public class WADLCompletor implements Completor{
         if(to<buffer.length()){
             assert buffer.charAt(to)=='/';
             String token = buffer.substring(from, to);
-            Path child = null;
-            if(token.equals(".."))
-                child = path.parent;
-            else{
-                for(Path c: path.children){
-                    if(c.variable()!=null || c.name.equals(token)){
-                        child = c;
-                        break;
-                    }
-                }
-            }
+            Path child = path.get(token);
             if(child==null)
                 return -1;
             return completePath(buffer, cursor, candidates, child, to);
