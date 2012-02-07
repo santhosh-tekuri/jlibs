@@ -37,11 +37,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import static jlibs.core.lang.Ansi.Attribute;
 import static jlibs.core.lang.Ansi.Color;
@@ -197,26 +193,11 @@ public class Command{
             return null;
         }
 
-        String url = path.toString();
-
-        StringBuilder queryString = new StringBuilder();
-        populateQueryString(queryString, path.resource.getParam());
         Request request = method.getRequest();
-        if(request!=null)
-            populateQueryString(queryString, request.getParam());
-        if(queryString.length()>0)
-            url += "?"+queryString;
-
-        HttpURLConnection con = (HttpURLConnection)new URL(url).openConnection();
-        populateHeaders(con, path.resource.getParam());
-
         File payload = null;
         if(request!=null){
-            populateHeaders(con, request.getParam());
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size()-1));
-                if(rep.getMediaType()!=null)
-                    con.addRequestProperty("Content-Type", rep.getMediaType());
                 if(rep.getElement()!=null){
                     XSInstance xsInstance = new XSInstance();
                     payload = new File("temp.xml");
@@ -225,8 +206,6 @@ public class Command{
                 }
             }
         }
-        con.addRequestProperty("Connection", "close");
-        con.setRequestMethod(method.getName());
 
         if(payload!=null){
             JavaProcessBuilder processBuilder = new JavaProcessBuilder();
@@ -241,38 +220,9 @@ public class Command{
                 return null;
         }
 
-        if(payload!=null)
-            con.setDoOutput(true);
-        con.connect();
-        if(payload!=null)
-            IOUtil.pump(new FileInputStream(payload), con.getOutputStream(), true, false);
-        return con;
+        return path.execute(method, new HashMap<String, List<String>>(), payload);
     }
 
-    private void populateQueryString(StringBuilder queryString, List<Param> params){
-        for(Param param: params){
-            if(param.getStyle()==ParamStyle.QUERY){
-                if(param.getFixed()!=null){
-                    if(queryString.length()>0)
-                        queryString.append('&');
-                    queryString.append(param.getName());
-                    queryString.append('=');
-                    queryString.append(param.getFixed());
-                }
-            }
-        }
-    }
-    
-    private void populateHeaders(HttpURLConnection con, List<Param> params){
-        for(Param param: params){
-            if(param.getStyle()==ParamStyle.HEADER){
-                if(param.getFixed()!=null){
-                    con.addRequestProperty(param.getName(), param.getFixed());
-                }
-            }
-        }
-    }
-    
     private static final Ansi SUCCESS = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLACK);
     private static final Ansi FAILURE = new Ansi(Attribute.BRIGHT, Color.RED, Color.BLACK);
 

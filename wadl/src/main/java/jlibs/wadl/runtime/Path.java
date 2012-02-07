@@ -15,9 +15,15 @@
 
 package jlibs.wadl.runtime;
 
-import jlibs.wadl.model.Resource;
+import jlibs.core.io.IOUtil;
+import jlibs.core.util.RandomUtil;
+import jlibs.wadl.model.*;
 import org.apache.xerces.xs.XSModel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -159,5 +165,71 @@ public class Path{
             path = path.parent;
         }
         return null;
+    }
+    
+    public HttpURLConnection execute(Method method, Map<String, List<String>> vars, File payload) throws Exception{
+        String url = toString();
+
+        StringBuilder queryString = new StringBuilder();
+        populate(ParamStyle.QUERY, null, queryString, resource.getParam(), vars);
+        Request request = method.getRequest();
+        if(request!=null)
+            populate(ParamStyle.QUERY, null, queryString, request.getParam(), vars);
+        if(queryString.length()>0)
+            url += "?"+queryString;
+
+        HttpURLConnection con = (HttpURLConnection)new URL(url).openConnection();
+        populate(ParamStyle.HEADER, con, null, resource.getParam(), vars);
+
+        if(request!=null){
+            populate(ParamStyle.HEADER, con, null, request.getParam(), vars);
+            if(!request.getRepresentation().isEmpty()){
+                Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size() - 1));
+                if(rep.getMediaType()!=null)
+                    con.addRequestProperty("Content-Type", rep.getMediaType());
+            }
+        }
+        con.addRequestProperty("Connection", "close");
+        con.setRequestMethod(method.getName());
+
+        if(payload!=null)
+            con.setDoOutput(true);
+        con.connect();
+        if(payload!=null)
+            IOUtil.pump(new FileInputStream(payload), con.getOutputStream(), true, false);
+        return con;
+    }
+
+    private static void populate(ParamStyle style, HttpURLConnection con, StringBuilder queryString, List<Param> params, Map<String, List<String>> vars){
+        for(Param param: params){
+            if(param.getStyle()==style){
+                List<String> values;
+                if(param.getFixed()!=null)
+                    values = Collections.singletonList(param.getFixed());
+                else{
+                    values = vars.get(param.getName());
+                    if(values==null && param.isRequired())
+                        throw new RuntimeException("unresolved queryParam: "+param.getName());
+                }
+                if(values!=null){
+                    for(String value: values){
+                        switch(style){
+                            case QUERY:
+                                if(queryString.length()>0)
+                                    queryString.append('&');
+                                queryString.append(param.getName());
+                                queryString.append('=');
+                                queryString.append(value);
+                                break;
+                            case HEADER:
+                                con.addRequestProperty(param.getName(), param.getFixed());
+                                break;
+                            default:
+                                throw new UnsupportedOperationException();
+                        }
+                    }
+                }
+            }
+        }
     }
 }
