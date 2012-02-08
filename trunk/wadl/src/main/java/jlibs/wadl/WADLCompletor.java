@@ -23,6 +23,7 @@ import jlibs.wadl.model.Response;
 import jlibs.wadl.runtime.Path;
 import jlibs.xml.dom.DOMUtil;
 import jline.Completor;
+import jline.FileNameCompletor;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -47,6 +48,10 @@ public class WADLCompletor implements Completor{
         int from = 0;
         int to = findArgument(buffer, from, ' ');
         String arg = buffer.substring(from, Math.min(to, cursor));
+        if(arg.isEmpty() && terminal.getCurrentPath()==null){
+            candidates.add("import ");
+            return 0;
+        }
         if(arg.isEmpty() || cursor<=to){
             List<String> available = new ArrayList<String>();
             available.add("cd");
@@ -93,8 +98,8 @@ public class WADLCompletor implements Completor{
             fillCandidates(candidates, arg, available);
             return from;
         }else{
+            String token = buffer.substring(to+1, cursor);
             if(arg.equals("authenticate")){
-                String token = buffer.substring(to+1, cursor);
                 List<String> available = new ArrayList<String>();
                 available.add("basic");
                 available.add("oauth");
@@ -106,7 +111,6 @@ public class WADLCompletor implements Completor{
             else if(arg.equals("set"))
                 return completeVariable(buffer, cursor, candidates, terminal.getCurrentPath(), to);
             else if(arg.equals("server")){
-                String token = buffer.substring(to+1, cursor);
                 if(token.contains(" "))
                     return -1;
                 Path currentRoot = terminal.getCurrentPath();
@@ -117,8 +121,11 @@ public class WADLCompletor implements Completor{
                         candidates.add(root.name+" ");
                 }
                 return candidates.isEmpty() ? -1 : to+1;
+            }else if(arg.equals("import")){
+                int index = new FileNameCompletor().complete(token, cursor - to, candidates);
+                return index==-1 ? index : index + to+1;
             }else
-                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
+                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to+1);
         }
     }
     
