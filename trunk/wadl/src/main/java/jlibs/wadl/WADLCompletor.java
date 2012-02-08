@@ -199,16 +199,14 @@ public class WADLCompletor implements Completor{
     private void fillPathCandidates(List<String> candidates, String token, Path current){
         for(Path child: current.children){
             if(child.variable()!=null){
-                candidates.clear();
+//                candidates.clear();
                 for(String resourceName: fetchResourceNames(current)){
                     if(resourceName.startsWith(token)){
                         char terminator = child.children.isEmpty() ? ' ' : '/';
                         candidates.add(resourceName+terminator);
                     }
                 }
-                return;
-            }
-            if(child.name.startsWith(token)){
+            }else if(child.name.startsWith(token)){
                 if(child.children.isEmpty())
                     candidates.add(child.name+' ');
                 else{
