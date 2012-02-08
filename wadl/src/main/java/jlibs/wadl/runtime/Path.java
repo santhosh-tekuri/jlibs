@@ -123,16 +123,19 @@ public class Path{
             else if(token.equals(".."))
                 p = path.parent;
             else{
+                Path varChild = null;
                 for(Path child: path.children){
                     String variable = child.variable();
-                    if(variable!=null){
-                        child.value = token;
-                        p = child;
-                        break;
-                    }else if(child.name.equals(token)){
+                    if(variable!=null)
+                        varChild = child;
+                    else if(child.name.equals(token)){
                         p = child;
                         break;
                     }
+                }
+                if(p==null && varChild!=null){
+                    p = varChild;
+                    p.value = token;
                 }
             }
             if(p==null)
