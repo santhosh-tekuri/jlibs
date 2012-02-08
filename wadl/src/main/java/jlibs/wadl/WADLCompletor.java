@@ -116,26 +116,8 @@ public class WADLCompletor implements Completor{
                         candidates.add(root.name+" ");
                 }
                 return candidates.isEmpty() ? -1 : to+1;
-            }else{
-                Path path = terminal.getCurrentPath();
-                if(path.resource!=null){
-                    Method method = null;
-                    for(Object obj: path.resource.getMethodOrResource()){
-                        if(obj instanceof Method){
-                            String m = ((Method)obj).getName();
-                            if(arg.equalsIgnoreCase(m)){
-                                method = (Method)obj;
-                                break;
-                            }
-                        }
-                    }
-                    if(method==null)
-                        return -1;
-                    return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
-                }
-
-                return -1;
-            }
+            }else
+                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
         }
     }
     
