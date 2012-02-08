@@ -19,6 +19,7 @@ import jlibs.core.io.FileUtil;
 import jlibs.core.io.IOUtil;
 import jlibs.core.lang.Ansi;
 import jlibs.core.lang.JavaProcessBuilder;
+import jlibs.core.lang.NotImplementedException;
 import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.wadl.model.*;
@@ -316,7 +317,10 @@ public class Command{
     }
 
     public boolean authenticate(String type, List<String> args) throws IOException{
-        if(type.equalsIgnoreCase(BasicAuthenticator.TYPE)){
+        if(type.equalsIgnoreCase("none")){
+            terminal.getCurrentPath().getRoot().authenticator = null;
+            return true;
+        }else if(type.equalsIgnoreCase(BasicAuthenticator.TYPE)){
             String user;
             if(!args.isEmpty())
                 user = args.remove(0);
@@ -335,7 +339,7 @@ public class Command{
             terminal.getCurrentPath().getRoot().authenticator = new BasicAuthenticator(user, passwd);
             return true;
         }else
-            throw new RuntimeException("Unsupported authentication: "+type);
+            throw new NotImplementedException(type);
     }
 
     private static final OutputStream DUMMY_OUTPUT = new OutputStream(){
