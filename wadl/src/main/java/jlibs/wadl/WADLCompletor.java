@@ -98,6 +98,7 @@ public class WADLCompletor implements Completor{
                 List<String> available = new ArrayList<String>();
                 available.add("basic");
                 available.add("oauth");
+                available.add("none");
                 fillCandidates(candidates, token, available);
                 return candidates.isEmpty() ? -1 : to+1;
             }else if(arg.equals("cd"))
