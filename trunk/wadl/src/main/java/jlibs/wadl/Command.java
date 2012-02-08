@@ -267,6 +267,17 @@ public class Command{
         if(con==null)
             return false;
 
+        if(con.getResponseCode()==401){ // Unauthorized
+            String value = con.getHeaderField("WWW-Authenticate");
+            if(value==null)
+                return false;
+            int space = value.indexOf(' ');
+            if(space==-1)
+                return false;
+            if(!authenticate(value.substring(0, space), Collections.<String>emptyList()))
+                return false;
+            return send(args);
+        }
         Ansi result = con.getResponseCode()/100==2 ? SUCCESS : FAILURE;
         result.outln(con.getResponseCode()+" "+con.getResponseMessage());
         System.out.println();
