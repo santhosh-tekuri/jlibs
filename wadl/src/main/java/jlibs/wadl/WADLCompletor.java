@@ -164,6 +164,11 @@ public class WADLCompletor implements Completor{
     private List<String> fetchResourceNames(Path current, Method method, String xpath){
         try{
             HttpURLConnection con = current.execute(method, new HashMap<String, List<String>>(), null);
+//            if(con.getResponseCode()==401){
+//                System.out.println();
+//                new Command(terminal).authenticate(con);
+//                return Collections.emptyList();
+//            }
             if(con.getResponseCode()==200){
                 Document doc = DOMUtil.newDocumentBuilder(true, false).parse(con.getInputStream());
                 XPathExpression expr = XPathFactory.newInstance().newXPath().compile(xpath);

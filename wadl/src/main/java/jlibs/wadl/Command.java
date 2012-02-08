@@ -262,21 +262,28 @@ public class Command{
     private static final Ansi SUCCESS = new Ansi(Attribute.BRIGHT, Color.GREEN, Color.BLACK);
     private static final Ansi FAILURE = new Ansi(Attribute.BRIGHT, Color.RED, Color.BLACK);
 
+    public boolean authenticate(HttpURLConnection con) throws IOException{
+        String value = con.getHeaderField("WWW-Authenticate");
+        if(value==null)
+            return false;
+        int space = value.indexOf(' ');
+        if(space==-1)
+            return false;
+        if(!authenticate(value.substring(0, space), Collections.<String>emptyList()))
+            return false;
+        return true;
+    }
+
     private boolean send(List<String> args) throws Exception{
         HttpURLConnection con = prepareSend(args);
         if(con==null)
             return false;
 
         if(con.getResponseCode()==401){ // Unauthorized
-            String value = con.getHeaderField("WWW-Authenticate");
-            if(value==null)
+            if(authenticate(con))
+                return send(args);
+            else
                 return false;
-            int space = value.indexOf(' ');
-            if(space==-1)
-                return false;
-            if(!authenticate(value.substring(0, space), Collections.<String>emptyList()))
-                return false;
-            return send(args);
         }
         Ansi result = con.getResponseCode()/100==2 ? SUCCESS : FAILURE;
         result.outln(con.getResponseCode()+" "+con.getResponseMessage());
