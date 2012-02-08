@@ -29,6 +29,7 @@ import jlibs.xml.xsd.XSInstance;
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.XSModel;
 
+import javax.xml.namespace.QName;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
@@ -178,6 +179,33 @@ public class Command{
         }
     }
 
+    private static final File FILE_PAYLOAD = new File("temp.xml");
+
+    private void generatePayload(Path path, QName element) throws Exception{
+        if(path.variable()!=null){
+            for(Object item: path.resource.getMethodOrResource()){
+                if(item instanceof Method){
+                    Method method = (Method)item;
+                    if(method.getName().equalsIgnoreCase("GET")){
+                        try{
+                            HttpURLConnection con = path.execute(method, new HashMap<String, List<String>>(), null);
+                            if(con.getResponseCode()==200){
+                                IOUtil.pump(con.getInputStream(), new FileOutputStream(FILE_PAYLOAD), true, true);
+                                return;
+                            }
+                        }catch(Exception ex){
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
+        XSInstance xsInstance = new XSInstance();
+        XMLDocument xml = new XMLDocument(new StreamResult(FILE_PAYLOAD), true, 4, null);
+        xsInstance.generate(path.getSchema(), element, xml);
+    }
+
     private HttpURLConnection prepareSend(List<String> args) throws Exception{
         Path path = terminal.getCurrentPath();
         if(args.size()>1)
@@ -208,10 +236,8 @@ public class Command{
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size()-1));
                 if(rep.getElement()!=null){
-                    XSInstance xsInstance = new XSInstance();
-                    payload = new File("temp.xml");
-                    XMLDocument xml = new XMLDocument(new StreamResult(payload), true, 4, null);
-                    xsInstance.generate(path.getSchema(), rep.getElement(), xml);
+                    payload = FILE_PAYLOAD;
+                    generatePayload(path, rep.getElement());
                 }
             }
         }
