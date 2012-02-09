@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli.model;
 
 import jlibs.core.net.URLUtil;
 import jlibs.wadl.model.*;

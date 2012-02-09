@@ -13,11 +13,11 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl.runtime;
+package jlibs.wadl.cli.model;
 
 import jlibs.core.io.IOUtil;
 import jlibs.core.util.RandomUtil;
-import jlibs.wadl.Authenticator;
+import jlibs.wadl.cli.commands.auth.Authenticator;
 import jlibs.wadl.model.*;
 import org.apache.xerces.xs.XSModel;
 

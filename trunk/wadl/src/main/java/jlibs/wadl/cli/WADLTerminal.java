@@ -13,10 +13,12 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli;
 
 import jlibs.core.lang.Ansi;
-import jlibs.wadl.runtime.Path;
+import jlibs.wadl.cli.commands.Command;
+import jlibs.wadl.cli.completors.WADLCompletor;
+import jlibs.wadl.cli.model.Path;
 import jline.CandidateListCompletionHandler;
 import jline.ConsoleReader;
 

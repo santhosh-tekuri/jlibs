@@ -13,14 +13,16 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli.completors;
 
 import jlibs.core.lang.StringUtil;
+import jlibs.wadl.cli.WADLTerminal;
+import jlibs.wadl.cli.commands.Command;
+import jlibs.wadl.cli.model.Path;
 import jlibs.wadl.model.Method;
 import jlibs.wadl.model.Param;
 import jlibs.wadl.model.Representation;
 import jlibs.wadl.model.Response;
-import jlibs.wadl.runtime.Path;
 import jlibs.xml.dom.DOMUtil;
 import jline.Completor;
 import jline.FileNameCompletor;
