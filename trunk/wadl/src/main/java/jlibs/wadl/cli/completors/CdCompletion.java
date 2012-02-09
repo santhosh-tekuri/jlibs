@@ -16,24 +16,16 @@
 package jlibs.wadl.cli.completors;
 
 import jlibs.wadl.cli.WADLTerminal;
-import jline.Completor;
-
-import java.util.List;
+import jlibs.wadl.cli.model.Path;
 
 /**
  * @author Santhosh Kumar T
  */
-public class WADLCompletor implements Completor{
-    private WADLTerminal terminal;
-    public WADLCompletor(WADLTerminal terminal){
-        this.terminal = terminal;
+public class CdCompletion extends PathCompletion{
+    public CdCompletion(WADLTerminal terminal){
+        super(terminal);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public int complete(String buffer, int cursor, List candidates){
-        Buffer b = new Buffer(buffer, cursor, candidates);
-        new CommandCompletion(terminal).complete(b);
-        return b.getFrom();
-    }
+    protected void completeNext(Buffer buffer, Path path){}
 }

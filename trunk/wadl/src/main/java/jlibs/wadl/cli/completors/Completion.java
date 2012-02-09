@@ -16,24 +16,24 @@
 package jlibs.wadl.cli.completors;
 
 import jlibs.wadl.cli.WADLTerminal;
-import jline.Completor;
 
 import java.util.List;
 
 /**
  * @author Santhosh Kumar T
  */
-public class WADLCompletor implements Completor{
-    private WADLTerminal terminal;
-    public WADLCompletor(WADLTerminal terminal){
+public abstract class Completion{
+    protected final WADLTerminal terminal;
+    public Completion(WADLTerminal terminal){
         this.terminal = terminal;
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public int complete(String buffer, int cursor, List candidates){
-        Buffer b = new Buffer(buffer, cursor, candidates);
-        new CommandCompletion(terminal).complete(b);
-        return b.getFrom();
+    public abstract void complete(Buffer buffer);
+
+    protected void fillCandidates(List<String> candidates, String prefix, List<String> available){
+        for(String arg: available){
+            if(arg.toLowerCase().startsWith(prefix.toLowerCase()))
+                candidates.add(arg+' ');
+        }
     }
 }

@@ -16,24 +16,22 @@
 package jlibs.wadl.cli.completors;
 
 import jlibs.wadl.cli.WADLTerminal;
-import jline.Completor;
-
-import java.util.List;
+import jline.FileNameCompletor;
 
 /**
  * @author Santhosh Kumar T
  */
-public class WADLCompletor implements Completor{
-    private WADLTerminal terminal;
-    public WADLCompletor(WADLTerminal terminal){
-        this.terminal = terminal;
+public class ImportCompletion extends Completion{
+    public ImportCompletion(WADLTerminal terminal){
+        super(terminal);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public int complete(String buffer, int cursor, List candidates){
-        Buffer b = new Buffer(buffer, cursor, candidates);
-        new CommandCompletion(terminal).complete(b);
-        return b.getFrom();
+    public void complete(Buffer buffer){
+        String arg = buffer.next();
+        int index = new FileNameCompletor().complete(arg, arg.length(), buffer.candidates());
+        if(index!=-1)
+            buffer.eat(index);
+
     }
 }
