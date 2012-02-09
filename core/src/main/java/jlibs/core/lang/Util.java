@@ -155,8 +155,4 @@ public class Util{
                 throw (CloneNotSupportedException)new CloneNotSupportedException().initCause(ex);
         }
     }
-
-    public static RuntimeException unchecked(Throwable thr){
-        return (RuntimeException)thr;
-    }
 }
