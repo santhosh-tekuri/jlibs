@@ -194,8 +194,9 @@ public class Path{
             url += "?"+queryString;
 
         HttpURLConnection con = (HttpURLConnection)new URL(url).openConnection();
-        populate(ParamStyle.HEADER, con, null, resource.getParam(), vars);
+        con.setRequestMethod(method.getName());
 
+        populate(ParamStyle.HEADER, con, null, resource.getParam(), vars);
         if(request!=null){
             populate(ParamStyle.HEADER, con, null, request.getParam(), vars);
             if(!request.getRepresentation().isEmpty()){
@@ -205,7 +206,6 @@ public class Path{
             }
         }
         con.addRequestProperty("Connection", "close");
-        con.setRequestMethod(method.getName());
 
         Authenticator authenticator = getAuthenticator();
         if(authenticator!=null)
