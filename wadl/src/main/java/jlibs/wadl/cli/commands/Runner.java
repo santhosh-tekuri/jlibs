@@ -20,19 +20,17 @@ import jlibs.core.io.IOUtil;
 import jlibs.core.lang.Ansi;
 import jlibs.core.lang.JavaProcessBuilder;
 import jlibs.core.lang.NotImplementedException;
-import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.wadl.cli.WADLTerminal;
 import jlibs.wadl.cli.commands.auth.BasicAuthenticator;
 import jlibs.wadl.cli.model.Path;
-import jlibs.wadl.cli.model.WADLReader;
 import jlibs.wadl.cli.ui.Editor;
-import jlibs.wadl.model.*;
+import jlibs.wadl.model.Method;
+import jlibs.wadl.model.Representation;
+import jlibs.wadl.model.Request;
 import jlibs.xml.sax.AnsiHandler;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.XSInstance;
-import jlibs.xml.xsd.XSParser;
-import org.apache.xerces.xs.XSModel;
 
 import javax.xml.namespace.QName;
 import javax.xml.transform.Transformer;
@@ -42,7 +40,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.util.*;
 
 import static jlibs.core.lang.Ansi.Attribute;
@@ -51,10 +48,10 @@ import static jlibs.core.lang.Ansi.Color;
 /**
  * @author Santhosh Kumar T
  */
-public class Command{
+public class Runner{
     private WADLTerminal terminal;
 
-    public Command(WADLTerminal terminal){
+    public Runner(WADLTerminal terminal){
         this.terminal = terminal;
     }
 
@@ -62,9 +59,10 @@ public class Command{
         List<String> args = getArguments(command);
 
         String arg1 = args.get(0);
-        if(arg1.equals("import"))
-            importWADL(args.get(1));
-        else if(arg1.equals("cd"))
+        if(arg1.equals("import")){
+            args.remove(0);
+            new Import(terminal).run(args);
+        }else if(arg1.equals("cd"))
             return cd(args.size()==1 ? null : args.get(1));
         else if(arg1.equals("set")){
             Properties vars = new Properties();
@@ -122,58 +120,6 @@ public class Command{
         }
     }
 
-    private void importWADL(String systemID) throws Exception{
-        Application application = new WADLReader().read(systemID);
-
-        XSModel schema = null;
-        if(application.getGrammars()!=null){
-            List<String> includes = new ArrayList<String>();
-            for(Include include: application.getGrammars().getInclude()){
-                if(include.getHref()!=null)
-                    includes.add(URLUtil.resolve(systemID, include.getHref()).toString());
-            }
-            if(!includes.isEmpty())
-                schema = new XSParser().parse(includes.toArray(new String[includes.size()]));
-        }
-
-        Path root = null;
-        for(Resources resources: application.getResources()){
-            URI base = URI.create(resources.getBase());
-            String url = base.getScheme()+"://"+base.getHost();
-            if(base.getPort()!=-1)
-                url += ":"+base.getPort();
-            root = null;
-            for(Path path: terminal.getRoots()){
-                if(path.name.equals(url)){
-                    root = path;
-                    break;
-                }
-            }
-            if(root==null){
-                root = new Path(null, url);
-                terminal.getRoots().add(root);
-                if(base.getPath()!=null && !base.getPath().isEmpty())
-                    root = root.add(base.getPath());
-            }
-            root.schema = schema;
-            for(Resource resource: resources.getResource())
-                importResource(resource, root);
-        }
-        terminal.setCurrentPath(root);
-    }
-
-    private void importResource(Resource resource, Path path){
-        path = path.add(resource.getPath());
-        if(path.resource==null)
-            path.resource = resource;
-        else
-            path.resource.getMethodOrResource().addAll(resource.getMethodOrResource());
-
-        for(Object obj: resource.getMethodOrResource()){
-            if(obj instanceof Resource)
-                importResource((Resource)obj, path);
-        }
-    }
 
     private void server(String server){
         for(Path root: terminal.getRoots()){

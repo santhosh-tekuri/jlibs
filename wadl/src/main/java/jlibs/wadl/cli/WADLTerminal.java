@@ -16,7 +16,7 @@
 package jlibs.wadl.cli;
 
 import jlibs.core.lang.Ansi;
-import jlibs.wadl.cli.commands.Command;
+import jlibs.wadl.cli.commands.Runner;
 import jlibs.wadl.cli.completors.WADLCompletor;
 import jlibs.wadl.cli.model.Path;
 import jline.CandidateListCompletionHandler;
@@ -36,7 +36,7 @@ import static jlibs.core.lang.Ansi.Color;
  */
 public class WADLTerminal{
     public final ConsoleReader console;
-    private final Command command = new Command(this);
+    private final Runner command = new Runner(this);
     private List<Path> roots = new ArrayList<Path>();
 
     public WADLTerminal() throws IOException{
