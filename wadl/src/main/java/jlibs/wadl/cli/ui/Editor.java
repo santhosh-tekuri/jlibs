@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli.ui;
 
 import jlibs.core.io.IOUtil;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;

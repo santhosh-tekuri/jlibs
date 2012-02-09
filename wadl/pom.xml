@@ -53,7 +53,7 @@
                     <archive>
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <mainClass>jlibs.wadl.WADLTerminal</mainClass>
+                            <mainClass>jlibs.wadl.cli.WADLTerminal</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

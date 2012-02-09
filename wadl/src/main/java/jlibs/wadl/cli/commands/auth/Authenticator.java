@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli.commands.auth;
 
 import java.net.HttpURLConnection;
 

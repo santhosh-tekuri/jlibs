@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.wadl;
+package jlibs.wadl.cli.commands;
 
 import jlibs.core.io.FileUtil;
 import jlibs.core.io.IOUtil;
@@ -22,8 +22,12 @@ import jlibs.core.lang.JavaProcessBuilder;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.core.net.URLUtil;
 import jlibs.core.util.RandomUtil;
+import jlibs.wadl.cli.WADLTerminal;
+import jlibs.wadl.cli.commands.auth.BasicAuthenticator;
+import jlibs.wadl.cli.model.Path;
+import jlibs.wadl.cli.model.WADLReader;
+import jlibs.wadl.cli.ui.Editor;
 import jlibs.wadl.model.*;
-import jlibs.wadl.runtime.Path;
 import jlibs.xml.sax.AnsiHandler;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.XSInstance;
