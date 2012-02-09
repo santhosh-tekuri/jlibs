@@ -17,7 +17,7 @@ package jlibs.wadl.cli.completors;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.wadl.cli.WADLTerminal;
-import jlibs.wadl.cli.commands.Command;
+import jlibs.wadl.cli.commands.Runner;
 import jlibs.wadl.cli.model.Path;
 import jlibs.wadl.model.Method;
 import jlibs.wadl.model.Param;
@@ -156,7 +156,7 @@ public class WADLCompletor implements Completor{
                 if(method.getName().equalsIgnoreCase("GET")){
                     for(Response response: method.getResponse()){
                         for(Representation rep: response.getRepresentation()){
-                            if(Command.isXML(rep.getMediaType())){
+                            if(Runner.isXML(rep.getMediaType())){
                                 for(Param param: rep.getParam()){
                                     if(param.getPath()!=null)
                                         return fetchResourceNames(current, method, param.getPath());
