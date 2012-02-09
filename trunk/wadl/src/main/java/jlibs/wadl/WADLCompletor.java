@@ -125,7 +125,7 @@ public class WADLCompletor implements Completor{
                 int index = new FileNameCompletor().complete(token, cursor - to, candidates);
                 return index==-1 ? index : index + to+1;
             }else
-                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to+1);
+                return completePath(buffer, cursor, candidates, terminal.getCurrentPath(), to);
         }
     }
     
@@ -230,7 +230,11 @@ public class WADLCompletor implements Completor{
             return -1;
 
         String arg = buffer.substring(from, cursor);
-        fillPathCandidates(candidates, arg, path);
+        if(arg.endsWith(" ")){
+            path = path.get(arg.trim());
+            return -1; //todo
+        }else
+            fillPathCandidates(candidates, arg, path);
         return from;
     }
     
