@@ -182,6 +182,19 @@ public class Path{
         return null;
     }
 
+    public Method findMethod(String methodName){
+        if(resource==null)
+            return null;
+        for(Object obj: resource.getMethodOrResource()){
+            if(obj instanceof jlibs.wadl.model.Method){
+                Method method = (Method)obj;
+                if(method.getName().equalsIgnoreCase(methodName))
+                    return method;
+            }
+        }
+        return null;
+    }
+
     public HttpURLConnection execute(Method method, Map<String, List<String>> vars, File payload) throws Exception{
         String url = toString();
 

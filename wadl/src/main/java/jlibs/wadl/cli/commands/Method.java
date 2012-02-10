@@ -115,16 +115,7 @@ public class Method extends Command{
             return null;
         }
 
-        jlibs.wadl.model.Method method = null;
-        for(Object obj: path.resource.getMethodOrResource()){
-            if(obj instanceof jlibs.wadl.model.Method){
-                jlibs.wadl.model.Method m = (jlibs.wadl.model.Method)obj;
-                if(m.getName().equalsIgnoreCase(args.get(0))){
-                    method = m;
-                    break;
-                }
-            }
-        }
+        jlibs.wadl.model.Method method = path.findMethod(args.get(0));
         if(method==null){
             System.err.println("unsupported method: "+args.get(0));
             return null;
