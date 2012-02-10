@@ -342,24 +342,6 @@ public class XSInstance{
         private static final String XSD_DATE_FORMAT = "yyyy-MM-dd";
         private static final String XSD_TIME_FORMAT = "HH:mm:ss";
 
-        private List<String> getEnumeratedValues(XSSimpleTypeDefinition simpleType){
-            ArrayList<String> enums = new ArrayList<String>();
-
-            XSObjectList facets = simpleType.getMultiValueFacets();
-            if(facets!=null){
-                for(int i=0; i<facets.getLength(); i++){
-                    XSMultiValueFacet facet = (XSMultiValueFacet)facets.item(i);
-                    if(facet.getFacetKind()==XSSimpleTypeDefinition.FACET_ENUMERATION) {
-                        StringList values = facet.getLexicalFacetValues();
-                        for(int j=0; j<values.getLength(); j++)
-                            enums.add(values.item(j));
-                    }
-                }
-            }
-            return enums;
-        }
-
-
         private String generateSampleValue(XSSimpleTypeDefinition simpleType, String hint){
             if(simpleType.getBuiltInKind()==XSConstants.LIST_DT){
                 XSSimpleTypeDefinition itemType = simpleType.getItemType();
@@ -394,7 +376,7 @@ public class XSInstance{
                             : RandomUtil.random(min, max);
                 }
 
-                List<String> enums = getEnumeratedValues(itemType);
+                List<String> enums = XSUtil.getEnumeratedValues(itemType);
                 if(enums.isEmpty()){
                     StringBuilder buff = new StringBuilder();
                     while(len>0){
@@ -422,7 +404,7 @@ public class XSInstance{
                 return generateSampleValue((XSSimpleTypeDefinition)members.item(rand), hint);
             }
 
-            List<String> enums = getEnumeratedValues(simpleType);
+            List<String> enums = XSUtil.getEnumeratedValues(simpleType);
             if(!enums.isEmpty())
                 return enums.get(RandomUtil.random(0, enums.size()-1));
 
