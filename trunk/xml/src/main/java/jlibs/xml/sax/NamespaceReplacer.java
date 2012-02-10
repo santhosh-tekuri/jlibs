@@ -65,9 +65,13 @@ public class NamespaceReplacer extends SAXDelegate{
     private AttributeReplacer attributeReplacer = new AttributeReplacer();
     private Attribute2Replacer attribute2Replacer = new Attribute2Replacer();
     private Attributes replace(Attributes attrs){
-        AttributeReplacer replacer = attrs instanceof Attributes2 ? attribute2Replacer : attributeReplacer;
-        replacer.setDelegate(attrs);
-        return replacer;
+        if(attrs instanceof Attributes2){
+            attribute2Replacer.setDelegate((Attributes2)attrs);
+            return attribute2Replacer;
+        }else{
+            attributeReplacer.setDelegate(attrs);
+            return attributeReplacer;
+        }
     }
 
     @Override
@@ -127,6 +131,7 @@ public class NamespaceReplacer extends SAXDelegate{
         super.endElement(uri, localName, qName);
         if(oldNSSupport!=null){
             oldNSSupport.endElement();
+            assert newNSSupport!=null;
             newNSSupport.endElement();
         }
     }
