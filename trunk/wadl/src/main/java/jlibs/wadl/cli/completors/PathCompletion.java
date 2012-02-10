@@ -32,7 +32,6 @@ import javax.xml.xpath.XPathFactory;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -118,7 +117,7 @@ public abstract class PathCompletion extends Completion{
 
     private List<String> fetchResourceNames(Path current, Method method, String xpath){
         try{
-            HttpURLConnection con = current.execute(method, new HashMap<String, List<String>>(), null);
+            HttpURLConnection con = current.execute(method, Collections.<String>emptyList(), null);
 //            if(con.getResponseCode()==401){
 //                System.out.println();
 //                new Command(terminal).authenticate(con);

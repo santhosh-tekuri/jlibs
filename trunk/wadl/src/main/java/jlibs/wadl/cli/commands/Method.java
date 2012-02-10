@@ -39,7 +39,6 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -107,17 +106,22 @@ public class Method extends Command{
     }
 
     private HttpURLConnection prepare(List<String> args) throws Exception{
+        String methodName = args.remove(0);
+        
         Path path = terminal.getCurrentPath();
-        if(args.size()>1)
-            path = path.get(args.get(1));
+        if(!args.isEmpty()){
+            String pathString = args.get(0);
+            if(pathString.indexOf('=')==-1 && pathString.indexOf(':')==-1)
+                path = path.get(args.remove(0));
+        }
         if(path==null || path.resource==null){
             System.err.println("resource not found");
             return null;
         }
 
-        jlibs.wadl.model.Method method = path.findMethod(args.get(0));
+        jlibs.wadl.model.Method method = path.findMethod(methodName);
         if(method==null){
-            System.err.println("unsupported method: "+args.get(0));
+            System.err.println("unsupported method: "+methodName);
             return null;
         }
 
@@ -146,7 +150,7 @@ public class Method extends Command{
                 return null;
         }
 
-        return path.execute(method, new HashMap<String, List<String>>(), payload);
+        return path.execute(method, args, payload);
     }
 
     private static final File FILE_PAYLOAD = new File("temp.xml");
@@ -157,7 +161,7 @@ public class Method extends Command{
                     jlibs.wadl.model.Method method = (jlibs.wadl.model.Method)item;
                     if(method.getName().equalsIgnoreCase("GET")){
                         try{
-                            HttpURLConnection con = path.execute(method, new HashMap<String, List<String>>(), null);
+                            HttpURLConnection con = path.execute(method, Collections.<String>emptyList(), null);
                             if(con.getResponseCode()==200){
                                 IOUtil.pump(con.getInputStream(), new FileOutputStream(FILE_PAYLOAD), true, true);
                                 return;
