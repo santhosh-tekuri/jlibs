@@ -117,4 +117,21 @@ public class XSUtil{
         });
         return elements;
     }
+
+    public static List<String> getEnumeratedValues(XSSimpleTypeDefinition simpleType){
+        ArrayList<String> enums = new ArrayList<String>();
+
+        XSObjectList facets = simpleType.getMultiValueFacets();
+        if(facets!=null){
+            for(int i=0; i<facets.getLength(); i++){
+                XSMultiValueFacet facet = (XSMultiValueFacet)facets.item(i);
+                if(facet.getFacetKind()==XSSimpleTypeDefinition.FACET_ENUMERATION) {
+                    StringList values = facet.getLexicalFacetValues();
+                    for(int j=0; j<values.getLength(); j++)
+                        enums.add(values.item(j));
+                }
+            }
+        }
+        return enums;
+    }
 }
