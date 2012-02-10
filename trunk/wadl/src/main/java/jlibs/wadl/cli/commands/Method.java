@@ -98,7 +98,8 @@ public class Method extends Command{
                 transformer.reset();
                 return success;
             } catch (Exception ex) {
-                // ignore
+                sysErr.println("response is not valid xml: "+ex.getMessage());
+                return false;
             } finally {
                 System.setErr(sysErr);
             }
@@ -106,6 +107,10 @@ public class Method extends Command{
         if(Util.isPlain(contentType) || Util.isJSON(contentType) || Util.isHTML(contentType)){
             IOUtil.pump(pin, System.out, true, false);
             System.out.println();
+        }else{
+            File temp = File.createTempFile("attachment", "."+Util.getExtension(contentType), FileUtil.USER_DIR);
+            IOUtil.pump(pin, new FileOutputStream(temp), true, true);
+            System.out.println("response saved to "+temp.getAbsolutePath());
         }
         return success;
     }

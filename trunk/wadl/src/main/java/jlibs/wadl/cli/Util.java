@@ -15,6 +15,8 @@
 
 package jlibs.wadl.cli;
 
+import jlibs.core.lang.ArrayUtil;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +56,18 @@ public class Util{
         return isContentType(contentType, "html");
     }
 
+    public static String getExtension(String contentType){
+        if(contentType==null)
+            return "";
+        int semicolon = contentType.indexOf(';');
+        if(semicolon!=-1)
+            contentType = contentType.substring(0, semicolon);
+        if(ArrayUtil.contains(new String[]{ "application/x-zip-compressed", "application/zip" }, contentType))
+            return "zip";
+        else
+            return "";
+    }
+    
     public static Map<String, List<String>> toMap(List<String> list, char separator){
         Map<String, List<String>> map = new HashMap<String, List<String>>();
         for(String item: list){
