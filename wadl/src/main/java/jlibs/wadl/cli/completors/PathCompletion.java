@@ -57,9 +57,14 @@ public abstract class PathCompletion extends Completion{
         }
 
         if(buffer.hasNext()){
-            path = path.get(pathString);
-            if(path!=null)
-                completeNext(buffer, path, buffer.next());
+            String arg = pathString;
+            if(slash!=-1 || (pathString.indexOf('=')==-1 && pathString.indexOf(':')==-1)){
+                path = path.get(pathString);
+                if(path==null)
+                    return;
+                arg = buffer.next();
+            }
+            completeNext(buffer, path, arg);
         }else{
             fillPathCandidates(buffer, path);
             if(slash==-1 && !pathString.startsWith("."))
