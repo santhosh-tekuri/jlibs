@@ -250,28 +250,32 @@ public class Path{
         for(Param param: params){
             if(param.getStyle()==style){
                 List<String> values;
-                if(param.getFixed()!=null)
-                    values = Collections.singletonList(param.getFixed());
-                else{
+                if(param.isRequired()){
                     values = vars.get(param.getName());
-                    if(values==null && param.isRequired())
-                        throw new RuntimeException("unresolved queryParam: "+param.getName());
-                }
-                if(values!=null){
-                    for(String value: values){
-                        switch(style){
-                            case QUERY:
-                                if(queryString.length()>0)
-                                    queryString.append('&');
-                                queryString.append(param.getName());
-                                queryString.append('=');
-                                queryString.append(value);
-                                break;
-                            case HEADER:
-                                con.addRequestProperty(param.getName(), param.getFixed());
-                                break;
-                            default:
-                                throw new UnsupportedOperationException();
+                    if(values==null || values.isEmpty()){
+                        if(param.getFixed()!=null)
+                            values = Collections.singletonList(param.getFixed());
+                        else if(param.getDefault()!=null)
+                            values = Collections.singletonList(param.getDefault());
+                        else
+                            throw new RuntimeException("unresolved queryParam: "+param.getName());
+                    }
+                    if(values!=null){
+                        for(String value: values){
+                            switch(style){
+                                case QUERY:
+                                    if(queryString.length()>0)
+                                        queryString.append('&');
+                                    queryString.append(param.getName());
+                                    queryString.append('=');
+                                    queryString.append(value);
+                                    break;
+                                case HEADER:
+                                    con.addRequestProperty(param.getName(), param.getFixed());
+                                    break;
+                                default:
+                                    throw new UnsupportedOperationException();
+                            }
                         }
                     }
                 }
