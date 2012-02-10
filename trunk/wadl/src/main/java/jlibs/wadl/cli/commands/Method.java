@@ -81,17 +81,20 @@ public class Method extends Command{
         else
             success = false;
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        IOUtil.pump(in, bout, true, true);
-        if (bout.size() == 0)
+        PushbackInputStream pin = new PushbackInputStream(in);
+        int data = pin.read();
+        if(data==-1)
             return success;
-        if(Util.isXML(con.getContentType())){
+        pin.unread(data);
+
+        String contentType = con.getContentType();
+        if(Util.isXML(contentType)){
             PrintStream sysErr = System.err;
             System.setErr(new PrintStream(new ByteArrayOutputStream()));
             try {
                 TransformerFactory factory = TransformerFactory.newInstance();
                 Transformer transformer = factory.newTransformer();
-                transformer.transform(new StreamSource(new ByteArrayInputStream(bout.toByteArray())), new SAXResult(new AnsiHandler()));
+                transformer.transform(new StreamSource(pin), new SAXResult(new AnsiHandler()));
                 transformer.reset();
                 return success;
             } catch (Exception ex) {
@@ -100,8 +103,10 @@ public class Method extends Command{
                 System.setErr(sysErr);
             }
         }
-        System.out.println(bout);
-        System.out.println();
+        if(Util.isPlain(contentType) || Util.isJSON(contentType) || Util.isHTML(contentType)){
+            IOUtil.pump(pin, System.out, true, false);
+            System.out.println();
+        }
         return success;
     }
 

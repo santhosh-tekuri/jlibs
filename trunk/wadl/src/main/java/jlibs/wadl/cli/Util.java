@@ -24,20 +24,36 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class Util{
-    public static boolean isXML(String contentType) {
+    public static boolean isContentType(String contentType, String match){
         if(contentType==null)
             return false;
         int semicolon = contentType.indexOf(';');
         if(semicolon!=-1)
             contentType = contentType.substring(0, semicolon);
-        if("text/xml".equalsIgnoreCase(contentType))
+        if(("text/"+match).equalsIgnoreCase(contentType))
             return true;
         else if(contentType.startsWith("application/"))
-            return contentType.endsWith("application/xml") || contentType.endsWith("+xml");
+            return contentType.endsWith("application/"+match) || contentType.endsWith("+"+match);
         else
             return false;
     }
     
+    public static boolean isXML(String contentType){
+        return isContentType(contentType, "xml");
+    }
+    
+    public static boolean isJSON(String contentType){
+        return isContentType(contentType, "json");
+    }
+
+    public static boolean isPlain(String contentType){
+        return isContentType(contentType, "plain");
+    }
+
+    public static boolean isHTML(String contentType){
+        return isContentType(contentType, "html");
+    }
+
     public static Map<String, List<String>> toMap(List<String> list, char separator){
         Map<String, List<String>> map = new HashMap<String, List<String>>();
         for(String item: list){
