@@ -35,7 +35,7 @@ public class CommandCompletion extends Completion{
         completions.put("cd", new CdCompletion(terminal));
         completions.put("set", new SetCompletion(terminal));
         completions.put("import", new ImportCompletion(terminal));
-        defaultCompletion = new CdCompletion(terminal);
+        defaultCompletion = new MethodCompletion(terminal);
     }
 
     @Override

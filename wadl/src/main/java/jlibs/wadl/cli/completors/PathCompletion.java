@@ -55,17 +55,19 @@ public abstract class PathCompletion extends Completion{
                 return;
             pathString = pathString.substring(slash+1);
         }
-        if(path.children.isEmpty())
-            return;
 
         if(buffer.hasNext()){
             path = path.get(pathString);
-            completeNext(buffer, path);
-        }else
+            if(path!=null)
+                completeNext(buffer, path, buffer.next());
+        }else{
             fillPathCandidates(buffer, path);
+            if(slash==-1 && !pathString.startsWith("."))
+                completeNext(buffer, path, pathString);
+        }
     }
-    
-    protected abstract void completeNext(Buffer buffer, Path path);
+
+    protected void completeNext(Buffer buffer, Path path, String arg){}
 
     private void fillPathCandidates(Buffer buffer, Path current){
         for(Path child: current.children){

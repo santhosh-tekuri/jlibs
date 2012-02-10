@@ -16,7 +16,6 @@
 package jlibs.wadl.cli.completors;
 
 import jlibs.wadl.cli.WADLTerminal;
-import jlibs.wadl.cli.model.Path;
 
 /**
  * @author Santhosh Kumar T
@@ -25,7 +24,4 @@ public class CdCompletion extends PathCompletion{
     public CdCompletion(WADLTerminal terminal){
         super(terminal);
     }
-
-    @Override
-    protected void completeNext(Buffer buffer, Path path){}
 }
