@@ -20,8 +20,14 @@ import jlibs.wadl.cli.model.Path;
 import jlibs.wadl.model.Method;
 import jlibs.wadl.model.Param;
 import jlibs.wadl.model.ParamStyle;
+import jlibs.xml.Namespaces;
+import jlibs.xml.xsd.XSUtil;
+import org.apache.xerces.xs.XSSimpleTypeDefinition;
+import org.apache.xerces.xs.XSTypeDefinition;
 
+import javax.xml.namespace.QName;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,7 +47,7 @@ public class MethodCompletion extends PathCompletion{
         Set<String> params = new HashSet<String>();
         while(buffer.hasNext()){
             int index = arg.indexOf('=');
-            if(index==-1)
+            if(index!=-1)
                 params.add(arg.substring(0, index+1));
             else{
                 index = arg.indexOf(':');
@@ -51,18 +57,57 @@ public class MethodCompletion extends PathCompletion{
             arg = buffer.next();
         }
         
-        for(Param param: method.getRequest().getParam()){
-            String candidate = param.getName();
-            if(param.getStyle()==ParamStyle.QUERY)
-                candidate += '=';
-            else if(param.getStyle()==ParamStyle.HEADER)
-                candidate += ':';
-            else
-                continue;
-            if(!params.contains(candidate)){
-                if(param.getFixed()!=null)
+        int index = arg.indexOf('=');
+        if(index==-1)
+            index = arg.indexOf(':');
+        if(index==-1){
+            for(Param param: method.getRequest().getParam()){
+                String candidate = param.getName();
+                if(param.getStyle()==ParamStyle.QUERY)
+                    candidate += '=';
+                else if(param.getStyle()==ParamStyle.HEADER)
+                    candidate += ':';
+                else
+                    continue;
+                if(params.contains(candidate) && !param.isRepeating())
+                    continue;
+                if(param.getFixed()!=null){
                     candidate += param.getFixed();
-                buffer.addCandidate(candidate, (char)0);
+                    buffer.addCandidate(candidate);
+                }else
+                    buffer.addCandidate(candidate, (char)0);
+            }
+        }else{
+            for(Param param: method.getRequest().getParam()){
+                String paramName = param.getName();
+                if(param.getStyle()==ParamStyle.QUERY)
+                    paramName += '=';
+                else if(param.getStyle()==ParamStyle.HEADER)
+                    paramName += ':';
+                else
+                    continue;
+                if(arg.startsWith(paramName)){
+                    buffer.eat(paramName.length());
+                    QName type = param.getType();
+                    if(param.getFixed()!=null)
+                        buffer.addCandidate(param.getDefault());
+                    else if(type!=null){
+                        if(type.equals(new QName(Namespaces.URI_XSD, "boolean"))){
+                            buffer.addCandidate("true");
+                            buffer.addCandidate("false");
+                        }else if(path.getSchema()!=null){
+                            XSTypeDefinition typeDef = path.getSchema().getTypeDefinition(type.getLocalPart(), type.getNamespaceURI());
+                            if(typeDef instanceof XSSimpleTypeDefinition){
+                                List<String> values = XSUtil.getEnumeratedValues((XSSimpleTypeDefinition)typeDef);
+                                for(String value: values)
+                                    buffer.addCandidate(value);
+                            }
+                        }
+                    }
+                    if(!buffer.hasCandidates() && param.getDefault()!=null)
+                        buffer.addCandidate(param.getDefault());
+                    return;
+                }
             }
         }
     }
