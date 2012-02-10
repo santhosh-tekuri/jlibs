@@ -15,6 +15,11 @@
 
 package jlibs.wadl.cli;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Santhosh Kumar T
  */
@@ -31,5 +36,21 @@ public class Util{
             return contentType.endsWith("application/xml") || contentType.endsWith("+xml");
         else
             return false;
+    }
+    
+    public static Map<String, List<String>> toMap(List<String> list, char separator){
+        Map<String, List<String>> map = new HashMap<String, List<String>>();
+        for(String item: list){
+            int index = item.indexOf(separator);
+            if(index!=-1){
+                String key = item.substring(0, index);
+                String value = item.substring(index+1);
+                List<String> values = map.get(key);
+                if(values==null)
+                    map.put(key, values=new ArrayList<String>());
+                values.add(value);
+            }
+        }
+        return map;
     }
 }

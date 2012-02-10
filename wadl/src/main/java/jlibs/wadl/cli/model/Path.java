@@ -17,6 +17,7 @@ package jlibs.wadl.cli.model;
 
 import jlibs.core.io.IOUtil;
 import jlibs.core.util.RandomUtil;
+import jlibs.wadl.cli.Util;
 import jlibs.wadl.cli.commands.auth.Authenticator;
 import jlibs.wadl.model.*;
 import org.apache.xerces.xs.XSModel;
@@ -195,23 +196,36 @@ public class Path{
         return null;
     }
 
-    public HttpURLConnection execute(Method method, Map<String, List<String>> vars, File payload) throws Exception{
+    public HttpURLConnection execute(Method method, List<String> vars, File payload) throws Exception{
         String url = toString();
 
         StringBuilder queryString = new StringBuilder();
-        populate(ParamStyle.QUERY, null, queryString, resource.getParam(), vars);
+        Map<String, List<String>> queryMap = Util.toMap(vars, '=');
+        for(Map.Entry<String, List<String>> entry: queryMap.entrySet()){
+            for(String value: entry.getValue()){
+                if(queryString.length()>0)
+                    queryString.append('&');
+                queryString.append(entry.getKey()).append('=').append(value);
+            }
+        }
+        populate(ParamStyle.QUERY, null, queryString, resource.getParam(), queryMap);
         Request request = method.getRequest();
         if(request!=null)
-            populate(ParamStyle.QUERY, null, queryString, request.getParam(), vars);
+            populate(ParamStyle.QUERY, null, queryString, request.getParam(), queryMap);
         if(queryString.length()>0)
             url += "?"+queryString;
 
         HttpURLConnection con = (HttpURLConnection)new URL(url).openConnection();
         con.setRequestMethod(method.getName());
 
-        populate(ParamStyle.HEADER, con, null, resource.getParam(), vars);
+        Map<String, List<String>> headerMap = Util.toMap(vars, '=');
+        for(Map.Entry<String, List<String>> entry: headerMap.entrySet()){
+            for(String value: entry.getValue())
+                con.addRequestProperty(entry.getKey(), value);
+        }
+        populate(ParamStyle.HEADER, con, null, resource.getParam(), headerMap);
         if(request!=null){
-            populate(ParamStyle.HEADER, con, null, request.getParam(), vars);
+            populate(ParamStyle.HEADER, con, null, request.getParam(), headerMap);
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size() - 1));
                 if(rep.getMediaType()!=null)
