@@ -16,7 +16,6 @@
 package jlibs.xml.sax.helpers;
 
 import jlibs.core.lang.Util;
-import jlibs.core.net.URLUtil;
 import jlibs.xml.Namespaces;
 import org.xml.sax.helpers.NamespaceSupport;
 
@@ -84,6 +83,16 @@ public class MyNamespaceSupport extends NamespaceSupport{
         return uri;
     }
 
+    private String suggestPrefix = "ns";
+
+    public String getSuggestPrefix(){
+        return suggestPrefix;
+    }
+
+    public void setSuggestPrefix(String suggestPrefix){
+        this.suggestPrefix = suggestPrefix;
+    }
+
     /**
      * generated a new prefix and binds it to given uri.
      *
@@ -92,7 +101,7 @@ public class MyNamespaceSupport extends NamespaceSupport{
     public String declarePrefix(String uri){
         String prefix = findPrefix(uri);
         if(prefix==null){
-            prefix = URLUtil.suggestPrefix(suggested, uri);
+            prefix = suggested.getProperty(uri, suggestPrefix);
             if(getURI(prefix)!=null){
                 int i = 1;
                 String _prefix;
