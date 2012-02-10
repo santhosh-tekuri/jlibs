@@ -15,6 +15,7 @@
 
 package jlibs.wadl.cli.completors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +33,7 @@ public class Buffer{
 
     private int separatorIndex;
     private String arg;
+    private List<String> args = new ArrayList<String>();
     
     public String next(){
         separatorIndex = str.indexOf(' ', from);
@@ -46,7 +48,12 @@ public class Buffer{
                     break;
             }
         }
+        args.add(arg);
         return arg;
+    }
+
+    public String arg(int i){
+        return args.get(i);
     }
     
     public int getFrom(){
@@ -67,8 +74,12 @@ public class Buffer{
     }
 
     public void addCandidate(String candidate, char separator){
-        if(candidate.startsWith(arg))
-            candidates.add(candidate+separator);
+        if(candidate.startsWith(arg)){
+            if(separator==0)
+                candidates.add(candidate);
+            else
+                candidates.add(candidate+separator);
+        }
     }
 
     public void addCandidateIgnoreCase(String candidate){
