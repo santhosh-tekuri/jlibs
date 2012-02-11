@@ -1,0 +1,22 @@
+subprojects {
+    apply plugin: 'maven'
+
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+    archivesBaseName = 'jlibs-'+project.name
+    version = '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
+        mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: "file:/Users/santhosh/Desktop/jlibs-repo/")
+            }
+        }
+    }
+}

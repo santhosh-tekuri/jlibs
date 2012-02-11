@@ -1,0 +1,7 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':xml')
+    compile ("org.netbeans.api:org-netbeans-swing-outline:RELEASE65BETA@jar")
+}
+

@@ -1,0 +1,9 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':core')
+    compile project(':nbp')
+    compile ("xerces:xercesImpl:2.9.1@jar"){
+        exclude group: 'xml-apis', module: 'xml-apis'
+    }
+}
