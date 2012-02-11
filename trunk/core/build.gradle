@@ -1,5 +1,3 @@
-apply plugin: 'java'
-
 dependencies {
     testCompile "org.testng:testng:5.8:jdk15@jar"
 }
