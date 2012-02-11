@@ -1,4 +1,9 @@
+allprojects{
+    defaultTasks 'build'
+}
+
 subprojects {
+    apply plugin: 'java'
     apply plugin: 'maven'
 
     sourceCompatibility = 1.6
@@ -6,17 +11,75 @@ subprojects {
     archivesBaseName = 'jlibs-'+project.name
     version = '1.0-SNAPSHOT'
 
+    compileJava {
+        options.compilerArgs << "-s"
+        def generatedSources = project.buildDir.absolutePath+"/generated-sources/annotations";
+        new File(generatedSources).mkdirs()
+        options.compilerArgs << generatedSources
+    }
+
+    compileTestJava {
+        options.compilerArgs << "-s"
+        def generatedSources = project.buildDir.absolutePath+"/generated-sources/test-annotations";
+        new File(generatedSources).mkdirs()
+        options.compilerArgs << generatedSources
+    }
+
     repositories {
         mavenCentral()
         mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
         mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
     }
 
+    task sourcesJar(type: Jar, dependsOn:classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourcesJar
+    }
+
     uploadArchives {
         repositories {
             mavenDeployer {
                 repository(url: "file:/Users/santhosh/Desktop/jlibs-repo/")
+                pom.whenConfigured { pom->
+                    for(dependency in pom.dependencies){
+                        if(dependency.groupId=='jlibs')
+                            dependency.artifactId = 'jlibs-'+dependency.artifactId
+                    }
+                }
             }
         }
+    }
+}
+
+task docs(type: Javadoc) {
+    source subprojects.collect {project -> project.sourceSets.main.allJava }
+    classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})
+    destinationDir = new File(projectDir, 'docs')
+
+    configure(options) {
+        linkSource true
+        links "http://download.oracle.com/javase/6/docs/api/"
+        links "http://download.oracle.com/javaee/6/api/"
+
+        groups.put("JLibs-Core", Arrays.asList("jlibs.core*"))
+        groups.put("JLibs-XMLDog", Arrays.asList("jlibs.xml.sax.dog*"))
+        groups.put("JLibs-XML", Arrays.asList("jlibs.xml*"))
+        groups.put("JLibs-Swing", Arrays.asList("jlibs.swing*"))
+
+        bottom '<link href="{@docRoot}/resources/prettify.css" type="text/css" rel="stylesheet" />'+
+                '<script type="text/javascript" src="{@docRoot}/resources/prettify.js"></script>'+
+                '<script language="javascript">'+
+                    'window.onload = function(){ prettyPrint(); }'+
+                '</script>'
+    }
+
+    copy{
+        from 'src/main/javadoc/resources'
+        into 'docs/resources'
+        include '**/*.*'
     }
 }
