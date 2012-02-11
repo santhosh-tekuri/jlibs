@@ -1,8 +1,5 @@
 apply plugin: 'java'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
-
 dependencies {
     testCompile "org.testng:testng:5.8:jdk15@jar"
 }
