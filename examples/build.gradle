@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':swing')
+    compile project(':jdbc')
+    compile project(':xmldog')
+    compile ("net.sf.saxon:saxon:9.0.0.2@jar")
+    compile ("net.sf.saxon:saxon-dom:9.0.0.2@jar")
+    compile ("net.sf.saxon:saxon-xpath:9.0.0.2@jar")
+    compile ("commons-dbcp:commons-dbcp:1.4@jar")
+    compile ("org.hsqldb:hsqldb:2.0.0@jar")
+}
+

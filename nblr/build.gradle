@@ -1,0 +1,9 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':xml')
+    compile project(':swing')
+    compile ("org.netbeans.api:org-netbeans-api-visual:RELEASE65BETA@jar")
+    compile ("org.netbeans.api:org-openide-util:RELEASE65BETA@jar")
+}
+

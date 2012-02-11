@@ -1,0 +1,1 @@
+include 'core', 'greplog', 'nbp', 'xml', 'wadl', 'jdbc', 'xmldog', 'swing', 'nblr', 'examples'

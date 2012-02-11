@@ -1,0 +1,7 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':xml')
+    compile "jline:jline:0.9.9@jar"
+    compile "com.fifesoft:rsyntaxtextarea:2.0@jar"
+}

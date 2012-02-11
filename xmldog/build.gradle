@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':xml')
+    compile ("jaxen:jaxen:1.1.1@jar"){
+        exclude group: 'dom4j', module: 'dom4j'
+        exclude group: 'jdom', module: 'jdom'
+        exclude group: 'xerces', module: 'xercesImpl'
+        exclude group: 'xml-apis', module: 'xml-apis'
+        exclude group: 'xom', module: 'xom'
+    }
+}
+
