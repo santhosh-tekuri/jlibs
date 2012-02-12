@@ -53,6 +53,61 @@ subprojects {
             }
         }
     }
+
+    build << {
+        def distribution = "$projectDir/../distribution";
+
+        // copy main jar
+        copy{
+            from "$project.buildDir/libs/$archivesBaseName-${version}.jar"
+            into "$distribution/lib"
+            rename { String fileName ->
+                fileName.replace("-$version", '')
+            }
+        }
+
+        // copy source jar
+        copy{
+            from "$project.buildDir/libs/$archivesBaseName-${version}-sources.jar"
+            into "$distribution/src"
+            rename { String fileName ->
+                fileName.replace("-$version-sources", '')
+            }
+        }
+
+        // copy external jars
+        copy{
+            from configurations.runtime
+            into "$distribution/lib/external"
+            exclude '**/jlibs-*.jar'
+            rename { String fileName ->
+                int minus = fileName.lastIndexOf('-');
+                int dot = fileName.lastIndexOf('.')
+                fileName.substring(0, minus)+fileName.substring(dot)
+            }
+        }
+
+        copy{
+            from "$projectDir"
+            into "$distribution"
+            include 'bin/**/*'
+            include 'resources/**/*'
+        }
+    }
+}
+
+task build{
+    copy{
+        from "$projectDir/dependencies.xml"
+        into "distribution/lib/external"
+        rename { String fileName -> 'build.xml' }
+    }
+    copy{
+        from projectDir
+        into 'distribution'
+        include 'readme.txt'
+        include 'keystore.ks'
+    }
 }
 
 task docs(type: Javadoc) {
@@ -83,3 +138,4 @@ task docs(type: Javadoc) {
         include '**/*.*'
     }
 }
+
