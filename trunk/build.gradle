@@ -127,12 +127,6 @@ task build(dependsOn: subprojects*.build) {
     }
 }
 
-task release(type: Zip, dependsOn: build) {
-    archiveName "build/jlibs-r${svnversion}.zip"
-    from 'build/dist'
-    exclude "lib/external/*.jar"
-}
-
 task docs(type: Javadoc) {
     source subprojects.collect {project -> project.sourceSets.main.allJava }
     classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})
@@ -160,5 +154,11 @@ task docs(type: Javadoc) {
         into 'build/apidocs/resources'
         include '**/*.*'
     }
+}
+
+task release(type: Zip, dependsOn: [build, subprojects*.uploadArchives, docs]) {
+    archiveName "build/jlibs-r${svnversion}.zip"
+    from 'build/dist'
+    exclude "lib/external/*.jar"
 }
 
