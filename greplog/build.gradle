@@ -1,0 +1,5 @@
+jar {
+    manifest {
+        attributes 'Main-Class': 'jlibs.util.logging.LogParser'
+    }
+}
