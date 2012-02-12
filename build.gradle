@@ -60,7 +60,7 @@ subprojects {
     uploadArchives {
         repositories {
             mavenDeployer {
-                repository(url: new File(projectDir, "../repo").toURL().toString())
+                repository(url: new File(projectDir, "../build/repo").toURL().toString())
                 pom.whenConfigured { pom->
                     for(dependency in pom.dependencies){
                         if(dependency.groupId=='jlibs')
@@ -72,7 +72,7 @@ subprojects {
     }
 
     build << {
-        def distribution = "$projectDir/../build";
+        def distribution = "$projectDir/../build/dist";
 
         // copy main jar
         copy{
@@ -116,27 +116,27 @@ subprojects {
 task build(dependsOn: subprojects*.build) {
     copy{
         from "$projectDir/dependencies.xml"
-        into "build/lib/external"
+        into "build/dist/lib/external"
         rename { String fileName -> 'build.xml' }
     }
     copy{
         from projectDir
-        into 'build'
+        into 'build/dist'
         include 'readme.txt'
         include 'keystore.ks'
     }
 }
 
 task release(type: Zip, dependsOn: build) {
-    archiveName "jlibs-r${svnversion}.zip"
-    from 'build'
+    archiveName "build/jlibs-r${svnversion}.zip"
+    from 'build/dist'
     exclude "lib/external/*.jar"
 }
 
 task docs(type: Javadoc) {
     source subprojects.collect {project -> project.sourceSets.main.allJava }
     classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})
-    destinationDir = new File(projectDir, 'docs')
+    destinationDir = new File(projectDir, 'build/apidocs')
 
     configure(options) {
         linkSource true
@@ -157,7 +157,7 @@ task docs(type: Javadoc) {
 
     copy{
         from 'src/main/javadoc/resources'
-        into 'docs/resources'
+        into 'build/apidocs/resources'
         include '**/*.*'
     }
 }
