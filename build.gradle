@@ -162,3 +162,6 @@ task release(type: Zip, dependsOn: [build, subprojects*.uploadArchives, docs]) {
     exclude "lib/external/*.jar"
 }
 
+task clean(type:Delete, dependsOn: subprojects*.clean) {
+	delete project.buildDir
+}
