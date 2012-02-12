@@ -72,7 +72,7 @@ subprojects {
     }
 
     build << {
-        def distribution = "$projectDir/../distribution";
+        def distribution = "$projectDir/../build";
 
         // copy main jar
         copy{
@@ -116,12 +116,12 @@ subprojects {
 task build(dependsOn: subprojects*.build) {
     copy{
         from "$projectDir/dependencies.xml"
-        into "distribution/lib/external"
+        into "build/lib/external"
         rename { String fileName -> 'build.xml' }
     }
     copy{
         from projectDir
-        into 'distribution'
+        into 'build'
         include 'readme.txt'
         include 'keystore.ks'
     }
@@ -129,7 +129,7 @@ task build(dependsOn: subprojects*.build) {
 
 task release(type: Zip, dependsOn: build) {
     archiveName "jlibs-${svnversion}.zip"
-    from 'distribution'
+    from 'build'
     exclude "lib/external/*.jar"
 }
 
