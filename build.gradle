@@ -8,7 +8,7 @@ new ByteArrayOutputStream().withStream { os ->
             executable = 'svnversion'
             standardOutput = os
         }
-        project.setProperty('svnversion', os.toString().replace(':', '_'));
+        project.setProperty('svnversion', os.toString().trim().replace(':', '_'));
     }else
         project.setProperty('svnversion', 'unknown');
 }
@@ -60,7 +60,7 @@ subprojects {
     uploadArchives {
         repositories {
             mavenDeployer {
-                repository(url: "file:/Users/santhosh/Desktop/jlibs-repo/")
+                repository(url: new File(projectDir, "../repo").toURL().toString())
                 pom.whenConfigured { pom->
                     for(dependency in pom.dependencies){
                         if(dependency.groupId=='jlibs')
@@ -128,7 +128,7 @@ task build(dependsOn: subprojects*.build) {
 }
 
 task release(type: Zip, dependsOn: build) {
-    archiveName "jlibs-${svnversion}.zip"
+    archiveName "jlibs-r${svnversion}.zip"
     from 'build'
     exclude "lib/external/*.jar"
 }
