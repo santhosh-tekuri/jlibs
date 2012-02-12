@@ -2,6 +2,17 @@ allprojects{
     defaultTasks 'build'
 }
 
+new ByteArrayOutputStream().withStream { os ->
+    if(file(".svn").exists()){
+        exec {
+            executable = 'svnversion'
+            standardOutput = os
+        }
+        project.setProperty('svnversion', os.toString().replace(':', '_'));
+    }else
+        project.setProperty('svnversion', 'unknown');
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
@@ -29,6 +40,12 @@ subprojects {
         mavenCentral()
         mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
         mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
+    }
+
+    jar {
+        manifest {
+            attributes 'Implementation-Version': svnversion
+        }
     }
 
     task sourcesJar(type: Jar, dependsOn:classes) {
@@ -76,16 +93,14 @@ subprojects {
         }
 
         // copy external jars
-        if(!project.hasProperty('release')){
-            copy{
-                from configurations.runtime
-                into "$distribution/lib/external"
-                exclude '**/jlibs-*.jar'
-                rename { String fileName ->
-                    int minus = fileName.lastIndexOf('-');
-                    int dot = fileName.lastIndexOf('.')
-                    fileName.substring(0, minus)+fileName.substring(dot)
-                }
+        copy{
+            from configurations.runtime
+            into "$distribution/lib/external"
+            exclude '**/jlibs-*.jar'
+            rename { String fileName ->
+                int minus = fileName.lastIndexOf('-');
+                int dot = fileName.lastIndexOf('.')
+                fileName.substring(0, minus)+fileName.substring(dot)
             }
         }
 
@@ -98,7 +113,7 @@ subprojects {
     }
 }
 
-task build{
+task build(dependsOn: subprojects*.build) {
     copy{
         from "$projectDir/dependencies.xml"
         into "distribution/lib/external"
@@ -110,6 +125,12 @@ task build{
         include 'readme.txt'
         include 'keystore.ks'
     }
+}
+
+task release(type: Zip, dependsOn: build) {
+    archiveName "jlibs-${svnversion}.zip"
+    from 'distribution'
+    exclude "lib/external/*.jar"
 }
 
 task docs(type: Javadoc) {
