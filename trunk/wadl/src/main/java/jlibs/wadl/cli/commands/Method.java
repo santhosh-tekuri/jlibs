@@ -121,8 +121,10 @@ public class Method extends Command{
         Path path = terminal.getCurrentPath();
         if(!args.isEmpty()){
             String pathString = args.get(0);
-            if(pathString.indexOf('=')==-1 && pathString.indexOf(':')==-1)
+            if(pathString.indexOf('=')==-1 && pathString.indexOf(':')==-1
+                    && !pathString.startsWith(">") && !pathString.startsWith("<")){
                 path = path.get(args.remove(0));
+            }
         }
         if(path==null || path.resource==null){
             System.err.println("resource not found");
@@ -137,7 +139,15 @@ public class Method extends Command{
 
         Request request = method.getRequest();
         File payload = null;
-        if(request!=null){
+        for(String arg: args){
+            if(arg.startsWith("<")){
+                args.remove(arg);
+                payload = Util.toFile(arg.substring(1));
+                break;
+            }
+        }
+        
+        if(payload==null && request!=null){
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size() - 1));
                 if(rep.getElement()!=null){
@@ -145,19 +155,18 @@ public class Method extends Command{
                     generatePayload(path, rep.getElement());
                 }
             }
-        }
-
-        if(payload!=null){
-            JavaProcessBuilder processBuilder = new JavaProcessBuilder();
-            StringTokenizer stok = new StringTokenizer(System.getProperty("java.class.path"), FileUtil.PATH_SEPARATOR);
-            while(stok.hasMoreTokens())
-                processBuilder.classpath(stok.nextToken());
-            processBuilder.mainClass(Editor.class.getName());
-            processBuilder.arg(payload.getAbsolutePath());
-            processBuilder.arg("text/xml");
-            processBuilder.launch(DUMMY_OUTPUT, DUMMY_OUTPUT).waitFor();
-            if(!payload.exists())
-                return null;
+            if(payload!=null){
+                JavaProcessBuilder processBuilder = new JavaProcessBuilder();
+                StringTokenizer stok = new StringTokenizer(System.getProperty("java.class.path"), FileUtil.PATH_SEPARATOR);
+                while(stok.hasMoreTokens())
+                    processBuilder.classpath(stok.nextToken());
+                processBuilder.mainClass(Editor.class.getName());
+                processBuilder.arg(payload.getAbsolutePath());
+                processBuilder.arg("text/xml");
+                processBuilder.launch(DUMMY_OUTPUT, DUMMY_OUTPUT).waitFor();
+                if(!payload.exists())
+                    return null;
+            }
         }
 
         return path.execute(method, args, payload);
