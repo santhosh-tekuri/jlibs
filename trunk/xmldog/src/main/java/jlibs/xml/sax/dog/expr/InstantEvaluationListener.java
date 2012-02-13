@@ -31,6 +31,7 @@ public abstract class InstantEvaluationListener extends EvaluationListener{
     public abstract void onResult(Expression expression, Object result);
 
     @Override
+    @SuppressWarnings("unchecked")
     public final void finished(Evaluation evaluation){
         Expression expression = evaluation.expression;
         if(expression.getXPath()==null)
