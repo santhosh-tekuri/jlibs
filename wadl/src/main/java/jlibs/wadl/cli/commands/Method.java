@@ -39,6 +39,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -60,6 +61,8 @@ public class Method extends Command{
     }
 
     private boolean execute(List<String> args) throws Exception{
+        File responseFile = getFile(args, ">");
+
         HttpURLConnection con = prepare(args);
         if(con==null)
             return false;
@@ -83,9 +86,16 @@ public class Method extends Command{
 
         PushbackInputStream pin = new PushbackInputStream(in);
         int data = pin.read();
-        if(data==-1)
+        if(data==-1){
+            if(responseFile!=null)
+                responseFile.delete();
             return success;
+        }
         pin.unread(data);
+        if(success && responseFile!=null){
+            IOUtil.pump(pin, new FileOutputStream(responseFile), true, true);
+            return true;
+        }
 
         String contentType = con.getContentType();
         if(Util.isXML(contentType)){
@@ -115,9 +125,23 @@ public class Method extends Command{
         return success;
     }
 
+    private File getFile(List<String>args, String argPrefix){
+        File file = null;
+        Iterator<String> iter = args.iterator();
+        while(iter.hasNext()){
+            String arg = iter.next();
+            if(arg.startsWith(argPrefix)){
+                iter.remove();
+                file = Util.toFile(arg.substring(1));
+            }
+        }
+        return file;
+    }
+    
     private HttpURLConnection prepare(List<String> args) throws Exception{
         String methodName = args.remove(0);
-        
+
+        File payload = getFile(args, "<");
         Path path = terminal.getCurrentPath();
         if(!args.isEmpty()){
             String pathString = args.get(0);
@@ -138,15 +162,7 @@ public class Method extends Command{
         }
 
         Request request = method.getRequest();
-        File payload = null;
-        for(String arg: args){
-            if(arg.startsWith("<")){
-                args.remove(arg);
-                payload = Util.toFile(arg.substring(1));
-                break;
-            }
-        }
-        
+
         if(payload==null && request!=null){
             if(!request.getRepresentation().isEmpty()){
                 Representation rep = request.getRepresentation().get(RandomUtil.random(0, request.getRepresentation().size() - 1));
