@@ -15,8 +15,10 @@
 
 package jlibs.wadl.cli;
 
+import jlibs.core.io.FileUtil;
 import jlibs.core.lang.ArrayUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,5 +84,9 @@ public class Util{
             }
         }
         return map;
+    }
+
+    public static File toFile(String str){
+        return new File(str.replace("~", FileUtil.USER_HOME.getAbsolutePath()));
     }
 }
