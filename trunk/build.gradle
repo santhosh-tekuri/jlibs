@@ -113,7 +113,10 @@ subprojects {
     }
 }
 
-task build(dependsOn: subprojects*.build) {
+task build(dependsOn: subprojects*.build) << {
+    fileTree(dir: 'build/dist/bin', include: '**/*.sh').each { File file ->
+        file.setExecutable(true)
+    }
     copy{
         from "$projectDir/dependencies.xml"
         into "build/dist/lib/external"
@@ -159,6 +162,7 @@ task docs(type: Javadoc) {
 task release(type: Zip, dependsOn: [build, subprojects*.uploadArchives, docs]) {
     archiveName "build/jlibs-r${svnversion}.zip"
     from 'build/dist'
+    into "jlibs-r${svnversion}"
     exclude "lib/external/*.jar"
 }
 
