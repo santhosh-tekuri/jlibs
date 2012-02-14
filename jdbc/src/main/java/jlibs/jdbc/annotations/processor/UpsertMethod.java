@@ -86,7 +86,7 @@ public class UpsertMethod extends UpdateMethod{
                 ColumnProperty column = getColumn(param);
                 columnNames.add("\"+"+column.columnName(true)+"+\"");
                 columnValues.add("?");
-                params.add(paramName);
+                params.add(column.toNativeTypeCode(paramName));
             }else{
                 int underscore = paramName.indexOf('_');
                 String hint = paramName.substring(0, underscore);
@@ -96,7 +96,7 @@ public class UpsertMethod extends UpdateMethod{
                 if("where".equals(hint) || "is".equals(hint)){
                     columnNames.add("\"+"+column.columnName(true)+"+\"");
                     columnValues.add("?");
-                    params.add(paramName);
+                    params.add(column.toNativeTypeCode(paramName));
                 }else
                     throw new AnnotationError(param, "invalid hint: "+hint);
             }
