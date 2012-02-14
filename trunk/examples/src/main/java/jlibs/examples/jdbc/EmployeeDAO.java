@@ -120,7 +120,7 @@ public abstract class EmployeeDAO extends DAO<Employee> {
     public abstract int update2(int age, String where_firstName, long id, String where_lastName);
 
     @Upsert
-    public abstract void upsert1(long id, int age, String where_firstName, String where_lastName);
+    public abstract void upsert1(long id, int age, String where_firstName, String where_lastName, Grade where_grade);
 
     @Upsert
     public abstract void upsert2(long id, int age, String where_firstName, String where_lastName);
