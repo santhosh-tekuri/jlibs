@@ -103,7 +103,7 @@ public class UpsertMethod extends UpdateMethod{
         }
         StringBuilder query = new StringBuilder("(")
                                     .append(StringUtil.join(columnNames.iterator(), ", "))
-                                    .append(" VALUES(")
+                                    .append(") VALUES(")
                                     .append(StringUtil.join(columnValues.iterator(), ", "))
                                     .append(')');
         return new CharSequence[]{
