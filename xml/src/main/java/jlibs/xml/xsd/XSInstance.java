@@ -46,10 +46,10 @@ import java.util.*;
 @SuppressWarnings({"unchecked"})
 public class XSInstance{
     public int minimumElementsGenerated = 2;
-    public int maximumElementsGenerated = 4;
+    public int maximumElementsGenerated = 2;
     public int minimumListItemsGenerated = 2;
-    public int maximumListItemsGenerated = 4;
-    public int maximumRecursionDepth = 2;
+    public int maximumListItemsGenerated = 2;
+    public int maximumRecursionDepth = 1;
     public Boolean generateOptionalElements = Boolean.TRUE;
     public Boolean generateOptionalAttributes = Boolean.TRUE;
     public Boolean generateFixedAttributes = Boolean.TRUE;
