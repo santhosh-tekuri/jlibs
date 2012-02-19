@@ -16,6 +16,7 @@
 package jlibs.wadl.cli.model;
 
 import jlibs.core.net.URLUtil;
+import jlibs.wadl.cli.Util;
 import jlibs.wadl.model.*;
 
 import javax.xml.bind.JAXBContext;
@@ -30,6 +31,8 @@ public class WADLReader{
     private HashSet<Object> inlined = new HashSet<Object>();
 
     public Application read(String systemID) throws Exception{
+        if(systemID.startsWith("~/"))
+            systemID = Util.toFile(systemID).getAbsolutePath();
         JAXBContext jc = JAXBContext.newInstance(Application.class.getPackage().getName());
         app = (Application)jc.createUnmarshaller().unmarshal(URLUtil.toURL(systemID));
         inline();
