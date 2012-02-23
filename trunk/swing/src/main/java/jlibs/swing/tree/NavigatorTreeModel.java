@@ -53,6 +53,7 @@ public class NavigatorTreeModel extends AbstractTreeModel{
 
     @Override
     public boolean isLeaf(Object node){
-        return navigator.children(node).length()==0;
+        // node can be null : javax.swing.JTable$AccessibleJTable.getAccessibleAt(JTable.java:6982)
+        return node==null || navigator.children(node).length()==0;
     }
 }
