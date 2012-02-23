@@ -55,6 +55,7 @@ public class XSInstance{
     public Boolean generateFixedAttributes = Boolean.TRUE;
     public Boolean generateDefaultAttributes = Boolean.TRUE;
     public boolean generateAllChoices = false;
+    public boolean showContentModel = true;
 
     private int generateRepeatCount(int minOccurs, int maxOccurs){
         if(minOccurs==0 && maxOccurs==1) //optional case
@@ -197,6 +198,38 @@ public class XSInstance{
                 if(path.getRecursionDepth()>2)
                     return false;
                 try{
+                    if(showContentModel && elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
+                        XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
+                        switch(complexType.getContentType()){
+                            case XSComplexTypeDefinition.CONTENTTYPE_ELEMENT:
+                            case XSComplexTypeDefinition.CONTENTTYPE_MIXED:
+                                String contentModel = new XSContentModel().toString(complexType, doc.getNamespaceSupport());
+                                boolean showContentModel = false;
+                                for(char ch: "?*+|;[".toCharArray()){
+                                    if(contentModel.indexOf(ch)!=-1){
+                                        showContentModel = true;
+                                        break;
+                                    }
+                                }
+                                if(showContentModel){
+                                    int depth = 0;
+                                    while(true){
+                                        path = path.getParentPath(XSElementDeclaration.class);
+                                        if(path!=null)
+                                            depth++;
+                                        else
+                                            break;
+                                    }
+                                    doc.addText("\n");
+                                    for(int i=depth; i>0; i--)
+                                        doc.addText("   ");
+                                    doc.addComment(contentModel);
+                                    doc.addText("\n");
+                                    for(int i=depth; i>0; i--)
+                                        doc.addText("   ");
+                                }
+                        }
+                    }
                     doc.startElement(elem.getNamespace(), elem.getName());
                     return true;
                 }catch(SAXException ex){
@@ -616,6 +649,9 @@ public class XSInstance{
         value = options.getProperty("generateAllChoices");
         if(value!=null)
             generateDefaultAttributes = Boolean.parseBoolean(value);
+        value = options.getProperty("showContentModel");
+        if(value!=null)
+            showContentModel = Boolean.parseBoolean(value);
     }
 
     public static void main(String[] args) throws Exception{
