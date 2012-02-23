@@ -16,12 +16,12 @@
 package jlibs.xml.sax;
 
 import org.xml.sax.*;
-import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.ext.DeclHandler;
-import static jlibs.xml.sax.SAXProperties.*;
-import static jlibs.xml.sax.SAXProperties.DECL_HANDLER_ALT;
+import org.xml.sax.ext.LexicalHandler;
 
-/**                                                                 x
+import static jlibs.xml.sax.SAXProperties.*;
+
+/**
  * Base class for xmlreader and xmlfilter implementations
  *  
  * @author Santhosh Kumar T
