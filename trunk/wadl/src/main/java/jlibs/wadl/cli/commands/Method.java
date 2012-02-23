@@ -19,6 +19,7 @@ import jlibs.core.io.FileUtil;
 import jlibs.core.io.IOUtil;
 import jlibs.core.lang.Ansi;
 import jlibs.core.lang.JavaProcessBuilder;
+import jlibs.core.util.CollectionUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.wadl.cli.Util;
 import jlibs.wadl.cli.WADLTerminal;
@@ -210,6 +211,9 @@ public class Method extends Command{
         }
 
         XSInstance xsInstance = new XSInstance();
+        InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("xsd-instance.properties");
+        if(is!=null)
+            xsInstance.loadOptions(CollectionUtil.readProperties(is, null));
         XMLDocument xml = new XMLDocument(new StreamResult(FILE_PAYLOAD), true, 4, null);
         xsInstance.generate(path.getSchema(), element, xml);
     }
