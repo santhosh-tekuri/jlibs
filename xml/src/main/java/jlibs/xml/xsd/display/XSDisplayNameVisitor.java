@@ -37,7 +37,7 @@ public class XSDisplayNameVisitor extends PathReflectionVisitor<Object, String>{
 
     @Override
     protected String getDefault(Object elem){
-        return elem.toString();
+        return StringUtil.toString(elem);
     }
 
     protected String process(XSNamespaceItem nsItem){

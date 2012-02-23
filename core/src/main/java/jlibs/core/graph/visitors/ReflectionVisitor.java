@@ -68,17 +68,19 @@ public abstract class ReflectionVisitor<E, R> implements Visitor<E, R>{
     @Override
     @SuppressWarnings({"unchecked"})
     public R visit(E elem){
-        if(seq==null)
-            sort();
-        else
-            seq.reset();
+        if(elem!=null){
+            if(seq==null)
+                sort();
+            else
+                seq.reset();
 
-        for(Class<?> clazz; (clazz=seq.next())!=null;){
-            if(clazz.isAssignableFrom(elem.getClass())){
-                try{
-                    return (R)methodMap.get(clazz).invoke(this, elem);
-                }catch(Exception ex){
-                    throw new RuntimeException(ex);
+            for(Class<?> clazz; (clazz=seq.next())!=null;){
+                if(clazz.isAssignableFrom(elem.getClass())){
+                    try{
+                        return (R)methodMap.get(clazz).invoke(this, elem);
+                    }catch(Exception ex){
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         }
