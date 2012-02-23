@@ -76,6 +76,10 @@ public class XMLDocument{
     private MyNamespaceSupport nsSupport = new MyNamespaceSupport();
     private boolean needsNewContext = true;
 
+    public MyNamespaceSupport getNamespaceSupport(){
+        return nsSupport;
+    }
+
     public void suggestPrefix(String prefix, String uri){
         nsSupport.suggestPrefix(prefix, uri);
     }
