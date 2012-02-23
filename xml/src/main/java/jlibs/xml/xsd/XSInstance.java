@@ -580,6 +580,40 @@ public class XSInstance{
         }
     }
 
+    public void loadOptions(Properties options){
+        String value = options.getProperty("minimumElementsGenerated");
+        if(value!=null)
+            minimumElementsGenerated = Integer.parseInt(value);
+        value = options.getProperty("maximumElementsGenerated");
+        if(value!=null)
+            maximumElementsGenerated = Integer.parseInt(value);
+        value = options.getProperty("minimumElementsGenerated");
+        if(value!=null)
+            minimumListItemsGenerated = Integer.parseInt(value);
+        value = options.getProperty("maximumListItemsGenerated");
+        if(value!=null)
+            maximumListItemsGenerated = Integer.parseInt(value);
+        value = options.getProperty("maximumRecursionDepth");
+        if(value!=null)
+            maximumRecursionDepth = Integer.parseInt(value);
+
+        value = options.getProperty("generateOptionalElements");
+        if(value!=null)
+            generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateOptionalAttributes");
+        if(value!=null)
+            generateOptionalAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateFixedAttributes");
+        if(value!=null)
+            generateFixedAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateOptionalElements");
+        if(value!=null)
+            generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateDefaultAttributes");
+        if(value!=null)
+            generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+    }
+
     public static void main(String[] args) throws Exception{
         if(args.length==0){
             System.err.println("Usage:");
@@ -614,40 +648,8 @@ public class XSInstance{
 
         XSInstance xsInstance = new XSInstance();
         InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("xsd-instance.properties");
-        if(is!=null){
-            Properties props = CollectionUtil.readProperties(is, null);
-            String value = props.getProperty("minimumElementsGenerated");
-            if(value!=null)
-                xsInstance.minimumElementsGenerated = Integer.parseInt(value);
-            value = props.getProperty("maximumElementsGenerated");
-            if(value!=null)
-                xsInstance.maximumElementsGenerated = Integer.parseInt(value);
-            value = props.getProperty("minimumElementsGenerated");
-            if(value!=null)
-                xsInstance.minimumListItemsGenerated = Integer.parseInt(value);
-            value = props.getProperty("maximumListItemsGenerated");
-            if(value!=null)
-                xsInstance.maximumListItemsGenerated = Integer.parseInt(value);
-            value = props.getProperty("maximumRecursionDepth");
-            if(value!=null)
-                xsInstance.maximumRecursionDepth = Integer.parseInt(value);
-
-            value = props.getProperty("generateOptionalElements");
-            if(value!=null)
-                xsInstance.generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-            value = props.getProperty("generateOptionalAttributes");
-            if(value!=null)
-                xsInstance.generateOptionalAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-            value = props.getProperty("generateFixedAttributes");
-            if(value!=null)
-                xsInstance.generateFixedAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-            value = props.getProperty("generateOptionalElements");
-            if(value!=null)
-                xsInstance.generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-            value = props.getProperty("generateDefaultAttributes");
-            if(value!=null)
-                xsInstance.generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-        }
+        if(is!=null)
+            xsInstance.loadOptions(CollectionUtil.readProperties(is, null));
         xsInstance.generate(xsModel, rootElement, new XMLDocument(new StreamResult(System.out), true, 4, null));
         System.out.println();
     }
