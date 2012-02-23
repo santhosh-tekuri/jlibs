@@ -54,6 +54,7 @@ public class XSInstance{
     public Boolean generateOptionalAttributes = Boolean.TRUE;
     public Boolean generateFixedAttributes = Boolean.TRUE;
     public Boolean generateDefaultAttributes = Boolean.TRUE;
+    public boolean generateAllChoices = false;
 
     private int generateRepeatCount(int minOccurs, int maxOccurs){
         if(minOccurs==0 && maxOccurs==1) //optional case
@@ -115,7 +116,7 @@ public class XSInstance{
                 if(group.getCompositor()==XSModelGroup.COMPOSITOR_CHOICE){
                     XSObjectList particles = group.getParticles();
                     int count = particles.getLength();
-                    if(!particle.getMaxOccursUnbounded())
+                    if(!generateAllChoices && !particle.getMaxOccursUnbounded())
                         count = Math.min(count, particle.getMaxOccurs());
                     List<XSParticle> list = new ArrayList<XSParticle>(particles.getLength());
                     for(int i=0; i<particles.getLength(); i++)
@@ -612,6 +613,9 @@ public class XSInstance{
         value = options.getProperty("generateDefaultAttributes");
         if(value!=null)
             generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateAllChoices");
+        if(value!=null)
+            generateDefaultAttributes = Boolean.parseBoolean(value);
     }
 
     public static void main(String[] args) throws Exception{
