@@ -1,0 +1,157 @@
+#summary Command line grep tool for log files
+#labels java,grep,log
+
+`greplog` is a command line tool providing grep functionality to log files.
+
+{{{
+java -jar jlibs-greplog.jar <header-file> <filter-file> [-printIndex] <log-file> ...
+}}}
+
+Each logrecord starts with header and message.
+{{{
+05:05:39.101 main INFO  BOOTSTRAP Initializing server...
+}}}
+
+in above logrecord `05:05:39.101 main INFO  BOOTSTRAP` is header and "Initializing server..." is message.
+
+First you need to create `header.xml` which defines the format of logrecord header.
+
+header.xml
+{{{
+<header>
+    <pattern>(\d\d:\d\d:\d\d.\d\d\d) ([^\s]+)\s+([^\s]+)\s+([^\s]+)</pattern>
+    <field group="1" name="timestamp"/>
+    <field group="2" name="thread"/>
+    <field group="3" name="level"/>
+    <field group="4" name="module"/>
+</header>
+}}}
+
+the `<pattern>` element defines java regex to mach the logrecord header.<br>
+here the regex is using groups to identify the fields in logrecord header.<br>
+the first group `(\d\d:\d\d:\d\d.\d\d\d)` matches the timestamp. i.e, `05:05:39.101`<br>
+the second group `([^\s]+)` matches the thread. i.e, `main`<br>
+the third group `([^\s]+)` matches the level. i.e, `INFO`<br>
+the fourth group `([^\s]+)` matches the module. i.e, `BOOTSTRAP`<br>
+
+each field is named using `<field>` element by specifying the group index.
+
+Now you have create `filter.xml` which tells what to extract from log file.
+
+filter.xml
+{{{
+<and>
+    <field name="level">WARNING</field>
+    <field name="level">ERROR</field>
+</and>
+}}}
+now run greplog command as follows:
+{{{
+java -jar jlibs-greplog.jar header.xml filter.xml server.log
+}}}
+
+---------------------------------------------------------------
+
+to grep all logrecords from iothreads assumming you have named io threads as iothread1, iothread2, iothread3 etc<br>
+the filter.xml will be:
+{{{
+<field name="thread">iothread\d+</field>
+}}}
+
+i.e we used java regex `iothread\d+` to match iothreads.<br>
+note that the regex should completely match the field value in logrecord.
+
+---------------------------------------------------------------
+
+to grep all logrecords which contain exception stacktraces:
+
+{{{
+<message>(?m)(?s)^.*Exception: .*$</message>
+}}}
+
+this greps all logrecords whose message contains `Exception: `<br>
+Note: flags `(?m)` and `(?s)` are required because message can be multi-line
+
+---------------------------------------------------------------
+
+to grep all logrecords from non-iothreads:
+{{{
+<not>
+    <field name="thread">iothread\d+</field>
+</not>
+}}}
+
+---------------------------------------------------------------
+to grep all logrecords following the first logrecord whose message contains<br>
+`NullPointerException: `
+
+{{{
+<following includeSelf="true">
+    <message>(?m)(?s)^.*Exception: .*$</message>
+</following>
+}}}
+
+similarly to grep all logrecords preceding the first logrecord whose message contains<br>
+`NullPointerException: `
+
+{{{
+<preceding includeSelf="true">
+    <message>(?m)(?s)^.*Exception: .*$</message>
+</preceding>
+}}}
+
+---------------------------------------------------------------
+Let us say your application appends log to existing server.log when restarted.<br>
+and you want to grep only logrecords from last jvm session.
+
+Assuming that your application logs a specific message while booting up.
+for example:
+{{{
+05:05:39.101 main INFO  BOOTSTRAP Initializing server...
+.....
+.....
+.....
+06:05:39.101 main INFO  BOOTSTRAP Initializing server...
+.....
+.....
+.....
+07:05:39.101 main INFO  BOOTSTRAP Initializing server...
+.....
+.....
+.....
+08:05:39.101 main INFO  BOOTSTRAP Initializing server...
+.....
+.....
+.....
+}}}
+
+first grep these specifc log record using following filter.xml
+{{{
+<and>
+    <field name="thread">BOOTSTRAP</field>
+    <message>(?m)(?s)^Initializing server\.\.\.$</message>    
+</and>
+}}}
+
+use `printIndex` argument:
+{{{
+java -jar jlibs-greplog.jar header.xml filter.xml -printIndex server.log
+}}}
+
+this argument prints index of logrecord before each logrecord as follows:
+{{{
+1 05:05:39.101 main INFO  BOOTSTRAP Initializing server...
+1934 06:05:39.101 main INFO  BOOTSTRAP Initializing server...
+2749 07:05:39.101 main INFO  BOOTSTRAP Initializing server...
+3678 08:05:39.101 main INFO  BOOTSTRAP Initializing server...
+}}}
+
+from the above output, we know that the 3678th logrecord is the first<br>
+logrecord in last jvm session.
+
+now to grep only logrecords from last jvm session:
+{{{
+<following includeSelf="true">
+    <index>3678</index>
+</following>
+}}}
