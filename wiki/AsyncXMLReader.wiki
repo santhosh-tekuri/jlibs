@@ -28,7 +28,7 @@ When feeding is complete, `feeder.feed()` returns null;
 
 But one interesing thing to be noted is, `feeder.feed()` returns `Feeder`. The returned `Feeder` could be<br>
 the same `feeder` object or different one. For example here the feeder returned might be for external dtd, <br>
-in case you have resolved external dtd with another ChannelInputSource. 
+in case you have resolved external dtd with another `ChannelInputSource`. 
 
 {{{
 SocketChannel channel = (SocketChannel)feeder.byteChannel();
