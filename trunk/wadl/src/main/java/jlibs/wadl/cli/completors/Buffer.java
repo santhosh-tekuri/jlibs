@@ -23,6 +23,7 @@ import java.util.List;
  */
 public class Buffer{
     private String str;
+    private int fromPrev = 0;
     private int from = 0;
     private List<String> candidates;
 
@@ -36,6 +37,7 @@ public class Buffer{
     private List<String> args = new ArrayList<String>();
     
     public String next(){
+        fromPrev = from;
         separatorIndex = str.indexOf(' ', from);
         if(separatorIndex==-1)
             arg = str.substring(from);
@@ -61,7 +63,8 @@ public class Buffer{
     }
 
     public void eat(int count){
-        from += count;
+        fromPrev += count;
+        from = fromPrev;
         arg = arg.substring(count);
     }
 
