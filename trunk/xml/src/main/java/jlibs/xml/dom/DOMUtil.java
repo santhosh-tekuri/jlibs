@@ -26,10 +26,14 @@ import org.xml.sax.helpers.AttributesImpl;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.BitSet;
 
 import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE;
@@ -256,6 +260,55 @@ public class DOMUtil{
         }
 
         return true;
+    }
+
+    /*-------------------------------------------------[ Serialize ]---------------------------------------------------*/
+
+    public static String toString(Node node){
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        serialize(node, new PrintStream(bout, true));
+        return bout.toString();
+    }
+
+    public static void serialize(Node node, PrintStream out){
+        switch(node.getNodeType()){
+            case Node.ATTRIBUTE_NODE:
+                out.print(node.getNodeName());
+                out.print("=\"");
+                out.print(node.getNodeValue().replace("\"", "&quot;"));
+                out.print("\"");
+                break;
+            case 13: // NodeType.NAMESPACE
+                out.print("xmlns:");
+                out.print(node.getLocalName());
+                out.print("=\"");
+                out.print(node.getNodeValue().replace("\"", "&quot;"));
+                out.print("\"");
+                break;
+            case Node.TEXT_NODE:
+            case Node.CDATA_SECTION_NODE:
+                out.print(node.getTextContent());
+                break;
+            case Node.COMMENT_NODE:
+                out.print("<!--");
+                out.print(node.getNodeValue());
+                out.print("-->");
+                break;
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                out.print("<?");
+                out.print(node.getNodeName());
+                out.print(' ');
+                out.print(node.getNodeValue());
+                out.print("?>");
+                break;
+            default:
+                try{
+                    Transformer transformer = TransformerUtil.newTransformer(null, true, 0, null);
+                    transformer.transform(new DOMSource(node), new StreamResult(out));
+                }catch(TransformerException ex){
+                    throw new RuntimeException(ex);
+                }
+        }
     }
 
     /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
