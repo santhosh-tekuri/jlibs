@@ -23,6 +23,7 @@ import org.apache.xerces.impl.xs.SchemaGrammar;
 import org.apache.xerces.impl.xs.XSImplementationImpl;
 import org.apache.xerces.impl.xs.XSModelImpl;
 import org.apache.xerces.impl.xs.util.StringListImpl;
+import org.apache.xerces.xs.LSInputList;
 import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
 import org.w3c.dom.DOMConfiguration;
@@ -74,6 +75,13 @@ public class XSParser{
         XSModel xsModel = xsLoader.loadURIList(new StringListImpl(uris, uris.length));
         if(xsModel==null)
             throw new RuntimeException("Couldn't load XMLSchema from "+ Arrays.asList(uris));
+        return xsModel;
+    }
+    
+    public XSModel parse(LSInputList inputList){
+        XSModel xsModel = xsLoader.loadInputList(inputList);
+        if(xsModel==null)
+            throw new RuntimeException("Couldn't load XMLSchema from "+ inputList);
         return xsModel;
     }
 
