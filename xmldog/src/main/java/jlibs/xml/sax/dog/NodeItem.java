@@ -19,17 +19,13 @@ import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMNavigator;
+import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.sax.dog.sniff.Event;
-import jlibs.xml.xsl.TransformerUtil;
 import org.jaxen.dom.NamespaceNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Node;
 
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -142,47 +138,9 @@ public class NodeItem implements NodeType{
     public void printTo(PrintStream out){
         if(xml instanceof Node){
             out.println(location);
-            Node node = (Node)xml;
-            switch(node.getNodeType()){
-                case Node.ATTRIBUTE_NODE:
-                    out.print(node.getNodeName());
-                    out.print("=\"");
-                    out.print(node.getNodeValue().replace("\"", "&quot;"));
-                    out.print("\"");
-                    break;
-                case NodeType.NAMESPACE:
-                    out.print("xmlns:");
-                    out.print(node.getLocalName());
-                    out.print("=\"");
-                    out.print(node.getNodeValue().replace("\"", "&quot;"));
-                    out.print("\"");
-                    break;
-                case Node.TEXT_NODE:
-                case Node.CDATA_SECTION_NODE:
-                    out.print(node.getTextContent());
-                    break;
-                case Node.COMMENT_NODE:
-                    out.print("<!--");
-                    out.print(node.getNodeValue());
-                    out.print("-->");
-                    break;
-                case Node.PROCESSING_INSTRUCTION_NODE:
-                    out.print("<?");
-                    out.print(node.getNodeName());
-                    out.print(' ');
-                    out.print(node.getNodeValue());
-                    out.print("?>");
-                    break;
-                default:
-                    try{
-                        Transformer transformer = TransformerUtil.newTransformer(null, true, 0, null);
-                        transformer.transform(new DOMSource((Node)xml), new StreamResult(out));
-                    }catch(TransformerException ex){
-                        throw new RuntimeException(ex);
-                    }
-            }
+            DOMUtil.serialize((Node)xml, out);
         }else
-            out.print(location);
+            out.print(localName);
     }
 
     @Override
