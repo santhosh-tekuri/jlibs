@@ -23,11 +23,13 @@ import jlibs.wadl.model.Application;
 import jlibs.wadl.model.Include;
 import jlibs.wadl.model.Resource;
 import jlibs.wadl.model.Resources;
+import jlibs.xml.dom.DOMLSInputList;
+import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.XSModel;
+import org.w3c.dom.Element;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,16 +54,20 @@ public class Import extends Command{
     private void importWADL(String systemID) throws Exception{
         Application application = new WADLReader().read(systemID);
 
+        DOMLSInputList inputList = new DOMLSInputList();
         XSModel schema = null;
         if(application.getGrammars()!=null){
-            List<String> includes = new ArrayList<String>();
             for(Include include: application.getGrammars().getInclude()){
                 if(include.getHref()!=null)
-                    includes.add(URLUtil.resolve(systemID, include.getHref()).toString());
+                    inputList.addSystemID(URLUtil.resolve(systemID, include.getHref()).toString());
             }
-            if(!includes.isEmpty())
-                schema = new XSParser().parse(includes.toArray(new String[includes.size()]));
+            for(Object any: application.getGrammars().getAny()){
+                if(any instanceof Element)
+                    inputList.addStringData(DOMUtil.toString((Element)any), systemID);
+            }
         }
+        if(!inputList.isEmpty())
+            schema = new XSParser().parse(inputList);
 
         Path root = null;
         for(Resources resources: application.getResources()){
