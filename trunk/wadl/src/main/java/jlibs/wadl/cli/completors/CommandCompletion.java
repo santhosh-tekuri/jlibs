@@ -64,12 +64,14 @@ public class CommandCompletion extends Completion{
             buffer.addCandidate("server");
             buffer.addCandidate("set");
             buffer.addCandidate("target");
-            completeMethods(buffer);
-            if(!buffer.hasCandidates()){
-                buffer.addCandidateIgnoreCase("GET");
-                buffer.addCandidateIgnoreCase("PUT");
-                buffer.addCandidateIgnoreCase("POST");
-                buffer.addCandidateIgnoreCase("DELETE");
+            if(terminal.getCurrentPath()!=null){
+                completeMethods(buffer);
+                if(!buffer.hasCandidates()){
+                    buffer.addCandidateIgnoreCase("GET");
+                    buffer.addCandidateIgnoreCase("PUT");
+                    buffer.addCandidateIgnoreCase("POST");
+                    buffer.addCandidateIgnoreCase("DELETE");
+                }
             }
         }else{
             Completion completion = completions.get(arg);
