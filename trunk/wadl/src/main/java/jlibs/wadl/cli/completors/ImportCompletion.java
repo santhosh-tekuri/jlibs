@@ -29,9 +29,10 @@ public class ImportCompletion extends Completion{
     @Override
     public void complete(Buffer buffer){
         String arg = buffer.next();
+        while(buffer.hasNext())
+            arg = buffer.next();
         int index = new FileNameCompletor().complete(arg, arg.length(), buffer.candidates());
         if(index!=-1)
             buffer.eat(index);
-
     }
 }
