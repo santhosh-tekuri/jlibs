@@ -162,7 +162,7 @@ public class XSDocument extends Namespaces{
 
     /*-------------------------------------------------[ Attribute ]---------------------------------------------------*/
 
-    enum Constraint{ DEFAULT, FIXED, NONE }
+    public enum Constraint{ DEFAULT, FIXED, NONE }
 
     /**
      * $constraint="$defaultValue"
@@ -211,7 +211,7 @@ public class XSDocument extends Namespaces{
 
     /*-------------------------------------------------[ Compositor ]---------------------------------------------------*/
 
-    enum Compositor{ SEQUENCE, ALL, CHOICE }
+    public enum Compositor{ SEQUENCE, ALL, CHOICE }
 
     public XSDocument startCompositor(Compositor compositor) throws SAXException{
         xml.startElement(URI_XSD, compositor.name().toLowerCase());
@@ -225,7 +225,7 @@ public class XSDocument extends Namespaces{
 
     /*-------------------------------------------------[ Derivations ]---------------------------------------------------*/
 
-    enum Derivation{ EXTENSION, RESTRICTION, SUBSTITUTION }
+    public enum Derivation{ EXTENSION, RESTRICTION, SUBSTITUTION }
 
     public XSDocument startDerivation(Derivation derivation, String baseNS, String baseLocalpart) throws SAXException{
         xml.startElement(URI_XSD, derivation.name().toLowerCase());
@@ -267,7 +267,7 @@ public class XSDocument extends Namespaces{
 
     /*-------------------------------------------------[ Content ]---------------------------------------------------*/
 
-    enum Content{ SIMPLE, ELEMENT, EMPTY, MIXED }
+    public enum Content{ SIMPLE, ELEMENT, EMPTY, MIXED }
 
     public XSDocument startContent(Content content) throws SAXException{
         xml.startElement(URI_XSD, (content==Content.SIMPLE) ? "simpleContent" : "complexContent");
@@ -283,7 +283,7 @@ public class XSDocument extends Namespaces{
 
     /*-------------------------------------------------[ Facet ]---------------------------------------------------*/
 
-    enum Facet{
+    public enum Facet{
         NONE, WHITE_SPACE,
         LENGTH, MIN_LENGTH, MAX_LENGTH,
         PATTERN, ENUMERATION, // multivalue facets
