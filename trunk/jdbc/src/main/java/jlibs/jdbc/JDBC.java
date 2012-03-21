@@ -28,6 +28,7 @@ public class JDBC{
 
     public final DataSource dataSource;
     public final String quoteString;
+    public final boolean supportsBatchUpdates;
 
     public static String getQuoteString(DataSource dataSource){
         Connection con = null;
@@ -47,6 +48,23 @@ public class JDBC{
         }
     }
 
+    public static boolean supportsBatchUpdates(DataSource dataSource){
+        Connection con = null;
+        try{
+            con = dataSource.getConnection();
+            return con.getMetaData().supportsBatchUpdates();
+        }catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }finally{
+            try{
+                if(con!=null)
+                    con.close();
+            }catch(SQLException ignore){
+                ignore.printStackTrace();
+            }
+        }
+    }
+
     public JDBC(DataSource dataSource){
         this(dataSource, getQuoteString(dataSource));
     }
@@ -54,6 +72,7 @@ public class JDBC{
     public JDBC(DataSource dataSource, String quoteString){
         this.dataSource = dataSource;
         this.quoteString = quoteString;
+        this.supportsBatchUpdates = supportsBatchUpdates(dataSource);
     }
 
     public String quote(String identifier){
@@ -137,13 +156,15 @@ public class JDBC{
             public Integer run(Connection con) throws SQLException{
                 if(debug)
                     System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+
+                Batch batch = BatchManager.INSTANCE.get().get(dataSource);
                 PreparedStatement stmt = null;
                 try{
-                    stmt = con.prepareStatement(query);
+                    stmt = batch==null ? con.prepareStatement(query) : batch.prepareStatement(con, query);
                     setParams(stmt, params);
-                    return stmt.executeUpdate();
+                    return batch==null ? stmt.executeUpdate() : batch.executeUpdate();
                 }finally{
-                    if(stmt!=null)
+                    if(stmt!=null && batch==null)
                         stmt.close();
                 }
             }
