@@ -114,6 +114,21 @@ public class TransactionManager extends ThreadLocal<Map<DataSource, Connection>>
             if(noTransaction){
                 if(!single){
                     try{
+                        Map<DataSource, Batch> batches = BatchManager.INSTANCE.get();
+                        Batch batch = batches.remove(ds);
+                        if(batch!=null){
+                            if(ex==null)
+                                batch.commit();
+                            else
+                                batch.rollback();
+                        }
+                    }catch(SQLException e){
+                        if(ex==null)
+                            ex = e;
+                        else
+                            ex.printStackTrace();
+                    }
+                    try{
                         if(ex==null)
                             commit(ds);
                         else
