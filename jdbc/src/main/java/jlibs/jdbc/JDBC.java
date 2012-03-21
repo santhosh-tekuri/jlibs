@@ -117,8 +117,7 @@ public class JDBC{
                     System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
                 PreparedStatement stmt = con.prepareStatement(query);
                 stmt.setMaxRows(maxRows);
-                for(int i=0; i<params.length; i++)
-                    stmt.setObject(i+1, params[i]);
+                setParams(stmt, params);
                 try{
                     return processAll(stmt.executeQuery(), rowMapper);
                 }finally{
