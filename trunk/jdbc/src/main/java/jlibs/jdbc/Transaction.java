@@ -15,15 +15,8 @@
 
 package jlibs.jdbc;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 /**
  * @author Santhosh Kumar T
  */
-public interface Transaction<R>{
-    public R run(Connection con) throws SQLException;
+public interface Transaction<R> extends JDBCTask<R>{
 }
-
-interface SingleStatementTransaction<T> extends Transaction<T>{}
-

@@ -102,7 +102,7 @@ public class JDBC{
     }
 
     public <T> T selectFirst(final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
+        return run(new JDBCTask<T>(){
             @Override
             public T run(Connection con) throws SQLException{
                 if(debug)
@@ -129,7 +129,7 @@ public class JDBC{
     }
 
     public <T> List<T> selectTop(final int maxRows, final String query, final RowMapper<T> rowMapper, final Object... params) throws DAOException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<List<T>>(){
+        return run(new JDBCTask<List<T>>(){
             @Override
             public List<T> run(Connection con) throws SQLException{
                 if(debug)
@@ -151,13 +151,13 @@ public class JDBC{
     }
 
     public int executeUpdate(final String query, final Object... params) throws DAOException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<Integer>(){
+        return run(new JDBCTask<Integer>(){
             @Override
             public Integer run(Connection con) throws SQLException{
                 if(debug)
                     System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
 
-                Batch batch = BatchManager.INSTANCE.get().get(dataSource);
+                Batch batch = BATCH.get();
                 PreparedStatement stmt = null;
                 try{
                     stmt = batch==null ? con.prepareStatement(query) : batch.prepareStatement(con, query);
@@ -172,11 +172,11 @@ public class JDBC{
     }
 
     public <T> T executeUpdate(final String query, final RowMapper<T> generatedKeysMapper, final Object... params) throws DAOException{
-        return TransactionManager.run(dataSource, new SingleStatementTransaction<T>(){
+        return run(new JDBCTask<T>(){
             @Override
             public T run(Connection con) throws SQLException{
                 if(debug)
-                    System.out.println("SQL["+con.getAutoCommit()+"]: "+query);
+                    System.out.println("SQL[" + con.getAutoCommit() + "]: " + query);
                 PreparedStatement stmt = null;
                 try{
                     stmt = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -184,10 +184,121 @@ public class JDBC{
                     stmt.executeUpdate();
                     return processFirst(stmt.getGeneratedKeys(), generatedKeysMapper);
                 }finally{
-                    if(stmt!=null)
+                    if(stmt != null)
                         stmt.close();
                 }
             }
         });
+    }
+
+    private ThreadLocal<Connection> CONNECTION = new ThreadLocal<Connection>();
+    private ThreadLocal<Batch> BATCH = new ThreadLocal<Batch>();
+
+    public <T> T run(int batchInterval, JDBCTask<T> task) throws DAOException{
+        boolean closeConnection = false;
+        Connection con = CONNECTION.get();
+        if(con==null){
+            try{
+                con = dataSource.getConnection();
+                if(debug)
+                    System.out.println("newConnection");
+                CONNECTION.set(con);
+            }catch(SQLException ex){
+                throw new DAOException(ex);
+            }
+            if(task instanceof Transaction){
+                try{
+                    con.setAutoCommit(false);
+                    if(debug)
+                        System.out.println("startTransaction");
+                }catch(SQLException ex){
+                    try{
+                        con.close();
+                        if(debug)
+                            System.out.println("closed");
+                    }catch(SQLException e){
+                        ex.printStackTrace();
+                    }
+                    throw new DAOException(ex);
+                }
+            }
+            closeConnection = true;
+        }
+
+        boolean finishBatch = false;
+        if(supportsBatchUpdates && batchInterval>1){
+            Batch batch = BATCH.get();
+            if(batch==null){
+                BATCH.set(new Batch(batchInterval));
+                finishBatch = true;
+            }
+        }
+        Exception ex = null;
+        try{
+            return task.run(con);
+        }catch(Exception e){
+            ex = e;
+        }finally{
+            if(closeConnection){
+                if(finishBatch){
+                    try{
+                        BATCH.get().finish(ex==null);
+                    }catch(SQLException e){
+                        if(ex==null)
+                            ex = e;
+                        else
+                            e.printStackTrace();
+                    }
+                    BATCH.set(null);
+                }
+                if(task instanceof Transaction){
+                    CONNECTION.set(null);
+                    try{
+                        if(ex==null){
+                            con.commit();
+                            if(debug)
+                                System.out.println("committed");
+                        }else{
+                            con.rollback();
+                            if(debug)
+                                System.out.println("rolledback");
+                        }
+                    }catch(SQLException e){
+                        if(ex==null)
+                            ex = e;
+                        else
+                            e.printStackTrace();
+                    }
+                    try{
+                        con.setAutoCommit(true);
+                        if(debug)
+                            System.out.println("closeTransaction");
+                    }catch(SQLException e){
+                        if(ex==null)
+                            ex = e;
+                        else
+                            e.printStackTrace();
+                    }
+                }
+                try{
+                    con.close();
+                    if(debug)
+                        System.out.println("closed");
+                }catch(SQLException e){
+                    if(ex==null)
+                        ex = e;
+                    else
+                        e.printStackTrace();
+                }
+            }
+        }
+        if(ex instanceof SQLException)
+            throw new DAOException(ex);
+        else
+            throw (RuntimeException)ex;
+    }
+
+    public <T> T run(JDBCTask<T> task) throws DAOException{
+        return run(1, task);
     }
 }
