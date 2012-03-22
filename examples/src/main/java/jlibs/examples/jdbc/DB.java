@@ -18,7 +18,6 @@ package jlibs.examples.jdbc;
 import jlibs.jdbc.DAO;
 import jlibs.jdbc.JDBC;
 import jlibs.jdbc.Transaction;
-import jlibs.jdbc.TransactionManager;
 import org.apache.commons.dbcp.BasicDataSource;
 
 import java.sql.Connection;
@@ -29,15 +28,15 @@ import java.util.List;
  * @author Santhosh Kumar T
  */
 public class DB{
-    public static final BasicDataSource DATA_SOURCE;
+    public static final JDBC JDBC;
     public static final EmployeeDAO EMPLOYEES;
 
     static{
-        DATA_SOURCE = new BasicDataSource();
- 	    DATA_SOURCE.setUrl("jdbc:hsqldb:file:examples/db/demo");
+        BasicDataSource ds = new BasicDataSource();
+ 	    ds.setUrl("jdbc:hsqldb:file:examples/db/demo");
 
-        JDBC jdbc = new JDBC(DATA_SOURCE);
-        EMPLOYEES = (EmployeeDAO) DAO.create(Employee.class, jdbc);
+        JDBC = new JDBC(ds);
+        EMPLOYEES = (EmployeeDAO) DAO.create(Employee.class, JDBC);
     }
 
     public static void main(String[] args) throws Exception{
@@ -64,9 +63,9 @@ public class DB{
         assert EMPLOYEES.all().get(0).getAge()==20;
 
         try{
-            TransactionManager.run(DATA_SOURCE, new Transaction<Object>() {
+            JDBC.run(new Transaction<Object>(){
                 @Override
-                public Object run(Connection con) throws SQLException {
+                public Object run(Connection con) throws SQLException{
                     Employee emp = new Employee();
                     emp.id = 2;
                     emp.setFirstName("santhosh");

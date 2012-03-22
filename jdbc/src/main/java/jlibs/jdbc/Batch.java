@@ -15,41 +15,13 @@
 
 package jlibs.jdbc;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.IdentityHashMap;
-import java.util.Map;
 
 /**
  * @author Santhosh Kumar T
  */
-public class BatchManager extends ThreadLocal<Map<DataSource, Batch>>{
-    static final BatchManager INSTANCE = new BatchManager();
-    private BatchManager(){}
-
-    @Override
-    protected Map<DataSource, Batch> initialValue(){
-        return new IdentityHashMap<DataSource, Batch>();
-    }
-
-    public static void run(final DataSource dataSource, int flushInterval, final Runnable runnable){
-        Map<DataSource, Batch> batches = INSTANCE.get();
-        Batch batch = batches.get(dataSource);
-        if(batch==null)
-            batches.put(dataSource, new Batch(flushInterval));
-
-        TransactionManager.run(dataSource, new Transaction<Object>(){
-            @Override
-            public Object run(Connection con) throws SQLException{
-                runnable.run();
-                return null;
-            }
-        });
-    }
-}
-
 class Batch{
     PreparedStatement pstmt;
     String query;
@@ -89,10 +61,10 @@ class Batch{
         return 0;
     }
     
-    void commit() throws SQLException{
+    void finish(boolean commit) throws SQLException{
         if(pstmt!=null){
             try{
-                if(count>0)
+                if(commit && count>0)
                     pstmt.executeBatch();
             }finally{
                 pstmt.close();
