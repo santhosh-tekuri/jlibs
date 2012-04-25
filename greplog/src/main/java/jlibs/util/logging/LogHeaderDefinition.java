@@ -15,12 +15,14 @@
 
 package jlibs.util.logging;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * @author Santhosh Kumar T
@@ -36,17 +38,35 @@ public class LogHeaderDefinition{
 
     public static LogHeaderDefinition parse(File file) throws Exception{
         Element root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement();
-        String p = root.getElementsByTagName("pattern").item(0).getTextContent();
-        Pattern pattern = Pattern.compile(p);
+        NodeList nodeList = root.getElementsByTagName("pattern");
+        if(nodeList.getLength()==0)
+            throw new IllegalArgumentException("[LogHeader] pattern element is missing");
+        String p = nodeList.item(0).getTextContent();
+        Pattern pattern;
+        try{
+            pattern = Pattern.compile(p);
+        }catch(PatternSyntaxException ex){
+            throw new RuntimeException("[LogHeader] invalid regex in pattern element", ex);
+        }
         String groupNames[] = new String[pattern.matcher("").groupCount()+1];
         groupNames[0] = "header";
         NodeList groupList = root.getElementsByTagName("field");
         for(int i=0; i<groupList.getLength(); i++){
             Element groupElement = (Element)groupList.item(i);
-            int index = Integer.parseInt(groupElement.getAttribute("group"));
-            String name = groupElement.getAttribute("name");
+            Attr attr = groupElement.getAttributeNode("group");
+            if(attr==null)
+                throw new IllegalArgumentException("[LogHeader] group attribute missing in field element");
+            int index = Integer.parseInt(attr.getNodeValue());
+            attr = groupElement.getAttributeNode("name");
+            if(attr==null)
+                throw new IllegalArgumentException("[LogHeader] name attribute missing in field element");
+            String name = attr.getNodeValue();
+            if(name.equals("header"))
+                throw new IllegalArgumentException("[LogHeader] field name header is reserved");
             groupNames[index] = name;
         }
+        if(groupNames[groupNames.length-1]==null)
+            throw new IllegalArgumentException("[LogHeader] expected "+(groupNames.length-1)+" field elements");
         return new LogHeaderDefinition(pattern, groupNames);
     }
 }

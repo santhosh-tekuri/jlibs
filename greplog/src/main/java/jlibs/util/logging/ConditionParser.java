@@ -15,6 +15,7 @@
 
 package jlibs.util.logging;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * @author Santhosh Kumar T
@@ -38,17 +40,27 @@ public class ConditionParser{
     private static Condition parse(Element element, LogHeaderDefinition definition){
         String name = element.getTagName();
         if("message".equals(name))
-            return new MessageCondition(Pattern.compile(element.getTextContent()));
+            try{
+                return new MessageCondition(Pattern.compile(element.getTextContent()));
+            }catch(PatternSyntaxException ex){
+                throw new RuntimeException("[LogFilter] invalid regex "+element.getTextContent()+" in message element", ex);
+            }
         else if("field".equals(name)){
-            int index = Arrays.asList(definition.groupNames).indexOf(element.getAttribute("name"));
-            Pattern pattern = Pattern.compile(element.getTextContent());
-            return new FieldCondition(pattern, index);
-        }else if("and".equals(name) || "or".equals(name)){
-            if("and".equals(name))
-                return new AndCondition(getChildConditions(element, definition));
-            else
-                return new OrCondition(getChildConditions(element, definition));
-        }else if("not".equals(name)){
+            Attr attr = element.getAttributeNode("name");
+            if(attr==null)
+                throw new IllegalArgumentException("[LogFilter] name attribute missing in field element");
+            int index = Arrays.asList(definition.groupNames).indexOf(attr.getNodeValue());
+            try{
+                Pattern pattern = Pattern.compile(element.getTextContent());
+                return new FieldCondition(pattern, index);
+            }catch(PatternSyntaxException ex){
+                throw new RuntimeException("[LogFilter] invalid regex "+element.getTextContent()+" in field element", ex);
+            }
+        }else if("and".equals(name))
+            return new AndCondition(getChildConditions(element, definition));
+        else if("or".equals(name))
+            return new OrCondition(getChildConditions(element, definition));
+        else if("not".equals(name)){
             return new NotCondition(getChildConditions(element, definition)[0]);
         }else if("index".equals(name)){
             return new IndexCondition(Integer.parseInt(element.getTextContent()));
@@ -59,7 +71,7 @@ public class ConditionParser{
             boolean includeSelf = Boolean.parseBoolean(element.getAttribute("includeSelf"));
             return new PrecedingCondition(getChildConditions(element, definition)[0], includeSelf);
         }else
-            throw new RuntimeException("Invalid Element: "+name);
+            throw new RuntimeException("[LogFilter] invalid element "+name);
     }
     
     private static Condition[] getChildConditions(Element parent, LogHeaderDefinition definition){
