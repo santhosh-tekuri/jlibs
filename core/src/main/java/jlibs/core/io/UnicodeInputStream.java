@@ -18,39 +18,39 @@ package jlibs.core.io;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 /**
  * @author Santhosh Kumar T
  */
 public class UnicodeInputStream extends FilterInputStream{
+    private ByteBuffer marker = ByteBuffer.allocate(4);
+    public final String encoding;
     public final boolean hasBOM;
-    public final BOM bom;
 
     public UnicodeInputStream(InputStream delegate) throws IOException{
-        super(delegate);
-
-        int len = IOUtil.readFully(delegate, marker);
-        if(len<4)
-            marker = Arrays.copyOf(marker, len);
-        BOM bom = BOM.get(marker, true);
-        if(bom!=null)
-            imarker = bom.with().length;
-        else
-            bom = BOM.get(marker, false);
-        this.bom = bom;
-        hasBOM = imarker>0;
+        this(delegate, EncodingDetector.DEFAULT);
     }
 
+    public UnicodeInputStream(InputStream delegate, EncodingDetector detector) throws IOException{
+        super(delegate);
 
-    private byte marker[] = new byte[4];
-    private int imarker;
+        int len = IOUtil.readFully(delegate, marker.array());
+        marker.limit(len);
+
+        encoding = detector.detect(marker);
+        hasBOM = marker.position()>0;
+        if(!marker.hasRemaining())
+            marker = null;
+    }
 
     @Override
     public int read() throws IOException{
         if(marker!=null){
-            int b = marker[imarker++];
-            if(imarker==marker.length)
+            int b = marker.get() & 0xFF;
+            if(!marker.hasRemaining())
                 marker = null;
             return b;
         }else
@@ -59,17 +59,22 @@ public class UnicodeInputStream extends FilterInputStream{
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException{
-        int read = 0;
-        while(marker!=null && len>0){
-            b[off] = (byte)read();
-            off++;
-            len--;
-            read++;
+        if(marker!=null){
+            int read = Math.min(marker.remaining(), len);
+            System.arraycopy(marker.array(), marker.position(), b, off, read);
+            if(read==marker.remaining())
+                marker = null;
+            else
+                marker.position(marker.position()+read);
+            return read;
         }
-        int r = super.read(b, off, len);
-        if(read==0)
-            return r;
+        return super.read(b, off, len);
+    }
+
+    public InputStreamReader createReader(){
+        if(encoding==null)
+            return new InputStreamReader(this);
         else
-            return r==-1 ? read : read+r;
+            return new InputStreamReader(this, Charset.forName(encoding));
     }
 }
