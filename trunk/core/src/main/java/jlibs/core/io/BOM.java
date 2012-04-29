@@ -15,71 +15,60 @@
 
 package jlibs.core.io;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+
 /**
- * see http://www.w3.org/TR/REC-xml/#sec-guessing-no-ext-info
+ *
  * 
  * @author Santhosh Kumar T
  */
 public enum BOM{
-    UTF8        (IOUtil.UTF_8.name()   , new int[]{0xEF, 0xBB, 0xBF}      , null),
-    UCS4_LE     ("UCS-4LE"             , new int[]{0xFF, 0xFE, 0x00, 0x00}, new int[]{0x3C, 0x00, 0x00, 0x00}),
-    UCS4_BE     ("UCS-4BE"             , new int[]{0x00, 0x00, 0xFE, 0xFF}, new int[]{0x00, 0x00, 0x00, 0x3C}),
-    UCS4_2143   ("UCS-4-2143"          , new int[]{0x00, 0x00, 0xFF, 0xFE}, new int[]{0x00, 0x00, 0x3C, 0x00}),
-    UCS4_3412   ("UCS-4-3412"          , new int[]{0xFE, 0xFF, 0x00, 0x00}, new int[]{0x00, 0x3C, 0x00, 0x00}),
-
-    UTF16_LE    (IOUtil.UTF_16LE.name(), new int[]{0xFF, 0xFE}            , new int[]{0x3C, 0x00, 0x3F, 0x00}),
-    UTF16_BE    (IOUtil.UTF_16BE.name(), new int[]{0xFE, 0xFF}            , new int[]{0x00, 0x3C, 0x00, 0x3F}),
-    ASCII       (IOUtil.UTF_8.name()   , null                             , new int[]{0x3C, 0x3F, 0x78, 0x6D}),
-    EBCDIC      ("Cp037"               , null                             , new int[]{0x4C, 0x6F, 0xA7, 0x94}),
-    ;
+    UTF32_LE("UTF-32LE"),
+    UTF32_BE("UTF-32BE"),
+    UTF16_LE("UTF-16LE"),
+    UTF16_BE("UTF-16BE"),
+        UTF8("UTF-8");
 
     private String encoding;
-    private byte with[];
-    private byte without[];
+    private int expected[];
 
-    BOM(String encoding, int[] with, int[] without){
+    BOM(String encoding){
         this.encoding = encoding;
-        this.with = toBytes(with);
-        this.without = toBytes(without);
-    }
 
-    private static byte[] toBytes(int[] arr){
-        if(arr==null)
-            return null;
-        else{
-            byte b[] = new byte[arr.length];
-            for(int i=0; i<arr.length; i++)
-                b[i] = (byte)arr[i];
-            return b;
-        }
+        byte byteBom[] = "\uFEFF".getBytes(Charset.forName(encoding));
+        expected = new int[byteBom.length];
+        for(int i=0; i<byteBom.length; i++)
+            expected[i] = byteBom[i]&0xFF;
     }
 
     public String encoding(){
         return encoding;
     }
 
-    public byte[] with(){
-        return with;
+    public int[] expected(){
+        return expected;
     }
 
-    public byte[] without(){
-        return without;
-    }
-
-    public static BOM get(byte b[], boolean with){
-        for(BOM bom : values()){
-            byte expected[] = with ? bom.with() : bom.without();
-            if(expected!=null && b.length>=expected.length){
-                boolean matched = true;
-                for(int i=0; i<expected.length; i++){
-                    if(expected[i]!=b[i]){
-                        matched = false;
-                        break;
-                    }
-                }
-                if(matched)
-                    return bom;
+    private boolean matches(ByteBuffer buffer){
+        int pos = buffer.position();
+        for(int i: expected){
+            if(i!=(buffer.get()&0xFF)){
+                buffer.position(pos);
+                return false;
             }
+        }
+        return true;
+    }
+
+    public static BOM detect(ByteBuffer buffer){
+        int available = buffer.remaining();
+        for(BOM bom: values()){
+            if(available>=bom.expected.length){
+                if(bom.matches(buffer))
+                    return bom;
+            }else
+                return null;
         }
         return null;
     }

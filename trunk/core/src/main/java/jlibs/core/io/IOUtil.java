@@ -82,6 +82,9 @@ public class IOUtil{
     public static final Charset UTF_16BE   = Charset.forName("UTF-16BE");
     public static final Charset UTF_16LE   = Charset.forName("UTF-16LE");
     public static final Charset UTF_16     = Charset.forName("UTF-16");
+    public static final Charset UTF_32BE   = Charset.forName("UTF-32BE");
+    public static final Charset UTF_32LE   = Charset.forName("UTF-32LE");
+    public static final Charset UTF_32     = Charset.forName("UTF-32");
 
     /*-------------------------------------------------[ Pumping ]---------------------------------------------------*/
 
@@ -282,13 +285,5 @@ public class IOUtil{
 	        n += count;
 	    }
         return n;
-    }
-
-    /**
-     * Creates InputStreamReader with detected encoding
-     */
-    public static InputStreamReader createReader(InputStream is) throws IOException{
-        UnicodeInputStream uis = new UnicodeInputStream(is);
-        return uis.bom==null ? new InputStreamReader(uis) : new InputStreamReader(uis, uis.bom.encoding());
     }
 }
