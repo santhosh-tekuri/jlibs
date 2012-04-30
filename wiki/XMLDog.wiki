@@ -142,8 +142,10 @@ You can configure for DOM results as follows:
 import package jlibs.xml.sax.dog.sniff.Event;
 
 Event event = dog.createEvent();
+results = new XPathResults(event);
+event.setListener(results);
 event.setXMLBuilder(new DOMBuilder());
-XPathResults results = dog.sniff(event, new InputSource("note.xml"));
+dog.sniff(event, new InputSource("note.xml"));
 
 List<NodeItem> items = (List<NodeItem>)results.getResult(xpath1)
 }}}
