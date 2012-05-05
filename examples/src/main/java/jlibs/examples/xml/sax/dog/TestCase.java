@@ -17,15 +17,18 @@ package jlibs.examples.xml.sax.dog;
 
 import jlibs.examples.xml.sax.dog.engines.SaxonEngine;
 import jlibs.xml.DefaultNamespaceContext;
+import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.XPathResults;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.sniff.DOMBuilder;
 import jlibs.xml.sax.dog.sniff.Event;
+import jlibs.xml.stream.STAXXMLReader;
 import jlibs.xml.xpath.DefaultXPathVariableResolver;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFunctionResolver;
@@ -35,6 +38,16 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public class TestCase{
+    public static XMLReader saxXMLReader;
+    public static XMLReader staxXMLReader;
+    static{
+        try{
+            saxXMLReader = SAXUtil.newSAXFactory(true, false, false).newSAXParser().getXMLReader();
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        staxXMLReader = new STAXXMLReader();
+    }
     public static boolean useSTAX = false;
     public static boolean useXMLBuilder = false;
     public static boolean useInstantResults = false;
@@ -72,16 +85,17 @@ public class TestCase{
             event.setXMLBuilder(new DOMBuilder());
 
         dogResult = new ArrayList<Object>(xpaths.size());
+        XMLReader reader = useSTAX ? staxXMLReader : saxXMLReader;
         if(useInstantResults){
             InstantXPathResults dogResults = new InstantXPathResults(dog.getDocumentXPathsCount());
             event.setListener(dogResults);
-            dog.sniff(event, source, useSTAX);
+            dog.sniff(event, source, reader);
             for(Expression expr: expressions)
                 dogResult.add(dogResults.getResult(expr));
         }else{
             XPathResults dogResults = new XPathResults(event);
             event.setListener(dogResults);
-            dog.sniff(event, source, useSTAX);
+            dog.sniff(event, source, reader);
             for(Expression expr: expressions)
                 dogResult.add(dogResults.getResult(expr));
         }

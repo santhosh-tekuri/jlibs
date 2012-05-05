@@ -16,10 +16,10 @@
 package jlibs.xml.sax.dog;
 
 import jlibs.core.lang.ImpossibleException;
-import jlibs.xml.sax.dog.expr.EvaluationListener;
+import jlibs.xml.sax.SAXProperties;
+import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.dog.expr.Expression;
 import jlibs.xml.sax.dog.expr.Literal;
-import jlibs.xml.sax.dog.expr.StaticEvaluation;
 import jlibs.xml.sax.dog.expr.func.FunctionCall;
 import jlibs.xml.sax.dog.expr.nodset.LocationExpression;
 import jlibs.xml.sax.dog.expr.nodset.PathExpression;
@@ -28,17 +28,17 @@ import jlibs.xml.sax.dog.path.LocationPath;
 import jlibs.xml.sax.dog.path.PositionalPredicate;
 import jlibs.xml.sax.dog.path.Step;
 import jlibs.xml.sax.dog.sniff.Event;
-import jlibs.xml.sax.dog.sniff.SAXEngine;
-import jlibs.xml.sax.dog.sniff.STAXEngine;
+import jlibs.xml.sax.dog.sniff.SAXHandler;
 import jlibs.xml.sax.dog.sniff.XPathParser;
+import jlibs.xml.stream.STAXXMLReader;
 import org.jaxen.saxpath.SAXPathException;
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathFunctionResolver;
 import javax.xml.xpath.XPathVariableResolver;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +65,6 @@ public final class XMLDog{
     private final List<Expression> expressions = new ArrayList<Expression>();
     private final List<Expression> docExpressions = new ArrayList<Expression>();
     private final List<Expression> globalExpressions = new ArrayList<Expression>();
-    private final ArrayDeque<Expression> tempStack = new ArrayDeque<Expression>();
 
     public Expression addXPath(String xpath) throws SAXPathException{
         Expression compiledExpr = parser.parse(xpath, true);
@@ -151,22 +150,37 @@ public final class XMLDog{
     }
 
     public Event createEvent(){
-        return new Event(nsContext, docExpressions, Constraint.ID_START+parser.constraints.size());
+        return new Event(nsContext, globalExpressions, docExpressions, Constraint.ID_START+parser.constraints.size(), parser.langInterested);
     }
 
     /*-------------------------------------------------[ Sniff ]---------------------------------------------------*/
 
     public void sniff(Event event, InputSource source, boolean useSTAX) throws XPathException{
-        EvaluationListener listener = event.getListener();
-        if(listener!=null){
-            for(Expression expr: globalExpressions)
-                listener.finished(new StaticEvaluation<Expression>(expr, -1, expr.getResult()));
-        }
-        if(!docExpressions.isEmpty()){
+        XMLReader reader;
+        try{
             if(useSTAX)
-                new STAXEngine(event, parser.langInterested).start(source);
+                reader = new STAXXMLReader();
             else
-                new SAXEngine(event, parser.langInterested).start(source);
+                reader = SAXUtil.newSAXFactory(true, false, false).newSAXParser().getXMLReader();
+            sniff(event, source, reader);
+        }catch(Exception ex){
+            throw new XPathException(ex);
+        }
+    }
+
+    public void sniff(Event event, InputSource source, XMLReader reader) throws XPathException{
+        try{
+            SAXHandler handler = event.getSAXHandler();
+            reader.setContentHandler(handler);
+            reader.setProperty(SAXProperties.LEXICAL_HANDLER, handler);
+        }catch(Exception ex){
+            throw new XPathException(ex);
+        }
+        try{
+            reader.parse(source);
+        }catch(Exception ex){
+            if(ex!=Event.STOP_PARSING)
+                throw new XPathException(ex);
         }
     }
 

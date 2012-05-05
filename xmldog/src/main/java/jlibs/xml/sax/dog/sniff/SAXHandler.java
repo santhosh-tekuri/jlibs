@@ -16,27 +16,24 @@
 package jlibs.xml.sax.dog.sniff;
 
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.SAXProperties;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.DefaultHandler2;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.xpath.XPathException;
 
 /**
  * @author Santhosh Kumar T
  */
-public final class SAXEngine extends DefaultHandler2{
+public final class SAXHandler extends DefaultHandler2{
     final Event event;
     final boolean langInterested;
 
-    public SAXEngine(Event event, boolean langInterested){
+    public SAXHandler(Event event, boolean langInterested){
         this.event = event;
         this.langInterested = langInterested;
     }
@@ -105,37 +102,6 @@ public final class SAXEngine extends DefaultHandler2{
             parser = factory.newSAXParser();
             saxParserLocal.set(parser);
         }
-        parser.getXMLReader().setProperty(SAXProperties.LEXICAL_HANDLER, this);
         return parser;
-    }
-
-    /*-------------------------------------------------[ Start ]---------------------------------------------------*/
-
-    public void start(InputSource is) throws XPathException{
-        SAXParser parser = null;
-        try{
-            parser = getParser();
-            parser.parse(is, this);
-        }catch(Exception ex){
-            if(ex!=Event.STOP_PARSING)
-                throw new XPathException(ex);
-        }finally{
-            if(parser!=null)
-                parser.reset();
-        }
-    }
-
-    public void start(String uri) throws XPathException{
-        SAXParser parser = null;
-        try{
-            parser = getParser();
-            parser.parse(uri, this);
-        }catch(Exception ex){
-            if(ex!=Event.STOP_PARSING)
-                throw new XPathException(ex);
-        }finally{
-            if(parser!=null)
-                parser.reset();
-        }
     }
 }

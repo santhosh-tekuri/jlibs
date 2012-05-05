@@ -38,12 +38,15 @@ import java.util.*;
  * @author Santhosh Kumar T
  */
 public final class Event extends EvaluationListener implements NodeSetListener{
-    private List<Expression> exprList;
-    private EventID.ConstraintEntry listenersArray[][];
+    private final List<Expression> exprList;
+    private final List<Expression> globalExprList;
+    private final EventID.ConstraintEntry listenersArray[][];
+    private final SAXHandler handler;
 
     @SuppressWarnings({"unchecked"})
-    public Event(NamespaceContext givenNSContext, List<Expression> exprList, int noOfConstraints){
+    public Event(NamespaceContext givenNSContext, List<Expression> globalExprList, List<Expression> exprList, int noOfConstraints, boolean langInterested){
         this.givenNSContext = givenNSContext;
+        this.globalExprList = globalExprList;
         this.exprList = exprList;
 
         int noOfXPaths = exprList.size();
@@ -53,10 +56,15 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         instantListenersCount = new int[noOfXPaths];
         finished = new BitSet(noOfXPaths);
         listenersArray = new EventID.ConstraintEntry[6][noOfConstraints];
+        handler = new SAXHandler(this, langInterested);
     }
 
     public NamespaceContext getNamespaceContext(){
         return nsContext;
+    }
+
+    public SAXHandler getSAXHandler(){
+        return handler;
     }
 
     /*-------------------------------------------------[ Information ]---------------------------------------------------*/
@@ -526,7 +534,14 @@ public final class Event extends EvaluationListener implements NodeSetListener{
     }
 
     public void onStartDocument(){
+        if(listener!=null){
+            for(Expression expr: globalExprList)
+                listener.finished(new StaticEvaluation<Expression>(expr, -1, expr.getResult()));
+        }
+
         int noOfXPaths = exprList.size();
+        if(noOfXPaths==0)
+            throw STOP_PARSING;
         pendingExpressions = noOfXPaths;
         nsContext = new DefaultNamespaceContext();
         locationInfo = tailInfo = new Info();
