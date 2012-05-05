@@ -40,6 +40,7 @@ import java.util.List;
  */
 public class XMLDogTest{
     public static void main(String[] args) throws Exception{
+        boolean useSTAX = false;
         boolean createDOM = false;
         boolean instantResults = false;
         final boolean printResults;
@@ -47,19 +48,21 @@ public class XMLDogTest{
         boolean _printResults = true;
         String file = null;
         for(String arg: args){
-            if("-dom".equals(arg))
+            if("-dom".equalsIgnoreCase(arg))
                 createDOM = true;
-            if("-instantResults".equals(arg))
+            if("-instantResults".equalsIgnoreCase(arg))
                 instantResults = true;
-            if("-dontPrintResults".equals(arg))
+            if("-dontPrintResults".equalsIgnoreCase(arg))
                 _printResults = false;
+            if("-useSTAX".equalsIgnoreCase(arg))
+                useSTAX = true;
             else
                 file = arg;
         }
         printResults = _printResults;
 
         if(file==null){
-            System.err.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] [-instantResults] [-dontPrintResults] <xml-file>");
+            System.err.println("usage: xmldog."+(OS.get().isWindows()?"bat":"sh")+" [-dom] [-instantResults] [-dontPrintResults] [-useSTAX] <xml-file>");
             System.exit(1);
         }
 
@@ -152,7 +155,7 @@ public class XMLDogTest{
         }else
             listener = new XPathResults(event);
         event.setListener(listener);
-        dog.sniff(event, new InputSource(file));
+        dog.sniff(event, new InputSource(file), useSTAX);
         time = System.nanoTime() - time;
         if(printResults && listener instanceof XPathResults)
             ((XPathResults)listener).print(expressions, System.out);
