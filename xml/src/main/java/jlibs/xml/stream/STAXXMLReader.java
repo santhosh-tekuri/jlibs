@@ -168,7 +168,11 @@ public class STAXXMLReader extends AbstractXMLReader{
                     handler.endDocument();
                     return;
             }
-            eventType = reader.getEventType();
+            try{
+                eventType = reader.next();
+            }catch(XMLStreamException ex){
+                throw new SAXException(ex);
+            }
         }
     }
 }
