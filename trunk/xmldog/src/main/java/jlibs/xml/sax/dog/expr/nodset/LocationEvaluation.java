@@ -349,6 +349,7 @@ public final class LocationEvaluation extends AxisListener<LocationExpression> i
             }
             entry = entry.next();
         }
+        result.clear(); // to avoid memory leak
     }
 
     private void decreasePredicateChain(){
