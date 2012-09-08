@@ -95,6 +95,8 @@ public class XMLDogTest{
                 }
             }
         });
+        String prefix = nsContext.declarePrefix("*");
+        System.out.println(prefix+"\t= *");
 
         final XMLDog dog = new XMLDog(nsContext, null, null);
         List<Expression> expressions = new ArrayList<Expression>();
