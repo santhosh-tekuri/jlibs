@@ -193,7 +193,14 @@ public final class XPathParser implements XPathHandler{
             String uri = prefix.length()==0 ? "" : nsContext.getNamespaceURI(prefix);
             if(uri==null)
                 throw new SAXPathException("undeclared prefix: " + prefix);
-            constraint = star ? namespaceURIStub.get(uri) : qnameStub.get(uri, localName);
+            if(star)
+                constraint = namespaceURIStub.get(uri);
+            else{
+                if("*".equals(uri))
+                    constraint = localNameStub.get(localName);
+                else
+                    constraint = qnameStub.get(uri, localName);
+            }
         }
         startStep(axis, constraint);
     }
@@ -656,6 +663,7 @@ public final class XPathParser implements XPathHandler{
     public ArrayList constraints = new ArrayList();
 
     private NamespaceURIStub namespaceURIStub = new NamespaceURIStub();
+    private LocalNameStub localNameStub = new LocalNameStub();
     private QNameStub qnameStub = new QNameStub();
     private PITargetStub piTargetStub = new PITargetStub();
 
@@ -675,6 +683,28 @@ public final class XPathParser implements XPathHandler{
                 return (NamespaceURI)constraints.get(index);
             else{
                 NamespaceURI constraint = new NamespaceURI(Constraint.ID_START +constraints.size(), namespaceURI);
+                constraints.add(constraint);
+                return constraint;
+            }
+        }
+    }
+
+    class LocalNameStub{
+        private String localName;
+
+        @Override
+        public boolean equals(Object obj){
+            return obj instanceof LocalName && ((LocalName)obj).localName.equals(localName);
+        }
+
+        @SuppressWarnings({"unchecked"})
+        public LocalName get(String localName){
+            this.localName = localName;
+            int index = constraints.indexOf(this);
+            if(index!=-1)
+                return (LocalName)constraints.get(index);
+            else{
+                LocalName constraint = new LocalName(Constraint.ID_START +constraints.size(), localName);
                 constraints.add(constraint);
                 return constraint;
             }
