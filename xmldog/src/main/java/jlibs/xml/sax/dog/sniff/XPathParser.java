@@ -58,6 +58,16 @@ public final class XPathParser implements XPathHandler{
         reader.setXPathHandler(this);
     }
 
+    private boolean allowDefaultPrefixMapping = false;
+
+    public boolean isAllowDefaultPrefixMapping(){
+        return allowDefaultPrefixMapping;
+    }
+
+    public void setAllowDefaultPrefixMapping(boolean allow){
+        allowDefaultPrefixMapping = allow;
+    }
+
     private boolean documentContext;
     public Expression parse(String xpath, boolean documentContext) throws SAXPathException{
         this.documentContext = documentContext; 
@@ -190,7 +200,7 @@ public final class XPathParser implements XPathHandler{
         if(star && prefix.length()==0)
             constraint = Star.INSTANCE;
         else{
-            String uri = prefix.length()==0 ? "" : nsContext.getNamespaceURI(prefix);
+            String uri = !allowDefaultPrefixMapping && prefix.length()==0 ? "" : nsContext.getNamespaceURI(prefix);
             if(uri==null)
                 throw new SAXPathException("undeclared prefix: " + prefix);
             if(star)

@@ -62,6 +62,14 @@ public final class XMLDog{
         parser = new XPathParser(nsContext, variableResolver, functionResolver);
     }
 
+    public boolean isAllowDefaultPrefixMapping(){
+        return parser.isAllowDefaultPrefixMapping();
+    }
+
+    public void setAllowDefaultPrefixMapping(boolean allow){
+        parser.setAllowDefaultPrefixMapping(allow);
+    }
+
     private final List<Expression> expressions = new ArrayList<Expression>();
     private final List<Expression> docExpressions = new ArrayList<Expression>();
     private final List<Expression> globalExpressions = new ArrayList<Expression>();
