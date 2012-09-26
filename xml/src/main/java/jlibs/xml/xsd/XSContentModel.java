@@ -99,6 +99,7 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
         @Override
         public boolean preProcess(XSElementDeclaration elem, Path path){
             appendCompositor(path);
+            nsSupport.declarePrefix(elem.getNamespace());
             buff.append(nsSupport.toQName(elem.getNamespace(), elem.getName()));
             appendCardinality(path);
             return false;
