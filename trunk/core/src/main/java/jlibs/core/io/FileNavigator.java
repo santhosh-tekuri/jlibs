@@ -15,9 +15,9 @@
 
 package jlibs.core.io;
 
+import jlibs.core.graph.Convertor;
 import jlibs.core.graph.Navigator2;
 import jlibs.core.graph.Sequence;
-import jlibs.core.graph.Convertor;
 import jlibs.core.graph.sequences.ArraySequence;
 import jlibs.core.graph.sequences.EmptySequence;
 
@@ -54,6 +54,6 @@ public class FileNavigator extends Navigator2<File> implements Convertor<File, S
     }
 
     public String getRelativePath(File fromFile, File toFile){
-        return getRelativePath(fromFile, toFile, this, FileUtil.SEPARATOR, false);
+        return getRelativePath(fromFile.getAbsoluteFile(), toFile.getAbsoluteFile(), this, FileUtil.SEPARATOR, false);
     }
 }
