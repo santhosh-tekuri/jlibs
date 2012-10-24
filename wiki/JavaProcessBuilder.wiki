@@ -1,7 +1,7 @@
 #summary Launching Java Process Programatically
 
 Java comes with [http://java.sun.com/j2se/1.5.0/docs/api/java/lang/ProcessBuilder.html java.lang.ProcessBuilder] to make process creation easier;<br>
-Similarly JLibs comes with [http://code.google.com/p/jlibs/source/browse/trunk/core/src/jlibs/core/lang/JavaProcessBuilder.java jlibs.core.lang.JavaProcessBuilder] to make java process creation easier;
+Similarly JLibs comes with [http://code.google.com/p/jlibs/source/browse/trunk/core/src/main/java/jlibs/core/lang/JavaProcessBuilder.java jlibs.core.lang.JavaProcessBuilder] to make java process creation easier;
 
 `JavaProcessBuilder` simply manages collection of java process attributes and help your to create command out of it.
 {{{
