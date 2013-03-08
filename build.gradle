@@ -39,7 +39,7 @@ subprojects {
     repositories {
         mavenCentral()
         mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
-        mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
+        mavenRepo url: "https://github.com/santhosh-tekuri/maven-repository/raw/master/"
     }
 
     jar {
