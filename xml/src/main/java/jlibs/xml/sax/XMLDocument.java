@@ -113,15 +113,15 @@ public class XMLDocument{
         return prefix.length()==0 ? localPart : prefix+':'+localPart;
     }
 
-    private void startPrefixMapping(NamespaceSupport nsSupport) throws SAXException{
+    private void startPrefixMappings() throws SAXException{
         Enumeration enumer = nsSupport.getDeclaredPrefixes();
         while(enumer.hasMoreElements()){
             String prefix = (String) enumer.nextElement();
-            xml.startPrefixMapping(prefix, nsSupport.getURI(prefix));
+            xml.startPrefixMapping(prefix, nsSupport.findURI(prefix));
         }
     }
 
-    private void endPrefixMapping(NamespaceSupport nsSupport) throws SAXException{
+    private void endPrefixMappings() throws SAXException{
         Enumeration enumer = nsSupport.getDeclaredPrefixes();
         while(enumer.hasMoreElements())
             xml.endPrefixMapping((String)enumer.nextElement());
@@ -164,7 +164,7 @@ public class XMLDocument{
                 nsSupport.pushContext();
             else
                 needsNewContext = true;
-            startPrefixMapping(nsSupport);
+            startPrefixMappings();
 
             elemStack.push(elem);
             xml.startElement(elem.getNamespaceURI(), elem.getLocalPart(), toString(elem), attrs);
@@ -265,7 +265,7 @@ public class XMLDocument{
     private XMLDocument endElement(QName qname) throws SAXException{
         xml.endElement(qname.getNamespaceURI(), qname.getLocalPart(), toString(qname));
 
-        endPrefixMapping(nsSupport);
+        endPrefixMappings();
         nsSupport.popContext();
         needsNewContext = true;
         return this;
@@ -374,7 +374,7 @@ public class XMLDocument{
                         depth++;
                         if(depth>1){
                             if(depth==2)
-                                XMLDocument.this.startPrefixMapping(nsSupport);
+                                XMLDocument.this.startPrefixMappings();
                             super.startElement(uri, localName, qName, atts);
                         }
                     }
@@ -384,7 +384,7 @@ public class XMLDocument{
                         if(depth>1){
                             super.endElement(uri, localName, qName);
                             if(depth==2)
-                                XMLDocument.this.endPrefixMapping(nsSupport);
+                                XMLDocument.this.endPrefixMappings();
                         }
                         depth--;
                     }
