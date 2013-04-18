@@ -101,17 +101,23 @@ public class MyNamespaceSupport extends NamespaceSupport{
     public String declarePrefix(String uri){
         String prefix = findPrefix(uri);
         if(prefix==null){
-            prefix = suggested.getProperty(uri, suggestPrefix);
-            if(getURI(prefix)!=null){
-                int i = 1;
-                String _prefix;
-                while(true){
-                    _prefix = prefix + i;
-                    if(getURI(_prefix)==null){
-                        prefix = _prefix;
-                        break;
+            if(uri.isEmpty())
+                prefix = ""; // non-empty prefix cannot be used for empty namespace
+            else{
+                prefix = suggested.getProperty(uri, suggestPrefix);
+                if(getURI(prefix)!=null){
+                    if(prefix.isEmpty())
+                        prefix = "ns";
+                    int i = 1;
+                    String _prefix;
+                    while(true){
+                        _prefix = prefix + i;
+                        if(getURI(_prefix)==null){
+                            prefix = _prefix;
+                            break;
+                        }
+                        i++;
                     }
-                    i++;
                 }
             }
             declarePrefix(prefix, uri);
