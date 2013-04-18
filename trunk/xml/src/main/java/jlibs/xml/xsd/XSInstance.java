@@ -96,7 +96,7 @@ public class XSInstance{
             doc.startDocument();
             doc.declarePrefix(Namespaces.URI_XSI);
             if(!rootElement.getNamespaceURI().isEmpty())
-                doc.declarePrefix("tns", rootElement.getNamespaceURI());
+                doc.declarePrefix(rootElement.getPrefix(), rootElement.getNamespaceURI());
             WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc));
             doc.endDocument();
         }catch(SAXException ex){
