@@ -213,6 +213,7 @@ public class JDBC{
                         System.out.println("startTransaction");
                 }catch(SQLException ex){
                     try{
+                        CONNECTION.set(null);
                         con.close();
                         if(debug)
                             System.out.println("closed");
@@ -252,7 +253,6 @@ public class JDBC{
                     BATCH.set(null);
                 }
                 if(task instanceof Transaction){
-                    CONNECTION.set(null);
                     try{
                         if(ex==null){
                             con.commit();
@@ -281,6 +281,7 @@ public class JDBC{
                     }
                 }
                 try{
+                    CONNECTION.set(null);
                     con.close();
                     if(debug)
                         System.out.println("closed");
