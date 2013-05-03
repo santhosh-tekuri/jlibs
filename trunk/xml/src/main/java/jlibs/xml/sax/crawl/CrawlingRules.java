@@ -19,7 +19,6 @@ import jlibs.xml.Namespaces;
 
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,9 +31,10 @@ public class CrawlingRules{
         doc.descendant(elementPath).extension = extension;
     }
 
-    public void addAttributeLink(QName... attributePath){
-        QName elementPath[] = Arrays.copyOf(attributePath, attributePath.length-1);
-        doc.descendant(elementPath).attribute = attributePath[attributePath.length-1];
+    public void addLink(QName elementPath[], QName namespaceAttribute, QName locationAttribute){
+        Element element = doc.descendant(elementPath);
+        element.namespaceAttribute = namespaceAttribute;
+        element.locationAttribute = locationAttribute;
     }
 
     public static CrawlingRules defaultRules(){
@@ -49,20 +49,21 @@ public class CrawlingRules{
         QName wsdl_definitions = new QName(Namespaces.URI_WSDL, "definitions");
         QName attr_location = new QName("location");
         QName wsdl_types = new QName(Namespaces.URI_WSDL, "types");
+        QName attr_namespace = new QName("namespace");
 
         rules.addExtension("xsd", xsd_schema);
-        rules.addAttributeLink(xsd_schema, xsd_import, attr_schemaLocation);
-        rules.addAttributeLink(xsd_schema, xsd_include, attr_schemaLocation);
+        rules.addLink(new QName[]{xsd_schema, xsd_import}, attr_namespace, attr_schemaLocation);
+        rules.addLink(new QName[]{xsd_schema, xsd_include}, null, attr_schemaLocation);
 
         rules.addExtension("xsl", xsl_stylesheet);
-        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "import"), attr_href);
-        rules.addAttributeLink(xsl_stylesheet, new QName(Namespaces.URI_XSL, "include"), attr_href);
+        rules.addLink(new QName[]{xsl_stylesheet, new QName(Namespaces.URI_XSL, "import")}, null, attr_href);
+        rules.addLink(new QName[]{xsl_stylesheet, new QName(Namespaces.URI_XSL, "include")}, null, attr_href);
 
         rules.addExtension("wsdl", wsdl_definitions);
-        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "import"), attr_location);
-        rules.addAttributeLink(wsdl_definitions, new QName(Namespaces.URI_WSDL, "include"), attr_location);
-        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_import, attr_schemaLocation);
-        rules.addAttributeLink(wsdl_definitions, wsdl_types, xsd_schema, xsd_include, attr_schemaLocation);
+        rules.addLink(new QName[]{wsdl_definitions, new QName(Namespaces.URI_WSDL, "import")}, attr_namespace, attr_location);
+        rules.addLink(new QName[]{wsdl_definitions, new QName(Namespaces.URI_WSDL, "include")}, null, attr_location);
+        rules.addLink(new QName[]{wsdl_definitions, wsdl_types, xsd_schema, xsd_import}, attr_namespace, attr_schemaLocation);
+        rules.addLink(new QName[]{wsdl_definitions, wsdl_types, xsd_schema, xsd_include}, null, attr_schemaLocation);
 
         return rules;
     }
@@ -70,7 +71,8 @@ public class CrawlingRules{
 
 class Element{
     QName qname;
-    QName attribute;
+    QName locationAttribute;
+    QName namespaceAttribute;
     String extension;
 
     Element parent;

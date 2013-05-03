@@ -41,7 +41,7 @@ import java.util.Map;
 /**
  * @author Santhosh Kumar T
  */
-public class XMLCrawler extends XMLFilterImpl{
+public class XMLCrawler{
     private CrawlingRules rules;
 
     private Element current;
@@ -60,59 +60,85 @@ public class XMLCrawler extends XMLFilterImpl{
     private XMLCrawler(XMLCrawler crawler){
         rules = crawler.rules;
         crawled = crawler.crawled;
+        resolver = crawler.resolver;
     }
 
-    @Override
-    public void startDocument() throws SAXException{
-        current = rules.doc;
-        super.startDocument();
-    }
+    private XMLFilterImpl xmlFilter = new XMLFilterImpl(){
+        @Override
+        public void startDocument() throws SAXException{
+            current = rules.doc;
+            super.startDocument();
+        }
 
-    @Override
-    public void startElement(String namespaceURI, String localName, String qualifiedName, Attributes atts) throws SAXException{
-        if(depth==0){
-            Element elem = current.findChild(namespaceURI, localName);
-            if(elem==null)
-                depth = 1;
-            else{
-                current = elem;
-                try{
-                    if(file==null && current.extension!=null)
-                        setFile(listener.toFile(url, current.extension));
-                    if(current.attribute!=null){
-                        String location = atts.getValue(current.attribute.getNamespaceURI(), current.attribute.getLocalPart());
-                        if(location!=null){
-                            location = URLUtil.toURI(url).resolve(location).toString();
-                            URL targetURL = URLUtil.toURL(location);
-                            File targetFile = null;
-                            if(crawled!=null)
-                                targetFile = crawled.get(targetURL);
-                            if(targetFile==null && listener.doCrawl(targetURL))
-                                targetFile = new XMLCrawler(this).crawl(new InputSource(location), listener, null);
-                            String href = targetFile==null ? location : FileNavigator.INSTANCE.getRelativePath(file.getParentFile(), targetFile);
-                            AttributesImpl newAtts = new AttributesImpl(atts);
-                            int index = atts.getIndex(current.attribute.getNamespaceURI(), current.attribute.getLocalPart());
-                            newAtts.setValue(index, href);
-                            atts = newAtts;
+        @Override
+        public void startElement(String namespaceURI, String localName, String qualifiedName, Attributes atts) throws SAXException{
+            if(depth==0){
+                Element elem = current.findChild(namespaceURI, localName);
+                if(elem==null)
+                    depth = 1;
+                else{
+                    current = elem;
+                    try{
+                        if(file==null && current.extension!=null)
+                            setFile(listener.toFile(url, current.extension));
+                        if(current.locationAttribute!=null){
+                            String linkNamespace = null;
+                            if(current.namespaceAttribute!=null)
+                                linkNamespace = atts.getValue(current.namespaceAttribute.getNamespaceURI(), current.namespaceAttribute.getLocalPart());
+                            String location = atts.getValue(current.locationAttribute.getNamespaceURI(), current.locationAttribute.getLocalPart());
+                            if(location!=null){
+                                location = resolveLink(linkNamespace, location);
+                                URL targetURL = URLUtil.toURL(location);
+                                File targetFile = null;
+                                if(crawled!=null)
+                                    targetFile = crawled.get(targetURL);
+                                if(targetFile==null && listener.doCrawl(targetURL))
+                                    targetFile = new XMLCrawler(XMLCrawler.this).crawl(new InputSource(location), listener, null);
+                                String href = targetFile==null ? location : FileNavigator.INSTANCE.getRelativePath(file.getParentFile(), targetFile);
+                                AttributesImpl newAtts = new AttributesImpl(atts);
+                                int index = atts.getIndex(current.locationAttribute.getNamespaceURI(), current.locationAttribute.getLocalPart());
+                                newAtts.setValue(index, href);
+                                atts = newAtts;
+                            }
                         }
+                    }catch(IOException ex){
+                        throw new SAXException(ex);
                     }
-                }catch(IOException ex){
-                    throw new SAXException(ex);
                 }
-            }
-        }else
-            depth++;
+            }else
+                depth++;
 
-        super.startElement(namespaceURI, localName, qualifiedName, atts);
+            super.startElement(namespaceURI, localName, qualifiedName, atts);
+        }
+
+        @Override
+        public void endElement(String uri, String localName, String qName) throws SAXException{
+            super.endElement(uri, localName, qName);
+            if(depth==0)
+                current = current.parent;
+            else
+                depth--;
+        }
+    };
+
+    /*-------------------------------------------------[ Resource Resolver ]---------------------------------------------------*/
+
+    private Resolver resolver;
+    public void setResolver(Resolver resolver){
+        this.resolver = resolver;
     }
 
-    @Override
-    public void endElement(String uri, String localName, String qName) throws SAXException{
-        super.endElement(uri, localName, qName);
-        if(depth==0)
-            current = current.parent;
-        else
-            depth--;
+    private String resolveLink(String namespace, String location){
+        String resolvedLocation = null;
+        if(resolver!=null)
+            resolvedLocation = resolver.resolve(namespace, url.toExternalForm(), location);
+        if(resolvedLocation==null)
+            resolvedLocation = URLUtil.toURI(url).resolve(location).toString();
+        return resolvedLocation;
+    }
+
+    public static interface Resolver{
+        public String resolve(String namespace, String base, String location);
     }
 
     /*-------------------------------------------------[ Crawling ]---------------------------------------------------*/
@@ -137,8 +163,8 @@ public class XMLCrawler extends XMLFilterImpl{
         url = URLUtil.toURL(document.getSystemId());
 
         try{
-            setParent(SAXUtil.newSAXParser(true, false, false).getXMLReader());
-            SAXSource source = new SAXSource(this, document);
+            xmlFilter.setParent(SAXUtil.newSAXParser(true, false, false).getXMLReader());
+            SAXSource source = new SAXSource(xmlFilter, document);
             out = new DelegatingOutputStream();
             if(file!=null)
                 setFile(file);
