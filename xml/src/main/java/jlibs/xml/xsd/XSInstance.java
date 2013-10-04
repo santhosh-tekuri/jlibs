@@ -322,6 +322,8 @@ public class XSInstance{
                             StringList list = wildcard.getNsConstraintList();
                             int rand = RandomUtil.random(0, list.getLength()-1);
                             uri = list.item(rand);
+                            if(uri==null)
+                                uri = ""; // <xs:any namespace="##local"/> returns nsConstraintList with null
                             break;
                         case XSWildcard.NSCONSTRAINT_NOT:
                             list = wildcard.getNsConstraintList();
