@@ -20,7 +20,7 @@ subprojects {
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
     archivesBaseName = 'jlibs-'+project.name
-    version = '1.0-SNAPSHOT'
+    version = '1.0'
 
     compileJava {
         options.compilerArgs << "-s"
