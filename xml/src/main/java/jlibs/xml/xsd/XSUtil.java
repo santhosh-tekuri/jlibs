@@ -41,6 +41,10 @@ public class XSUtil{
         return nsSupport;
     }
 
+    public static QName getQName(XSObject obj){
+        return getQName(obj, null);
+    }
+
     public static QName getQName(XSObject obj, MyNamespaceSupport nsSupport){
         if(obj instanceof XSAttributeUse)
             obj = ((XSAttributeUse)obj).getAttrDeclaration();
@@ -48,7 +52,7 @@ public class XSUtil{
         if(obj.getName()==null)
             return new QName("");
         String ns = obj.getNamespace()==null ? "" : obj.getNamespace();
-        String prefix = nsSupport.findPrefix(ns);
+        String prefix = nsSupport==null ? "" : nsSupport.findPrefix(ns);
         return new QName(ns, obj.getName(), prefix);
     }
 

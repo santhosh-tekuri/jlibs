@@ -678,15 +678,15 @@ public class XSInstance{
                 System.exit(1);
             }else if(elements.size()==1){
                 XSElementDeclaration elem = elements.get(0);
-                rootElement = new QName(elem.getNamespace(), elem.getName());
+                rootElement = XSUtil.getQName(elem);
             }else{
                 int i = 1;
                 for(XSElementDeclaration elem: elements)
-                    System.err.println(i++ +": "+new QName(elem.getNamespace(), elem.getName()));
+                    System.err.println(i++ +": "+XSUtil.getQName(elem));
                 System.err.print("Select Root Element: ");
                 String line = new BufferedReader(new InputStreamReader(System.in)).readLine();
                 XSElementDeclaration elem = elements.get(Integer.parseInt(line)-1);
-                rootElement = new QName(elem.getNamespace(), elem.getName());
+                rootElement = XSUtil.getQName(elem);
             }
         }
 
