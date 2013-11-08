@@ -584,17 +584,19 @@ public class XSInstance{
 
             public String randomNumber(){
                 if(fractionDigits==0){
+                    // NOTE: min/max facets can have fractional part
+                    //       even though fractionDigits is zero
                     long min = Long.MIN_VALUE;
                     if(minInclusive!=null)
-                        min = Long.parseLong(minInclusive);
+                        min = (long)Double.parseDouble(minInclusive);
                     if(minExclusive!=null)
-                        min = Long.parseLong(minExclusive)+1;
+                        min = (long)Double.parseDouble(minExclusive)+1;
 
                     long max = Long.MAX_VALUE;
                     if(maxInclusive!=null)
-                        max = Long.parseLong(maxInclusive);
+                        max = (long)Double.parseDouble(maxInclusive);
                     if(maxExclusive!=null)
-                        max = Long.parseLong(maxExclusive)-1;
+                        max = (long)Double.parseDouble(maxExclusive)-1;
 
                     return applyDigits(RandomUtil.random(min, max));
                 }else{
