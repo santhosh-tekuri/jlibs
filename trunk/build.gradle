@@ -20,7 +20,7 @@ subprojects {
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
     archivesBaseName = 'jlibs-'+project.name
-    version = '1.0'
+    version = '1.1-SNAPSHOT'
 
     compileJava {
         options.compilerArgs << "-s"
@@ -39,7 +39,8 @@ subprojects {
     repositories {
         mavenCentral()
         mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
-        mavenRepo url: "https://github.com/santhosh-tekuri/maven-repository/raw/master/"
+        mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
+        //mavenRepo url: "https://github.com/santhosh-tekuri/maven-repository/raw/master/"
     }
 
     jar {
