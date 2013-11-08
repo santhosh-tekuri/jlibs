@@ -85,6 +85,8 @@ public class XMLDocument{
     }
 
     public String declarePrefix(String uri){
+        if(uri==null)
+            uri = "";
         String prefix = nsSupport.findPrefix(uri);
         if(prefix==null){
             if(needsNewContext){
@@ -105,10 +107,14 @@ public class XMLDocument{
     }
 
     private QName declareQName(String uri, String localPart){
+        if(uri==null)
+            uri = "";
         return new QName(uri, localPart, declarePrefix(uri));
     }
 
     public String toQName(String uri, String localPart){
+        if(uri==null)
+            uri = "";
         String prefix = declarePrefix(uri);
         return prefix.length()==0 ? localPart : prefix+':'+localPart;
     }
@@ -178,6 +184,8 @@ public class XMLDocument{
     }
 
     public XMLDocument startElement(String uri, String name) throws SAXException{
+        if(uri==null)
+            uri = "";
         finishStartElement();
         elem = declareQName(uri, name);
         return this;
@@ -228,8 +236,11 @@ public class XMLDocument{
     public XMLDocument addAttribute(String uri, String name, String value) throws SAXException{
         if(elem==null)
             throw new SAXException("no start element found to associate this attribute");
-        if(value!=null)
-            attrs.addAttribute(uri==null?"":uri, name, toQName(uri, name), "CDATA", value);
+        if(value!=null){
+            if(uri==null)
+                uri = "";
+            attrs.addAttribute(uri, name, toQName(uri, name), "CDATA", value);
+        }
         return this;
     }
 
