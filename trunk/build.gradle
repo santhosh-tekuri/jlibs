@@ -2,6 +2,9 @@ allprojects{
     defaultTasks 'build'
 }
 
+if(!System.properties["java.version"].startsWith("1.6"))
+	throw new GradleException("Please run gralde with jdk 1.6.X");
+
 new ByteArrayOutputStream().withStream { os ->
     if(file(".svn").exists()){
         exec {
