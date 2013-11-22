@@ -541,10 +541,6 @@ public class XSInstance{
                 if(facet!=null)
                     totalDigits = Integer.parseInt(facet.getLexicalFacetValue());
 
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_TOTALDIGITS);
-                if(facet!=null)
-                    totalDigits = Integer.parseInt(facet.getLexicalFacetValue());
-
                 facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_FRACTIONDIGITS);
                 if(facet!=null)
                     fractionDigits = Integer.parseInt(facet.getLexicalFacetValue());
