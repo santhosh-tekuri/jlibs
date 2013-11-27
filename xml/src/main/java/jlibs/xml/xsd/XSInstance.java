@@ -250,8 +250,14 @@ public class XSInstance{
                         if(complexType.getContentType()==XSComplexTypeDefinition.CONTENTTYPE_SIMPLE)
                             simpleType = complexType.getSimpleType();
                     }
-                    if(simpleType!=null)
-                        doc.addText(generateSampleValue(simpleType, elem.getName()));
+                    if(simpleType!=null){
+                        String sampleValue = null;
+                        if(sampleValueGenerator!=null)
+                            sampleValue = sampleValueGenerator.generateSampleValue(elem, simpleType);
+                        if(sampleValue==null)
+                            sampleValue = generateSampleValue(simpleType, elem.getName());
+                        doc.addText(sampleValue);
+                    }
                     doc.endElement();
                 }catch(SAXException ex){
                     throw new ImpossibleException(ex);
@@ -276,8 +282,12 @@ public class XSInstance{
                                 sampleValue = attr.getConstraintValue();
                             break;
                         default:
-                            if(attr.getRequired() || RandomUtil.randomBoolean(generateOptionalAttributes))
-                                sampleValue = generateSampleValue(decl.getTypeDefinition(), decl.getName());
+                            if(attr.getRequired() || RandomUtil.randomBoolean(generateOptionalAttributes)){
+                                if(sampleValueGenerator!=null)
+                                    sampleValue = sampleValueGenerator.generateSampleValue(decl, decl.getTypeDefinition());
+                                if(sampleValue==null)
+                                    sampleValue = generateSampleValue(decl.getTypeDefinition(), decl.getName());
+                            }
                     }
                     if(sampleValue!=null)
                         doc.addAttribute(decl.getNamespace(), decl.getName(), sampleValue);
@@ -652,6 +662,13 @@ public class XSInstance{
         value = options.getProperty("showContentModel");
         if(value!=null)
             showContentModel = Boolean.parseBoolean(value);
+    }
+
+    public SampleValueGenerator sampleValueGenerator;
+
+    public static interface SampleValueGenerator{
+        public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType);
+        public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType);
     }
 
     public static void main(String[] args) throws Exception{

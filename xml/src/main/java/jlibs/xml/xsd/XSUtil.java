@@ -138,4 +138,118 @@ public class XSUtil{
         }
         return enums;
     }
+
+    public static XSNamespaceItem getNamespaceItem(XSModel schema, String namespace){
+        XSNamespaceItemList list = schema.getNamespaceItems();
+        for(int i=0; i<list.getLength(); i++){
+            XSNamespaceItem item = list.item(i);
+            String ns = item.getSchemaNamespace();
+            if(ns==null)
+                ns = "";
+            if(ns.equals(namespace))
+                return item;
+        }
+        return null;
+    }
+
+    /*-------------------------------------------------[ Find Declaration ]---------------------------------------------------*/
+
+    private static final RuntimeException STOP_SEARCHING = new RuntimeException("STOP_SEARCHING");
+
+    @SuppressWarnings("unchecked")
+    public static XSElementDeclaration findElementDeclaration(XSModel schema, final List<QName> xpath){
+        XSNamespaceItem nsItem = XSUtil.getNamespaceItem(schema, xpath.get(0).getNamespaceURI());
+        if(nsItem==null)
+            return null;
+
+        FilteredTreeNavigator navigator = new FilteredTreeNavigator(new XSNavigator(), new Filter(){
+            @Override
+            public boolean select(Object elem){
+                return elem instanceof XSElementDeclaration;
+            }
+        });
+
+        final XSElementDeclaration declaration[] = new XSElementDeclaration[1];
+
+        Walker walker = new PreorderWalker(nsItem, navigator);
+
+        try{
+            WalkerUtil.walk(walker, new Processor(){
+                int i = 0;
+                @Override
+                public boolean preProcess(Object elem, Path path){
+                    if(path.getParentPath()!=null){
+                        QName qname = XSUtil.getQName((XSElementDeclaration)elem);
+                        if(qname.equals(xpath.get(i))){
+                            i++;
+                            if(i==xpath.size()){
+                                declaration[0] = (XSElementDeclaration)elem;
+                                throw STOP_SEARCHING;
+                            }
+                            return true;
+                        }else
+                            return false;
+                    }
+                    return true;
+                }
+
+                @Override
+                public void postProcess(Object elem, Path path){}
+            });
+        }catch(RuntimeException ex){
+            if(ex!=STOP_SEARCHING)
+                throw ex;
+        }
+
+        return declaration[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    public static XSAttributeDeclaration findAttributeDeclaration(XSModel schema, final List<QName> xpath){
+        XSNamespaceItem nsItem = XSUtil.getNamespaceItem(schema, xpath.get(0).getNamespaceURI());
+        if(nsItem==null)
+            return null;
+
+        FilteredTreeNavigator navigator = new FilteredTreeNavigator(new XSNavigator(), new Filter(){
+            @Override
+            public boolean select(Object elem){
+                return elem instanceof XSElementDeclaration || elem instanceof XSAttributeUse;
+            }
+        });
+
+        final XSAttributeDeclaration declaration[] = new XSAttributeDeclaration[1];
+
+        Walker walker = new PreorderWalker(nsItem, navigator);
+
+        try{
+            WalkerUtil.walk(walker, new Processor(){
+                int i = 0;
+                @SuppressWarnings("ConstantConditions")
+                @Override
+                public boolean preProcess(Object elem, Path path){
+                    if(path.getParentPath()!=null){
+                        QName qname = XSUtil.getQName(elem instanceof XSAttributeUse? ((XSAttributeUse)elem).getAttrDeclaration() : (XSObject)elem);
+                        if(qname.equals(xpath.get(i)) && (i!=xpath.size()-1 || elem instanceof XSAttributeUse)){
+                            i++;
+                            if(i==xpath.size()){
+                                declaration[0] = ((XSAttributeUse)elem).getAttrDeclaration();
+                                throw STOP_SEARCHING;
+                            }
+                            return true;
+                        }else
+                            return false;
+                    }
+                    return true;
+                }
+
+                @Override
+                public void postProcess(Object elem, Path path){}
+            });
+        }catch(RuntimeException ex){
+            if(ex!=STOP_SEARCHING)
+                throw ex;
+        }
+
+        return declaration[0];
+    }
 }
