@@ -46,7 +46,7 @@ public class MyNamespaceSupport extends NamespaceSupport{
      * a number
      */
     public void suggestPrefix(String prefix, String uri){
-        suggested.put(prefix, uri);
+        suggested.put(uri, prefix);
     }
 
     /**
