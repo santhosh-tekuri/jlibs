@@ -58,6 +58,7 @@ public class XMLDocument{
         attrs.clear();
         elemStack.clear();
         elem = null;
+        depth = 0;
         nsSupport.pushContext();
 
         xml.startDocument();
@@ -138,6 +139,11 @@ public class XMLDocument{
     private Stack<QName> elemStack = new Stack<QName>();
     private QName elem;
 
+    int depth = 0;  // document is at 0; root is at 1
+    public int getDepth(){
+        return depth;
+    }
+
     private int marks = -1;
     public int mark() throws SAXException{
         finishStartElement();
@@ -188,6 +194,7 @@ public class XMLDocument{
             uri = "";
         finishStartElement();
         elem = declareQName(uri, name);
+        depth++;
         return this;
     }
 
@@ -275,6 +282,7 @@ public class XMLDocument{
 
     private XMLDocument endElement(QName qname) throws SAXException{
         xml.endElement(qname.getNamespaceURI(), qname.getLocalPart(), toString(qname));
+        depth--;
 
         endPrefixMappings();
         nsSupport.popContext();
