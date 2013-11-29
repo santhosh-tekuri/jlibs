@@ -578,7 +578,7 @@ public class XSInstance{
             }
 
             private String applyDigits(Object obj){
-                String str = String.valueOf(obj);
+                String str = applyExponent(String.valueOf(obj));
                 String number, fraction;
                 int dot = str.indexOf(".");
                 if(dot==-1){
@@ -606,6 +606,56 @@ public class XSInstance{
                 str += number;
                 if(fraction.length()>0)
                     str += '.' + fraction;
+                return str;
+            }
+
+            private String applyExponent(String str){
+                int index = str.indexOf('E');
+                if(index==-1)
+                    return str;
+
+                int exponent = Integer.parseInt(str.substring(index+(str.charAt(index+1)=='+'?2:1)));
+                str = str.substring(0, index);
+
+                boolean negative = false;
+                if(str.charAt(0)=='-'){
+                    negative = true;
+                    str = str.substring(1);
+                }
+
+                if(exponent!=0){
+                    int dot = str.indexOf('.');
+                    String beforeDot, afterDot;
+                    if(dot==-1){
+                        beforeDot = str;
+                        afterDot = "";
+                    }else{
+                        beforeDot = str.substring(0, dot);
+                        afterDot = str.substring(dot+1);
+                    }
+
+                    if(exponent<0){
+                        while(exponent!=0){
+                            if(beforeDot.length()==1)
+                                beforeDot = "0"+beforeDot;
+                            afterDot = beforeDot.substring(beforeDot.length()-1)+afterDot;
+                            beforeDot = beforeDot.substring(0, beforeDot.length()-1);
+                            exponent++;
+                        }
+                    }else{
+                        while(exponent!=0){
+                            if(afterDot.isEmpty())
+                                afterDot = "0";
+                            beforeDot = beforeDot+afterDot.substring(0, 1);
+                            afterDot = afterDot.substring(1);
+                            exponent--;
+                        }
+                    }
+                    str = afterDot.isEmpty() ? beforeDot : beforeDot+"."+afterDot;
+                }
+                if(negative)
+                    str = "-"+str;
+
                 return str;
             }
 
