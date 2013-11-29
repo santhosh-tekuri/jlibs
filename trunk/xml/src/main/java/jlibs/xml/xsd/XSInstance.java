@@ -498,7 +498,7 @@ public class XSInstance{
                 return new SimpleDateFormat(XSD_DATE_FORMAT).format(new Date());
             if("time".equals(name))
                 return new SimpleDateFormat(XSD_TIME_FORMAT).format(new Date());
-            if("dateTime".equals(name)){
+            if("datetime".equals(name)){
                 Date date = new Date();
                 return new SimpleDateFormat(XSD_DATE_FORMAT).format(date)+'T'+new SimpleDateFormat(XSD_TIME_FORMAT).format(date);
             }else{
