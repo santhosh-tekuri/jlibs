@@ -78,6 +78,10 @@ public class XSInstance{
     }
 
     public void generate(XSModel xsModel, QName rootElement, XMLDocument doc){
+        generate(xsModel, rootElement, doc, null, null);
+    }
+
+    public void generate(XSModel xsModel, QName rootElement, XMLDocument doc, String xsiSchemaLocation, String xsiNoNamespaceSchemaLocation){
         String namespace = rootElement.getNamespaceURI();
         XSElementDeclaration root = xsModel.getElementDeclaration(rootElement.getLocalPart(), namespace);
         if(root==null)
@@ -97,7 +101,7 @@ public class XSInstance{
             doc.declarePrefix(Namespaces.URI_XSI);
             if(!rootElement.getNamespaceURI().isEmpty())
                 doc.declarePrefix(rootElement.getPrefix(), rootElement.getNamespaceURI());
-            WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc));
+            WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc, xsiSchemaLocation, xsiNoNamespaceSchemaLocation));
             doc.endDocument();
         }catch(SAXException ex){
             throw new ImpossibleException(ex);
@@ -167,8 +171,22 @@ public class XSInstance{
 
     private class XSSampleVisitor extends ReflectionVisitor<Object, Processor<Object>>{
         private XMLDocument doc;
-        private XSSampleVisitor(XMLDocument doc){
+        private String xsiSchemaLocation;
+        private String xsiNoNamespaceSchemaLocation;
+
+        private XSSampleVisitor(XMLDocument doc, String xsiSchemaLocation, String xsiNoNamespaceSchemaLocation){
             this.doc = doc;
+            this.xsiSchemaLocation = xsiSchemaLocation;
+            this.xsiNoNamespaceSchemaLocation = xsiNoNamespaceSchemaLocation;
+        }
+
+        private void addXSILocations() throws SAXException{
+            if(doc.getDepth()==1){
+                if(xsiSchemaLocation!=null)
+                    doc.addAttribute(Namespaces.URI_XSI, "schemaLocation", xsiSchemaLocation);
+                if(xsiNoNamespaceSchemaLocation!=null)
+                    doc.addAttribute(Namespaces.URI_XSI, "noNamespaceSchemaLocation", xsiNoNamespaceSchemaLocation);
+            }
         }
 
         @Override
@@ -231,6 +249,7 @@ public class XSInstance{
                         }
                     }
                     doc.startElement(elem.getNamespace(), elem.getName());
+                    addXSILocations();
                     return true;
                 }catch(SAXException ex){
                     throw new ImpossibleException(ex);
@@ -355,8 +374,10 @@ public class XSInstance{
                     }
                     if(isAttribute(wildcard, path))
                         doc.addAttribute(uri, "anyAttr", "anyValue");
-                    else
+                    else{
                         doc.startElement(uri, "anyElement");
+                        addXSILocations();
+                    }
                     return true;
                 }catch(SAXException ex){
                     throw new ImpossibleException(ex);
