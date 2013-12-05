@@ -20,7 +20,6 @@ import jlibs.nbp.Feeder;
 import jlibs.nbp.NBChannel;
 import jlibs.nbp.NBParser;
 import jlibs.nbp.NBReaderChannel;
-import org.apache.xerces.impl.XMLEntityManager;
 import org.xml.sax.InputSource;
 
 import java.io.*;
@@ -106,7 +105,7 @@ public class XMLFeeder extends Feeder{
                             */
 
                             // set preference for redirection
-                            XMLEntityManager.setInstanceFollowRedirects(httpCon, true);
+                            httpCon.setInstanceFollowRedirects(true);
                         }
                         inputStream = con.getInputStream();
 
