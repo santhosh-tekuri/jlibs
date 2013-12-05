@@ -11,9 +11,9 @@ new ByteArrayOutputStream().withStream { os ->
             executable = 'svnversion'
             standardOutput = os
         }
-        project.setProperty('svnversion', os.toString().trim().replace(':', '_'));
+        project.ext.svnversion = os.toString().trim().replace(':', '_')
     }else
-        project.setProperty('svnversion', 'unknown');
+        project.ext.svnversion = 'unknown'
 }
 
 subprojects {
@@ -41,9 +41,9 @@ subprojects {
 
     repositories {
         mavenCentral()
-        mavenRepo url: "http://svn.apache.org/repos/asf/tuscany/maven/"
-        mavenRepo url: "http://dl.dropbox.com/u/326301/repository"
-        //mavenRepo url: "https://github.com/santhosh-tekuri/maven-repository/raw/master/"
+        maven { url "http://svn.apache.org/repos/asf/tuscany/maven/" }
+        maven { url "http://dl.dropbox.com/u/326301/repository" }
+        //maven { url "https://github.com/santhosh-tekuri/maven-repository/raw/master/" }
     }
 
     jar {
