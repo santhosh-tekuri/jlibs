@@ -26,7 +26,7 @@ import java.util.ArrayList;
 /**
  * @author Santhosh Kumar T
  */
-public class DOMLSInputList extends ArrayList<LSInput> implements LSInputList{
+public class DOMLSInputList extends ArrayList implements LSInputList{
     @Override
     public int getLength(){
         return size();
@@ -34,7 +34,7 @@ public class DOMLSInputList extends ArrayList<LSInput> implements LSInputList{
 
     @Override
     public LSInput item(int i){
-        return get(i);
+        return (LSInput)get(i);
     }
     
     public DOMInputImpl addSystemID(String systemID){
