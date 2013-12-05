@@ -1,4 +1,4 @@
-LICENSE: LGPL
+LICENSE: http://www.gnu.org/licenses/lgpl-2.1.html
 JAVA   : 1.6+
 
 The 3rdparty libraries used in jlibs are not included in this distribution.
@@ -10,7 +10,7 @@ Dependencies:
 +---------------+--------------+-----------------------------------------------+
 | jlibs-core    |              |                                               |
 | jlibs-jdbc    | jlibs-core   |                                               |
-| jlibs-xml     | jlibs-core   | xercelImpl.jar (version 2.9.1)                |
+| jlibs-xml     | jlibs-core   | xercelImpl.jar (version 2.11.0)                |
 | jlibs-xmldog  | jlibs-xml    | jaxen.jar (version 1.1.1)                     |
 | jlibs-swing   | jlibs-xml    | org-netbeans-swing-outline.jar (netbeans 6.5) |
 | jlibs-examples| jlibs-jdbc   | saxon.jar (version 9.0.0.2)                   |
