@@ -137,7 +137,6 @@ public class XSInstance{
         }
 
         protected Sequence<XSParticle> process(XSModelGroup modelGroup){
-            String str;
             switch(modelGroup.getCompositor()){
                 case XSModelGroup.COMPOSITOR_ALL :
                     XSObjectList particles = modelGroup.getParticles();
@@ -305,11 +304,11 @@ public class XSInstance{
                     switch(attr.getConstraintType()){
                         case XSConstants.VC_FIXED:
                             if(RandomUtil.randomBoolean(generateFixedAttributes))
-                                sampleValue = attr.getConstraintValue();
+                                sampleValue = attr.getValueConstraintValue().getNormalizedValue();
                             break;
                         case XSConstants.VC_DEFAULT:
                             if(RandomUtil.randomBoolean(generateDefaultAttributes))
-                                sampleValue = attr.getConstraintValue();
+                                sampleValue = attr.getValueConstraintValue().getNormalizedValue();
                             break;
                         default:
                             if(attr.getRequired() || RandomUtil.randomBoolean(generateOptionalAttributes)){
