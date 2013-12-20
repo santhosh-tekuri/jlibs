@@ -261,21 +261,32 @@ public class XSInstance{
                 if(path.getRecursionDepth()>2)
                     return;
                 try{
-                    XSSimpleTypeDefinition simpleType = null;
-                    if(elem.getTypeDefinition().getTypeCategory()==XSTypeDefinition.SIMPLE_TYPE)
-                        simpleType = (XSSimpleTypeDefinition)elem.getTypeDefinition();
-                    else{
-                        XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
-                        if(complexType.getContentType()==XSComplexTypeDefinition.CONTENTTYPE_SIMPLE)
-                            simpleType = complexType.getSimpleType();
-                    }
-                    if(simpleType!=null){
-                        String sampleValue = null;
-                        if(sampleValueGenerator!=null)
-                            sampleValue = sampleValueGenerator.generateSampleValue(elem, simpleType);
-                        if(sampleValue==null)
-                            sampleValue = generateSampleValue(simpleType, elem.getName());
-                        doc.addText(sampleValue);
+                    switch(elem.getConstraintType()){
+                        case XSConstants.VC_FIXED:
+                            doc.addText(elem.getValueConstraintValue().getNormalizedValue());
+                            break;
+                        case XSConstants.VC_DEFAULT:
+                            if(RandomUtil.randomBoolean()){
+                                doc.addText(elem.getValueConstraintValue().getNormalizedValue());
+                                break;
+                            }
+                        default:
+                            XSSimpleTypeDefinition simpleType = null;
+                            if(elem.getTypeDefinition().getTypeCategory()==XSTypeDefinition.SIMPLE_TYPE)
+                                simpleType = (XSSimpleTypeDefinition)elem.getTypeDefinition();
+                            else{
+                                XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
+                                if(complexType.getContentType()==XSComplexTypeDefinition.CONTENTTYPE_SIMPLE)
+                                    simpleType = complexType.getSimpleType();
+                            }
+                            if(simpleType!=null){
+                                String sampleValue = null;
+                                if(sampleValueGenerator!=null)
+                                    sampleValue = sampleValueGenerator.generateSampleValue(elem, simpleType);
+                                if(sampleValue==null)
+                                    sampleValue = generateSampleValue(simpleType, elem.getName());
+                                doc.addText(sampleValue);
+                            }
                     }
                     doc.endElement();
                 }catch(SAXException ex){
