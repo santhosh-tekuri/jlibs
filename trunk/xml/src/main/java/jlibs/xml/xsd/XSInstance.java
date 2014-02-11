@@ -99,8 +99,10 @@ public class XSInstance{
         try{
             doc.startDocument();
             doc.declarePrefix(Namespaces.URI_XSI);
-            if(!rootElement.getNamespaceURI().isEmpty())
-                doc.declarePrefix(rootElement.getPrefix(), rootElement.getNamespaceURI());
+            if(rootElement.getPrefix()!=null && !rootElement.getNamespaceURI().isEmpty()){
+                if(!showContentModel || !rootElement.getPrefix().isEmpty())
+                    doc.declarePrefix(rootElement.getPrefix(), rootElement.getNamespaceURI());
+            }
             WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc, xsiSchemaLocation, xsiNoNamespaceSchemaLocation));
             doc.endDocument();
         }catch(SAXException ex){
@@ -212,7 +214,7 @@ public class XSInstance{
         private Processor<XSElementDeclaration> elemProcessor = new Processor<XSElementDeclaration>(){
             @Override
             public boolean preProcess(XSElementDeclaration elem, Path path){
-                if(path.getRecursionDepth()>2)
+                if(path.getRecursionDepth()>maximumRecursionDepth)
                     return false;
                 try{
                     if(showContentModel && elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
@@ -257,7 +259,7 @@ public class XSInstance{
 
             @Override
             public void postProcess(XSElementDeclaration elem, Path path){
-                if(path.getRecursionDepth()>2)
+                if(path.getRecursionDepth()>maximumRecursionDepth)
                     return;
                 try{
                     switch(elem.getConstraintType()){
