@@ -212,9 +212,24 @@ public class XSInstance{
         }
 
         private Processor<XSElementDeclaration> elemProcessor = new Processor<XSElementDeclaration>(){
+            private boolean isRecursionDepthCrossed(XSElementDeclaration elem, Path path){
+                if(path.getRecursionDepth()>maximumRecursionDepth)
+                    return true;
+
+                int typeRecursionDepth = -1;
+                while(path!=null){
+                    if(path.getElement()==elem.getTypeDefinition())
+                        typeRecursionDepth++;
+                    path = path.getParentPath();
+                }
+
+                return typeRecursionDepth>maximumRecursionDepth;
+            };
+
+
             @Override
             public boolean preProcess(XSElementDeclaration elem, Path path){
-                if(path.getRecursionDepth()>maximumRecursionDepth)
+                if(isRecursionDepthCrossed(elem, path))
                     return false;
                 try{
                     if(showContentModel && elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
@@ -259,7 +274,7 @@ public class XSInstance{
 
             @Override
             public void postProcess(XSElementDeclaration elem, Path path){
-                if(path.getRecursionDepth()>maximumRecursionDepth)
+                if(isRecursionDepthCrossed(elem, path))
                     return;
                 try{
                     switch(elem.getConstraintType()){
