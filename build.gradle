@@ -68,7 +68,7 @@ subprojects {
                 pom.whenConfigured { pom->
                     for(dependency in pom.dependencies){
                         if(dependency.groupId=='jlibs')
-                            dependency.artifactId = 'jlibs-'+dependency.artifactId
+                            dependency.artifactId = dependency.artifactId
                     }
                 }
             }
