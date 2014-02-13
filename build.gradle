@@ -65,12 +65,6 @@ subprojects {
         repositories {
             mavenDeployer {
                 repository(url: new File(projectDir, "../build/repo").toURL().toString())
-                pom.whenConfigured { pom->
-                    for(dependency in pom.dependencies){
-                        if(dependency.groupId=='jlibs')
-                            dependency.artifactId = dependency.artifactId
-                    }
-                }
             }
         }
     }
