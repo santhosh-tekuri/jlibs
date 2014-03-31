@@ -15,8 +15,6 @@
 
 package jlibs.core.graph;
 
-import java.util.IdentityHashMap;
-
 /**
  * @author Santhosh Kumar T
  */
@@ -93,7 +91,7 @@ public final class Path{
         Object array[] = new Object[getLength()];
         Path path = this;
         for(int i=getLength(); i>0; i--){
-            array[--i] = path.elem;
+            array[i-1] = path.elem;
             path = path.parentPath;
         }
         return array;
