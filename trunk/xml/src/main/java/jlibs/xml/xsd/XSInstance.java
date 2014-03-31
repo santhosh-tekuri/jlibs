@@ -22,6 +22,7 @@ import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.sequences.RepeatSequence;
 import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.OS;
 import jlibs.core.util.CollectionUtil;
@@ -32,6 +33,7 @@ import jlibs.xml.xsd.display.XSDisplayFilter;
 import org.apache.xerces.xs.*;
 import org.xml.sax.SAXException;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
@@ -533,7 +535,12 @@ public class XSInstance{
                 count = count==null ? 1 : ++count;
                 counters.put(hint, count);
                 String countStr = count.toString();
+
+                XSFacet lengthFacet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_LENGTH);
+
                 XSFacet facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MINLENGTH);
+                if(facet==null)
+                    facet = lengthFacet;
                 if(facet!=null){
                     int len = Integer.parseInt(facet.getLexicalFacetValue());
                     len -= hint.length();
@@ -545,6 +552,8 @@ public class XSInstance{
                     }
                 }
                 facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXLENGTH);
+                if(facet==null)
+                    facet = lengthFacet;
                 if(facet!=null){
                     int maxLen = Integer.parseInt(facet.getLexicalFacetValue());
                     int len = maxLen;
@@ -558,7 +567,12 @@ public class XSInstance{
                         }
                     }
                 }
-                return hint+countStr;
+                String value = hint+countStr;
+
+                if("base64binary".equals(name))
+                    return DatatypeConverter.printBase64Binary(value.getBytes(IOUtil.UTF_8));
+                else
+                    return value;
             }
         }
 
