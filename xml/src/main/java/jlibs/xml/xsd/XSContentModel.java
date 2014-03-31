@@ -20,7 +20,7 @@ import jlibs.core.graph.Processor;
 import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.core.graph.walkers.PreorderWalker;
-import jlibs.xml.sax.helpers.MyNamespaceSupport;
+import jlibs.xml.sax.XMLDocument;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSModelGroup;
@@ -31,7 +31,7 @@ import org.apache.xerces.xs.XSParticle;
  */
 public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>{
     private StringBuilder buff = new StringBuilder();
-    private MyNamespaceSupport nsSupport;
+    private XMLDocument doc;
     
     @Override
     protected Processor<Object> getDefault(Object elem){
@@ -100,8 +100,8 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
         public boolean preProcess(XSElementDeclaration elem, Path path){
             appendCompositor(path);
             String uri = elem.getNamespace()==null ? "" : elem.getNamespace();
-            nsSupport.declarePrefix(uri);
-            buff.append(nsSupport.toQName(uri, elem.getName()));
+            doc.declarePrefix(uri);
+            buff.append(doc.toQName(uri, elem.getName()));
             appendCardinality(path);
             return false;
         }
@@ -111,11 +111,11 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
     };
 
     @SuppressWarnings("unchecked")
-    public String toString(XSComplexTypeDefinition complexType, MyNamespaceSupport nsSupport){
+    public String toString(XSComplexTypeDefinition complexType, XMLDocument doc){
         buff.setLength(0);
-        this.nsSupport = nsSupport;
+        this.doc = doc;
         WalkerUtil.walk(new PreorderWalker(complexType, new XSNavigator()), this);
-        this.nsSupport = null;
+        this.doc = null;
         return buff.toString();
     }
 }

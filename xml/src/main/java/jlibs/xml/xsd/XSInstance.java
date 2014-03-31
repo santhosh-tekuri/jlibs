@@ -237,7 +237,7 @@ public class XSInstance{
                         switch(complexType.getContentType()){
                             case XSComplexTypeDefinition.CONTENTTYPE_ELEMENT:
                             case XSComplexTypeDefinition.CONTENTTYPE_MIXED:
-                                String contentModel = new XSContentModel().toString(complexType, doc.getNamespaceSupport());
+                                String contentModel = new XSContentModel().toString(complexType, doc);
                                 boolean showContentModel = false;
                                 for(char ch: "?*+|;[".toCharArray()){
                                     if(contentModel.indexOf(ch)!=-1){
