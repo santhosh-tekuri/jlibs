@@ -16,15 +16,10 @@
 package jlibs.xml.sax.dog.sniff;
 
 import jlibs.xml.Namespaces;
-import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.DefaultHandler2;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 /**
  * @author Santhosh Kumar T
@@ -89,19 +84,5 @@ public final class SAXHandler extends DefaultHandler2{
     public void comment(char[] ch, int start, int length) throws SAXException{
         event.onText();
         event.onComment(ch, start, length);
-    }
-
-    private static SAXParserFactory factory;
-    private static final ThreadLocal<SAXParser> saxParserLocal = new ThreadLocal<SAXParser>();
-
-    private SAXParser getParser() throws ParserConfigurationException, SAXException{
-        SAXParser parser = saxParserLocal.get();
-        if(parser==null){
-            if(factory==null)
-                factory = SAXUtil.newSAXFactory(true, false, false);
-            parser = factory.newSAXParser();
-            saxParserLocal.set(parser);
-        }
-        return parser;
     }
 }
