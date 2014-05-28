@@ -23,6 +23,7 @@
 
     <target name="jlibs-xml" depends="jlibs-core" description="download dependencies reqd by jibs-xml">
         <dependency repository="${ibiblio.repository}" groupid="xerces" artifactid="xercesImpl" version="2.11.0"/>
+        <dependency repository="${ibiblio.repository}" groupid="xml-apis" artifactid="xml-apis" version="1.4.01"/>
     </target>
 
     <target name="jlibs-swing" depends="jlibs-xml" description="download dependencies reqd by jibs-swing">
