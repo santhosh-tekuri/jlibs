@@ -3,3 +3,14 @@ dependencies {
     compile "jline:jline:1.0@jar"
     compile "com.fifesoft:rsyntaxtextarea:2.5.0@jar"
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-wadl"
+                description "wadl terminal"
+            }
+        }
+    }
+}

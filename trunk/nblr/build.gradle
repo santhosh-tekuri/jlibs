@@ -5,3 +5,13 @@ dependencies {
     compile ("org.netbeans.api:org-openide-util:RELEASE65@jar")
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-nblr"
+                description "Non-Blocking Language Recognition"
+            }
+        }
+    }
+}

@@ -9,3 +9,13 @@ dependencies {
     compile ("org.hsqldb:hsqldb:2.0.0@jar")
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-examples"
+                description "examples showing how to uses jlibs libraries"
+            }
+        }
+    }
+}

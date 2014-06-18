@@ -9,3 +9,13 @@ dependencies {
     }
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-xmldog"
+                description "SAX based XPath 1.0 Engine"
+            }
+        }
+    }
+}

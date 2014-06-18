@@ -3,3 +3,14 @@ jar {
         attributes 'Main-Class': 'jlibs.util.logging.LogParser'
     }
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-greplog"
+                description "Command line grep tool for log files"
+            }
+        }
+    }
+}

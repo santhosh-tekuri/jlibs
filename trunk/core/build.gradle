@@ -6,3 +6,14 @@ test {
     useTestNG()
     options.suites("src/test/resources/testng.xml")
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-core"
+                description "core utilities"
+            }
+        }
+    }
+}
