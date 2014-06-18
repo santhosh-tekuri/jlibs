@@ -125,9 +125,9 @@
 
     <repositories>
         <repository>
-            <id>Jlibs</id>
-            <name>JLibs Repository</name>
-            <url>http://dl.dropbox.com/u/326301/repository</url>
+            <id>Netbeans</id>
+            <name>Netbeans Repository</name>
+            <url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

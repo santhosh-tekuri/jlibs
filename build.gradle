@@ -42,7 +42,7 @@ subprojects {
     repositories {
         mavenCentral()
         maven { url "http://svn.apache.org/repos/asf/tuscany/maven/" }
-        maven { url "http://dl.dropbox.com/u/326301/repository" }
+        maven { url "http://bits.netbeans.org/nexus/content/groups/netbeans" }
         //maven { url "https://github.com/santhosh-tekuri/maven-repository/raw/master/" }
     }
 
