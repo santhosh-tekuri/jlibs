@@ -40,10 +40,10 @@ Now you have create `filter.xml` which tells what to extract from log file.
 
 filter.xml
 {{{
-<and>
+<or>
     <field name="level">WARNING</field>
     <field name="level">ERROR</field>
-</and>
+</or>
 }}}
 now run greplog command as follows:
 {{{
@@ -87,7 +87,7 @@ to grep all logrecords following the first logrecord whose message contains<br>
 
 {{{
 <following includeSelf="true">
-    <message>(?m)(?s)^.*Exception: .*$</message>
+    <message>(?m)(?s)^.*NullPointerException: .*$</message>
 </following>
 }}}
 
@@ -96,7 +96,7 @@ similarly to grep all logrecords preceding the first logrecord whose message con
 
 {{{
 <preceding includeSelf="true">
-    <message>(?m)(?s)^.*Exception: .*$</message>
+    <message>(?m)(?s)^.*NullPointerException: .*$</message>
 </preceding>
 }}}
 
