@@ -1,0 +1,10 @@
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-nbp"
+                description "Non-Blocking Parser"
+            }
+        }
+    }
+}

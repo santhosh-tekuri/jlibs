@@ -5,3 +5,14 @@ dependencies {
 tasks.withType(Compile) {
     options.compilerArgs << "-proc:none"
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-jdbc"
+                description "J2EE DAO Pattern made easier"
+            }
+        }
+    }
+}

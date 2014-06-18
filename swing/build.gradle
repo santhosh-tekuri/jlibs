@@ -3,3 +3,13 @@ dependencies {
     compile ("org.netbeans.api:org-netbeans-swing-outline:RELEASE65@jar")
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-swing"
+                description "swing utilities"
+            }
+        }
+    }
+}

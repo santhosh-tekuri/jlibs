@@ -5,3 +5,14 @@ dependencies {
         transitive = true
     }
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-xml"
+                description "xml utilities"
+            }
+        }
+    }
+}
