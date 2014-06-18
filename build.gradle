@@ -52,13 +52,38 @@ subprojects {
         }
     }
 
+    javadoc {
+        configure(options) {
+            links "http://download.oracle.com/javase/6/docs/api/"
+            links "http://download.oracle.com/javaee/6/api/"
+
+            bottom '<link href="{@docRoot}/resources/prettify.css" type="text/css" rel="stylesheet" />'+
+                    '<script type="text/javascript" src="{@docRoot}/resources/prettify.js"></script>'+
+                    '<script language="javascript">'+
+                        'window.onload = function(){ prettyPrint(); }'+
+                    '</script>'
+        }
+        copy{
+            from '../src/main/javadoc/resources'
+            into 'build/docs/javadoc/resources'
+            include '**/*.*'
+        }
+    }
+    
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from 'build/docs/javadoc'
+    }
+    
     task sourcesJar(type: Jar, dependsOn:classes) {
         classifier = 'sources'
         from sourceSets.main.allSource
     }
 
     artifacts {
+        archives jar
         archives sourcesJar
+        archives javadocJar
     }
 
     uploadArchives {
