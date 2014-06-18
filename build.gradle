@@ -19,6 +19,7 @@ new ByteArrayOutputStream().withStream { os ->
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'signing'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -86,9 +87,14 @@ subprojects {
         archives javadocJar
     }
 
+    signing {
+        sign configurations.archives
+    }
+
     uploadArchives {
         repositories {
             mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
                 repository(url: new File(projectDir, "../build/repo").toURL().toString())
                 pom.project {
                     url "http://jlibs.googlecode.com"
