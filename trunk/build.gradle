@@ -65,6 +65,26 @@ subprojects {
         repositories {
             mavenDeployer {
                 repository(url: new File(projectDir, "../build/repo").toURL().toString())
+                pom.project {
+                    url "http://jlibs.googlecode.com"
+                    scm {
+                        url "scm:svn:https://jlibs.googlecode.com/svn/trunk/jlibs"
+                        connection "scm:svn:https://jlibs.googlecode.com/svn/trunk/jlibs"
+                    }
+                    licenses {
+                        license {
+                            name "GNU Lesser General Public License"
+                            url "http://www.gnu.org/licenses/lgpl.html"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id "santhosh"
+                            name "Santhosh Kumar Tekuri"
+                            email "santhosh.tekuri@gmail.com"
+                        }
+                    }                    
+                }
             }
         }
     }

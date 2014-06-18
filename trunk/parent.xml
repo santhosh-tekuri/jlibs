@@ -17,8 +17,7 @@
     
     <scm>
         <connection>scm:svn:https://jlibs.googlecode.com/svn/trunk/jlibs</connection>
-        <developerConnection>scm:svn:http://jlibs.googlecode.com/svn/trunk/jlibs</developerConnection>
-        <tag>HEAD</tag>
+        <url>scm:svn:http://jlibs.googlecode.com/svn/trunk/jlibs</url>
     </scm>
 
     <licenses>
@@ -27,6 +26,14 @@
             <url>http://www.gnu.org/licenses/lgpl.html</url>
         </license>
     </licenses>
+    
+    <developers>
+        <developer>
+            <id>santhosh</id>
+            <name>Santhosh Kumar Tekuri</name>
+            <email>santhosh.tekuri@gmail.com</email>
+        </developer>
+    </developers>
     
     <build>
         <finalName>${project.artifactId}</finalName>
