@@ -61,6 +61,10 @@ public class NamespaceReplacer extends SAXDelegate{
         String value = map.get(namespace);
         return value==null ? namespace : value;
     }
+
+    protected String translateAttribute(String namespace, Map<String, String> map){
+        return namespace.isEmpty() ? namespace : translate(namespace, map);
+    }
     
     private AttributeReplacer attributeReplacer = new AttributeReplacer();
     private Attribute2Replacer attribute2Replacer = new Attribute2Replacer();
@@ -107,22 +111,18 @@ public class NamespaceReplacer extends SAXDelegate{
         super.startElement(uri, localName, qName, replace(atts));
     }
 
-    protected String translate(String qName, MyNamespaceSupport from, MyNamespaceSupport to){
+    protected String translateAttribute(String qName, MyNamespaceSupport from, MyNamespaceSupport to){
         if(from==null)
             return qName;
-        String prefix, localName;
         int colon = qName.indexOf(':');
-        if(colon==-1){
-            prefix = "";
-            localName = qName;
-        }else{
-            prefix = qName.substring(0, colon);
-            localName = qName.substring(colon+1);
-        }
+        if(colon==-1)
+            return qName;
+        String prefix = qName.substring(0, colon);
+        String localName = qName.substring(colon+1);
         String uri = from.findURI(prefix);
         return to.toQName(uri, localName);
     }
-    
+
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
         uri = translate(uri, old2new);
@@ -149,7 +149,7 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public String getURI(int index){
-            return translate(delegate.getURI(index), old2new);
+            return translateAttribute(delegate.getURI(index), old2new);
         }
 
         @Override
@@ -159,7 +159,7 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public String getQName(int index){
-            return translate(delegate.getQName(index), oldNSSupport, newNSSupport);
+            return translateAttribute(delegate.getQName(index), oldNSSupport, newNSSupport);
         }
 
         @Override
@@ -174,17 +174,17 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public int getIndex(String uri, String localName){
-            return delegate.getIndex(translate(uri, new2old), localName);
+            return delegate.getIndex(translateAttribute(uri, new2old), localName);
         }
 
         @Override
         public int getIndex(String qName){
-            return delegate.getIndex(translate(qName, newNSSupport, oldNSSupport));
+            return delegate.getIndex(translateAttribute(qName, newNSSupport, oldNSSupport));
         }
 
         @Override
         public String getType(String uri, String localName){
-            return delegate.getType(translate(uri, new2old), localName);
+            return delegate.getType(translateAttribute(uri, new2old), localName);
         }
 
         @Override
@@ -194,12 +194,12 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public String getValue(String uri, String localName){
-            return delegate.getValue(translate(uri, new2old), localName);
+            return delegate.getValue(translateAttribute(uri, new2old), localName);
         }
 
         @Override
         public String getValue(String qName){
-            return delegate.getValue(translate(qName, newNSSupport, oldNSSupport));
+            return delegate.getValue(translateAttribute(qName, newNSSupport, oldNSSupport));
         }
     }
 
@@ -222,7 +222,7 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public boolean isDeclared(String uri, String localName){
-            return delegate.isDeclared(translate(uri, new2old), localName);
+            return delegate.isDeclared(translateAttribute(uri, new2old), localName);
         }
 
         @Override
@@ -232,12 +232,12 @@ public class NamespaceReplacer extends SAXDelegate{
 
         @Override
         public boolean isSpecified(String uri, String localName){
-            return delegate.isSpecified(translate(uri, new2old), localName);
+            return delegate.isSpecified(translateAttribute(uri, new2old), localName);
         }
 
         @Override
         public boolean isSpecified(String qName){
-            return delegate.isSpecified(translate(qName, newNSSupport, oldNSSupport));
+            return delegate.isSpecified(translateAttribute(qName, newNSSupport, oldNSSupport));
         }
     }
 
