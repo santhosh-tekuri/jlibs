@@ -23,6 +23,146 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * {@code TemplateMatcher} is a simple template engine provided with jlibs.
+ * <pre class="prettyprint">
+ * import jlibs.core.util.regex.TemplateMatcher;
+ *
+ * String msg = "Hai ${user}, your mail to ${email} has been sent successfully.";
+ *
+ * TemplateMatcher matcher = new TemplateMatcher("${", "}");
+ *
+ * Map<String, String> vars = new HashMap<String, String>();
+ * vars.put("user", "santhosh");
+ * vars.put("email", "scott@gmail.com");
+ * System.out.println(matcher.replace(msg, vars));
+ * </pre>
+ * prints following:
+ * <pre class="prettyprint">
+ * Hai santhosh, your mail to scott@gmail.com has been sent successfully.
+ * </pre>
+ *
+ * The two arguments to {@code TemplateMatcher} are {@code leftBrace} and {@code rightBrace}.<br>
+ * For example:
+ * <pre class="prettyprint">
+ * String msg = "Hai ___user___, your mail to ___email___ has been sent successfully.";
+ * TemplateMatcher matcher = new TemplateMatcher("___", "___");
+ *
+ * Map<String, String> vars = new HashMap<String, String>();
+ * vars.put("user", "santhosh");
+ * vars.put("email", "scott@gmail.com");
+ * System.out.println(matcher.replace(msg, vars));
+ * </pre>
+ * also prints the same output.
+ * <p>
+ * <b>NOTE: </b>if a variables resolves to {@code null}, then it appears as it is in result string
+ * </p>
+ * Right Brace is optional. in such case use {@code new TemplateMatcher(leftBrace)}:
+ * <pre class="prettyprint">
+ * String msg = "Hai $user, your mail to $email has been sent successfully.";
+ *
+ * TemplateMatcher matcher = new TemplateMatcher("$");
+ *
+ * Map<String, String> vars = new HashMap<String, String>();
+ * vars.put("user", "santhosh");
+ * vars.put("email", "scott@gmail.com");
+ * System.out.println(matcher.replace(msg, vars));
+ * </pre>
+ * also prints the same output;
+ * <p>
+ * <b>Variable Resolution:</b>
+ * </p>
+ * you can also resolve variables dynamically:
+ * <pre class="prettyprint">
+ * String msg = "Hai ${user.name}, you are using JVM from ${java.vendor}.";
+ *
+ * TemplateMatcher matcher = new TemplateMatcher("${", "}");
+ * String result = matcher.replace(msg, new TemplateMatcher.VariableResolver(){
+ *     &#064;Override
+ *     public String resolve(String variable){
+ *         return System.getProperty(variable);
+ *     }
+ * });
+ * </pre>
+ * prints
+ * <pre class="prettyprint">
+ * Hai santhosh, you are using JVM from Apple Inc..
+ * </pre>
+ * {@code VariableResolver} interface contains single method:
+ * <pre class="prettyprint">
+ * public String resolve(String variable)
+ * </pre>
+ * <p>
+ * <b>Using with writers:</b>
+ * </p>
+ * Let us say you have file {@code template.txt} which contains:
+ * <pre class="prettyprint">
+ * Hai ${user},
+ *     your mail to ${email} has been sent successfully.
+ * </pre>
+ * running the following code:
+ * <pre class="prettyprint">
+ * TemplateMatcher matcher = new TemplateMatcher("${", "}");
+ *
+ * Map<String, String> vars = new HashMap<String, String>();
+ * vars.put("user", "santhosh");
+ * vars.put("email", "scott@gmail.com");
+ * matcher.replace(new FileReader("templte.txt"), new FileWriter("result.txt"), vars);
+ * </pre>
+ * will creates file {@code result.txt} with following content:
+ * <pre class="prettyprint">
+ * Hai santhosh,
+ *     your mail to scott@gmail.com has been sent successfully.
+ * </pre>
+ * <p>
+ * <b>Copying Files/Directories:</b>
+ * </p>
+ * {@code TemplateMatcher} provides method to copy files/directories:
+ * <pre class="prettyprint">
+ * public void copyInto(File source, File targetDir, Map<String, String> variables) throws IOException;
+ * </pre>
+ * Name of each file and directory is treated as a template.<br>
+ * If name of directory is ${xyz} after applying template, if resolves to "a/b/c",<br>
+ * then it expands into the directory structure a/b/c;
+ *
+ * for example we have following directory structure:
+ * <pre class="prettyprint">
+ * ${root}
+ *   |- ${class}.java
+ * </pre>
+ * and content of ${class}.java file is:
+ * <pre class="prettyprint">
+ * package ${rootpackage};
+ *
+ * public class ${class} extends Comparator{
+ *
+ * }
+ * </pre>
+ * now running following code:
+ * <pre class="prettyprint">
+ * TemplateMatcher matcher = new TemplateMatcher("${", "}");
+ *
+ * Map<String, String> vars = new HashMap<String, String>();
+ * vars.put("root", "org/example");
+ * vars.put("rootpackage", "org.example");
+ * vars.put("class", "MyClass");
+ *
+ * matcher.copyInto(new File("${root}"), new File("."), vars);
+ * </pre>
+ * creates:
+ * <pre class="prettyprint">
+ * org
+ *   |-example
+ *     |-MyClass.java
+ * </pre>
+ * and content of MyClass.java will be:
+ * <pre class="prettyprint">
+ * package org.example;
+ *
+ * public class MyClass extends Comparator{
+ *
+ * }
+ * </pre>
+ *
  * @author Santhosh Kumar T
  */
 public class TemplateMatcher{
