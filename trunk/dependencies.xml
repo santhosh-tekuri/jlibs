@@ -20,8 +20,9 @@
 
     <target name="jlibs-core" description="download dependencies reqd by jibs-core"/>
     <target name="jlibs-jdbc" description="download dependencies reqd by jibs-jdbc"/>
+    <target name="jlibs-nbp" description="download dependencies reqd by jibs-nbp"/>
 
-    <target name="jlibs-xml" depends="jlibs-core" description="download dependencies reqd by jibs-xml">
+    <target name="jlibs-xml" depends="jlibs-core, jlibs-nbp" description="download dependencies reqd by jibs-xml">
         <dependency repository="${central.repository}" groupid="xerces" artifactid="xercesImpl" version="2.11.0"/>
         <dependency repository="${central.repository}" groupid="xml-apis" artifactid="xml-apis" version="1.4.01"/>
     </target>
@@ -34,7 +35,7 @@
         <dependency repository="${central.repository}" groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
     </target>
 
-    <target name="jlibs-nblr" description="download dependencies reqd by jibs-nblr">
+    <target name="jlibs-nblr" depends="jlibs-xml, jlibs-swing" description="download dependencies reqd by jibs-nblr">
         <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-openide-util" version="RELEASE65"/>
         <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-netbeans-api-visual" version="RELEASE65"/>
     </target>
