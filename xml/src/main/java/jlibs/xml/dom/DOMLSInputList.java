@@ -26,6 +26,7 @@ import java.util.ArrayList;
 /**
  * @author Santhosh Kumar T
  */
+@SuppressWarnings("unchecked")
 public class DOMLSInputList extends ArrayList implements LSInputList{
     @Override
     public int getLength(){
