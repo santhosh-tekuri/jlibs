@@ -93,7 +93,7 @@ public class BeanUtil{
      *
      * @see #getGetterMethod(Class, String, Class)
      */
-    public static Method getGetterMethod(Class beanClass, String property){
+    public static Method getGetterMethod(Class<?> beanClass, String property){
         try{
             return beanClass.getMethod(GET+getMethodSuffix(property));
         }catch(NoSuchMethodException ex1){
@@ -116,7 +116,7 @@ public class BeanUtil{
      *
      * @see #getGetterMethod(Class, String)
      */
-    public static Method getGetterMethod(Class beanClass, String property, Class propertyType){
+    public static Method getGetterMethod(Class<?> beanClass, String property, Class propertyType){
         try{
             try{
                 if(propertyType==boolean.class)
@@ -142,7 +142,7 @@ public class BeanUtil{
      *
      * @see #getSetterMethod(Class, String, Class)
      */
-    public static Method getSetterMethod(Class beanClass, String property){
+    public static Method getSetterMethod(Class<?> beanClass, String property){
         Method getter = getGetterMethod(beanClass, property);
         if(getter==null)
             return null;
@@ -164,7 +164,7 @@ public class BeanUtil{
      *
      * @see #getSetterMethod(Class, String)
      */
-    public static Method getSetterMethod(Class beanClass, String property, Class propertyType){
+    public static Method getSetterMethod(Class<?> beanClass, String property, Class propertyType){
         try{
             return beanClass.getMethod(SET+getMethodSuffix(property), propertyType);
         } catch(NoSuchMethodException ex){
@@ -182,7 +182,7 @@ public class BeanUtil{
      * 
      * @return  null if the property is not found. otherwise returns the type of the <code>property</code>
      */
-    public static Class getPropertyType(Class beanClass, String property){
+    public static Class getPropertyType(Class<?> beanClass, String property){
         Method getter = getGetterMethod(beanClass, property);
         if(getter==null)
             return null;
