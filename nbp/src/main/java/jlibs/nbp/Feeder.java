@@ -68,20 +68,45 @@ public class Feeder{
 
     /*-------------------------------------------------[ Eating ]---------------------------------------------------*/
 
+    private void closeAll(){
+        Feeder feeder = this;
+        while(feeder.parent!=null)
+            feeder = feeder.parent;
+        while(feeder!=null){
+            try{
+                if(feeder.channel!=null)
+                    feeder.channel.close();
+            }catch(IOException ignore){
+                // ignore
+            }
+            feeder = feeder.child;
+        }
+    }
+
     public final Feeder feed() throws IOException{
         try{
-            Feeder current = this;
-            Feeder next;
-            do{
-                next = current.read();
-                if(next==current)
-                    return current;
-                current = next;
-            }while(current!=null);
-        }catch(CharacterCodingException ex){
-            throw parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
+            try{
+                Feeder current = this;
+                Feeder next;
+                do{
+                    next = current.read();
+                    if(next==current)
+                        return current;
+                    current = next;
+                }while(current!=null);
+            }catch(CharacterCodingException ex){
+                throw parser.ioError(ex.getClass().getSimpleName()+": "+ex.getMessage());
+            }
+            return null;
+        }catch(Throwable thr){
+            closeAll();
+            if(thr instanceof RuntimeException)
+                throw (RuntimeException)thr;
+            else if(thr instanceof Error)
+                throw (Error)thr;
+            else
+                throw (IOException)thr;
         }
-        return null;
     }
 
     private boolean readMore = true;
