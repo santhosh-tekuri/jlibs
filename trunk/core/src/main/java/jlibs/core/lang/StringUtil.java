@@ -27,6 +27,11 @@ import java.util.StringTokenizer;
  * @author Santhosh Kumar T
  */
 public class StringUtil{
+    @SuppressWarnings("StringEquality")
+    public static boolean equalsIgnoreCase(String s1, String s2){
+        return s1==s2 || (s1!=null && s2!=null && s1.equalsIgnoreCase(s2));
+    }
+
     /**
      * if <code>obj</code> is null, returns empty string.
      * otherwise returns <code>obj.toString()</code>
@@ -94,7 +99,7 @@ public class StringUtil{
      * @see jlibs.core.io.FileUtil#findFreeFile(java.io.File dir, String pattern, boolean tryEmptyVar)
      */
     public static String suggest(Filter<String> filter, String pattern, boolean tryEmptyVar){
-        if(pattern.indexOf("${i}")==-1)
+        if(!pattern.contains("${i}"))
             throw new IllegalArgumentException("pattern must have ${i}");
 
         TemplateMatcher matcher = new TemplateMatcher("${", "}");
@@ -261,7 +266,7 @@ public class StringUtil{
     }
     
     public static String toLiteral(CharSequence str, boolean useRaw){
-        StringBuffer buf = new StringBuffer(str.length()+25);
+        StringBuilder buf = new StringBuilder(str.length()+25);
         for(int i=0,len=str.length(); i<len; i++){
             char c = str.charAt(i);
             switch(c){
@@ -288,7 +293,7 @@ public class StringUtil{
     }
 
     public static String fromLiteral(String str){
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         for(int i=0,len=str.length(); i<len; i++){
             char c = str.charAt(i);
