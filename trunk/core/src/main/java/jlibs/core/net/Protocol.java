@@ -18,31 +18,37 @@ package jlibs.core.net;
 /**
  * @author Santhosh Kumar T
  */
-public enum Protocols{
-    FTP(21, "File Transfer Protocol"),
-    SSH(22, "Secure Shell"),
-    TELNET(23, "Telnet protocol"),
-    SMTP(25, "Simple Mail Transfer Protocol"),
-    HTTP(80, "Hypertext Transfer Protocol"),
-    HTTPS(443, "Hypertext Transfer Protocol Secure"),
-    POP3(110, "Post Office Protocol v3"),
-    IMAP(143, "Internet Message Access Protocol"),
-    RMI(1099, "Remote Method Invocation"),
-    CVS(2401, "Concurrent Versions System"),
-    SVN(3690, "Subversion"),
+public enum Protocol{
+    TCP(-1, false, "Transmission Control Protocol"),
+    SSL(-1, true, "Secure Socket Layer"),
+    FTP(21, false, "File Transfer Protocol"),
+    SSH(22, true, "Secure Shell"),
+    TELNET(23, false, "Telnet protocol"),
+    SMTP(25, false, "Simple Mail Transfer Protocol"),
+    HTTP(80, false, "Hypertext Transfer Protocol"),
+    HTTPS(443, true, "Hypertext Transfer Protocol Secure"),
+    POP3(110, false, "Post Office Protocol v3"),
+    IMAP(143, false, "Internet Message Access Protocol"),
+    RMI(1099, false, "Remote Method Invocation"),
+    CVS(2401, false, "Concurrent Versions System"),
+    SVN(3690, false, "Subversion"),
     ;
 
     private int port;
     private String displayName;
-    Protocols(int port, String displayName){
+    private boolean secured;
+    Protocol(int port, boolean secured, String displayName){
         this.port = port;
+        this.secured = secured;
         this.displayName = displayName;
     }
 
+    public boolean secured(){
+        return secured;
+    }
     public int port(){
         return port;
     }
-
     public String displayName(){
         return displayName;
     }
