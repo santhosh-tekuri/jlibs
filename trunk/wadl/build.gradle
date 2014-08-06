@@ -14,3 +14,7 @@ uploadArchives {
         }
     }
 }
+
+license{
+    exclude "jlibs/wadl/model/*.java"
+}

@@ -17,3 +17,12 @@ uploadArchives {
         }
     }
 }
+
+license {
+    exclude 'i18n/ClassBundle.java'
+    exclude 'i18n/Invalid*Bundle.java'
+    exclude 'i18n/Missing*Bundle.java'
+    exclude 'i18n/DuplicateKey*Bundle.java'
+    exclude 'i18n/MethodSignatureClash*Bundle.java'
+    exclude 'i18n/ArgumentCountMismatchBundle.java'
+}

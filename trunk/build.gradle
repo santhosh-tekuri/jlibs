@@ -1,3 +1,14 @@
+import nl.javadude.gradle.plugins.license.License
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
+    }
+}
+
 allprojects{
     defaultTasks 'build'
 }
@@ -20,12 +31,21 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'signing'
+    apply plugin: 'license'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
     archivesBaseName = 'jlibs-'+project.name
     group = "com.googlecode.jlibs";
     version = '1.1-SNAPSHOT'
+
+    license {
+        header rootProject.file('src/etc/header.txt')
+        strictCheck true
+        skipExistingHeaders true
+        exclude 'META-INF/services/**'
+        exclude '**/*.xml'
+    }
 
     compileJava {
         options.compilerArgs << "-s"

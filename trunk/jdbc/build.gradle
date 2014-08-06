@@ -2,7 +2,7 @@ dependencies {
     compile project(':core')
 }
 
-tasks.withType(Compile) {
+tasks.withType(JavaCompile) {
     options.compilerArgs << "-proc:none"
 }
 

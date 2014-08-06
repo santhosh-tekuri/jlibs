@@ -16,3 +16,7 @@ uploadArchives {
         }
     }
 }
+
+license {
+    exclude '**/XMLScanner.java'
+}
