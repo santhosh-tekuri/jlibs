@@ -1,0 +1,146 @@
+/*
+ * JLibs: Common Utilities for Java
+ * Copyright (C) 2009  Santhosh Kumar T <santhosh.tekuri@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ */
+
+package jlibs.nio.util;
+
+import jlibs.nio.async.LineOverflowException;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+/**
+ * @author Santhosh Kumar Tekuri
+ */
+public class Line{
+    private char chars[];
+    private int count;
+
+    public Line(int size){
+        chars = new char[size];
+    }
+
+    public int length(){
+        return count;
+    }
+
+    public char charAt(int i){
+        if(i<0 || i>=count)
+            throw new IndexOutOfBoundsException();
+        return chars[i];
+    }
+
+    public char[] array(){
+        return chars;
+    }
+
+    public void reset(){
+        count = 0;
+    }
+
+    public String substring(int start, int end){
+        if (start<0 || start>end || end>count)
+            throw new IndexOutOfBoundsException();
+        return new String(chars, start, end-start);
+    }
+
+    private int maxLen = -1;
+    private int maxInitialLineLen = -1;
+    private int maxLineLen = -1;
+    private int lineCount = 0;
+    private int bytesConsumed = 0;
+    private int lineBytesConsumed = 0;
+    public void reset(int maxLen, int maxInitialLineLen, int maxLineLen){
+        reset();
+        this.maxLen = maxLen;
+        this.maxInitialLineLen = maxInitialLineLen;
+        this.maxLineLen = maxLineLen;
+        lineCount = bytesConsumed = lineBytesConsumed = 0;
+    }
+
+    public int lineCount(){
+        return lineCount;
+    }
+
+    public boolean consume(ByteBuffer buffer){
+        int pos = buffer.position();
+        boolean lineCompleted = false;
+        while(buffer.hasRemaining()){
+            char ch = (char)buffer.get();
+            if(ch=='\n'){
+                lineCompleted = true;
+                break;
+            }else if(ch!='\r' && !Character.isISOControl(ch)){
+                if(count==chars.length){
+                    if(count==Integer.MAX_VALUE)
+                        throw new OutOfMemoryError();
+                    int newCapacity = count<<2;
+                    if(newCapacity<count)
+                        newCapacity = Integer.MAX_VALUE;
+                    chars = Arrays.copyOf(chars, newCapacity);
+                }
+                chars[count++] = ch;
+            }
+        }
+
+        bytesConsumed += buffer.position()-pos;
+        lineBytesConsumed += buffer.position()-pos;
+        if(maxLen>0 && bytesConsumed>maxLen)
+            throw new LineOverflowException(-1);
+        if((lineCount==0 && maxInitialLineLen>=0 && lineBytesConsumed>maxInitialLineLen)
+                || (lineCount>0 && maxLineLen>=0 && lineBytesConsumed>maxLineLen))
+            throw new LineOverflowException(lineCount);
+        if(lineCompleted){
+            ++lineCount;
+            lineBytesConsumed = 0;
+        }
+        return lineCompleted;
+    }
+
+    @Override
+    public String toString(){
+        return new String(chars, 0, count);
+    }
+
+    public int indexOf(char ch, int from){
+        while(from<count){
+            if(chars[from]==ch)
+                return from;
+            ++from;
+        }
+        return -1;
+    }
+
+    public int indexOf(boolean whitespace, int from){
+        if(from>=0){
+            while(from<count){
+                if(Character.isWhitespace(chars[from])==whitespace)
+                    return from;
+                from++;
+            }
+        }else{
+            from = -from;
+            while(from>=0){
+                if(Character.isWhitespace(chars[from])==whitespace)
+                    return from;
+                from--;
+            }
+        }
+        return -1;
+    }
+
+    public static interface Consumer{
+        public void consume(Line line);
+    }
+}
