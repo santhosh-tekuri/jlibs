@@ -1,0 +1,25 @@
+dependencies {
+    compile project(':core')
+    compile project(':xml')
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+javadoc{
+    executable = '/Library/Java/JavaVirtualMachines/jdk1.8.0_05.jdk/Contents/Home/bin/javadoc'
+}
+tasks.withType(JavaCompile) {
+    options.fork = true;
+    options.forkOptions.executable = '/Library/Java/JavaVirtualMachines/jdk1.8.0_05.jdk/Contents/Home/bin/javac'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name "jlibs-nio"
+                description "NIO Utilities"
+            }
+        }
+    }
+}
