@@ -15,11 +15,14 @@
 
 package jlibs.nio.util;
 
+import jlibs.core.io.ByteArrayOutputStream2;
+import jlibs.core.io.IOUtil;
 import jlibs.nio.BufferPool;
 import jlibs.nio.Reactor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -235,5 +238,23 @@ public class Bytes implements Iterable<ByteBuffer>{
             buffer.put((byte)str.charAt(i));
         }
         return buffer;
+    }
+
+    public String toString(Charset charset){
+        if(isEmpty())
+            return "";
+        if(list.size()==1){
+            ByteBuffer buffer = list.getFirst();
+            return new String(buffer.array(), buffer.arrayOffset()+buffer.position(), buffer.remaining(), charset);
+        }else{
+            ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
+            for(ByteBuffer buffer: this)
+                bout.write(buffer.array(), buffer.arrayOffset()+buffer.position(), buffer.remaining());
+            return bout.toByteSequence().toString(charset);
+        }
+    }
+
+    public String toString(){
+        return toString(IOUtil.UTF_8);
     }
 }
