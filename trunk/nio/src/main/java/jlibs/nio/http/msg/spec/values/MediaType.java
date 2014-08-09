@@ -20,12 +20,16 @@ import jlibs.nio.http.msg.spec.Parser;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class MediaType{
     public static final String CHARSET = "charset";
+    public static final String BOUNDARY = "boundary";
+
     public static final MediaType WILDCARD = new MediaType("*", "*");
 
     public static final MediaType TEXT_PLAIN = new MediaType("text", "plain");
@@ -40,6 +44,8 @@ public class MediaType{
     public static final MediaType APPLICATION_JSON = new MediaType("application", "json");
     public static final MediaType APPLICATION_FORM_URLENCODED = new MediaType("application", "x-www-form-urlencoded");
     public static final MediaType MULTIPART_FORM_DATA = new MediaType("multipart", "form-data");
+    public static final MediaType MULTIPART_MIXED = new MediaType("multipart", "mixed");
+    public static final MediaType MULTIPART_ALTERNATIVE = new MediaType("multipart", "alternative");
 
     public static final MediaType SOAP_1_1 = TEXT_XML;
     public static final MediaType SOAP_1_2 = new MediaType("application", "soap+xml");
@@ -49,17 +55,7 @@ public class MediaType{
     public final Map<String, String> params;
 
     public MediaType(String type, String subType){
-        this.type = type;
-        this.subType = subType;
-        validate();
-        params = Collections.emptyMap();
-    }
-
-    public MediaType(String type, String subType, String charset){
-        this.type = type;
-        this.subType = subType;
-        validate();
-        params = Collections.singletonMap(CHARSET, charset);
+        this(type, subType, null);
     }
 
     public MediaType(String type, String subType, Map<String, String> params){
@@ -96,10 +92,8 @@ public class MediaType{
     }
 
     private void validate(){
-        if(type==null)
-            throw new NullPointerException("type==null");
-        if(subType==null)
-            throw new NullPointerException("subType==null");
+        Objects.requireNonNull(type, "type==null");
+        Objects.requireNonNull(subType, "subtype==null");
         if("*".equals(type) && !"*".equals(subType))
             throw new IllegalArgumentException("type==* && subType!=*");
     }
@@ -109,10 +103,37 @@ public class MediaType{
     }
 
     public MediaType withCharset(String charset){
-        Map<String, String> params = new HashMap<>();
-        params.putAll(this.params);
-        params.put(CHARSET, charset);
+        Map<String, String> params;
+        if(this.params.isEmpty())
+            params = Collections.singletonMap(CHARSET, charset);
+        else{
+            params = new HashMap<>(this.params);
+            params.put(CHARSET, charset);
+        }
         return new MediaType(type, subType, params);
+    }
+
+    public boolean isMultipart(){
+        return type.equals(MULTIPART_FORM_DATA.type);
+    }
+
+    public String getBoundary(){
+        return params.get(BOUNDARY);
+    }
+
+    public MediaType withBoundary(String boundary){
+        Map<String, String> params;
+        if(this.params.isEmpty())
+            params = Collections.singletonMap(BOUNDARY, boundary);
+        else{
+            params = new HashMap<>(this.params);
+            params.put(BOUNDARY, boundary);
+        }
+        return new MediaType(type, subType, params);
+    }
+
+    public MediaType withBoundary(){
+        return withBoundary(Long.toHexString(ThreadLocalRandom.current().nextLong()).toLowerCase());
     }
 
     private boolean isCompatible(String str1, String str2){

@@ -17,6 +17,7 @@ package jlibs.nio.async;
 
 import jlibs.nio.Client;
 import jlibs.nio.Reactor;
+import jlibs.nio.channels.ListenerUtil;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -61,6 +62,18 @@ public interface ExecutionContext{
             }
             client.close();
             buddy.close();
+        };
+    }
+
+    public static ExecutionContext doFinally(ExecutionContext delegate, Throwable thr, boolean timeout){
+        return (thr1 ,timeout1) -> {
+            if(thr!=null){
+                if(thr1!=null)
+                    thr.addSuppressed(thr1);
+                thr1 = thr;
+            }
+            timeout1 |= timeout;
+            ListenerUtil.resume(delegate, thr1, timeout1);
         };
     }
 }
