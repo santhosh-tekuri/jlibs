@@ -17,6 +17,7 @@ package jlibs.nio.http.msg;
 
 import jlibs.nio.Reactor;
 import jlibs.nio.http.msg.spec.values.Challenge;
+import jlibs.nio.http.msg.spec.values.ContentDisposition;
 import jlibs.nio.http.msg.spec.values.NewCookie;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
@@ -209,5 +210,13 @@ public class Response extends Message{
 
     public void setContentLocation(String location){
         CONTENT_LOCATION.set(this, location);
+    }
+
+    public ContentDisposition getContentDisposition(){
+        return CONTENT_DISPOSITION.get(this);
+    }
+
+    public void setContentDisposition(ContentDisposition contentDisposition){
+        CONTENT_DISPOSITION.set(this, contentDisposition);
     }
 }
