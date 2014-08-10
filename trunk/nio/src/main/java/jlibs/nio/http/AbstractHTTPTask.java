@@ -368,7 +368,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
             }
 
             client.out().startOutputMetric();
-            new WriteBytes(message.encodeTo(new Bytes()), true).start(client.out(), this::writePayload);
+            new WriteBytes(message).start(client.out(), this::writePayload);
         }catch(Throwable thr){
             _writeMessageCompleted(thr, false);
         }
@@ -460,17 +460,8 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
     private void closeOutputFilters(Throwable thr, boolean timeout){
         if(thr!=null || timeout){
             Object source = message.getPayload().getSource();
-            if(source instanceof InputChannel){
+            if(source instanceof InputChannel)
                 assert !((InputChannel)source).isOpen();
-//                try{
-//                    ((InputChannel)source).close();
-//                }catch(IOException ex){
-//                    if(thr!=null)
-//                        thr.addSuppressed(ex);
-//                    else
-//                        client.reactor.handleException(ex);
-//                }
-            }
             _writeMessageCompleted(thr, timeout);
             return;
         }
