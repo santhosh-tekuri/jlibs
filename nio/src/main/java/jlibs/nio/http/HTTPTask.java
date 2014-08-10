@@ -15,12 +15,16 @@
 
 package jlibs.nio.http;
 
-import jlibs.nio.*;
-import jlibs.nio.async.ExecutionContext;
+import jlibs.nio.Attachable;
+import jlibs.nio.Client;
+import jlibs.nio.ClientEndpoint;
+import jlibs.nio.Reactor;
+import jlibs.nio.http.filters.ConditionalFilter;
 import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
 
 import java.io.Closeable;
+import java.util.function.Predicate;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -73,6 +77,9 @@ public interface HTTPTask<T extends HTTPTask> extends Closeable, Attachable{
 
     public static interface Filter<T extends HTTPTask>{
         public void filter(T task) throws Exception;
+        public default ConditionalFilter<T> withPredicate(Predicate<T> predicate){
+            return new ConditionalFilter<>(predicate, this);
+        }
     }
     public static interface RequestFilter<T extends HTTPTask> extends Filter<T>{}
     public static interface ResponseFilter<T extends HTTPTask> extends Filter<T>{}
