@@ -17,10 +17,7 @@ package jlibs.nio.http.filters;
 
 import jlibs.core.lang.ImpossibleException;
 import jlibs.nio.http.HTTPServer;
-import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.msg.Request;
-import jlibs.nio.http.msg.Response;
-import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.msg.spec.values.Credentials;
 import jlibs.nio.http.msg.spec.values.DigestChallenge;
 import jlibs.nio.http.msg.spec.values.DigestCredentials;
@@ -29,7 +26,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
 import static javax.xml.bind.DatatypeConverter.*;
 import static jlibs.core.io.IOUtil.UTF_8;
@@ -37,16 +33,13 @@ import static jlibs.core.io.IOUtil.UTF_8;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class CheckDigestAuthentication implements HTTPTask.RequestFilter<HTTPServer.Task>{
-    private final boolean proxy;
+public class CheckDigestAuthentication extends CheckAuthentication{
     private final String realm;
-    private final Function<String, String> authenticator;
     public int nonceValiditySeconds = 300;
     private final String key;
-    public CheckDigestAuthentication(boolean proxy, String realm, Function<String, String> authenticator){
-        this.proxy = proxy;
+    public CheckDigestAuthentication(boolean proxy, Authenticator authenticator, String realm){
+        super(proxy, authenticator);
         this.realm = realm;
-        this.authenticator = authenticator;
 
         try{
             byte bytes[] = new byte[10];
@@ -76,7 +69,7 @@ public class CheckDigestAuthentication implements HTTPTask.RequestFilter<HTTPSer
                         && realm.equals(digestCredentials.realm)
                         && digestCredentials.nc!=null
                         && digestCredentials.cnonce!=null){
-                    String password = authenticator.apply(digestCredentials.username);
+                    String password = authenticator.getPassword(digestCredentials.username);
                     if(password!=null){
                         String a1 = digestCredentials.username+':'+realm+':'+password;
                         String ha1 = printHexBinary(md5.digest(a1.getBytes(UTF_8))).toLowerCase();
@@ -92,7 +85,7 @@ public class CheckDigestAuthentication implements HTTPTask.RequestFilter<HTTPSer
                         String response = printHexBinary(md5.digest(respString.getBytes(UTF_8))).toLowerCase();
                         md5.reset();
                         if(response.equals(digestCredentials.response)){
-                            task.resume();
+                            authorized(task, digestCredentials.username);
                             return;
                         }
                     }
@@ -105,17 +98,7 @@ public class CheckDigestAuthentication implements HTTPTask.RequestFilter<HTTPSer
         challenge.qops = Collections.singletonList("auth");
         challenge.stale = stale;
         challenge.nonce = createNonce(md5);
-
-        Response response = new Response();
-        if(proxy){
-            response.setStatus(Status.PROXY_AUTHENTICATION_REQUIRED);
-            response.setProxyChallenge(challenge);
-        }else{
-            response.setStatus(Status.UNAUTHORIZED);
-            response.setChallenge(challenge);
-        }
-        task.setResponse(response);
-        task.resume(response.statusCode);
+        unauthorized(task, challenge);
     }
 
     private String createNonce(MessageDigest md5){
