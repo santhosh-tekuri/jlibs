@@ -24,12 +24,15 @@ import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
 
 import java.io.Closeable;
+import java.util.Iterator;
 import java.util.function.Predicate;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public interface HTTPTask<T extends HTTPTask> extends Closeable, Attachable{
+    public void pushFilters(Iterator<? extends Filter> filters);
+
     public void resume();
     public default void resume(Throwable thr){
         resume(-1, null, thr);

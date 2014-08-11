@@ -16,6 +16,7 @@
 package jlibs.nio.http;
 
 import jlibs.core.lang.NotImplementedException;
+import jlibs.core.util.StackedIterator;
 import jlibs.nio.Client;
 import jlibs.nio.Debugger;
 import jlibs.nio.Reactor;
@@ -191,6 +192,16 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
             filter.filter(this);
         }catch(Throwable thr){
             resume(thr);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void pushFilters(Iterator<? extends Filter> filters){
+        if(this.filters!=null){
+            if(!(this.filters instanceof StackedIterator))
+                this.filters = new StackedIterator(this.filters);
+            ((StackedIterator)this.filters).push(filters);
         }
     }
 
