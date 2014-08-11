@@ -16,28 +16,19 @@
 package jlibs.nio.http.filters;
 
 import jlibs.nio.http.HTTPServer;
-import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.msg.Request;
-import jlibs.nio.http.msg.Response;
-import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.msg.spec.values.BasicChallenge;
 import jlibs.nio.http.msg.spec.values.BasicCredentials;
 import jlibs.nio.http.msg.spec.values.Credentials;
 
-import java.util.function.Function;
-
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class CheckBasicAuthentication implements HTTPTask.RequestFilter<HTTPServer.Task>{
-    private boolean proxy;
+public class CheckBasicAuthentication extends CheckAuthentication{
     private BasicChallenge challenge;
-    private Function<BasicCredentials, Boolean> authenticator;
-
-    public CheckBasicAuthentication(boolean proxy, String realm, Function<BasicCredentials, Boolean> authenticator){
-        this.proxy = proxy;
+    public CheckBasicAuthentication(boolean proxy, Authenticator authenticator, String realm){
+        super(proxy, authenticator);
         challenge = new BasicChallenge(realm);
-        this.authenticator = authenticator;
     }
 
     @Override
@@ -46,21 +37,13 @@ public class CheckBasicAuthentication implements HTTPTask.RequestFilter<HTTPServ
         Credentials credentials = request.getCredentials(proxy);
         if(credentials instanceof BasicCredentials){
             BasicCredentials basicCredentials = (BasicCredentials)credentials;
-            if(authenticator.apply(basicCredentials)){
-                task.resume();
+            String password = authenticator.getPassword(basicCredentials.user);
+            if(basicCredentials.password.equals(password)){
+                authorized(task, basicCredentials.user);
                 return;
             }
         }
 
-        Response response = new Response();
-        if(proxy){
-            response.setStatus(Status.PROXY_AUTHENTICATION_REQUIRED);
-            response.setProxyChallenge(challenge);
-        }else{
-            response.setStatus(Status.UNAUTHORIZED);
-            response.setChallenge(challenge);
-        }
-        task.setResponse(response);
-        task.resume(response.statusCode);
+        unauthorized(task, challenge);
     }
 }
