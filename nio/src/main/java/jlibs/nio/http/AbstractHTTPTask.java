@@ -26,6 +26,7 @@ import jlibs.nio.channels.OutputChannel;
 import jlibs.nio.channels.filters.ChunkedOutputFilter;
 import jlibs.nio.channels.filters.FixedLengthInputFilter;
 import jlibs.nio.channels.filters.IdentityOutputFilter;
+import jlibs.nio.http.async.WriteMultipart;
 import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.Encoding;
 import jlibs.nio.util.Bytes;
@@ -475,7 +476,9 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                     }else
                         ris = new ReadFromInputStream((InputStream)source, Bytes.CHUNK_SIZE);
                     ris.start(client.out(), this::closeOutputFilters);
-                }else
+                }else if(source instanceof Multipart)
+                    new WriteMultipart(payload).start(client.out(), this::closeOutputFilters);
+                else
                     _writeMessageCompleted(new NotImplementedException(source.getClass().getName()), false);
             }
         }catch(Throwable thr1){
