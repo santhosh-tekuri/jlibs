@@ -30,6 +30,7 @@ import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.Encoding;
 import jlibs.nio.util.Bytes;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -460,6 +461,16 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                     Bytes bytes = new Bytes();
                     ((Encodable)source).encodeTo(bytes.new OutputStream());
                     new WriteBytes(bytes, true).start(client.out(), this::closeOutputFilters);
+                }else if(source instanceof InputStream){
+                    ReadFromInputStream ris;
+                    if(payload.retain){
+                        Bytes bytes = payload.bytes;
+                        if(bytes==null)
+                            bytes = payload.bytes = new Bytes();
+                        ris = new ReadFromInputStream((InputStream)source, bytes);
+                    }else
+                        ris = new ReadFromInputStream((InputStream)source, Bytes.CHUNK_SIZE);
+                    ris.start(client.out(), this::closeOutputFilters);
                 }else
                     _writeMessageCompleted(new NotImplementedException(source.getClass().getName()), false);
             }
