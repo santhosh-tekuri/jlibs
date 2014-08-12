@@ -455,11 +455,15 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                     pump.start(this::closeOutputFilters);
                 }else if(payload.getEncoder()!=null){
                     Bytes bytes = new Bytes();
-                    payload.getEncoder().encodeTo(source, bytes.new OutputStream());
+                    try(Bytes.OutputStream bout=bytes.new OutputStream()){
+                        payload.getEncoder().encodeTo(source, bout);
+                    }
                     new WriteBytes(bytes, true).start(client.out(), this::closeOutputFilters);
                 }else if(source instanceof Encodable){
                     Bytes bytes = new Bytes();
-                    ((Encodable)source).encodeTo(bytes.new OutputStream());
+                    try(Bytes.OutputStream bout=bytes.new OutputStream()){
+                        ((Encodable)source).encodeTo(bout);
+                    }
                     new WriteBytes(bytes, true).start(client.out(), this::closeOutputFilters);
                 }else if(source instanceof InputStream){
                     ReadFromInputStream ris;
