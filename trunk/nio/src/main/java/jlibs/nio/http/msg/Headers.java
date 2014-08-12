@@ -15,6 +15,7 @@
 
 package jlibs.nio.http.msg;
 
+import jlibs.nio.Reactor;
 import jlibs.nio.http.msg.spec.*;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
@@ -28,7 +29,7 @@ import java.util.TreeMap;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Headers implements Line.Consumer{
+public class Headers implements Line.Consumer, Bytes.Encodable{
     private final TreeMap<String, Header> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private Header head;
 
@@ -317,13 +318,22 @@ public class Headers implements Line.Consumer{
         return buffer.toString();
     }
 
-    ByteBuffer encode(Bytes bytes, ByteBuffer buffer){
+    public ByteBuffer encode(Bytes bytes, ByteBuffer buffer){
         Header header = head;
         while(header!=null){
             buffer = header.encode(bytes, buffer);
             header = header.next;
         }
         return bytes.append("\r\n", buffer);
+    }
+
+    @Override
+    public Bytes encodeTo(Bytes bytes){
+        ByteBuffer buffer = Reactor.current().bufferPool.borrow(Bytes.CHUNK_SIZE);
+        buffer = encode(bytes, buffer);
+        buffer.flip();
+        bytes.append(buffer);
+        return bytes;
     }
 
     /*-------------------------------------------------[ Standard Headers ]---------------------------------------------------*/
