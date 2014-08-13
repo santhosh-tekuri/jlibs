@@ -68,6 +68,7 @@ public abstract class SAXParsing implements HTTPTask.ResponseFilter<HTTPTask>, H
             return;
         }
 
+        payload.removeEncodings();
         InputChannel in = (InputChannel)payload.getSource();
         InputSource is = createInputSource(payload);
         is.setEncoding(charset);
