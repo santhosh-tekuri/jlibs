@@ -49,19 +49,20 @@ public class FormURLEncodedUnmarshalling implements HTTPTask.RequestFilter<HTTPT
         Payload payload = message.getPayload();
 
         String charset;
-        boolean parse = false;
+        boolean compatible = false;
         if(payload.contentLength!=0 && payload.contentType!=null){
             MediaType mt = new MediaType(payload.contentType);
-            parse = mt.isCompatible(MediaType.APPLICATION_FORM_URLENCODED);
+            compatible = mt.isCompatible(MediaType.APPLICATION_FORM_URLENCODED);
             charset = mt.getCharset(IOUtil.UTF_8.name());
         }else
             charset = IOUtil.UTF_8.name();
 
-        if(!parse){
+        if(!compatible){
             task.resume();
             return;
         }
 
+        payload.removeEncodings();
         ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
         payload.writePayloadTo(bout, (thr, timeout) -> {
             if(thr!=null)
