@@ -170,7 +170,6 @@ public final class Reactor{
     /*-------------------------------------------------[ Clients ]---------------------------------------------------*/
 
     public Client newClient() throws IOException{
-        validate();
         SocketChannel channel = SocketChannel.open();
         try{
             return new Client(this, channel, null);
