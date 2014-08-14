@@ -26,9 +26,9 @@ import static java.nio.channels.SelectionKey.*;
  * @author Santhosh Kumar Tekuri
  */
 public class Debugger{
-    public static boolean DEBUG = false;
-    public static boolean IO = false;
-    public static boolean HTTP = false;
+    public static final boolean DEBUG = false;
+    public static final boolean IO = false;
+    public static final boolean HTTP = false;
     static{
         System.setErr(System.out);
     }
