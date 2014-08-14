@@ -174,7 +174,7 @@ public final class Server implements Channel, Reactor.ServerMXBean{
     }
 
     private ObjectName objectName;
-    public void enableJMX(){
+    public synchronized void enableJMX(){
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         try{
             InetSocketAddress address = (InetSocketAddress)boundTo();
@@ -188,7 +188,7 @@ public final class Server implements Channel, Reactor.ServerMXBean{
         }
     }
 
-    protected void disableJMX(){
+    protected synchronized void disableJMX(){
         try{
             if(objectName!=null){
                 MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
