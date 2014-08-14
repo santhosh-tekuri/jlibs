@@ -54,6 +54,7 @@ public class XSNavigator extends ReflectionVisitor<Object, Sequence> implements 
         return new DuplicateSequence<XSTypeDefinition>(elem.getTypeDefinition());
     }
 
+    @SuppressWarnings("unchecked")
     protected Sequence<XSObject> process(XSComplexTypeDefinition complexType){
         Sequence<XSObject> sequence = new XSObjectListSequence<XSObject>(complexType.getAttributeUses());
         if(complexType.getAttributeWildcard()!=null)
