@@ -39,6 +39,7 @@ public class DOMNavigator extends Navigator2<Node>{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Sequence<? extends Node> children(Node node){
         Sequence<Node> seq = new NodeListSequence(node.getChildNodes());
         if(node instanceof Element){
