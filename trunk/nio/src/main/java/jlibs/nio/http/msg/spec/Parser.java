@@ -15,8 +15,6 @@
 
 package jlibs.nio.http.msg.spec;
 
-import jlibs.nio.http.msg.spec.values.DigestCredentials;
-
 /**
  * @author Santhosh Kumar Tekuri
  */
@@ -135,44 +133,8 @@ public class Parser{
     }
 
     public void skipPairs(){
-        while(true){
-            String lvalue = lvalue();
-            if(lvalue==null)
-                return;
+        while(lvalue()!=null)
             rvalue();
-        }
-    }
-
-    public String elementName(){
-        if(isEmpty())
-            return null;
-        else{
-            if(foldable && string.charAt(index)==',')
-                skip();
-            return value(foldable ? EQUAL_SEMICOLON_COMMA : EQUAL_SEMICOLON);
-        }
-    }
-
-    public String elementValue(){
-        if(isEmpty() || string.charAt(index)!='=')
-            return null;
-        else{
-            skip();
-            return value(foldable ? SEMICOLON_COMMA : SEMICOLON);
-        }
-    }
-
-    public String paramName(){
-        if(isEmpty() || string.charAt(index)!=';')
-            return null;
-        else{
-            skip();
-            return value(foldable ? EQUAL_SEMICOLON_COMMA : EQUAL_SEMICOLON);
-        }
-    }
-
-    public String paramValue(){
-        return elementValue();
     }
 
     /*-------------------------------------------------[ Helper ]---------------------------------------------------*/
@@ -266,20 +228,5 @@ public class Parser{
         else
             buffer.append(value);
         return buffer;
-    }
-
-    public static void main(String[] args){
-        String value = "username=\"Muf\\\"asa\",\n"+
-                "                     realm=\"testrealm@host.com\",\n"+
-                "                     nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",\n"+
-                "                     uri=\"/dir/index.html\",\n"+
-                "                     qop=auth;Q=0.9,\n"+
-                "                     nc=00000001,\n"+
-                "                     cnonce=\"0a4f113b\",\n"+
-                "                     response=\"6629fae49393a05397450978507c4ef1\",\n"+
-                "                     opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
-
-        DigestCredentials credentials = new DigestCredentials(value);
-        System.out.println();
     }
 }

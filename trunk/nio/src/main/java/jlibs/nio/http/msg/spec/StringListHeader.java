@@ -29,8 +29,7 @@ public class StringListHeader extends ListHeaderSpec<String>{
     protected String parseSingle(Parser parser, Version version){
         String value = parser.lvalue();
         parser.rvalue();
-        while(parser.lvalue()!=null)
-            parser.rvalue();
+        parser.skipPairs();
         return value;
     }
 
