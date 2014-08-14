@@ -40,7 +40,7 @@ import static java.nio.channels.SelectionKey.*;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Reactor{
+public final class Reactor{
     static final AtomicInteger ID_GENERATOR = new AtomicInteger(-1);
     long lastAcceptedClientID;
     long lastConnectableClientID;
@@ -100,9 +100,8 @@ public class Reactor{
 
     /*-------------------------------------------------[ Tasks ]---------------------------------------------------*/
 
-//    private volatile List<Runnable> tasks = new LinkedList<>();
     private volatile Deque<Runnable> tasks = new ArrayDeque<>();
-    private volatile Deque<Runnable> tempTasks = new ArrayDeque<>();
+    private Deque<Runnable> tempTasks = new ArrayDeque<>();
 
     public synchronized void invokeLater(Runnable task){
         tasks.push(task);
@@ -174,8 +173,7 @@ public class Reactor{
         validate();
         SocketChannel channel = SocketChannel.open();
         try{
-            Client client = new Client(this, channel, null);
-            return client;
+            return new Client(this, channel, null);
         }catch(IOException ex){
             try{
                 channel.close();
@@ -258,7 +256,7 @@ public class Reactor{
             return null;
     }
 
-    private class ReactorThread extends Thread implements Thread.UncaughtExceptionHandler{
+    private final class ReactorThread extends Thread implements Thread.UncaughtExceptionHandler{
         ReactorThread(){
             super(Reactor.this.toString);
             setUncaughtExceptionHandler(this);
@@ -274,29 +272,9 @@ public class Reactor{
                 try{
                     if(readyListHead!=null)
                         processReadyList();
-                    runTasks();
+                    if(!tasks.isEmpty())
+                        runTasks();
 
-                    if(initiateShutdown){
-                        shutdownInProgress = true;
-                        initiateShutdown = false;
-                        if(Debugger.IO)
-                            Debugger.println(Reactor.this+".shutdownInitialized: servers="+serversCount()+
-                                    " connectedClients="+connectedClients+
-                                    " connectionPendingClients="+connectionPendingClients+
-                                    " acceptedClients="+acceptedClients);
-                        while(servers.size()>0)
-                            unregister(servers.get(0));
-                        if(force){
-                            for(SelectionKey key: selector.keys()){
-                                try{
-                                    key.channel().close();
-                                }catch(IOException ex){
-                                    handleException(ex);
-                                }
-                            }
-                            connectedClients = connectionPendingClients = acceptedClients = 0;
-                        }
-                    }
                     if(isShutdown()){
                         selector.close();
                         if(Debugger.IO)
@@ -308,21 +286,20 @@ public class Reactor{
                         return;
                     }
 
-                    long selectTimeout = timeoutTracker.isTracking() ? 1000 : 0;
+                    boolean tracking = timeoutTracker.isTracking();
+                    long selectTimeout = tracking ? 1000 : 0;
                     if(Debugger.IO)
                         Debugger.println(Reactor.this+".select("+selectTimeout+"){");
 
                     int selected = selector.select(selectTimeout);
-                    if(timeoutTracker.isTracking())
+                    if(tracking)
                         timeoutTracker.time = System.currentTimeMillis();
                     if(selected>0){
-                        Iterator<SelectionKey> ready = selector.selectedKeys().iterator();
-                        while(ready.hasNext()){
-                            activeClient = null;
-                            SelectionKey key = ready.next();
-                            ready.remove();
+                        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                        for(SelectionKey key: selectedKeys){
                             if(key.attachment() instanceof Client){
                                 client = (Client)key.attachment();
+                                activeClient = client;
                                 if(client.heapIndex!=-1){
                                     assert client.poolPrev==null && client.poolNext==null;
                                     timeoutTracker.untrack(client);
@@ -330,27 +307,30 @@ public class Reactor{
                                 if(key.isValid()){
                                     if(Debugger.IO)
                                         Debugger.println(client+".process{");
-                                    activeClient = client;
                                     client.process();
                                     if(Debugger.IO)
                                         Debugger.println("}");
                                 }
                             }else{
                                 Server server = (Server)key.attachment();
-                                if(key.isValid())
+                                if(key.isValid()){
+                                    activeClient = null;
                                     server.process(Reactor.this);
+                                }
                             }
                         }
+                        selectedKeys.clear();
                     }
                     if(Debugger.IO)
                         Debugger.println("}");
-
-                    while((client=timeoutTracker.next())!=null){
-                        if(client.poolPrev!=null && client.poolNext!=null){
-                            clientPool.remove(client);
-                            client.close();
-                        }else
-                            client.processTimeout();
+                    if(tracking){
+                        while((client=timeoutTracker.next())!=null){
+                            if(client.poolPrev!=null && client.poolNext!=null){
+                                clientPool.remove(client);
+                                client.close();
+                            }else
+                                client.processTimeout();
+                        }
                     }
                 }catch(Throwable ex){
                     handleException(ex);
@@ -372,6 +352,28 @@ public class Reactor{
     private volatile boolean initiateShutdown;
     private boolean shutdownInProgress;
 
+    private Runnable shutdownInitializer = () -> {
+        shutdownInProgress = true;
+        initiateShutdown = false;
+        if(Debugger.IO)
+            Debugger.println(Reactor.this+".shutdownInitialized: servers="+serversCount()+
+                    " connectedClients="+connectedClients+
+                    " connectionPendingClients="+connectionPendingClients+
+                    " acceptedClients="+acceptedClients);
+        while(servers.size()>0)
+            unregister(servers.get(0));
+        if(force){
+            for(SelectionKey key: selector.keys()){
+                try{
+                    key.channel().close();
+                }catch(IOException ex){
+                    handleException(ex);
+                }
+            }
+            connectedClients = connectionPendingClients = acceptedClients = 0;
+        }
+    };
+
     public void shutdown(){
         shutdown(false);
     }
@@ -385,7 +387,7 @@ public class Reactor{
             return;
         this.force = force;
         initiateShutdown = true;
-        selector.wakeup();
+        invokeLater(shutdownInitializer);
         if(Debugger.IO)
             Debugger.println(this+".shutdownRequested");
     }
@@ -396,8 +398,8 @@ public class Reactor{
     }
 
     public boolean isShutdown(){
-        return shutdownInProgress && serversCount()==0
-                && connectedClients==0 && connectionPendingClients==0 && acceptedClients==0;
+        return connectedClients==0 && connectionPendingClients==0 && acceptedClients==0
+                && shutdownInProgress && serversCount()==0;
     }
 
     protected void validate() throws IOException{
