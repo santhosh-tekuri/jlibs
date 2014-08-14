@@ -348,13 +348,10 @@ public final class Reactor{
 
     /*-------------------------------------------------[ Shutdown ]---------------------------------------------------*/
 
-    private volatile boolean force;
-    private volatile boolean initiateShutdown;
     private boolean shutdownInProgress;
 
     private Runnable shutdownInitializer = () -> {
         shutdownInProgress = true;
-        initiateShutdown = false;
         if(Debugger.IO)
             Debugger.println(Reactor.this+".shutdownInitialized: servers="+serversCount()+
                     " connectedClients="+connectedClients+
@@ -362,16 +359,17 @@ public final class Reactor{
                     " acceptedClients="+acceptedClients);
         while(servers.size()>0)
             unregister(servers.get(0));
-        if(force){
-            for(SelectionKey key: selector.keys()){
-                try{
-                    key.channel().close();
-                }catch(IOException ex){
-                    handleException(ex);
-                }
+    };
+
+    private Runnable forceShutdown = () -> {
+        for(SelectionKey key: selector.keys()){
+            try{
+                key.channel().close();
+            }catch(IOException ex){
+                handleException(ex);
             }
-            connectedClients = connectionPendingClients = acceptedClients = 0;
         }
+        connectedClients = connectionPendingClients = acceptedClients = 0;
     };
 
     public void shutdown(){
@@ -385,15 +383,15 @@ public final class Reactor{
     public void shutdown(boolean force){
         if(isShutdownPending() || isShutdown())
             return;
-        this.force = force;
-        initiateShutdown = true;
         invokeLater(shutdownInitializer);
+        if(force)
+            invokeLater(forceShutdown);
         if(Debugger.IO)
             Debugger.println(this+".shutdownRequested");
     }
 
     public boolean isShutdownPending(){
-        return (initiateShutdown || shutdownInProgress) &&
+        return shutdownInProgress &&
                 (serversCount()!=0 || connectedClients!=0 || connectionPendingClients!=0 || acceptedClients!=0);
     }
 
