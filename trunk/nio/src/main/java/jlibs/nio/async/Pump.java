@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Pump implements InputChannel.Listener, OutputChannel.Listener{
+public final class Pump implements InputChannel.Listener, OutputChannel.Listener{
     private BufferPool pool = Reactor.current().bufferPool;
     private InputChannel in;
     private OutputChannel out;
@@ -42,11 +42,11 @@ public class Pump implements InputChannel.Listener, OutputChannel.Listener{
         this(in, out, Bytes.CHUNK_SIZE);
     }
 
-    private Bytes bytes;
+    private Bytes backup;
     private Client activeClient;
     public Pump(InputChannel in, OutputChannel out, Bytes backup){
         this(in, out, backup.chunkSize);
-        this.bytes = backup;
+        this.backup = backup;
     }
 
     public Pump(InputChannel in, OutputChannel out, int bufferSize){
@@ -85,47 +85,20 @@ public class Pump implements InputChannel.Listener, OutputChannel.Listener{
         context = null;
     }
 
-    private int begin = 0;
-    private void flip(){
-        if(bytes==null)
-            buffer.flip();
-        else{
-            buffer.limit(buffer.position());
-            buffer.position(begin);
-        }
-    }
-
-    private void clear(){
-        if(bytes==null)
-            buffer.clear();
-        else{
-            if(buffer.limit()==buffer.capacity()){
-                begin = 0;
-                buffer.flip();
-                bytes.append(buffer);
-                buffer = pool.borrow(bytes.chunkSize);
-            }else{
-                begin = buffer.limit();
-                buffer.position(begin);
-                buffer.limit(buffer.capacity());
-            }
-        }
-    }
-
     private void cleanup(){
         if(buffer==null)
             return;
-        if(bytes!=null){
+        if(backup !=null){
             if(readMode){
                 if(buffer.position()!=0){
                     buffer.flip();
-                    bytes.append(buffer);
+                    backup.append(buffer);
                     buffer = null;
                 }
             }else{
                 if(buffer.limit()!=0){
                     buffer.position(0);
-                    bytes.append(buffer);
+                    backup.append(buffer);
                     buffer = null;
                 }
             }
@@ -142,6 +115,7 @@ public class Pump implements InputChannel.Listener, OutputChannel.Listener{
         try{
             while(true){
                 if(readMode){
+                    assert buffer.hasRemaining();
                     int read = in.read(buffer);
                     if(read==0){
                         in.addReadInterest();
@@ -151,7 +125,13 @@ public class Pump implements InputChannel.Listener, OutputChannel.Listener{
                         in.close();
                         return;
                     }else{
-                        flip();
+                        // flip
+                        if(backup==null)
+                            buffer.flip();
+                        else{
+                            buffer.limit(buffer.position());
+                            buffer.position(buffer.limit()-read);
+                        }
                         readMode = false;
                     }
                 }
@@ -161,13 +141,27 @@ public class Pump implements InputChannel.Listener, OutputChannel.Listener{
                     if(available>0)
                         ((ChunkedOutputFilter)out).startChunk(buffer.remaining()+available);
                 }
-                while(buffer.hasRemaining()){
+                assert buffer.hasRemaining();
+                do{
                     if(out.write(buffer)==0){
                         out.addWriteInterest();
                         return;
                     }
+                }while(buffer.hasRemaining());
+
+                // clear
+                if(backup==null)
+                    buffer.clear();
+                else{
+                    if(buffer.limit()==buffer.capacity()){
+                        buffer.flip();
+                        backup.append(buffer);
+                        buffer = pool.borrow(backup.chunkSize);
+                    }else{
+                        buffer.position(buffer.limit());
+                        buffer.limit(buffer.capacity());
+                    }
                 }
-                clear();
                 readMode = true;
             }
         }catch(Throwable thr){
