@@ -145,8 +145,8 @@ public class Client implements Closeable, Attachable{
 
     /*-------------------------------------------------[ process ]---------------------------------------------------*/
 
-    SelectableInputChannel readyInputChannel;
-    SelectableOutputChannel readyOutputChannel;
+    SelectableInputChannel readyInput;
+    SelectableOutputChannel readyOutput;
 
     void process(){
         if(selectionKey.isConnectable()){
@@ -171,23 +171,24 @@ public class Client implements Closeable, Attachable{
         int peerReadInterested;
         int peerWriteInterested;
 
-        if(readyInputChannel==null && readyOutputChannel==null){
+        if(readyInput ==null && readyOutput ==null){
             input = socketIO;
             output = socketIO;
             peerReadInterested = peerWriteInterested = 0;
         }else{
-            peerReadInterested = readyInputChannel==null ? 0 : readyInputChannel.interestOps()&OP_READ;
-            peerWriteInterested = readyOutputChannel==null ? 0 : readyOutputChannel.interestOps()&OP_WRITE;
-            if(readyInputChannel!=null)
-                readyInputChannel.clearSelfReadyInterests();
-            if(readyOutputChannel!=null && readyOutputChannel!=readyInputChannel)
-                readyOutputChannel.clearSelfReadyInterests();
-            if(readyInputChannel!=null)
-                input = readyInputChannel.getAppInput();
-            if(readyOutputChannel!=null)
-                output = readyOutputChannel.getAppOutput();
-            readyInputChannel = null;
-            readyOutputChannel = null;
+            peerReadInterested = readyInput ==null ? 0 : readyInput.interestOps()&OP_READ;
+            peerWriteInterested = readyOutput ==null ? 0 : readyOutput.interestOps()&OP_WRITE;
+            if(readyInput !=null){
+                readyInput.clearSelfReadyInterests();
+                input = readyInput.getAppInput();
+            }
+            if(readyOutput !=null){
+                if(readyOutput != readyInput)
+                    readyOutput.clearSelfReadyInterests();
+                output = readyOutput.getAppOutput();
+            }
+            readyInput = null;
+            readyOutput = null;
         }
 
         while(input!=null || output!=null){
@@ -247,9 +248,9 @@ public class Client implements Closeable, Attachable{
         if(!wasOutClosed && out.isClosed())
             ListenerUtil.closed(out);
 
-        if((out.readyOps()&OP_WRITE)!=0)
+        if(out.isOpen() && (out.readyOps()&OP_WRITE)!=0)
             ListenerUtil.ready(out);
-        if((in.readyOps()&OP_READ)!=0)
+        if(in.isOpen() && (in.readyOps()&OP_READ)!=0)
             ListenerUtil.ready(in);
 
         if(poolTimeout>0 && socketIO.interestOps()==0)
@@ -558,6 +559,10 @@ public class Client implements Closeable, Attachable{
         makeActive();
     }
 
+    public int taskID(){
+        return taskID;
+    }
+
     public void makeActive(){
         reactor.activeClient = this;
     }
@@ -592,7 +597,7 @@ public class Client implements Closeable, Attachable{
     @Override
     public String toString(){
         StringBuilder buf = new StringBuilder();
-        buf.append("client"+id+"[");
+        buf.append("client").append(id).append("[");
         InetSocketAddress address;
         if(acceptedFrom==null){
             buf.append(isConnected() ? "c:" : "?:");
@@ -604,8 +609,7 @@ public class Client implements Closeable, Attachable{
         if(address==null)
             buf.append("?");
         else
-            buf.append(address.getHostString()+":"+address.getPort());
-
+            buf.append(address.getHostString()).append(":").append(address.getPort());
         buf.append("]");
         return buf.toString();
     }

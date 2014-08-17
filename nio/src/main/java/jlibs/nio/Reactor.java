@@ -557,9 +557,9 @@ public final class Reactor{
             int interests = channel.interestOps();
             int readyOps = channel.selfReadyOps();
             if((readyOps&OP_READ)!=0 && (interests&OP_READ)!=0)
-                client.readyInputChannel = (SelectableInputChannel)channel;
+                client.readyInput = (SelectableInputChannel)channel;
             if((readyOps&OP_WRITE)!=0 && (interests&OP_WRITE)!=0)
-                client.readyOutputChannel = (SelectableOutputChannel)channel;
+                client.readyOutput = (SelectableOutputChannel)channel;
 
             Reactor.this.addToReadyList(client);
         }
