@@ -59,28 +59,30 @@ public class CreateXMLError implements HTTPTask.ResponseFilter<HTTPServer.Task>{
                 }
             }
             if(mt!=null)
-                task.setResponse(createResponse(task, mt.withCharset("UTF-8").toString(), this::createXMLError));
+                createResponse(task, mt.withCharset("UTF-8").toString(), this::createXMLError);
         }else{
             if(mt.isCompatible(MediaType.TEXT_XML) && request.headers.get("SOAPAction")!=null)
-                task.setResponse(createResponse(task, "text/xml;charset=UTF-8", this::createSoap11Error));
+                createResponse(task, "text/xml;charset=UTF-8", this::createSoap11Error);
             else if(mt.isCompatible(MediaType.SOAP_1_2))
-                task.setResponse(createResponse(task, "application/soap+xml;charset=UTF-8", this::createSoap12Error));
+                createResponse(task, "application/soap+xml;charset=UTF-8", this::createSoap12Error);
             else
-                task.setResponse(createResponse(task, "text/xml;charset=UTF-8", this::createXMLError));
+                createResponse(task, "text/xml;charset=UTF-8", this::createXMLError);
         }
 
         task.resume();
     }
 
-    private Response createResponse(HTTPServer.Task task, String mediaType, BiConsumer<HTTPServer.Task, OutputStream> consumer) throws IOException{
-        Response response = new Response();
-        response.statusCode = task.getErrorCode();
-        response.reasonPhrase = task.getErrorPhrase();
+    private void createResponse(HTTPServer.Task task, String mediaType, BiConsumer<HTTPServer.Task, OutputStream> consumer) throws IOException{
+        Response response = task.getResponse();
+        if(response==null){
+            task.setResponse(response=new Response());
+            response.statusCode = task.getErrorCode();
+            response.reasonPhrase = task.getErrorPhrase();
+        }
         Bytes bytes = new Bytes();
         consumer.accept(task, bytes.new OutputStream());
         response.setPayload(new Payload(bytes.size(), mediaType, null, null, null), true);
         response.getPayload().bytes = bytes;
-        return response;
     }
 
     protected String getErrorCode(HTTPServer.Task task){
