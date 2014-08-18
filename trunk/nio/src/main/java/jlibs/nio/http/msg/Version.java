@@ -15,6 +15,8 @@
 
 package jlibs.nio.http.msg;
 
+import jlibs.nio.util.Line;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
@@ -46,7 +48,7 @@ public final class Version implements Comparable<Version>{
 
     @Override
     public boolean equals(Object that){
-        return that==this || (that instanceof Version && text.equals(((Version)that).text));
+        return that==this || (that instanceof Version && text.equalsIgnoreCase(((Version)that).text));
     }
 
     @Override
@@ -58,11 +60,20 @@ public final class Version implements Comparable<Version>{
     public static final Version HTTP_1_1 = new Version("HTTP/1.1", true);
 
     public static Version valueOf(String text){
-        if(HTTP_1_1.text.equals(text))
+        if(HTTP_1_1.text.equalsIgnoreCase(text))
             return HTTP_1_1;
-        else if(HTTP_1_0.text.equals(text))
+        else if(HTTP_1_0.text.equalsIgnoreCase(text))
             return HTTP_1_0;
         else
             return new Version(text, true);
+    }
+
+    public static Version valueOf(Line line, int start, int end){
+        if(line.equalsIgnoreCase(start, end, HTTP_1_1.text))
+            return HTTP_1_1;
+        else if(line.equalsIgnoreCase(start, end, HTTP_1_0.text))
+            return HTTP_1_0;
+        else
+            return new Version(line.substring(start, end), true);
     }
 }
