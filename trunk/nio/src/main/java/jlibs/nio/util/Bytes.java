@@ -227,6 +227,16 @@ public class Bytes implements Iterable<ByteBuffer>{
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
 
+    public ByteBuffer append(byte b, ByteBuffer buffer){
+        if(!buffer.hasRemaining()){
+            buffer.flip();
+            append(buffer);
+            buffer = Reactor.current().bufferPool.borrow(chunkSize);
+        }
+        buffer.put(b);
+        return buffer;
+    }
+
     public ByteBuffer append(String str, ByteBuffer buffer){
         final int len = str.length();
         for(int i=0; i<len; i++){
