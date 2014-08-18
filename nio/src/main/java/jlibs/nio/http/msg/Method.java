@@ -15,6 +15,8 @@
 
 package jlibs.nio.http.msg;
 
+import jlibs.nio.util.Line;
+
 import java.util.Objects;
 
 /**
@@ -72,5 +74,28 @@ public final class Method{
             return OPTIONS;
         else
             return new Method(str);
+    }
+
+    public static Method valueOf(Line line, int start, int end){
+        if(line.equalsIgnoreCase(start, end, GET.name))
+            return GET;
+        else if(line.equalsIgnoreCase(start, end, POST.name))
+            return POST;
+        else if(line.equalsIgnoreCase(start, end, DELETE.name))
+            return DELETE;
+        else if(line.equalsIgnoreCase(start, end, HEAD.name))
+            return HEAD;
+        else if(line.equalsIgnoreCase(start, end, PUT.name))
+            return PUT;
+        else if(line.equalsIgnoreCase(start, end, CONNECT.name))
+            return CONNECT;
+        else if(line.equalsIgnoreCase(start, end, PATCH.name))
+            return PATCH;
+        else if(line.equalsIgnoreCase(start, end, TRACE.name))
+            return TRACE;
+        else if(line.equalsIgnoreCase(start, end, OPTIONS.name))
+            return OPTIONS;
+        else
+            return new Method(line.substring(start, end));
     }
 }

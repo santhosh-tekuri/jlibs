@@ -47,9 +47,9 @@ public class Request extends Message{
         int begin2 = line.indexOf(false, end1);
         int end2 = line.indexOf(false, -begin3);
 
-        method = Method.valueOf(line.substring(begin1, end1));
+        method = Method.valueOf(line, begin1, end1);
         uri = line.substring(begin2, end2+1);
-        version = Version.valueOf(line.substring(begin3+1, end3+1));
+        version = Version.valueOf(line, begin3+1, end3+1);
     }
 
     @Override

@@ -43,9 +43,11 @@ public class Response extends Message{
         int part2Begin = line.indexOf(false, part1End);
         int part2End = line.indexOf(false, -(line.length()-1));
 
-        version = Version.valueOf(line.substring(part0Begin, part0End));
-        statusCode = Integer.parseInt(line.substring(part1Begin, part1End));
-        reasonPhrase = line.substring(part2Begin, part2End+1);
+        version = Version.valueOf(line, part0Begin, part0End);
+        statusCode = line.parseInt(part1Begin, part1End);
+        reasonPhrase = Status.message(statusCode);
+        if(!line.equalsIgnoreCase(part2Begin, part2End+1, reasonPhrase))
+            reasonPhrase = line.substring(part2Begin, part2End+1);
     }
 
     @Override

@@ -140,6 +140,53 @@ public class Line{
         return -1;
     }
 
+    public boolean equals(int start, int end, CharSequence seq){
+        if(seq.length()!=end-start)
+            return false;
+        for(int i=0; start<end; ++i, ++start){
+            if(chars[start]!=seq.charAt(i))
+                return false;
+        }
+        return true;
+    }
+
+    public boolean equalsIgnoreCase(int start, int end, CharSequence seq){
+        if(seq.length()!=end-start)
+            return false;
+        for(int i=0; start<end; ++i, ++start){
+            if(Character.toUpperCase(chars[start])!=Character.toUpperCase(seq.charAt(i)))
+                return false;
+        }
+        return true;
+    }
+
+    public int parseInt(int start, int end){
+        if(end-start==0)
+            throw new NumberFormatException("empty string");
+
+        int i = start;
+        boolean negative = false;
+        if(chars[start]<'0'){
+            if(chars[start]=='-')
+                negative = true;
+            else if(chars[start]!='+')
+                throw new NumberFormatException("for input string \""+substring(start, end)+"\"");
+            if(end-start==1)
+                throw new NumberFormatException("cannot have lone + or -");
+            ++i;
+        }
+
+        int result = 0;
+        while(i<end){
+            char ch = chars[i++];
+            if(ch>='0' && ch<='9')
+                result = result*10 + (ch-'0');
+            else
+                throw new NumberFormatException("for input string \""+substring(start, end)+"\"");
+        }
+        return negative ? -result : result;
+    }
+
     public static interface Consumer{
         public void consume(Line line);
     }
