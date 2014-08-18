@@ -413,4 +413,7 @@ public class Headers implements Line.Consumer, Bytes.Encodable{
 
     // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
     public static final ContentDispositionSpec CONTENT_DISPOSITION = new ContentDispositionSpec();
+
+    // http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383528
+    public static final StringValueHeader SOAP_ACTION = new StringValueHeader("SOAPAction");
 }
