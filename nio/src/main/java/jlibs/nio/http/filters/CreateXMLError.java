@@ -61,12 +61,12 @@ public class CreateXMLError implements HTTPTask.ResponseFilter<HTTPServer.Task>{
             if(mt!=null)
                 createResponse(task, mt.withCharset("UTF-8").toString(), this::createXMLError);
         }else{
-            if(mt.isCompatible(MediaType.TEXT_XML) && request.headers.get("SOAPAction")!=null)
-                createResponse(task, "text/xml;charset=UTF-8", this::createSoap11Error);
+            if(mt.isCompatible(MediaType.TEXT_XML) && request.getSOAPAction()!=null)
+                createResponse(task, "text/xml; charset=UTF-8", this::createSoap11Error);
             else if(mt.isCompatible(MediaType.SOAP_1_2))
-                createResponse(task, "application/soap+xml;charset=UTF-8", this::createSoap12Error);
+                createResponse(task, "application/soap+xml; charset=UTF-8", this::createSoap12Error);
             else
-                createResponse(task, "text/xml;charset=UTF-8", this::createXMLError);
+                createResponse(task, "text/xml; charset=UTF-8", this::createXMLError);
         }
 
         task.resume();

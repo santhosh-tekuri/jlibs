@@ -193,4 +193,12 @@ public class Request extends Message{
     public void setXForwardedFor(Collection<String> clients){
         X_FORWARDED_FOR.set(this, clients);
     }
+
+    public String getSOAPAction(){
+        return SOAP_ACTION.get(this);
+    }
+
+    public void setSOAPAction(String soapAction){
+        SOAP_ACTION.set(this, soapAction);
+    }
 }
