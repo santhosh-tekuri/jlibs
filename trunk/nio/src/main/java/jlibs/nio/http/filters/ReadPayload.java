@@ -39,6 +39,7 @@ public class ReadPayload implements HTTPTask.RequestFilter<HTTPTask>, HTTPTask.R
         if(payload.contentLength==0)
             task.resume();
         else{
+            payload.removeEncodings();
             payload.readFromSource(-1, (thr,timeout) -> {  // @todo: how to configure limit
                 if(thr!=null)
                     task.resume(readRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
