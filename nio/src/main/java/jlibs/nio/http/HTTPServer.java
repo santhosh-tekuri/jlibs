@@ -25,6 +25,7 @@ import jlibs.nio.async.WriteBuffer;
 import jlibs.nio.channels.filters.ReadTrackingInputFilter;
 import jlibs.nio.channels.filters.TrackingInputFilter;
 import jlibs.nio.http.msg.*;
+import jlibs.nio.http.msg.spec.HTTPDate;
 import jlibs.nio.http.msg.spec.values.Expect;
 import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.http.encoders.ThrowableEncoder;
@@ -55,6 +56,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
     public int requestHeaderLimit;
     public int requestHeadersLimit;
     public boolean showStackTrace;
+    public boolean setDateHeader;
 
     public HTTPServer(Consumer<Task> listener){
         this.listener = listener;
@@ -241,6 +243,9 @@ public class HTTPServer extends HTTPService implements Server.Listener{
             }
             response.setKeepAlive(responseKeepAlive);
 
+            if(setDateHeader && response.headers.get(Headers.DATE.name)==null)
+                response.headers.set(Headers.DATE.name, HTTPDate.currentDate());
+
             if(drain)
                 drainInputFilters(null, false);
             else
@@ -304,6 +309,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
         public static int REQUEST_HEADER_LIMIT = 10*1024;
         public static int REQUEST_HEADERS_LIMIT = 25*1024;
         public static boolean SHOW_STACK_TRACE = true;
+        public static boolean SET_DATE_HEADER = true;
 
         private Defaults(){}
 
@@ -314,6 +320,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
             service.requestHeaderLimit = REQUEST_HEADER_LIMIT;
             service.requestHeadersLimit = REQUEST_HEADERS_LIMIT;
             service.showStackTrace = SHOW_STACK_TRACE;
+            service.setDateHeader = SET_DATE_HEADER;
         }
     }
 }
