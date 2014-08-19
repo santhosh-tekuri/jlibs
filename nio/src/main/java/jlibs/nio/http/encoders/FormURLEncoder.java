@@ -21,8 +21,6 @@ import jlibs.nio.http.msg.spec.values.MediaType;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.URLEncoder;
 import java.util.Map;
 
@@ -33,9 +31,6 @@ public final class FormURLEncoder implements Encoder{
     public static final MediaType MEDIA_TYPE = MediaType.APPLICATION_FORM_URLENCODED.withCharset(IOUtil.UTF_8.name());
     public static final FormURLEncoder INSTANCE = new FormURLEncoder();
 
-    private static final char AMPERSAND[] = { '&' };
-    private static final char EQUALS[] = { '=' };
-
     private FormURLEncoder(){}
 
     @Override
@@ -45,7 +40,6 @@ public final class FormURLEncoder implements Encoder{
             throw new IllegalArgumentException("!(src instanceof Map)");
 
         boolean first = true;
-        OutputStreamWriter writer = new OutputStreamWriter(out, IOUtil.UTF_8);
         Map<Object, Object> map = (Map<Object, Object>)src;
         for(Map.Entry<Object, Object> entry: map.entrySet()){
             String key = String.valueOf(entry.getKey());
@@ -53,19 +47,24 @@ public final class FormURLEncoder implements Encoder{
             if(entry.getValue() instanceof Iterable){
                 Iterable<Object> values = (Iterable<Object>)entry.getValue();
                 for(Object value: values)
-                    first = write(first, writer, key, value);
+                    first = write(first, out, key, value);
             }else
-                first = write(first, writer, key, entry.getValue());
+                first = write(first, out, key, entry.getValue());
         }
-        writer.flush();
     }
 
-    private static boolean write(boolean first, Writer writer, String key, Object value) throws IOException{
+    private static boolean write(boolean first, OutputStream out, String key, Object value) throws IOException{
         if(!first)
-            writer.write(AMPERSAND);
-        writer.write(key);
-        writer.write(EQUALS);
-        writer.write(URLEncoder.encode(String.valueOf(value), IOUtil.UTF_8.name()));
+            out.write('&');
+        write(out, key);
+        out.write('=');
+        write(out, URLEncoder.encode(String.valueOf(value), IOUtil.UTF_8.name()));
         return false;
+    }
+
+    private static void write(OutputStream out, String str) throws IOException{
+        int len = str.length();
+        for(int i=0; i<len; i++)
+            out.write(str.charAt(i));
     }
 }
