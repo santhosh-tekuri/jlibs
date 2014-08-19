@@ -19,6 +19,7 @@ import jlibs.core.graph.Filter;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -279,5 +280,37 @@ public class ArrayUtil{
         for(int i=arr.length-1; i>=0; i--)
             result[i] = arr[i];
         return result;
+    }
+
+    /*-------------------------------------------------[ ensureCapacity ]---------------------------------------------------*/
+
+    public static byte[] ensureCapacity(byte array[], int capacity){
+        if(capacity<=0 || capacity-array.length<=0)
+            return array;
+
+        int newCapacity = array.length*2;
+        if(newCapacity-capacity< 0)
+            newCapacity = capacity;
+        if(newCapacity<0){
+            if(capacity<0) // overflow
+                throw new OutOfMemoryError();
+            newCapacity = Integer.MAX_VALUE;
+        }
+        return Arrays.copyOf(array, newCapacity);
+    }
+
+    public static char[] ensureCapacity(char array[], int capacity){
+        if(capacity<=0 || capacity-array.length<=0)
+            return array;
+
+        int newCapacity = array.length*2;
+        if(newCapacity-capacity< 0)
+            newCapacity = capacity;
+        if(newCapacity<0){
+            if(capacity<0) // overflow
+                throw new OutOfMemoryError();
+            newCapacity = Integer.MAX_VALUE;
+        }
+        return Arrays.copyOf(array, newCapacity);
     }
 }
