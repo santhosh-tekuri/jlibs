@@ -101,7 +101,6 @@ public final class Reactor{
     /*-------------------------------------------------[ Tasks ]---------------------------------------------------*/
 
     private volatile Deque<Runnable> tasks = new ArrayDeque<>();
-    private Deque<Runnable> tempTasks = new ArrayDeque<>();
 
     public synchronized void invokeLater(Runnable task){
         tasks.push(task);
@@ -116,24 +115,6 @@ public final class Reactor{
             synchronized(task){
                 invokeLater(task);
                 task.wait();
-            }
-        }
-    }
-
-    void runTasks(){
-        while(!tasks.isEmpty()){
-            synchronized(this){
-                Deque<Runnable> temp = tasks;
-                tasks = tempTasks;
-                tempTasks = temp;
-            }
-            while(!tempTasks.isEmpty()){
-                try{
-                    activeClient = null;
-                    tempTasks.pop().run();
-                }catch(Throwable thr){
-                    handleException(thr);
-                }
             }
         }
     }
@@ -223,24 +204,6 @@ public final class Reactor{
         }
     }
 
-    void processReadyList(){
-        while(readyListHead!=null){
-            Client removed = readyListHead;
-            if(readyListHead.readyNext==readyListHead && readyListHead.readyPrev==readyListHead){
-                readyListHead = null;
-            }else{
-                readyListHead = readyListHead.readyNext;
-                readyListHead.readyPrev = removed.readyPrev;
-                readyListHead.readyPrev.readyNext = readyListHead;
-            }
-            removed.readyPrev = null;
-            removed.readyNext = null;
-
-            activeClient = removed;
-            removed.process();
-        }
-    }
-
     /*-------------------------------------------------[ Thread ]---------------------------------------------------*/
 
     public void start(){
@@ -266,13 +229,44 @@ public final class Reactor{
 
         @Override
         public void run(){
+            final TimeoutTracker timeoutTracker = Reactor.this.timeoutTracker;
+            Deque<Runnable> tempTasks = new ArrayDeque<>();
             Client client;
             while(true){
                 try{
-                    if(readyListHead!=null)
-                        processReadyList();
-                    if(!tasks.isEmpty())
-                        runTasks();
+                    // process ReadyList
+                    while(readyListHead!=null){
+                        Client removed = readyListHead;
+                        if(readyListHead.readyNext==readyListHead && readyListHead.readyPrev==readyListHead){
+                            readyListHead = null;
+                        }else{
+                            readyListHead = readyListHead.readyNext;
+                            readyListHead.readyPrev = removed.readyPrev;
+                            readyListHead.readyPrev.readyNext = readyListHead;
+                        }
+                        removed.readyPrev = null;
+                        removed.readyNext = null;
+
+                        activeClient = removed;
+                        removed.process();
+                    }
+
+                    // run tasks
+                    while(!tasks.isEmpty()){
+                        synchronized(this){
+                            Deque<Runnable> temp = tasks;
+                            tasks = tempTasks;
+                            tempTasks = temp;
+                        }
+                        while(!tempTasks.isEmpty()){
+                            try{
+                                activeClient = null;
+                                tempTasks.pop().run();
+                            }catch(Throwable thr){
+                                handleException(thr);
+                            }
+                        }
+                    }
 
                     if(isShutdown()){
                         selector.close();
