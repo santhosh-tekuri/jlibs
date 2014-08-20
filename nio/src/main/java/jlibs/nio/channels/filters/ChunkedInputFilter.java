@@ -15,31 +15,50 @@
 
 package jlibs.nio.channels.filters;
 
-import jlibs.core.io.IOUtil;
 import jlibs.nio.Reactor;
 import jlibs.nio.channels.impl.filters.AbstractInputFilterChannel;
-import jlibs.nio.util.BytePattern;
+import jlibs.nio.util.Line;
+import jlibs.nio.util.NIOUtil;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class ChunkedInputFilter extends AbstractInputFilterChannel{
     private static final int STATE_CHUNK_BEGIN = 0;
-    private static final int STATE_CHUNK_CONTENT = 1;
-    private static final int STATE_CHUNK_END = 2;
-    private static final int STATE_TRAILER = 3;
-    private static final int STATE_FINISHED = 4;
+    private static final int STATE_READ_EOL = 1;
+    private static final int STATE_CHUNK_CONTENT = 2;
+    private static final int STATE_CHUNK_END = 3;
+    private static final int STATE_LAST_CHUNK_END = 4;
+    private static final int STATE_TRAILER = 5;
+    private static final int STATE_FINISHED = 6;
+
+    private static final int HEX_DIGITS[] = new int['f'+1];
+    static{
+        for(int i='0'; i<='9'; ++i)
+            HEX_DIGITS[i] = i-'0';
+        for(int i='a'; i<='f'; ++i)
+            HEX_DIGITS[i] = i-'a'+10;
+        for(int i='A'; i<='F'; ++i)
+            HEX_DIGITS[i] = i-'A'+10;
+    }
 
     private int state = STATE_CHUNK_BEGIN;
-    private ByteBuffer buffer = Reactor.current().bufferPool.borrow(100);
-    private int readPos = 0;
-    private int chunkLength = -1;
-    private BytePattern.Matcher matcher;
+    private ByteBuffer buffer = Reactor.current().bufferPool.borrow(18);
+    private int chunkLength = 0;
+    private Line line;
+
+    public ChunkedInputFilter(){
+        buffer.flip();
+    }
+
+    private Line.Consumer consumer;
+    public void setLineConsumer(Line.Consumer consumer){
+        this.consumer = consumer;
+    }
 
     @Override
     public long available(){
@@ -52,106 +71,105 @@ public class ChunkedInputFilter extends AbstractInputFilterChannel{
             switch(state){
                 case STATE_CHUNK_BEGIN:
                     do{
-                        if(chunkLength==-1){
-                            if(!fillBuffer())
-                                return 0;
-                        }else
-                            chunkLength = -1;
-                        int semicolon = -1;
-                        byte array[] = buffer.array();
-                        for(int i=readPos+2; i<buffer.position(); i++){
-                            if(semicolon==-1 && array[i-2]==';')
-                                semicolon = i-2;
-                            if(array[i-1]=='\r' && array[i]=='\n'){
-                                try{
-                                    chunkLength = Integer.parseInt(new String(array, readPos, (semicolon==-1 ? i-1 : semicolon)-readPos, IOUtil.US_ASCII), 16);
-                                }catch(NumberFormatException ex){
-                                    throw new ChunkException("invalid chunk length", ex);
-                                }
-                                if(chunkLength<0)
-                                    throw new ChunkException("negative chunk length");
-                                readPos = i+1;
+                        if(!buffer.hasRemaining() && !fillBuffer())
+                            return 0;
+                        do{
+                            byte b = buffer.get();
+                            if((b>='0' && b<='9') || (b>='a' && b<='f') || (b>='A' && b<='F')){
+                                chunkLength <<= 4;
+                                chunkLength += HEX_DIGITS[b];
+                            }else{
+                                if(b=='\n')
+                                    state = chunkLength==0 ? STATE_LAST_CHUNK_END : STATE_CHUNK_CONTENT;
+                                else
+                                    state = STATE_READ_EOL;
                                 break;
                             }
-                        }
-                    }while(chunkLength<0);
-                    if(chunkLength==0){
-                        state = STATE_CHUNK_END;
-                        break;
-                    }else
-                        state = STATE_CHUNK_CONTENT;
+                        }while(buffer.hasRemaining());
+                    }while(state==STATE_CHUNK_BEGIN);
+                    break;
+                case STATE_READ_EOL:
+                    do{
+                        if(!buffer.hasRemaining() && !fillBuffer())
+                            return 0;
+                        do{
+                            if(buffer.get()=='\n'){
+                                state = chunkLength==0 ? STATE_LAST_CHUNK_END : STATE_CHUNK_CONTENT;
+                                break;
+                            }
+                        }while(buffer.hasRemaining());
+                    }while(state==STATE_READ_EOL);
+                    break;
                 case STATE_CHUNK_CONTENT:
-                    int read = 0;
-                    if(readPos!=buffer.position()){
-                        read = Math.min(chunkLength, Math.min(buffer.position()-readPos, dst.remaining()));
-                        dst.put(buffer.array(), readPos, read);
-                        readPos += read;
-                        chunkLength -= read;
+                    int pos = dst.position();
+                    if(buffer.hasRemaining()){
+                        int min = Math.min(chunkLength, Math.min(buffer.remaining(), dst.remaining()));
+                        int _limit = buffer.limit();
+                        buffer.limit(buffer.position()+min);
+                        dst.put(buffer);
+                        buffer.limit(_limit);
+                        chunkLength -= min;
                     }
                     if(chunkLength>0 && dst.hasRemaining()){
-                        int userLimit = dst.limit();
+                        int _limit = dst.limit();
                         dst.limit(dst.position()+Math.min(chunkLength, dst.remaining()));
                         int peerRead;
                         try{
                             peerRead = peerInput.read(dst);
                         }finally{
-                            dst.limit(userLimit);
+                            dst.limit(_limit);
                         }
                         if(peerRead==-1)
                             throw new EOFException(chunkLength+" more bytes expected");
                         chunkLength -= peerRead;
-                        read += peerRead;
                     }
-                    if(chunkLength==0){
-                        chunkLength = -2; // not last chunk
+                    if(chunkLength==0)
                         state = STATE_CHUNK_END;
-                    }
-                    return read;
+                    return dst.position()-pos;
                 case STATE_CHUNK_END:
-                    while(buffer.position()-readPos<2){
+                    do{
+                        if(!buffer.hasRemaining() && !fillBuffer())
+                            return 0;
+                        do{
+                            if(buffer.get()=='\n'){
+                                state = STATE_CHUNK_BEGIN;
+                                break;
+                            }
+                        }while(buffer.hasRemaining());
+                    }while(state==STATE_CHUNK_END);
+                    break;
+                case STATE_LAST_CHUNK_END:
+                    while(buffer.remaining()<2){
                         if(!fillBuffer())
                             return 0;
                     }
-                    if(buffer.get(readPos)=='\r' && buffer.get(readPos+1)=='\n'){
-                        readPos += 2;
-                        if(chunkLength==0){
-                            unreadBuffer();
-                            state = STATE_FINISHED;
-                            return -1;
-                        }else{
-                            state = STATE_CHUNK_BEGIN;
-                            break;
-                        }
+                    if(buffer.get()=='\r'){
+                        buffer.get(); // '\n'
+                        unreadBuffer();
+                        state = STATE_FINISHED;
+                        return -1;
                     }else{
-                        if(chunkLength==0){
-                            chunkLength = -2; // ready only if necessary
-                            matcher = BytePattern.CRLFCRLF.new Matcher();
-                            state = STATE_TRAILER;
-                        }else
-                            throw new ChunkException("chunk should end with '\\r\\n'");
+                        buffer.position(buffer.position()-1);
+                        state = STATE_TRAILER;
                     }
                 case STATE_TRAILER:
+                    if(line==null)
+                        line = new Line();
                     while(true){
-                        int pos;
-                        if(chunkLength==-1){
-                            pos = buffer.position();
-                            if(!fillBuffer())
-                                return 0;
-                        }else{
-                            pos = readPos;
-                            chunkLength = -1;
+                        while(buffer.hasRemaining()){
+                            if(line.consume(buffer)){
+                                if(consumer!=null)
+                                    consumer.consume(line);
+                                if(line.length()==0){
+                                    unreadBuffer();
+                                    state = STATE_FINISHED;
+                                    return -1;
+                                }else
+                                    line.reset();
+                            }
                         }
-
-                        byte array[] = buffer.array();
-                        while(pos<buffer.position()){
-                            if(matcher.matches(array[pos])){
-                                readPos = pos+1;
-                                unreadBuffer();
-                                state = STATE_FINISHED;
-                                return -1;
-                            }else
-                                ++pos;
-                        }
+                        if(!fillBuffer())
+                            return 0;
                     }
                 case STATE_FINISHED:
                     return -1;
@@ -160,40 +178,36 @@ public class ChunkedInputFilter extends AbstractInputFilterChannel{
     }
 
     private boolean fillBuffer() throws IOException{
-        if(readPos==buffer.position()){
-            buffer.clear();
-            readPos = 0;
-        }else if(!buffer.hasRemaining()){
-            if(readPos==0){
-                int newCapacity = buffer.capacity()+100;
-                buffer = ByteBuffer.wrap(Arrays.copyOf(buffer.array(), newCapacity), buffer.position(), newCapacity-buffer.capacity());
-            }else{
-                System.arraycopy(buffer.array(), readPos, buffer.array(), 0, buffer.position()-readPos);
-                buffer.position(buffer.position()-readPos);
-                readPos = 0;
-            }
+        NIOUtil.compact(buffer);
+        int read;
+        try{
+            read = peerInput.read(buffer);
+        }finally{
+            buffer.flip();
         }
-        int read = peerInput.read(buffer);
         if(read==-1)
             throw new EOFException("unexpected end of stream");
         return read!=0;
     }
 
     private void unreadBuffer(){
-        if(readPos!=buffer.position()){
-            buffer.limit(buffer.position());
-            buffer.position(readPos);
+        if(buffer.hasRemaining())
             peerInput.unread(buffer);
-        }else{
-            if(buffer.capacity()==100)
-                Reactor.current().bufferPool.returnBack(buffer);
-        }
+        else
+            Reactor.current().bufferPool.returnBack(buffer);
+        buffer = null;
     }
 
     @Override
     protected boolean isReadReady(){
         return state==STATE_FINISHED ||
-                (state==STATE_CHUNK_CONTENT && readPos!=buffer.position()) ||
-                (state==STATE_CHUNK_END && buffer.position()-readPos>=2);
+                (state==STATE_CHUNK_CONTENT && buffer.hasRemaining()) ||
+                (state==STATE_CHUNK_END && buffer.remaining()>=2);
+    }
+
+    @Override
+    public void dispose(){
+        if(buffer!=null)
+            Reactor.current().bufferPool.returnBack(buffer);
     }
 }

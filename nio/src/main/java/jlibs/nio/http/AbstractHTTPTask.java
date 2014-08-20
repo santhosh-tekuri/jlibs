@@ -23,6 +23,7 @@ import jlibs.nio.Reactor;
 import jlibs.nio.async.*;
 import jlibs.nio.channels.InputChannel;
 import jlibs.nio.channels.OutputChannel;
+import jlibs.nio.channels.filters.ChunkedInputFilter;
 import jlibs.nio.channels.filters.ChunkedOutputFilter;
 import jlibs.nio.channels.filters.FixedLengthInputFilter;
 import jlibs.nio.channels.filters.IdentityOutputFilter;
@@ -301,6 +302,8 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                             client.inPipeline.push(encodings.remove(encodings.size()-1).createInputFilter());
                     }
                 }
+                if(client.in() instanceof ChunkedInputFilter)
+                    ((ChunkedInputFilter)client.in()).setLineConsumer(message.headers);
                 addTrackingFilters();
                 payload = new Payload(contentLength, contentType, encodings, client.in());
             }
