@@ -31,7 +31,7 @@ import static jlibs.nio.http.msg.Headers.*;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public abstract class Message implements Line.Consumer, Bytes.Encodable{
+public abstract class Message implements Line.Consumer, Encodable, Bytes.Encodable{
     public Version version = Version.HTTP_1_1;
     public final Headers headers = new Headers();
 

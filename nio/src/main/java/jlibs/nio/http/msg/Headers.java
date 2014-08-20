@@ -20,6 +20,8 @@ import jlibs.nio.http.msg.spec.*;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.TreeMap;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Headers implements Line.Consumer, Bytes.Encodable{
+public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
     private final TreeMap<String, Header> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private Header head;
 
@@ -334,6 +336,17 @@ public class Headers implements Line.Consumer, Bytes.Encodable{
         buffer.flip();
         bytes.append(buffer);
         return bytes;
+    }
+
+    @Override
+    public void encodeTo(OutputStream out) throws IOException{
+        Header header = head;
+        while(header!=null){
+            header.encodeTo(out);
+            header = header.next;
+        }
+        out.write('\r');
+        out.write('\n');
     }
 
     /*-------------------------------------------------[ Standard Headers ]---------------------------------------------------*/

@@ -21,7 +21,10 @@ import jlibs.nio.http.msg.spec.AcceptCharset;
 import jlibs.nio.http.msg.spec.values.*;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
+import jlibs.nio.util.NIOUtil;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Date;
@@ -73,6 +76,18 @@ public class Request extends Message{
         buffer.flip();
         bytes.append(buffer);
         return bytes;
+    }
+
+    @Override
+    public void encodeTo(OutputStream out) throws IOException{
+        NIOUtil.writeAscii(method.name, out);
+        out.write(' ');
+        NIOUtil.writeAscii(uri, out);
+        out.write(' ');
+        NIOUtil.writeAscii(version.text, out);
+        out.write('\r');
+        out.write('\n');
+        headers.encodeTo(out);
     }
 
     /*-------------------------------------------------[ Headers ]---------------------------------------------------*/

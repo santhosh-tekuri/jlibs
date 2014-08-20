@@ -16,13 +16,16 @@
 package jlibs.nio.http.msg;
 
 import jlibs.nio.util.Bytes;
+import jlibs.nio.util.NIOUtil;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Header{
+public class Header implements Encodable{
     String name;
     String value;
 
@@ -67,6 +70,16 @@ public class Header{
         buffer = bytes.append(": ", buffer);
         buffer = bytes.append(value, buffer);
         return bytes.append("\r\n", buffer);
+    }
+
+    @Override
+    public void encodeTo(OutputStream out) throws IOException{
+        NIOUtil.writeAscii(name, out);
+        out.write(':');
+        out.write(' ');
+        NIOUtil.writeAscii(value, out);
+        out.write('\r');
+        out.write('\n');
     }
 
     public static interface Names{
