@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
  * @author Santhosh Kumar Tekuri
  */
 public class ReadLines extends InputTask{
-    private final Line line = new Line(275);
+    private final Line line = new Line();
     protected final Line.Consumer consumer;
 
     public ReadLines(Line.Consumer consumer){
