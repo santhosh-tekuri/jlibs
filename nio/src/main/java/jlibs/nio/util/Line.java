@@ -27,6 +27,10 @@ public class Line{
     private char chars[];
     private int count;
 
+    public Line(){
+        this(500);
+    }
+
     public Line(int size){
         chars = new char[size];
     }
