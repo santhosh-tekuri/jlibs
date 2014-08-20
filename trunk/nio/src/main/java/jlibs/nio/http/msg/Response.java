@@ -21,7 +21,10 @@ import jlibs.nio.http.msg.spec.values.ContentDisposition;
 import jlibs.nio.http.msg.spec.values.NewCookie;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
+import jlibs.nio.util.NIOUtil;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Date;
@@ -73,6 +76,20 @@ public class Response extends Message{
         buffer.flip();
         bytes.append(buffer);
         return bytes;
+    }
+
+    @Override
+    public void encodeTo(OutputStream out) throws IOException{
+        NIOUtil.writeAscii(version.text, out);
+        out.write(' ');
+        out.write(statusCode/100+'0');
+        out.write(statusCode/10%10+'0');
+        out.write(statusCode%10+'0');
+        out.write(' ');
+        NIOUtil.writeAscii(reasonPhrase, out);
+        out.write('\r');
+        out.write('\n');
+        headers.encodeTo(out);
     }
 
     /*-------------------------------------------------[ Status ]---------------------------------------------------*/
