@@ -41,6 +41,7 @@ import java.util.List;
 import static jlibs.nio.http.msg.Headers.*;
 import static jlibs.nio.http.msg.Method.GET;
 import static jlibs.nio.http.msg.Method.HEAD;
+import static jlibs.nio.http.msg.Method.TRACE;
 
 /**
  * @author Santhosh Kumar Tekri
@@ -351,16 +352,26 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
     protected final void writeMessage(Message message){
         try{
             this.message = message;
+            chunkedOutput = false;
 
+            message.headers.set(CONTENT_TYPE, message.getPayload().contentType);
             long contentLength = message.getPayload().contentLength;
             if(contentLength==0){
-                if(!(message instanceof Request && ((Request)message).method==GET))
-                    message.setContentLength(0);
-                message.headers.remove(CONTENT_TYPE);
-                message.headers.remove(TRANSFER_ENCODING);
+                boolean removeContentLength = false;
+                if(message instanceof Request){
+                    Method method = ((Request)message).method;
+                    if(method==GET || method==TRACE)
+                        removeContentLength = true;
+                }else{
+                    int statusCode = ((Response)message).statusCode;
+                    if(Status.isPayloadNotAllowed(statusCode))
+                        removeContentLength = true;
+                }
+                message.setContentLength(removeContentLength ? -1 : 0);
+                if(removeContentLength)
+                    message.headers.remove(TRANSFER_ENCODING);
                 message.headers.remove(CONTENT_ENCODING);
             }else{
-                message.headers.set(CONTENT_TYPE, message.getPayload().contentType);
                 if(contentLength==-1){
                     message.setChunked();
                     chunkedOutput = true;
@@ -406,7 +417,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         if(Debugger.HTTP)
             Debugger.println(client.out()+".writePayload()");
         Payload payload = message.getPayload();
-        if(payload.contentLength==0){
+        if(payload.contentLength==0 || (message instanceof Request && ((Request)message).method==HEAD)){
             _writeMessageCompleted(null, false);
             return;
         }
