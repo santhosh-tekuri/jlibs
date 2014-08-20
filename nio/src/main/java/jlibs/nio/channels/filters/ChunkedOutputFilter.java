@@ -15,7 +15,6 @@
 
 package jlibs.nio.channels.filters;
 
-import jlibs.core.io.IOUtil;
 import jlibs.nio.Reactor;
 import jlibs.nio.channels.impl.filters.AbstractOutputFilterChannel;
 
@@ -44,11 +43,28 @@ public class ChunkedOutputFilter extends AbstractOutputFilterChannel{
         chunkEnd.position(chunkEnd.limit());
     }
 
+    private static final byte digits[] = {
+        '0' , '1' , '2' , '3' , '4' , '5' ,
+        '6' , '7' , '8' , '9' , 'a' , 'b' ,
+        'c' , 'd' , 'e' , 'f'
+    };
+    private static final int shift = 4;
+    private static final int mask = (1<<shift)-1;
     public void startChunk(long length){
         if(length>0 && isOpen() && chunkLength==0 && !chunkEnd.hasRemaining()){
             chunkLength = length;
             chunkBegin.clear();
-            chunkBegin.put(Long.toString(length, 16).getBytes(IOUtil.US_ASCII));
+
+            // convert long to hex: borrowed from Long.toHexString(long)
+            final int mag = Long.SIZE - Long.numberOfLeadingZeros(length);
+            final int chars = Math.max(((mag + (shift-1))/shift), 1);
+            int charPos = chars;
+            do{
+                chunkBegin.put(--charPos, digits[((int)length)&mask]);
+                length >>>= shift;
+            }while(length!=0 && charPos>0);
+            chunkBegin.position(chars);
+
             chunkBegin.put((byte)'\r');
             chunkBegin.put((byte)'\n');
             chunkBegin.flip();
