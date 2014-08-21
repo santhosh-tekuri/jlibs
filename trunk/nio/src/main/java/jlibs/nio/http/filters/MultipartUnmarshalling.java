@@ -15,13 +15,9 @@
 
 package jlibs.nio.http.filters;
 
-import jlibs.nio.channels.InputChannel;
 import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.async.ReadMultipart;
-import jlibs.nio.http.msg.Message;
-import jlibs.nio.http.msg.Multipart;
-import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.MediaType;
 
 /**
@@ -44,37 +40,36 @@ public class MultipartUnmarshalling implements HTTPTask.RequestFilter<HTTPTask>,
     public void filter(HTTPTask task) throws Exception{
         Message message = parseRequest ? task.getRequest() : task.getResponse();
         Payload payload = message.getPayload();
-        if(!(payload.getSource() instanceof InputChannel)){
-            task.resume();
-            return;
-        }
 
-        MediaType mt = null;
-        if(payload.contentLength!=0 && payload.contentType!=null)
-            mt = new MediaType(payload.contentType);
+        if(payload.getContentLength()!=0 && payload instanceof RawPayload){
+            RawPayload rawPayload = (RawPayload)payload;
 
-        if(mt==null || !mt.isMultipart()){
-            task.resume();
-            return;
-        }
-
-        payload.removeEncodings();
-        InputChannel in = (InputChannel)payload.getSource();
-        Multipart multipart = new Multipart();
-        new ReadMultipart(multipart, mt.getBoundary()).start(in, (thr, timeout) -> {
-            if(thr!=null)
-                task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
-            else if(timeout)
-                task.resume(parseRequest ? Status.REQUEST_TIMEOUT : Status.RESPONSE_TIMEOUT);
-            else{
-                try{
-                    message.setPayload(new Payload(-1, payload.contentType, null, multipart, null), true);
-                }catch(Throwable ex){
-                    task.resume(ex);
-                    return;
-                }
+            MediaType mt = null;
+            if(rawPayload.channel!=null && payload.contentType!=null)
+                mt = new MediaType(payload.contentType);
+            if(mt==null || !mt.isMultipart()){
                 task.resume();
+                return;
             }
-        });
+
+            rawPayload.removeEncodings();
+            Multipart multipart = new Multipart();
+            new ReadMultipart(multipart, mt.getBoundary()).start(rawPayload.channel, (thr, timeout) -> {
+                if(thr!=null)
+                    task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
+                else if(timeout)
+                    task.resume(parseRequest ? Status.REQUEST_TIMEOUT : Status.RESPONSE_TIMEOUT);
+                else{
+                    try{
+                        message.setPayload(new MultipartPayload(payload.contentType, multipart), true);
+                    }catch(Throwable ex){
+                        task.resume(ex);
+                        return;
+                    }
+                    task.resume();
+                }
+            });
+        }else
+            task.resume();
     }
 }

@@ -21,7 +21,6 @@ import jlibs.nio.Client;
 import jlibs.nio.Debugger;
 import jlibs.nio.Reactor;
 import jlibs.nio.async.*;
-import jlibs.nio.channels.InputChannel;
 import jlibs.nio.channels.OutputChannel;
 import jlibs.nio.channels.filters.ChunkedInputFilter;
 import jlibs.nio.channels.filters.ChunkedOutputFilter;
@@ -32,16 +31,14 @@ import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.Encoding;
 import jlibs.nio.util.Bytes;
 
-import java.io.InputStream;
+import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import static jlibs.nio.http.msg.Headers.*;
-import static jlibs.nio.http.msg.Method.GET;
-import static jlibs.nio.http.msg.Method.HEAD;
-import static jlibs.nio.http.msg.Method.TRACE;
+import static jlibs.nio.http.msg.Method.*;
 
 /**
  * @author Santhosh Kumar Tekri
@@ -306,10 +303,10 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                 if(client.in() instanceof ChunkedInputFilter)
                     ((ChunkedInputFilter)client.in()).setLineConsumer(message.headers);
                 addTrackingFilters();
-                payload = new Payload(contentLength, contentType, encodings, client.in());
+                payload = new RawPayload(contentLength, contentType, encodings, client.in());
             }
             if(Debugger.HTTP)
-                Debugger.println("payload: "+payload.getSource());
+                Debugger.println("payload: "+client.in());
             message.setPayload(payload, true);
         }catch(Throwable thr1){
             _readMessageCompleted(thr1, false);
@@ -340,7 +337,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         if(client.inPipeline.empty())
             drainedInputFilters(null, false);
         else
-            new DrainInput(Bytes.CHUNK_SIZE).start(client.in(), this::drainInputFilters);
+            new DrainInput().start(client.in(), this::drainInputFilters);
     }
 
     protected abstract void drainedInputFilters(Throwable thr, boolean timeout);
@@ -349,14 +346,24 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
 
     private boolean chunkedOutput;
     private OutputChannel socketOutput;
+    private Payload writePayload;
     protected final void writeMessage(Message message){
         try{
             this.message = message;
             chunkedOutput = false;
 
             message.headers.set(CONTENT_TYPE, message.getPayload().contentType);
-            long contentLength = message.getPayload().contentLength;
-            if(contentLength==0){
+            writePayload = message.getPayload();
+            if(writePayload instanceof RawPayload){
+                RawPayload rawPayload = (RawPayload)message.getPayload();
+                List<Encoding> encodings = rawPayload.encodings;
+                if(encodings!=null && !encodings.isEmpty())
+                    message.setContentEncodings(encodings);
+            }
+
+            if(writePayload.getContentLength()>0)
+                message.setContentLength(writePayload.getContentLength());
+            else if(writePayload.getContentLength()==0){
                 boolean removeContentLength = false;
                 if(message instanceof Request){
                     Method method = ((Request)message).method;
@@ -371,17 +378,14 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                 if(removeContentLength)
                     message.headers.remove(TRANSFER_ENCODING);
                 message.headers.remove(CONTENT_ENCODING);
+            }else if(message.getPayload() instanceof EncodablePayload){
+                writePayload = ((EncodablePayload)message.getPayload()).toRawPayload();
+                message.setContentLength(writePayload.getContentLength());
             }else{
-                if(contentLength==-1){
-                    message.setChunked();
-                    chunkedOutput = true;
-                }else
-                    message.setContentLength(contentLength);
-
-                List<Encoding> encodings = message.getPayload().encodings;
-                if(encodings!=null && !encodings.isEmpty())
-                    message.setContentEncodings(encodings);
+                chunkedOutput = true;
+                message.setChunked();
             }
+
             if(hasProxyConnectionHeader && message instanceof Response){
                 Header header = response.headers.remove(CONNECTION);
                 if(header!=null)
@@ -416,8 +420,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         }
         if(Debugger.HTTP)
             Debugger.println(client.out()+".writePayload()");
-        Payload payload = message.getPayload();
-        if(payload.contentLength==0 || (message instanceof Request && ((Request)message).method==HEAD)){
+        if(writePayload.getContentLength()==0 || (message instanceof Request && ((Request)message).method==HEAD)){
             _writeMessageCompleted(null, false);
             return;
         }
@@ -425,19 +428,27 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         try{
             if(chunkedOutput)
                 client.outPipeline.push(new ChunkedOutputFilter());
-            if(payload.encodings==null || payload.encodings.isEmpty()){
-                List<Encoding> encodings = message.getContentEncodings();
-                while(!encodings.isEmpty())
-                    client.outPipeline.push(encodings.remove(encodings.size()-1).createOutputFilter());
+            if(writePayload instanceof RawPayload){
+                RawPayload rawPayload = (RawPayload)writePayload;
+                List<Encoding> encodings = rawPayload.encodings;
+                if(encodings==null || encodings.isEmpty()){
+                    encodings = message.getContentEncodings();
+                    while(!encodings.isEmpty())
+                        client.outPipeline.push(encodings.remove(encodings.size()-1).createOutputFilter());
+                }
             }
         }catch(Throwable thr1){
             _writeMessageCompleted(thr1, false);
             return;
         }
-        if(payload.bytes!=null)
-            new WriteBytes(payload.bytes, !payload.retain).start(client.out(), this::writePayloadSource);
-        else
-            writePayloadSource(null, false);
+        if(writePayload instanceof RawPayload){
+            RawPayload rawPayload = (RawPayload)writePayload;
+            if(rawPayload.bytes!=null){
+                new WriteBytes(rawPayload.bytes, !rawPayload.retain).start(client.out(), this::writePayloadSource);
+                return;
+            }
+        }
+        writePayloadSource(null, false);
     }
 
     private void writePayloadSource(Throwable thr, boolean timeout){
@@ -450,51 +461,30 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         try{
             if(Debugger.HTTP)
                 Debugger.println(client.out()+".writePayloadSource()");
-            Payload payload = message.getPayload();
-            Object source = payload.getSource();
-            if(source==null)
-                closeOutputFilters(null, false);
-            else{
-                if(source instanceof InputChannel){
+            if(writePayload instanceof RawPayload){
+                RawPayload rawPayload = (RawPayload)writePayload;
+                if(rawPayload.channel==null)
+                    closeOutputFilters(null, false);
+                else{
                     if(client.outPipeline.empty())
                         client.outPipeline.push(new IdentityOutputFilter());
 
                     Pump pump;
-                    if(payload.retain){
-                        Bytes bytes = payload.bytes;
-                        if(bytes==null)
-                            bytes = payload.bytes = new Bytes();
-                        pump = new Pump((InputChannel)source, client.out(), bytes);
+                    if(rawPayload.retain){
+                        if(rawPayload.bytes==null)
+                            rawPayload.bytes = new Bytes();
+                        pump = new Pump(rawPayload.channel, client.out(), rawPayload.bytes);
                     }else
-                        pump = new Pump((InputChannel)source, client.out());
+                        pump = new Pump(rawPayload.channel, client.out());
                     pump.start(this::closeOutputFilters);
-                }else if(payload.getEncoder()!=null){
-                    Bytes bytes = new Bytes();
-                    try(Bytes.OutputStream bout=bytes.new OutputStream()){
-                        payload.getEncoder().encodeTo(source, bout);
-                    }
-                    new WriteBytes(bytes, true).start(client.out(), this::closeOutputFilters);
-                }else if(source instanceof Encodable){
-                    Bytes bytes = new Bytes();
-                    try(Bytes.OutputStream bout=bytes.new OutputStream()){
-                        ((Encodable)source).encodeTo(bout);
-                    }
-                    new WriteBytes(bytes, true).start(client.out(), this::closeOutputFilters);
-                }else if(source instanceof InputStream){
-                    ReadFromInputStream ris;
-                    if(payload.retain){
-                        Bytes bytes = payload.bytes;
-                        if(bytes==null)
-                            bytes = payload.bytes = new Bytes();
-                        ris = new ReadFromInputStream((InputStream)source, bytes);
-                    }else
-                        ris = new ReadFromInputStream((InputStream)source, Bytes.CHUNK_SIZE);
-                    ris.start(client.out(), this::closeOutputFilters);
-                }else if(source instanceof Multipart)
-                    new WriteMultipart(payload).start(client.out(), this::closeOutputFilters);
-                else
-                    _writeMessageCompleted(new NotImplementedException(source.getClass().getName()), false);
-            }
+                }
+            }else if(writePayload instanceof MultipartPayload)
+                new WriteMultipart((MultipartPayload)writePayload).start(client.out(), this::closeOutputFilters);
+            else if(writePayload instanceof FilePayload){
+                FilePayload filePayload = (FilePayload)writePayload;
+                new ReadFromInputStream(new FileInputStream(filePayload.file), Bytes.CHUNK_SIZE).start(client.out(), this::closeOutputFilters);
+            }else
+                _writeMessageCompleted(new NotImplementedException(writePayload.getClass().getName()), false);
         }catch(Throwable thr1){
             _writeMessageCompleted(thr1, false);
         }
@@ -502,9 +492,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
 
     private void closeOutputFilters(Throwable thr, boolean timeout){
         if(thr!=null || timeout){
-            Object source = message.getPayload().getSource();
-            if(source instanceof InputChannel)
-                assert !((InputChannel)source).isOpen();
+            assert !(message.getPayload() instanceof RawPayload) || !((RawPayload)message.getPayload()).channel.isOpen();
             _writeMessageCompleted(thr, timeout);
             return;
         }
@@ -536,6 +524,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         }
         message = null;
         socketOutput = null;
+        writePayload = null;
         chunkedOutput = false;
         writeMessageCompleted(thr, timeout);
     }

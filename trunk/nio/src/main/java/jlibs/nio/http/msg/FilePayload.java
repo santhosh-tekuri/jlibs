@@ -15,42 +15,36 @@
 
 package jlibs.nio.http.msg;
 
+import jlibs.core.io.IOUtil;
 import jlibs.nio.async.ExecutionContext;
-import jlibs.nio.http.msg.spec.values.MediaType;
+import jlibs.nio.channels.ListenerUtil;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.OutputStream;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public abstract class Payload{
-    public static final Payload NO_PAYLOAD = new Payload(null){
-        @Override
-        public long getContentLength(){ return 0; }
+public class FilePayload extends Payload{
+    public final File file;
 
-        @Override
-        public void transferTo(OutputStream out, ExecutionContext context){}
-    };
-
-    public final String contentType;
-
-    protected Payload(String contentType){
-        this.contentType = contentType;
+    public FilePayload(String contentType, File file){
+        super(contentType);
+        this.file = file;
     }
 
-    private MediaType mediaType;
-    public MediaType getMediaType(){
-        if(contentType==null)
-            return null;
-        if(mediaType==null)
-            mediaType = new MediaType(contentType);
-        return mediaType;
-    }
-
+    @Override
     public long getContentLength(){
-        return -1;
+        return file.length();
     }
 
-    public abstract void transferTo(OutputStream out, ExecutionContext context);
+    public void transferTo(OutputStream out, ExecutionContext context){
+        try{
+            IOUtil.pump(new FileInputStream(file), out, true, false);
+            ListenerUtil.resume(context, null, false);
+        }catch(Throwable thr){
+            ListenerUtil.resume(context, thr, false);
+        }
+    }
 }
-
