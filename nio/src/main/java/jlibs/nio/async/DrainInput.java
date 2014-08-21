@@ -15,8 +15,10 @@
 
 package jlibs.nio.async;
 
+import jlibs.nio.Reactor;
 import jlibs.nio.channels.InputChannel;
 import jlibs.nio.channels.ListenerUtil;
+import jlibs.nio.util.Bytes;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,11 +26,8 @@ import java.nio.ByteBuffer;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class DrainInput extends InputTask{
-    private ByteBuffer buffer;
-    public DrainInput(int bufferSize){
-        buffer = ByteBuffer.allocate(bufferSize);
-    }
+public class DrainInput extends ClosingInputTask{
+    private ByteBuffer buffer = Reactor.current().bufferPool.borrow(Bytes.CHUNK_SIZE);
 
     public void start(InputChannel in, ExecutionContext context){
         super.start(in, context);
@@ -51,6 +50,14 @@ public class DrainInput extends InputTask{
                 return;
             }else
                 buffer.clear();
+        }
+    }
+
+    @Override
+    protected void cleanup(){
+        if(buffer!=null){
+            Reactor.current().bufferPool.returnBack(buffer);
+            buffer = null;
         }
     }
 }
