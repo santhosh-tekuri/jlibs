@@ -25,6 +25,7 @@ import jlibs.nio.channels.filters.BoundaryInputFilter;
 import jlibs.nio.http.msg.Multipart;
 import jlibs.nio.util.BytePattern;
 import jlibs.nio.util.Bytes;
+import jlibs.nio.util.Line;
 
 import java.io.IOException;
 
@@ -61,6 +62,7 @@ public class ReadMultipart{
         CloseInput.INSTANCE.start(client.in(), ExecutionContext.doFinally(context, thr, timeout));
     }
 
+    private Line line = new Line();
     private void readPartHeaders(Throwable thr, boolean timeout){
         if(thr!=null || timeout){
             resume(thr, timeout);
@@ -98,7 +100,8 @@ public class ReadMultipart{
             part.payload = bytes;
             bytes = null;
             multipart.parts.add(part);
-            new ReadLines(-1, -1, -1, part.headers).start(client.in(), this::readPartPayload);
+            line.reset();
+            new ReadLines(line, part.headers).start(client.in(), this::readPartPayload);
         }
     }
 

@@ -28,15 +28,11 @@ import java.nio.ByteBuffer;
  * @author Santhosh Kumar Tekuri
  */
 public class ReadLines extends InputTask{
-    private final Line line = new Line();
+    private final Line line;
     protected final Line.Consumer consumer;
 
-    public ReadLines(Line.Consumer consumer){
-        this(-1, -1, -1, consumer);
-    }
-
-    public ReadLines(int maxLen, int maxInitialLineLen, int maxLineLen, Line.Consumer consumer){
-        line.reset(maxLen, maxInitialLineLen, maxLineLen);
+    public ReadLines(Line line, Line.Consumer consumer){
+        this.line = line;
         this.consumer = consumer;
     }
 

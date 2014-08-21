@@ -30,6 +30,7 @@ import jlibs.nio.http.async.WriteMultipart;
 import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.Encoding;
 import jlibs.nio.util.Bytes;
+import jlibs.nio.util.Line;
 
 import java.io.FileInputStream;
 import java.util.Collections;
@@ -215,6 +216,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
     private int initialLineLimit;
     private int headerLimit;
     private int headersLimit;
+    private Line line;
     protected Message message;
     private final boolean supportsProxyConnectionHeader;
     private boolean hasProxyConnectionHeader;
@@ -224,7 +226,10 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
             Debugger.println(client.in()+".readMessage("+message.getClass().getSimpleName()+")");
         this.message = message;
         client.in().startInputMetric();
-        new ReadLines(headersLimit, initialLineLimit, headerLimit, message)
+        if(line==null)
+            line = new Line();
+        line.reset(headersLimit, initialLineLimit, headerLimit);
+        new ReadLines(line, message)
                 .ignoreEOF(message instanceof Request)
                 .start(client.in(), this::initPayload);
     }
