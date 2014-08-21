@@ -18,8 +18,8 @@ package jlibs.nio.http.encoders;
 import jlibs.core.io.IOUtil;
 import jlibs.nio.http.msg.Encoder;
 import jlibs.xml.xsl.TransformerUtil;
+import org.w3c.dom.Node;
 
-import javax.xml.soap.Node;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
