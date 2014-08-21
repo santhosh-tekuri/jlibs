@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public final class FormURLEncoder implements Encoder{
+public final class FormURLEncoder implements Encoder<Map<?, ?>>{
     public static final MediaType MEDIA_TYPE = MediaType.APPLICATION_FORM_URLENCODED.withCharset(IOUtil.UTF_8.name());
     public static final FormURLEncoder INSTANCE = new FormURLEncoder();
 
@@ -35,13 +35,9 @@ public final class FormURLEncoder implements Encoder{
 
     @Override
     @SuppressWarnings("unchecked")
-    public void encodeTo(Object src, OutputStream out) throws IOException{
-        if(!(src instanceof Map))
-            throw new IllegalArgumentException("!(src instanceof Map)");
-
+    public void encodeTo(Map<?, ?> map, OutputStream out) throws IOException{
         boolean first = true;
-        Map<Object, Object> map = (Map<Object, Object>)src;
-        for(Map.Entry<Object, Object> entry: map.entrySet()){
+        for(Map.Entry<?, ?> entry: map.entrySet()){
             String key = String.valueOf(entry.getKey());
             key = URLEncoder.encode(key, IOUtil.UTF_8.name());
             if(entry.getValue() instanceof Iterable){
