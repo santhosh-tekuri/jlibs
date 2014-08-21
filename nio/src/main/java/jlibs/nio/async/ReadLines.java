@@ -17,7 +17,6 @@ package jlibs.nio.async;
 
 import jlibs.nio.Reactor;
 import jlibs.nio.channels.InputChannel;
-import jlibs.nio.channels.ListenerUtil;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
 
@@ -52,11 +51,20 @@ public class ReadLines extends InputTask{
         try{
             ready(in);
         }catch(Throwable thr){
-            ListenerUtil.resume(detach(in), thr, false);
+            error(in, thr);
         }
     }
 
-    private final ByteBuffer buffer = Reactor.current().bufferPool.borrow(Bytes.CHUNK_SIZE);
+    private ByteBuffer buffer = Reactor.current().bufferPool.borrow(Bytes.CHUNK_SIZE);
+
+    @Override
+    protected void cleanup(){
+        if(buffer!=null){
+            Reactor.current().bufferPool.returnBack(buffer);
+            buffer = null;
+        }
+    }
+
     @Override
     public void ready(InputChannel in) throws IOException{
         while(true){
@@ -68,23 +76,30 @@ public class ReadLines extends InputTask{
                 return;
             }else if(read==-1){
                 boolean ignore = ignoreEOF && line.lineCount()==0 && line.length()==0;
-                ListenerUtil.resume(detach(in), ignore ? IgnorableEOFException.INSTANCE : new EOFException(), false);
+                resume(in, ignore ? IgnorableEOFException.INSTANCE : new EOFException(), false);
                 return;
             }
             while(buffer.hasRemaining()){
                 if(line.consume(buffer)){
                     consumer.consume(line);
                     if(line.length()==0){
-                        if(buffer.hasRemaining())
+                        if(buffer.hasRemaining()){
                             in.unread(buffer);
-                        else
-                            Reactor.current().bufferPool.returnBack(buffer);
-                        ListenerUtil.resume(detach(in), null, false);
+                            buffer = null;
+                        }
+                        resume(in, null, false);
                         return;
                     }else
                         line.reset();
                 }
             }
         }
+    }
+
+    @Override
+    public void error(InputChannel in, Throwable thr){
+        if(ignoreEOF && line.lineCount()==0 && line.length()==0)
+            thr = IgnorableEOFException.INSTANCE;
+        super.error(in, thr);
     }
 }

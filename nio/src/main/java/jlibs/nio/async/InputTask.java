@@ -15,8 +15,8 @@
 
 package jlibs.nio.async;
 
+import jlibs.nio.Reactor;
 import jlibs.nio.channels.InputChannel;
-import jlibs.nio.channels.ListenerUtil;
 
 import java.io.IOException;
 
@@ -29,26 +29,33 @@ public abstract class InputTask implements InputChannel.Listener{
         in.setInputListener(this);
     }
 
-    protected final ExecutionContext detach(InputChannel in){
+    protected void resume(InputChannel in, Throwable thr, boolean timeout){
+        cleanup();
         ExecutionContext context = in.attachment();
         in.attach(null);
         in.setInputListener(null);
-        return context;
+        try{
+            context.resume(thr, timeout);
+        }catch(Throwable thr1){
+            Reactor.current().handleException(thr1);
+        }
     }
+
+    protected void cleanup(){}
 
     @Override
     public void timeout(InputChannel in) throws IOException{
-        ListenerUtil.resume(detach(in), null, true);
+        resume(in, null, true);
     }
 
     @Override
     public void error(InputChannel in, Throwable thr){
-        ListenerUtil.resume(detach(in), thr, false);
+        resume(in, thr, false);
     }
 
     @Override
     public void closed(InputChannel in) throws IOException{
-        ListenerUtil.resume(detach(in), null, false);
+        resume(in, null, false);
     }
 
     @Override

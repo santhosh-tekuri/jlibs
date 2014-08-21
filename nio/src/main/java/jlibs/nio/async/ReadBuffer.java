@@ -16,7 +16,6 @@
 package jlibs.nio.async;
 
 import jlibs.nio.channels.InputChannel;
-import jlibs.nio.channels.ListenerUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,7 +35,7 @@ public class ReadBuffer extends InputTask{
         try{
             ready(in);
         }catch(Throwable thr){
-            ListenerUtil.resume(detach(in), thr, false);
+            error(in, thr);
         }
     }
 
@@ -50,6 +49,6 @@ public class ReadBuffer extends InputTask{
             }else if(read==-1)
                 break;
         }
-        ListenerUtil.resume(detach(in), null, false);
+        resume(in, null, false);
     }
 }

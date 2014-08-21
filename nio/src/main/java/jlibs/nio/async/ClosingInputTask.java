@@ -16,7 +16,6 @@
 package jlibs.nio.async;
 
 import jlibs.nio.channels.InputChannel;
-import jlibs.nio.channels.ListenerUtil;
 
 import java.io.IOException;
 
@@ -24,9 +23,6 @@ import java.io.IOException;
  * @author Santhosh Kumar Tekuri
  */
 public abstract class ClosingInputTask extends InputTask{
-    protected abstract void cleanup();
-
-
     private Throwable thr;
     private boolean timeout;
 
@@ -35,10 +31,8 @@ public abstract class ClosingInputTask extends InputTask{
         timeout = true;
         if(in.isOpen())
             in.close();
-        else{
-            cleanup();
-            ListenerUtil.resume(detach(in), thr, timeout);
-        }
+        else
+            resume(in, thr, true);
     }
 
     private void setException(Throwable thr){
@@ -57,20 +51,15 @@ public abstract class ClosingInputTask extends InputTask{
             }catch(Throwable thr1){
                 assert !in.isOpen();
                 setException(thr1);
-                if(!in.isClosed()){
-                    cleanup();
-                    ListenerUtil.resume(detach(in), this.thr, timeout);
-                }
+                if(!in.isClosed())
+                    resume(in, this.thr, timeout);
             }
-        }else{
-            cleanup();
-            ListenerUtil.resume(detach(in), this.thr, timeout);
-        }
+        }else
+            resume(in, this.thr, timeout);
     }
 
     @Override
     public void closed(InputChannel in) throws IOException{
-        cleanup();
-        ListenerUtil.resume(detach(in), this.thr, timeout);
+        resume(in, this.thr, timeout);
     }
 }

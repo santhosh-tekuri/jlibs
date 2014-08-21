@@ -17,7 +17,6 @@ package jlibs.nio.async;
 
 import jlibs.nbp.Feeder;
 import jlibs.nio.channels.InputChannel;
-import jlibs.nio.channels.ListenerUtil;
 
 import java.io.IOException;
 
@@ -36,7 +35,7 @@ public class XMLFeedTask extends InputTask{
         try{
             ready(in);
         }catch(Throwable thr){
-            ListenerUtil.resume(detach(in), thr, false);
+            error(in, thr);
         }
     }
 
