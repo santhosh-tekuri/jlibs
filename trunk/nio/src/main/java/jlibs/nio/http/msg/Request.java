@@ -67,9 +67,9 @@ public class Request extends Message{
     public Bytes encodeTo(Bytes bytes){
         ByteBuffer buffer = Reactor.current().bufferPool.borrow(Bytes.CHUNK_SIZE);
         buffer = bytes.append(method.name, buffer);
-        buffer = bytes.append(" ", buffer);
+        buffer = bytes.append((byte)' ', buffer);
         buffer = bytes.append(uri, buffer);
-        buffer = bytes.append(" ", buffer);
+        buffer = bytes.append((byte)' ', buffer);
         buffer = bytes.append(version.text, buffer);
         buffer = bytes.append("\r\n", buffer);
         buffer = headers.encode(bytes, buffer);

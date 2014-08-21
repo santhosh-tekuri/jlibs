@@ -323,7 +323,10 @@ public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
     public ByteBuffer encode(Bytes bytes, ByteBuffer buffer){
         Header header = head;
         while(header!=null){
-            buffer = header.encode(bytes, buffer);
+            buffer = bytes.append(header.name, buffer);
+            buffer = bytes.append(": ", buffer);
+            buffer = bytes.append(header.value, buffer);
+            buffer = bytes.append("\r\n", buffer);
             header = header.next;
         }
         return bytes.append("\r\n", buffer);

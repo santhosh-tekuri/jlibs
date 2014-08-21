@@ -288,12 +288,12 @@ public class HTTPServer extends HTTPService implements Server.Listener{
 
         private void finished(){
             endTime = System.currentTimeMillis();
-            if(accessLog!=null)
-                accessLogRecord.taskFinished(this);
             if(requestHasPayload)
                 requestPayloadSize = client.in().stopInputMetric();
-            if(accessLog!=null)
+            if(accessLog!=null){
+                accessLogRecord.taskFinished(this);
                 accessLogRecord.publish();
+            }
         }
 
         @Override
