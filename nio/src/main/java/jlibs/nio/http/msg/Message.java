@@ -22,6 +22,7 @@ import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.Line;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -71,8 +72,8 @@ public abstract class Message implements Line.Consumer, Encodable, Bytes.Encodab
     public void setPayload(Payload payload, boolean closeExistingPayload) throws IOException{
         Payload oldPayload = this.payload;
         this.payload = payload;
-        if(closeExistingPayload)
-            oldPayload.close();
+        if(closeExistingPayload && oldPayload instanceof Closeable)
+            ((Closeable)oldPayload).close();
     }
 
     /*-------------------------------------------------[ Headers ]---------------------------------------------------*/

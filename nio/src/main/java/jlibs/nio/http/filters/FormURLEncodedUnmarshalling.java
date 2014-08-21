@@ -19,9 +19,7 @@ import jlibs.core.io.ByteArrayOutputStream2;
 import jlibs.core.io.IOUtil;
 import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.encoders.FormURLEncoder;
-import jlibs.nio.http.msg.Message;
-import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.MediaType;
 
 import java.net.URLDecoder;
@@ -48,23 +46,22 @@ public class FormURLEncodedUnmarshalling implements HTTPTask.RequestFilter<HTTPT
         Message message = parseRequest ? task.getRequest() : task.getResponse();
         Payload payload = message.getPayload();
 
-        String charset;
-        boolean compatible = false;
-        if(payload.contentLength!=0 && payload.contentType!=null){
+        final String charset;
+        if(payload.getContentLength()!=0 && payload.contentType!=null){
             MediaType mt = new MediaType(payload.contentType);
-            compatible = mt.isCompatible(MediaType.APPLICATION_FORM_URLENCODED);
-            charset = mt.getCharset(IOUtil.UTF_8.name());
+            charset = mt.isCompatible(MediaType.APPLICATION_FORM_URLENCODED) ? mt.getCharset(IOUtil.UTF_8.name()) : null;
         }else
-            charset = IOUtil.UTF_8.name();
+            charset = null;
 
-        if(!compatible){
+        if(charset==null){
             task.resume();
             return;
         }
 
-        payload.removeEncodings();
+        if(payload instanceof RawPayload)
+            ((RawPayload)payload).removeEncodings();
         ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
-        payload.writePayloadTo(bout, (thr, timeout) -> {
+        payload.transferTo(bout, (thr, timeout) -> {
             if(thr!=null)
                 task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
             else if(timeout)
@@ -80,7 +77,7 @@ public class FormURLEncodedUnmarshalling implements HTTPTask.RequestFilter<HTTPT
                         String value = URLDecoder.decode(token.substring(equals+1), charset);
                         List<String> list = map.get(key);
                         if(list==null)
-                            map.put(key, list=new ArrayList<>());
+                            map.put(key, list=new ArrayList<>(2));
                         list.add(value);
                     }
                 }catch(Throwable thr1){
@@ -88,7 +85,7 @@ public class FormURLEncodedUnmarshalling implements HTTPTask.RequestFilter<HTTPT
                     return;
                 }
                 try{
-                    message.setPayload(new Payload(-1, FormURLEncoder.MEDIA_TYPE.toString(), null, map, FormURLEncoder.INSTANCE), true);
+                    message.setPayload(new EncodablePayload<>(FormURLEncoder.MEDIA_TYPE.toString(), map, FormURLEncoder.INSTANCE), true);
                 }catch(Throwable thr1){
                     task.resume(thr1);
                     return;

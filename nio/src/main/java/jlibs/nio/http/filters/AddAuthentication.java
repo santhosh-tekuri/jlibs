@@ -92,7 +92,7 @@ public class AddAuthentication implements HTTPTask.ResponseFilter<HTTPClient.Tas
                     md5.update((request.method+":"+request.uri).getBytes(UTF_8));
                     if("auth-init".equals(digestCredentials.qop)){
                         // ha2 = md5(method:uri:md5(payload)
-                        if(request.getPayload().contentLength==0)
+                        if(request.getPayload().getContentLength()==0)
                             md5.update((byte)':');
                         else{
                             // not implemented

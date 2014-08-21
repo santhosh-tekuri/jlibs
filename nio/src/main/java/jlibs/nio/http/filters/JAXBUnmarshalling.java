@@ -18,10 +18,11 @@ package jlibs.nio.http.filters;
 import jlibs.core.io.IOUtil;
 import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.encoders.JAXBEncoder;
+import jlibs.nio.http.msg.EncodablePayload;
 import jlibs.nio.http.msg.Message;
 import jlibs.nio.http.msg.Payload;
+import jlibs.nio.http.msg.RawPayload;
 import jlibs.xml.sax.async.AsyncXMLReader;
-import org.xml.sax.InputSource;
 
 import javax.xml.bind.UnmarshallerHandler;
 
@@ -36,9 +37,8 @@ public class JAXBUnmarshalling extends SAXParsing{
     }
 
     @Override
-    protected InputSource createInputSource(Payload payload) throws Exception{
-        payload.retain = false;
-        return super.createInputSource(payload);
+    protected boolean retain(RawPayload payload){
+        return false;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class JAXBUnmarshalling extends SAXParsing{
         Message message = parseRequest ? task.getRequest() : task.getResponse();
         Payload payload = message.getPayload();
         String contentType = payload.getMediaType().withCharset(IOUtil.UTF_8.name()).toString();
-        payload = new Payload(-1, contentType, null, jaxbObject, encoder);
+        payload = new EncodablePayload<>(contentType, jaxbObject, encoder);
         message.setPayload(payload, true);
         task.resume();
     }

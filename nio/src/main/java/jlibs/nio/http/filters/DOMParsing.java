@@ -18,8 +18,9 @@ package jlibs.nio.http.filters;
 import jlibs.core.io.IOUtil;
 import jlibs.nio.http.HTTPTask;
 import jlibs.nio.http.encoders.DOMEncoder;
+import jlibs.nio.http.msg.EncodablePayload;
 import jlibs.nio.http.msg.Message;
-import jlibs.nio.http.msg.Payload;
+import jlibs.nio.http.msg.RawPayload;
 import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.xml.sax.SAXUtil;
 import jlibs.xml.sax.async.AsyncXMLReader;
@@ -34,6 +35,11 @@ import javax.xml.transform.sax.TransformerHandler;
 public class DOMParsing extends SAXParsing{
     public DOMParsing(boolean parseRequest){
         super(parseRequest);
+    }
+
+    @Override
+    protected boolean retain(RawPayload payload){
+        return false;
     }
 
     @Override
@@ -54,9 +60,9 @@ public class DOMParsing extends SAXParsing{
         TransformerHandler handler = (TransformerHandler)xmlReader.getContentHandler();
         DOMResult result = (DOMResult)handler.getTransformer().getParameter(DOMResult.class.getName());
         Message message = parseRequest ? task.getRequest() : task.getResponse();
-        MediaType mediaType = message.getMediaType().withCharset(IOUtil.UTF_8.name());
+        MediaType mediaType = message.getPayload().getMediaType().withCharset(IOUtil.UTF_8.name());
         try{
-            message.setPayload(new Payload(-1, mediaType.toString(), null, result.getNode(), DOMEncoder.INSTANCE), true);
+            message.setPayload(new EncodablePayload<>(mediaType.toString(), result.getNode(), DOMEncoder.INSTANCE), true);
         }catch(Throwable thr){
             task.resume(thr);
             return;

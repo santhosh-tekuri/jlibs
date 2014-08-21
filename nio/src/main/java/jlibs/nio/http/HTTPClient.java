@@ -188,7 +188,7 @@ public class HTTPClient extends HTTPService{
                         return;
                     }
                 }
-                responseHasPayload = response.getPayload().contentLength!=0;
+                responseHasPayload = response.getPayload().getContentLength()!=0;
                 if(!responseHasPayload){
                     assert !(client.in() instanceof CloseTrackingInputFilter);
                     if(isKeepAlive())
@@ -300,7 +300,7 @@ public class HTTPClient extends HTTPService{
 
         @Override
         protected void notifyUser(Throwable thr, int timeoutCode){
-            if(thr!=null || timeoutCode!=-1 || response.getPayload().contentLength==0)
+            if(thr!=null || timeoutCode!=-1 || response.getPayload().getContentLength()==0)
                 commitAccessLog();
             super.notifyUser(thr, timeoutCode);
         }

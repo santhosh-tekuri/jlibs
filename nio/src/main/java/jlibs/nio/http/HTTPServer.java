@@ -118,7 +118,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
             response.setStatus(getErrorCode(), getErrorPhrase());
             if(thr!=null && showStackTrace){
                 try{
-                    response.setPayload(new Payload(-1, MediaType.TEXT_PLAIN.toString(), null, thr, ThrowableEncoder.INSTANCE), true);
+                    response.setPayload(new EncodablePayload<>(MediaType.TEXT_PLAIN.toString(), thr, ThrowableEncoder.INSTANCE), true);
                 }catch(IOException ex){
                     throw new ImpossibleException(ex);
                 }
@@ -197,7 +197,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
                 else
                     resume(thr);
             }else{
-                requestHasPayload = request.getPayload().contentLength != 0;
+                requestHasPayload = request.getPayload().getContentLength()!=0;
                 _resume();
             }
         }
@@ -234,7 +234,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
             response.version = requestVersion;
 
             boolean drain = false;
-            responseKeepAlive = requestKeepAlive && response.isKeepAlive();
+            responseKeepAlive = requestKeepAlive;
             if(responseKeepAlive && requestHasPayload){
                 if(client.in().isEOF())
                     drain = true;

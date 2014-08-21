@@ -24,7 +24,7 @@ import jlibs.nio.channels.OutputChannel;
 import jlibs.nio.http.msg.Encodable;
 import jlibs.nio.http.msg.Encoder;
 import jlibs.nio.http.msg.Multipart;
-import jlibs.nio.http.msg.Payload;
+import jlibs.nio.http.msg.MultipartPayload;
 import jlibs.nio.util.Bytes;
 
 import java.io.InputStream;
@@ -40,8 +40,8 @@ public class WriteMultipart{
     private boolean retain;
     private Iterator<Multipart.Part> parts;
 
-    public WriteMultipart(Payload payload){
-        this((Multipart)payload.getSource(), payload.getMediaType().getBoundary(), payload.retain);
+    public WriteMultipart(MultipartPayload payload){
+        this(payload.multipart, payload.getMediaType().getBoundary(), payload.retain);
     }
 
     public WriteMultipart(Multipart multipart, String boundary, boolean retain){

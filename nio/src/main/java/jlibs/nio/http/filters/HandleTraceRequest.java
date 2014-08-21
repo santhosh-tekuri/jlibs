@@ -17,8 +17,8 @@ package jlibs.nio.http.filters;
 
 import jlibs.nio.http.HTTPServer;
 import jlibs.nio.http.HTTPTask;
+import jlibs.nio.http.msg.EncodablePayload;
 import jlibs.nio.http.msg.Method;
-import jlibs.nio.http.msg.Payload;
 import jlibs.nio.http.msg.Response;
 
 /**
@@ -33,7 +33,7 @@ public class HandleTraceRequest implements HTTPTask.RequestFilter<HTTPServer.Tas
             Response response = task.getResponse();
             if(response==null)
                 task.setResponse(response=new Response());
-            response.setPayload(new Payload(-1, "message/http", null, task.getRequest(), null), true);
+            response.setPayload(EncodablePayload.newInstance("message/http", task.getRequest()), true);
         }
         task.resume();
     }

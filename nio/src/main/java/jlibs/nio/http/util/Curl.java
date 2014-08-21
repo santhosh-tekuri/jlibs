@@ -15,16 +15,12 @@
 
 package jlibs.nio.http.util;
 
-import jlibs.nio.*;
+import jlibs.nio.Reactor;
+import jlibs.nio.Reactors;
 import jlibs.nio.http.HTTPClient;
 import jlibs.nio.http.filters.AddAuthentication;
-import jlibs.nio.http.filters.AddBasicAuthentication;
 import jlibs.nio.http.filters.FollowRedirects;
-import jlibs.nio.http.filters.SAXParsing;
-import jlibs.nio.http.msg.Method;
-import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.msg.Response;
-import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.BasicChallenge;
 import jlibs.nio.http.msg.spec.values.BasicCredentials;
 import jlibs.nio.http.msg.spec.values.Challenge;
@@ -32,6 +28,7 @@ import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.util.Bytes;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
@@ -78,8 +75,7 @@ public class Curl{
                             MediaType mediaType = task.getRequest().getMediaType();
                             if(mediaType==null)
                                 mediaType = task.getRequest().method==Method.POST ? MediaType.APPLICATION_FORM_URLENCODED : MediaType.APPLICATION_OCTET_STREAM;
-                            Payload payload = new Payload(bytes.size(), mediaType.toString(), null, null, null);
-                            payload.bytes = bytes;
+                            Payload payload = new RawPayload(mediaType.toString(), bytes);
                             task.getRequest().setPayload(payload, true);
                             bytes = null;
                             payloadMarker = null;
@@ -157,15 +153,17 @@ public class Curl{
             if(processUnauthorized())
                 return;
             Payload payload = response.getPayload();
-            if(payload.contentLength!=0){
+            if(payload.getContentLength()!=0){
                 try{
-                    payload.removeEncodings();
-                    payload.writePayloadTo(System.out, this::payloadPrinted);
+                    if(payload instanceof RawPayload)
+                        ((RawPayload)payload).removeEncodings();
+                    payload.transferTo(System.out, this::payloadPrinted);
                     return;
                 }catch(Exception ex){
                     Reactor.current().handleException(ex);
                     try{
-                        payload.close();
+                        if(payload instanceof Closeable)
+                            ((Closeable)payload).close();
                     }catch(IOException e){
                         Reactor.current().handleException(e);
                     }

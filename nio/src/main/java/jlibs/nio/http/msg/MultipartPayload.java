@@ -15,14 +15,30 @@
 
 package jlibs.nio.http.msg;
 
-import java.io.IOException;
+import jlibs.core.lang.NotImplementedException;
+import jlibs.nio.async.ExecutionContext;
+import jlibs.nio.channels.ListenerUtil;
+
 import java.io.OutputStream;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface Encodable{
-    public void encodeTo(OutputStream out) throws IOException;
+public class MultipartPayload extends Payload{
+    public final Multipart multipart;
+    public boolean retain;
 
-    public static final Encoder<Encodable> ENCODER = (src,out) -> src.encodeTo(out);
+    public MultipartPayload(String contentType, Multipart multipart){
+        super(contentType);
+        this.multipart = multipart;
+    }
+
+    public void transferTo(OutputStream out, ExecutionContext context){
+        try{
+            throw new NotImplementedException();
+//            ListenerUtil.resume(context, null, false);
+        }catch(Throwable thr){
+            ListenerUtil.resume(context, thr, false);
+        }
+    }
 }

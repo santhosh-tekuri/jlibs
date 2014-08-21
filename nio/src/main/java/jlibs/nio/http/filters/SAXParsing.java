@@ -16,15 +16,10 @@
 package jlibs.nio.http.filters;
 
 import jlibs.core.io.ByteArrayOutputStream2;
-import jlibs.core.io.TeeInputStream;
 import jlibs.core.lang.NotImplementedException;
 import jlibs.nio.async.XMLFeedTask;
-import jlibs.nio.channels.InputChannel;
 import jlibs.nio.http.HTTPTask;
-import jlibs.nio.http.msg.Encodable;
-import jlibs.nio.http.msg.Message;
-import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.util.Bytes;
 import jlibs.nio.util.NIOUtil;
@@ -34,8 +29,6 @@ import jlibs.xml.sax.async.XMLFeeder;
 import org.xml.sax.InputSource;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Iterator;
@@ -57,7 +50,7 @@ public abstract class SAXParsing implements HTTPTask.ResponseFilter<HTTPTask>, H
         MediaType mt = null;
         String charset = null;
         boolean xmlPayload = false;
-        if(payload.contentLength!=0 && payload.contentType!=null){
+        if(payload.getContentLength()!=0 && payload.contentType!=null){
             mt = new MediaType(payload.contentType);
             xmlPayload = mt.isXML();
             charset = mt.getCharset(null);
@@ -68,70 +61,65 @@ public abstract class SAXParsing implements HTTPTask.ResponseFilter<HTTPTask>, H
             return;
         }
 
-        payload.removeEncodings();
-        InputChannel in = (InputChannel)payload.getSource();
-        InputSource is = createInputSource(payload);
+
+        InputSource is;
+        if(payload instanceof RawPayload){
+            RawPayload rawPayload = (RawPayload)payload;
+            rawPayload.removeEncodings();
+            if(rawPayload.channel==null || !rawPayload.channel.isOpen())
+                is = new InputSource(rawPayload.bytes.new InputStream());
+            else{
+                ReadableByteChannel channel = rawPayload.channel;
+                boolean retain = retain(rawPayload);
+                if(retain){
+                    if(rawPayload.bytes==null)
+                        rawPayload.bytes = new Bytes();
+                }
+                if(rawPayload.bytes!=null)
+                    channel = new Input(rawPayload.bytes, retain, channel);
+                is = new ChannelInputSource(channel);
+                is.setEncoding(charset);
+                AsyncXMLReader xmlReader = new AsyncXMLReader();
+                XMLFeeder feeder = xmlReader.createFeeder(is);
+                new XMLFeedTask(feeder).start(rawPayload.channel, (thr, timeout) -> {
+                    if(thr!=null)
+                        task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
+                    else if(timeout)
+                        task.resume(parseRequest ? Status.REQUEST_TIMEOUT : Status.RESPONSE_TIMEOUT);
+                    else
+                        parsingCompleted(task, xmlReader);
+                });
+                return;
+            }
+        }else if(payload instanceof FilePayload){
+            FilePayload filePayload = (FilePayload)payload;
+            is = new InputSource(filePayload.file.getAbsolutePath());
+        }else if(payload instanceof EncodablePayload){
+            EncodablePayload encodablePayload = (EncodablePayload)payload;
+            ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
+            encodablePayload.encoder.encodeTo(encodablePayload.source, bout);
+            is = new InputSource(bout.toByteSequence().asInputStream());
+        }else
+            throw new NotImplementedException(payload.getClass().getName());
+
         is.setEncoding(charset);
         AsyncXMLReader xmlReader = new AsyncXMLReader();
-        addHandlers(xmlReader);
         XMLFeeder feeder = xmlReader.createFeeder(is);
-        new XMLFeedTask(feeder).start(in, (thr, timeout) -> {
-            if(thr!=null)
-                task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
-            else if(timeout)
-                task.resume(parseRequest ? Status.REQUEST_TIMEOUT : Status.RESPONSE_TIMEOUT);
-            else
-                parsingCompleted(task, xmlReader);
-        });
+        try{
+            while(feeder!=null)
+                feeder.feed();
+            parsingCompleted(task, xmlReader);
+        }catch(Throwable thr){
+            task.resume(parseRequest ? Status.BAD_REQUEST : Status.BAD_RESPONSE, thr);
+        }
+    }
+
+    protected boolean retain(RawPayload payload){
+        return payload.retain;
     }
 
     protected boolean shouldParse(HTTPTask task, Message message, MediaType xmlMediaType){
         return true;
-    }
-
-    protected InputSource createInputSource(Payload payload) throws Exception{
-        if(payload.getSource()==null)
-            return new InputSource(payload.bytes.new InputStream());
-
-        if(payload.getSource() instanceof InputChannel){
-            ReadableByteChannel channel = (InputChannel)payload.getSource();
-            if(channel.isOpen()){
-                payload.removeEncodings();
-                if(payload.retain){
-                    if(payload.bytes==null)
-                        payload.bytes = new Bytes();
-                }
-
-                if(payload.bytes!=null)
-                    channel = new Input(payload.bytes, payload.retain, channel);
-
-                return new ChannelInputSource(channel);
-            }else
-                return new InputSource(payload.bytes.new InputStream());
-        }
-
-        InputStream in;
-        if(payload.getEncoder()!=null){
-            ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
-            payload.getEncoder().encodeTo(payload.getSource(), bout);
-            in = bout.toByteSequence().asInputStream();
-        }else if(payload.getSource() instanceof Encodable){
-            ByteArrayOutputStream2 bout = new ByteArrayOutputStream2();
-            ((Encodable)payload.getSource()).encodeTo(bout);
-            in = bout.toByteSequence().asInputStream();
-        }else if(payload.getSource() instanceof InputStream){
-            in = (InputStream)payload.getSource();
-            if(payload.retain){
-                if(payload.bytes==null)
-                    payload.bytes = new Bytes();
-                in = new TeeInputStream(in, payload.bytes.new OutputStream(), true);
-            }
-        }else
-            throw new NotImplementedException(payload.getSource().getClass().getName());
-
-        if(payload.bytes!=null)
-            in = new SequenceInputStream(payload.bytes.new InputStream(), in);
-        return new InputSource(in);
     }
 
     protected abstract void addHandlers(AsyncXMLReader xmlReader) throws Exception;

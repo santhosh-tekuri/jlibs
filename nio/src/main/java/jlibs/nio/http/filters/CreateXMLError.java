@@ -18,10 +18,7 @@ package jlibs.nio.http.filters;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.nio.http.HTTPServer;
 import jlibs.nio.http.HTTPTask;
-import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.msg.Request;
-import jlibs.nio.http.msg.Response;
-import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.http.msg.spec.values.QualityItem;
 import jlibs.nio.util.Bytes;
@@ -81,8 +78,7 @@ public class CreateXMLError implements HTTPTask.ResponseFilter<HTTPServer.Task>{
         }
         Bytes bytes = new Bytes();
         consumer.accept(task, bytes.new OutputStream());
-        response.setPayload(new Payload(bytes.size(), mediaType, null, null, null), true);
-        response.getPayload().bytes = bytes;
+        response.setPayload(new RawPayload(mediaType, bytes), true);
     }
 
     protected String getErrorCode(HTTPServer.Task task){
