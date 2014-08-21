@@ -56,9 +56,9 @@ public class WriteBytes extends OutputTask{
                     return buffer;
             }
         }else{
+            if(buffer!=null && pool!=null)
+                pool.returnBack(buffer);
             while(!bytes.isEmpty()){
-                if(buffer!=null && pool!=null)
-                    pool.returnBack(buffer);
                 buffer = bytes.remove();
                 if(buffer.hasRemaining())
                     return buffer;
