@@ -34,7 +34,7 @@ public class DrainInput extends ClosingInputTask{
         try{
             ready(in);
         }catch(Throwable thr){
-            ListenerUtil.resume(detach(in), thr, false);
+            error(in, thr);
         }
     }
 
