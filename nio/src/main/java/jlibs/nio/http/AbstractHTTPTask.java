@@ -248,6 +248,14 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         }catch(Exception ex){
             Reactor.current().handleException(ex);
         }
+
+        if(thr!=null || timeout){
+            if(Debugger.HTTP)
+                Debugger.println(client.in()+".initPayload("+thr+", "+timeout+")");
+            readMessageCompleted(thr, timeout);
+            return;
+        }
+
         if(message instanceof Request){
             if(supportsProxyConnectionHeader){
                 Header header = request.headers.remove(PROXY_CONNECTION);
@@ -262,13 +270,6 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         }
 
         keepAlive = keepAlive && message.isKeepAlive();
-
-        if(thr!=null || timeout){
-            if(Debugger.HTTP)
-                Debugger.println(client.in()+".initPayload("+thr+", "+timeout+")");
-            readMessageCompleted(thr, timeout);
-            return;
-        }
 
         if(Debugger.HTTP){
             Debugger.println(client.in()+".initPayload(){");
