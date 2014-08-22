@@ -107,6 +107,10 @@ public final class Reactor{
         selector.wakeup();
     }
 
+    public void invokeLaterWithoutWakeup(Runnable task){
+        tasks.push(task);
+    }
+
     public void invokeAndWait(Runnable task) throws InterruptedException{
         if(Reactor.current()==this)
             task.run();
