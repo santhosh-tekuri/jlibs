@@ -156,17 +156,10 @@ public class ChunkedInputFilter extends AbstractInputFilterChannel{
                     if(line==null)
                         line = new Line();
                     while(true){
-                        while(buffer.hasRemaining()){
-                            if(line.consume(buffer)){
-                                if(consumer!=null)
-                                    consumer.consume(line);
-                                if(line.length()==0){
-                                    unreadBuffer();
-                                    state = STATE_FINISHED;
-                                    return -1;
-                                }else
-                                    line.reset();
-                            }
+                        if(line.parse(buffer, consumer)){
+                            unreadBuffer();
+                            state = STATE_FINISHED;
+                            return -1;
                         }
                         if(!fillBuffer())
                             return 0;
