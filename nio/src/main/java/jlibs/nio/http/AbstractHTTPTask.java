@@ -254,11 +254,12 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                     request.headers.set(CONNECTION, header.getValue());
                 }
             }
-            requestKeepAlive = message.isKeepAlive();
+            assert keepAlive;
             requestVersion = message.version;
             requestMethod = ((Request)message).method;
-        }else
-            responseKeepAlive = message.isKeepAlive();
+        }
+
+        keepAlive = keepAlive && message.isKeepAlive();
 
         if(thr!=null || timeout){
             if(Debugger.HTTP)
@@ -630,11 +631,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
 
     protected Version requestVersion;
     protected Method requestMethod;
-    protected boolean requestKeepAlive;
-    protected boolean responseKeepAlive;
-    protected boolean isKeepAlive(){
-        return responseKeepAlive && requestKeepAlive;
-    }
+    protected boolean keepAlive = true;
 
     protected Request request;
     @Override public Request getRequest(){ return request; }
