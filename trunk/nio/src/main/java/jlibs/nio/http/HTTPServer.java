@@ -186,7 +186,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
                     finished();
                 }
 
-                requestKeepAlive = false;
+                keepAlive = false;
                 if(timeout)
                     resume(Status.REQUEST_TIMEOUT);
                 else if(thr instanceof LineOverflowException){
@@ -234,14 +234,13 @@ public class HTTPServer extends HTTPService implements Server.Listener{
             response.version = requestVersion;
 
             boolean drain = false;
-            responseKeepAlive = requestKeepAlive;
-            if(responseKeepAlive && requestHasPayload){
+            if(keepAlive && requestHasPayload){
                 if(client.in().isEOF())
                     drain = true;
                 else
-                    responseKeepAlive = false;
+                    keepAlive = false;
             }
-            response.setKeepAlive(responseKeepAlive);
+            response.setKeepAlive(keepAlive);
 
             if(setDateHeader && response.headers.get(Headers.DATE.name)==null)
                 response.headers.set(Headers.DATE.name, HTTPDate.currentDate());
@@ -268,11 +267,11 @@ public class HTTPServer extends HTTPService implements Server.Listener{
                 connectionStatus = ConnectionStatus.ABORTED;
                 client.closeForcefully();
             }
-            if(isOpen() && !responseKeepAlive)
+            if(isOpen() && !keepAlive)
                 connectionStatus = ConnectionStatus.CLOSED;
             notifyUser(thr, timeout ? Status.RESPONSE_TIMEOUT : -1);
             if(isOpen()){ // not closed && not stolen
-                if(responseKeepAlive){
+                if(keepAlive){
                     client.taskCompleted();
                     client.invokeLater(this::restart);
                 }else

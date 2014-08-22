@@ -135,11 +135,11 @@ public class HTTPClient extends HTTPService{
             }
 
             if(keepAliveTimeout<0)
-                requestKeepAlive = request.isKeepAlive();
+                keepAlive = request.isKeepAlive();
             else if(request.headers.get("Upgrade")!=null)
-                requestKeepAlive = true;
+                keepAlive = true;
             else
-                request.setKeepAlive(requestKeepAlive=keepAliveTimeout!=0);
+                request.setKeepAlive(keepAlive=keepAliveTimeout!=0);
 
             expectingContinue100 = Version.HTTP_1_1.compareTo(request.version)>=0 && request.getExpectation()!=null;
             writeMessage(request);
@@ -191,7 +191,7 @@ public class HTTPClient extends HTTPService{
                 responseHasPayload = response.getPayload().getContentLength()!=0;
                 if(!responseHasPayload){
                     assert !(client.in() instanceof CloseTrackingInputFilter);
-                    if(isKeepAlive())
+                    if(keepAlive)
                         endpoint.returnBack(client, Math.abs(keepAliveTimeout));
                     else
                         client.close();
@@ -261,7 +261,7 @@ public class HTTPClient extends HTTPService{
             if(Debugger.HTTP)
                 Debugger.println(client.in()+".responsePayloadClosed{");
             commitAccessLog();
-            if(filter.isEOF() && isKeepAlive())
+            if(filter.isEOF() && keepAlive)
                 drainInputFilters(null, false);
             else{
                 connectionStatus = ConnectionStatus.CLOSED;
