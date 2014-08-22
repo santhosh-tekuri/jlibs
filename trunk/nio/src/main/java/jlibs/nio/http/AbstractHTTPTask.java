@@ -235,6 +235,8 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
     }
 
     private void initPayload(Throwable thr, boolean timeout){
+        Message message = this.message;
+        this.message = null;
         if(message instanceof Request)
             requestHeadSize = client.in().stopInputMetric();
         else
@@ -264,7 +266,7 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
         if(thr!=null || timeout){
             if(Debugger.HTTP)
                 Debugger.println(client.in()+".initPayload("+thr+", "+timeout+")");
-            _readMessageCompleted(thr, timeout);
+            readMessageCompleted(thr, timeout);
             return;
         }
 
@@ -315,19 +317,15 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
                 Debugger.println("payload: "+client.in());
             message.setPayload(payload, true);
         }catch(Throwable thr1){
-            _readMessageCompleted(thr1, false);
+            readMessageCompleted(thr1, false);
             return;
         }
-        _readMessageCompleted(null, false);
+        readMessageCompleted(null, false);
         if(Debugger.HTTP)
             Debugger.println("}");
     }
 
     protected abstract void addTrackingFilters();
-    protected void _readMessageCompleted(Throwable thr, boolean timeout){
-        message = null;
-        readMessageCompleted(thr, timeout);
-    }
 
     protected abstract void readMessageCompleted(Throwable thr, boolean timeout);
 
