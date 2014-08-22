@@ -30,7 +30,7 @@ import java.util.LinkedList;
  * @author Santhosh Kumar Tekuri
  */
 public class Bytes implements Iterable<ByteBuffer>{
-    public static final int CHUNK_SIZE = Integer.parseInt(System.getProperty("Bytes.chunkSize", String.valueOf(4*1024))) ; // 4K
+    public static final int CHUNK_SIZE = Integer.parseInt(System.getProperty("Bytes.chunkSize", String.valueOf(16*1024))) ; // 16K
 
     public final int chunkSize;
     public boolean canPool = true;
@@ -197,10 +197,13 @@ public class Bytes implements Iterable<ByteBuffer>{
 
         public void write(String str){
             final int len = str.length();
-            for(int i=0; i<len; i++){
+            int i = 0;
+            while(i<len){
                 if(buffer==null)
                     buffer = pool==null ? ByteBuffer.allocate(chunkSize) : pool.borrow(chunkSize);
-                buffer.put((byte)str.charAt(i));
+                int min = i + Math.min(buffer.remaining(), len-i);
+                while(i<min)
+                    buffer.put((byte)str.charAt(i++));
                 if(!buffer.hasRemaining()){
                     buffer.flip();
                     append(buffer);
@@ -239,13 +242,16 @@ public class Bytes implements Iterable<ByteBuffer>{
 
     public ByteBuffer append(String str, ByteBuffer buffer){
         final int len = str.length();
-        for(int i=0; i<len; i++){
+        int i = 0;
+        while(i<len){
             if(!buffer.hasRemaining()){
                 buffer.flip();
                 append(buffer);
                 buffer = Reactor.current().bufferPool.borrow(chunkSize);
             }
-            buffer.put((byte)str.charAt(i));
+            int min = i + Math.min(buffer.remaining(), len-i);
+            while(i<min)
+                buffer.put((byte)str.charAt(i++));
         }
         return buffer;
     }
