@@ -24,8 +24,13 @@ import java.util.Objects;
  */
 public final class Method{
     public final String name;
-    private Method(String name){
+    public final boolean requestPayloadAllowed;
+    public final boolean responsePayloadAllowed;
+
+    private Method(String name, boolean requestPayloadAllowed, boolean responsePayloadAllowed){
         this.name = Objects.requireNonNull(name, "name==null");
+        this.requestPayloadAllowed = requestPayloadAllowed;
+        this.responsePayloadAllowed = responsePayloadAllowed;
     }
 
     @Override
@@ -43,15 +48,15 @@ public final class Method{
         return name;
     }
 
-    public static final Method GET = new Method("GET");
-    public static final Method POST = new Method("POST");
-    public static final Method DELETE = new Method("DELETE");
-    public static final Method HEAD = new Method("HEAD");
-    public static final Method PUT = new Method("PUT");
-    public static final Method CONNECT = new Method("CONNECT");
-    public static final Method PATCH = new Method("PATCH");
-    public static final Method TRACE = new Method("TRACE");
-    public static final Method OPTIONS = new Method("OPTIONS");
+    public static final Method GET = new Method("GET", false, true);
+    public static final Method POST = new Method("POST", true, true);
+    public static final Method DELETE = new Method("DELETE", true, true);
+    public static final Method HEAD = new Method("HEAD", false, false);
+    public static final Method PUT = new Method("PUT", true, true);
+    public static final Method CONNECT = new Method("CONNECT", false, true);
+    public static final Method PATCH = new Method("PATCH", true, true);
+    public static final Method TRACE = new Method("TRACE", false, true);
+    public static final Method OPTIONS = new Method("OPTIONS", true, true);
 
     public static Method valueOf(String str){
         if(GET.name.equalsIgnoreCase(str))
@@ -73,7 +78,7 @@ public final class Method{
         else if(OPTIONS.name.equalsIgnoreCase(str))
             return OPTIONS;
         else
-            return new Method(str);
+            return new Method(str, true, true);
     }
 
     public static Method valueOf(Line line, int start, int end){
@@ -96,6 +101,6 @@ public final class Method{
         else if(line.equalsIgnoreCase(start, end, OPTIONS.name))
             return OPTIONS;
         else
-            return new Method(line.substring(start, end));
+            return new Method(line.substring(start, end), true, true);
     }
 }

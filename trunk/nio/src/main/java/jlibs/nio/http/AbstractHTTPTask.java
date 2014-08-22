@@ -276,51 +276,50 @@ public abstract class AbstractHTTPTask<T extends AbstractHTTPTask> implements HT
             Debugger.println(message);
         }
 
-        String contentType = message.headers.value(CONTENT_TYPE);
-        List<Encoding> encodings = message.getEncodings();
-
         long contentLength;
-        if(message instanceof Response && requestMethod==HEAD)
-            contentLength = 0;
-        else{
-            contentLength = message.getContentLength();
+        if(message instanceof Request)
+            contentLength = requestMethod.requestPayloadAllowed ? message.getContentLength() : 0;
+        else
+            contentLength = requestMethod.responsePayloadAllowed && Status.isPayloadNotAllowed(response.statusCode) ? message.getContentLength() : 0;
+
+        if(contentLength!=0){
+            List<Encoding> encodings = message.getEncodings();
             if(contentLength==-1 && encodings.isEmpty()){
                 if(message instanceof Request)
                     contentLength = 0;
                 else if(message instanceof Response){
-                    Response response = (Response)message;
-                    if(Status.isPayloadNotAllowed(response.statusCode) || response.isKeepAlive())
+                    if(response.isKeepAlive())
                         contentLength = 0;
                 }
             }
+
+            try{
+                if(contentLength!=0){
+                    client.in().startInputMetric();
+                    if(contentLength!=-1)
+                        client.inPipeline.push(new FixedLengthInputFilter(contentLength));
+                    else if(!encodings.isEmpty()){
+                        if(encodings.get(encodings.size()-1).equals(Encoding.CHUNKED))
+                            client.inPipeline.push(encodings.remove(encodings.size()-1).createInputFilter());
+                        else{
+                            if(message instanceof Request || message.isKeepAlive())
+                                client.inPipeline.push(encodings.remove(encodings.size()-1).createInputFilter());
+                        }
+                    }
+                    if(client.in() instanceof ChunkedInputFilter)
+                        ((ChunkedInputFilter)client.in()).setLineConsumer(message.headers);
+                    addTrackingFilters();
+                    String contentType = message.headers.value(CONTENT_TYPE);
+                    message.setPayload(new RawPayload(contentLength, contentType, encodings, client.in()), true);
+                    if(Debugger.HTTP)
+                        Debugger.println("payload: "+client.in());
+                }
+            }catch(Throwable thr1){
+                readMessageCompleted(thr1, false);
+                return;
+            }
         }
 
-        try{
-            Payload payload = Payload.NO_PAYLOAD;
-            if(contentLength!=0){
-                client.in().startInputMetric();
-                if(contentLength!=-1)
-                    client.inPipeline.push(new FixedLengthInputFilter(contentLength));
-                else if(!encodings.isEmpty()){
-                    if(encodings.get(encodings.size()-1).equals(Encoding.CHUNKED))
-                        client.inPipeline.push(encodings.remove(encodings.size()-1).createInputFilter());
-                    else{
-                        if(message instanceof Request || message.isKeepAlive())
-                            client.inPipeline.push(encodings.remove(encodings.size()-1).createInputFilter());
-                    }
-                }
-                if(client.in() instanceof ChunkedInputFilter)
-                    ((ChunkedInputFilter)client.in()).setLineConsumer(message.headers);
-                addTrackingFilters();
-                payload = new RawPayload(contentLength, contentType, encodings, client.in());
-            }
-            if(Debugger.HTTP)
-                Debugger.println("payload: "+client.in());
-            message.setPayload(payload, true);
-        }catch(Throwable thr1){
-            readMessageCompleted(thr1, false);
-            return;
-        }
         readMessageCompleted(null, false);
         if(Debugger.HTTP)
             Debugger.println("}");
