@@ -75,19 +75,13 @@ public class ReadLines extends InputTask{
                 resume(in, ignore ? IgnorableEOFException.INSTANCE : new EOFException(), false);
                 return;
             }
-            while(buffer.hasRemaining()){
-                if(line.consume(buffer)){
-                    consumer.consume(line);
-                    if(line.length()==0){
-                        if(buffer.hasRemaining()){
-                            in.unread(buffer);
-                            buffer = null;
-                        }
-                        resume(in, null, false);
-                        return;
-                    }else
-                        line.reset();
+            if(line.parse(buffer, consumer)){
+                if(buffer.hasRemaining()){
+                    in.unread(buffer);
+                    buffer = null;
                 }
+                resume(in, null, false);
+                return;
             }
         }
     }

@@ -23,7 +23,7 @@ import java.util.Arrays;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Line{
+public final class Line{
     private char chars[];
     private int count;
 
@@ -66,7 +66,7 @@ public class Line{
     private int bytesConsumed = 0;
     private int lineBytesConsumed = 0;
     public void reset(int maxLen, int maxInitialLineLen, int maxLineLen){
-        reset();
+        count = 0;
         this.maxLen = maxLen;
         this.maxInitialLineLen = maxInitialLineLen;
         this.maxLineLen = maxLineLen;
@@ -77,39 +77,48 @@ public class Line{
         return lineCount;
     }
 
-    public boolean consume(ByteBuffer buffer){
-        int pos = buffer.position();
-        boolean lineCompleted = false;
+    public boolean parse(ByteBuffer buffer, Consumer consumer){
         while(buffer.hasRemaining()){
-            char ch = (char)buffer.get();
-            if(ch=='\n'){
-                lineCompleted = true;
-                break;
-            }else if(ch!='\r' && !Character.isISOControl(ch)){
-                if(count==chars.length){
-                    if(count==Integer.MAX_VALUE)
-                        throw new OutOfMemoryError();
-                    int newCapacity = count<<2;
-                    if(newCapacity<count)
-                        newCapacity = Integer.MAX_VALUE;
-                    chars = Arrays.copyOf(chars, newCapacity);
+            int pos = buffer.position();
+            boolean lineCompleted = false;
+            while(buffer.hasRemaining()){
+                char ch = (char)buffer.get();
+                if(ch=='\n'){
+                    lineCompleted = true;
+                    break;
+                }else if(ch!='\r' && !Character.isISOControl((int)ch)){
+                    if(count==chars.length){
+                        if(count==Integer.MAX_VALUE)
+                            throw new OutOfMemoryError();
+                        int newCapacity = count<<2;
+                        if(newCapacity<count)
+                            newCapacity = Integer.MAX_VALUE;
+                        chars = Arrays.copyOf(chars, newCapacity);
+                    }
+                    chars[count++] = ch;
                 }
-                chars[count++] = ch;
             }
-        }
 
-        bytesConsumed += buffer.position()-pos;
-        lineBytesConsumed += buffer.position()-pos;
-        if(maxLen>0 && bytesConsumed>maxLen)
-            throw new LineOverflowException(-1);
-        if((lineCount==0 && maxInitialLineLen>=0 && lineBytesConsumed>maxInitialLineLen)
-                || (lineCount>0 && maxLineLen>=0 && lineBytesConsumed>maxLineLen))
-            throw new LineOverflowException(lineCount);
-        if(lineCompleted){
-            ++lineCount;
-            lineBytesConsumed = 0;
+            bytesConsumed += buffer.position()-pos;
+            lineBytesConsumed += buffer.position()-pos;
+            if(maxLen>0 && bytesConsumed>maxLen)
+                throw new LineOverflowException(-1);
+            if((lineCount==0 && maxInitialLineLen>=0 && lineBytesConsumed>maxInitialLineLen)
+                    || (lineCount>0 && maxLineLen>=0 && lineBytesConsumed>maxLineLen))
+                throw new LineOverflowException(lineCount);
+            if(lineCompleted){
+                ++lineCount;
+                lineBytesConsumed = 0;
+                if(consumer!=null)
+                    consumer.consume(this);
+                if(count==0)
+                    return true;
+                else
+                    count = 0;
+            }else
+                return false;
         }
-        return lineCompleted;
+        return false;
     }
 
     @Override
@@ -127,16 +136,20 @@ public class Line{
     }
 
     public int indexOf(boolean whitespace, int from){
+        char chars[] = this.chars;
         if(from>=0){
+            int count = this.count;
             while(from<count){
-                if(Character.isWhitespace(chars[from])==whitespace)
+                char ch = chars[from];
+                if((ch==' '||ch=='\t')==whitespace)
                     return from;
                 from++;
             }
         }else{
             from = -from;
             while(from>=0){
-                if(Character.isWhitespace(chars[from])==whitespace)
+                char ch = chars[from];
+                if((ch==' '||ch=='\t')==whitespace)
                     return from;
                 from--;
             }
@@ -154,11 +167,15 @@ public class Line{
         return true;
     }
 
+    public static int toUpperCase(char ascii){
+        return ascii>='a' && ascii<='z' ? (ascii & 0xDF) : ascii;
+    }
+
     public boolean equalsIgnoreCase(int start, int end, CharSequence seq){
         if(seq.length()!=end-start)
             return false;
         for(int i=0; start<end; ++i, ++start){
-            if(Character.toUpperCase(chars[start])!=Character.toUpperCase(seq.charAt(i)))
+            if(toUpperCase(chars[start])!=toUpperCase(seq.charAt(i)))
                 return false;
         }
         return true;
