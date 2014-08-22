@@ -582,7 +582,7 @@ public class Client implements Closeable, Attachable{
     private Runnable runnable;
     public void invokeLater(Runnable runnable){
         this.runnable = runnable;
-        reactor.invokeLater(this::run);
+        reactor.invokeLaterWithoutWakeup(this::run);
     }
 
     private void run(){
