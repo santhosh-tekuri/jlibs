@@ -31,7 +31,7 @@ import java.util.TreeMap;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
+public final class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
     private final TreeMap<String, Header> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private Header head;
 
@@ -86,22 +86,6 @@ public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
         return header==null ? null : header.value;
     }
 
-    public List<String> values(HeaderSpec spec){
-        return values(spec.name);
-    }
-
-    public List<String> values(String name){
-        List<String> values = new ArrayList<>(5);
-
-        Header header = get(name);
-        while(header!=null){
-            StringTokenizer stok = new StringTokenizer(header.value);
-            while(stok.hasMoreElements())
-                values.add(stok.nextToken().trim());
-            header = header.sameNext;
-        }
-        return values;
-    }
 
     /*-------------------------------------------------[ Remove ]---------------------------------------------------*/
 
@@ -239,25 +223,13 @@ public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
     boolean populated;
     private List<String> trailers;
 
-    private void addHeader(){
-        if(name.equalsIgnoreCase(TRAILER.name)){
-            trailers = TRAILER.parse(value, Version.HTTP_1_1);
-            for(String token: trailers){
-                if(token.equalsIgnoreCase(TRANSFER_ENCODING.name)
-                        || token.equalsIgnoreCase(CONTENT_LENGTH.name)
-                        || token.equalsIgnoreCase(TRAILER.name))
-                    throw new IllegalArgumentException("Unacceptable Trailer Token");
-            }
-        }
-        add(name, value);
-        name = value = null;
-    }
-
     @Override
     public void consume(Line line){
         if(line.length()==0){
-            if(name!=null)
-                addHeader();
+            if(name!=null){
+                add(name, value);
+                name = value = null;
+            }
             if(populated){
                 if(trailers!=null)
                     remove(TRAILER.name);
@@ -275,22 +247,31 @@ public class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
                     value += ' '+line.substring(valueBegin, valueEnd+1);
                 }
                 return;
-            }else
-                addHeader();
+            }else{
+                add(name, value);
+                name = value = null;
+            }
         }
 
         int nameBegin = line.indexOf(false, 0);
         int colon = line.indexOf(':', nameBegin);
         int nameEnd = line.indexOf(false, -(colon-1));
-        name = line.substring(nameBegin, nameEnd+1);
+        name = line.substring(nameBegin, nameEnd+1);//, headerNames);
         if(populated){
+            if(trailers==null){
+                trailers = TRAILER.parse(value, Version.HTTP_1_1);
+                for(String token: trailers){
+                    if(token.equalsIgnoreCase(TRANSFER_ENCODING.name)
+                            || token.equalsIgnoreCase(CONTENT_LENGTH.name)
+                            || token.equalsIgnoreCase(TRAILER.name))
+                        throw new IllegalArgumentException("Unacceptable Trailer Token");
+                }
+            }
             boolean acceptable = false;
-            if(trailers!=null){
-                for(String trailer: trailers){
-                    if(name.equalsIgnoreCase(trailer)){
-                        acceptable = true;
-                        break;
-                    }
+            for(String trailer: trailers){
+                if(name.equalsIgnoreCase(trailer)){
+                    acceptable = true;
+                    break;
                 }
             }
             if(!acceptable)
