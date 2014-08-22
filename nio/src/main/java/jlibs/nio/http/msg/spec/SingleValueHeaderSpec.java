@@ -15,10 +15,7 @@
 
 package jlibs.nio.http.msg.spec;
 
-import jlibs.nio.http.msg.Headers;
-import jlibs.nio.http.msg.Message;
-import jlibs.nio.http.msg.Multipart;
-import jlibs.nio.http.msg.Version;
+import jlibs.nio.http.msg.*;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -30,7 +27,7 @@ public abstract class SingleValueHeaderSpec<T> extends HeaderSpec{
 
     protected abstract T _parse(String value, Version version);
     public T parse(String value, Version version){
-        if(value!=null && value.startsWith("\""))
+        if(value!=null && value.length()>0 && value.charAt(0)=='"')
             value = new Parser(false, value).value();
         return _parse(value, version);
     }
@@ -38,7 +35,8 @@ public abstract class SingleValueHeaderSpec<T> extends HeaderSpec{
     public abstract String format(T value, Version version);
 
     public T get(Headers headers, Version version){
-        return parse(headers.value(name), version);
+        Header header = headers.get(name);
+        return parse(header==null ? null : header.getValue(), version);
     }
 
     public String set(Headers headers, Version version, T value){
