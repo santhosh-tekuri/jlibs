@@ -48,19 +48,23 @@ public class ServerEndpoint extends Endpoint{
     public void start(Server.Listener listener) throws IOException{
         server = new Server();
         server.attach(this);
-        server.setListener((s, client) -> {
-            try{
-                if(sslContext != null){
-                    SSLEngine engine = sslContext.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    client.pipeline.push(new SSLFilter(engine));
+        if(sslContext==null)
+            server.setListener(listener);
+        else{
+            server.setListener((s, client) -> {
+                try{
+                    if(sslContext != null){
+                        SSLEngine engine = sslContext.createSSLEngine();
+                        engine.setUseClientMode(false);
+                        client.pipeline.push(new SSLFilter(engine));
+                    }
+                    listener.accepted(s, client);
+                }catch(Throwable thr){
+                    Reactor.current().handleException(thr);
+                    client.closeForcefully();
                 }
-                listener.accepted(s, client);
-            }catch(Throwable thr){
-                Reactor.current().handleException(thr);
-                client.closeForcefully();
-            }
-        });
+            });
+        }
         server.bind(socketAddress(), backlog);
         Reactors.register(server);
     }
