@@ -17,6 +17,7 @@ package jlibs.nio.http.msg;
 
 import jlibs.nio.http.HTTPException;
 import jlibs.nio.http.msg.spec.HTTPEncoding;
+import jlibs.nio.http.msg.spec.HTTPLong;
 import jlibs.nio.http.msg.spec.values.Encoding;
 import jlibs.nio.http.msg.spec.values.MediaType;
 import jlibs.nio.util.Bytes;
@@ -88,7 +89,7 @@ public abstract class Message implements Line.Consumer, Encodable, Bytes.Encodab
 
     public long getContentLength(){
         Header header = headers.get(CONTENT_LENGTH);
-        return header==null? -1 : Long.parseLong(header.value);
+        return header==null? -1 : HTTPLong.parseLong(header.value);
     }
 
     public void setContentLength(long length){
