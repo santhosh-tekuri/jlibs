@@ -22,7 +22,7 @@ import jlibs.nio.http.msg.Version;
  */
 public class Connection extends SingleValueHeaderSpec<Boolean>{
     public static final String CLOSE = "close";
-    public static final String KEEP_ALIVE = "Keep-Alive";
+    public static final String KEEP_ALIVE = "keep-alive";
 
     public Connection(String name){
         super(name);
@@ -30,12 +30,10 @@ public class Connection extends SingleValueHeaderSpec<Boolean>{
 
     @Override
     protected Boolean _parse(String value, Version version){
-        if(CLOSE.equalsIgnoreCase(value))
-            return false;
-        else if(version.keepAliveDefault)
-            return true;
+        if(version.keepAliveDefault)
+            return !(value!=null && CLOSE.equalsIgnoreCase(value));
         else
-            return KEEP_ALIVE.equalsIgnoreCase(value);
+            return value!=null && KEEP_ALIVE.equalsIgnoreCase(value);
     }
 
     @Override
