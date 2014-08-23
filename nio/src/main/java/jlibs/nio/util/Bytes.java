@@ -50,15 +50,29 @@ public class Bytes implements Iterable<ByteBuffer>{
     }
 
     public long size(){
-        long size = 0;
-        for(ByteBuffer buffer: list)
-            size += buffer.remaining();
-        return size;
+        if(list.isEmpty())
+            return 0L;
+        else if(list.size()==1)
+            return list.peekFirst().remaining();
+        else{
+            long size = 0;
+            if(!list.isEmpty()){
+                for(ByteBuffer buffer: list)
+                    size += buffer.remaining();
+            }
+            return size;
+        }
+    }
+
+    public boolean isListEmpty(){
+        return list.isEmpty();
     }
 
     public boolean isEmpty(){
         if(list.isEmpty())
             return true;
+        if(list.peekFirst().hasRemaining() || list.peekLast().hasRemaining())
+            return false;
         for(ByteBuffer buffer: list){
             if(buffer.hasRemaining())
                 return false;

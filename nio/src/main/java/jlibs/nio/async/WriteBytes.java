@@ -58,10 +58,12 @@ public class WriteBytes extends OutputTask{
         }else{
             if(buffer!=null && pool!=null)
                 pool.returnBack(buffer);
-            while(!bytes.isEmpty()){
+            while(!bytes.isListEmpty()){
                 buffer = bytes.remove();
                 if(buffer.hasRemaining())
                     return buffer;
+                else if(pool!=null)
+                    pool.returnBack(buffer);
             }
         }
         return null;
