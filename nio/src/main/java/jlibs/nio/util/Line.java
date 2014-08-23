@@ -59,6 +59,28 @@ public final class Line{
         return new String(chars, start, end-start);
     }
 
+    public String substringTrimmed(int from){
+        char chars[] = this.chars;
+        int count = this.count;
+        while(from<count){
+            char ch = chars[from];
+            if(ch!=' ' && ch!='\t')
+                break;
+            ++from;
+        }
+        if(from==count)
+            return "";
+
+        int to = count-1;
+        while(true){
+            char ch = chars[to];
+            if(ch!=' ' && ch!='\t')
+                break;
+            --to;
+        }
+        return new String(chars, from, to-from+1);
+    }
+
     private int maxLen = -1;
     private int maxInitialLineLen = -1;
     private int maxLineLen = -1;
