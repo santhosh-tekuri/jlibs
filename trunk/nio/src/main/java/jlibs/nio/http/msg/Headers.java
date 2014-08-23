@@ -239,13 +239,9 @@ public final class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
             return;
         }else if(name!=null){
             if(line.charAt(0)==' '||line.charAt(0)=='\t'){
-                int valueBegin = line.indexOf(false, 1);
-                if(valueBegin==-1)
-                    value += ' ';
-                else{
-                    int valueEnd = line.indexOf(false, -(line.length()-1));
-                    value += ' '+line.substring(valueBegin, valueEnd+1);
-                }
+                line.array()[0] = ' ';
+                int valueEnd = line.indexOf(false, -(line.length()-1));
+                value += ' '+line.substring(0, valueEnd+1);
                 return;
             }else{
                 add(name, value);
@@ -253,10 +249,10 @@ public final class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
             }
         }
 
-        int nameBegin = line.indexOf(false, 0);
-        int colon = line.indexOf(':', nameBegin);
-        int nameEnd = line.indexOf(false, -(colon-1));
-        name = line.substring(nameBegin, nameEnd+1);//, headerNames);
+        int colon = line.indexOf(':', 0);
+        if(colon==0)
+            throw new IllegalArgumentException("empty header name");
+        name = line.substring(0, colon);
         if(populated){
             if(trailers==null){
                 trailers = TRAILER.parse(value, Version.HTTP_1_1);
@@ -278,13 +274,7 @@ public final class Headers implements Line.Consumer, Encodable, Bytes.Encodable{
                 throw new IllegalArgumentException("Unacceptable Trailer");
         }
 
-        int valueBegin = line.indexOf(false, colon+1);
-        if(valueBegin==-1)
-            value = "";
-        else{
-            int valueEnd = line.indexOf(false, -(line.length()-1));
-            value = line.substring(valueBegin, valueEnd+1);
-        }
+        value = line.substringTrimmed(colon+1);
     }
 
     /*-------------------------------------------------[ Marshalling ]---------------------------------------------------*/
