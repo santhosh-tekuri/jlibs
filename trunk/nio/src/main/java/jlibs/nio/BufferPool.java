@@ -50,9 +50,9 @@ public class BufferPool{
 
     public ByteBuffer borrow(int size){
         Bytes bytes = get(size, false);
-        if(bytes==null || bytes.isEmpty())
+        if(bytes==null || bytes.isListEmpty()){
             return ByteBuffer.allocate(size);
-        else
+        }else
             return bytes.remove();
     }
 
@@ -62,7 +62,7 @@ public class BufferPool{
     }
 
     public void returnBack(Bytes bytes){
-        while(!bytes.isEmpty())
+        while(!bytes.isListEmpty())
             returnBack(bytes.remove());
     }
 }
