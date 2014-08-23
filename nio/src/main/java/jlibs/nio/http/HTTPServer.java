@@ -267,7 +267,7 @@ public class HTTPServer extends HTTPService implements Server.Listener{
                 connectionStatus = ConnectionStatus.ABORTED;
                 client.closeForcefully();
             }
-            if(isOpen() && !keepAlive)
+            if(!keepAlive && isOpen())
                 connectionStatus = ConnectionStatus.CLOSED;
             notifyUser(thr, timeout ? Status.RESPONSE_TIMEOUT : -1);
             if(isOpen()){ // not closed && not stolen

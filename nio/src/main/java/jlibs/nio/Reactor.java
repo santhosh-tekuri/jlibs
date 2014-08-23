@@ -233,6 +233,7 @@ public final class Reactor{
 
         @Override
         public void run(){
+            final Selector selector = Reactor.this.selector;
             final TimeoutTracker timeoutTracker = Reactor.this.timeoutTracker;
             Deque<Runnable> tempTasks = new ArrayDeque<>();
             Client client;
@@ -284,7 +285,7 @@ public final class Reactor{
                     }
 
                     boolean tracking = timeoutTracker.isTracking();
-                    long selectTimeout = tracking ? 1000 : 0;
+                    long selectTimeout = tracking ? 1000L : 0L;
                     if(Debugger.IO)
                         Debugger.println(Reactor.this+".select("+selectTimeout+"){");
 

@@ -82,25 +82,31 @@ public final class Method{
     }
 
     public static Method valueOf(Line line, int start, int end){
-        if(line.equalsIgnoreCase(start, end, GET.name))
-            return GET;
-        else if(line.equalsIgnoreCase(start, end, POST.name))
-            return POST;
-        else if(line.equalsIgnoreCase(start, end, DELETE.name))
-            return DELETE;
-        else if(line.equalsIgnoreCase(start, end, HEAD.name))
-            return HEAD;
-        else if(line.equalsIgnoreCase(start, end, PUT.name))
-            return PUT;
-        else if(line.equalsIgnoreCase(start, end, CONNECT.name))
-            return CONNECT;
-        else if(line.equalsIgnoreCase(start, end, PATCH.name))
-            return PATCH;
-        else if(line.equalsIgnoreCase(start, end, TRACE.name))
-            return TRACE;
-        else if(line.equalsIgnoreCase(start, end, OPTIONS.name))
-            return OPTIONS;
-        else
-            return new Method(line.substring(start, end), true, true);
+        final int len = end-start;
+        if(len==3){
+            if(line.equalsIgnoreCase(start, end, GET.name))
+                return GET;
+            else if(line.equalsIgnoreCase(start, end, PUT.name))
+                return PUT;
+        }else if(len==4){
+            if(line.equalsIgnoreCase(start, end, POST.name))
+                return POST;
+            else if(line.equalsIgnoreCase(start, end, HEAD.name))
+                return HEAD;
+        }else if(len==5){
+            if(line.equalsIgnoreCase(start, end, PATCH.name))
+                return PATCH;
+            else if(line.equalsIgnoreCase(start, end, TRACE.name))
+                return TRACE;
+        }else if(len==6){
+            if(line.equalsIgnoreCase(start, end, DELETE.name))
+                return DELETE;
+        }else if(len==7){
+            if(line.equalsIgnoreCase(start, end, CONNECT.name))
+                return CONNECT;
+            else if(line.equalsIgnoreCase(start, end, OPTIONS.name))
+                return OPTIONS;
+        }
+        return new Method(line.substring(start, end), true, true);
     }
 }
