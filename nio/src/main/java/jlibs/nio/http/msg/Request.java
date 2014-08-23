@@ -43,14 +43,21 @@ public class Request extends Message{
 
     @Override
     protected void parseInitialLine(Line line){
-        int begin1 = line.indexOf(false, 0);
-        int end1 = line.indexOf(true, begin1);
+        int end1;
+        char array[] = line.array();
+        if(line.length()>3 && array[0]=='G' && array[1]=='E' && array[2]=='T' && array[3]==' '){
+            method = Method.GET;
+            end1 = 3;
+        }else{
+            int begin1 = line.indexOf(false, 0);
+            end1 = line.indexOf(true, begin1);
+            method = Method.valueOf(line, begin1, end1);
+        }
         int end3 = line.indexOf(false, -(line.length()-1));
         int begin3 = line.indexOf(true, -end3);
         int begin2 = line.indexOf(false, end1);
         int end2 = line.indexOf(false, -begin3);
 
-        method = Method.valueOf(line, begin1, end1);
         uri = line.substring(begin2, end2+1);
         version = Version.valueOf(line, begin3+1, end3+1);
     }
