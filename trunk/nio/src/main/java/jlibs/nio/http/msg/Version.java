@@ -69,11 +69,13 @@ public final class Version implements Comparable<Version>{
     }
 
     public static Version valueOf(Line line, int start, int end){
-        if(line.equalsIgnoreCase(start, end, HTTP_1_1.text))
-            return HTTP_1_1;
-        else if(line.equalsIgnoreCase(start, end, HTTP_1_0.text))
-            return HTTP_1_0;
-        else
-            return new Version(line.substring(start, end), true);
+        if(end-start==8 && line.equalsIgnoreCase(start, end-1, "HTTP/1.")){
+            char minorVersion = line.array()[end-1];
+            if(minorVersion=='1')
+                return HTTP_1_1;
+            else if(minorVersion=='0')
+                return HTTP_1_0;
+        }
+        return new Version(line.substring(start, end), true);
     }
 }
