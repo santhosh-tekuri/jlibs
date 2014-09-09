@@ -28,9 +28,12 @@ public class Waiter implements Runnable{
 
     @Override
     public void run(){
-        delegate.run();
-        synchronized(this){
-            notifyAll();
+        try{
+            delegate.run();
+        }finally{
+            synchronized(this){
+                notifyAll();
+            }
         }
     }
 }
