@@ -142,4 +142,12 @@ public abstract class OutputFilter implements Output{
         if(!isOpen())
             throw new ClosedChannelException();
     }
+
+    @Override
+    public String toString(){
+        String name = getClass().getSimpleName();
+        if(name.endsWith("Output"))
+            name = name.substring(0, name.length()-"Output".length());
+        return name+'_'+peer;
+    }
 }
