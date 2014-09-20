@@ -75,6 +75,19 @@ public class Request extends Message{
         headers.setSingleValue(HOST, host, null);
     }
 
+    /*-------------------------------------------------[ Accept-Encoding ]---------------------------------------------------*/
+
+    // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
+    public static final AsciiString ACCEPT_ENCODING = new AsciiString("Accept-Encoding");
+
+    public List<Encoding> getAcceptEncodings(){
+        return headers.getListValue(ACCEPT_ENCODING, encodingDelegate, true);
+    }
+
+    public void setAcceptEncodings(Collection<Encoding> encodings){
+        headers.setListValue(ACCEPT_ENCODING, encodings, null, true);
+    }
+
     /*-------------------------------------------------[ X-Forwarded-For ]---------------------------------------------------*/
 
     // http://en.wikipedia.org/wiki/X-Forwarded-For
@@ -363,9 +376,6 @@ public class Request extends Message{
         headers.set(USER_AGENT, userAgent);
     }
 
-
-    // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
-    public static final AsciiString ACCEPT_ENCODING = new AsciiString("Accept-Encoding");
 
     // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
     public static final AsciiString ACCEPT_LANGUAGE = new AsciiString("Accept-Language");

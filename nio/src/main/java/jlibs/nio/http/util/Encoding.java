@@ -33,19 +33,19 @@ import java.util.zip.GZIPOutputStream;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class ContentEncoding{
-    public static final ContentEncoding DEFLATE = new ContentEncoding("deflate", InflaterInput::new, DeflaterOutput::new, DeflaterOutputStream::new);
-    public static final ContentEncoding GZIP = new ContentEncoding("gzip", GZIPInput::new, GZIPOutput::new, GZIPOutputStream::new);
+public class Encoding{
+    public static final Encoding DEFLATE = new Encoding("deflate", InflaterInput::new, DeflaterOutput::new, DeflaterOutputStream::new);
+    public static final Encoding GZIP = new Encoding("gzip", GZIPInput::new, GZIPOutput::new, GZIPOutputStream::new);
 
     public final String name;
     private final Function<Input, Input> inFunction;
     private final Function<Output, Output> outFunction;
     private final IOFunction<OutputStream, OutputStream> osFunction;
 
-    public ContentEncoding(String name,
-                           Function<Input, Input> inFunction,
-                           Function<Output, Output> outFunction,
-                           IOFunction<OutputStream, OutputStream> osFunction){
+    public Encoding(String name,
+                    Function<Input, Input> inFunction,
+                    Function<Output, Output> outFunction,
+                    IOFunction<OutputStream, OutputStream> osFunction){
         this.name = Objects.requireNonNull(name, "name==null").toLowerCase();
         this.inFunction = inFunction;
         this.outFunction = outFunction;
@@ -77,7 +77,7 @@ public class ContentEncoding{
 
     @Override
     public boolean equals(Object that){
-        return this==that || (that instanceof ContentEncoding && this.name.equalsIgnoreCase(((ContentEncoding)that).name));
+        return this==that || (that instanceof Encoding && this.name.equalsIgnoreCase(((Encoding)that).name));
     }
 
     @Override
@@ -85,12 +85,12 @@ public class ContentEncoding{
         return name;
     }
 
-    public static ContentEncoding valueOf(String encoding){
+    public static Encoding valueOf(String encoding){
         if(DEFLATE.name.equalsIgnoreCase(encoding))
             return DEFLATE;
         else if(GZIP.name.equalsIgnoreCase(encoding))
             return GZIP;
         else
-            return new ContentEncoding(encoding, null, null, null);
+            return new Encoding(encoding, null, null, null);
     }
 }

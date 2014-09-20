@@ -16,12 +16,14 @@
 package jlibs.nio.http;
 
 import jlibs.nio.filters.ChunkedOutput;
-import jlibs.nio.http.util.ContentEncoding;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.listeners.Task;
 
 import java.util.List;
 
 import static java.nio.channels.SelectionKey.OP_WRITE;
+import static jlibs.nio.Debugger.HTTP;
+import static jlibs.nio.Debugger.println;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -32,7 +34,7 @@ public abstract class WritePayload extends Task{
     }
 
     boolean chunked;
-    List<ContentEncoding> encodings;
+    List<Encoding> encodings;
 
     protected final void setup(){
         if(chunked)
@@ -41,5 +43,7 @@ public abstract class WritePayload extends Task{
             for(int i=encodings.size()-1; i>=0; --i)
                 out = encodings.get(i).wrap(out);
         }
+        if(HTTP)
+            println("out = "+out);
     }
 }

@@ -18,7 +18,7 @@ package jlibs.nio.http.msg;
 import jlibs.core.lang.Util;
 import jlibs.nio.http.SocketPayload;
 import jlibs.nio.http.util.ContentDisposition;
-import jlibs.nio.http.util.ContentEncoding;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.http.util.MediaType;
 import jlibs.nio.http.util.Parser;
 
@@ -129,12 +129,12 @@ public abstract class Message{
     // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11
     public static final AsciiString CONTENT_ENCODING = new AsciiString("Content-Encoding");
 
-    private static final Function<Parser, ContentEncoding> encodingDelegate = Parser.lvalueDelegate(ContentEncoding::valueOf);
-    public List<ContentEncoding> getContentEncodings(){
+    protected static final Function<Parser, Encoding> encodingDelegate = Parser.lvalueDelegate(Encoding::valueOf);
+    public List<Encoding> getContentEncodings(){
         return headers.getListValue(CONTENT_ENCODING, encodingDelegate, true);
     }
 
-    public void setContentEncodings(Collection<ContentEncoding> encodings){
+    public void setContentEncodings(Collection<Encoding> encodings){
         headers.setListValue(CONTENT_ENCODING, encodings, null, true);
     }
 

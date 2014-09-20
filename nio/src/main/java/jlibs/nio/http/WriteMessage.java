@@ -19,7 +19,7 @@ import jlibs.core.lang.NotImplementedException;
 import jlibs.nio.Reactor;
 import jlibs.nio.Writable;
 import jlibs.nio.http.msg.*;
-import jlibs.nio.http.util.ContentEncoding;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.listeners.Task;
 import jlibs.nio.util.Buffers;
 
@@ -213,7 +213,7 @@ public final class WriteMessage extends Task{
             buffers = new Buffers();
             OutputStream os = buffers;
             try{
-                List<ContentEncoding> encodings = message.getContentEncodings();
+                List<Encoding> encodings = message.getContentEncodings();
                 while(!encodings.isEmpty())
                     os = encodings.remove(encodings.size()-1).wrap(os);
                 encodablePayload.writeTo(os);
@@ -227,7 +227,7 @@ public final class WriteMessage extends Task{
             if(socketPayload.in.isOpen()){
                 writePayload = new WriteSocketPayload(socketPayload);
                 long contentLength = socketPayload.getContentLength();
-                List<ContentEncoding> encodings = socketPayload.encodings;
+                List<Encoding> encodings = socketPayload.encodings;
                 if(encodings!=null && !encodings.isEmpty()){
                     message.setContentEncodings(encodings);
                     if(contentLength!=-1){
