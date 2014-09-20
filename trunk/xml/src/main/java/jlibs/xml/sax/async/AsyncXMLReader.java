@@ -152,8 +152,8 @@ public final class AsyncXMLReader implements XMLReader, NBHandler<SAXException>,
                 declHandler = (DeclHandler)value;
             else
                 throw new SAXNotSupportedException("value must implement "+DeclHandler.class);
-        }
-        throw new SAXNotRecognizedException();
+        }else
+            throw new SAXNotRecognizedException();
     }
 
     private XMLScanner xmlScanner = new XMLScanner(this, XMLScanner.RULE_DOCUMENT);
