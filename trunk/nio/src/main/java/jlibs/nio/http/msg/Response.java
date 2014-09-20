@@ -220,6 +220,63 @@ public class Response extends Message{
         headers.setListValue(ALLOW, methods, null, true);
     }
 
+    /*-------------------------------------------------[ Access-Control-Allow-Origin ]---------------------------------------------------*/
+
+    // http://www.w3.org/TR/cors/#http-access-control-allow-origin
+    public static final AsciiString ACCESS_CONTROL_ALLOW_ORIGIN = new AsciiString("Access-Control-Allow-Origin");
+
+    public Origins getAccessControlAllowedOrigins(){
+        return headers.getSingleValue(ACCESS_CONTROL_ALLOW_ORIGIN, Origins::valueOf);
+    }
+
+    public void setAccessControlAllowedOrigins(Origins origins){
+        headers.setSingleValue(ACCESS_CONTROL_ALLOW_ORIGIN, origins, null);
+    }
+
+    /*-------------------------------------------------[ Access-Control-Allow-Methods ]---------------------------------------------------*/
+
+    // http://www.w3.org/TR/cors/#access-control-allow-methods-response-header
+    public static final AsciiString ACCESS_CONTROL_ALLOW_METHODS = new AsciiString("Access-Control-Allow-Methods");
+
+    public List<Method> getAccessControlAllowedMethods(){
+        return headers.getListValue(ACCESS_CONTROL_ALLOW_METHODS, Parser.lvalueDelegate(Method::valueOf), true);
+    }
+
+    public void setAccessControlAllowedMethods(Collection<Method> methods){
+        headers.setListValue(ACCESS_CONTROL_ALLOW_METHODS, methods, null, true);
+    }
+
+    /*-------------------------------------------------[ Access-Control-Allow-Credentials ]---------------------------------------------------*/
+
+    // http://www.w3.org/TR/cors/#access-control-allow-credentials-response-header
+    public static final AsciiString ACCESS_CONTROL_ALLOW_CREDENTIALS = new AsciiString("Access-Control-Allow-Credentials");
+
+    public boolean isAccessControlAllowCredentials(){
+        Boolean value = headers.getSingleValue(ACCESS_CONTROL_ALLOW_CREDENTIALS, Boolean::parseBoolean);
+        return value==null ? Boolean.FALSE : value;
+    }
+
+    public void setAccessControlAllowCredentials(boolean allow){
+        headers.set(ACCESS_CONTROL_ALLOW_CREDENTIALS, allow ? "true" : null);
+    }
+
+    /*-------------------------------------------------[ Access-Control-Max-Age ]---------------------------------------------------*/
+
+    // http://www.w3.org/TR/cors/#access-control-max-age-response-header
+    public static final AsciiString ACCESS_CONTROL_MAX_AGE = new AsciiString("Access-Control-Max-Age");
+
+    public long getAccessControlMaxAge(){
+        String value = headers.value(ACCESS_CONTROL_MAX_AGE);
+        return value==null? -1 : Util.parseLong(value);
+    }
+
+    public void setAccessControlMaxAge(long age){
+        if(age<0)
+            headers.remove(ACCESS_CONTROL_MAX_AGE);
+        else
+            headers.set(ACCESS_CONTROL_MAX_AGE, Long.toString(age));
+    }
+
     static{
         AsciiString.initInterned();
     }

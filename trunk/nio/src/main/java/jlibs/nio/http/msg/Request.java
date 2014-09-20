@@ -17,7 +17,6 @@ package jlibs.nio.http.msg;
 
 import jlibs.core.io.IOUtil;
 import jlibs.nio.http.util.*;
-import jlibs.nio.http.util.HTTPDate;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -371,7 +370,29 @@ public class Request extends Message{
     // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
     public static final AsciiString ACCEPT_LANGUAGE = new AsciiString("Accept-Language");
 
-//    static{
-//        AsciiString.initInterned();
-//    }
+    /*-------------------------------------------------[ Origin ]---------------------------------------------------*/
+
+    // http://tools.ietf.org/html/rfc6454#section-7
+    public static final AsciiString ORIGIN = new AsciiString("Origin");
+
+    public Origins getOrigins(){
+        return headers.getSingleValue(ORIGIN, Origins::valueOf);
+    }
+
+    public void setOrigins(Origins origins){
+        headers.setSingleValue(ORIGIN, origins, null);
+    }
+
+    /*-------------------------------------------------[ Access-Control-Request-Method ]---------------------------------------------------*/
+
+    // http://www.w3.org/TR/cors/#access-control-request-method-request-header
+    public static final AsciiString ACCESS_CONTROL_REQUEST_METHOD = new AsciiString("Access-Control-Request-Method");
+
+    public Method getAccessControlRequestMethod(){
+        return headers.getSingleValue(ACCESS_CONTROL_REQUEST_METHOD, Method::valueOf);
+    }
+
+    public void setAccessControlRequestMethod(Method method){
+        headers.setSingleValue(ACCESS_CONTROL_REQUEST_METHOD, method, null);
+    }
 }
