@@ -15,6 +15,7 @@
 
 package jlibs.nio.http.filters;
 
+import jlibs.nio.http.Key;
 import jlibs.nio.http.ClientExchange;
 import jlibs.nio.http.ClientFilter;
 import jlibs.nio.http.FilterType;
@@ -24,16 +25,14 @@ import jlibs.nio.http.msg.Response;
 import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.util.HTTPURL;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-
 /**
  * @author Santhosh Kumar Tekuri
  *
  * Client Response Filter
  */
 public class FollowRedirects implements ClientFilter{
-    private static ThreadLocal<Map<ClientExchange, Integer>> map = ThreadLocal.withInitial(WeakHashMap::new);
+    private static final Key<Integer> REDIRECT_COUNT = new Key<>("RedirectCount", 0);
+
     private int maxRedirects;
     public FollowRedirects(int maxRedirects){
         this.maxRedirects = maxRedirects;
@@ -50,15 +49,13 @@ public class FollowRedirects implements ClientFilter{
         if(location==null || location.isEmpty())
             return true;
 
-        Integer count = map.get().remove(exchange);
-        if(count==null)
-            count = 0;
+        int count = exchange.attachment(REDIRECT_COUNT);
         if(count>=maxRedirects)
             return true;
 
         if(location.startsWith("/")){
             exchange.getRequest().uri = location;
-            map.get().put(exchange, ++count);
+            exchange.attach(REDIRECT_COUNT, ++count);
             exchange.retry();
         }else if(location.startsWith("http://") || location.startsWith("https://")){
             HTTPURL url;
@@ -68,7 +65,7 @@ public class FollowRedirects implements ClientFilter{
                 throw Status.BAD_GATEWAY.with(ex);
             }
             exchange.getRequest().uri = url.path;
-            map.get().put(exchange, ++count);
+            exchange.attach(REDIRECT_COUNT, ++count);
             exchange.retry(url.createEndpoint());
         }
         // @todo what abt relative location not starting with '/'

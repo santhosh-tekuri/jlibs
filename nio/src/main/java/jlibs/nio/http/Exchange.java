@@ -24,11 +24,11 @@ import jlibs.nio.listeners.Task;
 
 import java.io.Closeable;
 import java.nio.channels.SelectionKey;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import static java.nio.channels.SelectionKey.OP_READ;
-import static jlibs.nio.Debugger.HTTP;
-import static jlibs.nio.Debugger.enter;
-import static jlibs.nio.Debugger.exit;
+import static jlibs.nio.Debugger.*;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -48,6 +48,7 @@ public abstract class Exchange extends Task implements Closeable{
         error = null;
         request = null;
         response = null;
+        attachments = null;
     }
 
     @Override
@@ -123,13 +124,33 @@ public abstract class Exchange extends Task implements Closeable{
         return getClass().getSimpleName()+"["+getEndpoint()+"]";
     }
 
-    private Object attachment;
-    public void attach(Object attachment){
-        this.attachment = attachment;
+    /*-------------------------------------------------[ Attachments ]---------------------------------------------------*/
+
+    private Map<Key, Object> attachments;
+
+    @SuppressWarnings("unchecked")
+    public <T> T attachment(Key<T> key){
+        if(attachments ==null)
+            return key.defaultValue;
+        else{
+            T value = (T)attachments.get(key);
+            return value==null ? key.defaultValue : value;
+        }
     }
 
     @SuppressWarnings("unchecked")
-    public <A> A attachment(){
-        return (A)attachment;
+    public <T> T attach(Key<T> key, T value){
+        if(attachments ==null)
+            attachments = new IdentityHashMap<>();
+        T oldValue = (T)attachments.put(key, value);
+        return oldValue==null ? key.defaultValue : value;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T detach(Key<T> key){
+        if(attachments ==null)
+            return key.defaultValue;
+        T value = (T)attachments.remove(key);
+        return value==null ? key.defaultValue : value;
     }
 }
