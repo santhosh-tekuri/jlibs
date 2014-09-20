@@ -155,4 +155,33 @@ public class Util{
                 throw (CloneNotSupportedException)new CloneNotSupportedException().initCause(ex);
         }
     }
+
+    public static long parseLong(String value){
+        int len = value.length();
+        if(len==0)
+            throw new NumberFormatException("empty string");
+
+        int i = 0;
+        boolean negative = false;
+        char firstChar = value.charAt(0);
+        if(firstChar<'0'){
+            if(firstChar=='-')
+                negative = true;
+            else if(firstChar!='+')
+                throw new NumberFormatException("for input string \""+value+"\"");
+            if(len==1)
+                throw new NumberFormatException("cannot have lone + or -");
+            ++i;
+        }
+
+        int result = 0;
+        while(i<len){
+            char ch = value.charAt(i++);
+            if(ch>='0' && ch<='9')
+                result = result*10 + (ch-'0');
+            else
+                throw new NumberFormatException("for input string \""+value+"\"");
+        }
+        return negative ? -result : result;
+    }
 }
