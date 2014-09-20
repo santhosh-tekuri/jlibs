@@ -57,6 +57,8 @@ public class HTTPProxyServer{
         server.stop();
     }
 
+    private static Key<ServerExchange> SERVER_EXCHANGE = new Key<>("ServerExchange");
+
     private class Listener implements RequestListener, ResponseListener{
         @Override
         public boolean process(ServerExchange exchange) throws Exception{
@@ -72,7 +74,7 @@ public class HTTPProxyServer{
                 }
                 request.uri = url.path;
                 ClientExchange clientExchange = client.newExchange(url.createEndpoint());
-                clientExchange.attach(exchange);
+                clientExchange.attach(SERVER_EXCHANGE, exchange);
                 clientExchange.setRequest(request);
                 clientExchange.execute(this);
             }
@@ -81,7 +83,7 @@ public class HTTPProxyServer{
 
         @Override
         public void process(ClientExchange exchange, Throwable thr) throws Exception{
-            ServerExchange serverExchange = exchange.attachment();
+            ServerExchange serverExchange = exchange.attachment(SERVER_EXCHANGE);
             if(thr==null){
                 serverExchange.setResponse(exchange.getResponse());
                 serverExchange.resume();
@@ -145,7 +147,6 @@ public class HTTPProxyServer{
     }
 
     public static void main(String[] args) throws Exception{
-        System.setOut(new PrintStream(new FileOutputStream("/Users/santhosh/Desktop/proxy.log")));
         Reactors.start(1);
         HTTPProxyServer proxyServer = new HTTPProxyServer(new TCPEndpoint(args[0]));
         proxyServer.client.proxy = null;
