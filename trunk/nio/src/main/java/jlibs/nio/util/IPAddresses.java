@@ -27,6 +27,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
+ * Helper class to iterate through local ip addresses
+ * with streaming support
+ *
  * @author Santhosh Kumar Tekuri
  */
 public class IPAddresses extends AbstractIterator<InetAddress>{
@@ -35,6 +38,10 @@ public class IPAddresses extends AbstractIterator<InetAddress>{
 
     public IPAddresses() throws SocketException{
         interfaces.add(NetworkInterface.getNetworkInterfaces());
+    }
+
+    public IPAddresses(NetworkInterface ni){
+        interfaces.add(Collections.enumeration(Collections.singleton(ni)));
     }
 
     @Override
@@ -57,15 +64,9 @@ public class IPAddresses extends AbstractIterator<InetAddress>{
         }
     }
 
-    public static Stream<InetAddress> stream() throws IOException{
+    public Stream<InetAddress> stream() throws IOException{
         int characteristics = Spliterator.NONNULL;
-        Spliterator<InetAddress> spliterator = Spliterators.spliteratorUnknownSize(new IPAddresses(), characteristics);
+        Spliterator<InetAddress> spliterator = Spliterators.spliteratorUnknownSize(this, characteristics);
         return StreamSupport.stream(spliterator, false);
-    }
-
-    public static void main(String[] args) throws IOException{
-        IPAddresses.stream()
-                .filter(inetAddress -> inetAddress instanceof Inet4Address)
-                .forEach(inetAddress -> System.out.println(inetAddress.getHostAddress()));
     }
 }
