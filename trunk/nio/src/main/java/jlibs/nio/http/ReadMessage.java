@@ -24,7 +24,7 @@ import jlibs.nio.filters.FixedLengthInput;
 import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.parser.HeadersParser;
 import jlibs.nio.http.msg.parser.MessageParser;
-import jlibs.nio.http.util.ContentEncoding;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.listeners.Task;
 
 import java.io.EOFException;
@@ -96,7 +96,7 @@ public class ReadMessage extends Task{
         // init payload --------------------------------
         keepAlive = message.isKeepAlive();
         long contentLength = -1;
-        List<ContentEncoding> encodings = null;
+        List<Encoding> encodings = null;
 
         if(!emptyPayload){
             if(message instanceof Request){

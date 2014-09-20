@@ -18,7 +18,7 @@ package jlibs.nio.http;
 import jlibs.nio.Input;
 import jlibs.nio.filters.TrackingInput;
 import jlibs.nio.http.msg.Payload;
-import jlibs.nio.http.util.ContentEncoding;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.util.Buffers;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public class SocketPayload extends Payload{
     private long contentLength;
     protected Input in;
 
-    public SocketPayload(long contentLength, String contentType, Input in, List<ContentEncoding> encodings){
+    public SocketPayload(long contentLength, String contentType, Input in, List<Encoding> encodings){
         super(contentType);
         this.contentLength = contentLength;
         this.in = in;
@@ -42,7 +42,7 @@ public class SocketPayload extends Payload{
         return contentLength;
     }
 
-    protected List<ContentEncoding> encodings;
+    protected List<Encoding> encodings;
     public boolean retain;
     public Buffers buffers;
     public Input socket(){
@@ -57,7 +57,7 @@ public class SocketPayload extends Payload{
         }
         try{
             while(!encodings.isEmpty()){
-                ContentEncoding encoding = encodings.remove(encodings.size()-1);
+                Encoding encoding = encodings.remove(encodings.size()-1);
                 in = encoding.wrap(in);
             }
         }finally{
