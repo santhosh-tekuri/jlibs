@@ -15,7 +15,10 @@
 
 package jlibs.nio.listeners;
 
-import jlibs.nio.*;
+import jlibs.nio.Input;
+import jlibs.nio.Output;
+import jlibs.nio.Reactor;
+import jlibs.nio.Transport;
 import jlibs.nio.filters.BufferInput;
 import jlibs.nio.filters.ChunkedOutput;
 import jlibs.nio.util.BufferAllocator;
@@ -213,17 +216,17 @@ public abstract class Task{
             }
         }catch(Throwable thr){
             try{
-                readBuffersDone(in);
+                readBuffersDone(in, buffers);
             }catch(Throwable suppressed){
                 thr.addSuppressed(suppressed);
             }
             throw thr;
         }
-        readBuffersDone(in);
+        readBuffersDone(in, buffers);
         return true;
     }
 
-    private void readBuffersDone(Input in) throws IOException{
+    private void readBuffersDone(Input in, Buffers buffers) throws IOException{
         if(buffer.position()==0)
             allocator.free(buffer);
         else{
@@ -518,7 +521,7 @@ public abstract class Task{
                     else if(buffer.remaining()==0){
                         buffer.flip();
                         buffers.append(buffer);
-                        allocator.allocateHeap();
+                        buffer = allocator.allocateHeap();
                     }
                 }
             }
