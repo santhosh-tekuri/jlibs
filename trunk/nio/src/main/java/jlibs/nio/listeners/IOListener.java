@@ -121,7 +121,7 @@ public class IOListener implements Input.Listener, Output.Listener{
 
     private Callback callback;
     private Object attachment;
-    public <A> IOListener setCallback(Callback callback, A attachment){
+    public <A> IOListener setCallback(Callback<A> callback, A attachment){
         this.callback = callback;
         this.attachment = attachment;
         return this;
