@@ -32,6 +32,8 @@ public abstract class NBChannel<T extends SelectableChannel> implements Channel{
         if(selectable!=null)
             selectable.configureBlocking(false);
         workingFor = reactor==null ? this : reactor.getExecutionOwner();
+        if(workingFor==null)
+            workingFor = this;
         uniqueID = getClass().getSimpleName()+'@'+Integer.toHexString(hashCode());
         makeActive();
     }

@@ -140,6 +140,8 @@ public class ConnectionPool{
             --ConnectionPool.this.count;
             con.taskCompleted();
             con.workingFor = reactor.getExecutionOwner();
+            if(con.workingFor==null)
+                con.workingFor = con;
             con.makeActive();
         }
     }
