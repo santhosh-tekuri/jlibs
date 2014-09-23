@@ -1,2 +1,6 @@
+.java-version
 .gradle
 /build
+/*/build
+/target
+/*/target
