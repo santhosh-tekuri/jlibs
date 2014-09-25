@@ -13,15 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http.accesslog;
+package jlibs.nio.log;
 
-import jlibs.nio.http.ServerExchange;
+import java.io.IOException;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class ServerAccessLog extends AccessLog{
-    public ServerAccessLog(String format){
-        super(ServerExchange.class, format);
-    }
+public interface LogRecord{
+    public void publishTo(Appendable appendable) throws IOException;
 }

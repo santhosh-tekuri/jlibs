@@ -13,7 +13,9 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.util;
+package jlibs.nio.log;
+
+import jlibs.nio.util.RepeatingDuration;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,7 +27,7 @@ import java.util.Date;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class LogHandler{
+public class FileLogHandler implements LogHandler{
     private File dir;
     private String prefix;
     private String suffix;
@@ -34,7 +36,7 @@ public class LogHandler{
     private long next = 0;
     private BufferedWriter writer;
 
-    public LogHandler(File dir, String prefix, String suffix, String format){
+    public FileLogHandler(File dir, String prefix, String suffix, String format){
         this.dir = dir;
         this.prefix = prefix;
         this.suffix = suffix;
@@ -57,17 +59,13 @@ public class LogHandler{
         }
     }
 
-    public synchronized void publish(Record record){
+    public synchronized void publish(LogRecord record){
         try{
             rotateIfNecessary();
-            record.publish(writer);
+            record.publishTo(writer);
             writer.flush();
         }catch(Throwable ex){
             ex.printStackTrace();
         }
-    }
-
-    public static interface Record{
-        public void publish(Appendable writer) throws IOException;
     }
 }

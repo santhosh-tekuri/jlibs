@@ -13,15 +13,23 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http.accesslog;
+package jlibs.nio.log;
 
-import jlibs.nio.http.ClientExchange;
+import java.io.IOException;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class ClientAccessLog extends AccessLog{
-    public ClientAccessLog(String format){
-        super(ClientExchange.class, format);
+public class ConsoleLogHandler implements LogHandler{
+    public static final ConsoleLogHandler INSTANCE = new ConsoleLogHandler();
+
+    @Override
+    public void publish(LogRecord record){
+        try{
+            record.publishTo(System.err);
+            System.err.flush();
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
     }
 }

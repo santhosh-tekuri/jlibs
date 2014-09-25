@@ -18,9 +18,9 @@ package jlibs.nio.http;
 import jlibs.nio.Proxy;
 import jlibs.nio.SocksProxy;
 import jlibs.nio.TCPEndpoint;
-import jlibs.nio.http.accesslog.ClientAccessLog;
 import jlibs.nio.http.util.HTTPURL;
-import jlibs.nio.util.LogHandler;
+import jlibs.nio.log.ConsoleLogHandler;
+import jlibs.nio.log.LogHandler;
 
 import javax.net.ssl.SSLException;
 import java.security.GeneralSecurityException;
@@ -50,8 +50,8 @@ public class HTTPClient{
     public String userAgent = Defaults.USER_AGENT;
     public long keepAliveTimeout = Defaults.KEEP_ALIVE_TIMEOUT;
 
-    public ClientAccessLog accessLog;
-    public LogHandler logHandler;
+    public AccessLog accessLog;
+    public LogHandler logHandler = ConsoleLogHandler.INSTANCE;
 
     public HTTPClient(){
         proxy = Proxy.DEFAULTS.get(HTTPProxy.TYPE);
