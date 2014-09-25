@@ -13,11 +13,11 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http.accesslog;
+package jlibs.nio.log;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface AttributeCreator{
-    public Attribute create(String customizer);
+public interface LogHandler{
+    public void publish(LogRecord record);
 }

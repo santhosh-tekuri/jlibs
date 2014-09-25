@@ -76,6 +76,10 @@ public abstract class NBChannel<T extends SelectableChannel> implements Channel{
         executionID = null;
     }
 
+    public int getTaskID(){
+        return taskID;
+    }
+
     String executionID;
     public String getExecutionID(){
         if(executionID==null){

@@ -13,26 +13,36 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http.accesslog;
+package jlibs.nio.http;
 
-import jlibs.nio.http.Exchange;
 import jlibs.nio.http.msg.Message;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public abstract class AccessLogEntry{
+public abstract class Attribute<T>{
     public final Class<? extends Exchange> exchangeType;
     public final Class<? extends Message> messageType;
-    public AccessLogEntry(Class<? extends Exchange> exchangeType, Class<? extends Message> messageType){
+    public final boolean captureOnFinish;
+
+    protected Attribute(Class<? extends Exchange> exchangeType, Class<? extends Message> messageType, boolean captureOnFinish){
         this.exchangeType = exchangeType;
         this.messageType = messageType;
+        this.captureOnFinish = captureOnFinish;
     }
 
-    public abstract String getValue(Exchange exchange);
+    public abstract T getValue(Exchange exchange);
 
-    public boolean matches(Exchange exchange, Message msg){
-        return (exchangeType==null || exchangeType==exchange.getClass()) &&
-                (messageType==null || messageType==msg.getClass());
+    public String getValueAsString(Exchange exchange){
+        T value = getValue(exchange);
+        return value==null ? null : value.toString();
+    }
+
+    public boolean isApplicable(Exchange exchange){
+        return exchangeType==null || exchangeType==exchange.getClass();
+    }
+
+    public boolean isApplicable(Exchange exchange, Message message){
+        return isApplicable(exchange) && (messageType==null || messageType==message.getClass());
     }
 }

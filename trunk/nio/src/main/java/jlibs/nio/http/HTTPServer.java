@@ -18,9 +18,9 @@ package jlibs.nio.http;
 import jlibs.nio.TCPConnection;
 import jlibs.nio.TCPEndpoint;
 import jlibs.nio.TCPServer;
-import jlibs.nio.http.accesslog.ServerAccessLog;
 import jlibs.nio.listeners.IOListener;
-import jlibs.nio.util.LogHandler;
+import jlibs.nio.log.ConsoleLogHandler;
+import jlibs.nio.log.LogHandler;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -61,8 +61,8 @@ public class HTTPServer implements TCPServer.Listener{
     public String serverName = Defaults.SERVER_NAME;
     public boolean supportsProxyConnectionHeader = Defaults.SUPPORTS_PROXY_CONNECTION_HEADER;
 
-    public ServerAccessLog accessLog;
-    public LogHandler logHandler;
+    public AccessLog accessLog;
+    public LogHandler logHandler = ConsoleLogHandler.INSTANCE;
 
     public static class Defaults{
         public static boolean SET_DATE_HEADER = false;

@@ -21,8 +21,6 @@ import jlibs.nio.Result;
 import jlibs.nio.TCPEndpoint;
 import jlibs.nio.filters.CloseTrackingInput;
 import jlibs.nio.filters.TrackingInput;
-import jlibs.nio.http.accesslog.AccessLog;
-import jlibs.nio.http.accesslog.ClientAccessLog;
 import jlibs.nio.http.msg.Method;
 import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
@@ -30,9 +28,8 @@ import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.msg.parser.ResponseParser;
 import jlibs.nio.http.util.Expect;
 import jlibs.nio.listeners.IOListener;
-import jlibs.nio.util.LogHandler;
+import jlibs.nio.log.LogHandler;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -328,15 +325,13 @@ public class ClientExchange extends Exchange{
         try{
             if(accessLog!=null){
                 accessLogRecord.finished(this);
-                if(accessLog instanceof ClientAccessLog){
-                    if(logHandler==null)
-                        accessLogRecord.publish(System.out);
-                    else
-                        logHandler.publish(accessLogRecord);
+                if(accessLogRecord.getOwner()==ClientExchange.class){
+                    logHandler.publish(accessLogRecord);
+                    accessLogRecord.reset();
                 }
             }
-        }catch(IOException ex){
-            Reactor.current().handleException(ex);
+        }catch(Throwable thr){
+            Reactor.current().handleException(thr);
         }
         if(callback!=null){
             try{

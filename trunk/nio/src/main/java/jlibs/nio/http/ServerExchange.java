@@ -23,13 +23,11 @@ import jlibs.nio.TCPEndpoint;
 import jlibs.nio.filters.InputLimitExceeded;
 import jlibs.nio.filters.ReadTrackingInput;
 import jlibs.nio.filters.TrackingInput;
-import jlibs.nio.http.accesslog.AccessLog;
-import jlibs.nio.http.accesslog.ServerAccessLog;
 import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.parser.RequestParser;
 import jlibs.nio.http.util.Expect;
 import jlibs.nio.http.util.USAscii;
-import jlibs.nio.util.LogHandler;
+import jlibs.nio.log.LogHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,6 +36,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static jlibs.nio.Debugger.HTTP;
@@ -66,7 +65,7 @@ public final class ServerExchange extends Exchange{
     private Collection<ServerFilter> responseFilters;
     private Collection<ServerFilter> errorFilters;
 
-    ServerAccessLog accessLog;
+    AccessLog accessLog;
     AccessLog.Record accessLogRecord;
     LogHandler logHandler;
 
@@ -352,14 +351,11 @@ public final class ServerExchange extends Exchange{
         try{
             if(accessLog!=null){
                 accessLogRecord.finished(this);
-                if(logHandler==null)
-                    accessLogRecord.publish(System.out);
-                else
-                    logHandler.publish(accessLogRecord);
+                logHandler.publish(accessLogRecord);
                 accessLogRecord.reset();
             }
-        }catch(IOException ex){
-            Reactor.current().handleException(ex);
+        }catch(Throwable thr){
+            Reactor.current().handleException(thr);
         }
         if(callback!=null){
             try{
@@ -406,4 +402,39 @@ public final class ServerExchange extends Exchange{
         String str = super.toString();
         return str.substring(0, str.length()-1)+":"+state+"]";
     }
+
+    /*-------------------------------------------------[ Attributes ]---------------------------------------------------*/
+
+    public static Attribute<InetAddress> REMOTE_IP = new Attribute<InetAddress>(ServerExchange.class, Request.class, false){
+        @Override
+        public InetAddress getValue(Exchange exchange){
+            return ((ServerExchange)exchange).getClientAddress();
+        }
+
+        @Override
+        public String getValueAsString(Exchange exchange){
+            InetAddress address = getValue(exchange);
+            return address==null ? null : address.getHostAddress();
+        }
+
+        @Override
+        public String toString(){
+            return "remote_ip";
+        }
+    };
+
+    public static Attribute<String> CLIENT_IP = new Attribute<String>(ServerExchange.class, Request.class, false){
+        @Override
+        public String getValue(Exchange exchange){
+            List<String> list = exchange.getRequest().getXForwardedFor();
+            if(!list.isEmpty())
+                return list.get(0);
+            return ((ServerExchange)exchange).getClientAddress().getHostAddress();
+        }
+
+        @Override
+        public String toString(){
+            return "client_ip";
+        }
+    };
 }

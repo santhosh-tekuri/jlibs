@@ -20,6 +20,7 @@ import jlibs.nio.http.msg.Method;
 import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
 import jlibs.nio.http.msg.Status;
+import jlibs.nio.http.util.Encoding;
 import jlibs.nio.http.util.HTTPURL;
 import jlibs.nio.listeners.InputException;
 import jlibs.nio.listeners.OutputException;
@@ -27,12 +28,11 @@ import jlibs.nio.listeners.Pump;
 import jlibs.nio.util.BufferAllocator;
 
 import javax.net.ssl.SSLException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.SocketTimeoutException;
 import java.nio.BufferOverflowException;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 /**
@@ -74,6 +74,7 @@ public class HTTPProxyServer{
                 }
                 request.uri = url.path;
                 ClientExchange clientExchange = client.newExchange(url.createEndpoint());
+                clientExchange.setAccessLog(exchange);
                 clientExchange.attach(SERVER_EXCHANGE, exchange);
                 clientExchange.setRequest(request);
                 clientExchange.execute(this);
