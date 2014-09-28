@@ -13,28 +13,30 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http;
+package jlibs.nio.http.expr;
+
+import java.util.Map;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public enum ConnectionStatus{
-    OPEN{
-        @Override
-        public String toString(){
-            return "+";
-        }
-    },
-    ABORTED{
-        @Override
-        public String toString(){
-            return "x";
-        }
-    },
-    CLOSED{
-        @Override
-        public String toString(){
-            return "-";
-        }
+public class Lookup implements Expression{
+    public final Expression child;
+    public Lookup(Expression child){
+        this.child = child;
+    }
+
+    @Override
+    public Object evaluate(Object root, Object current){
+        String name = TypeConversion.toString(child.evaluate(root, root));
+        if(current instanceof Map)
+            return ((Map)current).get(name);
+        else
+            return name==null ? null : ((ValueMap)current).getValue(name);
+    }
+
+    @Override
+    public String toString(){
+        return child.toString();
     }
 }

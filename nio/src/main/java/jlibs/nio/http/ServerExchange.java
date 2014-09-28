@@ -23,6 +23,7 @@ import jlibs.nio.TCPEndpoint;
 import jlibs.nio.filters.InputLimitExceeded;
 import jlibs.nio.filters.ReadTrackingInput;
 import jlibs.nio.filters.TrackingInput;
+import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.parser.RequestParser;
 import jlibs.nio.http.util.Expect;
@@ -227,8 +228,13 @@ public final class ServerExchange extends Exchange{
 
     @Override
     protected void readMessageFinished(Throwable thr){
-        if(accessLog!=null)
-            accessLogRecord.process(this, request);
+        if(accessLog!=null){
+            try{
+                accessLogRecord.process(this, request);
+            }catch(Throwable thr1){
+                Reactor.current().handleException(thr1);
+            }
+        }
         if(thr!=null){
             if(thr==ReadMessage.IGNORABLE_EOF_EXCEPTION){
                 close();
@@ -403,38 +409,18 @@ public final class ServerExchange extends Exchange{
         return str.substring(0, str.length()-1)+":"+state+"]";
     }
 
-    /*-------------------------------------------------[ Attributes ]---------------------------------------------------*/
-
-    public static Attribute<InetAddress> REMOTE_IP = new Attribute<InetAddress>(ServerExchange.class, Request.class, false){
-        @Override
-        public InetAddress getValue(Exchange exchange){
-            return ((ServerExchange)exchange).getClientAddress();
-        }
-
-        @Override
-        public String getValueAsString(Exchange exchange){
-            InetAddress address = getValue(exchange);
-            return address==null ? null : address.getHostAddress();
-        }
-
-        @Override
-        public String toString(){
-            return "remote_ip";
-        }
-    };
-
-    public static Attribute<String> CLIENT_IP = new Attribute<String>(ServerExchange.class, Request.class, false){
-        @Override
-        public String getValue(Exchange exchange){
-            List<String> list = exchange.getRequest().getXForwardedFor();
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="remote_ip"){
+            InetAddress address = getClientAddress();
+            return address.getHostAddress();
+        }else if(name=="client_ip"){
+            List<String> list = getRequest().getXForwardedFor();
             if(!list.isEmpty())
                 return list.get(0);
-            return ((ServerExchange)exchange).getClientAddress().getHostAddress();
-        }
-
-        @Override
-        public String toString(){
-            return "client_ip";
-        }
-    };
+            return getClientAddress().getHostAddress();
+        }else
+            return super.getField(name);
+    }
 }

@@ -16,6 +16,7 @@
 package jlibs.nio.http.msg;
 
 import jlibs.core.io.IOUtil;
+import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.util.*;
 
 import java.nio.ByteBuffer;
@@ -60,6 +61,28 @@ public class Request extends Message{
                 .append("\r\n")
                 .append(headers);
         return builder.toString();
+    }
+
+    /*-------------------------------------------------[ Bean ]---------------------------------------------------*/
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="method")
+            return method;
+        else if(name=="uri")
+            return uri;
+        else if(name=="line")
+            return method+" "+uri+' '+version;
+        else if(name=="query_string"){
+            if(uri==null)
+                return null;
+            int question = uri.indexOf('?');
+            return question==-1 ? "" : uri.substring(question+1);
+        }else if(name=="cookies")
+            return getCookies();
+        else
+            return super.getField(name);
     }
 
     /*-------------------------------------------------[ Host ]---------------------------------------------------*/

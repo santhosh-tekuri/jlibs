@@ -15,6 +15,8 @@
 
 package jlibs.nio.http.msg;
 
+import jlibs.nio.http.expr.Bean;
+import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.util.USAscii;
 
 import java.nio.ByteBuffer;
@@ -24,7 +26,7 @@ import static jlibs.nio.http.util.USAscii.*;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public final class Status extends RuntimeException{
+public final class Status extends RuntimeException implements Bean{
     public final int code;
     public final String reason;
     public final boolean payloadNotAllowed;
@@ -131,6 +133,17 @@ public final class Status extends RuntimeException{
     @Override
     public String toString(){
         return code+" "+reason;
+    }
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="code")
+            return code;
+        else if(name=="reason")
+            return reason;
+        else
+            throw new UnresolvedException(name);
     }
 
     private static final Status array[] = new Status[900];

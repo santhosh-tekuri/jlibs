@@ -15,15 +15,16 @@
 
 package jlibs.nio;
 
+import jlibs.nio.http.expr.Bean;
+import jlibs.nio.http.expr.UnresolvedException;
+import jlibs.nio.http.expr.ValueMap;
 import jlibs.nio.util.NIOUtil;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.security.cert.X509Certificate;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
@@ -35,7 +36,7 @@ import static jlibs.nio.SSLSocket.Action.*;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public final class SSLSocket implements Transport{
+public final class SSLSocket implements Transport, Bean{
     private static final ByteBuffer dummy = ByteBuffer.allocate(0);
 
     private final Input peerIn;
@@ -665,6 +666,73 @@ public final class SSLSocket implements Transport{
                 if((selfInterestOps&OP_WRITE)!=0)
                     peerOut.addWriteInterest();
             }
+        }
+    }
+
+    public SSLSession getSession(){
+        return engine.getSession();
+    }
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="protocol")
+            return getSession().getProtocol();
+        else if(name=="cipher")
+            return getSession().getCipherSuite();
+        else if(name=="local")
+            return new CertificateBean((X509Certificate)getSession().getLocalCertificates()[0]);
+        else if(name=="peer"){
+            try{
+                return new CertificateBean((X509Certificate)getSession().getPeerCertificates()[0]);
+            }catch(SSLPeerUnverifiedException ex){
+                return null;
+            }
+        }else
+            throw new UnresolvedException(name);
+    }
+
+    public static class CertificateBean implements Bean{
+        public final X509Certificate cert;
+        public CertificateBean(X509Certificate cert){
+            this.cert = cert;
+        }
+
+        @Override
+        @SuppressWarnings("StringEquality")
+        public Object getField(String name) throws UnresolvedException{
+            if(name=="sdn")
+                return new DistinguishedName(cert.getSubjectX500Principal().getName());
+            else if(name=="idn")
+                return new DistinguishedName(cert.getIssuerX500Principal().getName());
+            return null;
+        }
+
+        @Override
+        public String toString(){
+            return cert.toString();
+        }
+    }
+
+    public static class DistinguishedName implements ValueMap{
+        public final String dn;
+        public DistinguishedName(String dn){
+            this.dn = dn;
+        }
+
+        @Override
+        public Object getValue(String name){
+            for(String attr: dn.split(",")){
+                String str[] = attr.split("=");
+                if(str[0].equals(name))
+                    return str[1];
+            }
+            return null;
+        }
+
+        @Override
+        public String toString(){
+            return dn;
         }
     }
 }

@@ -16,93 +16,71 @@
 package jlibs.nio.http;
 
 import jlibs.core.io.FileUtil;
+import jlibs.nio.http.expr.Expression;
+import jlibs.nio.http.expr.Literal;
+import jlibs.nio.http.expr.TypeConversion;
 import jlibs.nio.http.msg.Message;
 import jlibs.nio.http.msg.Request;
+import jlibs.nio.http.msg.Response;
 import jlibs.nio.log.LogRecord;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class AccessLog{
+    private static final Pattern PATTERN = Pattern.compile("([$%#])\\{(.*?)\\}");
+    private static final List<String> REQUEST_VARS = Arrays.asList(
+        "request",
+        "request_count",
+        "scheme",
+        "host",
+        "port",
+        "remote_ip",
+        "client_ip",
+        "id"
+    );
+
+    private static final List<String> CAPTURE_ON_FINISH = Arrays.asList(
+        "connection_status"
+    );
+
     private final List<Attribute> attributes = new ArrayList<>();
 
-    public AccessLog(String format){
-        StringBuilder buffer = new StringBuilder();
+    public AccessLog(String format) throws ParseException{
+        Matcher matcher = PATTERN.matcher(format);
+        int cursor = 0;
+        while(cursor<format.length() && matcher.find(cursor)){
+            String literal = format.substring(cursor, matcher.start());
+            if(!literal.isEmpty())
+                attributes.add(new Attribute(literal));
 
-        int i = 0;
-        while(i<format.length()){
+            String group1 = matcher.group(1);
+            Class exchangeType = null;
+            if(group1.equals("$"))
+                exchangeType = ServerExchange.class;
+            else if(group1.equals("%"))
+                exchangeType = ClientExchange.class;
 
-            // parseConstant
-            buffer.setLength(0);
-            while(i<format.length()){
-                char ch = format.charAt(i);
-                if(ch=='$' || ch=='%' || ch=='#'){
-                    if(i+1<format.length()){
-                        char next = format.charAt(i+1);
-                        if(next==ch)
-                            ++i;
-                        else if(Character.isJavaIdentifierStart(next))
-                            break;
-                    }
-                }
-                buffer.append(ch);
-                ++i;
-            }
-            if(buffer.length()>0){
-                attributes.add(new Constant(buffer.toString()));
-                buffer.setLength(0);
-            }
+            String group2 = matcher.group(2);
+            Class messageType = Response.class;
+            if(REQUEST_VARS.contains(group2) || group2.startsWith("request."))
+                messageType = Request.class;
+            boolean captureOnFinish = CAPTURE_ON_FINISH.contains(group2);
+            attributes.add(new Attribute(Expression.compile(group2), exchangeType, messageType, captureOnFinish));
 
-            if(i<format.length()){
-                char prefix = format.charAt(i++);
-                Class<? extends Exchange> exchangeType = null;
-                if(prefix=='$')
-                    exchangeType = ServerExchange.class;
-                else if(prefix=='%')
-                    exchangeType = ClientExchange.class;
-
-                while(i<format.length()){
-                    char ch = format.charAt(i);
-                    if(Character.isJavaIdentifierPart(ch)){
-                        buffer.append(ch);
-                        ++i;
-                    }else
-                        break;
-                }
-                String name = buffer.toString();
-                buffer.setLength(0);
-                Function<String, Attribute<?>> creator = registry.get(name);
-                if(creator==null){
-                    attributes.add(new Constant(prefix+name));
-                    continue;
-                }
-
-                String arg = null;
-                if(i<format.length()){
-                    char ch = format.charAt(i);
-                    if(ch=='('){
-                        ++i;
-                        while(i<format.length()){
-                            ch = format.charAt(i++);
-                            if(ch==')'){
-                                arg = buffer.toString();
-                                buffer.setLength(0);
-                                break;
-                            }else
-                                buffer.append(ch);
-                        }
-                    }
-                }
-                Attribute attr = creator.apply(arg);
-                if(attr.exchangeType!=exchangeType)
-                    attr = new DelegatingAttribute(exchangeType, attr);
-                attributes.add(attr);
-            }
+            cursor = matcher.end();
         }
+        String literal = format.substring(cursor, format.length());
+        if(!literal.isEmpty())
+            attributes.add(new Attribute(literal));
     }
 
     public class Record implements LogRecord{
@@ -128,7 +106,7 @@ public class AccessLog{
             for(int i=0; i<values.length; i++){
                 Attribute attr = attributes.get(i);
                 if(!attr.captureOnFinish && attr.isApplicable(exchange, msg))
-                    values[i] = attr.getValueAsString(exchange);
+                    values[i] = attr.getValue(exchange);
             }
         }
 
@@ -138,11 +116,10 @@ public class AccessLog{
             for(int i=0; i<values.length; i++){
                 Attribute attr = attributes.get(i);
                 if(attr.captureOnFinish && attr.isApplicable(exchange)){
-                    String value = attr.getValueAsString(exchange);
+                    String value = attr.getValue(exchange);
                     if(value!=null){
-                        if(values[i]!=null && !(attr instanceof Constant)){
+                        if(values[i]!=null)
                             value = Long.toString(Long.parseLong(values[i]) + Long.parseLong(value));
-                        }
                     }
                     values[i] = value;
                 }
@@ -161,83 +138,42 @@ public class AccessLog{
 
     /*-------------------------------------------------[ Static Members ]---------------------------------------------------*/
 
-    public static final Map<String, Function<String, Attribute<?>>> registry = new HashMap<>();
-
-    public static void register(Attribute<?> attribute){
-        register(attribute.toString(), attribute);
-    }
-
-    public static void register(String name, Attribute<?> attribute){
-        registry.put(name, s -> attribute);
-    }
-
-    public static void register(String name, Function<String, Attribute<?>> builder){
-        registry.put(name, builder);
-    }
-
-    static{
-        register(Exchange.REQUEST_COUNT);
-        register(Exchange.SCHEME);
-        register(Exchange.HOST);
-        register(Exchange.PORT);
-        register(Exchange.CONNECTION_STATUS);
-        register(Exchange.REQUEST_METHOD);
-        register(Exchange.REQUEST_LINE);
-        register(Exchange.QUERY_STRING);
-        register(Exchange.RESPONSE_STATUS);
-
-        register(ServerExchange.REMOTE_IP);
-        register(ServerExchange.CLIENT_IP);
-
-        register("request_header", Exchange.RequestHeader::new);
-        register("request_cookie", Exchange.RequestCookie::new);
-        register("response_header", Exchange.ResponseHeader::new);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static class DelegatingAttribute extends Attribute{
-        private Attribute delegate;
-        public DelegatingAttribute(Class<? extends Exchange> exchangeType, Attribute delegate){
-            super(exchangeType, delegate.messageType, delegate.captureOnFinish);
-            this.delegate = delegate;
+    private static class Attribute{
+        public final Class exchangeType;
+        public final Class messageType;
+        public final boolean captureOnFinish;
+        private Expression expr;
+        protected Attribute(Expression expr, Class exchangeType, Class messageType, boolean captureOnFinish){
+            this.expr = expr;
+            this.exchangeType = exchangeType;
+            this.messageType = messageType;
+            this.captureOnFinish = captureOnFinish;
         }
 
-        @Override
-        public Object getValue(Exchange exchange){
-            return delegate.getValue(exchange);
+        protected Attribute(String literal){
+            this(new Literal(literal), null, Request.class, false);
         }
 
-        @Override
-        public String getValueAsString(Exchange exchange){
-            return delegate.getValueAsString(exchange);
-        }
-
-        @Override
-        public String toString(){
-            String prefix = "#";
-            if(exchangeType==ServerExchange.class)
-                prefix = "$";
-            else if(exchangeType==ClientExchange.class)
-                prefix = "%";
-            return prefix+delegate.toString();
-        }
-    }
-
-    private static class Constant extends Attribute<String>{
-        private String value;
-        public Constant(String value){
-            super(null, Request.class, true);
-            this.value = value;
-        }
-
-        @Override
         public String getValue(Exchange exchange){
-            return value;
+            return TypeConversion.toString(expr.evaluate(exchange));
+        }
+
+        public boolean isApplicable(Exchange exchange){
+            return exchangeType==null || exchangeType==exchange.getClass();
+        }
+
+        public boolean isApplicable(Exchange exchange, Message message){
+            return isApplicable(exchange) && (messageType==null || messageType==message.getClass());
         }
 
         @Override
         public String toString(){
-            return value;
+            if(exchangeType==ServerExchange.class)
+                return "${"+expr+'}';
+            else if(exchangeType==ClientExchange.class)
+                return "%{"+expr+'}';
+            else
+                return "#{"+expr+'}';
         }
     }
 }
