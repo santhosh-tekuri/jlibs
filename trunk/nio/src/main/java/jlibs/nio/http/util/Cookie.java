@@ -17,13 +17,15 @@ package jlibs.nio.http.util;
 
 import jlibs.core.lang.StringUtil;
 import jlibs.nio.Reactor;
+import jlibs.nio.http.expr.Bean;
+import jlibs.nio.http.expr.UnresolvedException;
 
 import java.util.Objects;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class Cookie{
+public class Cookie implements Bean{
     public static final int VERSION_RFC2109 = 1;
 
     public final int version;
@@ -113,5 +115,22 @@ public class Cookie{
             Parser.appendValue(builder, "$Path", path);
         }
         return Reactor.free(builder);
+    }
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="name")
+            return name;
+        else if(name=="value")
+            return value;
+        else if(name=="version")
+            return version;
+        else if(name=="domain")
+            return domain;
+        else if(name=="path")
+            return path;
+        else
+            throw new UnresolvedException(name);
     }
 }

@@ -13,28 +13,27 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http;
+package jlibs.nio.http.expr;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public enum ConnectionStatus{
-    OPEN{
-        @Override
-        public String toString(){
-            return "+";
-        }
-    },
-    ABORTED{
-        @Override
-        public String toString(){
-            return "x";
-        }
-    },
-    CLOSED{
-        @Override
-        public String toString(){
-            return "-";
-        }
+public class Literal implements Expression{
+    public final Object value;
+    public Literal(Object value){
+        this.value = value;
+    }
+
+    @Override
+    public Object evaluate(Object root, Object current){
+        return value;
+    }
+
+    @Override
+    public String toString(){
+        if(value instanceof CharSequence)
+            return "'"+value+"'";
+        else
+            return TypeConversion.toString(value);
     }
 }

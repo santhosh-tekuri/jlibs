@@ -17,6 +17,8 @@ package jlibs.nio.http.msg;
 
 import jlibs.core.lang.Util;
 import jlibs.nio.http.SocketPayload;
+import jlibs.nio.http.expr.Bean;
+import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.util.ContentDisposition;
 import jlibs.nio.http.util.Encoding;
 import jlibs.nio.http.util.MediaType;
@@ -31,7 +33,7 @@ import java.util.function.Function;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public abstract class Message{
+public abstract class Message implements Bean{
     public Version version = Version.HTTP_1_1;
     public final Headers headers = new Headers();
     public Headers trailers;
@@ -46,6 +48,25 @@ public abstract class Message{
         return badMessageStatus().with(thr);
     }
     public abstract Status timeoutStatus();
+
+    /*-------------------------------------------------[ Bean ]---------------------------------------------------*/
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="headers")
+            return headers;
+        else if(name=="version")
+            return version;
+        else if(name=="keep_alive")
+            return isKeepAlive();
+        else if(name=="content_length")
+            return getContentLength();
+        else if(name=="content_type")
+            return getMediaType();
+        else
+            throw new UnresolvedException(name);
+    }
 
     /*-------------------------------------------------[ Payload ]---------------------------------------------------*/
 

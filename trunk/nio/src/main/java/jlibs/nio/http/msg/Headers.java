@@ -16,6 +16,7 @@
 package jlibs.nio.http.msg;
 
 import jlibs.nio.Reactor;
+import jlibs.nio.http.expr.ValueMap;
 import jlibs.nio.http.util.Parser;
 import jlibs.nio.http.util.USAscii;
 
@@ -27,7 +28,7 @@ import static jlibs.nio.http.util.USAscii.QUOTE;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public final class Headers{
+public final class Headers implements ValueMap{
     private Object table[] = new Object[16];
     private Header first;
 
@@ -298,6 +299,13 @@ public final class Headers{
         }
 
         return count1==count2;
+    }
+
+    /*-------------------------------------------------[ Value-Map ]---------------------------------------------------*/
+
+    @Override
+    public Object getValue(String name){
+        return value(name);
     }
 
     /*-------------------------------------------------[ HTTP-Helpers ]---------------------------------------------------*/

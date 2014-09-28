@@ -13,28 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http;
+package jlibs.nio.http.expr;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public enum ConnectionStatus{
-    OPEN{
-        @Override
-        public String toString(){
-            return "+";
-        }
-    },
-    ABORTED{
-        @Override
-        public String toString(){
-            return "x";
-        }
-    },
-    CLOSED{
-        @Override
-        public String toString(){
-            return "-";
-        }
+public class TypeConversion{
+    public static String toString(Object result){
+        return result==null ? null : result.toString();
     }
 }

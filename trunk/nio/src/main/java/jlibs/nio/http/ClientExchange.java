@@ -257,8 +257,13 @@ public class ClientExchange extends Exchange{
 
     @Override
     protected void readMessageFinished(Throwable thr){
-        if(accessLog!=null)
-            accessLogRecord.process(this, response);
+        if(accessLog!=null){
+            try{
+                accessLogRecord.process(this, response);
+            }catch(Throwable thr1){
+                Reactor.current().handleException(thr1);
+            }
+        }
         if(thr==null){
             if(continue100Expected && Status.CONTINUE.equals(response.status))
                 state = SEND_REQUEST_PAYLOAD;

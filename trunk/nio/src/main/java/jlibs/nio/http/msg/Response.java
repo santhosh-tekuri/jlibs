@@ -16,6 +16,7 @@
 package jlibs.nio.http.msg;
 
 import jlibs.core.lang.Util;
+import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.util.*;
 
 import java.nio.ByteBuffer;
@@ -53,6 +54,17 @@ public class Response extends Message{
                 .append("\r\n")
                 .append(headers);
         return builder.toString();
+    }
+
+    /*-------------------------------------------------[ Bean ]---------------------------------------------------*/
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="status")
+            return status;
+        else
+            return super.getField(name);
     }
 
     /*-------------------------------------------------[ Date ]---------------------------------------------------*/
