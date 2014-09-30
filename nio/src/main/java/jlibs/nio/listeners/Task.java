@@ -403,29 +403,54 @@ public abstract class Task{
 
     /*-------------------------------------------------[ pumping ]---------------------------------------------------*/
 
+    private boolean flushNeeded;
     protected void preparePump(Buffers backup){
         buffers = backup;
         buffer = allocator.allocate();
+        flushNeeded = false;
     }
 
-    protected boolean doPump(int readyOp, boolean flush) throws IOException{
+    protected boolean doPump(int readyOp) throws IOException{
+        boolean flushing = false;
         try{
+            if(readyOp==OP_WRITE && flushNeeded){
+                flushing = true;
+                if(!out.flush()){
+                    out.addWriteInterest();
+                    return false;
+                }
+                flushing = false;
+                flushNeeded = false;
+                readyOp = OP_READ;
+            }
             while(true){
                 if(readyOp==OP_READ){
                     int read = in.read(buffer);
                     if(read==0){
                         in.addReadInterest();
+                        if(flushNeeded){
+                            flushing = true;
+                            if(!out.flush()){
+                                out.addWriteInterest();
+                                return false;
+                            }
+                            flushing = false;
+                            flushNeeded = false;
+                        }
                         return false;
-                    }
+                    }else if(read==-1)
+                        break;
                     // flip -------------------
                     if(buffers==null)
                         buffer.flip();
                     else{
                         buffer.limit(buffer.position());
-                        buffer.position(buffer.limit()-(read==-1?0:read));
+                        buffer.position(buffer.limit()-read);
                     }
                     readyOp = OP_WRITE;
+                    flushNeeded = false;
                 }
+
                 if(buffer.hasRemaining()){
                     do{
                         if(out.write(buffer)==0){
@@ -433,6 +458,7 @@ public abstract class Task{
                             return false;
                         }
                     }while(buffer.hasRemaining());
+                    flushNeeded = true;
 
                     // clear -------------------
                     if(buffers==null)
@@ -447,26 +473,21 @@ public abstract class Task{
                             buffer.limit(buffer.capacity());
                         }
                     }
-                    readyOp = OP_READ;
-                }else{
-                    if(!flush || out.flush())
-                        break;
-                    out.addWriteInterest();
-                    return false;
                 }
+                readyOp = OP_READ;
             }
         }catch(Throwable thr){
             try{
-                pumpDone(readyOp);
+                pumpDone(flushing ? OP_READ : readyOp);
             }catch(Throwable suppressed){
                 thr.addSuppressed(suppressed);
             }
-            throw readyOp==OP_READ ? new InputException(thr) : new OutputException(thr);
+            throw readyOp==OP_WRITE || flushing ? new OutputException(thr) : new InputException(thr);
         }
         try{
-            pumpDone(OP_WRITE);
+            pumpDone(readyOp);
         }catch(Throwable thr){
-            throw new OutputException(thr);
+            throw new InputException(thr);
         }
         return true;
     }

@@ -37,7 +37,7 @@ public class Pump extends Task{
     protected boolean process(int readyOp) throws IOException{
         if(pumping){
             try{
-                if(doPump(readyOp, false))
+                if(doPump(readyOp))
                     pumping = false;
                 else
                     return false;
