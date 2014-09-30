@@ -65,7 +65,7 @@ public class WriteSocketPayload extends WritePayload{
                     readyOp = OP_READ;
                     state = DO_PUMP;
                 case DO_PUMP:
-                    return doPump(readyOp, false);
+                    return doPump(readyOp);
             }
         }
     }
