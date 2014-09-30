@@ -73,6 +73,8 @@ public class PooledBufferAllocator implements BufferAllocator{
     public ByteBuffer allocateDirect(int size){
         Buffers buffers = get(map[1], size, false);
         if(buffers==null || buffers.length==0){
+            if(DEBUG)
+                println("pool.allocateDirect("+size+")");
             return ByteBuffer.allocateDirect(size);
         }else
             return buffers.removeLast();
