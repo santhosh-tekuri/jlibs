@@ -18,56 +18,43 @@ package jlibs.nio;
 import jlibs.nio.http.expr.Bean;
 import jlibs.nio.http.expr.UnresolvedException;
 import jlibs.nio.http.expr.ValueMap;
+import jlibs.nio.util.Buffers;
 import jlibs.nio.util.NIOUtil;
 
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.security.cert.X509Certificate;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
-import static jlibs.nio.Debugger.IO;
-import static jlibs.nio.Debugger.println;
-import static jlibs.nio.SSLSocket.Action.*;
+import static jlibs.nio.Debugger.*;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public final class SSLSocket implements Transport, Bean{
-    private static final ByteBuffer dummy = ByteBuffer.allocate(0);
+    private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
     private final Input peerIn;
     private final Output peerOut;
-    private Socket transportIn, transportOut;
-    private SSLEngine engine;
+    private final SSLEngine engine;
 
-    private int selfInterestOps;
-    private ByteBuffer socketReadBuffer;
-    private ByteBuffer socketWriteBuffer;
+    private final int packetBufferSize;
+    private ByteBuffer peerReadBuffer;
+    private ByteBuffer peerWriteBuffer;
 
-    private int appReadBuffersOffset = 1;
-    private ByteBuffer appReadBuffers[] = new ByteBuffer[2];
-    private ByteBuffer appReadBuffer;
-    private int appReadBufferSize;
+    private ByteBuffer appReadBuffers[];
+    private int appReadBuffersOffset;
 
-    private int appWriteBufferOffset = 0;
-    private int appWriteBufferLength = 1;
-    private ByteBuffer appWriteBuffers[] = new ByteBuffer[]{ dummy };
-    private final ByteBuffer appWriteBuffers1[] = appWriteBuffers;
-    private void moveAppWritten(){
-        while(appWriteBufferLength!=0){
-            if(!appWriteBuffers[appWriteBufferOffset].hasRemaining()){
-                ++appWriteBufferOffset;
-                --appWriteBufferLength;
-            }else
-                break;
-        }
-    }
+    private final ByteBuffer buffersArray1[] = { EMPTY_BUFFER };
+    private final Buffers appWriteBuffers = new Buffers(buffersArray1, 0, 1);
 
-    public SSLSocket(Input in, Output out, SSLEngine engine) throws SSLException{
+    public SSLSocket(Input in, Output out, SSLEngine engine) throws IOException{
         peerIn = in;
         transportIn = peerIn.channel().transport;
         transportIn.peekIn = this;
@@ -77,305 +64,291 @@ public final class SSLSocket implements Transport, Bean{
         transportOut.peekOut = this;
 
         this.engine = engine;
-
         SSLSession session = engine.getSession();
 
-        appReadBufferSize = session.getApplicationBufferSize();
-        appReadBuffer =  ByteBuffer.allocate(appReadBufferSize);
-        appReadBuffer.position(appReadBuffer.limit());
-        appReadBuffers[1] = appReadBuffer;
+        packetBufferSize = session.getPacketBufferSize();
+        peerWriteBuffer = Reactor.current().allocator.allocate(2*packetBufferSize);
+        peerWriteBuffer.position(peerWriteBuffer.limit());
 
-        socketWriteBuffer = ByteBuffer.allocate(session.getPacketBufferSize());
-        socketWriteBuffer.position(socketWriteBuffer.limit());
+        ByteBuffer appReadBuffer =  Reactor.current().allocator.allocate(session.getApplicationBufferSize());
+        appReadBuffer.position(appReadBuffer.limit());
+        appReadBuffers = new ByteBuffer[]{ null, appReadBuffer };
+        appReadBuffersOffset = 1;
 
         if(IO){
             println("useClientMode: "+engine.getUseClientMode()+
                     " applicationBufferSize: "+session.getApplicationBufferSize()+
-                    " packetBufferSize: "+session.getPacketBufferSize());
+                    " packetBufferSize: "+session.getPacketBufferSize() +
+                    " handshakeStatus: "+engine.getHandshakeStatus());
         }
-
         engine.beginHandshake();
-        if(IO)
-            println("beginHandshake");
-        setAction(null);
-        selfInterestOps = action== NEED_READ ? OP_READ : OP_WRITE;
+        selfInterests = engine.getHandshakeStatus()==NEED_UNWRAP ? OP_READ : OP_WRITE;
     }
 
-    /*-------------------------------------------------[ Action ]---------------------------------------------------*/
+    public SSLSession getSession(){
+        return engine.getSession();
+    }
 
-    enum Action{ NOT_HANDSHAKING, NEED_TASK, NEED_WRAP, NEED_WRITE, NEED_READ, NEED_UNWRAP, NEED_USER_READ }
-    private Action action;
-    private void setAction(Action action){
-        if(action==null){
-            switch(engine.getHandshakeStatus()){
-                case NOT_HANDSHAKING:
-                    action = NOT_HANDSHAKING;
-                    break;
+    private int selfInterests;
+    private long appWrote, appRead;
+    private boolean unwrapUnderflow;
+    private void run(SSLEngineResult.HandshakeStatus handshakeStatus) throws IOException{
+        assert handshakeStatus==engine.getHandshakeStatus() || engine.getHandshakeStatus()==NOT_HANDSHAKING;
+        selfInterests = 0;
+        appRead = appWrote = 0;
+        while(!engine.isOutboundDone()){
+            if(IO)
+                println(handshakeStatus+".run()");
+            switch(handshakeStatus){
                 case NEED_TASK:
-                    action = NEED_TASK;
-                    break;
-                case NEED_WRAP:
-                    action = NEED_WRAP;
-                    break;
-                case NEED_UNWRAP:
-                    action = NEED_READ;
-            }
-            assert action!=null;
-        }
-        this.action = action;
-        if(IO)
-            println("action="+this.action);
-    }
-
-    /*-------------------------------------------------[ SSLEngineResult ]---------------------------------------------------*/
-
-    private boolean initialHandshake = true;
-    private SSLEngineResult.Status status = null;
-    private SSLEngineResult.Status unwrapStatus = null;
-
-    private long appRead = 0;
-    private long appWrote = 0;
-    private void setResult(SSLEngineResult result){
-        if(action==NEED_UNWRAP){
-            unwrapStatus = result.getStatus();
-            appRead += result.bytesProduced();
-        }else if(action==NEED_WRAP)
-            appWrote += result.bytesConsumed();
-        this.status = result.getStatus();
-        if(IO){
-            println(String.format(
-                    "RESULT: %5d %5d %-16s %-15s",
-                    result.bytesConsumed(), result.bytesProduced(),
-                    result.getStatus(), result.getHandshakeStatus()
-            ));
-        }
-    }
-
-    /*-------------------------------------------------[ Misc ]---------------------------------------------------*/
-
-
-    private boolean readReady(){
-        if(peerClosed)
-            return true;
-        if(initialHandshake)
-            return false;
-        if(appReadBuffer.hasRemaining() || engine.isInboundDone())
-            return true;
-        else if(socketReadBuffer!=null && socketReadBuffer.hasRemaining() && unwrapStatus!=BUFFER_UNDERFLOW)
-            return true;
-        return false;
-    }
-
-    private boolean writeReady(){
-        if(peerClosed)
-            return true;
-        if(initialHandshake)
-            return false;
-        if(engine.isOutboundDone())
-            return true;
-        return false;
-    }
-
-    /*-------------------------------------------------[ Run ]---------------------------------------------------*/
-
-    private boolean peerClosed;
-    private void run() throws IOException{
-        if(IO)
-            println("run{");
-        boolean readFromPeer = false;
-
-        while(!peerClosed && (!engine.isInboundDone() || !engine.isOutboundDone() || action!=NOT_HANDSHAKING)){
-            switch(action){
-                case NEED_TASK:{
                     Runnable task;
                     while((task=engine.getDelegatedTask())!=null)
                         task.run();
-                    setAction(null);
                     break;
-                }
-                case NEED_WRAP:{
-                    // prepare write
-                    if(socketWriteBuffer==null){
-                        if(socketReadBuffer.hasRemaining()){
-                            if(IO)
-                                println("allocating: socketWriteBuffer");
-                            socketWriteBuffer = ByteBuffer.allocate(socketReadBuffer.capacity());
-                            socketWriteBuffer.position(socketWriteBuffer.limit());
+                case NEED_WRAP:
+                    if(peerWriteBuffer==null){
+                        if(peerReadBuffer.hasRemaining()){
+                            peerWriteBuffer = Reactor.current().allocator.allocate(2*packetBufferSize);
+                            peerWriteBuffer.position(peerWriteBuffer.limit());
                         }else{
-                            socketWriteBuffer = socketReadBuffer;
-                            socketReadBuffer = null;
+                            peerWriteBuffer = peerReadBuffer;
+                            peerReadBuffer = null;
                         }
-                    }
-                    assert !socketWriteBuffer.hasRemaining();
-
-                    socketWriteBuffer.clear();
-                    setResult(engine.wrap(appWriteBuffers, appWriteBufferOffset, appWriteBufferLength, socketWriteBuffer));
-                    socketWriteBuffer.flip();
-                    if(appWriteBuffers[appWriteBufferOffset]!=dummy)
-                        moveAppWritten();
-                    assert status==OK || (status==CLOSED && engine.isOutboundDone());
-
-                    setAction(NEED_WRITE);
-                    break;
-                }
-                case NEED_WRITE:{
-                    if(socketWriteBuffer.hasRemaining()){
-                        peerOut.write(socketWriteBuffer);
-                        if(socketWriteBuffer.hasRemaining()){
-                            selfInterestOps |= OP_WRITE;
-                            if(IO)
-                                println("writeInterested");
-                            return;
-                        }
-                    }
-                    setAction(null);
-                    break;
-                }
-                case NEED_USER_READ:
-                case NEED_READ:{
-                    assert !appReadBuffer.hasRemaining();
-
-                    // prepare read
-                    if(socketReadBuffer==null){
-                        if(socketWriteBuffer.hasRemaining()){
-                            if(IO)
-                                println("allocating: socketReadBuffer");
-                            socketReadBuffer = ByteBuffer.allocate(socketWriteBuffer.capacity());
-                            socketReadBuffer.position(socketReadBuffer.limit());
-                        }else{
-                            socketReadBuffer = socketWriteBuffer;
-                            socketWriteBuffer = null;
-                        }
-                    }
-
-                    readFromPeer = false;
-                    if(!socketReadBuffer.hasRemaining() || unwrapStatus==BUFFER_UNDERFLOW){
-                        NIOUtil.compact(socketReadBuffer);
-                        int read = peerIn.read(socketReadBuffer);
-                        readFromPeer = true;
-                        socketReadBuffer.flip();
-                        if(read==0){
-                            if(initialHandshake || !isOpen()){
-                                selfInterestOps |= OP_READ;
-                                if(IO)
-                                    println("readInterested");
+                    }else if(peerWriteBuffer.hasRemaining() && (peerWriteBuffer.capacity()-peerWriteBuffer.limit())<packetBufferSize){
+                        do{
+                            if(peerOut.write(peerWriteBuffer)==0){
+                                selfInterests |= OP_WRITE;
+                                return;
                             }
-                            return;
-                        }else if(read==-1){
-                            if(IO)
-                                println("peerClosed");
-                            peerClosed = true;
-                            return;
-                        }
+                        }while(peerWriteBuffer.hasRemaining());
                     }
-                    setAction(engine.isInboundDone()? null : NEED_UNWRAP);
-                    break;
-                }
-                case NEED_UNWRAP:{
-                    assert socketReadBuffer.hasRemaining();
 
-                    appReadBuffer.clear();
-                    setResult(engine.unwrap(socketReadBuffer, appReadBuffers, appReadBuffersOffset, appReadBuffers.length-appReadBuffersOffset));
-                    appReadBuffer.flip();
-
-                    switch(status){
-                        case BUFFER_UNDERFLOW: // not enough data in netReadBuffer
-                            if(initialHandshake){
-                                setAction(NEED_READ);
-                                if(readFromPeer){
-                                    selfInterestOps |= OP_READ;
-                                    if(IO)
-                                        println("readInterested");
-                                    return;
-                                }
-                            }else{
-                                if(readFromPeer){
-                                    setAction(null);
-                                    return;
-                                }else
-                                    setAction(NEED_USER_READ);
-                            }
-                            continue;
-                        case BUFFER_OVERFLOW: // not enough room in appReadBuffer
-                            assert appReadBuffer==dummy;
-                            appReadBuffer = ByteBuffer.allocate(appReadBufferSize);
-                            appReadBuffer.position(appReadBuffer.limit());
-                            appReadBuffers[appReadBuffers.length-1] = appReadBuffer;
-                            continue;
-                        case CLOSED:
-                            assert engine.isInboundDone();
-                        case OK:
-                            if(appReadBuffer.hasRemaining()){
-                                if(!isOpen()){
-                                    if(IO)
-                                        println("draining appReadBuffer");
-                                    appReadBuffer.position(appReadBuffer.limit());
-                                }else{
-                                    setAction(null);
-                                    return;
-                                }
-                            }
-                            break;
-                    }
-                    setAction(null);
-                    break;
-                }
-                case NOT_HANDSHAKING:{
-                    initialHandshake = false;
-                    if(appWriteBufferLength!=0 && appWriteBuffers[appWriteBufferOffset].hasRemaining())
-                        setAction(NEED_WRAP);
-                    else if(!isOpen() && !engine.isOutboundDone()){
-                        if(IO)
-                            println("closeOutbound");
-                        engine.closeOutbound();
-                        setAction(null);
+                    if(peerWriteBuffer.hasRemaining()){
+                        peerWriteBuffer.position(peerWriteBuffer.limit());
+                        peerWriteBuffer.limit(peerWriteBuffer.capacity());
                     }else
-                        return;
+                        peerWriteBuffer.clear();
+                    try{
+                        SSLEngineResult result = engine.wrap(appWriteBuffers.array, appWriteBuffers.offset, appWriteBuffers.length, peerWriteBuffer);
+                        if(IO) println(result);
+                        assert result.getStatus()!=BUFFER_UNDERFLOW;
+                        assert result.getStatus()==OK || (result.getStatus()==CLOSED && engine.isOutboundDone());
+                        appWrote += result.bytesConsumed();
+                    }finally{
+                        peerWriteBuffer.flip();
+                    }
                     break;
+                case NEED_UNWRAP:
+                    if(!writePendingToPeer())
+                        return;
+                    if(peerReadBuffer==null){
+                        peerReadBuffer = peerWriteBuffer;
+                        peerWriteBuffer = null;
+                    }
+                    while(true){
+                        if(!peerReadBuffer.hasRemaining() || unwrapUnderflow){
+                            NIOUtil.compact(peerReadBuffer);
+                            try{
+                                int read = peerIn.read(peerReadBuffer);
+                                if(read==0){
+                                    selfInterests |= OP_READ;
+                                    return;
+                                }else if(read==-1){
+                                    try{
+                                        engine.closeInbound();
+                                    }catch(SSLException ignore){
+                                        // ignore.printStackTrace();
+                                    }
+                                    break;
+                                }else
+                                    unwrapUnderflow = false;
+                            }finally{
+                                peerReadBuffer.flip();
+                            }
+                        }
+                        ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
+                        if(appReadBuffer.hasRemaining())
+                            return;
+                        appReadBuffer.clear();
+                        try{
+                            SSLEngineResult result = engine.unwrap(peerReadBuffer, appReadBuffers, appReadBuffersOffset, appReadBuffers.length-appReadBuffersOffset);
+                            if(IO) println(result);
+                            if(result.getStatus()==BUFFER_UNDERFLOW)
+                                unwrapUnderflow = true;
+                            else{
+                                assert result.getStatus()!=BUFFER_OVERFLOW;
+                                assert result.getStatus()==OK || (result.getStatus()==CLOSED && engine.isInboundDone());
+                                appRead += result.bytesProduced();
+                                if(appRead>0){
+                                    if(isOpen())
+                                        return;
+                                    else
+                                        appReadBuffer.position(appReadBuffer.limit());
+                                }
+                                break;
+                            }
+                        }finally{
+                            appReadBuffer.flip();
+                        }
+                    }
+                    break;
+                case FINISHED:
+                case NOT_HANDSHAKING:
+                    if(open)
+                        return;
+                    else
+                        engine.closeOutbound();
+            }
+            handshakeStatus = engine.getHandshakeStatus();
+        }
+    }
+
+    private boolean writePendingToPeer() throws IOException{
+        if(peerWriteBuffer!=null && peerWriteBuffer.hasRemaining()){
+            do{
+                if(peerOut.write(peerWriteBuffer)==0){
+                    selfInterests |= OP_WRITE;
+                    return false;
                 }
-            }
+            }while(peerWriteBuffer.hasRemaining());
         }
-
-        if(!open){
-            try{
-                peerIn.close();
-            }finally{
-                peerOut.close();
-            }
-        }
-    }
-
-    /*-------------------------------------------------[ ReadyOps ]---------------------------------------------------*/
-
-    private void process() throws IOException{
-        selfInterestOps = 0;
-        if(action==NEED_READ || action==NEED_WRITE || action==NEED_WRAP){
-            run();
-            if(IO)
-                println("}");
-        }
-    }
-
-    private boolean canAppRead() throws IOException{
-        process();
-        if(!initialHandshake && selfInterestOps ==0){
-            assert action==NOT_HANDSHAKING;
-            assert socketWriteBuffer==null || !socketWriteBuffer.hasRemaining();
-            return true;
-        }else
-            return false;
-    }
-
-    private boolean canAppWrite() throws IOException{
-        if(canAppRead()){
-            if(peerClosed || engine.isOutboundDone())
-                throw new SSLException("peer closed");
-            return true;
-        }else
-            return false;
+        return true;
     }
 
     /*-------------------------------------------------[ App Read ]---------------------------------------------------*/
+
+    @Override
+    public void addReadInterest(){
+        if(transportIn.peekIn==this)
+            transportIn.peekInInterested = true;
+        if(appReadBuffers[appReadBuffers.length-1].hasRemaining()
+                || engine.isInboundDone()
+                || (peerReadBuffer!=null && peerReadBuffer.hasRemaining() && !unwrapUnderflow))
+            transportIn.wakeupReader();
+        else{
+            if(selfInterests==0)
+                peerIn.addReadInterest();
+            else{
+                if((selfInterests&OP_READ)!=0)
+                    peerIn.addReadInterest();
+                if((selfInterests&OP_WRITE)!=0)
+                    peerOut.addWriteInterest();
+            }
+        }
+    }
+
+    @Override
+    public int read(ByteBuffer dst) throws IOException{
+        if(!isOpen())
+            throw new ClosedChannelException();
+        if(IO)
+            enter("SSLSocket1.read(dst)");
+        if(selfInterests!=0){
+            run(engine.getHandshakeStatus());
+            if(selfInterests!=0)
+                return 0;
+        }
+        ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
+        if(appReadBuffer.hasRemaining()){
+            if(IO)
+                exit("return "+Math.min(appReadBuffer.remaining(), dst.remaining()));
+            return NIOUtil.copy(appReadBuffer, dst);
+        }
+        if(engine.isInboundDone()){
+            if(IO)
+                exit("return -1");
+            eof = true;
+            return -1;
+        }
+
+        appReadBuffers[--appReadBuffersOffset] = dst;
+        try{
+            while(true){
+                run(NEED_UNWRAP);
+                if(appRead==0){
+                    if(engine.isInboundDone()){
+                        if(IO)
+                            exit("return -1");
+                        eof = true;
+                        return -1;
+                    }else if(selfInterests!=0){
+                        if(IO)
+                            exit("return 0");
+                        return 0;
+                    }
+                }else{
+                    if(IO)
+                        exit("return "+appRead);
+                    return (int)appRead;
+                }
+            }
+        }finally{
+            appReadBuffers[appReadBuffersOffset++] = null;
+        }
+    }
+
+    @Override
+    public long read(ByteBuffer[] dsts) throws IOException{
+        return read(dsts, 0, dsts.length);
+    }
+
+    @Override
+    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException{
+        if(!isOpen())
+            throw new ClosedChannelException();
+        if(IO)
+            enter("SSLSocket1.read(dsts)");
+        if(selfInterests!=0){
+            run(engine.getHandshakeStatus());
+            if(selfInterests!=0)
+                return 0;
+        }
+        ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
+        if(appReadBuffer.hasRemaining()){
+            if(IO)
+                exit("return "+Math.min(appReadBuffer.remaining(), new Buffers(dsts, offset, length).remaining()));
+            return NIOUtil.copy(appReadBuffer, dsts, offset, length);
+        }
+        if(engine.isInboundDone()){
+            if(IO)
+                exit("return -1");
+            eof = true;
+            return -1;
+        }
+
+        if(appReadBuffers.length<length+1){
+            appReadBuffers = new ByteBuffer[length+1];
+            appReadBuffersOffset = length;
+            appReadBuffers[length] = appReadBuffer;
+        }
+
+        appReadBuffersOffset -= length;
+        System.arraycopy(dsts, offset, appReadBuffers, appReadBuffersOffset, length);
+        try{
+            while(true){
+                run(NEED_UNWRAP);
+                if(appRead==0){
+                    if(engine.isInboundDone()){
+                        if(IO)
+                            exit("return -1");
+                        eof = true;
+                        return -1;
+                    }else if(selfInterests!=0){
+                        if(IO)
+                            exit("return 0");
+                        return 0;
+                    }
+                }else{
+                    if(IO)
+                        exit("return "+appRead);
+                    return appRead;
+                }
+            }
+        }finally{
+            for(int i=0; i<length; i++)
+                appReadBuffers[appReadBuffersOffset++] = null;
+        }
+    }
 
     private boolean eof;
 
@@ -386,144 +359,59 @@ public final class SSLSocket implements Transport, Bean{
 
     @Override
     public long available(){
-        return appReadBuffer.remaining();
-    }
-
-    @Override
-    public int read(ByteBuffer dst) throws IOException{
-        if(IO)
-            println("SSLSocket.read(dst){");
-        int read = 0;
-        if(canAppRead()){
-            if(appReadBuffer.hasRemaining())
-                read = NIOUtil.copy(appReadBuffer, dst);
-
-            if(dst.hasRemaining() && !engine.isInboundDone() && !peerClosed){
-                appRead = 0;
-                appReadBuffers[--appReadBuffersOffset] = dst;
-                try{
-                    do{
-                        setAction(NEED_USER_READ);
-                        run();
-                        if(IO)
-                            println("}");
-                    }while(appRead==0 && readReady() && !engine.isInboundDone() && !peerClosed);
-                }finally{
-                    appReadBuffers[appReadBuffersOffset++] = null;
-                }
-                if(action==NEED_USER_READ)
-                    setAction(null);
-                read = (int)appRead-appReadBuffer.remaining();
-            }
-
-            if(read==0 && (engine.isInboundDone() || peerClosed)){
-                eof = true;
-                read = -1;
-            }
-            assert selfInterestOps==0;
-        }
-        if(IO){
-            println("return "+read);
-            println("}");
-        }
-        return read;
-    }
-
-    @Override
-    public long read(ByteBuffer[] dsts) throws IOException{
-        return read(dsts, 0, dsts.length);
-    }
-
-    @Override
-    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException{
-        if(IO)
-            println("SSLSocket.read(dsts){");
-        long read = 0;
-        if(canAppRead()){
-            if(appReadBuffer.hasRemaining())
-                read = NIOUtil.copy(appReadBuffer, dsts, offset, length);
-
-            if(read==0 && length!=0 && !engine.isInboundDone() && !peerClosed){
-                appRead = 0;
-                if(appReadBuffers.length<length+1){
-                    appReadBuffers = new ByteBuffer[length+1];
-                    appReadBuffersOffset = appReadBuffers.length-1;
-                    appReadBuffers[appReadBuffersOffset] = appReadBuffer;
-                }
-                for(int i=offset+length-1; i>=offset; i--){
-                    if(dsts[i].hasRemaining())
-                        appReadBuffers[--appReadBuffersOffset] = dsts[i];
-                }
-                try{
-                    do{
-                        setAction(NEED_USER_READ);
-                        run();
-                        if(IO)
-                            println("}");
-                    }while(appRead==0 && readReady() && !engine.isInboundDone() && !peerClosed);
-                }finally{
-                    while(appReadBuffersOffset!=appReadBuffers.length-1)
-                        appReadBuffers[appReadBuffersOffset++] = null;
-                }
-                if(action==NEED_USER_READ)
-                    setAction(null);
-                read = appRead-appReadBuffer.remaining();
-            }
-
-            if(read==0 && (engine.isInboundDone() || peerClosed)){
-                eof = true;
-                read = -1;
-            }
-            assert selfInterestOps==0;
-        }
-        if(IO){
-            println("return "+read);
-            println("}");
-        }
-        return read;
+        return appReadBuffers[appReadBuffers.length-1].remaining();
     }
 
     @Override
     public long transferTo(long position, long count, FileChannel target) throws IOException{
-        if(canAppRead() && appReadBuffer.hasRemaining())
+        ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
+        if(appReadBuffer.hasRemaining())
             return NIOUtil.transfer(appReadBuffer, target, position, count);
         return target.transferFrom(this, position, count);
     }
 
     /*-------------------------------------------------[ App Write ]---------------------------------------------------*/
 
-    private long appWrite() throws IOException{
-        try{
-            appWrote = 0;
-            setAction(NEED_WRAP);
-            run();
-            if(IO)
-                println("}");
-//                if(selfInterestOps!=0)
-//                    addPeerInterests(selfInterestOps);
-            return appWrote;
-        }finally{
-            appWriteBuffers = appWriteBuffers1;
-            appWriteBuffers[0] = dummy;
-            appWriteBufferOffset = 0;
-            appWriteBufferLength = 1;
+    @Override
+    public void addWriteInterest(){
+        if(transportOut.peekOut==this)
+            transportOut.peekOutInterested = true;
+        if(engine.isOutboundDone())
+            transportOut.wakeupWriter();
+        else{
+            if(selfInterests==0)
+                peerOut.addWriteInterest();
+            else{
+                if((selfInterests&OP_READ)!=0)
+                    peerIn.addReadInterest();
+                if((selfInterests&OP_WRITE)!=0)
+                    peerOut.addWriteInterest();
+            }
         }
     }
 
     @Override
-    public int write(ByteBuffer dst) throws IOException{
+    public int write(ByteBuffer src) throws IOException{
+        if(!isOpen())
+            throw new ClosedChannelException();
         if(IO)
-            println("SSLSocket.write(dst){");
-        int wrote = 0;
-        if(canAppWrite()){
-            appWriteBuffers[0] = dst;
-            wrote = (int)appWrite();
+            enter("SSLSocket1.write(src)");
+        if(selfInterests!=0){
+            run(engine.getHandshakeStatus());
+            if(selfInterests!=0)
+                return 0;
         }
-        if(IO){
-            println("wrote = "+wrote);
-            println("}");
+        if(engine.isOutboundDone())
+            throw new IOException("outboundDone");
+        appWriteBuffers.array[0] = src;
+        try{
+            run(NEED_WRAP);
+            if(IO)
+                exit("return "+appWrote);
+            return (int)appWrote;
+        }finally{
+            appWriteBuffers.array[0] = EMPTY_BUFFER;
         }
-        return wrote;
     }
 
     @Override
@@ -533,20 +421,63 @@ public final class SSLSocket implements Transport, Bean{
 
     @Override
     public long write(ByteBuffer[] srcs, int offset, int length) throws IOException{
+        if(!isOpen())
+            throw new ClosedChannelException();
         if(IO)
-            println("SSLSocket.write(dsts){");
-        long wrote = 0;
-        if(canAppWrite()){
-            appWriteBuffers = srcs;
-            appWriteBufferOffset = offset;
-            appWriteBufferLength = length;
-            wrote = appWrite();
+            enter("SSLSocket1.write(srcs)");
+        if(selfInterests!=0){
+            run(engine.getHandshakeStatus());
+            if(selfInterests!=0)
+                return 0;
         }
-        if(IO){
-            println("wrote = "+wrote);
-            println("}");
+        if(engine.isOutboundDone())
+            throw new IOException("outboundDone");
+        appWriteBuffers.array = srcs;
+        appWriteBuffers.offset = offset;
+        appWriteBuffers.length = length;
+        try{
+            run(NEED_WRAP);
+            if(IO)
+                exit("return "+appWrote);
+            return (int)appWrote;
+        }finally{
+            appWriteBuffers.array = buffersArray1;
+            appWriteBuffers.offset = 0;
+            appWriteBuffers.length = 1;
         }
-        return wrote;
+    }
+
+    @Override
+    public boolean flush() throws IOException{
+        if(IO)
+            println("SSLSocket1.flush()");
+        if(peerIn.isOpen() && peerOut.isOpen()){
+            if(selfInterests!=0){
+                run(engine.getHandshakeStatus());
+                if(selfInterests!=0)
+                    return false;
+            }
+            if(!writePendingToPeer())
+                return false;
+            if(!open){
+                if(peerReadBuffer!=null){
+                    Reactor.current().allocator.free(peerReadBuffer);
+                    peerReadBuffer = null;
+                }
+                if(peerWriteBuffer!=null){
+                    Reactor.current().allocator.free(peerWriteBuffer);
+                    peerWriteBuffer = null;
+                }
+                Reactor.current().allocator.free(appReadBuffers[appReadBuffers.length-1]);
+                appReadBuffers[appReadBuffers.length-1] = null;
+                try{
+                    peerIn.close();
+                }finally{
+                    peerOut.close();
+                }
+            }
+        }
+        return peerOut.flush();
     }
 
     @Override
@@ -566,21 +497,19 @@ public final class SSLSocket implements Transport, Bean{
     @Override
     public void close() throws IOException{
         if(open){
-            open = false;
-            if(appReadBuffer.hasRemaining()){
-                if(IO)
-                    println("draining appReadBuffer");
-                appReadBuffer.position(appReadBuffer.limit());
-            }
-            run();
             if(IO)
-                println("}");
-//            if(selfInterestOps!=0)
-//                addPeerInterests(selfInterestOps);
+                println("SSLSocket1.close()");
+            open = false;
+            ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
+            if(appReadBuffer.hasRemaining())
+                appReadBuffer.position(appReadBuffer.limit());
+            run(engine.getHandshakeStatus());
         }
     }
 
     /*-------------------------------------------------[ Transport-Misc ]---------------------------------------------------*/
+
+    private final Socket transportIn, transportOut;
 
     @Override
     public Input.Listener getInputListener(){
@@ -627,51 +556,7 @@ public final class SSLSocket implements Transport, Bean{
         return transportIn.channel(); //todo
     }
 
-    @Override
-    public boolean flush() throws IOException{
-        process();
-        return (selfInterestOps&OP_WRITE)==0 && peerOut.flush();
-    }
-
-    @Override
-    public void addReadInterest(){
-        if(transportIn.peekIn==this)
-            transportIn.peekInInterested = true;
-        if(readReady())
-            transportIn.wakeupReader();
-        else{
-            if(selfInterestOps==0)
-                peerIn.addReadInterest();
-            else{
-                if((selfInterestOps&OP_READ)!=0)
-                    peerIn.addReadInterest();
-                if((selfInterestOps&OP_WRITE)!=0)
-                    peerOut.addWriteInterest();
-            }
-        }
-    }
-
-    @Override
-    public void addWriteInterest(){
-        if(transportOut.peekOut==this)
-            transportOut.peekOutInterested = true;
-        if(writeReady())
-            transportOut.wakeupWriter();
-        else{
-            if(selfInterestOps==0)
-                peerOut.addWriteInterest();
-            else{
-                if((selfInterestOps&OP_READ)!=0)
-                    peerIn.addReadInterest();
-                if((selfInterestOps&OP_WRITE)!=0)
-                    peerOut.addWriteInterest();
-            }
-        }
-    }
-
-    public SSLSession getSession(){
-        return engine.getSession();
-    }
+    /*-------------------------------------------------[ Bean ]---------------------------------------------------*/
 
     @Override
     @SuppressWarnings("StringEquality")
