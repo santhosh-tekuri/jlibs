@@ -53,10 +53,10 @@ public class TCPProxyServer implements TCPServer.Listener{
         }, null);
     }
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws Exception{
         Reactors.start(1);
-        TCPEndpoint localEndpoint = new TCPEndpoint(8080);
-        TCPEndpoint remoteEndpoint = new TCPEndpoint("www.mvnrepository.com", 80);
+        TCPEndpoint localEndpoint = new TCPEndpoint(args[0]);
+        TCPEndpoint remoteEndpoint = new TCPEndpoint(args[1]);
         new TCPProxyServer(localEndpoint, remoteEndpoint).start();
     }
 }
