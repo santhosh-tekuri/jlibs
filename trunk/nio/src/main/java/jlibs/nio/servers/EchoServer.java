@@ -15,12 +15,12 @@
 
 package jlibs.nio.servers;
 
-import jlibs.core.net.SSLUtil;
-import jlibs.nio.*;
+import jlibs.nio.Reactors;
+import jlibs.nio.TCPConnection;
+import jlibs.nio.TCPEndpoint;
+import jlibs.nio.TCPServer;
 import jlibs.nio.listeners.Pump;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import java.io.IOException;
 
 /**
@@ -43,20 +43,11 @@ public class EchoServer implements TCPServer.Listener{
 
     @Override
     public void accept(TCPConnection con){
-        try{
-            SSLContext sslContext = SSLUtil.defaultContext();
-            SSLEngine sslEngine = sslContext.createSSLEngine();
-            sslEngine.setUseClientMode(false);
-            new SSLSocket(con.in(), con.out(), sslEngine);
-        }catch(Throwable thr){
-            thr.printStackTrace();
-            return;
-        }
         Pump.start(con);
     }
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws Exception{
         Reactors.start(1);
-        new EchoServer(new TCPEndpoint(8080)).start();
+        new EchoServer(new TCPEndpoint(args[0])).start();
     }
 }
