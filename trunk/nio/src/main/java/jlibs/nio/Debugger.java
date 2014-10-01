@@ -15,6 +15,7 @@
 
 package jlibs.nio;
 
+import javax.net.ssl.SSLEngineResult;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -26,18 +27,16 @@ import static java.nio.channels.SelectionKey.*;
  * @author Santhosh Kumar Tekuri
  */
 public class Debugger{
-    public static final boolean DEBUG = true;
-    public static final boolean IO = true;
-    public static final boolean HTTP = true;
+    public static final boolean DEBUG = false;
+    public static final boolean IO = false;
+    public static final boolean HTTP = false;
     static{
         System.setErr(System.out);
     }
 
     public static void enter(boolean reset, String msg){
-        if(reset){
-            Indentation indent = indentation.get();
-            indent.reset();
-        }
+        if(reset)
+            indentation.get().reset();
         println(msg+"{");
     }
 
@@ -60,6 +59,14 @@ public class Debugger{
 
     public static void println(Object obj){
         println(String.valueOf(obj));
+    }
+
+    public static void println(SSLEngineResult result){
+        println(String.format(
+                "RESULT: %5d %5d %-16s %-15s",
+                result.bytesConsumed(), result.bytesProduced(),
+                result.getStatus(), result.getHandshakeStatus()
+        ));
     }
 
     public static void println(String msg, PrintStream ps){
@@ -110,12 +117,7 @@ public class Debugger{
         return str;
     }
 
-    private static final ThreadLocal<Indentation> indentation = new ThreadLocal<Indentation>(){
-        @Override
-        protected Indentation initialValue(){
-            return new Indentation();
-        }
-    };
+    private static final ThreadLocal<Indentation> indentation = ThreadLocal.withInitial(Indentation::new);
 
     private static class Indentation{
         private int amount;
