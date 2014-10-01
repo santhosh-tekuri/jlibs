@@ -16,7 +16,7 @@
 package jlibs.nio.util;
 
 /**
- * Pattern can be based on:<ul></ul>
+ * Pattern can be based on:<ul>
  * <li>Wildcards: 2001:0db8:0123:4567:89ab:cdef:*:*</li>
  * <li>CIDR Notation: Wildcards: 2001:0db8:0123:4567:89ab:cdef::/32</li>
  * </ul>
