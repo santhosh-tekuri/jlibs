@@ -307,6 +307,7 @@ class Columns extends ArrayList<ColumnProperty>{
         printer.importClass(ImpossibleException.class);
         printer.importPackage(DAO.class);
         printer.importPackage(Connection.class);
+        printer.importClass(SQLType.class);
         if(ModelUtil.isInnerClass(printer.clazz))
             printer.importClass(printer.clazz);
         printer.println();
