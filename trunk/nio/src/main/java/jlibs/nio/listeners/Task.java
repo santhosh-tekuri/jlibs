@@ -15,10 +15,7 @@
 
 package jlibs.nio.listeners;
 
-import jlibs.nio.Input;
-import jlibs.nio.Output;
-import jlibs.nio.Reactor;
-import jlibs.nio.Transport;
+import jlibs.nio.*;
 import jlibs.nio.filters.BufferInput;
 import jlibs.nio.filters.ChunkedOutput;
 import jlibs.nio.util.BufferAllocator;
@@ -56,8 +53,12 @@ public abstract class Task{
         this.out = out;
     }
 
+
+    @Trace(condition=DEBUG, args="($1==1?'R':'W')")
     protected abstract boolean process(int readyOp) throws IOException;
     protected void cleanup(Throwable thr){}
+
+    @Trace(condition=DEBUG, args="$1+\", \"+$2")
     protected int childTaskFinished(Task childTask, Throwable thr) throws Throwable{
         if(thr!=null)
             throw thr;
