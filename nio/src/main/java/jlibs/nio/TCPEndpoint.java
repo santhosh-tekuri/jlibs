@@ -92,7 +92,7 @@ public class TCPEndpoint{
             @Override
             public void accept(TCPConnection con){
                 try{
-                    if(sslContext != null){
+                    if(sslContext!=null){
                         SSLEngine engine = sslContext.createSSLEngine();
                         engine.setUseClientMode(false);
                         new SSLSocket(con.in(), con.out(), engine);
