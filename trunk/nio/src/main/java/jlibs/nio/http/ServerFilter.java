@@ -15,9 +15,14 @@
 
 package jlibs.nio.http;
 
+import jlibs.nio.Trace;
+
+import static jlibs.nio.Debugger.HTTP;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
 public interface ServerFilter{
+    @Trace(condition=HTTP, args="$2")
     public boolean filter(ServerExchange exchange, FilterType type) throws Exception;
 }

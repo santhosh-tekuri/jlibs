@@ -18,12 +18,9 @@ package jlibs.nio.http;
 import jlibs.nio.*;
 import jlibs.nio.http.expr.Bean;
 import jlibs.nio.http.expr.UnresolvedException;
-import jlibs.nio.http.msg.AsciiString;
-import jlibs.nio.http.msg.Method;
 import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
 import jlibs.nio.http.msg.parser.MessageParser;
-import jlibs.nio.http.util.Cookie;
 import jlibs.nio.listeners.Task;
 
 import java.io.Closeable;
@@ -32,7 +29,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 import static java.nio.channels.SelectionKey.OP_READ;
-import static jlibs.nio.Debugger.*;
+import static jlibs.nio.Debugger.HTTP;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -88,15 +85,12 @@ public abstract class Exchange extends Task implements Bean, Closeable{
         resume(null);
     }
 
+    @Trace(condition=HTTP, args="$1")
     public final void resume(Throwable thr){
-        if(HTTP)
-            enter("resume("+thr+")");
         if(thr!=null)
             setError(thr);
         in.channel().makeActive();
         listener.process(in);
-        if(HTTP)
-            exit();
     }
 
     protected Throwable error = null;
