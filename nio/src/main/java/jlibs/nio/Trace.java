@@ -13,16 +13,16 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.nio.http;
+package jlibs.nio;
 
-import jlibs.nio.Trace;
-
-import static jlibs.nio.Debugger.HTTP;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface ClientFilter{
-    @Trace(condition=HTTP, args="$2")
-    public boolean filter(ClientExchange exchange, FilterType type) throws Exception;
+@Target(ElementType.METHOD)
+public @interface Trace{
+    public boolean condition() default true;
+    public String args() default "\"\"";
 }
