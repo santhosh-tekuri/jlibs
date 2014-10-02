@@ -16,8 +16,12 @@
 package jlibs.nio;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
+
+import static jlibs.nio.Debugger.DEBUG;
+import static jlibs.nio.Debugger.IO;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -25,11 +29,33 @@ import java.nio.channels.GatheringByteChannel;
 public interface Output extends GatheringByteChannel{
     public NBStream channel();
     public void addWriteInterest();
+    public void wakeupWriter();
+
+    @Override
+    @Trace(condition=IO, args="\"src\"")
+    int write(ByteBuffer src) throws IOException;
+
+    @Override
+    @Trace(condition=IO, args="\"srcs\"")
+    long write(ByteBuffer[] srcs, int offset, int length) throws IOException;
+
+    @Override
+    @Trace(condition=IO, args="\"srcs\"")
+    long write(ByteBuffer[] srcs) throws IOException;
+
+    @Trace(condition=IO)
     public boolean flush() throws IOException;
+
+    @Override
+    @Trace(condition=DEBUG)
+    void close() throws IOException;
+
     public Listener getOutputListener();
     public void setOutputListener(Listener listener);
-    public void wakeupWriter();
+
     public Output detachOutput();
+
+    @Trace(condition=IO, args="\"pos:\"+$2+\", count:\"+$3")
     public long transferFrom(FileChannel src, long position, long count) throws IOException;
 
     public interface Listener{

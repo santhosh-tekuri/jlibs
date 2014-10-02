@@ -25,7 +25,6 @@ import java.nio.channels.SelectionKey;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
-import static jlibs.nio.Debugger.DEBUG;
 import static jlibs.nio.Debugger.IO;
 import static jlibs.nio.Debugger.println;
 
@@ -86,15 +85,12 @@ public final class Socket implements Transport{
         }
     }
 
-
     @Override
     public int read(ByteBuffer dst) throws IOException{
         if(timeout)
             throw SOCKET_TIMEOUT_EXCEPTION;
         int read = reader.read(dst);
         eof = read==-1;
-        if(IO)
-            println(this+".read = "+read);
         return read;
     }
 
@@ -104,8 +100,6 @@ public final class Socket implements Transport{
             throw SOCKET_TIMEOUT_EXCEPTION;
         long read = reader.read(dsts);
         eof = read==-1;
-        if(IO)
-            println(this+".read[] = "+read);
         return read;
     }
 
@@ -115,17 +109,12 @@ public final class Socket implements Transport{
             throw SOCKET_TIMEOUT_EXCEPTION;
         long read = reader.read(dsts, offset, length);
         eof = read==-1;
-        if(IO)
-            println(this+".read[] = "+read);
         return read;
     }
 
     @Override
     public long transferTo(long position, long count, FileChannel target) throws IOException{
-        long read = target.transferFrom(reader, position, count);
-        if(IO)
-            println(this+".transferToFile(pos:"+position+", count:"+count+") = "+read);
-        return read;
+        return target.transferFrom(reader, position, count);
     }
 
     @Override
@@ -179,41 +168,30 @@ public final class Socket implements Transport{
     public int write(ByteBuffer src) throws IOException{
         if(timeout)
             throw SOCKET_TIMEOUT_EXCEPTION;
-        int wrote = writer.write(src);
-        if(IO)
-            println(this+".write = "+wrote);
-        return wrote;
+        return writer.write(src);
     }
 
     @Override
     public long write(ByteBuffer[] srcs) throws IOException{
         if(timeout)
             throw SOCKET_TIMEOUT_EXCEPTION;
-        long wrote = writer.write(srcs);
-        if(IO)
-            println(this+".write[] = "+wrote);
-        return wrote;
+        return writer.write(srcs);
     }
 
     @Override
     public long write(ByteBuffer[] srcs, int offset, int length) throws IOException{
         if(timeout)
             throw SOCKET_TIMEOUT_EXCEPTION;
-        long wrote = writer.write(srcs, offset, length);
-        if(IO)
-            println(this+".write[] = "+wrote);
-        return wrote;
+        return writer.write(srcs, offset, length);
     }
 
     @Override
     public long transferFrom(FileChannel src, long position, long count) throws IOException{
-        long wrote = src.transferTo(position, count, writer);
-        if(IO)
-            println(this+".transferFromFile(pos:"+position+", count:"+count+") = "+wrote);
-        return wrote;
+        return src.transferTo(position, count, writer);
     }
 
     @Override
+    @Trace(condition=false)
     public boolean flush() throws IOException{
         return true;
     }
@@ -233,8 +211,6 @@ public final class Socket implements Transport{
     @Override
     public void close() throws IOException{
         if(isOpen()){
-            if(DEBUG)
-                println(this+".close");
             channel.closing();
             channel.selectable.close();
         }
