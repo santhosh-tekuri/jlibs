@@ -16,13 +16,33 @@
 package jlibs.nio;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ScatteringByteChannel;
+
+import static jlibs.nio.Debugger.DEBUG;
+import static jlibs.nio.Debugger.IO;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public interface Input extends ScatteringByteChannel{
+    @Override
+    @Trace(condition=IO, args="\"dst\"")
+    int read(ByteBuffer dst) throws IOException;
+
+    @Override
+    @Trace(condition=IO, args="\"dsts\"")
+    long read(ByteBuffer[] dsts, int offset, int length) throws IOException;
+
+    @Override
+    @Trace(condition=IO, args="\"dsts\"")
+    long read(ByteBuffer[] dsts) throws IOException;
+
+    @Override
+    @Trace(condition=DEBUG)
+    void close() throws IOException;
+
     public NBStream channel();
     public void addReadInterest();
     public long available();
@@ -31,6 +51,8 @@ public interface Input extends ScatteringByteChannel{
     public void setInputListener(Listener listener);
     public void wakeupReader();
     public Input detachInput();
+
+    @Trace(condition=IO, args="\"pos:\"+$1+\", count:\"+$2")
     public long transferTo(long position, long count, FileChannel target) throws IOException;
 
     public interface Listener{
