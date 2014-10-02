@@ -62,7 +62,7 @@ public abstract class Proxy{
 
             host = System.getProperty("socksProxyHost");
             if(host!=null){
-                int port = Integer.parseInt(System.getProperty("socksProxyPort", "443"));
+                int port = Integer.parseInt(System.getProperty("socksProxyPort", "1080"));
                 Proxy proxy = new SocksProxy(5, new TCPEndpoint(host, port));
                 proxy.user = System.getProperty("socksProxyUser");
                 proxy.password = System.getProperty("socksProxyPassword");
