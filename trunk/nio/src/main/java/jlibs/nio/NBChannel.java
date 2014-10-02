@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 
+import static jlibs.nio.Debugger.IO;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
@@ -38,6 +40,7 @@ public abstract class NBChannel<T extends SelectableChannel> implements Channel{
         makeActive();
     }
 
+    @Trace(condition=IO, args="($1?\"timeout\":\"\")")
     protected abstract void process(boolean timeout);
 
     int heapIndex = -1;

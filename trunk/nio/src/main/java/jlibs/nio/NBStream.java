@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
+import static jlibs.nio.Debugger.IO;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
@@ -58,6 +60,7 @@ public abstract class NBStream<T extends SelectableChannel> extends NBChannel<T>
         reactor.wakeup(this);
     }
 
+    @Trace(condition=IO)
     void wakeupNow(){
         transport.wakeupNow();
     }

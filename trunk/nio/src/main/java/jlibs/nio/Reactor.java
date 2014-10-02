@@ -237,15 +237,11 @@ public class Reactor{
                         if(nbStream.heapIndex!=-1)
                             timeoutTracker.stopTimer(nbStream);
                         activeChannel = nbStream;
-                        if(IO)
-                            enter(true, nbStream+".wakeupNow");
                         try{
                             nbStream.wakeupNow();
                         }catch(Throwable thr){
                             handleException(thr);
                         }
-                        if(IO)
-                            exit();
                         NBStream next = nbStream.wakeupNext==nbStream ? null : nbStream.wakeupNext;
                         nbStream.wakeupNext = null;
                         nbStream = next;
@@ -262,7 +258,7 @@ public class Reactor{
                     while(!tempTasks.isEmpty()){
                         activeChannel = null;
                         if(DEBUG)
-                            enter(true, "runTask");
+                            enter("runTask");
                         try{
                             tempTasks.pop().run();
                         }catch(Throwable thr){
@@ -289,7 +285,7 @@ public class Reactor{
                 int selected = 0;
                 try{
                     if(IO)
-                        enter(true, "select("+selectTimeout+")");
+                        enter("select("+selectTimeout+")");
                     selected = selector.select(selectTimeout);
                 }catch(IOException ex){
                     handleException(ex);
@@ -304,15 +300,11 @@ public class Reactor{
                             if(nbChannel.heapIndex!=-1)
                                 timeoutTracker.stopTimer(nbChannel);
                             activeChannel = nbChannel;
-                            if(IO)
-                                enter(nbChannel+".process");
                             try{
                                 nbChannel.process(false);
                             }catch(Throwable thr){
                                 handleException(thr);
                             }
-                            if(IO)
-                                exit();
                         }
                     }
                     selectedKeys.clear();
@@ -328,15 +320,11 @@ public class Reactor{
                             connectionPool.remove((Connection)nbChannel);
                             nbChannel.close();
                         }else{
-                            if(IO)
-                                enter(true, nbChannel+".processTimeout");
                             try{
                                 nbChannel.process(true);
                             }catch(Throwable thr){
                                 handleException(thr);
                             }
-                            if(IO)
-                                exit();
                         }
                     }
                 }
