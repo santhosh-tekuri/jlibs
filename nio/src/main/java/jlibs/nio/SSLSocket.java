@@ -32,7 +32,8 @@ import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
-import static jlibs.nio.Debugger.*;
+import static jlibs.nio.Debugger.IO;
+import static jlibs.nio.Debugger.println;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -92,18 +93,18 @@ public final class SSLSocket implements Transport, Bean{
     private int selfInterests;
     private long appWrote, appRead;
     private boolean unwrapUnderflow;
+    @Trace(condition=IO, args="$1")
     private void run(SSLEngineResult.HandshakeStatus handshakeStatus) throws IOException{
         assert handshakeStatus==engine.getHandshakeStatus() || engine.getHandshakeStatus()==NOT_HANDSHAKING;
         selfInterests = 0;
         appRead = appWrote = 0;
         while(!engine.isOutboundDone()){
-            if(IO)
-                println(handshakeStatus+".run()");
             switch(handshakeStatus){
                 case NEED_TASK:
                     Runnable task;
                     while((task=engine.getDelegatedTask())!=null)
                         task.run();
+                    handshakeStatus = engine.getHandshakeStatus();
                     break;
                 case NEED_WRAP:
                     if(peerWriteBuffer==null){
@@ -117,7 +118,8 @@ public final class SSLSocket implements Transport, Bean{
                     }else if(peerWriteBuffer.hasRemaining() && (peerWriteBuffer.capacity()-peerWriteBuffer.limit())<packetBufferSize){
                         do{
                             if(peerOut.write(peerWriteBuffer)==0){
-                                selfInterests |= OP_WRITE;
+                                if(engine.getHandshakeStatus()==NEED_UNWRAP)
+                                    selfInterests |= OP_WRITE;
                                 return;
                             }
                         }while(peerWriteBuffer.hasRemaining());
@@ -137,6 +139,7 @@ public final class SSLSocket implements Transport, Bean{
                     }finally{
                         peerWriteBuffer.flip();
                     }
+                    handshakeStatus = engine.getHandshakeStatus();
                     break;
                 case NEED_UNWRAP:
                     if(!writePendingToPeer())
@@ -151,7 +154,8 @@ public final class SSLSocket implements Transport, Bean{
                             try{
                                 int read = peerIn.read(peerReadBuffer);
                                 if(read==0){
-                                    selfInterests |= OP_READ;
+                                    if(engine.getHandshakeStatus()==NEED_UNWRAP)
+                                        selfInterests |= OP_READ;
                                     return;
                                 }else if(read==-1){
                                     try{
@@ -191,15 +195,24 @@ public final class SSLSocket implements Transport, Bean{
                             appReadBuffer.flip();
                         }
                     }
+                    handshakeStatus = engine.getHandshakeStatus();
                     break;
                 case FINISHED:
                 case NOT_HANDSHAKING:
-                    if(open)
-                        return;
-                    else
+                    if(open){
+                        if(appRead==0 && appReadBuffersOffset!=appReadBuffers.length-1)
+                            handshakeStatus = NEED_UNWRAP;
+                        else if(appWrote==0 && appWriteBuffers.peekLast()!=EMPTY_BUFFER)
+                            handshakeStatus = NEED_WRAP;
+                        else
+                            return;
+                    }else{
                         engine.closeOutbound();
+                        handshakeStatus = engine.getHandshakeStatus();
+                    }
             }
-            handshakeStatus = engine.getHandshakeStatus();
+            if(IO)
+                println("handshakeStatus = "+handshakeStatus);
         }
     }
 
@@ -241,47 +254,31 @@ public final class SSLSocket implements Transport, Bean{
     public int read(ByteBuffer dst) throws IOException{
         if(!isOpen())
             throw new ClosedChannelException();
-        if(IO)
-            enter("SSLSocket1.read(dst)");
         if(selfInterests!=0){
             run(engine.getHandshakeStatus());
             if(selfInterests!=0)
                 return 0;
         }
+
         ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
-        if(appReadBuffer.hasRemaining()){
-            if(IO)
-                exit("return "+Math.min(appReadBuffer.remaining(), dst.remaining()));
+        if(appReadBuffer.hasRemaining())
             return NIOUtil.copy(appReadBuffer, dst);
-        }
         if(engine.isInboundDone()){
-            if(IO)
-                exit("return -1");
             eof = true;
             return -1;
         }
 
+        if(!dst.hasRemaining())
+            return 0;
+
         appReadBuffers[--appReadBuffersOffset] = dst;
         try{
-            while(true){
-                run(NEED_UNWRAP);
-                if(appRead==0){
-                    if(engine.isInboundDone()){
-                        if(IO)
-                            exit("return -1");
-                        eof = true;
-                        return -1;
-                    }else if(selfInterests!=0){
-                        if(IO)
-                            exit("return 0");
-                        return 0;
-                    }
-                }else{
-                    if(IO)
-                        exit("return "+appRead);
-                    return (int)appRead;
-                }
-            }
+            run(NEED_UNWRAP);
+            if(appRead==0 && engine.isInboundDone()){
+                eof = true;
+                return -1;
+            }else
+                return (int)appRead;
         }finally{
             appReadBuffers[appReadBuffersOffset++] = null;
         }
@@ -296,25 +293,28 @@ public final class SSLSocket implements Transport, Bean{
     public long read(ByteBuffer[] dsts, int offset, int length) throws IOException{
         if(!isOpen())
             throw new ClosedChannelException();
-        if(IO)
-            enter("SSLSocket1.read(dsts)");
         if(selfInterests!=0){
             run(engine.getHandshakeStatus());
             if(selfInterests!=0)
                 return 0;
         }
+
         ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
-        if(appReadBuffer.hasRemaining()){
-            if(IO)
-                exit("return "+Math.min(appReadBuffer.remaining(), new Buffers(dsts, offset, length).remaining()));
+        if(appReadBuffer.hasRemaining())
             return NIOUtil.copy(appReadBuffer, dsts, offset, length);
-        }
         if(engine.isInboundDone()){
-            if(IO)
-                exit("return -1");
             eof = true;
             return -1;
         }
+
+        while(length>0){
+            if(dsts[offset].hasRemaining())
+                break;
+            ++offset;
+            --length;
+        }
+        if(length==0)
+            return 0;
 
         if(appReadBuffers.length<length+1){
             appReadBuffers = new ByteBuffer[length+1];
@@ -325,25 +325,12 @@ public final class SSLSocket implements Transport, Bean{
         appReadBuffersOffset -= length;
         System.arraycopy(dsts, offset, appReadBuffers, appReadBuffersOffset, length);
         try{
-            while(true){
-                run(NEED_UNWRAP);
-                if(appRead==0){
-                    if(engine.isInboundDone()){
-                        if(IO)
-                            exit("return -1");
-                        eof = true;
-                        return -1;
-                    }else if(selfInterests!=0){
-                        if(IO)
-                            exit("return 0");
-                        return 0;
-                    }
-                }else{
-                    if(IO)
-                        exit("return "+appRead);
-                    return appRead;
-                }
-            }
+            run(NEED_UNWRAP);
+            if(appRead==0 && engine.isInboundDone()){
+                eof = true;
+                return -1;
+            }else
+                return appRead;
         }finally{
             for(int i=0; i<length; i++)
                 appReadBuffers[appReadBuffersOffset++] = null;
@@ -394,8 +381,6 @@ public final class SSLSocket implements Transport, Bean{
     public int write(ByteBuffer src) throws IOException{
         if(!isOpen())
             throw new ClosedChannelException();
-        if(IO)
-            enter("SSLSocket1.write(src)");
         if(selfInterests!=0){
             run(engine.getHandshakeStatus());
             if(selfInterests!=0)
@@ -403,11 +388,13 @@ public final class SSLSocket implements Transport, Bean{
         }
         if(engine.isOutboundDone())
             throw new IOException("outboundDone");
+
+        if(!src.hasRemaining())
+            return 0;
+
         appWriteBuffers.array[0] = src;
         try{
             run(NEED_WRAP);
-            if(IO)
-                exit("return "+appWrote);
             return (int)appWrote;
         }finally{
             appWriteBuffers.array[0] = EMPTY_BUFFER;
@@ -423,8 +410,6 @@ public final class SSLSocket implements Transport, Bean{
     public long write(ByteBuffer[] srcs, int offset, int length) throws IOException{
         if(!isOpen())
             throw new ClosedChannelException();
-        if(IO)
-            enter("SSLSocket1.write(srcs)");
         if(selfInterests!=0){
             run(engine.getHandshakeStatus());
             if(selfInterests!=0)
@@ -432,13 +417,21 @@ public final class SSLSocket implements Transport, Bean{
         }
         if(engine.isOutboundDone())
             throw new IOException("outboundDone");
+
+        while(length>0){
+            if(srcs[offset].hasRemaining())
+                break;
+            ++offset;
+            --length;
+        }
+        if(length==0)
+            return 0;
+
         appWriteBuffers.array = srcs;
         appWriteBuffers.offset = offset;
         appWriteBuffers.length = length;
         try{
             run(NEED_WRAP);
-            if(IO)
-                exit("return "+appWrote);
             return (int)appWrote;
         }finally{
             appWriteBuffers.array = buffersArray1;
@@ -449,8 +442,6 @@ public final class SSLSocket implements Transport, Bean{
 
     @Override
     public boolean flush() throws IOException{
-        if(IO)
-            println("SSLSocket1.flush()");
         if(peerIn.isOpen() && peerOut.isOpen()){
             if(selfInterests!=0){
                 run(engine.getHandshakeStatus());
@@ -497,8 +488,6 @@ public final class SSLSocket implements Transport, Bean{
     @Override
     public void close() throws IOException{
         if(open){
-            if(IO)
-                println("SSLSocket1.close()");
             open = false;
             ByteBuffer appReadBuffer = appReadBuffers[appReadBuffers.length-1];
             if(appReadBuffer.hasRemaining())
@@ -554,6 +543,11 @@ public final class SSLSocket implements Transport, Bean{
     @Override
     public NBStream channel(){
         return transportIn.channel(); //todo
+    }
+
+    @Override
+    public String toString(){
+        return "SSLSocket";
     }
 
     /*-------------------------------------------------[ Bean ]---------------------------------------------------*/
