@@ -15,12 +15,13 @@
 
 package jlibs.nio.listeners;
 
-import jlibs.nio.*;
+import jlibs.nio.Connection;
+import jlibs.nio.Input;
+import jlibs.nio.Output;
+import jlibs.nio.Reactor;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
-import static jlibs.nio.Debugger.DEBUG;
-import static jlibs.nio.Debugger.println;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -58,21 +59,12 @@ public class IOListener implements Input.Listener, Output.Listener{
         try{
             while(true){
                 Throwable taskError = null;
-                if(DEBUG)
-                    println(task+".process{");
                 try{
-                    if(!task.process(readyOp)){
-                        if(DEBUG)
-                            println("}");
+                    if(!task.process(readyOp))
                         return;
-                    }
                 }catch(Throwable thr){
-                    if(DEBUG)
-                        println("throw "+thr);
                     taskError = thr;
                 }
-                if(DEBUG)
-                    println("}");
                 task = taskFinished(taskError);
                 if(task==null)
                     break;
@@ -105,13 +97,8 @@ public class IOListener implements Input.Listener, Output.Listener{
         if(parent==null){
             if(thr!=null)
                 throw thr;
-        }else{
-            if(DEBUG)
-                println(parent+".childTaskFinished("+task+", "+thr+"){");
+        }else
             parent.firstOp = parent.childTaskFinished(task, thr);
-            if(DEBUG)
-                println("}");
-        }
         return parent;
     }
 
