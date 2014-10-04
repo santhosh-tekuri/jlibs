@@ -16,10 +16,7 @@
 package jlibs.nio.http;
 
 import jlibs.core.lang.NotImplementedException;
-import jlibs.nio.Connection;
-import jlibs.nio.Reactor;
-import jlibs.nio.TCPConnection;
-import jlibs.nio.TCPEndpoint;
+import jlibs.nio.*;
 import jlibs.nio.filters.InputLimitExceeded;
 import jlibs.nio.filters.ReadTrackingInput;
 import jlibs.nio.filters.TrackingInput;
@@ -28,7 +25,6 @@ import jlibs.nio.http.msg.*;
 import jlibs.nio.http.msg.parser.RequestParser;
 import jlibs.nio.http.util.Expect;
 import jlibs.nio.http.util.USAscii;
-import jlibs.nio.log.LogHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -45,6 +41,7 @@ import static jlibs.nio.Debugger.println;
 import static jlibs.nio.http.ServerExchange.State.*;
 import static jlibs.nio.http.msg.Message.CONNECTION;
 import static jlibs.nio.http.msg.Message.PROXY_CONNECTION;
+import static jlibs.nio.http.msg.Method.CONNECT;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -68,7 +65,6 @@ public final class ServerExchange extends Exchange{
 
     AccessLog accessLog;
     AccessLog.Record accessLogRecord;
-    LogHandler logHandler;
 
     protected ServerExchange(HTTPServer server){
         super(server.maxRequestHeadSize, new RequestParser(server.maxURISize), OP_READ);
@@ -80,8 +76,8 @@ public final class ServerExchange extends Exchange{
 
         accessLog = server.accessLog;
         if(accessLog!=null){
-            accessLogRecord = accessLog.new Record();
-            logHandler = server.logHandler;
+            accessLogRecord = accessLog.records.allocate();
+            accessLogRecord.setLogHandler(server.logHandler);
         }
         connectionStatus = ConnectionStatus.OPEN;
     }
@@ -224,6 +220,10 @@ public final class ServerExchange extends Exchange{
         continue100Buffer = null;
         filters = null;
         callback = null;
+        if(accessLog!=null){
+            accessLogRecord = accessLog.records.allocate();
+            accessLogRecord.setLogHandler(server.logHandler);
+        }
     }
 
     @Override
@@ -237,6 +237,10 @@ public final class ServerExchange extends Exchange{
         }
         if(thr!=null){
             if(thr==ReadMessage.IGNORABLE_EOF_EXCEPTION){
+                if(accessLog!=null){
+                    accessLogRecord.reset();
+                    accessLog.records.free(accessLogRecord);
+                }
                 close();
                 return;
             }
@@ -266,7 +270,7 @@ public final class ServerExchange extends Exchange{
                 request.headers.set(CONNECTION, header.getValue());
             }
         }
-        keepAlive = error==null && request.isKeepAlive();
+        keepAlive = error==null && (request.method==CONNECT || request.isKeepAlive());
         requestVersion = request.version;
         requestHasPayload = request.getPayload().getContentLength()!=0;
 
@@ -353,13 +357,11 @@ public final class ServerExchange extends Exchange{
     }
 
     @SuppressWarnings("unchecked")
+    @Trace(condition=HTTP)
     private void notifyCallback(){
         try{
-            if(accessLog!=null){
+            if(accessLog!=null)
                 accessLogRecord.finished(this);
-                logHandler.publish(accessLogRecord);
-                accessLogRecord.reset();
-            }
         }catch(Throwable thr){
             Reactor.current().handleException(thr);
         }
