@@ -16,12 +16,14 @@
 package jlibs.nio.http;
 
 import jlibs.core.io.FileUtil;
+import jlibs.nio.Reactors;
 import jlibs.nio.http.expr.Expression;
 import jlibs.nio.http.expr.Literal;
 import jlibs.nio.http.expr.TypeConversion;
 import jlibs.nio.http.msg.Message;
 import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.msg.Response;
+import jlibs.nio.log.LogHandler;
 import jlibs.nio.log.LogRecord;
 
 import java.io.IOException;
@@ -83,13 +85,15 @@ public class AccessLog{
             attributes.add(new Attribute(literal));
     }
 
+    public Reactors.Pool<Record> records = new Reactors.Pool<>(Record::new);
     public class Record implements LogRecord{
         private Class<? extends Exchange> owner;
+        private int exchanges = 0;
         private String values[] = new String[attributes.size()];
 
-        public void reset(){
-            owner = null;
-            Arrays.fill(values, null);
+        private LogHandler logHandler;
+        public void setLogHandler(LogHandler logHandler){
+            this.logHandler = logHandler;
         }
 
         public Class<? extends Exchange> getOwner(){
@@ -103,6 +107,8 @@ public class AccessLog{
         public void process(Exchange exchange, Message msg){
             if(owner==null)
                 owner = exchange.getClass();
+            if(msg instanceof Request)
+                ++exchanges;
             for(int i=0; i<values.length; i++){
                 Attribute attr = attributes.get(i);
                 if(!attr.captureOnFinish && attr.isApplicable(exchange, msg))
@@ -111,8 +117,7 @@ public class AccessLog{
         }
 
         public void finished(Exchange exchange){
-            if(owner==null)
-                owner = exchange.getClass();
+            --exchanges;
             for(int i=0; i<values.length; i++){
                 Attribute attr = attributes.get(i);
                 if(attr.captureOnFinish && attr.isApplicable(exchange)){
@@ -124,6 +129,18 @@ public class AccessLog{
                     values[i] = value;
                 }
             }
+            if(exchanges==0){
+                logHandler.publish(this);
+                reset();
+                records.free(this);
+            }
+        }
+
+        public void reset(){
+            owner = null;
+            exchanges = 0;
+            logHandler = null;
+            Arrays.fill(values, null);
         }
 
         @Override

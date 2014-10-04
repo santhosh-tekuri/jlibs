@@ -15,10 +15,7 @@
 
 package jlibs.nio.http;
 
-import jlibs.nio.Connection;
-import jlibs.nio.Reactor;
-import jlibs.nio.Result;
-import jlibs.nio.TCPEndpoint;
+import jlibs.nio.*;
 import jlibs.nio.filters.CloseTrackingInput;
 import jlibs.nio.filters.TrackingInput;
 import jlibs.nio.http.msg.Method;
@@ -28,7 +25,6 @@ import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.msg.parser.ResponseParser;
 import jlibs.nio.http.util.Expect;
 import jlibs.nio.listeners.IOListener;
-import jlibs.nio.log.LogHandler;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -53,7 +49,6 @@ public class ClientExchange extends Exchange{
 
     private AccessLog accessLog;
     private AccessLog.Record accessLogRecord;
-    private LogHandler logHandler;
 
     protected ClientExchange(HTTPClient client, TCPEndpoint endpoint){
         super(client.maxResponseHeadSize, new ResponseParser(), OP_WRITE);
@@ -64,8 +59,8 @@ public class ClientExchange extends Exchange{
 
         accessLog = client.accessLog;
         if(accessLog!=null){
-            accessLogRecord = accessLog.new Record();
-            logHandler = client.logHandler;
+            accessLogRecord = accessLog.records.allocate();
+            accessLogRecord.setLogHandler(client.logHandler);
         }
     }
 
@@ -218,7 +213,6 @@ public class ClientExchange extends Exchange{
     public void setAccessLog(ServerExchange exchange){
         accessLog = exchange.accessLog;
         accessLogRecord = exchange.accessLogRecord;
-        logHandler = exchange.logHandler;
     }
 
     public void execute(ResponseListener listener){
@@ -293,6 +287,7 @@ public class ClientExchange extends Exchange{
                 listener.process(in);
             else{
                 in.setInputListener(listener);
+                System.err.println("wakeupreader");
                 in.wakeupReader();
             }
         }
@@ -326,15 +321,11 @@ public class ClientExchange extends Exchange{
         this.callback = callback;
     }
 
+    @Trace(condition=HTTP)
     private void notifyCallback(){
         try{
-            if(accessLog!=null){
+            if(accessLog!=null)
                 accessLogRecord.finished(this);
-                if(accessLogRecord.getOwner()==ClientExchange.class){
-                    logHandler.publish(accessLogRecord);
-                    accessLogRecord.reset();
-                }
-            }
         }catch(Throwable thr){
             Reactor.current().handleException(thr);
         }
