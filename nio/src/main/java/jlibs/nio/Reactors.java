@@ -17,6 +17,7 @@ package jlibs.nio;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -94,5 +95,32 @@ public class Reactors{
     public static void shutdown(boolean force){
         for(Reactor reactor: reactors)
             reactor.invokeLater(() -> reactor.shutdown(force));
+    }
+
+    public static class Pool<T>{
+        private Deque<T> dqs[];
+        private Supplier<T> supplier;
+
+        @SuppressWarnings("unchecked")
+        public Pool(Supplier<T> supplier){
+            dqs = new Deque[reactors.size()];
+            for(int i=0; i<dqs.length; i++)
+                dqs[i] = new ArrayDeque<>();
+            this.supplier = supplier;
+        }
+
+        public T allocate(){
+            Deque<T> dq = dqs[Reactor.current().id];
+            if(dq.isEmpty())
+                return supplier.get();
+            else
+                return dq.pop();
+        }
+
+        public void free(T item){
+
+            Deque<T> dq = dqs[Reactor.current().id];
+            dq.push(item);
+        }
     }
 }
