@@ -69,7 +69,7 @@ public class Request extends Message{
     @SuppressWarnings("StringEquality")
     public Object getField(String name) throws UnresolvedException{
         if(name=="method")
-            return method;
+            return method==null ? null : method.toString();
         else if(name=="uri")
             return uri;
         else if(name=="line")
