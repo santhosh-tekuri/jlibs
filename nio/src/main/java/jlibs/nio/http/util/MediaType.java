@@ -15,6 +15,9 @@
 
 package jlibs.nio.http.util;
 
+import jlibs.nio.http.expr.Bean;
+import jlibs.nio.http.expr.UnresolvedException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +27,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class MediaType{
+public class MediaType implements Bean{
     public static final String CHARSET = "charset";
     public static final String BOUNDARY = "boundary";
 
@@ -192,5 +195,34 @@ public class MediaType{
             toString = builder.toString();
         }
         return toString;
+    }
+
+    @Override
+    @SuppressWarnings("StringEquality")
+    public Object getField(String name) throws UnresolvedException{
+        if(name=="type")
+            return type;
+        else if(name=="subtype")
+            return subType;
+        else if(name=="charset")
+            return getCharset(null);
+        else if(name=="is_any")
+            return isAny();
+        else if(name=="is_xml")
+            return isXML();
+        else if(name=="is_multipart")
+            return isMultipart();
+        else if(name=="is_json")
+            return isCompatible(APPLICATION_JSON);
+        else if(name=="is_soap11")
+            return isCompatible(SOAP_1_1);
+        else if(name=="is_soap12")
+            return isCompatible(SOAP_1_2);
+        else if(name=="is_octet_stream")
+            return isCompatible(APPLICATION_OCTET_STREAM);
+        else if(name=="is_form_urlencoded")
+            return isCompatible(APPLICATION_FORM_URLENCODED);
+        else
+            throw new UnresolvedException(name);
     }
 }
