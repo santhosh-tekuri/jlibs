@@ -20,6 +20,7 @@ import jlibs.nio.InputFilter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -65,6 +66,14 @@ public class LimitInput extends InputFilter{
             limit -= read;
         }
         return read;
+    }
+
+    @Override
+    public long transferTo(long position, long count, FileChannel target) throws IOException{
+        long transferred = peer.transferTo(position, count, target);
+        if(transferred>limit)
+            throw InputLimitExceeded.INSTANCE;
+        limit -= transferred;
     }
 
     @Override
