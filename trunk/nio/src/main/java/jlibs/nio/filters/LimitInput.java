@@ -74,6 +74,7 @@ public class LimitInput extends InputFilter{
         if(transferred>limit)
             throw InputLimitExceeded.INSTANCE;
         limit -= transferred;
+        return transferred;
     }
 
     @Override
