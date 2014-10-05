@@ -17,7 +17,6 @@ package jlibs.nio.http.filters;
 
 import jlibs.nio.http.FilterType;
 import jlibs.nio.http.ServerExchange;
-import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.util.BasicChallenge;
 import jlibs.nio.http.util.BasicCredentials;
 import jlibs.nio.http.util.Credentials;
@@ -37,8 +36,7 @@ public class CheckBasicAuthentication extends CheckAuthentication{
     @Override
     public boolean filter(ServerExchange exchange, FilterType type) throws Exception{
         assert type==FilterType.REQUEST;
-        Request request = exchange.getRequest();
-        Credentials credentials = request.getCredentials(proxy);
+        Credentials credentials = getCredentials(exchange);
         if(credentials instanceof BasicCredentials){
             BasicCredentials basicCredentials = (BasicCredentials)credentials;
             String password = authenticator.getPassword(basicCredentials.user);

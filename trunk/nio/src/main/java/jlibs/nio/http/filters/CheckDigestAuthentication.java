@@ -18,7 +18,6 @@ package jlibs.nio.http.filters;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.nio.http.FilterType;
 import jlibs.nio.http.ServerExchange;
-import jlibs.nio.http.msg.Request;
 import jlibs.nio.http.util.Credentials;
 import jlibs.nio.http.util.DigestChallenge;
 import jlibs.nio.http.util.DigestCredentials;
@@ -28,9 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
-import static javax.xml.bind.DatatypeConverter.printHexBinary;
+import static javax.xml.bind.DatatypeConverter.*;
 import static jlibs.core.io.IOUtil.UTF_8;
 
 /**
@@ -59,12 +56,10 @@ public class CheckDigestAuthentication extends CheckAuthentication{
     @Override
     public boolean filter(ServerExchange exchange, FilterType type) throws Exception{
         assert type==FilterType.REQUEST;
+        Credentials credentials = getCredentials(exchange);
+
         MessageDigest md5 = MessageDigest.getInstance("MD5");
-
         boolean stale = false;
-
-        Request request = exchange.getRequest();
-        Credentials credentials = request.getCredentials(proxy);
         if(credentials instanceof DigestCredentials){
             DigestCredentials digestCredentials = (DigestCredentials)credentials;
             long expiryTime = getExpiryTime(md5, digestCredentials.nonce);
@@ -85,7 +80,7 @@ public class CheckDigestAuthentication extends CheckAuthentication{
                         String ha1 = printHexBinary(md5.digest(a1.getBytes(UTF_8))).toLowerCase();
                         md5.reset();
 
-                        md5.update((request.method+":"+digestCredentials.uri).getBytes(UTF_8));
+                        md5.update((exchange.getRequest().method+":"+digestCredentials.uri).getBytes(UTF_8));
                         String ha2 = printHexBinary(md5.digest()).toLowerCase();
                         md5.reset();
 
