@@ -20,6 +20,7 @@ import jlibs.nio.http.ServerFilter;
 import jlibs.nio.http.msg.Response;
 import jlibs.nio.http.msg.Status;
 import jlibs.nio.http.util.Challenge;
+import jlibs.nio.http.util.Credentials;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -32,6 +33,14 @@ public abstract class CheckAuthentication implements ServerFilter{
     protected CheckAuthentication(Authenticator authenticator, boolean proxy){
         this.authenticator = authenticator;
         this.proxy = proxy;
+    }
+
+    protected Credentials getCredentials(ServerExchange exchange){
+        try{
+            return exchange.getRequest().getCredentials(proxy);
+        }catch(Exception ex){
+            throw Status.BAD_REQUEST.with(ex);
+        }
     }
 
     protected void authorized(ServerExchange exchange, String user){
