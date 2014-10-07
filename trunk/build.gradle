@@ -11,7 +11,7 @@ allprojects{
     defaultTasks 'build'
 }
 
-if(!System.getenv("JAVA8_HOME")==null)
+if(System.getenv("JAVA8_HOME")==null)
     throw new GradleException("Please set environment variable JAVA8_HOME");
 
 if(!System.properties["java.version"].startsWith("1.6"))
@@ -110,6 +110,7 @@ subprojects {
     }
 
     signing {
+        required { gradle.taskGraph.hasTask(release) }
         sign configurations.archives
     }
 
