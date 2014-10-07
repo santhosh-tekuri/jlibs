@@ -1,5 +1,3 @@
-import nl.javadude.gradle.plugins.license.License
-
 buildscript {
     repositories {
         jcenter()
@@ -12,6 +10,9 @@ buildscript {
 allprojects{
     defaultTasks 'build'
 }
+
+if(!System.getenv("JAVA8_HOME")==null)
+    throw new GradleException("Please set environment variable JAVA8_HOME");
 
 if(!System.properties["java.version"].startsWith("1.6"))
 	throw new GradleException("Please run gralde with jdk 1.6.X");
@@ -201,11 +202,14 @@ task build(dependsOn: subprojects*.build) << {
 }
 
 task docs(type: Javadoc) {
+    executable = "${System.env.JAVA8_HOME}/bin/javadoc"
     source subprojects.collect {project -> project.sourceSets.main.allJava }
     classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})
     destinationDir = new File(projectDir, 'build/apidocs')
+    options.addStringOption('Xdoclint:none', '-quiet')
 
     configure(options) {
+        exclude 'jlibs/nio/Tracer.java'
         linkSource true
         links "http://download.oracle.com/javase/6/docs/api/"
         links "http://download.oracle.com/javaee/6/api/"
