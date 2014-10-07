@@ -18,6 +18,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 javadoc{
     executable = "${System.env.JAVA8_HOME}/bin/javadoc"
+    exclude 'jlibs/nio/Tracer.java'
 }
 tasks.withType(JavaCompile) {
     options.fork = true;
