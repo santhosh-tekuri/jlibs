@@ -10,7 +10,8 @@ Dependencies:
 +---------------+--------------+-----------------------------------------------+
 | jlibs-core    |              |                                               |
 | jlibs-jdbc    | jlibs-core   |                                               |
-| jlibs-xml     | jlibs-core   | xercelImpl.jar (version 2.11.0)                |
+| jlibs-xml     | jlibs-core   | xercelImpl.jar (version 2.11.0)               |
+|               |              | xml-apis.jar  (version=1.4.01)                |
 | jlibs-xmldog  | jlibs-xml    | jaxen.jar (version 1.1.1)                     |
 | jlibs-swing   | jlibs-xml    | org-netbeans-swing-outline.jar (netbeans 6.5) |
 | jlibs-examples| jlibs-jdbc   | saxon.jar (version 9.0.0.2)                   |
