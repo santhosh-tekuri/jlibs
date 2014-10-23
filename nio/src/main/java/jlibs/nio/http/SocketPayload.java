@@ -28,6 +28,7 @@ import java.util.List;
  */
 public class SocketPayload extends Payload{
     private long contentLength;
+    protected List<Encoding> encodings;
     protected Input in;
 
     public SocketPayload(long contentLength, String contentType, Input in, List<Encoding> encodings){
@@ -42,7 +43,10 @@ public class SocketPayload extends Payload{
         return contentLength;
     }
 
-    protected List<Encoding> encodings;
+    public List<Encoding> getEncodings(){
+        return encodings;
+    }
+
     public boolean retain;
     public Buffers buffers;
     public Input socket(){
