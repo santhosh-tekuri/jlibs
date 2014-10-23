@@ -224,7 +224,7 @@ public final class WriteMessage extends Task{
             message.setContentLength(buffers.remaining());
         }else if(payload instanceof SocketPayload){
             SocketPayload socketPayload = (SocketPayload)payload;
-            if(socketPayload.in.isOpen()){
+            if(socketPayload.in!=null && socketPayload.in.isOpen()){
                 writePayload = new WriteSocketPayload(socketPayload);
                 long contentLength = socketPayload.getContentLength();
                 List<Encoding> encodings = socketPayload.encodings;

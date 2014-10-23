@@ -52,7 +52,7 @@ public class ParseXML extends ParseSocketPayload{
 
         InputSource is;
         Input socket = payload.socket();
-        if(socket.isOpen()){
+        if(socket!=null && socket.isOpen()){
             ReadableByteChannel channel = socket;
             boolean retain = retain(payload);
             if(retain){
