@@ -22,13 +22,29 @@ import jlibs.nio.Reactor;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import static jlibs.nio.Debugger.IO;
+import static jlibs.nio.Debugger.println;
+import static jlibs.nio.http.util.USAscii.CR;
+import static jlibs.nio.http.util.USAscii.LF;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class ChunkedOutput extends OutputFilter{
     private static final int MAX_LEN = Long.toString(Long.MAX_VALUE, 16).length()+2;
-    private static final byte CHUNK_END[] = { (byte)'\r', (byte)'\n' };
-    private static final byte LAST_CHUNK[] = { (byte)'0', (byte)'\r', (byte)'\n', (byte)'\r', (byte)'\n' };
+
+    private static final ByteBuffer CHUNK_END;
+    static{
+        CHUNK_END = Reactor.current().allocator.allocate(2).put(CR).put(LF);
+        CHUNK_END.flip();
+    }
+
+    private static final ByteBuffer LAST_CHUNK;
+    static{
+        LAST_CHUNK = Reactor.current().allocator.allocate(5);
+        LAST_CHUNK.put((byte)'0').put(CR).put(LF).put(CR).put(LF);
+        LAST_CHUNK.flip();
+    }
 
     private ByteBuffer chunkBegin;
     private long chunkLength;
@@ -38,20 +54,22 @@ public class ChunkedOutput extends OutputFilter{
     public ChunkedOutput(Output peer){
         super(peer);
         chunkBegin = Reactor.current().allocator.allocate(MAX_LEN);
-        chunkEnd = ByteBuffer.wrap(CHUNK_END);
-        buffers = new ByteBuffer[]{ chunkBegin, null, chunkEnd, ByteBuffer.wrap(LAST_CHUNK)};
+        chunkEnd = CHUNK_END.duplicate();
+        buffers = new ByteBuffer[]{ chunkBegin, null, chunkEnd, LAST_CHUNK.duplicate()};
         chunkEnd.position(chunkEnd.limit());
     }
 
     private static final byte digits[] = {
-            '0' , '1' , '2' , '3' , '4' , '5' ,
-            '6' , '7' , '8' , '9' , 'a' , 'b' ,
-            'c' , 'd' , 'e' , 'f'
+        '0' , '1' , '2' , '3' , '4' , '5' ,
+        '6' , '7' , '8' , '9' , 'a' , 'b' ,
+        'c' , 'd' , 'e' , 'f'
     };
     private static final int shift = 4;
     private static final int mask = (1<<shift)-1;
     public void startChunk(long length){
         if(length>0 && isOpen() && chunkLength==0 && !chunkEnd.hasRemaining()){
+            if(IO)
+                println("startChunk: "+length);
             chunkLength = length;
             chunkBegin.clear();
 
@@ -122,10 +140,19 @@ public class ChunkedOutput extends OutputFilter{
 
     @Override
     public long write(ByteBuffer[] srcs, int offset, int length) throws IOException{
-        if(length==0)
-            return write(srcs[offset]);
         if(!canUserWrite())
             return 0;
+
+        while(length>0 && !srcs[offset].hasRemaining()){
+            ++offset;
+            --length;
+        }
+
+        if(length==0)
+            return 0;
+
+        if(length==1 || chunkBegin.hasRemaining())
+            return write(srcs[offset]);
 
         if(chunkLength==0){
             long remaining = 0;
@@ -136,9 +163,12 @@ public class ChunkedOutput extends OutputFilter{
             buffers[0] = chunkBegin;
             System.arraycopy(srcs, offset, buffers, 1, length);
             buffers[buffers.length-1] = chunkEnd;
-            int chunkBeginRemaining = chunkBegin.remaining();
-            long wrote = peer.write(buffers, 0, buffers.length) - chunkBeginRemaining;
-            return wrote<0 ? 0 : wrote;
+            long wrote = peer.write(buffers, 0, buffers.length);
+            if(chunkBegin.hasRemaining())
+                return 0;
+            wrote = Math.min(wrote-chunkBegin.position(), remaining);
+            chunkLength -= wrote;
+            return wrote;
         }else{
             int len = 0;
             ByteBuffer candidate = null;
@@ -147,17 +177,20 @@ public class ChunkedOutput extends OutputFilter{
             long remaining = 0;
             for(; len<length; len++){
                 remaining += srcs[offset+len].remaining();
-                if(remaining==0)
+                if(remaining==chunkLength)
                     break;
                 else if(remaining>chunkLength){
                     candidate = srcs[offset+len];
                     candidateLimit = candidate.limit();
-                    candidate.limit((int)(remaining-chunkLength));
+                    candidate.limit((int)(candidateLimit-(remaining-chunkLength)));
                     break;
                 }
             }
+
             try{
-                return peer.write(srcs, 0, len);
+                long wrote = peer.write(srcs, offset, len);
+                chunkLength -= wrote;
+                return wrote;
             }finally{
                 if(candidate!=null)
                     candidate.limit(candidateLimit);
