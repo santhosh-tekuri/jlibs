@@ -217,17 +217,17 @@ public abstract class Task{
             }
         }catch(Throwable thr){
             try{
-                readBuffersDone(in, buffers);
+                readBuffersDone(buffers);
             }catch(Throwable suppressed){
                 thr.addSuppressed(suppressed);
             }
             throw thr;
         }
-        readBuffersDone(in, buffers);
+        readBuffersDone(buffers);
         return true;
     }
 
-    private void readBuffersDone(Input in, Buffers buffers) throws IOException{
+    private void readBuffersDone(Buffers buffers) throws IOException{
         if(buffer.position()==0)
             allocator.free(buffer);
         else{
@@ -236,6 +236,60 @@ public abstract class Task{
         }
         buffer = null;
         in.close();
+    }
+
+    /*-------------------------------------------------[ readFixedLength ]---------------------------------------------------*/
+
+    private long readLimit;
+    protected void prepareReadFixedLength(long readLimit){
+        this.readLimit = readLimit;
+    }
+
+    protected boolean readFixedLength(Buffers buffers) throws IOException{
+        try{
+            while(true){
+                if(buffer!=null && !buffer.hasRemaining()){
+                    buffer.flip();
+                    buffers.append(buffer);
+                    buffer = null;
+                }
+                if(buffer==null){
+                    if(readLimit==0)
+                        break;
+                    buffer = allocator.allocate();
+                    buffer.limit((int)Math.min(buffer.remaining(), readLimit));
+                    readLimit -= buffer.remaining();
+                }
+                int read = in.read(buffer);
+                if(read==-1)
+                    break;
+                else if(read==0){
+                    in.addReadInterest();
+                    return false;
+                }
+            }
+        }catch(Throwable thr){
+            try{
+                readFixedLengthDone(buffers);
+            }catch(Throwable suppressed){
+                thr.addSuppressed(suppressed);
+            }
+            throw thr;
+        }
+        readFixedLengthDone(buffers);
+        return true;
+    }
+
+    private void readFixedLengthDone(Buffers buffers){
+        if(buffer!=null){
+            if(buffer.position()==0)
+                allocator.free(buffer);
+            else{
+                buffer.flip();
+                buffers.append(buffer);
+            }
+            buffer = null;
+        }
     }
 
     /*-------------------------------------------------[ closeOutputs ]---------------------------------------------------*/
