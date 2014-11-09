@@ -135,10 +135,16 @@ public final class ServerExchange extends Exchange{
                         if(HTTP)
                             println("state = "+state);
                     case FILTER_RESPONSE:
-                    case FILTER_ERROR:
-                        FilterType filterType = state==FILTER_RESPONSE ? FilterType.RESPONSE : FilterType.ERROR;
                         while(filters.hasNext()){
-                            if(!filters.next().filter(this, filterType))
+                            if(!filters.next().filter(this, FilterType.RESPONSE))
+                                return false;
+                        }
+                        state = DELIVER_RESPONSE;
+                        if(HTTP)
+                            println("state = "+state);
+                    case FILTER_ERROR:
+                        while(filters.hasNext()){
+                            if(!filters.next().filter(this, FilterType.ERROR))
                                 return false;
                         }
                         state = DELIVER_RESPONSE;
@@ -319,6 +325,22 @@ public final class ServerExchange extends Exchange{
             reset();
     }
 
+    private void clearResponse(){
+        if(response!=null){
+            if(response.getPayload() instanceof SocketPayload){
+                SocketPayload payload = (SocketPayload)response.getPayload();
+                if(payload.in!=null && payload.in.isOpen()){
+                    try{
+                        payload.in.close();
+                    }catch(Throwable ignore){
+                        Reactor.current().handleException(ignore);
+                    }
+                }
+            }
+            response = null;
+        }
+    }
+
     protected void setError(Throwable thr){
         if(thr instanceof SocketTimeoutException)
             error = Status.REQUEST_TIMEOUT;
@@ -332,15 +354,19 @@ public final class ServerExchange extends Exchange{
             println("error = "+error);
 
         if(state.ordinal()<FILTER_ERROR.ordinal()){
+            if(state==FILTER_RESPONSE)
+                clearResponse();
             filters = errorFilters.iterator();
             state = FILTER_ERROR;
             if(HTTP)
                 println("state = "+state);
         }else if(state==FILTER_ERROR){
+            clearResponse();
             state = DELIVER_RESPONSE;
             if(HTTP)
                 println("state = "+state);
         }else{
+            clearResponse();
             notifyCallback();
             close();
         }
