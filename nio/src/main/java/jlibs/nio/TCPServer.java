@@ -52,6 +52,7 @@ public class TCPServer extends NBChannel<ServerSocketChannel>{
     }
 
     private ObjectName objName;
+    @Trace(condition=Debugger.DEBUG, args="$1")
     public TCPServer bind(SocketAddress local) throws IOException{
         selectable.bind(local, BACKLOG);
         String boundToStr = ((InetSocketAddress)local).getHostString();
