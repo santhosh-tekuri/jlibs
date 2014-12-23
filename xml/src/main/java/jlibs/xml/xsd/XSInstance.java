@@ -619,7 +619,8 @@ public class XSInstance{
             }
 
             private String applyDigits(Object obj){
-                String str = applyExponent(String.valueOf(obj));
+//                String str = applyExponent(String.valueOf(obj));
+                String str = String.valueOf(obj);
                 String number, fraction;
                 int dot = str.indexOf(".");
                 if(dot==-1){
