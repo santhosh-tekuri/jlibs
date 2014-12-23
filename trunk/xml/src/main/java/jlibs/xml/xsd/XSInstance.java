@@ -762,15 +762,12 @@ public class XSInstance{
         value = options.getProperty("generateFixedAttributes");
         if(value!=null)
             generateFixedAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
-        value = options.getProperty("generateOptionalElements");
-        if(value!=null)
-            generateOptionalElements = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
         value = options.getProperty("generateDefaultAttributes");
         if(value!=null)
             generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
         value = options.getProperty("generateAllChoices");
         if(value!=null)
-            generateDefaultAttributes = Boolean.parseBoolean(value);
+            generateAllChoices = Boolean.parseBoolean(value);
         value = options.getProperty("showContentModel");
         if(value!=null)
             showContentModel = Boolean.parseBoolean(value);
