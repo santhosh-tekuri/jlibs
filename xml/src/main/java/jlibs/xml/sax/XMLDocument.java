@@ -120,6 +120,10 @@ public class XMLDocument{
         return prefix.length()==0 ? localPart : prefix+':'+localPart;
     }
 
+    public String toAttrQName(String uri, String localPart){
+        return uri.equals("") ? localPart : toQName(uri, localPart);
+    }
+
     private void startPrefixMappings() throws SAXException{
         Enumeration enumer = nsSupport.getDeclaredPrefixes();
         while(enumer.hasMoreElements()){
@@ -246,7 +250,7 @@ public class XMLDocument{
         if(value!=null){
             if(uri==null)
                 uri = "";
-            attrs.addAttribute(uri, name, toQName(uri, name), "CDATA", value);
+            attrs.addAttribute(uri, name, toAttrQName(uri, name), "CDATA", value);
         }
         return this;
     }
