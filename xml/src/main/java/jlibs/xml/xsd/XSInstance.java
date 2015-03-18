@@ -18,6 +18,7 @@ package jlibs.xml.xsd;
 import jlibs.core.graph.*;
 import jlibs.core.graph.navigators.FilteredTreeNavigator;
 import jlibs.core.graph.sequences.DuplicateSequence;
+import jlibs.core.graph.sequences.EmptySequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.graph.sequences.RepeatSequence;
 import jlibs.core.graph.visitors.ReflectionVisitor;
@@ -157,6 +158,8 @@ public class XSInstance{
         protected Sequence process(XSElementDeclaration elem){
             if(elem.getAbstract()){
                 XSObjectList substitutionGroup = xsModel.getSubstitutionGroup(elem);
+                if(substitutionGroup.getLength()==0)
+                    return EmptySequence.getInstance();
                 int rand = RandomUtil.random(0, substitutionGroup.getLength() - 1);
                 return new DuplicateSequence(substitutionGroup.item(rand));
             }
@@ -164,6 +167,8 @@ public class XSInstance{
                 XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
                 if(complexType.getAbstract()){
                     List<XSComplexTypeDefinition> subTypes = XSUtil.getSubTypes(xsModel, complexType);
+                    if(subTypes.isEmpty())
+                        return EmptySequence.getInstance();
                     int rand = RandomUtil.random(0, subTypes.size() - 1);
                     return new DuplicateSequence<XSTypeDefinition>(subTypes.get(rand));
                 }
