@@ -1,4 +1,4 @@
-/*
+/**
  * JLibs: Common Utilities for Java
  * Copyright (C) 2009  Santhosh Kumar T <santhosh.tekuri@gmail.com>
  *
