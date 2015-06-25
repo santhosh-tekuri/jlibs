@@ -197,6 +197,7 @@ public class ModelUtil{
                 if(i>0)
                     buff.append(", ");
                 buff.append(throwType);
+                i++;
             }
         }
 
