@@ -22,10 +22,9 @@ import jlibs.core.annotation.processing.Printer;
 import jlibs.core.graph.sequences.FilteredSequence;
 import jlibs.core.graph.sequences.IterableSequence;
 import jlibs.core.lang.model.ModelUtil;
+import org.kohsuke.MetaInfServices;
 
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -44,6 +43,7 @@ import static jlibs.core.annotation.processing.Printer.*;
  */
 @SupportedAnnotationTypes("jlibs.core.graph.Visitor.Implement")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
+@MetaInfServices(javax.annotation.processing.Processor.class)
 public class VisitorAnnotationProcessor extends AnnotationProcessor{
     private static final String METHOD_NAME = "doVisit";
     private static final String SUFFIX = "Impl";

@@ -22,9 +22,11 @@ import jlibs.core.graph.Visitor;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.xml.sax.binding.SAXContext;
 import jlibs.xml.sax.binding.impl.Delegate;
+import org.kohsuke.MetaInfServices;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
@@ -45,6 +47,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
 @SuppressWarnings({"unchecked"})
 @SupportedAnnotationTypes("jlibs.xml.sax.binding.Binding")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
+@MetaInfServices(Processor.class)
 public class BindingAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "Impl";
     public static final String FORMAT = "${package}.${class}"+SUFFIX;

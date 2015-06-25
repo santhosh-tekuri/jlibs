@@ -21,11 +21,9 @@ import jlibs.core.annotation.processing.Environment;
 import jlibs.core.annotation.processing.Printer;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
+import org.kohsuke.MetaInfServices;
 
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
@@ -47,6 +45,7 @@ import static jlibs.core.util.i18n.PropertiesUtil.*;
 @SupportedAnnotationTypes({ "jlibs.core.util.i18n.ResourceBundle", "jlibs.core.util.i18n.Bundle" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 @SupportedOptions("ResourceBundle.basename")
+@MetaInfServices(Processor.class)
 public class BundleAnnotationProcessor extends AnnotationProcessor{
     public static final String FORMAT = "${package}._Bundle";
     private static String basename;

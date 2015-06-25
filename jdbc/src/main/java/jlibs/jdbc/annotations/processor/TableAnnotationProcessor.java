@@ -20,7 +20,9 @@ import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.jdbc.annotations.References;
 import jlibs.jdbc.annotations.Table;
+import org.kohsuke.MetaInfServices;
 
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
@@ -33,6 +35,7 @@ import java.util.Set;
  */
 @SupportedAnnotationTypes({"jlibs.jdbc.annotations.Table", "jlibs.jdbc.annotations.Database"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
+@MetaInfServices(Processor.class)
 public class TableAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "DAO";
     public static final String FORMAT = "${package}._${class}"+SUFFIX;
