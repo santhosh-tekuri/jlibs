@@ -1,25 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>jlibs</groupId>
-    <artifactId>jlibs-all</artifactId>
+    <artifactId>jlibs-parent</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 
     <name>jlibs</name>
-    <url>http://jlibs.googlecode.com</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <scm>
-        <connection>scm:svn:https://jlibs.googlecode.com/svn/trunk/jlibs</connection>
-        <developerConnection>scm:svn:http://jlibs.googlecode.com/svn/trunk/jlibs</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+    <url>https://github.com/santhosh-tekuri/jlibs</url>
 
     <licenses>
         <license>
@@ -27,86 +17,89 @@
             <url>http://www.gnu.org/licenses/lgpl.html</url>
         </license>
     </licenses>
-    
-    <modules> 
+
+    <scm>
+        <url>https://github.com/santhosh-tekuri/jlibs</url>
+        <connection>scm:git:git://github.com/santhosh-tekuri/jlibs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/santhosh-tekuri/jlibs.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>santhosh-tekuri</id>
+            <name>Santhosh Kumar Tekuri</name>
+            <email>santhosh.tekuri@gmail.com</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.6</jdk.version>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+    </properties>
+
+    <modules>
         <module>core</module>
+        <module>jdbc</module>
         <module>greplog</module>
-        <module>wadl</module>
         <module>nbp</module>
-        <module>jdbc</module> 
         <module>xml</module>
+        <module>wadl</module>
         <module>xmldog</module>
         <module>swing</module>
         <module>nblr</module>
         <module>examples</module>
-    </modules> 
-  
+        <module>distribution</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.8</version>
+            <scope>test</scope>
+            <classifier>jdk15</classifier>
+        </dependency>
+    </dependencies>
+
     <build>
-        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>1.1</version>
                 <executions>
                     <execution>
-                        <id>enforce-java</id>
                         <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>1.6</version>
-                                </requireJavaVersion>
-                            </rules>    
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.3</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
+                            <goal>toolchain</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <revisionOnScmFailure>unknown</revisionOnScmFailure>
+                    <toolchains>
+                        <jdk>
+                            <version>${jdk.version}</version>
+                        </jdk>
+                    </toolchains>
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-5</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>attach-sources</id>
                         <goals>
-                            <goal>single</goal>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <finalName>jlibs-r${buildNumber}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptors>
-                        <descriptor>src/main/assembly/final.xml</descriptor>
-                    </descriptors>
-                </configuration>
             </plugin>
+
             <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-            	<inherited>false</inherited>
+                <inherited>false</inherited>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
                 <version>1.8.0</version>
@@ -119,18 +112,18 @@
                 </executions>
                 <configuration>
                     <strictCheck>true</strictCheck>
-                	<aggregate>true</aggregate>
+                    <aggregate>true</aggregate>
                     <header>src/etc/header.txt</header>
                     <includes>
-                    	<include>**/src/**</include>
-                    	<include>**/bin/**</include>
+                        <include>**/src/main/**</include>
+                        <include>**/bin/**</include>
                     </includes>
                     <excludes>
-                    	<exclude>**/src/main/assembly/*</exclude>
-                    	<exclude>**/src/main/resources/META-INF/services/*</exclude>
-                    	<exclude>**/src/test/resources/**</exclude>
-                    	<exclude>**/*.conf</exclude>
-                    	<exclude>*/bin/**</exclude>
+                        <exclude>**/src/main/assembly/*</exclude>
+                        <exclude>**/src/main/resources/META-INF/services/*</exclude>
+                        <exclude>**/src/test/resources/**</exclude>
+                        <exclude>**/*.conf</exclude>
+                        <exclude>*/bin/**</exclude>
                         <exclude>**/prettify.*</exclude>
                         <exclude>core/src/main/java/jlibs/core/lang/Noun.java</exclude>
                         <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
@@ -139,56 +132,43 @@
                         <exclude>json/src/main/java/jlibs/json/parser/JSONScanner.java</exclude>
                         <exclude>json/src/main/java/jlibs/json/parser/JSONParser.java</exclude>
                         <exclude>wadl/src/main/java/jlibs/wadl/model/*.java</exclude>
+                        <exclude>nio/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
+
             <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.6.1</version>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.4</version>
                 <configuration>
-                    <source>1.6</source>
-                    <links>
-                        <link>http://java.sun.com/javase/6/docs/api/</link>
-                    </links>
-                    <linksource>true</linksource>
-                    <groups>
-                        <group>
-                            <title>JLibs-Core</title>
-                            <packages>jlibs.core*</packages>
-                        </group>
-                        <group>
-                            <title>JLibs-XMLDog</title>
-                            <packages>jlibs.xml.sax.dog*</packages>
-                        </group>
-                        <group>
-                            <title>JLibs-XML</title>
-                            <packages>jlibs.xml*</packages>
-                        </group>
-                        <group>
-                            <title>JLibs-Swing</title>
-                            <packages>jlibs.swing*</packages>
-                        </group>
-                    </groups>
-                    <top>
-                        <![CDATA[
-                        <link href="{@docRoot}/resources/prettify.css" type="text/css" rel="stylesheet" />
-                        <script type="text/javascript" src="{@docRoot}/resources/prettify.js"></script>
-                        <script language="javascript">
-                            window.onload = function(){ prettyPrint(); }
-                        </script>
-                        ]]>
-                    </top>
-                    <docfilessubdirs>true</docfilessubdirs> 
+                    <altDeploymentRepository>internal.repo::default::file://${user.dir}/mvn-repo</altDeploymentRepository>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>internal-repo</id>
-            <url>file://${user.dir}/repository</url>
-            <!-- the download url: http://dl.dropbox.com/u/326301/repository -->
-        </snapshotRepository>
-    </distributionManagement>
+    <repositories>
+        <repository>
+            <id>Netbeans</id>
+            <name>Netbeans Repository</name>
+            <url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>saxon</id>
+            <name>Saxon Repository</name>
+            <url>http://svn.apache.org/repos/asf/tuscany/maven/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

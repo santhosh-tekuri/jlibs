@@ -8,31 +8,29 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>jlibs-nblr</artifactId>
+    <artifactId>jlibs-nio</artifactId>
     <packaging>jar</packaging>
 
-    <name>nblr</name>
+    <name>nio</name>
+
+    <properties>
+        <jdk.version>1.8</jdk.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>jlibs-nbp</artifactId>
+            <artifactId>jlibs-xml</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>jlibs</groupId>
-            <artifactId>jlibs-swing</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-api-visual</artifactId>
-            <version>RELEASE65</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-util</artifactId>
-            <version>RELEASE65</version>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.18.2-GA</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>
