@@ -17,10 +17,6 @@ package jlibs.core.lang.model;
 
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.Environment;
-import jlibs.core.lang.ArrayUtil;
-import jlibs.core.lang.NotImplementedException;
-import jlibs.core.lang.StringUtil;
-import jlibs.core.util.regex.TemplateMatcher;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
@@ -78,31 +74,26 @@ public class ModelUtil{
                 return true;
         }
     }
-    
-    public static String primitiveWrappers[] = new String[]{
-        Boolean.class.getName(),
-        Byte.class.getName(),
-        Short.class.getName(),
-        Integer.class.getName(),
-        Long.class.getName(),
-        Character.class.getName(),
-        Float.class.getName(),
-        Double.class.getName()
-    };
 
-    public static String primitives[] = new String[]{
-        boolean.class.getName(),
-        byte.class.getName(),
-        short.class.getName(),
-        int.class.getName(),
-        long.class.getName(),
-        char.class.getName(),
-        float.class.getName(),
-        double.class.getName()
-    };
+    private static Map<String, String> primitiveWrappers = new HashMap<String, String>();
+    static{
+        primitiveWrappers.put(Boolean.class.getName(), boolean.class.getName());
+        primitiveWrappers.put(Byte.class.getName(), byte.class.getName());
+        primitiveWrappers.put(Short.class.getName(), short.class.getName());
+        primitiveWrappers.put(Integer.class.getName(), int.class.getName());
+        primitiveWrappers.put(Long.class.getName(), long.class.getName());
+        primitiveWrappers.put(Character.class.getName(), char.class.getName());
+        primitiveWrappers.put(Float.class.getName(), float.class.getName());
+        primitiveWrappers.put(Double.class.getName(), double.class.getName());
+
+    }
 
     public static boolean isPrimitiveWrapper(TypeMirror mirror){
-        return mirror.getKind()==TypeKind.DECLARED && ArrayUtil.contains(primitiveWrappers, toString(mirror, false));
+        return mirror.getKind()==TypeKind.DECLARED && primitiveWrappers.containsKey(toString(mirror, false));
+    }
+
+    public static String getPrimitive(String primitiveWrapper){
+        return primitiveWrappers.get(primitiveWrapper);
     }
 
     public static String toString(TypeMirror mirror, boolean usePrimitiveWrappers){
@@ -133,11 +124,14 @@ public class ModelUtil{
             case SHORT:
             case BYTE:
                 String name = kind.toString().toLowerCase();
-                return usePrimitiveWrappers ? "java.lang."+ StringUtil.capitalize(name) : name;
+                if(usePrimitiveWrappers)
+                    return "java.lang."+Character.toUpperCase(name.charAt(0))+name.substring(1);
+                else
+                    return name;
             case ARRAY:
                 return toString(((ArrayType)mirror).getComponentType(), false)+"[]";
             default:
-                throw new NotImplementedException(kind +" is not implemented for "+mirror.getClass());
+                throw new RuntimeException(kind +" is not implemented for "+mirror.getClass());
         }
     }
 
@@ -165,7 +159,7 @@ public class ModelUtil{
         }
         return true;
     }
-    
+
     public static String signature(ExecutableElement method, boolean useParamNames){
         StringBuilder buff = new StringBuilder();
 
@@ -314,11 +308,9 @@ public class ModelUtil{
     /*-------------------------------------------------[ Finding Generated Class ]---------------------------------------------------*/
 
     public static String[] findClass(TypeElement clazz, String format){
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("package", ModelUtil.getPackage(clazz));
-        vars.put("class", clazz.getSimpleName().toString());
-        String qname = new TemplateMatcher("${", "}").replace(format, vars);
-        String pakage, clazzName;        
+        String qname = format.replace("${package}", ModelUtil.getPackage(clazz))
+                .replace("${class}", clazz.getSimpleName().toString());
+        String pakage, clazzName;
 
         int dot = qname.lastIndexOf('.');
         if(dot==-1){
@@ -334,10 +326,8 @@ public class ModelUtil{
     }
 
     public static Class findClass(Class clazz, String format) throws ClassNotFoundException{
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("package", clazz.getPackage()!=null?clazz.getPackage().getName():"");
-        vars.put("class", clazz.getSimpleName());
-        String qname = new TemplateMatcher("${", "}").replace(format, vars);
+        String qname = format.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
+                .replace("${class}", clazz.getSimpleName());
         if(qname.startsWith(".")) // default package
             qname = qname.substring(1);
         return clazz.getClassLoader().loadClass(qname);

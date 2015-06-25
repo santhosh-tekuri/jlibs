@@ -230,7 +230,7 @@ abstract class DMLMethod{
                 else{
                     String type = ModelUtil.toString(param.asType(), true);
                     if(ModelUtil.isPrimitive(param.asType()) || ModelUtil.isPrimitiveWrapper(param.asType()))
-                        type = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
+                        type = ModelUtil.getPrimitive(type);
                     boolean found = false;
                     for(JavaType javaType: JavaType.values()){
                         if(javaType.clazz.getName().equals(type)){
@@ -262,7 +262,7 @@ abstract class DMLMethod{
         if(!ModelUtil.toString(column.propertyType(), true).equals(ModelUtil.toString(param.asType(), true))){
             String type = ModelUtil.toString(column.propertyType(), true);
             if(ModelUtil.isPrimitive(column.propertyType()) || ModelUtil.isPrimitiveWrapper(column.propertyType()))
-                type = ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)] + '/' + type;
+                type = ModelUtil.getPrimitive(type) + '/' + type;
             throw new AnnotationError(param, param.getSimpleName()+" must be of type "+type);
         }
         return column;

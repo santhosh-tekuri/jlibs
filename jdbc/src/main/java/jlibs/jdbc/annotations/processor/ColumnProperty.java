@@ -16,7 +16,6 @@
 package jlibs.jdbc.annotations.processor;
 
 import jlibs.core.annotation.processing.AnnotationError;
-import jlibs.core.lang.ArrayUtil;
 import jlibs.core.lang.ClassUtil;
 import jlibs.core.lang.StringUtil;
 import jlibs.core.lang.model.ModelUtil;
@@ -91,7 +90,7 @@ abstract class ColumnProperty<E extends Element>{
             return ModelUtil.toString(propertyType, false);
         else if(primitiveWrapper){
             String type = ModelUtil.toString(propertyType, false);
-            return ModelUtil.primitives[ArrayUtil.indexOf(ModelUtil.primitiveWrappers, type)];
+            return ModelUtil.getPrimitive(type);
         }else if(javaType()==JavaType.OTHER)
             return Object.class.getName();
         else
