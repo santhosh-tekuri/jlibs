@@ -14,6 +14,14 @@
 
     <name>core</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>jlibs-apt</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

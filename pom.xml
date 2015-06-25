@@ -41,6 +41,7 @@
     </properties>
 
     <modules>
+        <module>apt</module>
         <module>core</module>
         <module>jdbc</module>
         <module>greplog</module>
