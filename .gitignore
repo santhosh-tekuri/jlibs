@@ -1,8 +1,3 @@
-.java-version
-.gradle
-/build
-/*/build
-/target
 /*/target
 .idea
 *.iml
