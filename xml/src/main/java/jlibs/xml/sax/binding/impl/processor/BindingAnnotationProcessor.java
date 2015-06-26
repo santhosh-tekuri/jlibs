@@ -18,7 +18,6 @@ package jlibs.xml.sax.binding.impl.processor;
 import jlibs.core.annotation.processing.AnnotationError;
 import jlibs.core.annotation.processing.AnnotationProcessor;
 import jlibs.core.annotation.processing.Printer;
-import jlibs.core.graph.Visitor;
 import jlibs.core.lang.model.ModelUtil;
 import jlibs.xml.sax.binding.SAXContext;
 import jlibs.xml.sax.binding.impl.Delegate;
@@ -67,9 +66,6 @@ public class BindingAnnotationProcessor extends AnnotationProcessor{
 
                 try{
                     TypeElement c = (TypeElement)elem;
-
-                    if(c.getModifiers().contains(Modifier.FINAL))
-                        throw new AnnotationError(c, ModelUtil.getAnnotationMirror(c, Visitor.Implement.class), "final class can't be annotated with "+jlibs.xml.sax.binding.Binding.class.getName());
 
                     while(c!=null && !c.getQualifiedName().contentEquals(Object.class.getName())){
                         process(binding, c);
