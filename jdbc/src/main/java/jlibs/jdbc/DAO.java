@@ -15,7 +15,6 @@
 
 package jlibs.jdbc;
 
-import jlibs.core.lang.model.ModelUtil;
 import jlibs.core.util.CollectionUtil;
 import jlibs.jdbc.annotations.processor.TableAnnotationProcessor;
 
@@ -41,7 +40,11 @@ public abstract class DAO<T> implements RowMapper<T>{
     @SuppressWarnings({"unchecked"})
     public static <T> DAO<T> create(Class<T> clazz, JDBC jdbc){
         try{
-            Class tableClass = ModelUtil.findClass(clazz, TableAnnotationProcessor.FORMAT);
+            String qname = TableAnnotationProcessor.FORMAT.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
+                    .replace("${class}", clazz.getSimpleName());
+            if(qname.startsWith(".")) // default package
+                qname = qname.substring(1);
+            Class tableClass = clazz.getClassLoader().loadClass(qname);
             return (DAO<T>)tableClass.getConstructor(JDBC.class).newInstance(jdbc);
         }catch(ClassNotFoundException ex){
             throw new RuntimeException(ex);

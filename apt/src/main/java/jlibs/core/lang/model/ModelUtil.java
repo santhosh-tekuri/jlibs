@@ -325,14 +325,6 @@ public class ModelUtil{
         return new String[]{ qname, pakage, clazzName };
     }
 
-    public static Class findClass(Class clazz, String format) throws ClassNotFoundException{
-        String qname = format.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
-                .replace("${class}", clazz.getSimpleName());
-        if(qname.startsWith(".")) // default package
-            qname = qname.substring(1);
-        return clazz.getClassLoader().loadClass(qname);
-    }
-
     public static boolean exists(String pakage, String relativeName){
         try{
             InputStream is = null;
