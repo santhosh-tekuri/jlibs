@@ -20,6 +20,17 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
+            <artifactId>jlibs-i18n</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>jlibs-i18n-apt</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jlibs</groupId>
             <artifactId>jlibs-swing</artifactId>
             <version>${project.version}</version>
         </dependency>

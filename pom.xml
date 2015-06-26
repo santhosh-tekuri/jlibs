@@ -43,6 +43,8 @@
     <modules>
         <module>apt</module>
         <module>core</module>
+        <module>i18n-apt</module>
+        <module>i18n</module>
         <module>jdbc</module>
         <module>greplog</module>
         <module>nbp</module>

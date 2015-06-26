@@ -18,18 +18,23 @@ package jlibs.core.util.i18n;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import jlibs.core.lang.model.ModelUtil;
 
 /**
  * @author Santhosh Kumar T
  */
 public class I18N{
+    protected static final String FORMAT = "${package}._Bundle";
     public static final String BASENAME = "Bundle";
-    
+
     @SuppressWarnings({"unchecked"})
     public static <T> T getImplementation(Class<T> bundleClass){
         try{
-            return (T)ModelUtil.findClass(bundleClass, BundleAnnotationProcessor.FORMAT).getDeclaredField("INSTANCE").get(null);
+            String qname = FORMAT.replace("${package}", bundleClass.getPackage()!=null?bundleClass.getPackage().getName():"")
+                                 .replace("${class}", bundleClass.getSimpleName());
+            if(qname.startsWith(".")) // default package
+                qname = qname.substring(1);
+            Class implementation = bundleClass.getClassLoader().loadClass(qname);
+            return (T)implementation.getDeclaredField("INSTANCE").get(null);
         }catch(Exception ex){
             throw new RuntimeException(ex);
         }
@@ -45,7 +50,7 @@ public class I18N{
         }catch(MissingResourceException ex){
             return null;
         }
-    }    
+    }
 
     public static String getHint(Class clazz, String member, String hint, Object... args){
         return getValue(clazz, clazz.getSimpleName()+'.'+member+'.'+hint, args);

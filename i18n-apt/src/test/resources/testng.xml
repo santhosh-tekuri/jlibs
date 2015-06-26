@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="DevSanity" verbose="2">
+    <test name="Development">
+        <classes>
+            <class name="jlibs.core.i18n.ResourceBundleTest"/>
+        </classes>
+    </test>
+</suite>

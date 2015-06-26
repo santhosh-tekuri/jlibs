@@ -47,7 +47,6 @@ import static jlibs.core.util.i18n.PropertiesUtil.*;
 @SupportedOptions("ResourceBundle.basename")
 @MetaInfServices(Processor.class)
 public class BundleAnnotationProcessor extends AnnotationProcessor{
-    public static final String FORMAT = "${package}._Bundle";
     private static String basename;
 
     private static class Info{
@@ -89,7 +88,7 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
             }
             if(bundles!=null)
                 bundles.generateProperties(entries, props);
-            
+
             close();
         }
 
@@ -105,13 +104,13 @@ public class BundleAnnotationProcessor extends AnnotationProcessor{
         }
     }
     private static Map<String, Info> infos = new HashMap<String, Info>();
-    
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
         basename = Environment.get().getOptions().get("ResourceBundle.basename");
         if(basename==null)
             basename = "Bundle";
-        
+
         try{
             for(TypeElement annotation: annotations){
                 if(annotation.getQualifiedName().contentEquals(ResourceBundle.class.getName())){
@@ -171,7 +170,7 @@ class Interfaces{
 
     public void add(TypeElement clazz) throws IOException{
         if(printer==null)
-            printer = Printer.get(clazz, ResourceBundle.class, BundleAnnotationProcessor.FORMAT);
+            printer = Printer.get(clazz, ResourceBundle.class, I18N.FORMAT);
 
         interfaces.add(clazz.getSimpleName().toString());
 
@@ -181,7 +180,7 @@ class Interfaces{
             clazz = ModelUtil.getSuper(clazz);
         }
     }
-    
+
     private void add(ExecutableElement method){
         AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Message.class);
         if(mirror==null)
@@ -258,7 +257,7 @@ class Interfaces{
                 ExecutableElement method = entry.getValue();
 
                 printer.println("@Override");
-                
+
                 boolean returnsException = ModelUtil.isAssignable(method.getReturnType(), Throwable.class);
                 String returnType = returnsException
                                         ? ModelUtil.toString(method.getReturnType(), false)
@@ -282,7 +281,7 @@ class Interfaces{
 
                 printer.println("){");
                 printer.indent++;
-                
+
                 String message = "MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+")";
                 if(returnsException){
                     String prefix = printer.generatedPakage;
@@ -392,7 +391,7 @@ class Bundles{
         for(Map.Entry<Element, List<Element>> entry: classes.entrySet()){
             writeComments(props, "-------------------------------------------------[ "+entry.getKey().getSimpleName()+" ]---------------------------------------------------");
             props.newLine();
-            
+
             for(Element method : entry.getValue()){
                 AnnotationMirror mirror = ModelUtil.getAnnotationMirror(method, Bundle.class);
                 for(AnnotationValue value: (Collection<AnnotationValue>)ModelUtil.getAnnotationValue(method, mirror, "value")){
