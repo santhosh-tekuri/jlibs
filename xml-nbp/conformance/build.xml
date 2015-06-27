@@ -14,16 +14,16 @@
     <target name="run" depends="setup, expected, test"/>
     <target name="setup" depends="download, prepare"/>
     <target name="test" depends="generate, compare, report"/>
-    
+
     <target name="download">
         <get src="http://www.cafeconleche.org/SAXTest/SAXTest.zip" dest="SAXTest.zip" usetimestamp="true"/>
         <get src="http://www.w3.org/XML/Test/xmlts20080827.zip" dest="xmlts.zip" usetimestamp="true"/>
     </target>
-    
+
     <target name="prepare" unless="prepared">
         <unzip src="SAXTest.zip" dest="."/>
         <unzip src="xmlts.zip" dest="SAXTest"/>
-        
+
         <loadfile srcFile="exclude.txt" property="exclude">
             <filterchain>
                 <striplinecomments>
@@ -42,30 +42,32 @@
         <updatesuite suite="eduni/namespaces/1.1/rmt-ns11.xml"/>
         <updatesuite suite="eduni/errata-2e/errata2e.xml"/>
     </target>
-    
+
     <target name="expected" description="Generates expected output">
         <ant dir="SAXTest" target="expected" inheritAll="false"/>
         <copy todir="SAXTest/expected">
             <fileset dir="SAXTest/results/preexpected"/>
-        </copy>        
+        </copy>
     </target>
-    
+
+    <property name="jlibs.version" value="1.0-SNAPSHOT"/>
     <target name="generate" description="Generate output from JLibs">
-        <java dir="SAXTest" fork="true" failOnError="true" classname="com.elharo.saxtest.ConformanceGenerator" 
+        <java dir="SAXTest" fork="true" failOnError="true" classname="com.elharo.saxtest.ConformanceGenerator"
               output="output.txt" error="error.txt">
             <classpath>
                 <pathelement location="SAXTest/build/classes"/>
                 <pathelement location="SAXTest/lib/xom-1.0a1.jar"/>
                 <pathelement location="SAXTest/lib/xercesImpl.jar"/>
-           
-                <pathelement location="../../core/target/jlibs-core.jar"/>
-                <pathelement location="../../nbp/target/jlibs-nbp.jar"/>
-                <pathelement location="../target/jlibs-xml.jar"/>
+
+                <pathelement location="../../core/target/jlibs-core-${jlibs.version}.jar"/>
+                <pathelement location="../../nbp/target/jlibs-nbp-${jlibs.version}.jar"/>
+                <pathelement location="../../xml/target/jlibs-xml-${jlibs.version}.jar"/>
+                <pathelement location="../target/jlibs-xml-nbp-${jlibs.version}.jar"/>
             </classpath>
-            <arg value="jlibs.xml.sax.async.AsyncXMLReader"/> 
+            <arg value="jlibs.xml.sax.async.AsyncXMLReader"/>
         </java>
     </target>
-    
+
     <target name="compare" description="Compare expected output with actual output">
         <java dir="SAXTest" fork="true" classname="com.elharo.saxtest.ResultComparer">
             <classpath>
@@ -75,7 +77,7 @@
                 <pathelement location="SAXTest/lib/xmlParserAPIs.jar"/>
                 <pathelement location="SAXTest/lib/junit.jar"/>
             </classpath>
-            <arg value="jlibs.xml.sax.async.AsyncXMLReader"/> 
+            <arg value="jlibs.xml.sax.async.AsyncXMLReader"/>
         </java>
     </target>
 
@@ -91,7 +93,7 @@
         </condition>
         <fail message="Some Tests Failed" unless="success"/>
     </target>
-    
+
     <target name="clean">
         <delete>
             <fileset dir=".">
