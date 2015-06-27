@@ -50,6 +50,7 @@
         <module>greplog</module>
         <module>nbp</module>
         <module>xml</module>
+        <module>xsd</module>
         <module>wadl</module>
         <module>xmldog</module>
         <module>swing</module>

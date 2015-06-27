@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>jlibs-xml</artifactId>
+            <artifactId>jlibs-xsd</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -8,21 +8,22 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>jlibs-swing</artifactId>
+    <artifactId>jlibs-xsd</artifactId>
     <packaging>jar</packaging>
 
-    <name>swing</name>
+    <name>xsd</name>
 
     <dependencies>
         <dependency>
             <groupId>jlibs</groupId>
-            <artifactId>jlibs-xsd</artifactId>
+            <artifactId>jlibs-xml</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-swing-outline</artifactId>
-            <version>RELEASE65</version>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
         </dependency>
     </dependencies>
+
 </project>
