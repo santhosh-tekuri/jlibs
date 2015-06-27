@@ -43,13 +43,15 @@
     <modules>
         <module>apt</module>
         <module>core</module>
-        <module>i18n-apt</module>
         <module>i18n</module>
+        <module>i18n-apt</module>
         <module>jdbc</module>
         <module>jdbc-apt</module>
         <module>greplog</module>
         <module>nbp</module>
         <module>xml</module>
+        <module>xml-binding</module>
+        <module>xml-binding-apt</module>
         <module>xml-nbp</module>
         <module>xsd</module>
         <module>wadl</module>

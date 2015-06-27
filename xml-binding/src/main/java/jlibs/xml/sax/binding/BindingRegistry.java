@@ -17,7 +17,6 @@ package jlibs.xml.sax.binding;
 
 import jlibs.xml.sax.binding.impl.Registry;
 import jlibs.xml.sax.binding.impl.Relation;
-import jlibs.xml.sax.binding.impl.processor.BindingAnnotationProcessor;
 
 import javax.xml.namespace.QName;
 
@@ -43,7 +42,7 @@ public class BindingRegistry{
 
     public void register(QName qname, Class clazz){
         try{
-            String implQName = BindingAnnotationProcessor.FORMAT.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
+            String implQName = "${package}.${class}Impl".replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
                     .replace("${class}", clazz.getSimpleName());
             if(implQName.startsWith(".")) // default package
                 implQName = implQName.substring(1);
@@ -52,7 +51,7 @@ public class BindingRegistry{
                 qname = (QName)implClass.getDeclaredField("ELEMENT").get(null);
             if(qname==null)
                 throw new IllegalArgumentException("can't find qname for: "+implClass);
-            
+
             jlibs.xml.sax.binding.impl.Binding binding = (jlibs.xml.sax.binding.impl.Binding)implClass.getDeclaredField("INSTANCE").get(null);
             registry.register(qname, 0, binding, 0, Relation.DO_NOTHING);
         }catch(ClassNotFoundException ex){

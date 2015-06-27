@@ -21,6 +21,17 @@
         </dependency>
         <dependency>
             <groupId>jlibs</groupId>
+            <artifactId>jlibs-xml-binding</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jlibs</groupId>
+            <artifactId>jlibs-xml-binding-apt</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jlibs</groupId>
             <artifactId>jlibs-swing</artifactId>
             <version>${project.version}</version>
         </dependency>
