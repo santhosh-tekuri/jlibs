@@ -41,6 +41,12 @@
         </dependency>
         <dependency>
             <groupId>jlibs</groupId>
+            <artifactId>jlibs-jdbc-apt</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jlibs</groupId>
             <artifactId>jlibs-xmldog</artifactId>
             <version>${project.version}</version>
         </dependency>

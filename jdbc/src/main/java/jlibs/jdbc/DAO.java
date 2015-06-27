@@ -16,7 +16,6 @@
 package jlibs.jdbc;
 
 import jlibs.core.util.CollectionUtil;
-import jlibs.jdbc.annotations.processor.TableAnnotationProcessor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
@@ -40,7 +39,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     @SuppressWarnings({"unchecked"})
     public static <T> DAO<T> create(Class<T> clazz, JDBC jdbc){
         try{
-            String qname = TableAnnotationProcessor.FORMAT.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
+            String qname = "${package}._${class}DAO".replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
                     .replace("${class}", clazz.getSimpleName());
             if(qname.startsWith(".")) // default package
                 qname = qname.substring(1);
@@ -60,7 +59,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
 
     /*-------------------------------------------------[ Abstract Methods ]---------------------------------------------------*/
-    
+
     public abstract T newRow();
     public abstract Object getColumnValue(int i, T record);
     public abstract void setColumnValue(int i, T record, Object value);
@@ -68,7 +67,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     public abstract Object getAutoColumnValue(ResultSet rs) throws SQLException;
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
-    
+
     private Object[] values(T record, int order[]){
         Object args[] = new Object[order.length];
         for(int i=0; i<args.length; i++)
@@ -96,7 +95,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         }
         query.append(" FROM ").append(table.name).append(" ");
         selectQuery = query.toString();
-        
+
         // INSERT Query
         query.setLength(0);
         query.append('(');
@@ -171,9 +170,9 @@ public abstract class DAO<T> implements RowMapper<T>{
         deleteQuery = query.toString();
         deleteOrder = CollectionUtil.toIntArray(args);
     }
-    
+
     /*-------------------------------------------------[ Select ]---------------------------------------------------*/
-    
+
     private String selectQuery(String condition){
         return condition==null ? selectQuery : selectQuery+condition;
     }
@@ -181,7 +180,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     public List<T> all() throws DAOException{
         return all(null);
     }
-    
+
     public List<T> all(String condition, Object... args) throws DAOException{
         return top(0, condition, args);
     }
@@ -197,7 +196,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     public T first(String condition, Object... args) throws DAOException{
         return jdbc.selectFirst(selectQuery(condition), this, args);
     }
-    
+
     /*-------------------------------------------------[ Count ]---------------------------------------------------*/
 
     protected int integer(String functionCall, String condition, Object... args) throws DAOException{
@@ -217,7 +216,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
 
     /*-------------------------------------------------[ Insert ]---------------------------------------------------*/
-    
+
     private final RowMapper<Object> generaedKeyMapper = new RowMapper<Object>(){
         @Override
         public Object newRecord(ResultSet rs) throws SQLException{
@@ -234,7 +233,7 @@ public abstract class DAO<T> implements RowMapper<T>{
         }else
             return jdbc.executeUpdate("INSERT INTO "+table.name+" "+query, generaedKeyMapper, args);
     }
-    
+
     public void insert(T record) throws DAOException{
         if(table.autoColumn==-1){
             Object args[] = new Object[table.columns.length];
@@ -248,7 +247,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
 
     /*-------------------------------------------------[ Update ]---------------------------------------------------*/
-    
+
     public int update(String query, Object... args) throws DAOException{
         if(query==null)
             query = "";
@@ -260,7 +259,7 @@ public abstract class DAO<T> implements RowMapper<T>{
     }
 
     /*-------------------------------------------------[ Upsert ]---------------------------------------------------*/
-    
+
     public void upsert(T record) throws DAOException{
         if(update(record)==0)
             insert(record);
