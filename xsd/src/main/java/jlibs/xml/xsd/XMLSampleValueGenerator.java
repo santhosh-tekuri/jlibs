@@ -16,6 +16,7 @@
 
 package jlibs.xml.xsd;
 
+import jlibs.core.util.RandomUtil;
 import jlibs.xml.sax.SAXUtil;
 import org.apache.xerces.xs.*;
 import org.xml.sax.Attributes;
@@ -38,8 +39,8 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
-    private Map<XSElementDeclaration, String> elementValues = new HashMap<XSElementDeclaration, String>();
-    private Map<XSAttributeDeclaration, String> attributeValues = new HashMap<XSAttributeDeclaration, String>();
+    private Map<XSElementDeclaration, List<String>> elementValues = new HashMap<XSElementDeclaration, List<String>>();
+    private Map<XSAttributeDeclaration, List<String>> attributeValues = new HashMap<XSAttributeDeclaration, List<String>>();
 
     public XMLSampleValueGenerator(final XSModel schema, InputSource sampleInput) throws SAXException, ParserConfigurationException, IOException{
         DefaultHandler handler = new DefaultHandler(){
@@ -53,8 +54,12 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
                     QName qname = new QName(attributes.getURI(i), attributes.getLocalName(i));
                     xpath.add(qname);
                     XSAttributeDeclaration attr = XSUtil.findAttributeDeclaration(schema, xpath);
-                    if(attr!=null)
-                        attributeValues.put(attr, attributes.getValue(i));
+                    if(attr!=null){
+                        List<String> values = attributeValues.get(attr);
+                        if(values==null)
+                            attributeValues.put(attr, values=new ArrayList<String>());
+                        values.add(attributes.getValue(i));
+                    }
                     xpath.remove(xpath.size()-1);
                 }
                 contents.reset();
@@ -79,8 +84,12 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
                             if(complexType.getContentType()==XSComplexTypeDefinition.CONTENTTYPE_SIMPLE)
                                 simpleType = true;
                         }
-                        if(simpleType)
-                            elementValues.put(elem, contents.toString());
+                        if(simpleType){
+                            List<String> values = elementValues.get(elem);
+                            if(values==null)
+                                elementValues.put(elem, values=new ArrayList<String>());
+                            values.add(contents.toString());
+                        }
                     }
                 }
                 xpath.remove(xpath.size()-1);
@@ -93,11 +102,13 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
 
     @Override
     public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType){
-        return elementValues.get(element);
+        List<String> values = elementValues.get(element);
+        return values==null ? null : values.get(RandomUtil.random(0, values.size()));
     }
 
     @Override
     public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
-        return attributeValues.get(attribute);
+        List<String> values = attributeValues.get(attribute);
+        return values==null ? null : values.get(RandomUtil.random(0, values.size()));
     }
 }
