@@ -20,13 +20,6 @@
             <artifactId>jlibs-apt</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.kohsuke.metainf-services</groupId>
-            <artifactId>metainf-services</artifactId>
-            <version>1.1</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
     </dependencies>
 
     <build>
