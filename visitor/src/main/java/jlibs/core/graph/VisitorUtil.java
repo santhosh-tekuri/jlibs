@@ -21,8 +21,10 @@ import java.lang.reflect.InvocationTargetException;
  * @author Santhosh Kumar T
  */
 public class VisitorUtil{
+    static final String FORMAT = "${package}.${class}Impl";
+
     private static Class findGeneratedClass(Class clazz) throws ClassNotFoundException{
-        String qname = VisitorAnnotationProcessor.FORMAT.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
+        String qname = FORMAT.replace("${package}", clazz.getPackage()!=null?clazz.getPackage().getName():"")
                 .replace("${class}", clazz.getSimpleName());
         if(qname.startsWith(".")) // default package
             qname = qname.substring(1);

@@ -45,9 +45,7 @@ import static jlibs.core.annotation.processing.Printer.*;
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 @MetaInfServices(javax.annotation.processing.Processor.class)
 public class VisitorAnnotationProcessor extends AnnotationProcessor{
-    private static final String METHOD_NAME = "doVisit";
-    private static final String SUFFIX = "Impl";
-    public static final String FORMAT = "${package}.${class}"+SUFFIX;
+    private static final String METHOD_NAME = "accept";
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv){
@@ -65,7 +63,7 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
 
                     Printer pw = null;
                     try{
-                        pw = Printer.get(c, Visitor.Implement.class, FORMAT);
+                        pw = Printer.get(c, Visitor.Implement.class, VisitorUtil.FORMAT);
                         boolean implementing = ModelUtil.isAssignable(elem.asType(), Visitor.class);
                         boolean isFinal = c.getModifiers().contains(Modifier.FINAL);
                         if(!isFinal && implementing)
@@ -156,7 +154,7 @@ public class VisitorAnnotationProcessor extends AnnotationProcessor{
             printer.indent++;
             if(classes.get(mirror).getReturnType().getKind()!=TypeKind.VOID)
                 printer.print("return ");
-            printer.println(prefix+"doVisit(("+type+")obj);");
+            printer.println(prefix+METHOD_NAME+"(("+type+")obj);");
             printer.indent--;
         }
         printer.println();

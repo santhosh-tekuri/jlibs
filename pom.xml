@@ -43,6 +43,8 @@
     <modules>
         <module>apt</module>
         <module>core</module>
+        <module>visitor</module>
+        <module>visitor-apt</module>
         <module>i18n</module>
         <module>i18n-apt</module>
         <module>jdbc</module>
