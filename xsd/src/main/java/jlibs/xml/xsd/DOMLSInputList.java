@@ -13,7 +13,7 @@
  * Lesser General Public License for more details.
  */
 
-package jlibs.xml.dom;
+package jlibs.xml.xsd;
 
 import org.apache.xerces.dom.DOMInputImpl;
 import org.apache.xerces.xs.LSInputList;
@@ -37,7 +37,7 @@ public class DOMLSInputList extends ArrayList implements LSInputList{
     public LSInput item(int i){
         return (LSInput)get(i);
     }
-    
+
     public DOMInputImpl addSystemID(String systemID){
         DOMInputImpl input = new DOMInputImpl();
         input.setSystemId(systemID);

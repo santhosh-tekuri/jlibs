@@ -23,7 +23,7 @@ import jlibs.wadl.model.Application;
 import jlibs.wadl.model.Include;
 import jlibs.wadl.model.Resource;
 import jlibs.wadl.model.Resources;
-import jlibs.xml.dom.DOMLSInputList;
+import jlibs.xml.xsd.DOMLSInputList;
 import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.xsd.XSParser;
 import org.apache.xerces.xs.XSModel;
