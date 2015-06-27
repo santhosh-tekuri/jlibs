@@ -50,6 +50,7 @@
         <module>greplog</module>
         <module>nbp</module>
         <module>xml</module>
+        <module>xml-nbp</module>
         <module>xsd</module>
         <module>wadl</module>
         <module>xmldog</module>
@@ -140,7 +141,7 @@
                         <exclude>**/prettify.*</exclude>
                         <exclude>core/src/main/java/jlibs/core/lang/Noun.java</exclude>
                         <exclude>nblr/src/main/resources/jlibs/nblr/codegen/**/*.txt</exclude>
-                        <exclude>xml/src/main/java/jlibs/xml/sax/async/XMLScanner.java</exclude>
+                        <exclude>xml-nbp/src/main/java/jlibs/xml/sax/async/XMLScanner.java</exclude>
                         <exclude>xml/conformance/SAXTest/**</exclude>
                         <exclude>json/src/main/java/jlibs/json/parser/JSONScanner.java</exclude>
                         <exclude>json/src/main/java/jlibs/json/parser/JSONParser.java</exclude>
