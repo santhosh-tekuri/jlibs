@@ -35,7 +35,7 @@ public class DB{
         BasicDataSource ds = new BasicDataSource();
  	    ds.setUrl("jdbc:hsqldb:file:examples/db/demo");
 
-        JDBC = new JDBC(ds);
+        JDBC = new JDBC(ds, null);
         EMPLOYEES = (EmployeeDAO) DAO.create(Employee.class, JDBC);
     }
 
@@ -90,7 +90,7 @@ public class DB{
 
         emp.setAge(10);
         EMPLOYEES.upsert(emp);
-        assert EMPLOYEES.first("where id=?", 1).getAge()==10;
+        assert EMPLOYEES.first("where id=?", emp.id).getAge()==10;
         emp.id = -1;
         emp.setLastName("KUMAR");
         EMPLOYEES.upsert(emp);
