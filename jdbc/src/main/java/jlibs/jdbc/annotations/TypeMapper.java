@@ -18,9 +18,16 @@ package jlibs.jdbc.annotations;
 
 import jlibs.jdbc.JDBCTypeMapper;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * @author Santhosh Kumar T
  */
+@Target({ ElementType.METHOD, ElementType.FIELD })
+@Retention(RetentionPolicy.SOURCE)
 public @interface TypeMapper{
     Class<? extends JDBCTypeMapper> mapper();
     Class mapsTo();
