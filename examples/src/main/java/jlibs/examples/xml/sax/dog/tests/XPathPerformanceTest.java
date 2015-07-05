@@ -16,16 +16,14 @@
 
 package jlibs.examples.xml.sax.dog.tests;
 
+import jlibs.core.io.FileNavigator;
 import jlibs.core.io.FileUtil;
 import jlibs.core.lang.JavaProcessBuilder;
 import jlibs.core.util.logging.AnsiFormatter;
 import jlibs.examples.xml.sax.dog.TestCase;
 import jlibs.examples.xml.sax.dog.TestSuite;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 
 /**
  * @author Santhosh Kumar T
@@ -127,9 +125,12 @@ public class XPathPerformanceTest{
             BufferedReader dogReader = new BufferedReader(new FileReader(FileUtil.TMP_DIR+FileUtil.SEPARATOR+"true.txt"));
             BufferedReader domReader = new BufferedReader(new FileReader(FileUtil.TMP_DIR+FileUtil.SEPARATOR+"false.txt"));
 
+            File configFile = new File(args[0]);
             int maxlen = 0;
-            for(TestCase testCase: testSuite.testCases)
+            for(TestCase testCase: testSuite.testCases){
+                testCase.file = FileNavigator.INSTANCE.getRelativePath(configFile.getParentFile(), new File(testCase.file));
                 maxlen = Math.max(maxlen, testCase.file.length());
+            }
 
             System.out.format("%nAverage Execution Time over %d runs:%n", runCount);
             printLine(maxlen);
