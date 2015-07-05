@@ -72,9 +72,8 @@ h1 {
 }
 
 h2 {
-  padding-bottom: 10px;
   font-size: 32px;
-  background: url('../images/bg_hr.png') repeat-x bottom;
+  border-bottom: 1px solid silver;
 }
 
 h3 {
@@ -157,35 +156,25 @@ p img {
   border: none;
 }
 
-pre, code {
-  width: 100%;
-  color: #222;
-  background-color: #fff;
-
-  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
-  font-size: 14px;
-
-  border-radius: 2px;
-  -moz-border-radius: 2px;
-  -webkit-border-radius: 2px;
-}
-
-pre {
-  width: 100%;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,.1);
-  overflow: auto;
+pre code {
+  color: #000;
+  font-family: 'Anonymous Pro', monospace;
+  font-size: 0.88em;
+  border-radius: 3px;
+  background-color: #F8F8F8;
+  border: 1px solid #CCC;
+  padding: 5px 3px 5px 13px;
+  display: block;
 }
 
 code {
-  padding: 3px;
-  margin: 0 3px;
-  box-shadow: 0 0 10px rgba(0,0,0,.1);
-}
-
-pre code {
-  display: block;
-  box-shadow: none;
+  color: #000;
+  font-family: 'Anonymous Pro', monospace;
+  font-size: 0.88em;
+  border-radius: 3px;
+  background-color: #F8F8F8;
+  border: 1px solid #CCC;
+  padding: 1px 3px 1px 3px;
 }
 
 blockquote {
@@ -266,7 +255,7 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 640px;
+  max-width: 1020px;
   padding: 20px 10px;
   margin: 0 auto;
 }
