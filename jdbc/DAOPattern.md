@@ -5,6 +5,25 @@ layout: default
 
 # J2EE DAO Pattern made easier
 
+## Dependencies ###
+
+```xml
+<dependency>
+    <groupId>jlibs</groupId>
+    <artifactId>jlibs-jdbc</artifactId>
+    <version>2.0</version>
+</dependency> 
+
+<dependency>
+    <groupId>jlibs</groupId>
+    <artifactId>jlibs-jdbc-apt</artifactId>
+    <version>2.0</version>
+    <optional>true</optional>
+</dependency> 
+```
+
+`jlibs-jdbc-apt` contains annotation processor and is required only at *compile time*
+
 ## Annotating POJO ##
 
 Create a POJO and map it to database using annotations
