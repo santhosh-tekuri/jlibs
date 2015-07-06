@@ -256,7 +256,6 @@ Full-Width Styles
 .inner {
   position: relative;
   max-width: 1020px;
-  padding: 20px 10px;
   margin: 0 auto;
 }
 
@@ -284,10 +283,6 @@ Full-Width Styles
   background: linear-gradient(top, #373737, #212121);
 }
 
-#header_wrap .inner {
-  padding: 50px 10px 30px 10px;
-}
-
 #project_title {
   margin: 0;
   color: #fff;
@@ -302,6 +297,7 @@ Full-Width Styles
   font-weight: 300;
   background: none;
   text-shadow: #111 0px 0px 10px;
+  border-bottom: 0px;
 }
 
 #downloads {

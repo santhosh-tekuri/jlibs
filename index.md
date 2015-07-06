@@ -3,6 +3,8 @@ title: JLibs
 layout: default
 ---
 
+This project is licensed under the terms of the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
 ## Maven
 
 ```xml
@@ -38,15 +40,6 @@ the `toolchains.xml` file (see below) should be put in `$user.home/.m2` director
             <jdkHome>/path/to/jdk/1.6</jdkHome>
         </configuration>
     </toolchain>
-    <toolchain>
-        <type>jdk</type>
-        <provides>
-            <version>1.8</version>
-        </provides>
-        <configuration>
-            <jdkHome>/path/to/jdk/1.8</jdkHome>
-        </configuration>
-    </toolchain>
 </toolchains>
 ```
 
@@ -61,6 +54,11 @@ $ mvn
 ```
 
 after successful build, you can find distribution at `distribution/target/jlibs-2.0`
+
+## Feedback and Collaboration ##
+
+- For bugs and enhancements, please use [Github Issues](https://github.com/santhosh-tekuri/jlibs/issues)
+- For questions and feedback, please email [santhosh.tekuri@gmail.com](mailto:santhosh.tekuri@gmail.com)
 
 ## User Guide
 
