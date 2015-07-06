@@ -49,9 +49,6 @@
             <destName>build.xml</destName>
         </file>
         <file>
-            <source>../readme.txt</source>
-        </file>
-        <file>
             <source>../keystore.ks</source>
         </file>
     </files>
