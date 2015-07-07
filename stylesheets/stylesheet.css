@@ -96,7 +96,7 @@ p {
   margin: 10px 0 15px 0;
 }
 
-footer p {
+footer {
   color: #f2f2f2;
 }
 
@@ -346,10 +346,14 @@ Full-Width Styles
 
 #main_content {
   padding-top: 40px;
+  padding-bottom: 50px;
 }
 
 #footer_wrap {
   background: #212121;
+  position: fixed;
+  bottom: 0;
+  height: 20px;
 }
 
 
