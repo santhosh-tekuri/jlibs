@@ -2,7 +2,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <groupId>jlibs</groupId>
+        <groupId>in.jlibs</groupId>
         <artifactId>jlibs-parent</artifactId>
         <version>2.1-SNAPSHOT</version>
     </parent>
@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>jlibs</groupId>
+            <groupId>in.jlibs</groupId>
             <artifactId>jlibs-xsd</artifactId>
             <version>${project.version}</version>
         </dependency>
