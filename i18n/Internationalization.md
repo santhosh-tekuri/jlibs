@@ -37,7 +37,11 @@ So you need to manually configure this as below:
 - check "Enable Project Specific Settings" and "Enable Annotation Processing"
 - set "Generated source directory" to "target/generated-sources/annotations"
 - now open the Java Compiler / Annotation Processing / Factory Path panel
-- add jlibs-apt.jar, jlibs-core.jar, jlibs-i18n.jar and jlibs-i18-apt.jar (you can get these jars from ~/.m2 folder)
+- add 
+[jlibs-apt-2.0.jar](https://raw.githubusercontent.com/santhosh-tekuri/maven-repository/master/jlibs/jlibs-apt/2.0/jlibs-apt-2.0.jar), 
+[jlibs-core-2.0.jar](https://raw.githubusercontent.com/santhosh-tekuri/maven-repository/master/jlibs/jlibs-core/2.0/jlibs-core-2.0.jar), 
+[jlibs-i18n-2.0.jar](https://raw.githubusercontent.com/santhosh-tekuri/maven-repository/master/jlibs/jlibs-i18n/2.0/jlibs-i18n-2.0.jar) and 
+[jlibs-i18-apt-2.0.jar](https://raw.githubusercontent.com/santhosh-tekuri/maven-repository/master/jlibs/jlibs-i18n-apt/2.0/jlibs-i18n-apt-2.0.jar)
 - now build the project
 
 ## Sample Code ##
