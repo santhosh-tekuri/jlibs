@@ -27,6 +27,19 @@ But with JLibs you create an interface and annotate it with `@ResourceBundle`
 
 `jlibs-i18n-apt` contains annotation processor and is required only at *compile time*
 
+## Eclipse ##
+
+Eclipse does not do automatic annotation processing from classpath currently. See [Bug 280542](https://bugs.eclipse.org/bugs/show_bug.cgi?id=280542)
+
+So you need to manually configure this as below:
+
+- open the project properties dialog, and go to the Java Compiler / Annotation Processing panel
+- check "Enable Project Specific Settings" and "Enable Annotation Processing"
+- set "Generated source directory" to "target/generated-sources/annotations"
+- now open the Java Compiler / Annotation Processing / Factory Path panel
+- add jlibs-apt.jar, jlibs-core.jar, jlibs-i18n.jar and jlibs-i18-apt.jar (you can get these jars from ~/.m2 folder)
+- now build the project
+
 ## Sample Code ##
 
 ```java
