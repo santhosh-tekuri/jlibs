@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 
+import static jlibs.core.annotation.processing.Printer.MINUS;
+import static jlibs.core.annotation.processing.Printer.PLUS;
 import static jlibs.core.util.i18n.PropertiesUtil.*;
 
 /**
@@ -234,8 +236,9 @@ class Interfaces{
     public void generateClass(String basename) throws IOException{
         printer.printPackage();
 
-        printer.println("import java.util.ResourceBundle;");
-        printer.println("import java.text.MessageFormat;");
+        printer.importClass(java.util.ResourceBundle.class);
+        printer.importClass(MessageFormat.class);
+        printer.importClass(LocaleContext.class);
         printer.emptyLine(true);
 
         printer.printClassDoc();
@@ -245,7 +248,13 @@ class Interfaces{
 
         printer.println("public static final "+printer.generatedClazz +" INSTANCE = new "+printer.generatedClazz +"();");
         printer.emptyLine(true);
-        printer.println("private final ResourceBundle BUNDLE = ResourceBundle.getBundle(\""+printer.generatedPakage.replace('.', '/')+"/"+basename+"\");");
+        printer.printlns(
+            "private final ResourceBundle BUNDLE(){",
+                PLUS,
+                "return ResourceBundle.getBundle(\""+printer.generatedPakage.replace('.', '/')+"/"+basename+"\", LocaleContext.getLocale());",
+                MINUS,
+            "}"
+        );
         printer.emptyLine(true);
 
         for(Map.Entry<Element, Map<String, ExecutableElement>> methods : classes.entrySet()){
@@ -283,7 +292,7 @@ class Interfaces{
                 printer.println("){");
                 printer.indent++;
 
-                String message = "MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+")";
+                final String message = "MessageFormat.format(BUNDLE().getString(\""+key+"\")"+params+")";
                 if(returnsException){
                     String prefix = printer.generatedPakage;
                     String option = Environment.get().getOptions().get("ResourceBundle.ignorePackageCount");
@@ -303,7 +312,7 @@ class Interfaces{
                         errorCode = prefix+"."+errorCode;
                     printer.println(" return new "+returnType+"(\""+errorCode+"\", "+message+");");
                 }else
-                    printer.println("return MessageFormat.format(BUNDLE.getString(\""+key+"\")"+params+");");
+                    printer.println("return "+message+";");
                 printer.indent--;
                 printer.println("}");
             }
