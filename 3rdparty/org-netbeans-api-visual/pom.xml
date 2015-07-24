@@ -3,26 +3,30 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>in.jlibs</groupId>
-        <artifactId>jlibs-parent</artifactId>
+        <artifactId>jlibs-3rdparty</artifactId>
         <version>2.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>jlibs-swing</artifactId>
+    <artifactId>org-netbeans-api-visual</artifactId>
     <packaging>jar</packaging>
+    <version>RELEASE65</version>
 
-    <name>swing</name>
+    <name>org-netbeans-api-visual</name>
 
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>
-            <artifactId>jlibs-xsd</artifactId>
+            <artifactId>org-openide-util</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>in.jlibs</groupId>
-            <artifactId>org-netbeans-swing-outline</artifactId>
-            <version>RELEASE65</version>
-        </dependency>
     </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

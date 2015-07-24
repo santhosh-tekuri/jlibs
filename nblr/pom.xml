@@ -36,12 +36,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.api</groupId>
+            <groupId>in.jlibs</groupId>
             <artifactId>org-netbeans-api-visual</artifactId>
             <version>RELEASE65</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.api</groupId>
+            <groupId>in.jlibs</groupId>
             <artifactId>org-openide-util</artifactId>
             <version>RELEASE65</version>
         </dependency>

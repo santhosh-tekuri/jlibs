@@ -42,6 +42,7 @@
     </properties>
 
     <modules>
+        <module>3rdparty</module>
         <module>apt</module>
         <module>core</module>
         <module>visitor</module>
@@ -215,17 +216,6 @@
     </profiles>
     
     <repositories>
-        <repository>
-            <id>Netbeans</id>
-            <name>Netbeans Repository</name>
-            <url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
         <repository>
             <id>saxon</id>
             <name>Saxon Repository</name>

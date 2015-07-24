@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>in.jlibs</groupId>
+        <artifactId>jlibs-parent</artifactId>
+        <version>2.1-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>jlibs-3rdparty</artifactId>
+    <packaging>pom</packaging>
+
+    <name>3rdparty</name>
+
+    <properties>
+        <download-url>http://bits.netbeans.org/nexus/content/groups/netbeans/org/netbeans/api/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}</download-url>
+        <jar-prefix>${project.artifactId}-${project.version}</jar-prefix>
+    </properties>
+
+    <modules>
+        <module>org-openide-util</module>
+        <module>org-netbeans-api-visual</module>
+        <module>org-netbeans-swing-outline</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                    <executions>
+                        <execution>
+                            <id>replace-artificat</id>
+                            <phase>package</phase>
+                            <configuration>
+                                <target>
+                                <macrodef name="download">
+                                    <attribute name="suffix"/>
+                                    <sequential>
+                                        <get src="${download-url}.jar" dest="target/original@{suffix}.jar" usetimestamp="true"/> 
+                                        <copy file="target/original@{suffix}.jar" tofile="target/${jar-prefix}@{suffix}.jar" overwrite="true"/>
+                                    </sequential>
+                                </macrodef>
+                                    <download suffix=""/>
+                                    <download suffix="-sources"/>
+                                    <download suffix="-javadoc"/>
+                                </target>
+                            </configuration>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>                    
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
