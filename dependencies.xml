@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="jlibs-dependencies" default="download">
-    <property name="netbeans.repository" value="http://bits.netbeans.org/nexus/content/groups/netbeans"/>
     <property name="central.repository" value="http://central.maven.org/maven2"/>
     <property name="apache.repository" value="http://svn.apache.org/repos/asf/tuscany/maven"/>
 
@@ -27,18 +26,13 @@
         <dependency repository="${central.repository}" groupid="xml-apis" artifactid="xml-apis" version="1.4.01"/>
     </target>
 
-    <target name="jlibs-swing" depends="jlibs-xml" description="download dependencies reqd by jibs-swing">
-        <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-netbeans-swing-outline" version="RELEASE65"/>
-    </target>
+    <target name="jlibs-swing" depends="jlibs-xml" description="download dependencies reqd by jibs-swing"/>
 
     <target name="jlibs-xmldog" depends="jlibs-xml" description="download dependencies reqd by jibs-xmldog">
         <dependency repository="${central.repository}" groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
     </target>
 
-    <target name="jlibs-nblr" depends="jlibs-xml, jlibs-swing" description="download dependencies reqd by jibs-nblr">
-        <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-openide-util" version="RELEASE65"/>
-        <dependency repository="${netbeans.repository}" groupid="org/netbeans/api" artifactid="org-netbeans-api-visual" version="RELEASE65"/>
-    </target>
+    <target name="jlibs-nblr" depends="jlibs-xml, jlibs-swing" description="download dependencies reqd by jibs-nblr"/>
 
     <target name="jlibs-wadl" description="download dependencies reqd by jibs-wadl">
         <dependency repository="${central.repository}" groupid="jline" artifactid="jline" version="1.0"/>
