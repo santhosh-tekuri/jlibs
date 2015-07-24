@@ -34,7 +34,7 @@
                         <outputDirectory>lib/external</outputDirectory>
                         <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
                         <excludes>
-                            <exclude>jlibs:*</exclude>
+                            <exclude>in.jlibs:*</exclude>
                         </excludes>
                     </dependencySet>
                 </dependencySets>
