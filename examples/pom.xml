@@ -13,10 +13,6 @@
 
     <name>examples</name>
 
-    <properties>
-        <saxon.version>9.0.0.2</saxon.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>
@@ -52,18 +48,8 @@
         </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon</artifactId>
-            <version>${saxon.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon-dom</artifactId>
-            <version>${saxon.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon-xpath</artifactId>
-            <version>${saxon.version}</version>
+            <artifactId>Saxon-HE</artifactId>
+            <version>9.6.0-6</version>
         </dependency>
         <dependency>
             <groupId>commons-dbcp</groupId>

@@ -19,6 +19,7 @@ package jlibs.examples.xml.sax.dog;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.sax.dog.NodeItem;
+import net.sf.saxon.dom.DOMNodeWrapper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -62,7 +63,7 @@ public abstract class XPathEngine{
                         item = new NodeItem((Node)obj, nsContext);
                     else if(obj instanceof net.sf.saxon.om.NodeInfo){
                         net.sf.saxon.om.NodeInfo info = (net.sf.saxon.om.NodeInfo)obj;
-                        Node node = (Node)((net.sf.saxon.dom.NodeWrapper)info.getParent()).getUnderlyingNode();
+                        Node node = (Node)((DOMNodeWrapper)info.getParent()).getUnderlyingNode();
                         item = new NodeItem(node, info.getLocalPart(), info.getStringValue(), nsContext);
                     }else if(obj instanceof NodeList)
                         item = translate(obj, nsContext);

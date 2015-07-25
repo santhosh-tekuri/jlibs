@@ -19,12 +19,12 @@ package jlibs.examples.xml.sax.dog.engines;
 import jlibs.examples.xml.sax.dog.TestCase;
 import jlibs.examples.xml.sax.dog.XPathEngine;
 import jlibs.examples.xml.sax.dog.XPathInfo;
-import net.sf.saxon.xpath.JAXPXPathStaticContext;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.StandardErrorListener;
 import net.sf.saxon.xpath.XPathEvaluator;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import javax.xml.transform.SourceLocator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -60,10 +60,9 @@ public class JDKEngine extends XPathEngine{
         XPath xpathObj = factory.newXPath();
         if(xpathObj instanceof XPathEvaluator){
             XPathEvaluator xpe = (XPathEvaluator)xpathObj;
-            xpe.setStaticContext(new JAXPXPathStaticContext(xpe.getConfiguration()){
-                @Override public void issueWarning(String s, SourceLocator locator){}
-            });
-            xpe.setBackwardsCompatible(true);
+            xpe.getConfiguration().setVersionWarning(false);
+            ((StandardErrorListener)xpe.getConfiguration().getErrorListener()).setRecoveryPolicy(Configuration.RECOVER_SILENTLY);
+            xpe.getStaticContext().setBackwardsCompatibilityMode(true);
         }
         for(XPathInfo xpathInfo: testCase.xpaths){
             xpathObj.setXPathVariableResolver(testCase.variableResolver);

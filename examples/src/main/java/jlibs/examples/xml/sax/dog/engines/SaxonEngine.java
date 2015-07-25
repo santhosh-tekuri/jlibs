@@ -29,18 +29,18 @@ import jlibs.xml.Namespaces;
 import jlibs.xml.dom.DOMUtil;
 import jlibs.xml.sax.dog.NodeItem;
 import jlibs.xml.sax.dog.NodeType;
-import net.sf.saxon.om.Axis;
-import net.sf.saxon.om.AxisIterator;
-import net.sf.saxon.om.NamespaceIterator;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.StandardErrorListener;
+import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.xpath.JAXPXPathStaticContext;
+import net.sf.saxon.tree.NamespaceNode;
+import net.sf.saxon.tree.iter.AxisIterator;
 import net.sf.saxon.xpath.XPathEvaluator;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.transform.SourceLocator;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.xpath.XPathConstants;
 import java.util.ArrayList;
@@ -60,14 +60,13 @@ public class SaxonEngine extends XPathEngine{
     public List<Object> evaluate(TestCase testCase, String file) throws Exception{
         XPathFactoryImpl xpf = new XPathFactoryImpl();
         XPathEvaluator xpe = (XPathEvaluator)xpf.newXPath();
-        xpe.setStaticContext(new JAXPXPathStaticContext(xpe.getConfiguration()){
-            @Override public void issueWarning(String s, SourceLocator locator){}
-        });
-        xpe.setBackwardsCompatible(true);
+        xpe.getConfiguration().setVersionWarning(false);
+        ((StandardErrorListener)xpe.getConfiguration().getErrorListener()).setRecoveryPolicy(Configuration.RECOVER_SILENTLY);
+        xpe.getStaticContext().setBackwardsCompatibilityMode(true);
         xpe.setXPathVariableResolver(testCase.variableResolver);
         xpe.setXPathFunctionResolver(testCase.functionResolver);
         xpe.setNamespaceContext(testCase.nsContext);
-        NodeInfo doc = xpe.setSource(new SAXSource(new InputSource(file)));
+        NodeInfo doc = xpe.getConfiguration().buildDocument(new SAXSource(new InputSource(file)));
 
         List<Object> results = new ArrayList<Object>(testCase.xpaths.size());
         for(XPathInfo xpathInfo: testCase.xpaths){
@@ -125,7 +124,7 @@ public class SaxonEngine extends XPathEngine{
                 assert n2==null;
                 return true;
             }
-            NodeInfo n1Child = new NodeInfoSequence(n1, Axis.CHILD).findNext();
+            NodeInfo n1Child = new NodeInfoSequence(n1, AxisInfo.CHILD).findNext();
             Node n2Child = null;
             if(n2.getNodeType()==Node.DOCUMENT_NODE || n2.getNodeType()==Node.ELEMENT_NODE)
                 n2Child = n2.getFirstChild(); // the jdk's dom impl returns non-null child for attribute etc
@@ -138,13 +137,13 @@ public class SaxonEngine extends XPathEngine{
                     return true;
 
                 while(true){
-                    NodeInfo n1Sibling = new NodeInfoSequence(n1, Axis.FOLLOWING_SIBLING).findNext();
+                    NodeInfo n1Sibling = new NodeInfoSequence(n1, AxisInfo.FOLLOWING_SIBLING).findNext();
                     Node n2Sibling = n2.getNextSibling();
                     if(!shallowEquals(n1Sibling, n2Sibling))
                         return false;
                     if(n1Sibling==null){
                         assert n2Sibling==null;
-                        NodeInfo n1Parent = new NodeInfoSequence(n1, Axis.ANCESTOR).findNext();
+                        NodeInfo n1Parent = new NodeInfoSequence(n1, AxisInfo.ANCESTOR).findNext();
                         Node n2Parent = n2.getParentNode();
 
                         if(n1Parent==null && n2Parent==null)
@@ -169,7 +168,7 @@ public class SaxonEngine extends XPathEngine{
     }
 
     public static boolean isNamespaceDeclaration(NodeInfo attr){
-        return Namespaces.URI_XMLNS.equals(attr.getURI()) || attr instanceof NamespaceIterator.NamespaceNodeImpl;
+        return Namespaces.URI_XMLNS.equals(attr.getURI()) || attr instanceof NamespaceNode;
     }
 
     private boolean shallowEquals(NodeInfo n1, Node n2){
@@ -225,7 +224,7 @@ public class SaxonEngine extends XPathEngine{
                 if(!localName1.equals(localName2))
                     return false;
 
-                NodeInfoSequence attrs1 = new NodeInfoSequence(n1, Axis.ATTRIBUTE);
+                NodeInfoSequence attrs1 = new NodeInfoSequence(n1, AxisInfo.ATTRIBUTE);
                 NamedNodeMap attrs2 = element2.getAttributes();
                 BitSet bitSet = new BitSet();
                 NodeInfo attr1;
@@ -305,7 +304,7 @@ public class SaxonEngine extends XPathEngine{
 
         @Override
         public Sequence<? extends NodeInfo> children(NodeInfo node){
-            return new NodeInfoSequence(node, Axis.CHILD);
+            return new NodeInfoSequence(node, AxisInfo.CHILD);
         }
 
         private class XPathConvertor extends PredicateConvertor<NodeInfo>{

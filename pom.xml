@@ -42,7 +42,6 @@
     </properties>
 
     <modules>
-        <module>3rdparty</module>
         <module>apt</module>
         <module>core</module>
         <module>visitor</module>
@@ -181,7 +180,11 @@
     <profiles>
         <profile> 
             <id>release</id>
+            <modules>
+                <module>3rdparty</module>
+            </modules>
             <build>
+                <defaultGoal>clean install deploy</defaultGoal>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -215,20 +218,6 @@
         </profile>
     </profiles>
     
-    <repositories>
-        <repository>
-            <id>saxon</id>
-            <name>Saxon Repository</name>
-            <url>http://svn.apache.org/repos/asf/tuscany/maven/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
