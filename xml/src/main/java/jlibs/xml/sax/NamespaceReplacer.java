@@ -16,20 +16,11 @@
 
 package jlibs.xml.sax;
 
-import jlibs.xml.Namespaces;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
-import jlibs.xml.xsl.TransformerUtil;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.xml.sax.*;
 import org.xml.sax.ext.Attributes2;
-import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLFilterImpl;
 
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,7 +30,7 @@ import java.util.Properties;
  *
  * @author Santhosh Kumar T
  */
-public class NamespaceReplacer extends SAXDelegate{
+public class NamespaceReplacer extends XMLFilterImpl{
     protected Map<String, String> old2new = new HashMap<String, String>();
     protected Map<String, String> new2old = new HashMap<String, String>();
 
@@ -56,6 +47,20 @@ public class NamespaceReplacer extends SAXDelegate{
             newNSSupport = new MyNamespaceSupport(SUGGESTED);
         }else
             oldNSSupport = newNSSupport = null;
+    }
+
+    public NamespaceReplacer(XMLReader xmlReader, Map<String, String> old2new){
+        this(old2new);
+        setParent(xmlReader);
+    }
+
+    @Override
+    public void setFeature(String name, boolean value) throws SAXNotRecognizedException, SAXNotSupportedException{
+        if(SAXFeatures.NAMESPACE_PREFIXES.equals(name) && value)
+            throw new SAXNotSupportedException("Feature '"+SAXFeatures.NAMESPACE_PREFIXES+"' is not supported");
+        if(SAXFeatures.NAMESPACES.equals(name) && !value)
+            throw new SAXNotSupportedException("Feature '"+SAXFeatures.NAMESPACES+"' is required");
+        super.setFeature(name, value);
     }
 
     protected String translate(String namespace, Map<String, String> map){
@@ -86,6 +91,10 @@ public class NamespaceReplacer extends SAXDelegate{
             newNSSupport.startDocument();
         }
         super.startDocument();
+
+        String uri = translate("", old2new);
+        if(uri!=null)
+            startPrefixMapping("", "");
     }
 
     @Override
@@ -240,27 +249,5 @@ public class NamespaceReplacer extends SAXDelegate{
         public boolean isSpecified(String qName){
             return delegate.isSpecified(translateAttribute(qName, newNSSupport, oldNSSupport));
         }
-    }
-
-    public static void main(String[] args) throws Exception{
-        String inFile = "/Users/santhosh/Desktop/old.xml";
-
-        Map<String, String> namespaces = new HashMap<String, String>();
-        namespaces.put(Namespaces.URI_SOAPENV, Namespaces.URI_SOAP12ENV);
-        NamespaceReplacer replacer = new NamespaceReplacer(namespaces);
-
-        XMLReader reader = SAXUtil.newSAXParser(true, false, false).getXMLReader();
-        SAXUtil.setHandler(reader, replacer);
-
-        TransformerHandler handler = TransformerUtil.newTransformerHandler(null, true, 0, null);
-        replacer.setHandler(handler);
-        StringWriter writer = new StringWriter();
-        handler.setResult(new StreamResult(writer));
-
-        reader.parse(new InputSource(inFile));
-
-        String xml = writer.toString();
-        System.out.println(xml);
-        SAXUtil.newSAXParser(true, false, false).parse(new InputSource(new StringReader(xml)), new DefaultHandler());
     }
 }
