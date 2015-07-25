@@ -45,10 +45,9 @@ public class TransformerUtil{
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXMLDeclaration ? "yes" : "no");
 
         // indentation
-        if(indentAmount>=0){
+        if(indentAmount>0){
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            if(indentAmount>0)
-                transformer.setOutputProperty(OUTPUT_KEY_INDENT_AMOUT, String.valueOf(indentAmount));
+            transformer.setOutputProperty(OUTPUT_KEY_INDENT_AMOUT, String.valueOf(indentAmount));
         }
 
         if(!StringUtil.isWhitespace(encoding))
