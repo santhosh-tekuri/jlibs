@@ -4,7 +4,7 @@
     <parent>
         <groupId>in.jlibs</groupId>
         <artifactId>jlibs-parent</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -39,8 +39,8 @@
                                 <macrodef name="download">
                                     <attribute name="suffix"/>
                                     <sequential>
-                                        <get src="${download-url}.jar" dest="target/original@{suffix}.jar" usetimestamp="true"/> 
-                                        <copy file="target/original@{suffix}.jar" tofile="target/${jar-prefix}@{suffix}.jar" overwrite="true"/>
+                                        <get src="${download-url}@{suffix}.jar" dest="target/original@{suffix}.jar" usetimestamp="true" ignoreerrors="true"/> 
+                                        <copy file="target/original@{suffix}.jar" tofile="target/${jar-prefix}@{suffix}.jar" overwrite="true" failonerror="false"/>
                                     </sequential>
                                 </macrodef>
                                     <download suffix=""/>
