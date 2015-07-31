@@ -11,15 +11,15 @@ the package `jlibs.xml.sax.binding` contains classes which help you to read xml 
 
 ```xml
 <dependency>
-    <groupId>jlibs</groupId>
+    <groupId>in.jlibs</groupId>
     <artifactId>jlibs-xml-binding</artifactId>
-    <version>2.0</version>
+    <version>2.1</version>
 </dependency> 
 
 <dependency>
-    <groupId>jlibs</groupId>
+    <groupId>in.jlibs</groupId>
     <artifactId>jlibs-xml-binding-apt</artifactId>
-    <version>2.0</version>
+    <version>2.1</version>
     <optional>true</optional>
 </dependency> 
 ```

@@ -9,17 +9,11 @@ This project is licensed under the terms of the [Apache License, Version 2.0](ht
 
 ```xml
 <dependency>
-    <groupId>jlibs</groupId>
+    <groupId>in.jlibs</groupId>
     <artifactId>jlibs-XXX</artifactId>
-    <version>2.0</version>
+    <version>2.1</version>
 </dependency> 
 
-<repository>
-    <id>jlibs-repository</id>
-    <name>JLibs Repository</name>
-    <url>https://raw.githubusercontent.com/santhosh-tekuri/maven-repository/master</url>
-    <layout>default</layout>
-</repository>
 ```
 
 replace `jlibs-XXX` with the module you want to use. For example: `jlibs-xmldog`
@@ -53,7 +47,7 @@ $ cd jlibs
 $ mvn
 ```
 
-after successful build, you can find distribution at `distribution/target/jlibs-2.0`
+after successful build, you can find distribution at `distribution/target/jlibs-2.1`
 
 ## Feedback and Collaboration ##
 
