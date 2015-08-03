@@ -62,6 +62,8 @@
         <module>xmldog</module>
         <module>swing</module>
         <module>nblr</module>
+        <module>wamp4j-core</module>
+        <module>wamp4j-netty</module>
         <module>examples</module>
         <module>distribution</module>
     </modules>
