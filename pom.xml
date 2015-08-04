@@ -138,6 +138,7 @@
                     <header>src/etc/header.txt</header>
                     <includes>
                         <include>**/src/main/**</include>
+                        <include>**/src/test/**</include>
                         <include>**/bin/**</include>
                     </includes>
                     <excludes>
