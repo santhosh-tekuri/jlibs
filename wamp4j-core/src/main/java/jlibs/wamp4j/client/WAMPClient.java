@@ -420,12 +420,14 @@ public class WAMPClient{
             }
             lastUsedRequestID = Util.generateID(requests, lastUsedRequestID);
             PublishMessage publish = new PublishMessage(lastUsedRequestID, options, topic, arguments, argumentsKw);
-            if(publish.needsAcknowledgement())
-                requests.put(lastUsedRequestID, listener);
             try{
                 send(publish);
+                if(publish.needsAcknowledgement())
+                    requests.put(lastUsedRequestID, listener);
+                else
+                    listener.onPublish(this);
             }catch(WAMPException ex){
-                requests.remove(lastUsedRequestID).onError(this, ex);
+                listener.onError(this, ex);
             }
         }else{
             client.submit(new Runnable(){
