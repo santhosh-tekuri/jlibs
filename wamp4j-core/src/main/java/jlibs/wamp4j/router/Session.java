@@ -170,7 +170,7 @@ class Session implements Listener{
                     reply = unsubscribe.error(ErrorCode.noSuchSubscription(unsubscribe.subscriptionID));
                 send(reply);
                 break;
-            case PublishedMessage.ID:
+            case PublishMessage.ID:
                 PublishMessage publish = (PublishMessage)message;
                 realm.topics.publish(this, publish);
                 if(publish.needsAcknowledgement()){

@@ -73,7 +73,7 @@ public class PublishMessage extends WAMPMessage{
         this(requestID, options, topic, arguments, null);
     }
 
-    public PublishMessage(int requestType, long requestID, ObjectNode options, String topic){
+    public PublishMessage(long requestID, ObjectNode options, String topic){
         this(requestID, options, topic, null, null);
     }
 

@@ -44,7 +44,6 @@ class Topic{
     }
 
     public void onUnsubscribe(Subscription subscription){
-        assert size()>1;
         subscription.subscriptionID = -1;
         subscriptions.remove(subscription);
         subscription.onUnsubscribe(client);

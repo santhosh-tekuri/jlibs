@@ -63,7 +63,7 @@ public class Topics{
         Topic topic = uris.get(publish.topic);
         if(topic==null || topic.sessions.isEmpty())
             return;
-        EventMessage event = new EventMessage(topic.subscriptionID, 0, null, publish.arguments, publish.argumentsKw);
+        EventMessage event = new EventMessage(topic.subscriptionID, 0, publish.options, publish.arguments, publish.argumentsKw);
         for(Session session : topic.sessions){
             if(session!=publisher)
                 session.send(event);
