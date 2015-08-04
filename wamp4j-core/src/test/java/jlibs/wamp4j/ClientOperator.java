@@ -1,16 +1,31 @@
+/**
+ * Copyright 2015 Santhosh Kumar Tekuri
+ *
+ * The JLibs authors license this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package jlibs.wamp4j;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.client.CallListener;
+import jlibs.wamp4j.client.PublishListener;
 import jlibs.wamp4j.client.SessionListener;
 import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.msg.ResultMessage;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -44,13 +59,14 @@ public class ClientOperator{
 
             @Override
             public void onError(WAMPClient client, WAMPException error){
+                error.printStackTrace();
                 atomic.set(error);
             }
         });
-        assertEquals(getResult(), Boolean.TRUE);
+        assertEquals(Await.getResult(atomic), Boolean.TRUE);
     }
 
-    public ResultMessage call(final ObjectNode options, final String procedure, final ArrayNode arguments, final ObjectNode argumentsKw) throws Throwable{
+    public ResultMessage call(ObjectNode options, String procedure, ArrayNode arguments, ObjectNode argumentsKw) throws Throwable{
         atomic.set(null);
         client.call(options, procedure, arguments, argumentsKw, new CallListener(){
             @Override
@@ -63,20 +79,29 @@ public class ClientOperator{
                 atomic.set(error);
             }
         });
-        return getResult();
+        return Await.getResult(atomic);
+    }
+
+    public void publish(ObjectNode options, String topic, ArrayNode arguments, ObjectNode argumentsKw) throws Throwable{
+        PublishListener listener = new PublishListener(){
+            @Override
+            public void onPublish(WAMPClient client){
+                atomic.set(true);
+            }
+
+            @Override
+            public void onError(WAMPClient client, WAMPException error){
+                atomic.set(error);
+            }
+        };
+        atomic.set(null);
+        client.publish(options, topic, arguments, argumentsKw, listener);
+        assertEquals(Await.getResult(atomic), Boolean.TRUE);
     }
 
     public void close() throws Throwable{
         atomic.set(null);
         client.close();
-        assertEquals(getResult(), Boolean.FALSE);
-    }
-
-    private <T> T getResult() throws Throwable{
-        await().untilAtomic(atomic, notNullValue());
-        Object result = atomic.getAndSet(null);
-        if(result instanceof Throwable)
-            throw (Throwable)result;
-        return (T)result;
+        assertEquals(Await.getResult(atomic), Boolean.FALSE);
     }
 }
