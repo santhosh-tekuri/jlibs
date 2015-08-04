@@ -1,15 +1,23 @@
 package jlibs.wamp4j;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.client.WAMPClient;
+import jlibs.wamp4j.msg.CallMessage;
+import jlibs.wamp4j.msg.ErrorMessage;
+import jlibs.wamp4j.msg.InvocationMessage;
+import jlibs.wamp4j.msg.ResultMessage;
 import jlibs.wamp4j.netty.NettyWebSocketClient;
 import jlibs.wamp4j.netty.NettyWebSocketServer;
 import jlibs.wamp4j.router.WAMPRouter;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.net.URI;
+
+import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -50,7 +58,7 @@ public class RPCTests{
         try{
             p2.registerWith(jlibsClient2);
         }catch(WAMPException ex){
-            Assert.assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
+            assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
         }
         p1.unregister();
     }
@@ -65,7 +73,80 @@ public class RPCTests{
         p1.unregister();
     }
 
-    @AfterClass(description="stops client and router")
+    @Test(description="test echo service")
+    public void test4() throws Throwable{
+        try{
+            jlibsClient1.call(null, "p1", null, null);
+            throw new RuntimeException("exception should occur");
+        }catch(WAMPException wex){
+            assertEquals(wex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }
+        ProcedureOperator p1 = new ProcedureOperator("p1"){
+            @Override
+            protected void onRequest(WAMPClient client, InvocationMessage invocation){
+                client.reply(invocation.yield(invocation.details, invocation.arguments, invocation.argumentsKw));
+            }
+        };
+        p1.registerWith(jlibsClient2);
+
+        ResultMessage result = jlibsClient1.call(null, "p1", null, null);
+        assertEquals(result.details, instance.objectNode());
+        assertEquals(result.arguments, null);
+        assertEquals(result.argumentsKw, null);
+
+        ArrayNode arguments = instance.arrayNode().add("arg");
+        result = jlibsClient1.call(null, "p1", arguments, null);
+        assertEquals(result.details, instance.objectNode());
+        assertEquals(result.arguments, arguments);
+        assertEquals(result.argumentsKw, null);
+
+        ObjectNode options = instance.objectNode().put("option1", "value1");
+        ObjectNode argumentsKw = instance.objectNode().put("key", "value");
+        result = jlibsClient1.call(options, "p1", arguments, argumentsKw);
+        assertEquals(result.details, options);
+        assertEquals(result.arguments, arguments);
+        assertEquals(result.argumentsKw, argumentsKw);
+
+        p1.unregister();
+        try{
+            jlibsClient1.call(null, "p1", null, null);
+            throw new RuntimeException("exception should occur");
+        }catch(WAMPException wex){
+            assertEquals(wex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }
+    }
+
+    @Test(description="test rpc error")
+    public void test5() throws Throwable{
+        ProcedureOperator p1 = new ProcedureOperator("p1"){
+            @Override
+            protected void onRequest(WAMPClient client, InvocationMessage invocation){
+                client.reply(invocation.error(invocation.details, "p1.error", invocation.arguments, invocation.argumentsKw));
+            }
+        };
+        p1.registerWith(jlibsClient2);
+
+        ArrayNode arguments = instance.arrayNode().add("arg");
+        ObjectNode options = instance.objectNode().put("option1", "value1");
+        ObjectNode argumentsKw = instance.objectNode().put("key", "value");
+        try{
+            jlibsClient1.call(options, "p1", arguments, argumentsKw);
+            throw new RuntimeException("exception should occur");
+        }catch(WAMPException wex){
+            ErrorMessage error = new ErrorMessage(CallMessage.ID, -1, options, "p1.error", arguments, argumentsKw);
+            assertEquals(wex.getErrorCode(), new ErrorCode(error));
+        }
+
+        p1.unregister();
+        try{
+            jlibsClient1.call(null, "p1", null, null);
+            throw new RuntimeException("exception should occur");
+        }catch(WAMPException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }
+    }
+
+    @AfterClass(description="stops clients and router")
     public void stop() throws Throwable{
         jlibsClient1.close();
         jlibsClient2.close();

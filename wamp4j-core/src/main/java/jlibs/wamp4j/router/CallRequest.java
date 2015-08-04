@@ -17,8 +17,7 @@
 package jlibs.wamp4j.router;
 
 import jlibs.wamp4j.ErrorCode;
-import jlibs.wamp4j.msg.CallMessage;
-import jlibs.wamp4j.msg.ErrorMessage;
+import jlibs.wamp4j.msg.*;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -32,6 +31,17 @@ class CallRequest{
         this.callID = callID;
         this.procedure = procedure;
         this.callSession = callSession;
+    }
+
+    public void reply(YieldMessage yield){
+        procedure.requests.remove(yield.requestID);
+        callSession.send(new ResultMessage(callID, yield.options, yield.arguments, yield.argumentsKw));
+    }
+
+    public void reply(ErrorMessage error){
+        assert error.requestType== InvocationMessage.ID;
+        procedure.requests.remove(error.requestID);
+        callSession.send(new ErrorMessage(CallMessage.ID, callID, error.details, error.error, error.arguments, error.argumentsKw));
     }
 
     public ErrorMessage error(ErrorCode errorCode){

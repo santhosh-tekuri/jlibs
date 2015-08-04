@@ -1,7 +1,11 @@
 package jlibs.wamp4j;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jlibs.wamp4j.client.CallListener;
 import jlibs.wamp4j.client.SessionListener;
 import jlibs.wamp4j.client.WAMPClient;
+import jlibs.wamp4j.msg.ResultMessage;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,20 +47,36 @@ public class ClientOperator{
                 atomic.set(error);
             }
         });
-        await().untilAtomic(atomic, notNullValue());
-        Object result = atomic.getAndSet(null);
-        if(result instanceof Throwable)
-            throw (Throwable)result;
-        assertEquals(result, Boolean.TRUE);
+        assertEquals(getResult(), Boolean.TRUE);
+    }
+
+    public ResultMessage call(final ObjectNode options, final String procedure, final ArrayNode arguments, final ObjectNode argumentsKw) throws Throwable{
+        atomic.set(null);
+        client.call(options, procedure, arguments, argumentsKw, new CallListener(){
+            @Override
+            public void onResult(WAMPClient client, ResultMessage result){
+                atomic.set(result);
+            }
+
+            @Override
+            public void onError(WAMPClient client, WAMPException error){
+                atomic.set(error);
+            }
+        });
+        return getResult();
     }
 
     public void close() throws Throwable{
         atomic.set(null);
         client.close();
+        assertEquals(getResult(), Boolean.FALSE);
+    }
+
+    private <T> T getResult() throws Throwable{
         await().untilAtomic(atomic, notNullValue());
         Object result = atomic.getAndSet(null);
         if(result instanceof Throwable)
             throw (Throwable)result;
-        assertEquals(result, Boolean.FALSE);
+        return (T)result;
     }
 }

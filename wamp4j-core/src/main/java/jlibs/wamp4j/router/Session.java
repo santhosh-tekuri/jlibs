@@ -138,7 +138,7 @@ class Session implements Listener{
                     send(call.error(ErrorCode.noSuchProcedure(call.procedure)));
                 else{
                     long invocationRequestId = procedure.session.addRequest(call.requestID, this, procedure);
-                    reply = new InvocationMessage(invocationRequestId, procedure.registrationID, null, call.arguments, call.argumentsKw);
+                    reply = new InvocationMessage(invocationRequestId, procedure.registrationID, call.options, call.arguments, call.argumentsKw);
                     procedure.session.send(reply);
                 }
                 break;
@@ -147,9 +147,14 @@ class Session implements Listener{
                 CallRequest callRequest = requests.remove(yield.requestID);
                 if(callRequest ==null)
                     return;
-                callRequest.procedure.requests.remove(yield.requestID);
-                ResultMessage result = new ResultMessage(callRequest.callID, null, yield.arguments, yield.argumentsKw);
-                callRequest.callSession.send(result);
+                callRequest.reply(yield);
+                break;
+            case ErrorMessage.ID:
+                ErrorMessage error = (ErrorMessage)message;
+                callRequest = requests.remove(error.requestID);
+                if(callRequest ==null)
+                    return;
+                callRequest.reply(error);
                 break;
             case SubscribeMessage.ID:
                 SubscribeMessage subscribe = (SubscribeMessage)message;
