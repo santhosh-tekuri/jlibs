@@ -38,7 +38,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class RPCTests{
+public class RPCTest{
     private URI uri = URI.create("ws://localhost:8080/wamp4j");
     private RouterOperator router;
     private ClientOperator jlibsClient1;
