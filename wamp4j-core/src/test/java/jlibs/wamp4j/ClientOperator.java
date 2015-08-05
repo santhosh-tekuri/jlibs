@@ -67,7 +67,7 @@ public class ClientOperator{
     }
 
     public ResultMessage call(ObjectNode options, String procedure, ArrayNode arguments, ObjectNode argumentsKw) throws Throwable{
-        atomic.set(null);
+        final AtomicReference<Object> atomic = new AtomicReference<Object>();
         client.call(options, procedure, arguments, argumentsKw, new CallListener(){
             @Override
             public void onResult(WAMPClient client, ResultMessage result){
@@ -83,6 +83,7 @@ public class ClientOperator{
     }
 
     public void publish(ObjectNode options, String topic, ArrayNode arguments, ObjectNode argumentsKw) throws Throwable{
+        final AtomicReference<Object> atomic = new AtomicReference<Object>();
         PublishListener listener = new PublishListener(){
             @Override
             public void onPublish(WAMPClient client){
