@@ -71,6 +71,8 @@ public class WAMPClient{
     }
 
     private void disconnect(){
+        if(debug)
+            System.out.format("%s -- disconnect%n", this);
         webSocket.close();
         webSocket = null;
         goodbyeSend = false;
@@ -124,6 +126,8 @@ public class WAMPClient{
                     assert sessionID==-1;
                     sessionID = welcome.sessionID;
                     sessionListener.onOpen(WAMPClient.this);
+                    if(userClosed)
+                        doClose();
                     break;
                 case AbortMessage.ID:
                     AbortMessage abort = (AbortMessage)message;
@@ -197,10 +201,7 @@ public class WAMPClient{
         }
     };
 
-    private boolean goodbyeSend = false;
     private void send(WAMPMessage message) throws WAMPException{
-        if(message instanceof GoodbyeMessage)
-            goodbyeSend = true;
         OutputStream out = webSocket.createOutputStream();
         try{
             serialization.mapper().writeValue(out, message.toArrayNode());
@@ -439,20 +440,26 @@ public class WAMPClient{
         }
     }
 
+    private void clearPendingRequests(){
+        if(debug)
+            System.out.format("%s -- clearing pending requests%n", this);
+        WAMPException error = new WAMPException(ErrorCode.systemShutdown());
+        for(Map.Entry<Long, WAMPListener> entry : requests.entrySet()){
+            WAMPListener listener = entry.getValue();
+            listener.onError(this, error);
+        }
+        requests.clear();
+        lastUsedRequestID = -1;
+    }
+
+    private boolean userClosed;
+    private boolean goodbyeSend = false;
     public void close(){
         validate();
         if(client.isEventLoop()){
-            WAMPMessage message;
-            if(sessionID==-1)
-                message = new AbortMessage("aborted by user", ErrorCode.SYSTEM_SHUTDOWN);
-            else
-                message = new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT);
-            try{
-                send(message);
-            }catch(WAMPException ex){
-                sessionListener.onWarning(this, ex);
-                disconnect();
-            }
+            userClosed = true;
+            if(sessionID!=-1)
+                doClose();
         }else{
             client.submit(new Runnable(){
                 @Override
@@ -460,6 +467,20 @@ public class WAMPClient{
                     close();
                 }
             });
+        }
+    }
+
+    private void doClose(){
+        if(debug)
+            System.out.format("%s -- doClose%n", this);
+        clearPendingRequests();
+        WAMPMessage message = new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT);
+        goodbyeSend = true;
+        try{
+            send(message);
+        }catch(WAMPException ex){
+            sessionListener.onWarning(this, ex);
+            disconnect();
         }
     }
 

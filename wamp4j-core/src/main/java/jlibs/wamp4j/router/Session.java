@@ -92,18 +92,18 @@ class Session implements Listener{
                 break;
             case GoodbyeMessage.ID:
                 // notify waiting callers if any
-                realm.removeSession(this);
                 for(Map.Entry<Long, CallRequest> entry : requests.entrySet()){
                     CallRequest callRequest = entry.getValue();
                     callRequest.procedure.requests.remove(entry.getKey());
                     callRequest.callSession.send(callRequest.noSuchProcedure());
                 }
-                for(Map.Entry<Long, Topic> entry : subscriptions.entrySet())
-                    realm.topics.unsubscribe(null, entry.getKey());
+                while(!subscriptions.isEmpty())
+                    realm.topics.unsubscribe(this, subscriptions.keySet().iterator().next());
                 if(!goodbyeSend){
                     if(send(new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT)))
                         webSocket.close();
                 }
+                realm.removeSession(this);
                 break;
             case RegisterMessage.ID:
                 RegisterMessage register = (RegisterMessage)message;
@@ -191,6 +191,8 @@ class Session implements Listener{
 
     private boolean goodbyeSend = false;
     protected boolean send(WAMPMessage message){
+        if(sessionID==-1)
+            return false;
         if(message instanceof GoodbyeMessage)
             goodbyeSend = true;
         OutputStream out = webSocket.createOutputStream();

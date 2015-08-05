@@ -165,7 +165,9 @@ public class ErrorCode{
     /**
      * The Peer is shutting down completely - used as a GOODBYE (or ABORT) reason
      */
-    public static final String SYSTEM_SHUTDOWN = "wamp.error.system_shutdown";
+    public static ErrorCode systemShutdown(){
+        return new ErrorCode("wamp.error.system_shutdown");
+    }
 
     /**
      * The Peer want to leave the realm - used as a GOODBYE reason

@@ -42,8 +42,7 @@ public class NettyClientWebSocket extends NettyWebSocket<WebSocketFrame>{
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
         if(handshaker.isHandshakeComplete()){
-            if(listener!=null)
-                listener.onError(this, cause);
+            super.exceptionCaught(ctx, cause);
         }else{
             connectListener.onError(cause);
             ctx.close();

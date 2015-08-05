@@ -44,6 +44,11 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
         super.channelActive(ctx);
     }
 
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception{
+        super.channelInactive(ctx);
+    }
+
     protected void onWebSocketFrame(WebSocketFrame msg) throws Exception{
         if(msg instanceof TextWebSocketFrame || msg instanceof BinaryWebSocketFrame){
             if(listener!=null){
@@ -52,6 +57,12 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
                 listener.onMessage(this, type, is);
             }
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
+        if(listener!=null)
+            listener.onError(this, cause);
     }
 
     protected String subProtocol;

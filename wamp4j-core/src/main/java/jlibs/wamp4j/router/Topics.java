@@ -54,8 +54,7 @@ public class Topics{
             uris.remove(topic.uri);
             ids.remove(topic.subscriptionID);
         }
-        if(session.sessionID!=-1)
-            session.subscriptions.remove(subscriptionID);
+        session.subscriptions.remove(subscriptionID);
         return true;
     }
 
