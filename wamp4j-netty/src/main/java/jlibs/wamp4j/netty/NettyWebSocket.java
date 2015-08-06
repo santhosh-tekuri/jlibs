@@ -60,6 +60,13 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
     }
 
     @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception{
+        if(listener!=null)
+            listener.onReadComplete(this);
+        super.channelReadComplete(ctx);
+    }
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
         if(listener!=null)
             listener.onError(this, cause);

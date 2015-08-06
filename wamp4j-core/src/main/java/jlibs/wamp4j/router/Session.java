@@ -35,7 +35,7 @@ import static jlibs.wamp4j.Debugger.ROUTER;
  */
 class Session implements Listener{
     private final WAMPRouter router;
-    private WebSocket webSocket;
+    private final WebSocket webSocket;
     private final WAMPSerialization serialization;
 
     private Realm realm;
@@ -169,6 +169,9 @@ class Session implements Listener{
                     Debugger.println(this, "-- not yet implemented%n");
         }
     }
+
+    @Override
+    public void onReadComplete(WebSocket webSocket){}
 
     @Override
     public void onError(WebSocket webSocket, Throwable error){

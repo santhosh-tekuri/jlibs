@@ -195,6 +195,9 @@ public class WAMPClient{
         }
 
         @Override
+        public void onReadComplete(WebSocket webSocket){}
+
+        @Override
         public void onError(WebSocket webSocket, Throwable error){
             sessionListener.onError(WAMPClient.this, new WAMPException(error));
             disconnect();
@@ -272,13 +275,37 @@ public class WAMPClient{
         }
     }
 
-    public AtomicLong called = new AtomicLong();
-    public AtomicLong processed = new AtomicLong();
+    private void beforeSend(){
+        long count = waiting.decrementAndGet();
+        if(count==1){
+            synchronized(this){
+                this.notifyAll();
+            }
+        }
+    }
+
+    private void beforeSubmit(){
+        long count = waiting.incrementAndGet();
+        if(count>200001){
+            synchronized(this){
+                try{
+                    this.wait();
+                }catch(InterruptedException ignore){
+                    // Restore the interrupted status
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    public AtomicLong waiting = new AtomicLong();
+    public AtomicLong send = new AtomicLong();
     public void call(final ObjectNode options, final String procedure, final ArrayNode arguments, final ObjectNode argumentsKw, final CallListener listener){
         if(!validate(listener))
             return;
         if(client.isEventLoop()){
-            processed.incrementAndGet();
+            send.incrementAndGet();
+            beforeSend();
             lastUsedRequestID = Util.generateID(requests, lastUsedRequestID);
             CallMessage call = new CallMessage(lastUsedRequestID, options, procedure, arguments, argumentsKw);
             requests.put(lastUsedRequestID, listener);
@@ -288,7 +315,7 @@ public class WAMPClient{
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
         }else{
-            called.incrementAndGet();
+            beforeSubmit();
             client.submit(new Runnable(){
                 @Override
                 public void run(){

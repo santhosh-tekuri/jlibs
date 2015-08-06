@@ -143,12 +143,12 @@ public class Benchmark{
                 while(true){
                     long replies = this.replies.get();
                     System.out.println(++count+" -------------------------------");
-                    System.out.println("requests: "+requests);
-                    System.out.println("replies: "+replies);
-                    System.out.println("called: "+client.called);
-                    System.out.println("processed: "+client.processed);
+                    System.out.println("  requests: "+requests);
+                    System.out.println("   replies: "+replies);
+                    System.out.println("   waiting: "+client.waiting);
+                    System.out.println("      sent: "+client.send);
                     double throughput = (double)replies/ TimeUnit.SECONDS.convert(end-begin, TimeUnit.NANOSECONDS);
-                    System.out.println("throughput: " + throughput);
+                    System.out.println("throughput: " + throughput+"/sec");
                     if(requests==replies)
                         break;
                     Thread.sleep(10*1000);
@@ -279,8 +279,8 @@ public class Benchmark{
             return;
         }
         final boolean blocking = Boolean.parseBoolean(args[0]);
-        final int threads = Integer.parseInt(args[2]);
-        final long timeout = Long.parseLong(args[3]);
+        final int threads = Integer.parseInt(args[1]);
+        final long timeout = Long.parseLong(args[2]);
         new WAMPClient(new NettyWebSocketClient(), uri, realm).connect(new SessionAdapter(){
             @Override
             public void onOpen(WAMPClient client){

@@ -20,5 +20,6 @@ import java.io.InputStream;
 
 public interface Listener{
     public void onMessage(WebSocket webSocket, MessageType type, InputStream is);
+    public void onReadComplete(WebSocket webSocket);
     public void onError(WebSocket webSocket, Throwable error);
 }
