@@ -23,7 +23,6 @@ import jlibs.wamp4j.msg.EventMessage;
 import jlibs.wamp4j.netty.NettyWebSocketClient;
 import jlibs.wamp4j.netty.NettyWebSocketServer;
 import jlibs.wamp4j.router.WAMPRouter;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -173,6 +172,51 @@ public class PubSubTest{
         atomic2.set("blah2");
         assertEquals(Await.getResult(atomic1), "blah1");
         assertEquals(Await.getResult(atomic2), "blah2");
+    }
+
+    @Test(description="when client closes it should call onUnsubscribe on subscriptions")
+    public void test4() throws Throwable{
+        SubscriptionOperator s1 = new SubscriptionOperator("t1");
+        s1.subscribeWith(null, jlibsClient1);
+        SubscriptionOperator s2 = new SubscriptionOperator("t1");
+        s2.subscribeWith(null, jlibsClient1);
+        SubscriptionOperator s3 = new SubscriptionOperator("t2");
+        s3.subscribeWith(null, jlibsClient1);
+        jlibsClient1.close();
+        s1.assertUnsubscribed();
+        s2.assertUnsubscribed();
+        s3.assertUnsubscribed();
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1.connect();
+    }
+
+    @Test(description="when router closes clients should call onUnsubscribe on subscriptions")
+    public void test5() throws Throwable{
+        SubscriptionOperator s1 = new SubscriptionOperator("t1");
+        s1.subscribeWith(null, jlibsClient1);
+        SubscriptionOperator s2 = new SubscriptionOperator("t1");
+        s2.subscribeWith(null, jlibsClient1);
+        SubscriptionOperator s3 = new SubscriptionOperator("t2");
+        s3.subscribeWith(null, jlibsClient1);
+
+        SubscriptionOperator s4 = new SubscriptionOperator("t1");
+        s4.subscribeWith(null, jlibsClient2);
+        SubscriptionOperator s5 = new SubscriptionOperator("t1");
+        s5.subscribeWith(null, jlibsClient2);
+        SubscriptionOperator s6 = new SubscriptionOperator("t2");
+        s6.subscribeWith(null, jlibsClient2);
+
+        SubscriptionOperator s7 = new SubscriptionOperator("t1");
+        s7.subscribeWith(null, marsClient);
+        SubscriptionOperator s8 = new SubscriptionOperator("t1");
+        s8.subscribeWith(null, marsClient);
+        SubscriptionOperator s9 = new SubscriptionOperator("t2");
+        s9.subscribeWith(null, marsClient);
+
+        router.close();
+        for(SubscriptionOperator s: new SubscriptionOperator[]{s1, s2, s3, s4, s5, s6, s7, s8, s9})
+            s.assertUnsubscribed();
+        start();
     }
 
     @AfterClass(description="stops clients and router")

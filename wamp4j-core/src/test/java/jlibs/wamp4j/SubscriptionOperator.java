@@ -69,6 +69,10 @@ public class SubscriptionOperator{
     public void unsubscribe() throws Throwable{
         atomic.set(null);
         client.client.unsubscribe(subscription);
+        assertUnsubscribed();
+    }
+
+    public void assertUnsubscribed() throws Throwable{
         assertEquals(Await.getResult(atomic), Boolean.FALSE);
         client = null;
     }
