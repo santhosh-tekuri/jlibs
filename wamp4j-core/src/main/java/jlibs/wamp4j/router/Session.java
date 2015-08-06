@@ -221,6 +221,8 @@ class Session implements Listener{
             callRequest.procedure.requests.remove(entry.getKey());
             callRequest.callSession.send(callRequest.noSuchProcedure());
         }
+        for(Procedure procedure : procedures.values())
+            realm.procedures.remove(procedure.uri());
         while(!subscriptions.isEmpty())
             realm.topics.unsubscribe(this, subscriptions.keySet().iterator().next());
         if(!goodbyeSend){

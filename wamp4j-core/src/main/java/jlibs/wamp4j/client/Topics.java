@@ -48,6 +48,11 @@ class Topics{
         topic.onSubscribe(subscription);
     }
 
+    public void onEvent(EventMessage event){
+        Topic topic = idMap.get(event.subscriptionID);
+        topic.onEvent(event);
+    }
+
     public void onUnsubscribe(Subscription subscription){
         Topic topic = idMap.remove(subscription.subscriptionID);
         nameMap.remove(topic.uri);
@@ -55,8 +60,10 @@ class Topics{
         topic.onUnsubscribe(subscription);
     }
 
-    public void onEvent(EventMessage event){
-        Topic topic = idMap.get(event.subscriptionID);
-        topic.onEvent(event);
+    public void unsubscribeAll(){
+        for(Topic topic : nameMap.values())
+            topic.unsubscribeAll();
+        nameMap.clear();
+        idMap.clear();
     }
 }

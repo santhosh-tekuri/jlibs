@@ -43,19 +43,27 @@ class Topic{
         subscription.onSubscribe(client);
     }
 
+    public void onEvent(EventMessage event){
+        for(Subscription subscription : subscriptions){
+            subscription.onEvent(event);
+        }
+    }
+
     public void onUnsubscribe(Subscription subscription){
         subscription.subscriptionID = -1;
         subscriptions.remove(subscription);
         subscription.onUnsubscribe(client);
     }
 
-    public int size(){
-        return subscriptions.size();
+    public void unsubscribeAll(){
+        for(Subscription subscription : subscriptions){
+            subscription.subscriptionID = -1;
+            subscription.onUnsubscribe(client);
+        }
+        subscriptions.clear();
     }
 
-    public void onEvent(EventMessage event){
-        for(Subscription subscription : subscriptions){
-            subscription.onEvent(event);
-        }
+    public int size(){
+        return subscriptions.size();
     }
 }

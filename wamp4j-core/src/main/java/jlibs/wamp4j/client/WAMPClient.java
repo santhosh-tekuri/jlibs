@@ -146,6 +146,7 @@ public class WAMPClient{
                         }catch(WAMPException ex){
                             sessionListener.onWarning(WAMPClient.this, ex);
                         }
+                        cleanup();
                     }
                     disconnect();
                     break;
@@ -439,18 +440,6 @@ public class WAMPClient{
         }
     }
 
-    private void clearPendingRequests(){
-        if(CLIENT)
-            Debugger.println(this, "-- clearing pending requests");
-        WAMPException error = new WAMPException(ErrorCode.systemShutdown());
-        for(Map.Entry<Long, WAMPListener> entry : requests.entrySet()){
-            WAMPListener listener = entry.getValue();
-            listener.onError(this, error);
-        }
-        requests.clear();
-        lastUsedRequestID = -1;
-    }
-
     private boolean userClosed;
     private boolean goodbyeSend = false;
     public void close(){
@@ -468,10 +457,25 @@ public class WAMPClient{
         }
     }
 
+    private void cleanup(){
+        if(CLIENT)
+            Debugger.println(this, "-- closing listeners");
+        WAMPException error = new WAMPException(ErrorCode.systemShutdown());
+        for(Map.Entry<Long, WAMPListener> entry : requests.entrySet()){
+            WAMPListener listener = entry.getValue();
+            listener.onError(this, error);
+        }
+        requests.clear();
+        lastUsedRequestID = -1;
+        procedures.unregisterAll();
+        topics.unsubscribeAll();
+    }
+
     private void doClose(){
         if(CLIENT)
             Debugger.println(this, "-- doClose");
-        clearPendingRequests();
+
+        cleanup();
         WAMPMessage message = new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT);
         goodbyeSend = true;
         try{

@@ -40,6 +40,10 @@ class Procedures{
         procedure.onRegister(client);
     }
 
+    public Procedure get(String uri){
+        return uriMap.get(uri);
+    }
+
     public void onInvocation(InvocationMessage invocation){
         Procedure procedure = idMap.get(invocation.registrationID);
         procedure.onInvocation(client, invocation);
@@ -52,7 +56,12 @@ class Procedures{
         procedure.onUnregister(client);
     }
 
-    public Procedure get(String uri){
-        return uriMap.get(uri);
+    public void unregisterAll(){
+        for(Procedure procedure : idMap.values()){
+            procedure.registrationID = -1;
+            procedure.onUnregister(client);
+        }
+        idMap.clear();
+        uriMap.clear();
     }
 }

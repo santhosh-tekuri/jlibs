@@ -24,8 +24,8 @@ import java.util.List;
  * @author Santhosh Kumar Tekuri
  */
 public final class Debugger{
-    public static final boolean CLIENT = true;
-    public static final boolean ROUTER = true;
+    public static final boolean CLIENT = false;
+    public static final boolean ROUTER = false;
 
     public static void println(Object module, String message, Object... args){
         List<Object> list = new ArrayList<Object>(1+args.length);

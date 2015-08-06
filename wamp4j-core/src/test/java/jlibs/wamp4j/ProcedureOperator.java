@@ -71,6 +71,10 @@ public class ProcedureOperator{
     public void unregister() throws Throwable{
         atomic.set(null);
         client.client.unregister(procedure);
+        assertUnregistered();
+    }
+
+    public void assertUnregistered() throws Throwable{
         assertEquals(Await.getResult(atomic), Boolean.FALSE);
         client = null;
     }

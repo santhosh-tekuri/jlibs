@@ -195,6 +195,7 @@ public class RPCTest{
         }catch(WAMPException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
+        p1.assertUnregistered();
         jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
         jlibsClient1.connect();
     }
@@ -213,6 +214,7 @@ public class RPCTest{
         }catch(WAMPException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
+        p1.assertUnregistered();
         jlibsClient1.assertClosed();
         jlibsClient2.assertClosed();
         start();
