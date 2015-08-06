@@ -34,7 +34,7 @@ import static jlibs.wamp4j.Debugger.ROUTER;
  * @author Santhosh Kumar Tekuri
  */
 class Session implements Listener{
-    private Realms realms;
+    private final WAMPRouter router;
     private WebSocket webSocket;
     private final WAMPSerialization serialization;
 
@@ -52,8 +52,8 @@ class Session implements Listener{
     // key = subscriptionID
     protected final Map<Long, Topic> subscriptions = new HashMap<Long, Topic>();
 
-    public Session(Realms realms, WebSocket webSocket, WAMPSerialization serialization){
-        this.realms = realms;
+    public Session(WAMPRouter router, WebSocket webSocket, WAMPSerialization serialization){
+        this.router = router;
         this.webSocket = webSocket;
         this.serialization = serialization;
     }
@@ -79,7 +79,7 @@ class Session implements Listener{
         switch(message.getID()){
             case HelloMessage.ID:
                 HelloMessage hello = (HelloMessage)message;
-                realm = realms.get(hello.realm);
+                realm = router.realms.get(hello.realm);
                 realm.addSession(this);
                 WelcomeMessage welcome = new WelcomeMessage(sessionID, Peer.router.details);
                 send(welcome);
@@ -172,7 +172,10 @@ class Session implements Listener{
 
     @Override
     public void onError(WebSocket webSocket, Throwable error){
-        error.printStackTrace();
+        router.listener.onError(router, error);
+        cleanup();
+        realm.removeSession(this);
+        webSocket.close();
     }
 
     private boolean goodbyeSend = false;
@@ -185,8 +188,10 @@ class Session implements Listener{
         try{
             serialization.mapper().writeValue(out, message.toArrayNode());
         }catch(Throwable thr){
-            thr.printStackTrace();
+            router.listener.onError(router, thr);
             webSocket.release(out);
+            cleanup();
+            realm.removeSession(this);
             webSocket.close();
             return false;
         }
@@ -213,7 +218,7 @@ class Session implements Listener{
         return lastRequestID;
     }
 
-    public void close(){
+    private void cleanup(){
         if(ROUTER)
             Debugger.println(this, "-- notify waiting callers");
         for(Map.Entry<Long, CallRequest> entry : requests.entrySet()){
@@ -225,6 +230,10 @@ class Session implements Listener{
             realm.procedures.remove(procedure.uri());
         while(!subscriptions.isEmpty())
             realm.topics.unsubscribe(this, subscriptions.keySet().iterator().next());
+    }
+
+    public void close(){
+        cleanup();
         if(!goodbyeSend){
             if(send(new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT)))
                 webSocket.close();

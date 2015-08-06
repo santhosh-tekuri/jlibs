@@ -33,10 +33,10 @@ import static jlibs.wamp4j.Util.subProtocols;
  * @author Santhosh Kumar Tekuri
  */
 public class WAMPRouter{
-    private WebSocketServer server;
-    private URI uri;
-    private WAMPSerialization serializations[];
-    private Realms realms = new Realms();
+    private final WebSocketServer server;
+    private final URI uri;
+    private final WAMPSerialization serializations[];
+    protected final Realms realms = new Realms();
 
     public WAMPRouter(WebSocketServer server, URI uri, WAMPSerialization... serializations){
         this.server = server;
@@ -48,9 +48,11 @@ public class WAMPRouter{
         this(server, uri, WAMPSerialization.values());
     }
 
+    protected RouterListener listener;
     public void bind(final RouterListener listener){
         if(ROUTER)
             Debugger.println(this, "-- bind %s", uri);
+        this.listener = listener;
         server.bind(uri, subProtocols(serializations), new AcceptListener(){
             @Override
             public void onBind(WebSocketServer server){
@@ -62,7 +64,7 @@ public class WAMPRouter{
                 if(ROUTER)
                     Debugger.println(WAMPRouter.this, "-- accept");
                 WAMPSerialization serialization = serialization(webSocket, serializations);
-                webSocket.setListener(new Session(realms, webSocket, serialization));
+                webSocket.setListener(new Session(WAMPRouter.this, webSocket, serialization));
             }
 
             @Override
