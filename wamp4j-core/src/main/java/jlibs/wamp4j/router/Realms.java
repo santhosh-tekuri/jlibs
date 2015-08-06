@@ -31,4 +31,10 @@ class Realms{
             realms.put(name, realm=new Realm(name));
         return realm;
     }
+
+    public void close(){
+        for(Realm realm : realms.values())
+            realm.close();
+        realms.clear();
+    }
 }

@@ -112,7 +112,16 @@ public class ErrorCode{
         return result;
     }
 
-/*-------------------------------------------------[ Interactions ]---------------------------------------------------*/
+    @Override
+    public String toString(){
+        return "ErrorCode{" +
+                "uri='" + uri + '\'' +
+                ", arguments=" + arguments +
+                ", argumentsKw=" + argumentsKw +
+                '}';
+    }
+
+    /*-------------------------------------------------[ Interactions ]---------------------------------------------------*/
 
     /**
      * Peer provided an incorrect URI for any URI-based attribute of WAMP message, such as realm, topic or procedure

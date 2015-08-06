@@ -79,6 +79,16 @@ public class NettyWebSocketServer implements WebSocketServer{
     }
 
     @Override
+    public boolean isEventLoop(){
+        return eventLoopGroup.next().inEventLoop();
+    }
+
+    @Override
+    public void submit(Runnable r){
+        eventLoopGroup.submit(r);
+    }
+
+    @Override
     public void close(){
         channel.close().addListener(new ChannelFutureListener(){
             @Override

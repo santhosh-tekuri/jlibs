@@ -23,5 +23,7 @@ import java.net.URI;
  */
 public interface WebSocketServer{
     public void bind(URI uri, String subProtocols[], AcceptListener listener);
+    public boolean isEventLoop();
+    public void submit(Runnable r);
     public void close();
 }

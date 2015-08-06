@@ -455,7 +455,6 @@ public class WAMPClient{
     private boolean userClosed;
     private boolean goodbyeSend = false;
     public void close(){
-        validate();
         if(client.isEventLoop()){
             userClosed = true;
             if(sessionID!=-1)

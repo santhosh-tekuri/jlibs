@@ -52,4 +52,10 @@ class Realm{
     public String toString(){
         return name;
     }
+
+    public void close(){
+        for(Session session : sessions.values())
+            session.close();
+        sessions.clear();
+    }
 }

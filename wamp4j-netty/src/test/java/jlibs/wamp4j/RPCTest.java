@@ -181,6 +181,43 @@ public class RPCTest{
         jlibsClient2.connect();
     }
 
+    @Test(description="when callee closed before sending replies")
+    public void test7() throws Throwable{
+        ProcedureOperator p1 = new ProcedureOperator("p1"){
+            @Override
+            protected void onRequest(WAMPClient client, InvocationMessage invocation){
+                client.close();
+            }
+        };
+        p1.registerWith(jlibsClient1);
+        try{
+            jlibsClient2.call(null, "p1", null, null);
+        }catch(WAMPException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1.connect();
+    }
+
+    @Test(description="when router closed before caller receives reply")
+    public void test8() throws Throwable{
+        ProcedureOperator p1 = new ProcedureOperator("p1"){
+            @Override
+            protected void onRequest(WAMPClient client, InvocationMessage invocation){
+                router.router.close();
+            }
+        };
+        p1.registerWith(jlibsClient1);
+        try{
+            jlibsClient2.call(null, "p1", null, null);
+        }catch(WAMPException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }
+        jlibsClient1.assertClosed();
+        jlibsClient2.assertClosed();
+        start();
+    }
+
     @AfterClass(description="stops clients and router")
     public void stop() throws Throwable{
         jlibsClient1.close();

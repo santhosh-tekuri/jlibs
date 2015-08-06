@@ -103,6 +103,10 @@ public class ClientOperator{
     public void close() throws Throwable{
         atomic.set(null);
         client.close();
+        assertClosed();
+    }
+
+    public void assertClosed() throws Throwable{
         assertEquals(Await.getResult(atomic), Boolean.FALSE);
     }
 }
