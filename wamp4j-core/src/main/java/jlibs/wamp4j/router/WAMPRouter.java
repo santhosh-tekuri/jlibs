@@ -16,6 +16,7 @@
 
 package jlibs.wamp4j.router;
 
+import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.spi.AcceptListener;
 import jlibs.wamp4j.spi.WebSocket;
@@ -23,6 +24,7 @@ import jlibs.wamp4j.spi.WebSocketServer;
 
 import java.net.URI;
 
+import static jlibs.wamp4j.Debugger.ROUTER;
 import static jlibs.wamp4j.Util.serialization;
 import static jlibs.wamp4j.Util.subProtocols;
 
@@ -31,8 +33,6 @@ import static jlibs.wamp4j.Util.subProtocols;
  * @author Santhosh Kumar Tekuri
  */
 public class WAMPRouter{
-    private static final boolean debug = false;
-
     private WebSocketServer server;
     private URI uri;
     private WAMPSerialization serializations[];
@@ -49,8 +49,8 @@ public class WAMPRouter{
     }
 
     public void bind(final RouterListener listener){
-        if(debug)
-            System.out.format("%s -- bind%n", this);
+        if(ROUTER)
+            Debugger.println(this, "-- bind %s", uri);
         server.bind(uri, subProtocols(serializations), new AcceptListener(){
             @Override
             public void onBind(WebSocketServer server){
@@ -59,8 +59,8 @@ public class WAMPRouter{
 
             @Override
             public void onAccept(WebSocket webSocket){
-                if(debug)
-                    System.out.format("%s -- accept%n", this);
+                if(ROUTER)
+                    Debugger.println(WAMPRouter.this, "-- accept");
                 WAMPSerialization serialization = serialization(webSocket, serializations);
                 webSocket.setListener(new Session(realms, webSocket, serialization));
             }
@@ -79,11 +79,11 @@ public class WAMPRouter{
 
     public void close(){
         if(server.isEventLoop()){
-            if(debug)
-                System.out.format("%s -- close%n", this);
+            if(ROUTER)
+                Debugger.println(this, "-- close");
             realms.close();
-            if(debug)
-                System.out.format("%s -- disconnect%n", this);
+            if(ROUTER)
+                Debugger.println(this, "-- disconnect");
             server.close();
         }else{
             server.submit(new Runnable(){
@@ -97,6 +97,6 @@ public class WAMPRouter{
 
     @Override
     public String toString(){
-        return String.format("%20s", getClass().getSimpleName());
+        return getClass().getSimpleName();
     }
 }

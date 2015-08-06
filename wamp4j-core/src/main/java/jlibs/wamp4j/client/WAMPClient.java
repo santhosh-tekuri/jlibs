@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static jlibs.wamp4j.Debugger.CLIENT;
 import static jlibs.wamp4j.Util.serialization;
 import static jlibs.wamp4j.Util.subProtocols;
 
@@ -38,8 +39,6 @@ import static jlibs.wamp4j.Util.subProtocols;
  * @author Santhosh Kumar Tekuri
  */
 public class WAMPClient{
-    private static final boolean debug = false;
-
     private WebSocketClient client;
     private URI uri;
     private String realm;
@@ -71,8 +70,8 @@ public class WAMPClient{
     }
 
     private void disconnect(){
-        if(debug)
-            System.out.format("%s -- disconnect%n", this);
+        if(CLIENT)
+            Debugger.println(this, "-- disconnect");
         webSocket.close();
         webSocket = null;
         goodbyeSend = false;
@@ -118,8 +117,8 @@ public class WAMPClient{
                 return;
             }
 
-            if(debug)
-                System.out.format("%s <- %s%n", WAMPClient.this, message);
+            if(CLIENT)
+                Debugger.println(WAMPClient.this, "<- %s", message);
             switch(message.getID()){
                 case WelcomeMessage.ID:
                     WelcomeMessage welcome = (WelcomeMessage)message;
@@ -189,8 +188,8 @@ public class WAMPClient{
                     topics.onEvent(event);
                     break;
                 default:
-                    if(debug)
-                        System.out.format("%s not yet implemented%n", WAMPClient.this);
+                    if(CLIENT)
+                        Debugger.println(WAMPClient.this, "-- %s not yet implemented");
             }
         }
 
@@ -209,8 +208,8 @@ public class WAMPClient{
             webSocket.release(out);
             throw new WAMPException(ErrorCode.serializationFailed()).initCause(thr);
         }
-        if(debug)
-            System.out.format("%s -> %s%n", this, message);
+        if(CLIENT)
+            Debugger.println(this, "-> %s", message);
         webSocket.send(serialization.messageType(), out);
         webSocket.flush();
     }
@@ -441,8 +440,8 @@ public class WAMPClient{
     }
 
     private void clearPendingRequests(){
-        if(debug)
-            System.out.format("%s -- clearing pending requests%n", this);
+        if(CLIENT)
+            Debugger.println(this, "-- clearing pending requests");
         WAMPException error = new WAMPException(ErrorCode.systemShutdown());
         for(Map.Entry<Long, WAMPListener> entry : requests.entrySet()){
             WAMPListener listener = entry.getValue();
@@ -470,8 +469,8 @@ public class WAMPClient{
     }
 
     private void doClose(){
-        if(debug)
-            System.out.format("%s -- doClose%n", this);
+        if(CLIENT)
+            Debugger.println(this, "-- doClose");
         clearPendingRequests();
         WAMPMessage message = new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT);
         goodbyeSend = true;
@@ -485,7 +484,6 @@ public class WAMPClient{
 
     @Override
     public String toString(){
-        String string = String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);
-        return String.format("%20s", string);
+        return String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);
     }
 }

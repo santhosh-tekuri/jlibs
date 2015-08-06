@@ -17,10 +17,7 @@
 package jlibs.wamp4j.router;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import jlibs.wamp4j.ErrorCode;
-import jlibs.wamp4j.Peer;
-import jlibs.wamp4j.Util;
-import jlibs.wamp4j.WAMPSerialization;
+import jlibs.wamp4j.*;
 import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
@@ -31,12 +28,12 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jlibs.wamp4j.Debugger.ROUTER;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
 class Session implements Listener{
-    private static final boolean debug = false;
-
     private Realms realms;
     private WebSocket webSocket;
     private final WAMPSerialization serialization;
@@ -77,8 +74,8 @@ class Session implements Listener{
             return;
         }
 
-        if(debug)
-            System.out.format("%s <- %s%n", this, message);
+        if(ROUTER)
+            Debugger.println(this, "<- %s", message);
         switch(message.getID()){
             case HelloMessage.ID:
                 HelloMessage hello = (HelloMessage)message;
@@ -168,8 +165,8 @@ class Session implements Listener{
                 }
                 break;
             default:
-                if(debug)
-                    System.out.format("%s not yet implemented%n", this);
+                if(ROUTER)
+                    Debugger.println(this, "-- not yet implemented%n");
         }
     }
 
@@ -193,8 +190,8 @@ class Session implements Listener{
             webSocket.close();
             return false;
         }
-        if(debug)
-            System.out.format("%s -> %s%n", this, message);
+        if(ROUTER)
+            Debugger.println(this, "-> %s", message);
         webSocket.send(serialization.messageType(), out);
         webSocket.flush();
         return true;
@@ -217,8 +214,8 @@ class Session implements Listener{
     }
 
     public void close(){
-        if(debug)
-            System.out.format("%s -- notify waiting callers%n", this);
+        if(ROUTER)
+            Debugger.println(this, "-- notify waiting callers");
         for(Map.Entry<Long, CallRequest> entry : requests.entrySet()){
             CallRequest callRequest = entry.getValue();
             callRequest.procedure.requests.remove(entry.getKey());
@@ -234,7 +231,6 @@ class Session implements Listener{
 
     @Override
     public String toString(){
-        String string = String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);
-        return String.format("%20s", string);
+        return String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);
     }
 }
