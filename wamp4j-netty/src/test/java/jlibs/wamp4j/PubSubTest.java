@@ -56,7 +56,7 @@ public class PubSubTest{
         marsClient.connect();
     }
 
-    @Test
+    @Test(description="sanity test")
     public void test1() throws Throwable{
         jlibsClient1.publish(null, "t1", null, null);
 
@@ -99,6 +99,80 @@ public class PubSubTest{
         jlibsClient1.publish(options, "t1", arguments, argumentsKw);
         Thread.sleep(10 * 1000);
         assertEquals(atomic.get(), null);
+    }
+
+    @Test(description="multiple subscriptions on same topic from a client and diffrent client publishes")
+    public void test2() throws Throwable{
+        final AtomicReference<Object> atomic1 = new AtomicReference<Object>();
+        SubscriptionOperator s1 = new SubscriptionOperator("t1"){
+            @Override
+            public void onMessage(EventMessage event){
+                atomic1.set(event);
+            }
+        };
+        s1.subscribeWith(null, jlibsClient1);
+
+        final AtomicReference<Object> atomic2 = new AtomicReference<Object>();
+        SubscriptionOperator s2 = new SubscriptionOperator("t1"){
+            @Override
+            public void onMessage(EventMessage event){
+                atomic2.set(event);
+            }
+        };
+        s2.subscribeWith(null, jlibsClient1);
+
+        jlibsClient2.publish(null, "t1", null, null);
+        Await.getResult(atomic1);
+        Await.getResult(atomic2);
+
+        s1.unsubscribe();
+        atomic1.set("blah1");
+        jlibsClient2.publish(null, "t1", null, null);
+        assertEquals(Await.getResult(atomic1), "blah1");
+        Await.getResult(atomic2);
+
+        s2.unsubscribe();
+        atomic1.set("blah1");
+        atomic2.set("blah2");
+        assertEquals(Await.getResult(atomic1), "blah1");
+        assertEquals(Await.getResult(atomic2), "blah2");
+    }
+
+    @Test(description="multiple subscriptions on same topic from a client and same client publishes")
+    public void test3() throws Throwable{
+        final AtomicReference<Object> atomic1 = new AtomicReference<Object>();
+        SubscriptionOperator s1 = new SubscriptionOperator("t1"){
+            @Override
+            public void onMessage(EventMessage event){
+                atomic1.set(event);
+            }
+        };
+        s1.subscribeWith(null, jlibsClient1);
+
+        final AtomicReference<Object> atomic2 = new AtomicReference<Object>();
+        SubscriptionOperator s2 = new SubscriptionOperator("t1"){
+            @Override
+            public void onMessage(EventMessage event){
+                atomic2.set(event);
+            }
+        };
+        s2.subscribeWith(null, jlibsClient1);
+
+        jlibsClient1.publish(null, "t1", null, null);
+        Await.getResult(atomic1);
+        Await.getResult(atomic2);
+
+        s1.unsubscribe();
+        atomic1.set("blah1");
+        jlibsClient1.publish(null, "t1", null, null);
+        assertEquals(Await.getResult(atomic1), "blah1");
+        Await.getResult(atomic2);
+
+        s2.unsubscribe();
+        atomic1.set("blah1");
+        atomic2.set("blah2");
+        assertEquals(Await.getResult(atomic1), "blah1");
+        assertEquals(Await.getResult(atomic2), "blah2");
     }
 
     @AfterClass(description="stops clients and router")

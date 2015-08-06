@@ -31,6 +31,6 @@ public final class Debugger{
         List<Object> list = new ArrayList<Object>(1+args.length);
         list.add(module);
         list.add(Arrays.asList(args));
-        System.out.printf("%20s "+message+"%n", list.toArray());
+        System.err.printf("%20s "+message+"%n", list.toArray());
     }
 }

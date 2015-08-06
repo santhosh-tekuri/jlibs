@@ -42,9 +42,13 @@ class Topics{
     }
 
     public void onSubscribe(long subscriptionID, Subscription subscription){
-        assert idMap.get(subscriptionID)==null;
-        Topic topic = new Topic(client, subscription.topic, subscriptionID);
-        idMap.put(subscriptionID, topic);
+        Topic topic = idMap.get(subscriptionID);
+        if(topic==null){
+            topic = new Topic(client, subscription.topic, subscriptionID);
+            nameMap.put(topic.uri, topic);
+            idMap.put(subscriptionID, topic);
+        }else
+            assert topic.uri.equals(subscription.topic);
         topic.onSubscribe(subscription);
     }
 
