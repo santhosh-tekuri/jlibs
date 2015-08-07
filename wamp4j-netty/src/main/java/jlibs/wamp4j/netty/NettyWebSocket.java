@@ -110,6 +110,11 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
     }
 
     @Override
+    public boolean isOpen(){
+        return ctx.channel().isOpen();
+    }
+
+    @Override
     public void close(){
         ctx.writeAndFlush(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
     }

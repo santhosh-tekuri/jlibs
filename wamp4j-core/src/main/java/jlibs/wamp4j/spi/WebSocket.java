@@ -30,5 +30,7 @@ public interface WebSocket{
 
     public void send(MessageType type, OutputStream out);
     public void flush();
+
+    public boolean isOpen();
     public void close();
 }
