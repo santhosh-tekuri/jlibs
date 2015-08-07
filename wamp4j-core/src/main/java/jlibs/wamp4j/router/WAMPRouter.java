@@ -101,4 +101,49 @@ public class WAMPRouter{
     public String toString(){
         return getClass().getSimpleName();
     }
+
+    /*-------------------------------------------------[ Flush Chain ]---------------------------------------------------*/
+
+    protected Session flushHead;
+    protected Session flushTail;
+
+    protected void addToFlushList(Session session){
+        assert !session.flushNeeded;
+        session.flushNeeded = true;
+        if(flushHead==null)
+            flushHead = session;
+        else
+            flushTail.flushNext = session;
+        flushTail = session;
+    }
+
+    protected Session removeFromFlushList(){
+        if(flushHead==null)
+            return null;
+        Session removed = flushHead;
+        assert removed.flushNeeded;
+        flushHead = removed.flushNext;
+        if(flushHead==null)
+            flushTail = null;
+        removed.flushNext = null;
+        removed.flushNeeded = false;
+        return removed;
+    }
+
+    protected void removeFromFlushList(Session session){
+        assert session.flushNeeded;
+        session.flushNeeded = false;
+        if(flushHead==session){
+            flushHead = session.flushNext;
+            if(flushHead==null)
+                flushTail = null;
+        }else{
+            Session prev = flushHead;
+            while(prev.flushNext!=session)
+                prev = prev.flushNext;
+            prev.flushNext = session.flushNext;
+            if(flushTail==session)
+                flushTail = prev;
+        }
+    }
 }

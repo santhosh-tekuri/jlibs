@@ -171,7 +171,11 @@ class Session implements Listener{
     }
 
     @Override
-    public void onReadComplete(WebSocket webSocket){}
+    public void onReadComplete(WebSocket webSocket){
+        Session session;
+        while((session=router.removeFromFlushList())!=null)
+            session.webSocket.flush();
+    }
 
     @Override
     public void onError(WebSocket webSocket, Throwable error){
@@ -182,6 +186,8 @@ class Session implements Listener{
     }
 
     private boolean goodbyeSend = false;
+    protected boolean flushNeeded;
+    protected Session flushNext;
     protected boolean send(WAMPMessage message){
         if(sessionID==-1)
             return false;
@@ -191,6 +197,8 @@ class Session implements Listener{
         try{
             serialization.mapper().writeValue(out, message.toArrayNode());
         }catch(Throwable thr){
+            if(flushNeeded)
+                router.removeFromFlushList(this);
             router.listener.onError(router, thr);
             webSocket.release(out);
             cleanup();
@@ -198,10 +206,11 @@ class Session implements Listener{
             webSocket.close();
             return false;
         }
+        if(!flushNeeded)
+            router.addToFlushList(this);
         if(ROUTER)
             Debugger.println(this, "-> %s", message);
         webSocket.send(serialization.messageType(), out);
-        webSocket.flush();
         return true;
     }
 
