@@ -58,7 +58,7 @@ public class SubscribedMessage extends WAMPMessage{
     @Override
     public ArrayNode toArrayNode(){
         ArrayNode array = instance.arrayNode();
-        array.add(ID);
+        array.add(idNodes[ID]);
         array.add(requestID);
         array.add(subscriptionID);
         return array;

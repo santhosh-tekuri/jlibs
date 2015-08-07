@@ -21,10 +21,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import java.util.regex.Pattern;
-
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * When the request cannot be fulfilled by the Broker,
@@ -71,7 +69,6 @@ public class ErrorMessage extends WAMPMessage{
         this(requestType, requestID, details, error, null, null);
     }
 
-    private static final Pattern regex = Pattern.compile("\\{(.*?)\\}");
     public ErrorMessage(int requestType, long requestID, ErrorCode errorCode){
         this(requestType, requestID, null, errorCode.uri, errorCode.arguments, errorCode.argumentsKw);
     }
@@ -84,8 +81,8 @@ public class ErrorMessage extends WAMPMessage{
     @Override
     public ArrayNode toArrayNode(){
         ArrayNode array = instance.arrayNode();
-        array.add(ID);
-        array.add(requestType);
+        array.add(idNodes[ID]);
+        array.add(idNodes[requestType]);
         array.add(requestID);
         array.add(objectNode(details));
         array.add(error);

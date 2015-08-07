@@ -67,7 +67,7 @@ public class RegisterMessage extends RequestMessage{
     @Override
     public ArrayNode toArrayNode(){
         ArrayNode array = instance.arrayNode();
-        array.add(ID);
+        array.add(idNodes[ID]);
         array.add(requestID);
         array.add(objectNode(options));
         array.add(procedure);

@@ -18,6 +18,7 @@ package jlibs.wamp4j.msg;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
@@ -27,6 +28,34 @@ import jlibs.wamp4j.WAMPException;
  * @author Santhosh Kumar Tekuri
  */
 public abstract class WAMPMessage{
+    protected static final IntNode idNodes[] = new IntNode[71];
+    static{
+        int ids[] = {
+                HelloMessage.ID,
+                WelcomeMessage.ID,
+                AbortMessage.ID,
+                GoodbyeMessage.ID,
+                ErrorMessage.ID,
+                PublishMessage.ID,
+                PublishedMessage.ID,
+                SubscribeMessage.ID,
+                SubscribedMessage.ID,
+                UnsubscribeMessage.ID,
+                UnsubscribedMessage.ID,
+                EventMessage.ID,
+                CallMessage.ID,
+                ResultMessage.ID,
+                RegisterMessage.ID,
+                RegisteredMessage.ID,
+                UnregisterMessage.ID,
+                UnregisteredMessage.ID,
+                InvocationMessage.ID,
+                YieldMessage.ID
+        };
+        for(int id: ids)
+            idNodes[id] = IntNode.valueOf(id);
+    }
+
     public abstract int getID();
     public abstract ArrayNode toArrayNode();
 

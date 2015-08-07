@@ -92,7 +92,7 @@ public class EventMessage extends WAMPMessage{
     @Override
     public ArrayNode toArrayNode(){
         ArrayNode array = instance.arrayNode();
-        array.add(ID);
+        array.add(idNodes[ID]);
         array.add(subscriptionID);
         array.add(publicationID);
         array.add(objectNode(details));
