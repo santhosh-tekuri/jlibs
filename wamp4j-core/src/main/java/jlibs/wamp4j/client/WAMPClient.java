@@ -89,6 +89,7 @@ public class WAMPClient{
             webSocket.setListener(messageListener);
             try{
                 send(new HelloMessage(realm, Peer.client.details));
+                webSocket.flush();
             }catch(WAMPException impossible){
                 impossible.printStackTrace();
             }
@@ -195,7 +196,9 @@ public class WAMPClient{
         }
 
         @Override
-        public void onReadComplete(WebSocket webSocket){}
+        public void onReadComplete(WebSocket webSocket){
+            webSocket.flush();
+        }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error){
@@ -215,7 +218,6 @@ public class WAMPClient{
         if(CLIENT)
             Debugger.println(this, "-> %s", message);
         webSocket.send(serialization.messageType(), out);
-        webSocket.flush();
     }
 
     private boolean validate(WAMPListener listener){
@@ -240,6 +242,7 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(register);
+                webSocket.flush();
             }catch(WAMPException ex){
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
@@ -262,6 +265,7 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(unregister);
+                webSocket.flush();
             }catch(WAMPException ex){
                 procedure.onError(this, ex);
             }
@@ -311,6 +315,7 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, listener);
             try{
                 send(call);
+                webSocket.flush();
             }catch(WAMPException ex){
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
@@ -345,6 +350,7 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(yield);
+                webSocket.flush();
             }catch(WAMPException ex){
                 sessionListener.onWarning(this, ex);
                 try{
@@ -369,6 +375,7 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(error);
+                webSocket.flush();
             }catch(WAMPException ex){
                 sessionListener.onError(this, ex);
                 webSocket.close();
@@ -394,6 +401,7 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(subscribe);
+                    webSocket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -421,6 +429,7 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(unsubscribe);
+                    webSocket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -450,6 +459,7 @@ public class WAMPClient{
             PublishMessage publish = new PublishMessage(lastUsedRequestID, options, topic, arguments, argumentsKw);
             try{
                 send(publish);
+                webSocket.flush();
                 if(publish.needsAcknowledgement())
                     requests.put(lastUsedRequestID, listener);
                 else
@@ -507,6 +517,7 @@ public class WAMPClient{
         goodbyeSend = true;
         try{
             send(message);
+            webSocket.flush();
         }catch(WAMPException ex){
             sessionListener.onWarning(this, ex);
             disconnect();
