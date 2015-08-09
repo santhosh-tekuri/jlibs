@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static jlibs.wamp4j.Debugger.CLIENT;
@@ -201,6 +204,31 @@ public class WAMPClient{
         }
 
         @Override
+        public void readyToWrite(WebSocket webSocket){
+            if(writing.getAndSet(true))
+                return;
+            waiting.set(false);
+            while(webSocket.isWritable()){
+                Runnable runnable = queue.poll();
+                if(runnable==null){
+                    webSocket.flush();
+                    break;
+                }
+                runnable.run();
+                if(!webSocket.isWritable())
+                    webSocket.flush();
+            }
+            writing.set(false);
+            if(!webSocket.isWritable())
+                waiting.set(true);
+            if(queue.size()==0){
+                synchronized(WAMPClient.this){
+                    WAMPClient.this.notifyAll();
+                }
+            }
+        }
+
+        @Override
         public void onError(WebSocket webSocket, Throwable error){
             sessionListener.onError(WAMPClient.this, new WAMPException(error));
             disconnect();
@@ -279,18 +307,18 @@ public class WAMPClient{
         }
     }
 
-    private void beforeSend(){
-        long count = waiting.decrementAndGet();
-        if(count==1){
-            synchronized(this){
-                this.notifyAll();
-            }
+    private BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+    private AtomicBoolean writing = new AtomicBoolean();
+    private AtomicBoolean waiting = new AtomicBoolean();
+    private Runnable flushTask = new Runnable(){
+        @Override
+        public void run(){
+            messageListener.readyToWrite(webSocket);
         }
-    }
+    };
 
     private void beforeSubmit(){
-        long count = waiting.incrementAndGet();
-        if(count>200001){
+        if(queue.size()>20000){
             synchronized(this){
                 try{
                     this.wait();
@@ -302,31 +330,30 @@ public class WAMPClient{
         }
     }
 
-    public AtomicLong waiting = new AtomicLong();
     public AtomicLong send = new AtomicLong();
     public void call(final ObjectNode options, final String procedure, final ArrayNode arguments, final ObjectNode argumentsKw, final CallListener listener){
         if(!validate(listener))
             return;
         if(client.isEventLoop()){
             send.incrementAndGet();
-            beforeSend();
             lastUsedRequestID = Util.generateID(requests, lastUsedRequestID);
             CallMessage call = new CallMessage(lastUsedRequestID, options, procedure, arguments, argumentsKw);
             requests.put(lastUsedRequestID, listener);
             try{
                 send(call);
-                webSocket.flush();
             }catch(WAMPException ex){
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
         }else{
             beforeSubmit();
-            client.submit(new Runnable(){
+            queue.add(new Runnable(){
                 @Override
                 public void run(){
                     call(options, procedure, arguments, argumentsKw, listener);
                 }
             });
+            if(!writing.get() && waiting.compareAndSet(false, true))
+                client.submit(flushTask);
         }
     }
 

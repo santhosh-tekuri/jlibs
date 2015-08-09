@@ -28,6 +28,7 @@ public interface WebSocket{
     public OutputStream createOutputStream();
     public void release(OutputStream out);
 
+    public boolean isWritable();
     public void send(MessageType type, OutputStream out);
     public void flush();
 

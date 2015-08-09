@@ -41,6 +41,8 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception{
         this.ctx = ctx;
+        if(listener!=null)
+            listener.readyToWrite(this);
         super.channelActive(ctx);
     }
 
@@ -105,6 +107,11 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
     }
 
     @Override
+    public boolean isWritable(){
+        return ctx.channel().isWritable();
+    }
+
+    @Override
     public void flush(){
         ctx.flush();
     }
@@ -112,6 +119,12 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
     @Override
     public boolean isOpen(){
         return ctx.channel().isOpen();
+    }
+
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception{
+        if(ctx.channel().isWritable() && listener!=null)
+            listener.readyToWrite(this);
     }
 
     @Override

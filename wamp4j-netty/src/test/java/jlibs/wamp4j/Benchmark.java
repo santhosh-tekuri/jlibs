@@ -75,6 +75,7 @@ public class Benchmark{
                 System.out.println("replies: "+replies);
                 double throughput = (double)replies/ TimeUnit.SECONDS.convert(end-begin, TimeUnit.NANOSECONDS);
                 System.out.println("throughput: "+throughput);
+                System.exit(0);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
@@ -120,6 +121,7 @@ public class Benchmark{
 
         @Override
         public void run(){
+            long nanos = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
             for(int i=0; i<threads.length; i++)
                 (threads[i]=new RPCThread()).start();
             try{
@@ -133,27 +135,27 @@ public class Benchmark{
                 System.out.println("waiting to join");
                 for(RPCThread thread : threads)
                     thread.join();
-                long end = System.nanoTime();
                 long requests = 0;
                 for(RPCThread thread : threads){
                     requests += thread.requests.get();
                 }
 
-                int count = -1;
+
                 while(true){
                     long replies = this.replies.get();
-                    System.out.println(++count+" -------------------------------");
+                    long end = System.nanoTime();
+                    double seconds = ((double)(end-begin))/nanos;
+                    System.out.println(" ------------------------------- "+seconds);
                     System.out.println("  requests: "+requests);
                     System.out.println("   replies: "+replies);
-                    System.out.println("   waiting: "+client.waiting);
-                    System.out.println("      sent: "+client.send);
-                    double throughput = (double)replies/ TimeUnit.SECONDS.convert(end-begin, TimeUnit.NANOSECONDS);
+                    System.out.println("      sent: " + client.send);
+                    double throughput = (double)replies/ seconds;
                     System.out.println("throughput: " + throughput+"/sec");
                     if(requests==replies)
                         break;
                     Thread.sleep(10*1000);
                 }
-                System.out.println("completed");
+                System.exit(0);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }

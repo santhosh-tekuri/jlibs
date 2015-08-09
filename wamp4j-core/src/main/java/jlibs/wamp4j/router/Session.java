@@ -178,6 +178,9 @@ class Session implements Listener{
     }
 
     @Override
+    public void readyToWrite(WebSocket webSocket){}
+
+    @Override
     public void onError(WebSocket webSocket, Throwable error){
         router.listener.onError(router, error);
         cleanup();
