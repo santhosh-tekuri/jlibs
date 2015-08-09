@@ -17,6 +17,8 @@
 package jlibs.wamp4j.netty;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -52,7 +54,7 @@ public class NettyWebSocketClient implements WebSocketClient{
         if(port==-1)
             port = 80;
 
-        new Bootstrap()
+        Bootstrap bootstrap = new Bootstrap()
                 .group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>(){
@@ -69,8 +71,16 @@ public class NettyWebSocketClient implements WebSocketClient{
                                 new NettyClientWebSocket(handshaker, listener)
                         );
                     }
-                })
-                .connect(uri.getHost(), port);
+                });
+        bootstrap.connect(uri.getHost(), port).addListener(new ChannelFutureListener(){
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception{
+                if(!future.isSuccess()){
+                    assert !future.channel().isOpen();
+                    listener.onError(future.cause());
+                }
+            }
+        });
     }
 
     @Override
