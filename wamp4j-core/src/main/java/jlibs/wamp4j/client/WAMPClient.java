@@ -551,6 +551,10 @@ public class WAMPClient{
         }
     }
 
+    public long getSessionID(){
+        return sessionID;
+    }
+
     @Override
     public String toString(){
         return String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);

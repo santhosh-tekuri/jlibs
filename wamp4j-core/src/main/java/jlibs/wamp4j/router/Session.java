@@ -119,14 +119,18 @@ class Session implements Listener{
                 break;
             case CallMessage.ID:
                 CallMessage call = (CallMessage)message;
-                procedure = realm.procedures.get(call.procedure);
-                if(procedure==null)
-                    send(call.error(ErrorCode.noSuchProcedure(call.procedure)));
-                else{
-                    long invocationRequestId = procedure.session.addRequest(call.requestID, this, procedure);
-                    reply = new InvocationMessage(invocationRequestId, procedure.registrationID, call.options, call.arguments, call.argumentsKw);
-                    procedure.session.send(reply);
-                }
+                MetaProcedure metaProcedure = MetaProcedures.get(call.procedure);
+                if(metaProcedure==null){
+                    procedure = realm.procedures.get(call.procedure);
+                    if(procedure==null)
+                        send(call.error(ErrorCode.noSuchProcedure(call.procedure)));
+                    else{
+                        long invocationRequestId = procedure.session.addRequest(call.requestID, this, procedure);
+                        reply = new InvocationMessage(invocationRequestId, procedure.registrationID, call.options, call.arguments, call.argumentsKw);
+                        procedure.session.send(reply);
+                    }
+                }else
+                    metaProcedure.reply(this, call);
                 break;
             case YieldMessage.ID:
                 YieldMessage yield = (YieldMessage)message;
@@ -253,6 +257,10 @@ class Session implements Listener{
             if(send(new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT)))
                 webSocket.close();
         }
+    }
+
+    public Realm realm(){
+        return realm;
     }
 
     @Override

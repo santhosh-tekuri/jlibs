@@ -16,6 +16,7 @@
 
 package jlibs.wamp4j;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.client.WAMPClient;
@@ -31,9 +32,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -218,6 +222,23 @@ public class RPCTest{
         jlibsClient1.assertClosed();
         jlibsClient2.assertClosed();
         start();
+    }
+
+    @Test
+    public void sessionCount() throws Throwable{
+        ResultMessage result = jlibsClient1.call(null, "wamp.session.count", null, null);
+        assertEquals(result.arguments.get(0).intValue(), 2);
+    }
+
+    @Test
+    public void sessionList() throws Throwable{
+        ResultMessage result = jlibsClient1.call(null, "wamp.session.list", null, null);
+        List<Long> sessionIDs = new ArrayList<Long>();
+        sessionIDs.add(jlibsClient1.client.getSessionID());
+        sessionIDs.add(jlibsClient2.client.getSessionID());
+        for(JsonNode sessionID : (ArrayNode)result.arguments.get(0))
+            assertTrue(sessionIDs.remove(sessionID.longValue()));
+        assertTrue(sessionIDs.isEmpty());
     }
 
     @AfterClass(description="stops clients and router")

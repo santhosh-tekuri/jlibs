@@ -16,10 +16,13 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import jlibs.wamp4j.Util;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -46,6 +49,17 @@ class Realm{
     public void removeSession(Session session){
         sessions.remove(session.sessionID);
         session.sessionID = -1;
+    }
+
+    public int sessionCount(){
+        return sessions.size();
+    }
+
+    public ArrayNode sessionIDs(){
+        ArrayNode sessionIDs = instance.arrayNode();
+        for(Long sessionID : sessions.keySet())
+            sessionIDs.add(sessionID);
+        return sessionIDs;
     }
 
     @Override
