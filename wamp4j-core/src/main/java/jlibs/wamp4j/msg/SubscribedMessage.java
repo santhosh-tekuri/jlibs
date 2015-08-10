@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-
 /**
  * If the Broker is able to fulfill and allow the subscription,
  * it answers by sending a SUBSCRIBED message to the Subscriber
@@ -56,12 +54,10 @@ public class SubscribedMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(subscriptionID);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

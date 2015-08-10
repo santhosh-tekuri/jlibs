@@ -19,10 +19,11 @@ package jlibs.wamp4j.msg;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
+
+import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -57,16 +58,18 @@ public abstract class WAMPMessage{
     }
 
     public abstract int getID();
-    public abstract ArrayNode toArrayNode();
+    public abstract void toArrayNode(ArrayNode array);
 
     @Override
     public String toString(){
-        return getClass().getSimpleName()+": "+toArrayNode();
+        ArrayNode array = instance.arrayNode();
+        toArrayNode(array);
+        return getClass().getSimpleName()+": "+array;
     }
 
     /*-------------------------------------------------[ Helpers ]---------------------------------------------------*/
 
-    private static final ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+    private static final ObjectNode objectNode = instance.objectNode();
     static ObjectNode objectNode(ObjectNode node){
         return node==null ? objectNode : node;
     }

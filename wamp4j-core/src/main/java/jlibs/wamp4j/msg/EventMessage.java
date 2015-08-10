@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
-
 /**
  * When a publication is successful and a Broker dispatches the event,
  * it determines a list of receivers for the event based on Subscribers
@@ -90,8 +87,7 @@ public class EventMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(subscriptionID);
         array.add(publicationID);
@@ -100,7 +96,6 @@ public class EventMessage extends WAMPMessage{
             array.add(arguments);
         if(argumentsKw!=null)
             array.add(argumentsKw);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

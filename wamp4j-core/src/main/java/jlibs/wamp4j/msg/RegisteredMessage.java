@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-
 /**
  * If the Dealer is able to fulfill and allowing the registration,
  * it answers by sending a REGISTERED message to the Callee
@@ -52,12 +50,10 @@ public class RegisteredMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(registrationID);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 import static jlibs.wamp4j.Util.nonNull;
 
 /**
@@ -79,8 +78,7 @@ public class ErrorMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(idNodes[requestType]);
         array.add(requestID);
@@ -90,7 +88,6 @@ public class ErrorMessage extends WAMPMessage{
             array.add(arguments);
         if(argumentsKw!=null)
             array.add(argumentsKw);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

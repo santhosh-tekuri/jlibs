@@ -22,7 +22,7 @@ import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * Both the Router and the Client may abort the opening of a WAMP session
@@ -62,12 +62,10 @@ public class AbortMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(objectNode(details));
         array.add(reason);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

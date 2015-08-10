@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * After the underlying transport has been established, opening of a WAMP session
@@ -54,12 +53,10 @@ public class HelloMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(realm);
         array.add(details);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

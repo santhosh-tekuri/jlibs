@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * A Subscriber communicates its interest in a topic to a Broker by sending a SUBSCRIBE message
@@ -62,13 +61,11 @@ public class SubscribeMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(objectNode(options));
         array.add(topic);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

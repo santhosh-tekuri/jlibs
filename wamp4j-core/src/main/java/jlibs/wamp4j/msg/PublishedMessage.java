@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-
 /**
  * If the Broker is able to fulfill and allowing the publication,
  * and PUBLISH.Options.acknowledge == true, the Broker replies
@@ -53,12 +51,10 @@ public class PublishedMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(publicationID);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

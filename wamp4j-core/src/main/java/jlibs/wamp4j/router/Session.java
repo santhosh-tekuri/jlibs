@@ -56,6 +56,7 @@ class Session implements Listener{
         this.router = router;
         this.webSocket = webSocket;
         this.serialization = serialization;
+        array = router.array;
     }
 
     @Override
@@ -195,6 +196,7 @@ class Session implements Listener{
     private boolean goodbyeSend = false;
     protected boolean flushNeeded;
     protected Session flushNext;
+    private final ArrayNode array;
     protected boolean send(WAMPMessage message){
         if(sessionID==-1)
             return false;
@@ -202,7 +204,9 @@ class Session implements Listener{
             goodbyeSend = true;
         OutputStream out = webSocket.createOutputStream();
         try{
-            serialization.mapper().writeValue(out, message.toArrayNode());
+            array.removeAll();
+            message.toArrayNode(array);
+            serialization.mapper().writeValue(out, array);
         }catch(Throwable thr){
             if(flushNeeded)
                 router.removeFromFlushList(this);

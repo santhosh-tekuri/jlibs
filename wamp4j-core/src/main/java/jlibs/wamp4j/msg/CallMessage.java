@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * When a Caller wishes to call a remote procedure, it sends a CALL message to a Dealer
@@ -86,8 +85,7 @@ public class CallMessage extends RequestMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(objectNode(options));
@@ -96,7 +94,6 @@ public class CallMessage extends RequestMessage{
             array.add(arguments);
         if(argumentsKw!=null)
             array.add(argumentsKw);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

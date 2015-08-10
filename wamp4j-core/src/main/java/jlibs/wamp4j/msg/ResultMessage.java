@@ -21,8 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-
 /**
  * The Dealer will then send a RESULT message to the original Caller
  *
@@ -74,8 +72,7 @@ public class ResultMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(objectNode(details));
@@ -83,7 +80,6 @@ public class ResultMessage extends WAMPMessage{
             array.add(arguments);
         if(argumentsKw!=null)
             array.add(argumentsKw);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

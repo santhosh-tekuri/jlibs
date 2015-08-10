@@ -21,8 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-
 /**
  * If the Dealer is able to fulfill (mediate) the call and it allows the call,
  * it sends a INVOCATION message to the respective Callee implementing the procedure
@@ -81,8 +79,7 @@ public class InvocationMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(registrationID);
@@ -91,7 +88,6 @@ public class InvocationMessage extends WAMPMessage{
             array.add(arguments);
         if(argumentsKw!=null)
             array.add(argumentsKw);
-        return array;
     }
 
     public YieldMessage yield(ObjectNode options, ArrayNode arguments, ObjectNode argumentsKw){

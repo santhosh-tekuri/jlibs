@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
 
-import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static jlibs.wamp4j.Util.*;
+import static jlibs.wamp4j.Util.nonNull;
 
 /**
  * A Callee announces the availability of an endpoint implementing
@@ -65,13 +64,11 @@ public class RegisterMessage extends RequestMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(requestID);
         array.add(objectNode(options));
         array.add(procedure);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){

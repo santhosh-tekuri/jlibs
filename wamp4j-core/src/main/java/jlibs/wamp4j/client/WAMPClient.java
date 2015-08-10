@@ -17,6 +17,7 @@
 package jlibs.wamp4j.client;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.*;
 import jlibs.wamp4j.Util;
@@ -235,10 +236,13 @@ public class WAMPClient{
         }
     };
 
+    private final ArrayNode array = JsonNodeFactory.instance.arrayNode();
     private void send(WAMPMessage message) throws WAMPException{
         OutputStream out = webSocket.createOutputStream();
         try{
-            serialization.mapper().writeValue(out, message.toArrayNode());
+            array.removeAll();
+            message.toArrayNode(array);
+            serialization.mapper().writeValue(out, array);
         }catch(Throwable thr){
             webSocket.release(out);
             throw new WAMPException(ErrorCode.serializationFailed()).initCause(thr);

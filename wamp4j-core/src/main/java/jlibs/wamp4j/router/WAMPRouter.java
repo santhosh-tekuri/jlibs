@@ -16,6 +16,8 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.spi.AcceptListener;
@@ -33,6 +35,8 @@ import static jlibs.wamp4j.Util.subProtocols;
  * @author Santhosh Kumar Tekuri
  */
 public class WAMPRouter{
+    protected final ArrayNode array = JsonNodeFactory.instance.arrayNode();
+
     private final WebSocketServer server;
     private final URI uri;
     private final WAMPSerialization serializations[];

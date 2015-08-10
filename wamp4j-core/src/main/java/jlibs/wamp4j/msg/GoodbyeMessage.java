@@ -63,12 +63,10 @@ public class GoodbyeMessage extends WAMPMessage{
     }
 
     @Override
-    public ArrayNode toArrayNode(){
-        ArrayNode array = instance.arrayNode();
+    public void toArrayNode(ArrayNode array){
         array.add(idNodes[ID]);
         array.add(objectNode(details));
         array.add(reason);
-        return array;
     }
 
     static final Decoder decoder = new Decoder(){
