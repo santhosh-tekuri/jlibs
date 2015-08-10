@@ -105,13 +105,13 @@ public class InvocationMessage extends WAMPMessage{
                 throw new WAMPException(ErrorCode.invalidMessage());
 
             assert id(array)==ID;
-            long subscriptionID = longValue(array, 1);
-            long publicationID = longValue(array, 2);
+            long requestID = longValue(array, 1);
+            long registrationID = longValue(array, 2);
             ObjectNode details = objectValue(array, 3);
             ArrayNode arguments = array.size()>=5 ? arrayValue(array, 4) : null;
             ObjectNode argumentsKw = array.size()==6 ? objectValue(array, 5) : null;
 
-            return new InvocationMessage(subscriptionID, publicationID, details, arguments, argumentsKw);
+            return new InvocationMessage(requestID, registrationID, details, arguments, argumentsKw);
         }
     };
 }
