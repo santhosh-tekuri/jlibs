@@ -277,20 +277,22 @@ public class Benchmark{
 
     public static void main(String[] args) throws Exception{
         if(args.length==0){
-            System.err.println("needs arguments: {blocking} {threads} {timeout}");
+            System.err.println("needs arguments: {blocking} {threads} {duration}");
             return;
         }
         final boolean blocking = Boolean.parseBoolean(args[0]);
         final int threads = Integer.parseInt(args[1]);
-        final long timeout = Long.parseLong(args[2]);
+        final long duration = Long.parseLong(args[2]);
+        System.out.printf("configuration: { blocking: %s, threads: %d, duration: %d}%n", blocking, threads, duration);
         new WAMPClient(new NettyWebSocketClient(), uri, realm).connect(new SessionAdapter(){
             @Override
             public void onOpen(WAMPClient client){
+                System.out.println("connected to wamp-router");
                 Runnable runnable;
                 if(blocking)
-                    runnable = new Blocking(client, threads, timeout);
+                    runnable = new Blocking(client, threads, duration);
                 else
-                    runnable = new NonBlocking(client, threads, timeout);
+                    runnable = new NonBlocking(client, threads, duration);
                 new Thread(runnable).start();
             }
         });
