@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
@@ -36,7 +37,7 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
     private final WebSocketServerHandshaker handshaker;
     private final String subProtocol;
     protected ChannelHandlerContext ctx;
-
+    private ChannelPromise voidPromise;
     public NettyWebSocket(WebSocketServerHandshaker handshaker, String subProtocol){
         this.handshaker = handshaker;
         this.subProtocol = subProtocol;
@@ -45,6 +46,7 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception{
         this.ctx = ctx;
+        voidPromise = ctx.channel().voidPromise();
         if(listener!=null)
             listener.readyToWrite(this);
         super.channelActive(ctx);
@@ -112,7 +114,7 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
     public void send(MessageType type, OutputStream out){
         ByteBuf buffer = ((ByteBufOutputStream)out).buffer();
         WebSocketFrame frame = type==MessageType.text ? new TextWebSocketFrame(buffer) : new BinaryWebSocketFrame(buffer);
-        ctx.write(frame).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        ctx.write(frame, voidPromise);
     }
 
     @Override
