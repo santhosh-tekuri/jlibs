@@ -22,10 +22,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
 import jlibs.wamp4j.spi.WebSocket;
@@ -35,8 +32,15 @@ import java.io.OutputStream;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> implements WebSocket{
+public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> implements WebSocket{
+    private final WebSocketServerHandshaker handshaker;
+    private final String subProtocol;
     protected ChannelHandlerContext ctx;
+
+    public NettyWebSocket(WebSocketServerHandshaker handshaker, String subProtocol){
+        this.handshaker = handshaker;
+        this.subProtocol = subProtocol;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception{
@@ -51,11 +55,18 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
         super.channelInactive(ctx);
     }
 
-    protected void onWebSocketFrame(WebSocketFrame msg) throws Exception{
-        if(msg instanceof TextWebSocketFrame || msg instanceof BinaryWebSocketFrame){
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception{
+        if(frame instanceof CloseWebSocketFrame){
+            if(handshaker!=null)
+                handshaker.close(ctx.channel(), (CloseWebSocketFrame)frame.retain());
+        }else if(frame instanceof PingWebSocketFrame){
+            if(handshaker!=null)
+                ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
+        }else if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
             if(listener!=null){
-                MessageType type = msg instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
-                ByteBufInputStream is = new ByteBufInputStream(msg.content());
+                ByteBufInputStream is = new ByteBufInputStream(frame.content());
+                MessageType type = frame instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
                 listener.onMessage(this, type, is);
             }
         }
@@ -73,8 +84,6 @@ public abstract class NettyWebSocket<T> extends SimpleChannelInboundHandler<T> i
         if(listener!=null)
             listener.onError(this, cause);
     }
-
-    protected String subProtocol;
 
     @Override
     public String subProtocol(){

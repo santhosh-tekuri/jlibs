@@ -17,9 +17,7 @@
 package jlibs.wamp4j.netty;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -67,8 +65,7 @@ public class NettyWebSocketClient implements WebSocketClient{
                                 new HttpClientCodec(),
                                 new HttpObjectAggregator(8192),
                                 new WebSocketClientProtocolHandler(handshaker),
-                                new WebSocketFrameAggregator(16 * 1024 * 1024), // 16MB
-                                new NettyClientWebSocket(handshaker, listener)
+                                new HandshakeListener(handshaker, listener)
                         );
                     }
                 });
@@ -92,4 +89,41 @@ public class NettyWebSocketClient implements WebSocketClient{
     public void submit(Runnable r){
         eventLoopGroup.submit(r);
     }
+
+    private static class HandshakeListener extends SimpleChannelInboundHandler<Object>{
+        private final WebSocketClientHandshaker handshaker;
+        private final ConnectListener connectListener;
+
+        public HandshakeListener(WebSocketClientHandshaker handshaker, ConnectListener connectListener){
+            this.handshaker = handshaker;
+            this.connectListener = connectListener;
+        }
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, Object msg){}
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
+            if(handshaker.isHandshakeComplete()){
+                super.exceptionCaught(ctx, cause);
+            }else{
+                connectListener.onError(cause);
+                ctx.close();
+            }
+        }
+
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception{
+            if(evt == WebSocketClientProtocolHandler.ClientHandshakeStateEvent.HANDSHAKE_COMPLETE){
+                NettyWebSocket webSocket = new NettyWebSocket(null, handshaker.actualSubprotocol());
+                ctx.pipeline().addLast("ws-aggregator", new WebSocketFrameAggregator(16 * 1024 * 1024)); // 16MB
+                ctx.pipeline().addLast("websocket", webSocket);
+                ctx.pipeline().remove(this);
+                webSocket.channelActive(ctx);
+                connectListener.onConnect(webSocket);
+            }else
+                ctx.fireUserEventTriggered(evt);
+        }
+    }
+
 }

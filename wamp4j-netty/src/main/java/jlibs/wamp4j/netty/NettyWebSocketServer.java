@@ -17,16 +17,18 @@
 package jlibs.wamp4j.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.AttributeKey;
+import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.AcceptListener;
 import jlibs.wamp4j.spi.WebSocketServer;
 
@@ -61,7 +63,7 @@ public class NettyWebSocketServer implements WebSocketServer{
                         ch.pipeline().addLast(
                                 new HttpServerCodec(),
                                 new HttpObjectAggregator(65536),
-                                new NettyServerWebSocket(uri, listener, subProtocols)
+                                new Handshaker(uri, listener, subProtocols)
                         );
                     }
                 });
@@ -99,5 +101,47 @@ public class NettyWebSocketServer implements WebSocketServer{
                 acceptListener.onClose(NettyWebSocketServer.this);
             }
         });
+    }
+
+    private static class Handshaker extends SimpleChannelInboundHandler<FullHttpRequest>{
+        private final URI uri;
+        private final AcceptListener acceptListener;
+        private final String subProtocols[];
+
+        public Handshaker(URI uri, AcceptListener acceptListener, String subProtocols[]){
+            this.uri = uri;
+            this.acceptListener = acceptListener;
+            this.subProtocols = subProtocols;
+        }
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception{
+            WebSocketServerHandshaker handshaker = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
+                    Util.toString(subProtocols), false).newHandshaker(request);
+            if(handshaker==null){
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+                return;
+            }
+
+            ChannelFuture future = handshaker.handshake(ctx.channel(), request);
+            for(String subProtocol : subProtocols){
+                if(subProtocol.equals(handshaker.selectedSubprotocol())){
+                    NettyWebSocket webSocket = new NettyWebSocket(handshaker, subProtocol);
+                    ctx.pipeline().addLast("ws-aggregator", new WebSocketFrameAggregator(16 * 1024 * 1024));
+                    ctx.pipeline().addLast("websocket", webSocket);
+                    ctx.pipeline().remove(this);
+                    webSocket.channelActive(ctx);
+                    acceptListener.onAccept(webSocket);
+                    return;
+                }
+            }
+            future.addListener(ChannelFutureListener.CLOSE);
+        }
+
+        private String getWebSocketLocation(FullHttpRequest req) {
+            String location =  req.headers().get("Host") + uri.getPath();
+            String protocol = uri.getScheme();
+            return ("https".equals(protocol)?"wss":"ws")+"://"+location;
+        }
     }
 }
