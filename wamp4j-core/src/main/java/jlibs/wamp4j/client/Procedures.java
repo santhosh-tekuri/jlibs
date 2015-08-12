@@ -45,7 +45,7 @@ class Procedures{
     }
 
     public void onInvocation(InvocationMessage invocation){
-        Procedure procedure = idMap.get(invocation.registrationID);
+        Procedure procedure = idMap.get(invocation.registrationID.longValue());
         procedure.onInvocation(client, invocation);
     }
 

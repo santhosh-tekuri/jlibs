@@ -19,6 +19,7 @@ package jlibs.wamp4j.msg;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
@@ -74,22 +75,23 @@ public abstract class WAMPMessage{
         return node==null ? objectNode : node;
     }
 
-    static int id(ArrayNode array) throws WAMPException{
-        return intValue(array, 0);
+    static NumericNode numericNode(ArrayNode array, int index) throws WAMPException{
+        JsonNode node = array.get(index);
+        if(!node.isNumber())
+            throw new WAMPException(ErrorCode.invalidMessage());
+        return (NumericNode)node;
     }
 
     static int intValue(ArrayNode array, int index) throws WAMPException{
-        JsonNode node = array.get(index);
-        if(!node.isNumber())
-            throw new WAMPException(ErrorCode.invalidMessage());
-        return node.intValue();
+        return numericNode(array, index).intValue();
     }
 
     static long longValue(ArrayNode array, int index) throws WAMPException{
-        JsonNode node = array.get(index);
-        if(!node.isNumber())
-            throw new WAMPException(ErrorCode.invalidMessage());
-        return node.longValue();
+        return numericNode(array, index).longValue();
+    }
+
+    static int id(ArrayNode array) throws WAMPException{
+        return intValue(array, 0);
     }
 
     static String textValue(ArrayNode array, int index) throws WAMPException{

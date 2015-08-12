@@ -16,6 +16,7 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.databind.node.LongNode;
 import jlibs.wamp4j.msg.RegisterMessage;
 
 import java.util.HashMap;
@@ -26,13 +27,13 @@ import java.util.Map;
  */
 class Procedure{
     public final RegisterMessage register;
-    public final long registrationID;
+    public final LongNode registrationID;
     public final Session session;
     protected final Map<Long, CallRequest> requests = new HashMap<Long, CallRequest>();
 
     public Procedure(RegisterMessage register, long registrationID, Session session){
         this.register = register;
-        this.registrationID = registrationID;
+        this.registrationID = LongNode.valueOf(registrationID);
         this.session = session;
     }
 

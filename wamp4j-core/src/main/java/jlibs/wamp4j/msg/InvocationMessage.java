@@ -17,6 +17,7 @@
 package jlibs.wamp4j.msg;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.ErrorCode;
 import jlibs.wamp4j.WAMPException;
@@ -38,7 +39,7 @@ public class InvocationMessage extends WAMPMessage{
     /**
      * the registration ID under which the procedure was registered at the Dealer
      */
-    public final long registrationID;
+    public final NumericNode registrationID;
 
     /**
      * a dictionary that allows to provide additional invocation request details in an extensible way
@@ -56,7 +57,7 @@ public class InvocationMessage extends WAMPMessage{
     public final ObjectNode argumentsKw;
 
 
-    public InvocationMessage(long requestID, long registrationID, ObjectNode details, ArrayNode arguments, ObjectNode argumentsKw){
+    public InvocationMessage(long requestID, NumericNode registrationID, ObjectNode details, ArrayNode arguments, ObjectNode argumentsKw){
         this.requestID = requestID;
         this.registrationID = registrationID;
         this.details = details;
@@ -64,11 +65,11 @@ public class InvocationMessage extends WAMPMessage{
         this.argumentsKw = argumentsKw;
     }
 
-    public InvocationMessage(long requestID, long registrationID, ObjectNode details, ArrayNode arguments){
+    public InvocationMessage(long requestID, NumericNode registrationID, ObjectNode details, ArrayNode arguments){
         this(requestID, registrationID, details, arguments, null);
     }
 
-    public InvocationMessage(long requestID, long registrationID, ObjectNode details){
+    public InvocationMessage(long requestID, NumericNode registrationID, ObjectNode details){
         this(requestID, registrationID, details, null, null);
     }
 
@@ -106,7 +107,7 @@ public class InvocationMessage extends WAMPMessage{
 
             assert id(array)==ID;
             long requestID = longValue(array, 1);
-            long registrationID = longValue(array, 2);
+            NumericNode registrationID = numericNode(array, 2);
             ObjectNode details = objectValue(array, 3);
             ArrayNode arguments = array.size()>=5 ? arrayValue(array, 4) : null;
             ObjectNode argumentsKw = array.size()==6 ? objectValue(array, 5) : null;
