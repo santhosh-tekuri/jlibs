@@ -19,6 +19,8 @@ package jlibs.wamp4j;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jlibs.wamp4j.client.ClientOperator;
+import jlibs.wamp4j.client.ProcedureOperator;
 import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.msg.CallMessage;
 import jlibs.wamp4j.msg.ErrorMessage;
@@ -26,6 +28,7 @@ import jlibs.wamp4j.msg.InvocationMessage;
 import jlibs.wamp4j.msg.ResultMessage;
 import jlibs.wamp4j.netty.NettyWebSocketClient;
 import jlibs.wamp4j.netty.NettyWebSocketServer;
+import jlibs.wamp4j.router.RouterOperator;
 import jlibs.wamp4j.router.WAMPRouter;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -216,12 +219,46 @@ public class RPCTest{
         try{
             jlibsClient2.call(null, "p1", null, null);
         }catch(WAMPException ex){
-            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+            assertEquals(ex.getErrorCode(), ErrorCode.systemShutdown());
         }
         p1.assertUnregistered();
         jlibsClient1.assertClosed();
         jlibsClient2.assertClosed();
         start();
+    }
+
+    @Test(description="when client closes, router should remove all its registrations")
+    public void test9() throws Throwable{
+        ProcedureOperator p1 = new ProcedureOperator("p1");
+        p1.registerWith(jlibsClient1);
+        ProcedureOperator p2 = new ProcedureOperator("p1");
+        try{
+            p2.registerWith(jlibsClient2);
+        }catch(WAMPException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
+        }
+        jlibsClient1.close();
+        p2.registerWith(jlibsClient2);
+        p2.unregister();
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1.connect();
+    }
+
+    @Test(description="when client killed, router should remove all its registrations")
+    public void test10() throws Throwable{
+        ProcedureOperator p1 = new ProcedureOperator("p1");
+        p1.registerWith(jlibsClient1);
+        ProcedureOperator p2 = new ProcedureOperator("p1");
+        try{
+            p2.registerWith(jlibsClient2);
+        }catch(WAMPException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
+        }
+        jlibsClient1.kill();
+        p2.registerWith(jlibsClient2);
+        p2.unregister();
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1.connect();
     }
 
     @Test
@@ -236,7 +273,7 @@ public class RPCTest{
         List<Long> sessionIDs = new ArrayList<Long>();
         sessionIDs.add(jlibsClient1.client.getSessionID());
         sessionIDs.add(jlibsClient2.client.getSessionID());
-        for(JsonNode sessionID : (ArrayNode)result.arguments.get(0))
+        for(JsonNode sessionID : result.arguments.get(0))
             assertTrue(sessionIDs.remove(sessionID.longValue()));
         assertTrue(sessionIDs.isEmpty());
     }

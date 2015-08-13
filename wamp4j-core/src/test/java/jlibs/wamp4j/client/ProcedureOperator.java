@@ -14,39 +14,41 @@
  * under the License.
  */
 
-package jlibs.wamp4j;
+package jlibs.wamp4j.client;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import jlibs.wamp4j.client.Subscription;
-import jlibs.wamp4j.client.WAMPClient;
-import jlibs.wamp4j.msg.EventMessage;
+import jlibs.wamp4j.Await;
+import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.msg.InvocationMessage;
+import org.testng.Assert;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.testng.Assert.assertEquals;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class SubscriptionOperator{
-    private Subscription subscription;
+public class ProcedureOperator{
+    private Procedure procedure;
     private final AtomicReference<Object> atomic = new AtomicReference<Object>();
 
-    public SubscriptionOperator(String topic){
-        subscription = new Subscription(topic){
+    public ProcedureOperator(String uri){
+        procedure = new Procedure(uri){
             @Override
-            public void onSubscribe(WAMPClient client){
+            public void onRegister(WAMPClient client){
                 atomic.set(true);
             }
 
             @Override
-            public void onUnsubscribe(WAMPClient client){
-                atomic.set(false);
+            public void onInvocation(WAMPClient client, InvocationMessage invocation){
+                onRequest(client, invocation);
             }
 
             @Override
-            public void onEvent(EventMessage event){
-                onMessage(event);
+            public void onUnregister(WAMPClient client){
+                atomic.set(false);
             }
 
             @Override
@@ -56,23 +58,24 @@ public class SubscriptionOperator{
         };
     }
 
-    public void onMessage(EventMessage event){}
+    protected void onRequest(WAMPClient client, InvocationMessage invocation){
+    }
 
     private ClientOperator client;
-    public void subscribeWith(ObjectNode options, ClientOperator client) throws Throwable{
+    public void registerWith(ClientOperator client) throws Throwable{
         atomic.set(null);
-        client.client.subscribe(options, subscription);
-        assertEquals(Await.getResult(atomic), Boolean.TRUE);
+        client.client.register(null, procedure);
+        Assert.assertEquals(Await.getResult(atomic), Boolean.TRUE);
         this.client = client;
     }
 
-    public void unsubscribe() throws Throwable{
+    public void unregister() throws Throwable{
         atomic.set(null);
-        client.client.unsubscribe(subscription);
-        assertUnsubscribed();
+        client.client.unregister(procedure);
+        assertUnregistered();
     }
 
-    public void assertUnsubscribed() throws Throwable{
+    public void assertUnregistered() throws Throwable{
         assertEquals(Await.getResult(atomic), Boolean.FALSE);
         client = null;
     }

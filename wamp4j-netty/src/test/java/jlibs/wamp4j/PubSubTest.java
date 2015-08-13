@@ -18,10 +18,13 @@ package jlibs.wamp4j;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jlibs.wamp4j.client.ClientOperator;
+import jlibs.wamp4j.client.SubscriptionOperator;
 import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.msg.EventMessage;
 import jlibs.wamp4j.netty.NettyWebSocketClient;
 import jlibs.wamp4j.netty.NettyWebSocketServer;
+import jlibs.wamp4j.router.RouterOperator;
 import jlibs.wamp4j.router.WAMPRouter;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

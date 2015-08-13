@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package jlibs.wamp4j;
+package jlibs.wamp4j.router;
 
 import jlibs.wamp4j.router.RouterListener;
 import jlibs.wamp4j.router.WAMPRouter;
