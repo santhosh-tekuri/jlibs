@@ -39,7 +39,7 @@ class Session implements Listener{
     private final WAMPSerialization serialization;
 
     private Realm realm;
-    long sessionID;
+    long sessionID = -1;
 
     // key = registrationID
     protected final Map<Long, Procedure> procedures = new HashMap<Long, Procedure>();
