@@ -34,4 +34,5 @@ public interface WebSocket{
 
     public boolean isOpen();
     public void close();
+    public void kill();
 }

@@ -23,12 +23,15 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.AbstractNioChannel;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
 import jlibs.wamp4j.spi.WebSocket;
 
 import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -143,5 +146,18 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
     @Override
     public void close(){
         ctx.writeAndFlush(new CloseWebSocketFrame()).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    @Override
+    public void kill(){
+        try{
+            Method method = AbstractNioChannel.class.getDeclaredMethod("javaChannel");
+            method.setAccessible(true);
+            SocketChannel channel = (SocketChannel)method.invoke(ctx.channel());
+            channel.close();
+        }catch(Exception ex){
+            ex.printStackTrace();
+            ctx.close();
+        }
     }
 }

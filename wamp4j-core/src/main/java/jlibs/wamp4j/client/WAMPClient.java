@@ -566,6 +566,11 @@ public class WAMPClient{
         }
     }
 
+    // used for testing only
+    void kill(){
+        webSocket.kill();
+    }
+
     public long getSessionID(){
         return sessionID;
     }
