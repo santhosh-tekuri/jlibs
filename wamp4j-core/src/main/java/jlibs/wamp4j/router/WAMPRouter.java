@@ -60,6 +60,8 @@ public class WAMPRouter{
         server.bind(uri, subProtocols(serializations), new AcceptListener(){
             @Override
             public void onBind(WebSocketServer server){
+                if(ROUTER)
+                    Debugger.println(WAMPRouter.this, "-- bound %s", uri);
                 listener.onBind(WAMPRouter.this);
             }
 

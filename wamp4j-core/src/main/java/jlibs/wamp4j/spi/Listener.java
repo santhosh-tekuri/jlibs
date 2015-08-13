@@ -23,4 +23,5 @@ public interface Listener{
     public void onReadComplete(WebSocket webSocket);
     public void readyToWrite(WebSocket webSocket);
     public void onError(WebSocket webSocket, Throwable error);
+    public void onClose(WebSocket webSocket);
 }

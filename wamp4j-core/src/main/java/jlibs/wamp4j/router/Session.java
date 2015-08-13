@@ -187,10 +187,22 @@ class Session implements Listener{
 
     @Override
     public void onError(WebSocket webSocket, Throwable error){
-        router.listener.onError(router, error);
+        if(ROUTER)
+            Debugger.println(this, "-- onError: "+error.getMessage());
         cleanup();
         realm.removeSession(this);
         webSocket.close();
+    }
+
+    @Override
+    public void onClose(WebSocket webSocket){
+        if(ROUTER)
+            Debugger.println(this, "-- onClose");
+        assert !webSocket.isOpen();
+        if(sessionID!=-1){
+            cleanup();
+            realm.removeSession(this);
+        }
     }
 
     private boolean goodbyeSend = false;

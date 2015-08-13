@@ -231,8 +231,16 @@ public class WAMPClient{
 
         @Override
         public void onError(WebSocket webSocket, Throwable error){
+            cleanup();
             sessionListener.onError(WAMPClient.this, new WAMPException(error));
             disconnect();
+        }
+
+        @Override
+        public void onClose(WebSocket webSocket){
+            assert !webSocket.isOpen();
+            if(sessionID!=-1)
+                cleanup();
         }
     };
 
@@ -537,6 +545,9 @@ public class WAMPClient{
         lastUsedRequestID = -1;
         procedures.unregisterAll();
         topics.unsubscribeAll();
+        synchronized(this){
+            notifyAll();
+        }
     }
 
     private void doClose(){

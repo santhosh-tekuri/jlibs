@@ -54,6 +54,8 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception{
+        if(listener!=null)
+            listener.onClose(this);
         super.channelInactive(ctx);
     }
 
