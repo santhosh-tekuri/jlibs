@@ -30,7 +30,7 @@ public final class Debugger{
     public static void println(Object module, String message, Object... args){
         List<Object> list = new ArrayList<Object>(1+args.length);
         list.add(module);
-        list.add(Arrays.asList(args));
+        list.addAll(Arrays.asList(args));
         System.err.printf("%20s "+message+"%n", list.toArray());
     }
 }
