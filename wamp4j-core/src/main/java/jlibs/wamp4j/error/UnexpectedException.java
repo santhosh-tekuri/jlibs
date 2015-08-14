@@ -14,14 +14,18 @@
  * under the License.
  */
 
-package jlibs.wamp4j.msg;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import jlibs.wamp4j.error.InvalidMessageException;
+package jlibs.wamp4j.error;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-interface Decoder{
-    public WAMPMessage decode(ArrayNode array) throws InvalidMessageException;
+public class UnexpectedException extends WAMPException{
+    UnexpectedException(ErrorCode errorCode){
+        super(errorCode);
+    }
+
+    public UnexpectedException(Throwable throwable){
+        this(ErrorCode.unexpectedError());
+        initCause(throwable);
+    }
 }

@@ -18,7 +18,7 @@ package jlibs.wamp4j.client;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.Await;
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.WAMPException;
 import jlibs.wamp4j.msg.EventMessage;
 import org.testng.Assert;
 

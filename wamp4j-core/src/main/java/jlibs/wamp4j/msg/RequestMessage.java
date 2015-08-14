@@ -16,7 +16,7 @@
 
 package jlibs.wamp4j.msg;
 
-import jlibs.wamp4j.ErrorCode;
+import jlibs.wamp4j.error.ErrorCode;
 
 /**
  * @author Santhosh Kumar Tekuri

@@ -17,8 +17,7 @@
 package jlibs.wamp4j.msg;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import jlibs.wamp4j.ErrorCode;
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.InvalidMessageException;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -48,10 +47,10 @@ public class WAMPMessageDecoder{
         decoders[YieldMessage.ID] = YieldMessage.decoder;
     }
 
-    public static WAMPMessage decode(ArrayNode array) throws WAMPException{
+    public static WAMPMessage decode(ArrayNode array) throws InvalidMessageException{
         int id = WAMPMessage.id(array);
         if(id<0 || id>decoders.length-1 || decoders[id]==null)
-            throw new WAMPException(ErrorCode.invalidMessage());
+            throw new InvalidMessageException();
         return decoders[id].decode(array);
     }
 }

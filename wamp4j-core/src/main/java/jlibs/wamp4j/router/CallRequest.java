@@ -16,7 +16,7 @@
 
 package jlibs.wamp4j.router;
 
-import jlibs.wamp4j.ErrorCode;
+import jlibs.wamp4j.error.ErrorCode;
 import jlibs.wamp4j.msg.*;
 
 /**

@@ -16,7 +16,7 @@
 
 package jlibs.wamp4j.client;
 
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.WAMPException;
 
 /**
  * @author Santhosh Kumar Tekuri

@@ -17,14 +17,12 @@
 package jlibs.wamp4j.client;
 
 import jlibs.wamp4j.Await;
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.WAMPException;
 import jlibs.wamp4j.msg.InvocationMessage;
 import org.testng.Assert;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.testng.Assert.assertEquals;
 
 /**

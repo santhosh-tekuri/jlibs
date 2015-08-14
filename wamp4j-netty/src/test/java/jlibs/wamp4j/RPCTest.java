@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.client.ClientOperator;
 import jlibs.wamp4j.client.ProcedureOperator;
 import jlibs.wamp4j.client.WAMPClient;
+import jlibs.wamp4j.error.*;
 import jlibs.wamp4j.msg.CallMessage;
 import jlibs.wamp4j.msg.ErrorMessage;
 import jlibs.wamp4j.msg.InvocationMessage;
@@ -80,7 +81,7 @@ public class RPCTest{
         ProcedureOperator p2 = new ProcedureOperator("p1");
         try{
             p2.registerWith(jlibsClient2);
-        }catch(WAMPException ex){
+        }catch(ProcedureAlreadyExistsException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
         }
         p1.unregister();
@@ -101,8 +102,8 @@ public class RPCTest{
         try{
             jlibsClient1.call(null, "p1", null, null);
             throw new RuntimeException("exception should occur");
-        }catch(WAMPException wex){
-            assertEquals(wex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }catch(NoSuchProcedureException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
         ProcedureOperator p1 = new ProcedureOperator("p1"){
             @Override
@@ -134,8 +135,8 @@ public class RPCTest{
         try{
             jlibsClient1.call(null, "p1", null, null);
             throw new RuntimeException("exception should occur");
-        }catch(WAMPException wex){
-            assertEquals(wex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
+        }catch(NoSuchProcedureException ex){
+            assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
     }
 
@@ -164,7 +165,7 @@ public class RPCTest{
         try{
             jlibsClient1.call(null, "p1", null, null);
             throw new RuntimeException("exception should occur");
-        }catch(WAMPException ex){
+        }catch(NoSuchProcedureException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
     }
@@ -180,7 +181,7 @@ public class RPCTest{
         p1.registerWith(jlibsClient1);
         try{
             jlibsClient2.call(null, "p1", null, null);
-        }catch(WAMPException ex){
+        }catch(SystemShutdownException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.systemShutdown());
         }
         p1.unregister();
@@ -199,7 +200,7 @@ public class RPCTest{
         p1.registerWith(jlibsClient1);
         try{
             jlibsClient2.call(null, "p1", null, null);
-        }catch(WAMPException ex){
+        }catch(NoSuchProcedureException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
         p1.assertUnregistered();
@@ -218,7 +219,7 @@ public class RPCTest{
         p1.registerWith(jlibsClient1);
         try{
             jlibsClient2.call(null, "p1", null, null);
-        }catch(WAMPException ex){
+        }catch(SystemShutdownException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.systemShutdown());
         }
         p1.assertUnregistered();
@@ -234,7 +235,7 @@ public class RPCTest{
         ProcedureOperator p2 = new ProcedureOperator("p1");
         try{
             p2.registerWith(jlibsClient2);
-        }catch(WAMPException ex){
+        }catch(ProcedureAlreadyExistsException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
         }
         jlibsClient1.close();
@@ -251,7 +252,7 @@ public class RPCTest{
         ProcedureOperator p2 = new ProcedureOperator("p1");
         try{
             p2.registerWith(jlibsClient2);
-        }catch(WAMPException ex){
+        }catch(ProcedureAlreadyExistsException ex){
             assertEquals(ex.getErrorCode(), ErrorCode.procedureAlreadyExists("p1"));
         }
         jlibsClient1.kill();

@@ -14,14 +14,17 @@
  * under the License.
  */
 
-package jlibs.wamp4j.msg;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import jlibs.wamp4j.error.InvalidMessageException;
+package jlibs.wamp4j.error;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-interface Decoder{
-    public WAMPMessage decode(ArrayNode array) throws InvalidMessageException;
+public class NotConnectedException extends WAMPException{
+    NotConnectedException(ErrorCode errorCode){
+        super(errorCode);
+    }
+
+    public NotConnectedException(){
+        this(ErrorCode.notConnected());
+    }
 }

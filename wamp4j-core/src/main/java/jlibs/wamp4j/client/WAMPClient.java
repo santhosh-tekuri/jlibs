@@ -19,8 +19,11 @@ package jlibs.wamp4j.client;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jlibs.wamp4j.*;
+import jlibs.wamp4j.Debugger;
+import jlibs.wamp4j.Peer;
 import jlibs.wamp4j.Util;
+import jlibs.wamp4j.WAMPSerialization;
+import jlibs.wamp4j.error.*;
 import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.*;
 
@@ -136,13 +139,13 @@ public class WAMPClient{
                 case AbortMessage.ID:
                     AbortMessage abort = (AbortMessage)message;
                     assert sessionID==-1;
-                    sessionListener.onError(WAMPClient.this, new WAMPException(new ErrorCode(abort)));
+                    sessionListener.onError(WAMPClient.this, WAMPException.newInstance(abort));
                     disconnect();
                     break;
                 case ErrorMessage.ID:
                     ErrorMessage error = (ErrorMessage)message;
                     WAMPListener listener = requests.remove(error.requestID);
-                    listener.onError(WAMPClient.this, new WAMPException(error));
+                    listener.onError(WAMPClient.this, WAMPException.newInstance(error));
                     break;
                 case GoodbyeMessage.ID:
                     if(!goodbyeSend){
@@ -232,7 +235,7 @@ public class WAMPClient{
         @Override
         public void onError(WebSocket webSocket, Throwable error){
             cleanup();
-            sessionListener.onError(WAMPClient.this, new WAMPException(error));
+            sessionListener.onError(WAMPClient.this, new UnexpectedException(error));
             disconnect();
         }
 
@@ -253,7 +256,7 @@ public class WAMPClient{
             serialization.mapper().writeValue(out, array);
         }catch(Throwable thr){
             webSocket.release(out);
-            throw new WAMPException(ErrorCode.serializationFailed()).initCause(thr);
+            throw new SerializationFailedException(thr);
         }
         if(CLIENT)
             Debugger.println(this, "-> %s", message);
@@ -262,7 +265,7 @@ public class WAMPClient{
 
     private boolean validate(WAMPListener listener){
         if(sessionID==-1){
-            listener.onError(this, new WAMPException(ErrorCode.notConnected()));
+            listener.onError(this, new NotConnectedException());
             return false;
         }else
             return true;
@@ -371,10 +374,10 @@ public class WAMPClient{
 
     public ResultMessage call(ObjectNode options, String procedure, ArrayNode arguments, ObjectNode argumentsKw) throws WAMPException, InterruptedException{
         if(sessionID==-1)
-            throw new WAMPException(ErrorCode.notConnected());
+            throw new NotConnectedException();
         if(client.isEventLoop())
-            throw new WAMPException(ErrorCode.wrongThread());
-        BlockingCallListener listener = new BlockingCallListener();
+            throw new WrongThreadException();
+        final BlockingCallListener listener = new BlockingCallListener();
         synchronized(listener){
             call(options, procedure, arguments, argumentsKw, listener);
             listener.wait();
@@ -536,7 +539,7 @@ public class WAMPClient{
     private void cleanup(){
         if(CLIENT)
             Debugger.println(this, "-- closing listeners");
-        WAMPException error = new WAMPException(ErrorCode.systemShutdown());
+        WAMPException error = new SystemShutdownException();
         for(Map.Entry<Long, WAMPListener> entry : requests.entrySet()){
             WAMPListener listener = entry.getValue();
             listener.onError(this, error);

@@ -14,36 +14,13 @@
  * under the License.
  */
 
-package jlibs.wamp4j;
-
-import jlibs.wamp4j.msg.ErrorMessage;
+package jlibs.wamp4j.error;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class WAMPException extends Exception{
-    private ErrorCode errorCode;
-
-    public WAMPException(ErrorCode errorCode){
-        super(errorCode.message());
-        this.errorCode = errorCode;
-    }
-
-    public WAMPException(ErrorMessage errorMessage){
-        this(new ErrorCode(errorMessage));
-    }
-
-    public WAMPException(Throwable thr){
-        this(ErrorCode.unexpectedError());
-        super.initCause(thr);
-    }
-
-    public ErrorCode getErrorCode(){
-        return errorCode;
-    }
-
-    public WAMPException initCause(Throwable thr){
-        super.initCause(thr);
-        return this;
+public class NoSuchRoleException extends WAMPException{
+    NoSuchRoleException(ErrorCode errorCode){
+        super(errorCode);
     }
 }

@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jlibs.wamp4j.ErrorCode;
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.InvalidMessageException;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 
@@ -75,43 +74,43 @@ public abstract class WAMPMessage{
         return node==null ? objectNode : node;
     }
 
-    static NumericNode numericNode(ArrayNode array, int index) throws WAMPException{
+    static NumericNode numericNode(ArrayNode array, int index) throws InvalidMessageException{
         JsonNode node = array.get(index);
         if(!node.isNumber())
-            throw new WAMPException(ErrorCode.invalidMessage());
+            throw new InvalidMessageException();
         return (NumericNode)node;
     }
 
-    static int intValue(ArrayNode array, int index) throws WAMPException{
+    static int intValue(ArrayNode array, int index) throws InvalidMessageException{
         return numericNode(array, index).intValue();
     }
 
-    static long longValue(ArrayNode array, int index) throws WAMPException{
+    static long longValue(ArrayNode array, int index) throws InvalidMessageException{
         return numericNode(array, index).longValue();
     }
 
-    static int id(ArrayNode array) throws WAMPException{
+    static int id(ArrayNode array) throws InvalidMessageException{
         return intValue(array, 0);
     }
 
-    static String textValue(ArrayNode array, int index) throws WAMPException{
+    static String textValue(ArrayNode array, int index) throws InvalidMessageException{
         JsonNode node = array.get(index);
         if(!node.isTextual())
-            throw new WAMPException(ErrorCode.invalidMessage());
+            throw new InvalidMessageException();
         return node.textValue();
     }
 
-    static ArrayNode arrayValue(ArrayNode array, int index) throws WAMPException{
+    static ArrayNode arrayValue(ArrayNode array, int index) throws InvalidMessageException{
         JsonNode node = array.get(index);
         if(!node.isArray())
-            throw new WAMPException(ErrorCode.invalidMessage());
+            throw new InvalidMessageException();
         return (ArrayNode)node;
     }
 
-    static ObjectNode objectValue(ArrayNode array, int index) throws WAMPException{
+    static ObjectNode objectValue(ArrayNode array, int index) throws InvalidMessageException{
         JsonNode node = array.get(index);
         if(!node.isObject())
-            throw new WAMPException(ErrorCode.invalidMessage());
+            throw new InvalidMessageException();
         return (ObjectNode)node;
     }
 }

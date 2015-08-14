@@ -18,8 +18,7 @@ package jlibs.wamp4j.msg;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jlibs.wamp4j.ErrorCode;
-import jlibs.wamp4j.WAMPException;
+import jlibs.wamp4j.error.InvalidMessageException;
 
 import static jlibs.wamp4j.Util.nonNull;
 
@@ -98,9 +97,9 @@ public class CallMessage extends RequestMessage{
 
     static final Decoder decoder = new Decoder(){
         @Override
-        public WAMPMessage decode(ArrayNode array) throws WAMPException{
+        public WAMPMessage decode(ArrayNode array) throws InvalidMessageException{
             if(array.size()<4 || array.size()>6)
-                throw new WAMPException(ErrorCode.invalidMessage());
+                throw new InvalidMessageException();
 
             assert id(array)==ID;
             long requestID = longValue(array, 1);

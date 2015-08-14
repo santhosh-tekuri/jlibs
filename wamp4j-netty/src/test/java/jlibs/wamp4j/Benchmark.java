@@ -20,6 +20,7 @@ import jlibs.wamp4j.client.CallListener;
 import jlibs.wamp4j.client.Procedure;
 import jlibs.wamp4j.client.SessionListener;
 import jlibs.wamp4j.client.WAMPClient;
+import jlibs.wamp4j.error.WAMPException;
 import jlibs.wamp4j.msg.InvocationMessage;
 import jlibs.wamp4j.msg.ResultMessage;
 import jlibs.wamp4j.netty.NettyWebSocketClient;
