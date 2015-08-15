@@ -30,8 +30,11 @@ import jlibs.core.lang.OS;
 import jlibs.core.util.CollectionUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.xml.Namespaces;
+import jlibs.xml.XMLUtil;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.display.XSDisplayFilter;
+import jlibs.xml.xsd.display.XSDisplayNameVisitor;
+import jlibs.xml.xsd.display.XSDisplayValueVisitor;
 import org.apache.xerces.xs.*;
 import org.xml.sax.SAXException;
 
@@ -54,12 +57,17 @@ public class XSInstance{
     public int minimumListItemsGenerated = 2;
     public int maximumListItemsGenerated = 2;
     public int maximumRecursionDepth = 1;
+
+    // TRUE=always, FALSE=never, null=random
     public Boolean generateOptionalElements = Boolean.TRUE;
     public Boolean generateOptionalAttributes = Boolean.TRUE;
     public Boolean generateFixedAttributes = Boolean.TRUE;
     public Boolean generateDefaultAttributes = Boolean.TRUE;
+
     public boolean generateAllChoices = false;
-    public boolean showContentModel = true;
+
+    // TRUE=always, FALSE=never, null=when_appropriate
+    public Boolean showContentModel = null;
 
     private int generateRepeatCount(int minOccurs, int maxOccurs){
         if(minOccurs==0 && maxOccurs==1) //optional case
@@ -104,9 +112,16 @@ public class XSInstance{
             doc.startDocument();
             doc.declarePrefix(Namespaces.URI_XSI);
             if(rootElement.getPrefix()!=null && !rootElement.getNamespaceURI().isEmpty()){
-                if(!showContentModel || !rootElement.getPrefix().isEmpty())
+                if(!Boolean.FALSE.equals(showContentModel) || !rootElement.getPrefix().isEmpty())
                     doc.declarePrefix(rootElement.getPrefix(), rootElement.getNamespaceURI());
             }
+
+            XSNamespaceItemList namespaceItems = xsModel.getNamespaceItems();
+            for(int i=0; i<namespaceItems.getLength(); i++){
+                XSNamespaceItem namespaceItem = namespaceItems.item(i);
+                doc.declarePrefix(namespaceItem.getSchemaNamespace());
+            }
+
             WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc, xsiSchemaLocation, xsiNoNamespaceSchemaLocation));
             doc.endDocument();
         }catch(SAXException ex){
@@ -240,36 +255,45 @@ public class XSInstance{
                 if(isRecursionDepthCrossed(elem, path))
                     return false;
                 try{
-                    if(showContentModel && elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
+                    if(!Boolean.FALSE.equals(showContentModel) && elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
                         XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
+
+                        StringBuilder contentModel = new StringBuilder();
+
+                        XSObjectList attributeUses = complexType.getAttributeUses();
+                        if(!attributeUses.isEmpty()){
+                            contentModel.append("@(");
+                            for(int i=0; i<attributeUses.getLength(); i++){
+                                XSAttributeUse attrUse = (XSAttributeUse)attributeUses.get(i);
+                                if(i>0)
+                                    contentModel.append(", ");
+                                contentModel.append(XMLUtil.getQName(XSUtil.getQName(attrUse, doc.getNamespaceSupport())));
+                            }
+                            contentModel.append(")");
+                        }
+
                         switch(complexType.getContentType()){
                             case XSComplexTypeDefinition.CONTENTTYPE_ELEMENT:
                             case XSComplexTypeDefinition.CONTENTTYPE_MIXED:
-                                String contentModel = new XSContentModel().toString(complexType, doc);
-                                boolean showContentModel = false;
+                                if(contentModel.length()>0)
+                                    contentModel.append(" ");
+                                contentModel.append(new XSContentModel().toString(complexType, doc));
+                        }
+
+                        if(contentModel.length()>0){
+                            boolean addComment = false;
+                            if(Boolean.TRUE.equals(showContentModel))
+                                addComment = true;
+                            else{
                                 for(char ch: "?*+|;[".toCharArray()){
-                                    if(contentModel.indexOf(ch)!=-1){
-                                        showContentModel = true;
+                                    if(contentModel.indexOf(String.valueOf(ch))!=-1){
+                                        addComment = true;
                                         break;
                                     }
                                 }
-                                if(showContentModel){
-                                    int depth = 0;
-                                    while(true){
-                                        path = path.getParentPath(XSElementDeclaration.class);
-                                        if(path!=null)
-                                            depth++;
-                                        else
-                                            break;
-                                    }
-                                    doc.addText("\n");
-                                    for(int i=depth; i>0; i--)
-                                        doc.addText("   ");
-                                    doc.addComment(contentModel);
-                                    doc.addText("\n");
-                                    for(int i=depth; i>0; i--)
-                                        doc.addText("   ");
-                                }
+                            }
+                            if(addComment)
+                                addComment(path, contentModel.toString());
                         }
                     }
                     doc.startElement(elem.getNamespace(), elem.getName());
@@ -278,6 +302,24 @@ public class XSInstance{
                 }catch(SAXException ex){
                     throw new ImpossibleException(ex);
                 }
+            }
+
+            private void addComment(Path path, String comment) throws SAXException{
+                int depth = 0;
+                while(true){
+                    path = path.getParentPath(XSElementDeclaration.class);
+                    if(path!=null)
+                        depth++;
+                    else
+                        break;
+                }
+                doc.addText("\n");
+                for(int i=depth; i>0; i--)
+                    doc.addText("   ");
+                doc.addComment(comment);
+                doc.addText("\n");
+                for(int i=depth; i>0; i--)
+                    doc.addText("   ");
             }
 
             @Override
@@ -777,7 +819,7 @@ public class XSInstance{
             generateAllChoices = Boolean.parseBoolean(value);
         value = options.getProperty("showContentModel");
         if(value!=null)
-            showContentModel = Boolean.parseBoolean(value);
+            showContentModel = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
     }
 
     public SampleValueGenerator sampleValueGenerator;
