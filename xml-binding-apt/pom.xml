@@ -16,6 +16,11 @@
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>
+            <artifactId>jlibs-apt</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>in.jlibs</groupId>
             <artifactId>jlibs-xml-binding</artifactId>
             <version>${project.version}</version>
         </dependency>
