@@ -25,24 +25,29 @@ import static jlibs.wamp4j.Role.*;
  * @author Santhosh Kumar Tekuri
  */
 public enum Feature{
-    subscriber_blackwhite_listing(false, publisher, broker),
-    publisher_exclusion(false, publisher, broker),
-    publisher_identification(false, publisher, broker, subscriber),
-    publication_trustlevels(false, subscriber, broker),
-    pattern_based_subscription(false, subscriber, broker),
-    partitioned_pubsub(false, publisher, subscriber, broker),
-    subscriber_metaevents(false, subscriber, broker),
-    subscriber_list(false, subscriber, broker),
-    event_history(false, subscriber, broker),
-    progressive_call_results(false, caller, callee, dealer),
-    call_canceling(false, caller, callee, dealer),
-    call_timeout(false, caller, callee, dealer),
-    callee_blackwhite_listing(false, caller, dealer),
-    caller_exclusion(false, caller, dealer),
+    // rpc
     caller_identification(false, caller, callee, dealer),
     call_trustlevels(false, callee, dealer),
     pattern_based_registration(false, callee, dealer),
     partitioned_rpc(false, callee, callee),
+    registration_meta_api(false, dealer),
+    shared_registration(false, callee, dealer),
+    call_canceling(false, caller, callee, dealer),
+    call_timeout(false, caller, callee, dealer),
+    callee_blackwhite_listing(false, caller, dealer),
+    caller_exclusion(false, caller, dealer),
+    progressive_call_results(false, caller, callee, dealer),
+
+    //pub-sub
+    publisher_identification(false, publisher, broker, subscriber),
+    publication_trustlevels(false, subscriber, broker),
+    publisher_exclusion(false, publisher, broker),
+    pattern_based_subscription(false, subscriber, broker),
+    subscriber_blackwhite_listing(false, publisher, broker),
+    partitioned_pubsub(false, publisher, subscriber, broker),
+    subscriber_metaevents(false, subscriber, broker),
+    subscriber_list(false, subscriber, broker),
+    event_history(false, subscriber, broker),
     ;
 
     public final EnumSet<Role> roles;
