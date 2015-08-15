@@ -63,21 +63,29 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
             }
         }
     }
-    
+
     private void appendCardinality(Path path){
         path = path.getParentPath(XSParticle.class);
         if(path!=null){
             XSParticle particle = (XSParticle)path.getElement();
-            if(particle.getMinOccurs()==0 && particle.getMaxOccursUnbounded())
+            if(particle.getMinOccurs()==1 && particle.getMaxOccurs()==1)
+                return;
+            if(particle.getMinOccurs()==0 && particle.getMaxOccurs()==1)
+                buff.append("?");
+            else if(particle.getMinOccurs()==0 && particle.getMaxOccursUnbounded())
                 buff.append("*");
             else if(particle.getMinOccurs()==1 && particle.getMaxOccursUnbounded())
                 buff.append("+");
-            else if(particle.getMaxOccursUnbounded())
-                buff.append(particle.getMinOccurs()).append("+");
-            else if(particle.getMinOccurs()==0 && particle.getMaxOccurs()==1)
-                buff.append("?");
-            else if(particle.getMinOccurs()!=1 && particle.getMaxOccurs()!=-1)
-                buff.append("[").append(particle.getMinOccurs()).append(",").append(particle.getMaxOccurs()).append("]");
+            else{
+                buff.append("[");
+                if(particle.getMaxOccursUnbounded())
+                    buff.append(particle.getMinOccurs()).append("+");
+                else if(particle.getMinOccurs()==particle.getMaxOccurs())
+                    buff.append(particle.getMinOccurs());
+                else
+                    buff.append(particle.getMinOccurs()).append(",").append(particle.getMaxOccurs());
+                buff.append("]");
+            }
         }
     }
 
