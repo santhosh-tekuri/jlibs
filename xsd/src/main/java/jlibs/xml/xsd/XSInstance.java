@@ -33,8 +33,6 @@ import jlibs.xml.Namespaces;
 import jlibs.xml.XMLUtil;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.display.XSDisplayFilter;
-import jlibs.xml.xsd.display.XSDisplayNameVisitor;
-import jlibs.xml.xsd.display.XSDisplayValueVisitor;
 import org.apache.xerces.xs.*;
 import org.xml.sax.SAXException;
 
@@ -268,6 +266,8 @@ public class XSInstance{
                                 if(i>0)
                                     contentModel.append(", ");
                                 contentModel.append(XMLUtil.getQName(XSUtil.getQName(attrUse, doc.getNamespaceSupport())));
+                                if(!attrUse.getRequired())
+                                    contentModel.append('?');
                             }
                             contentModel.append(")");
                         }
