@@ -16,23 +16,10 @@
 
 package jlibs.wamp4j.spi;
 
-import java.io.OutputStream;
-
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface WebSocket{
-    public String subProtocol();
-    public void setListener(Listener listener);
-
-    public OutputStream createOutputStream();
-    public void release(OutputStream out);
-
-    public boolean isWritable();
-    public void send(MessageType type, OutputStream out);
-    public void flush();
-
-    public boolean isOpen();
-    public void close();
-    public void kill();
+public interface WAMPEndpoint{
+    public boolean isEventLoop();
+    public void submit(Runnable r);
 }

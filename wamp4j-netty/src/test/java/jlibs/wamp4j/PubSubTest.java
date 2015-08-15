@@ -22,8 +22,8 @@ import jlibs.wamp4j.client.ClientOperator;
 import jlibs.wamp4j.client.SubscriptionOperator;
 import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.msg.EventMessage;
-import jlibs.wamp4j.netty.NettyWebSocketClient;
-import jlibs.wamp4j.netty.NettyWebSocketServer;
+import jlibs.wamp4j.netty.NettyClientEndpoint;
+import jlibs.wamp4j.netty.NettyServerEndpoint;
 import jlibs.wamp4j.router.RouterOperator;
 import jlibs.wamp4j.router.WAMPRouter;
 import org.testng.annotations.AfterClass;
@@ -48,13 +48,13 @@ public class PubSubTest{
 
     @BeforeClass(description="starts router and clients")
     public void start() throws Throwable{
-        router = new RouterOperator(new WAMPRouter(new NettyWebSocketServer(), uri));
+        router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
-        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient2.connect();
-        marsClient = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "mars"));
+        marsClient = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "mars"));
         marsClient.connect();
     }
 
@@ -189,7 +189,7 @@ public class PubSubTest{
         s1.assertUnsubscribed();
         s2.assertUnsubscribed();
         s3.assertUnsubscribed();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
     }
 

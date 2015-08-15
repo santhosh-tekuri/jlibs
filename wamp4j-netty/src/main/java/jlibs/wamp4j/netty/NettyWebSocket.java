@@ -27,7 +27,7 @@ import io.netty.channel.nio.AbstractNioChannel;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
-import jlibs.wamp4j.spi.WebSocket;
+import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.io.OutputStream;
 import java.lang.reflect.Method;
@@ -36,7 +36,7 @@ import java.nio.channels.SocketChannel;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> implements WebSocket{
+public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> implements WAMPSocket{
     private final WebSocketServerHandshaker handshaker;
     private final String subProtocol;
     protected ChannelHandlerContext ctx;

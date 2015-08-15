@@ -30,7 +30,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.AttributeKey;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.AcceptListener;
-import jlibs.wamp4j.spi.WebSocketServer;
+import jlibs.wamp4j.spi.WAMPServerEndPoint;
 
 import java.net.URI;
 import java.util.concurrent.ThreadFactory;
@@ -38,11 +38,11 @@ import java.util.concurrent.ThreadFactory;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyWebSocketServer implements WebSocketServer{
+public class NettyServerEndpoint implements WAMPServerEndPoint{
     private static final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, new ThreadFactory(){
         @Override
         public Thread newThread(Runnable r){
-            return new Thread(r, "NettyWebSocketServer");
+            return new Thread(r, NettyServerEndpoint.class.getSimpleName());
         }
     });
 
@@ -73,7 +73,7 @@ public class NettyWebSocketServer implements WebSocketServer{
                 if(future.isSuccess()){
                     channel = future.channel();
                     channel.attr(ACCEPT_LISTENER).set(listener);
-                    listener.onBind(NettyWebSocketServer.this);
+                    listener.onBind(NettyServerEndpoint.this);
                 }else
                     listener.onError(future.cause());
             }
@@ -98,7 +98,7 @@ public class NettyWebSocketServer implements WebSocketServer{
                 AcceptListener acceptListener = channel.attr(ACCEPT_LISTENER).get();
                 if(!future.isSuccess())
                     acceptListener.onError(future.cause());
-                acceptListener.onClose(NettyWebSocketServer.this);
+                acceptListener.onClose(NettyServerEndpoint.this);
             }
         });
     }

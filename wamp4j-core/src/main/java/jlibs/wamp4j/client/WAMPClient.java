@@ -46,24 +46,24 @@ import static jlibs.wamp4j.Util.subProtocols;
  * @author Santhosh Kumar Tekuri
  */
 public class WAMPClient{
-    private WebSocketClient client;
+    private WAMPClientEndpoint client;
     private URI uri;
     private String realm;
     private WAMPSerialization serializations[];
 
-    public WAMPClient(WebSocketClient client, URI uri, String realm, WAMPSerialization... serializations){
+    public WAMPClient(WAMPClientEndpoint client, URI uri, String realm, WAMPSerialization... serializations){
         this.client = client;
         this.uri = uri;
         this.realm = realm;
         this.serializations = serializations;
     }
 
-    public WAMPClient(WebSocketClient client, URI uri, String realm){
+    public WAMPClient(WAMPClientEndpoint client, URI uri, String realm){
         this(client, uri, realm, WAMPSerialization.values());
     }
 
     private SessionListener sessionListener;
-    private WebSocket webSocket;
+    private WAMPSocket socket;
     private WAMPSerialization serialization;
     private long sessionID = -1;
     private Map<Long, WAMPListener> requests = new HashMap<Long, WAMPListener>();
@@ -79,8 +79,8 @@ public class WAMPClient{
     private void disconnect(){
         if(CLIENT)
             Debugger.println(this, "-- disconnect");
-        webSocket.close();
-        webSocket = null;
+        socket.close();
+        socket = null;
         goodbyeSend = false;
         if(sessionID!=-1){
             sessionID = -1;
@@ -90,13 +90,13 @@ public class WAMPClient{
 
     private final ConnectListener connectListener = new ConnectListener(){
         @Override
-        public void onConnect(WebSocket webSocket){
-            WAMPClient.this.webSocket = webSocket;
-            WAMPClient.this.serialization = serialization(webSocket, serializations);
-            webSocket.setListener(messageListener);
+        public void onConnect(WAMPSocket socket){
+            WAMPClient.this.socket = socket;
+            WAMPClient.this.serialization = serialization(socket, serializations);
+            socket.setListener(messageListener);
             try{
                 send(new HelloMessage(realm, Peer.client.details));
-                webSocket.flush();
+                socket.flush();
             }catch(WAMPException impossible){
                 impossible.printStackTrace();
             }
@@ -110,9 +110,9 @@ public class WAMPClient{
 
     private final Listener messageListener = new Listener(){
         @Override
-        public void onMessage(WebSocket webSocket, MessageType type, InputStream is){
+        public void onMessage(WAMPSocket socket, MessageType type, InputStream is){
             if(type!=serialization.messageType()){
-                onError(webSocket, new RuntimeException("unexpected messageType: " + type));
+                onError(socket, new RuntimeException("unexpected messageType: " + type));
                 return;
             }
 
@@ -121,7 +121,7 @@ public class WAMPClient{
                 ArrayNode array = serialization.mapper().readValue(is, ArrayNode.class);
                 message = WAMPMessageDecoder.decode(array);
             }catch(Throwable thr){
-                onError(webSocket, thr);
+                onError(socket, thr);
                 return;
             }
 
@@ -203,27 +203,27 @@ public class WAMPClient{
         }
 
         @Override
-        public void onReadComplete(WebSocket webSocket){
-            webSocket.flush();
+        public void onReadComplete(WAMPSocket socket){
+            socket.flush();
         }
 
         @Override
-        public void readyToWrite(WebSocket webSocket){
+        public void readyToWrite(WAMPSocket socket){
             if(writing.getAndSet(true))
                 return;
             waiting.set(false);
-            while(webSocket.isWritable()){
+            while(socket.isWritable()){
                 Runnable runnable = queue.poll();
                 if(runnable==null){
-                    webSocket.flush();
+                    socket.flush();
                     break;
                 }
                 runnable.run();
-                if(!webSocket.isWritable())
-                    webSocket.flush();
+                if(!socket.isWritable())
+                    socket.flush();
             }
             writing.set(false);
-            if(!webSocket.isWritable())
+            if(!socket.isWritable())
                 waiting.set(true);
             if(queue.size()==0){
                 synchronized(WAMPClient.this){
@@ -233,15 +233,15 @@ public class WAMPClient{
         }
 
         @Override
-        public void onError(WebSocket webSocket, Throwable error){
+        public void onError(WAMPSocket socket, Throwable error){
             cleanup();
             sessionListener.onError(WAMPClient.this, new UnexpectedException(error));
             disconnect();
         }
 
         @Override
-        public void onClose(WebSocket webSocket){
-            assert !webSocket.isOpen();
+        public void onClose(WAMPSocket socket){
+            assert !socket.isOpen();
             if(sessionID!=-1)
                 cleanup();
         }
@@ -249,18 +249,18 @@ public class WAMPClient{
 
     private final ArrayNode array = JsonNodeFactory.instance.arrayNode();
     private void send(WAMPMessage message) throws WAMPException{
-        OutputStream out = webSocket.createOutputStream();
+        OutputStream out = socket.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);
             serialization.mapper().writeValue(out, array);
         }catch(Throwable thr){
-            webSocket.release(out);
+            socket.release(out);
             throw new SerializationFailedException(thr);
         }
         if(CLIENT)
             Debugger.println(this, "-> %s", message);
-        webSocket.send(serialization.messageType(), out);
+        socket.send(serialization.messageType(), out);
     }
 
     private boolean validate(WAMPListener listener){
@@ -285,7 +285,7 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(register);
-                webSocket.flush();
+                socket.flush();
             }catch(WAMPException ex){
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
@@ -308,7 +308,7 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(unregister);
-                webSocket.flush();
+                socket.flush();
             }catch(WAMPException ex){
                 procedure.onError(this, ex);
             }
@@ -328,7 +328,7 @@ public class WAMPClient{
     private Runnable flushTask = new Runnable(){
         @Override
         public void run(){
-            messageListener.readyToWrite(webSocket);
+            messageListener.readyToWrite(socket);
         }
     };
 
@@ -392,7 +392,7 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(yield);
-                webSocket.flush();
+                socket.flush();
             }catch(WAMPException ex){
                 sessionListener.onWarning(this, ex);
                 try{
@@ -417,10 +417,10 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(error);
-                webSocket.flush();
+                socket.flush();
             }catch(WAMPException ex){
                 sessionListener.onError(this, ex);
-                webSocket.close();
+                socket.close();
             }
         }else{
             client.submit(new Runnable(){
@@ -443,7 +443,7 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(subscribe);
-                    webSocket.flush();
+                    socket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -471,7 +471,7 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(unsubscribe);
-                    webSocket.flush();
+                    socket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -501,7 +501,7 @@ public class WAMPClient{
             PublishMessage publish = new PublishMessage(lastUsedRequestID, options, topic, arguments, argumentsKw);
             try{
                 send(publish);
-                webSocket.flush();
+                socket.flush();
                 if(publish.needsAcknowledgement())
                     requests.put(lastUsedRequestID, listener);
                 else
@@ -562,7 +562,7 @@ public class WAMPClient{
         goodbyeSend = true;
         try{
             send(message);
-            webSocket.flush();
+            socket.flush();
         }catch(WAMPException ex){
             sessionListener.onWarning(this, ex);
             disconnect();
@@ -571,7 +571,7 @@ public class WAMPClient{
 
     // used for testing only
     void kill(){
-        webSocket.kill();
+        socket.kill();
     }
 
     public long getSessionID(){

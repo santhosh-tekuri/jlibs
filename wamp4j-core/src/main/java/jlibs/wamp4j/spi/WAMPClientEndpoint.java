@@ -21,8 +21,6 @@ import java.net.URI;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface WebSocketClient{
+public interface WAMPClientEndpoint extends WAMPEndpoint{
     public void connect(URI uri, ConnectListener listener, String... subProtocols);
-    public boolean isEventLoop();
-    public void submit(Runnable r);
 }

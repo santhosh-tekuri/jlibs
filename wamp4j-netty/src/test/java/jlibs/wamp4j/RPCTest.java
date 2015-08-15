@@ -27,8 +27,8 @@ import jlibs.wamp4j.msg.CallMessage;
 import jlibs.wamp4j.msg.ErrorMessage;
 import jlibs.wamp4j.msg.InvocationMessage;
 import jlibs.wamp4j.msg.ResultMessage;
-import jlibs.wamp4j.netty.NettyWebSocketClient;
-import jlibs.wamp4j.netty.NettyWebSocketServer;
+import jlibs.wamp4j.netty.NettyClientEndpoint;
+import jlibs.wamp4j.netty.NettyServerEndpoint;
 import jlibs.wamp4j.router.RouterOperator;
 import jlibs.wamp4j.router.WAMPRouter;
 import org.testng.annotations.AfterClass;
@@ -55,13 +55,13 @@ public class RPCTest{
 
     @BeforeClass(description="starts router and clients")
     public void start() throws Throwable{
-        router = new RouterOperator(new WAMPRouter(new NettyWebSocketServer(), uri));
+        router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
-        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient2.connect();
-        marsClient = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "mars"));
+        marsClient = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "mars"));
         marsClient.connect();
     }
 
@@ -185,7 +185,7 @@ public class RPCTest{
             assertEquals(ex.getErrorCode(), ErrorCode.systemShutdown());
         }
         p1.unregister();
-        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient2 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient2.connect();
     }
 
@@ -204,7 +204,7 @@ public class RPCTest{
             assertEquals(ex.getErrorCode(), ErrorCode.noSuchProcedure("p1"));
         }
         p1.assertUnregistered();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
     }
 
@@ -241,7 +241,7 @@ public class RPCTest{
         jlibsClient1.close();
         p2.registerWith(jlibsClient2);
         p2.unregister();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
     }
 
@@ -258,7 +258,7 @@ public class RPCTest{
         jlibsClient1.kill();
         p2.registerWith(jlibsClient2);
         p2.unregister();
-        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyWebSocketClient(), uri, "jlibs"));
+        jlibsClient1 = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         jlibsClient1.connect();
     }
 

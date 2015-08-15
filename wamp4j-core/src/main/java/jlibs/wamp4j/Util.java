@@ -16,7 +16,7 @@
 
 package jlibs.wamp4j;
 
-import jlibs.wamp4j.spi.WebSocket;
+import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.util.Map;
 
@@ -47,9 +47,9 @@ public class Util{
         return subProtocols;
     }
 
-    public static WAMPSerialization serialization(WebSocket webSocket, WAMPSerialization... serializations){
+    public static WAMPSerialization serialization(WAMPSocket socket, WAMPSerialization... serializations){
         for(WAMPSerialization serialization : serializations){
-            if(serialization.protocol().equals(webSocket.subProtocol())){
+            if(serialization.protocol().equals(socket.subProtocol())){
                 return serialization;
             }
         }

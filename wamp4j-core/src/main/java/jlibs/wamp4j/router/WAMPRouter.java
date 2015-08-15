@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.spi.AcceptListener;
-import jlibs.wamp4j.spi.WebSocket;
-import jlibs.wamp4j.spi.WebSocketServer;
+import jlibs.wamp4j.spi.WAMPServerEndPoint;
+import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.net.URI;
 
@@ -37,18 +37,18 @@ import static jlibs.wamp4j.Util.subProtocols;
 public class WAMPRouter{
     protected final ArrayNode array = JsonNodeFactory.instance.arrayNode();
 
-    private final WebSocketServer server;
+    private final WAMPServerEndPoint server;
     private final URI uri;
     private final WAMPSerialization serializations[];
     protected final Realms realms = new Realms();
 
-    public WAMPRouter(WebSocketServer server, URI uri, WAMPSerialization... serializations){
+    public WAMPRouter(WAMPServerEndPoint server, URI uri, WAMPSerialization... serializations){
         this.server = server;
         this.uri = uri;
         this.serializations = serializations;
     }
 
-    public WAMPRouter(WebSocketServer server, URI uri){
+    public WAMPRouter(WAMPServerEndPoint server, URI uri){
         this(server, uri, WAMPSerialization.values());
     }
 
@@ -59,18 +59,18 @@ public class WAMPRouter{
         this.listener = listener;
         server.bind(uri, subProtocols(serializations), new AcceptListener(){
             @Override
-            public void onBind(WebSocketServer server){
+            public void onBind(WAMPServerEndPoint server){
                 if(ROUTER)
                     Debugger.println(WAMPRouter.this, "-- bound %s", uri);
                 listener.onBind(WAMPRouter.this);
             }
 
             @Override
-            public void onAccept(WebSocket webSocket){
+            public void onAccept(WAMPSocket socket){
                 if(ROUTER)
                     Debugger.println(WAMPRouter.this, "-- accept");
-                WAMPSerialization serialization = serialization(webSocket, serializations);
-                webSocket.setListener(new Session(WAMPRouter.this, webSocket, serialization));
+                WAMPSerialization serialization = serialization(socket, serializations);
+                socket.setListener(new Session(WAMPRouter.this, socket, serialization));
             }
 
             @Override
@@ -79,7 +79,7 @@ public class WAMPRouter{
             }
 
             @Override
-            public void onClose(WebSocketServer server){
+            public void onClose(WAMPServerEndPoint server){
                 listener.onClose(WAMPRouter.this);
             }
         });

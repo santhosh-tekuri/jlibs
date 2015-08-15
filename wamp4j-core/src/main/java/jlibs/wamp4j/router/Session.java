@@ -25,7 +25,7 @@ import jlibs.wamp4j.error.ErrorCode;
 import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
-import jlibs.wamp4j.spi.WebSocket;
+import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +39,7 @@ import static jlibs.wamp4j.Debugger.ROUTER;
  */
 class Session implements Listener{
     private final WAMPRouter router;
-    private final WebSocket webSocket;
+    private final WAMPSocket socket;
     private final WAMPSerialization serialization;
 
     private Realm realm;
@@ -56,17 +56,17 @@ class Session implements Listener{
     // key = subscriptionID
     protected final Map<Long, Topic> subscriptions = new HashMap<Long, Topic>();
 
-    public Session(WAMPRouter router, WebSocket webSocket, WAMPSerialization serialization){
+    public Session(WAMPRouter router, WAMPSocket socket, WAMPSerialization serialization){
         this.router = router;
-        this.webSocket = webSocket;
+        this.socket = socket;
         this.serialization = serialization;
         array = router.array;
     }
 
     @Override
-    public void onMessage(WebSocket webSocket, MessageType type, InputStream is){
+    public void onMessage(WAMPSocket socket, MessageType type, InputStream is){
         if(type!=serialization.messageType()){
-            onError(webSocket, new RuntimeException("unexpected messageType: " + type));
+            onError(socket, new RuntimeException("unexpected messageType: " + type));
             return;
         }
 
@@ -75,7 +75,7 @@ class Session implements Listener{
             ArrayNode array = serialization.mapper().readValue(is, ArrayNode.class);
             message = WAMPMessageDecoder.decode(array);
         }catch(Throwable thr){
-            onError(webSocket, thr);
+            onError(socket, thr);
             return;
         }
 
@@ -90,7 +90,7 @@ class Session implements Listener{
                 send(welcome);
                 break;
             case AbortMessage.ID:
-                webSocket.close();
+                socket.close();
                 break;
             case GoodbyeMessage.ID:
                 close();
@@ -180,29 +180,29 @@ class Session implements Listener{
     }
 
     @Override
-    public void onReadComplete(WebSocket webSocket){
+    public void onReadComplete(WAMPSocket socket){
         Session session;
         while((session=router.removeFromFlushList())!=null)
-            session.webSocket.flush();
+            session.socket.flush();
     }
 
     @Override
-    public void readyToWrite(WebSocket webSocket){}
+    public void readyToWrite(WAMPSocket socket){}
 
     @Override
-    public void onError(WebSocket webSocket, Throwable error){
+    public void onError(WAMPSocket socket, Throwable error){
         if(ROUTER)
             Debugger.println(this, "-- onError: "+error.getMessage());
         cleanup();
         realm.removeSession(this);
-        webSocket.close();
+        socket.close();
     }
 
     @Override
-    public void onClose(WebSocket webSocket){
+    public void onClose(WAMPSocket socket){
         if(ROUTER)
             Debugger.println(this, "-- onClose");
-        assert !webSocket.isOpen();
+        assert !socket.isOpen();
         if(sessionID!=-1){
             cleanup();
             realm.removeSession(this);
@@ -218,7 +218,7 @@ class Session implements Listener{
             return false;
         if(message instanceof GoodbyeMessage)
             goodbyeSend = true;
-        OutputStream out = webSocket.createOutputStream();
+        OutputStream out = socket.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);
@@ -227,17 +227,17 @@ class Session implements Listener{
             if(flushNeeded)
                 router.removeFromFlushList(this);
             router.listener.onError(router, thr);
-            webSocket.release(out);
+            socket.release(out);
             cleanup();
             realm.removeSession(this);
-            webSocket.close();
+            socket.close();
             return false;
         }
         if(!flushNeeded)
             router.addToFlushList(this);
         if(ROUTER)
             Debugger.println(this, "-> %s", message);
-        webSocket.send(serialization.messageType(), out);
+        socket.send(serialization.messageType(), out);
         return true;
     }
 
@@ -275,7 +275,7 @@ class Session implements Listener{
         cleanup();
         if(!goodbyeSend){
             if(send(new GoodbyeMessage("good-bye", ErrorCode.GOODBYE_AND_OUT)))
-                webSocket.close();
+                socket.close();
         }
     }
 

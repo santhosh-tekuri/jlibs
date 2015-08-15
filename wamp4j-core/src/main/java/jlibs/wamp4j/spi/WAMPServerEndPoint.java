@@ -16,12 +16,12 @@
 
 package jlibs.wamp4j.spi;
 
-import java.io.InputStream;
+import java.net.URI;
 
-public interface Listener{
-    public void onMessage(WAMPSocket socket, MessageType type, InputStream is);
-    public void onReadComplete(WAMPSocket socket);
-    public void readyToWrite(WAMPSocket socket);
-    public void onError(WAMPSocket socket, Throwable error);
-    public void onClose(WAMPSocket socket);
+/**
+ * @author Santhosh Kumar Tekuri
+ */
+public interface WAMPServerEndPoint extends WAMPEndpoint{
+    public void bind(URI uri, String subProtocols[], AcceptListener listener);
+    public void close();
 }

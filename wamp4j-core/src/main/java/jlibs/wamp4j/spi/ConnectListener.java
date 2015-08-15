@@ -20,6 +20,6 @@ package jlibs.wamp4j.spi;
  * @author Santhosh Kumar Tekuri
  */
 public interface ConnectListener{
-    public void onConnect(WebSocket webSocket);
+    public void onConnect(WAMPSocket socket);
     public void onError(Throwable error);
 }

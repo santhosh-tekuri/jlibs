@@ -20,8 +20,8 @@ package jlibs.wamp4j.spi;
  * @author Santhosh Kumar Tekuri
  */
 public interface AcceptListener{
-    public void onBind(WebSocketServer server);
-    public void onAccept(WebSocket webSocket);
+    public void onBind(WAMPServerEndPoint server);
+    public void onAccept(WAMPSocket socket);
     public void onError(Throwable error);
-    public void onClose(WebSocketServer server);
+    public void onClose(WAMPServerEndPoint server);
 }

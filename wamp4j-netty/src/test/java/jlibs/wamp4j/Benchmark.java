@@ -23,8 +23,8 @@ import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.error.WAMPException;
 import jlibs.wamp4j.msg.InvocationMessage;
 import jlibs.wamp4j.msg.ResultMessage;
-import jlibs.wamp4j.netty.NettyWebSocketClient;
-import jlibs.wamp4j.netty.NettyWebSocketServer;
+import jlibs.wamp4j.netty.NettyClientEndpoint;
+import jlibs.wamp4j.netty.NettyServerEndpoint;
 import jlibs.wamp4j.router.RouterListener;
 import jlibs.wamp4j.router.WAMPRouter;
 
@@ -238,7 +238,7 @@ public class Benchmark{
 
     static class Router{
         public static void main(String[] args){
-            WAMPRouter router = new WAMPRouter(new NettyWebSocketServer(), uri);
+            WAMPRouter router = new WAMPRouter(new NettyServerEndpoint(), uri);
             router.bind(new RouterListener(){
                 @Override
                 public void onBind(WAMPRouter router){
@@ -261,7 +261,7 @@ public class Benchmark{
 
     static class Client{
         public static void main(String[] args) throws Exception{
-            WAMPClient client = new WAMPClient(new NettyWebSocketClient(), uri, realm);
+            WAMPClient client = new WAMPClient(new NettyClientEndpoint(), uri, realm);
             client.connect(new SessionAdapter(){
                 @Override
                 public void onOpen(WAMPClient client){
@@ -285,7 +285,7 @@ public class Benchmark{
         final int threads = Integer.parseInt(args[1]);
         final long duration = Long.parseLong(args[2]);
         System.out.printf("configuration: { blocking: %s, threads: %d, duration: %d}%n", blocking, threads, duration);
-        new WAMPClient(new NettyWebSocketClient(), uri, realm).connect(new SessionAdapter(){
+        new WAMPClient(new NettyClientEndpoint(), uri, realm).connect(new SessionAdapter(){
             @Override
             public void onOpen(WAMPClient client){
                 System.out.println("connected to wamp-router");

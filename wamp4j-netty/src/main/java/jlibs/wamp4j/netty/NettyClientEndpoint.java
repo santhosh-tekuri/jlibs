@@ -27,7 +27,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.ConnectListener;
-import jlibs.wamp4j.spi.WebSocketClient;
+import jlibs.wamp4j.spi.WAMPClientEndpoint;
 
 import java.net.URI;
 import java.util.concurrent.ThreadFactory;
@@ -35,11 +35,11 @@ import java.util.concurrent.ThreadFactory;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyWebSocketClient implements WebSocketClient{
+public class NettyClientEndpoint implements WAMPClientEndpoint{
     private static final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, new ThreadFactory(){
         @Override
         public Thread newThread(Runnable r){
-            return new Thread(r, "NettyWebSocketClient");
+            return new Thread(r, NettyClientEndpoint.class.getSimpleName());
         }
     });
 

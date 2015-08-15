@@ -16,14 +16,23 @@
 
 package jlibs.wamp4j.spi;
 
-import java.net.URI;
+import java.io.OutputStream;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface WebSocketServer{
-    public void bind(URI uri, String subProtocols[], AcceptListener listener);
-    public boolean isEventLoop();
-    public void submit(Runnable r);
+public interface WAMPSocket{
+    public String subProtocol();
+    public void setListener(Listener listener);
+
+    public OutputStream createOutputStream();
+    public void release(OutputStream out);
+
+    public boolean isWritable();
+    public void send(MessageType type, OutputStream out);
+    public void flush();
+
+    public boolean isOpen();
     public void close();
+    public void kill();
 }
