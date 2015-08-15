@@ -22,10 +22,15 @@ import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.visitors.ReflectionVisitor;
 import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.xml.sax.XMLDocument;
+import jlibs.xml.xsd.XSNavigator;
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSModelGroup;
+import org.apache.xerces.xs.XSObjectList;
 import org.apache.xerces.xs.XSParticle;
+import org.apache.xerces.xs.XSTypeDefinition;
 
 /**
  * @author Santhosh Kumar T
@@ -76,7 +81,7 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
                 buff.append(particle.getMinOccurs()).append("+");
             else if(particle.getMinOccurs()==0 && particle.getMaxOccurs()==1)
                 buff.append("?");
-            else if(particle.getMinOccurs()!=1 && particle.getMaxOccurs()!=-1)
+            else if(particle.getMinOccurs() != particle.getMaxOccurs())
                 buff.append("[").append(particle.getMinOccurs()).append(",").append(particle.getMaxOccurs()).append("]");
         }
     }
@@ -108,7 +113,26 @@ public class XSContentModel extends ReflectionVisitor<Object, Processor<Object>>
         }
 
         @Override
-        public void postProcess(XSElementDeclaration elem, Path path){}
+        public void postProcess(XSElementDeclaration elem, Path path)
+        {
+        	if(elem.getTypeDefinition().getTypeCategory()==XSTypeDefinition.COMPLEX_TYPE)
+        	{
+                XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
+	            XSObjectList list = complexType.getAttributeUses();
+	            if (list.size() > 0)
+	            {
+	            	for (int i = 0; i < list.size(); i++)
+	            	{
+	            		XSAttributeUse use = (XSAttributeUse) list.get(i);
+	            		boolean required = use.getRequired();
+	            		XSAttributeDeclaration attrDeclaration = use.getAttrDeclaration();
+	            		String uri = attrDeclaration.getNamespace()==null ? "" : attrDeclaration.getNamespace();
+	            		doc.declarePrefix(uri);
+	            		buff.append((" @" + doc.toQName(uri, attrDeclaration.getName())) + (required?"":"?"));
+	            	}
+	            }	
+        	}
+        }
     };
 
     @SuppressWarnings("unchecked")
