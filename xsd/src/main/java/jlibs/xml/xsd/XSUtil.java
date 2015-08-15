@@ -53,7 +53,11 @@ public class XSUtil{
         if(obj.getName()==null)
             return new QName("");
         String ns = obj.getNamespace()==null ? "" : obj.getNamespace();
-        String prefix = nsSupport==null ? "" : nsSupport.findPrefix(ns);
+        String prefix;
+        if(nsSupport==null || (ns.isEmpty() && obj instanceof XSAttributeDeclaration))
+            prefix = "";
+        else
+            prefix = nsSupport.findPrefix(ns);
         return new QName(ns, obj.getName(), prefix);
     }
 
