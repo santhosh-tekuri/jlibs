@@ -44,6 +44,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+
 /**
  * @author Santhosh Kumar T
  */
@@ -60,6 +61,8 @@ public class XSInstance{
     public Boolean generateDefaultAttributes = Boolean.TRUE;
     public boolean generateAllChoices = false;
     public boolean showContentModel = true;
+    public boolean showDetailedContentModel = true;
+
 
     private int generateRepeatCount(int minOccurs, int maxOccurs){
         if(minOccurs==0 && maxOccurs==1) //optional case
@@ -246,7 +249,7 @@ public class XSInstance{
                             case XSComplexTypeDefinition.CONTENTTYPE_ELEMENT:
                             case XSComplexTypeDefinition.CONTENTTYPE_MIXED:
                                 String contentModel = new XSContentModel().toString(complexType, doc);
-                                boolean showContentModel = false;
+                                boolean showContentModel = showDetailedContentModel;
                                 for(char ch: "?*+|;[".toCharArray()){
                                     if(contentModel.indexOf(ch)!=-1){
                                         showContentModel = true;
@@ -778,6 +781,10 @@ public class XSInstance{
         value = options.getProperty("showContentModel");
         if(value!=null)
             showContentModel = Boolean.parseBoolean(value);
+        
+        value = options.getProperty("showDetailedContentModel");
+        if(value!=null)
+            showDetailedContentModel = Boolean.parseBoolean(value);
     }
 
     public SampleValueGenerator sampleValueGenerator;
