@@ -290,7 +290,7 @@ public class WAMPClient{
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     register(options, procedure);
@@ -313,7 +313,7 @@ public class WAMPClient{
                 procedure.onError(this, ex);
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     unregister(procedure);
@@ -332,7 +332,7 @@ public class WAMPClient{
         }
     };
 
-    private void beforeSubmit(){
+    private void submit(Runnable r){
         if(queue.size()>20000){
             synchronized(this){
                 try{
@@ -343,6 +343,9 @@ public class WAMPClient{
                 }
             }
         }
+        queue.add(r);
+        if(!writing.get() && waiting.compareAndSet(false, true))
+            client.submit(flushTask);
     }
 
     public AtomicLong send = new AtomicLong();
@@ -360,15 +363,12 @@ public class WAMPClient{
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
         }else{
-            beforeSubmit();
-            queue.add(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     call(options, procedure, arguments, argumentsKw, listener);
                 }
             });
-            if(!writing.get() && waiting.compareAndSet(false, true))
-                client.submit(flushTask);
         }
     }
 
@@ -403,7 +403,7 @@ public class WAMPClient{
                 }
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     reply(yield);
@@ -423,7 +423,7 @@ public class WAMPClient{
                 socket.close();
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     reply(error);
@@ -451,7 +451,7 @@ public class WAMPClient{
                 topic.onSubscribe(subscription);
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     subscribe(options, subscription);
@@ -479,7 +479,7 @@ public class WAMPClient{
                 topic.onUnsubscribe(subscription);
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     unsubscribe(subscription);
@@ -510,7 +510,7 @@ public class WAMPClient{
                 listener.onError(this, ex);
             }
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     publish(options, topic, arguments, argumentsKw, listener);
@@ -527,7 +527,7 @@ public class WAMPClient{
             if(sessionID!=-1)
                 doClose();
         }else{
-            client.submit(new Runnable(){
+            submit(new Runnable(){
                 @Override
                 public void run(){
                     close();
