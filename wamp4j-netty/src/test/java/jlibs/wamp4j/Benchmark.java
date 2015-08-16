@@ -249,7 +249,7 @@ public class Benchmark{
             System.out.print(count);
             requests += count;
         }
-        if(threads.length>0)
+        if(threads.length>1)
             System.out.println(" = "+requests);
         else
             System.out.println();

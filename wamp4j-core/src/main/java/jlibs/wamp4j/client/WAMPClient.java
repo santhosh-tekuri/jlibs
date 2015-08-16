@@ -285,7 +285,6 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(register);
-                socket.flush();
             }catch(WAMPException ex){
                 requests.remove(lastUsedRequestID).onError(this, ex);
             }
@@ -308,7 +307,6 @@ public class WAMPClient{
             requests.put(lastUsedRequestID, procedure);
             try{
                 send(unregister);
-                socket.flush();
             }catch(WAMPException ex){
                 procedure.onError(this, ex);
             }
@@ -392,7 +390,6 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(yield);
-                socket.flush();
             }catch(WAMPException ex){
                 sessionListener.onWarning(this, ex);
                 try{
@@ -417,7 +414,6 @@ public class WAMPClient{
         if(client.isEventLoop()){
             try{
                 send(error);
-                socket.flush();
             }catch(WAMPException ex){
                 sessionListener.onError(this, ex);
                 socket.close();
@@ -443,7 +439,6 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(subscribe);
-                    socket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -471,7 +466,6 @@ public class WAMPClient{
                 requests.put(lastUsedRequestID, subscription);
                 try{
                     send(unsubscribe);
-                    socket.flush();
                 }catch(WAMPException ex){
                     requests.remove(lastUsedRequestID).onError(this, ex);
                 }
@@ -501,7 +495,6 @@ public class WAMPClient{
             PublishMessage publish = new PublishMessage(lastUsedRequestID, options, topic, arguments, argumentsKw);
             try{
                 send(publish);
-                socket.flush();
                 if(publish.needsAcknowledgement())
                     requests.put(lastUsedRequestID, listener);
                 else
