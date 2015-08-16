@@ -70,18 +70,24 @@ public class Benchmark{
 
         @Override
         protected void doRun(){
+            long requests = 0;
+            long replies = 0;
+            long errors = 0;
             while(!Thread.interrupted()){
-                requests.incrementAndGet();
+                ++requests;
                 try{
                     client.call(null, HELLO_WORLD, null, null);
-                    replies.incrementAndGet();
+                    ++replies;
                 }catch(Throwable throwable){
-                    errors.incrementAndGet();
+                    ++errors;
                     if(throwable instanceof InterruptedException)
                         break;
                     throwable.printStackTrace();
                 }
             }
+            this.requests.set(requests);
+            this.replies.set(replies);
+            this.errors.set(errors);
         }
     }
 
@@ -92,10 +98,12 @@ public class Benchmark{
 
         @Override
         protected void doRun(){
+            long count = 0;
             while(!Thread.interrupted()){
-                requests.incrementAndGet();
+                ++count;
                 client.call(null, HELLO_WORLD, null, null, this);
             }
+            requests.set(count);
         }
 
         @Override
@@ -237,6 +245,7 @@ public class Benchmark{
             requests += thread.requests.get();
         }
 
+        System.out.println("  requests: "+requests);
         while(true){
             long replies = 0;
             for(RPCThread thread : threads){
@@ -251,7 +260,6 @@ public class Benchmark{
             long end = System.nanoTime();
             double seconds = ((double)(end-begin))/nanos;
             System.out.println(" ------------------------------- "+seconds);
-            System.out.println("  requests: "+requests);
             System.out.println("   replies: "+replies);
             System.out.println("   errors: "+errors);
             double throughput = (double)(replies+errors)/seconds;
