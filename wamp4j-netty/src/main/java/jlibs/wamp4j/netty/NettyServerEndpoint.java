@@ -30,6 +30,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.AttributeKey;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.AcceptListener;
+import jlibs.wamp4j.spi.NamedThreadFactory;
 import jlibs.wamp4j.spi.WAMPServerEndPoint;
 
 import java.net.URI;
@@ -39,12 +40,7 @@ import java.util.concurrent.ThreadFactory;
  * @author Santhosh Kumar Tekuri
  */
 public class NettyServerEndpoint implements WAMPServerEndPoint{
-    private static final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, new ThreadFactory(){
-        @Override
-        public Thread newThread(Runnable r){
-            return new Thread(r, NettyServerEndpoint.class.getSimpleName());
-        }
-    });
+    private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, NamedThreadFactory.ROUTER_THREAD_FACTORY);
 
     private static final AttributeKey<AcceptListener> ACCEPT_LISTENER = AttributeKey.newInstance(AcceptListener.class.getName());
     private Channel channel;
