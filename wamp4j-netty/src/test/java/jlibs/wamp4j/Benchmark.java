@@ -240,12 +240,20 @@ public class Benchmark{
         for(RPCThread thread : threads)
             thread.join();
 
+        System.out.print("  requests: ");
         long requests = 0;
         for(RPCThread thread : threads){
-            requests += thread.requests.get();
+            long count = thread.requests.get();
+            if(thread!=threads[0])
+                System.out.print('+');
+            System.out.print(count);
+            requests += count;
         }
+        if(threads.length>0)
+            System.out.println(" = "+requests);
+        else
+            System.out.println();
 
-        System.out.println("  requests: "+requests);
         while(true){
             long replies = 0;
             for(RPCThread thread : threads){
