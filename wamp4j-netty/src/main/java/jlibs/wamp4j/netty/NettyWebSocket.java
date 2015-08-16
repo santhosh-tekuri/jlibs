@@ -64,18 +64,18 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception{
-        if(frame instanceof CloseWebSocketFrame){
-            if(handshaker!=null)
-                handshaker.close(ctx.channel(), (CloseWebSocketFrame)frame.retain());
-        }else if(frame instanceof PingWebSocketFrame){
-            if(handshaker!=null)
-                ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
-        }else if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
+        if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
             if(listener!=null){
                 ByteBufInputStream is = new ByteBufInputStream(frame.content());
                 MessageType type = frame instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
                 listener.onMessage(this, type, is);
             }
+        }else if(frame instanceof PingWebSocketFrame){
+            if(handshaker!=null)
+                ctx.write(new PongWebSocketFrame(frame.content().retain()));
+        }else if(frame instanceof CloseWebSocketFrame){
+            if(handshaker!=null)
+                handshaker.close(ctx.channel(), (CloseWebSocketFrame)frame.retain());
         }
     }
 
