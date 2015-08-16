@@ -17,6 +17,7 @@
 package jlibs.wamp4j.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -34,7 +35,6 @@ import jlibs.wamp4j.spi.NamedThreadFactory;
 import jlibs.wamp4j.spi.WAMPServerEndPoint;
 
 import java.net.URI;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -53,6 +53,7 @@ public class NettyServerEndpoint implements WAMPServerEndPoint{
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(eventLoopGroup)
                 .channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception{
