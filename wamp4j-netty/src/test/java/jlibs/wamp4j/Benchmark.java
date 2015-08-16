@@ -38,150 +38,65 @@ public class Benchmark{
     private static final URI uri = URI.create("ws://localhost:8080/test");
     public static final String HELLO_WORLD = "hello_world";
 
-    private static class Blocking implements Runnable{
-        private WAMPClient client;
-        private RPCThread threads[];
-        private CountDownLatch latch;
-        private long duration;
-        public Blocking(WAMPClient client, int threadCount, long duration){
+    private static abstract class RPCThread extends Thread{
+        final WAMPClient client;
+        final CountDownLatch latch;
+        final AtomicLong requests = new AtomicLong();
+        final AtomicLong replies = new AtomicLong();
+        final AtomicLong errors = new AtomicLong();
+
+        public RPCThread(WAMPClient client, CountDownLatch latch){
             this.client = client;
-            threads = new RPCThread[threadCount];
-            latch = new CountDownLatch(threadCount+1);
-            this.duration = duration;
+            this.latch = latch;
         }
 
-        @Override
         public void run(){
-            for(int i=0; i<threads.length; i++)
-                (threads[i]=new RPCThread()).start();
+            latch.countDown();
             try{
-                latch.countDown();
                 latch.await();
-                long begin = System.nanoTime();
-                Thread.sleep(duration);
-                System.out.println("interrupting");
-                for(RPCThread thread : threads)
-                    thread.interrupt();
-                System.out.println("waiting to join");
-                for(RPCThread thread : threads)
-                    thread.join();
-                long end = System.nanoTime();
-                long requests = 0;
-                long replies = 0;
-                for(RPCThread thread : threads){
-                    requests += thread.requests;
-                    replies += thread.replies;
-                }
-                System.out.println("requests: "+requests);
-                System.out.println("replies: "+replies);
-                double throughput = (double)replies/ TimeUnit.SECONDS.convert(end-begin, TimeUnit.NANOSECONDS);
-                System.out.println("throughput: "+throughput);
-                System.exit(0);
+                doRun();
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }
 
-        private class RPCThread extends Thread{
-            long requests, replies;
-            @Override
-            public void run(){
-                latch.countDown();
+        protected abstract void doRun();
+    }
+
+    private static class BlockingRPCThread extends RPCThread{
+        public BlockingRPCThread(WAMPClient client, CountDownLatch latch){
+            super(client, latch);
+        }
+
+        @Override
+        protected void doRun(){
+            while(!Thread.interrupted()){
+                requests.incrementAndGet();
                 try{
-                    latch.await();
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
-                while(!Thread.interrupted()){
-                    ++requests;
-                    try{
-                        client.call(null, HELLO_WORLD, null, null);
-                        ++replies;
-                    }catch(Throwable throwable){
-                        ++replies;
-                        if(throwable instanceof InterruptedException)
-                            break;
-                        throwable.printStackTrace();
-                    }
+                    client.call(null, HELLO_WORLD, null, null);
+                    replies.incrementAndGet();
+                }catch(Throwable throwable){
+                    errors.incrementAndGet();
+                    if(throwable instanceof InterruptedException)
+                        break;
+                    throwable.printStackTrace();
                 }
             }
         }
     }
 
-    private static class NonBlocking implements Runnable, CallListener{
-        private WAMPClient client;
-        private RPCThread threads[];
-        private CountDownLatch latch;
-        private long duration;
-        public NonBlocking(WAMPClient client, int threadCount, long duration){
-            this.client = client;
-            threads = new RPCThread[threadCount];
-            latch = new CountDownLatch(threadCount+1);
-            this.duration = duration;
+    private static class NonBlockingRPCThread extends RPCThread implements CallListener{
+        public NonBlockingRPCThread(WAMPClient client, CountDownLatch latch){
+            super(client, latch);
         }
 
         @Override
-        public void run(){
-            long nanos = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
-            for(int i=0; i<threads.length; i++)
-                (threads[i]=new RPCThread()).start();
-            try{
-                latch.countDown();
-                latch.await();
-                long begin = System.nanoTime();
-                Thread.sleep(duration);
-                System.out.println("interrupting");
-                for(RPCThread thread : threads)
-                    thread.interrupt();
-                System.out.println("waiting to join");
-                for(RPCThread thread : threads)
-                    thread.join();
-                long requests = 0;
-                for(RPCThread thread : threads){
-                    requests += thread.requests.get();
-                }
-
-
-                while(true){
-                    long replies = this.replies.get();
-                    long end = System.nanoTime();
-                    double seconds = ((double)(end-begin))/nanos;
-                    System.out.println(" ------------------------------- "+seconds);
-                    System.out.println("  requests: "+requests);
-                    System.out.println("   replies: "+replies);
-                    System.out.println("      sent: " + client.send);
-                    double throughput = (double)replies/ seconds;
-                    System.out.println("throughput: " + throughput+"/sec");
-                    if(requests==replies)
-                        break;
-                    Thread.sleep(10*1000);
-                }
-                System.exit(0);
-            }catch(InterruptedException e){
-                e.printStackTrace();
+        protected void doRun(){
+            while(!Thread.interrupted()){
+                requests.incrementAndGet();
+                client.call(null, HELLO_WORLD, null, null, this);
             }
         }
-
-        private class RPCThread extends Thread{
-            public AtomicLong requests = new AtomicLong();
-            @Override
-            public void run(){
-                long count = 0;
-                latch.countDown();
-                try{
-                    latch.await();
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
-                while(!Thread.interrupted()){
-                    ++count;
-                    client.call(null, HELLO_WORLD, null, null, NonBlocking.this);
-                }
-                requests.set(count);
-            }
-        }
-
-        private AtomicLong replies = new AtomicLong();
 
         @Override
         public void onResult(WAMPClient client, ResultMessage result){
@@ -190,7 +105,7 @@ public class Benchmark{
 
         @Override
         public void onError(WAMPClient client, WAMPException error){
-            replies.incrementAndGet();
+            errors.incrementAndGet();
             error.printStackTrace();
         }
     }
@@ -276,26 +191,75 @@ public class Benchmark{
         }
     }
 
+    private static final long nanos = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
     public static void main(String[] args) throws Exception{
         if(args.length==0){
             System.err.println("needs arguments: {blocking} {threads} {duration}");
             return;
         }
         final boolean blocking = Boolean.parseBoolean(args[0]);
-        final int threads = Integer.parseInt(args[1]);
+        final int threadCount = Integer.parseInt(args[1]);
         final long duration = Long.parseLong(args[2]);
-        System.out.printf("configuration: { blocking: %s, threads: %d, duration: %d}%n", blocking, threads, duration);
-        new WAMPClient(new NettyClientEndpoint(), uri, realm).connect(new SessionAdapter(){
-            @Override
-            public void onOpen(WAMPClient client){
-                System.out.println("connected to wamp-router");
-                Runnable runnable;
-                if(blocking)
-                    runnable = new Blocking(client, threads, duration);
-                else
-                    runnable = new NonBlocking(client, threads, duration);
-                new Thread(runnable).start();
+        System.out.printf("configuration: { java_version: %s, blocking: %s, threads: %d, duration: %d}%n", System.getProperty("java.version"), blocking, threadCount, duration);
+
+        final CountDownLatch latch = new CountDownLatch(1+threadCount);
+        final RPCThread threads[] = new RPCThread[threadCount];
+        for(int i=0; i<threads.length; i++){
+            final int index = i;
+            new WAMPClient(new NettyClientEndpoint(), uri, realm).connect(new SessionAdapter(){
+                @Override
+                public void onOpen(WAMPClient client){
+                    System.out.println("client"+index+" connected to wamp-router");
+                    RPCThread thread;
+                    if(blocking)
+                        thread = new BlockingRPCThread(client, latch);
+                    else
+                        thread = new NonBlockingRPCThread(client, latch);
+                    threads[index] = thread;
+                    thread.start();
+                }
+            });
+        }
+
+        latch.countDown();
+        latch.await();
+        long begin = System.nanoTime();
+        Thread.sleep(duration);
+        System.out.println("interrupting");
+        for(RPCThread thread : threads)
+            thread.interrupt();
+        System.out.println("waiting to join");
+        for(RPCThread thread : threads)
+            thread.join();
+
+        long requests = 0;
+        for(RPCThread thread : threads){
+            requests += thread.requests.get();
+        }
+
+        while(true){
+            long replies = 0;
+            for(RPCThread thread : threads){
+                replies += thread.replies.get();
             }
-        });
+
+            long errors = 0;
+            for(RPCThread thread : threads){
+                errors += thread.errors.get();
+            }
+
+            long end = System.nanoTime();
+            double seconds = ((double)(end-begin))/nanos;
+            System.out.println(" ------------------------------- "+seconds);
+            System.out.println("  requests: "+requests);
+            System.out.println("   replies: "+replies);
+            System.out.println("   errors: "+errors);
+            double throughput = (double)(replies+errors)/seconds;
+            System.out.println("throughput: " + throughput+"/sec");
+            if(requests==replies)
+                break;
+            Thread.sleep(10*1000);
+        }
+        System.exit(0);
     }
 }
