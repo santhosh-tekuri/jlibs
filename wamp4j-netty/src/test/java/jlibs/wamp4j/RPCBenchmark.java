@@ -16,6 +16,8 @@
 
 package jlibs.wamp4j;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jlibs.wamp4j.client.CallListener;
 import jlibs.wamp4j.client.Procedure;
 import jlibs.wamp4j.client.SessionListener;
@@ -33,7 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Benchmark{
+public class RPCBenchmark{
     private static final String realm = "my-realm";
     private static final URI uri = URI.create("ws://localhost:8080/test");
     public static final String HELLO_WORLD = "hello_world";
@@ -43,6 +45,7 @@ public class Benchmark{
         final CountDownLatch latch;
         final AtomicLong requests = new AtomicLong();
         final AtomicLong replies = new AtomicLong();
+        final AtomicLong latencies = new AtomicLong();
         final AtomicLong errors = new AtomicLong();
 
         public RPCThread(WAMPClient client, CountDownLatch latch){
@@ -76,12 +79,14 @@ public class Benchmark{
             while(!Thread.interrupted()){
                 ++requests;
                 try{
+                    long begin = System.nanoTime();
                     client.call(null, HELLO_WORLD, null, null);
+                    latencies.addAndGet(System.nanoTime()-begin);
                     ++replies;
                 }catch(Throwable throwable){
-                    ++errors;
                     if(throwable instanceof InterruptedException)
                         break;
+                    ++errors;
                     throwable.printStackTrace();
                 }
             }
@@ -101,13 +106,16 @@ public class Benchmark{
             long count = 0;
             while(!Thread.interrupted()){
                 ++count;
-                client.call(null, HELLO_WORLD, null, null, this);
+                ArrayNode args = JsonNodeFactory.instance.arrayNode();
+                args.add(System.nanoTime());
+                client.call(null, HELLO_WORLD, args, null, this);
             }
             requests.set(count);
         }
 
         @Override
         public void onResult(WAMPClient client, ResultMessage result){
+            latencies.addAndGet(System.nanoTime()-result.arguments.get(0).longValue());
             replies.incrementAndGet();
         }
 
@@ -191,7 +199,7 @@ public class Benchmark{
                     client.register(null, new ProcedureAdapter(HELLO_WORLD){
                         @Override
                         public void onInvocation(WAMPClient client, InvocationMessage invocation){
-                            client.reply(invocation.yield(null, null, null));
+                            client.reply(invocation.yield(invocation.details, invocation.arguments, invocation.argumentsKw));
                         }
                     });
                 }
@@ -199,7 +207,6 @@ public class Benchmark{
         }
     }
 
-    private static final long nanos = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
     public static void main(String[] args) throws Exception{
         if(args.length==0){
             System.err.println("needs arguments: {blocking} {threads} {duration}");
@@ -256,22 +263,23 @@ public class Benchmark{
 
         while(true){
             long replies = 0;
+            long errors = 0;
+            long latencies = 0;
             for(RPCThread thread : threads){
                 replies += thread.replies.get();
-            }
-
-            long errors = 0;
-            for(RPCThread thread : threads){
                 errors += thread.errors.get();
+                latencies += thread.latencies.get();
             }
 
             long end = System.nanoTime();
-            double seconds = ((double)(end-begin))/nanos;
+            double seconds = ((double)(end-begin))/ TimeUnit.SECONDS.toNanos(1);
+            double throughput = (double)(replies+errors)/seconds;
+            double latency = (1.0*latencies/(replies+errors))/ TimeUnit.MILLISECONDS.toNanos(1);
             System.out.println(" ------------------------------- "+seconds);
             System.out.println("   replies: "+replies);
-            System.out.println("   errors: "+errors);
-            double throughput = (double)(replies+errors)/seconds;
+            System.out.println("    errors: "+errors);
             System.out.println("throughput: " + throughput+"/sec");
+            System.out.println("   latency: " + latency+" ms");
             if(requests==replies)
                 break;
             Thread.sleep(10*1000);
