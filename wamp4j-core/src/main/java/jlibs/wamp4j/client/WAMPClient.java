@@ -30,10 +30,10 @@ import jlibs.wamp4j.spi.*;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -207,29 +207,34 @@ public class WAMPClient{
             socket.flush();
         }
 
+        private Queue<Runnable> internalQueue = new ArrayDeque<Runnable>(QUEUE_SIZE);
+        private AtomicBoolean writing = new AtomicBoolean();
+
         @Override
         public void readyToWrite(WAMPSocket socket){
             if(writing.getAndSet(true))
                 return;
-            waiting.set(false);
             while(socket.isWritable()){
-                Runnable runnable = queue.poll();
+                if(internalQueue.isEmpty()){
+                    synchronized(WAMPClient.this){
+                        Queue<Runnable> temp = internalQueue;
+                        internalQueue = externalQueue;
+                        externalQueue = temp;
+                        WAMPClient.this.notifyAll();
+                    }
+                }
+                Runnable runnable = internalQueue.poll();
                 if(runnable==null){
                     socket.flush();
                     break;
+                }else{
+                    runnable.run();
+                    if(!socket.isWritable())
+                        socket.flush();
                 }
-                runnable.run();
-                if(!socket.isWritable())
-                    socket.flush();
             }
             writing.set(false);
-            if(!socket.isWritable())
-                waiting.set(true);
-            if(queue.size()==0){
-                synchronized(WAMPClient.this){
-                    WAMPClient.this.notifyAll();
-                }
-            }
+            waiting.set(!socket.isWritable());
         }
 
         @Override
@@ -320,8 +325,8 @@ public class WAMPClient{
         }
     }
 
-    private BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
-    private AtomicBoolean writing = new AtomicBoolean();
+    private static final int QUEUE_SIZE = 10000;
+    private Queue<Runnable> externalQueue = new ArrayDeque<Runnable>(QUEUE_SIZE);
     private AtomicBoolean waiting = new AtomicBoolean();
     private Runnable flushTask = new Runnable(){
         @Override
@@ -331,18 +336,19 @@ public class WAMPClient{
     };
 
     private void submit(Runnable r){
-        if(queue.size()>20000){
-            synchronized(this){
+        synchronized(this){
+            while(externalQueue.size()>=QUEUE_SIZE){
                 try{
                     this.wait();
                 }catch(InterruptedException ignore){
                     // Restore the interrupted status
                     Thread.currentThread().interrupt();
+                    break;
                 }
             }
+            externalQueue.add(r);
         }
-        queue.add(r);
-        if(!writing.get() && waiting.compareAndSet(false, true))
+        if(waiting.compareAndSet(false, true))
             client.submit(flushTask);
     }
 
