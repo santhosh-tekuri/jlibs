@@ -227,11 +227,8 @@ public class WAMPClient{
                 if(runnable==null){
                     socket.flush();
                     break;
-                }else{
+                }else
                     runnable.run();
-                    if(!socket.isWritable())
-                        socket.flush();
-                }
             }
             writing.set(false);
             waiting.set(!socket.isWritable());
@@ -266,6 +263,8 @@ public class WAMPClient{
         if(CLIENT)
             Debugger.println(this, "-> %s", message);
         socket.send(serialization.messageType(), out);
+        if(!socket.isWritable())
+            socket.flush();
     }
 
     private boolean validate(WAMPListener listener){
