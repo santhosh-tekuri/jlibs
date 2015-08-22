@@ -41,6 +41,8 @@ public class RPCBenchmark{
     public static final String HELLO_WORLD = "hello_world";
 
     private static abstract class RPCThread extends Thread{
+        private static int count = 0;
+
         final WAMPClient client;
         final CountDownLatch latch;
         final AtomicLong requests = new AtomicLong();
@@ -49,6 +51,7 @@ public class RPCBenchmark{
         final AtomicLong errors = new AtomicLong();
 
         public RPCThread(WAMPClient client, CountDownLatch latch){
+            super("RPCThread"+count++);
             this.client = client;
             this.latch = latch;
         }
