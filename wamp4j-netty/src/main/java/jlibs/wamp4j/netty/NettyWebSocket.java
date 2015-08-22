@@ -21,8 +21,8 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.AbstractNioChannel;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
@@ -36,7 +36,7 @@ import java.nio.channels.SocketChannel;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> implements WAMPSocket{
+public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMPSocket{
     private final WebSocketServerHandshaker handshaker;
     private final String subProtocol;
     protected ChannelHandlerContext ctx;
@@ -63,27 +63,32 @@ public class NettyWebSocket extends SimpleChannelInboundHandler<WebSocketFrame> 
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception{
-        if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
-            if(listener!=null){
-                ByteBufInputStream is = new ByteBufInputStream(frame.content());
-                MessageType type = frame instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
-                listener.onMessage(this, type, is);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception{
+        if(msg instanceof WebSocketFrame){
+            WebSocketFrame frame = (WebSocketFrame)msg;
+            try{
+                if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
+                    if(listener!=null){
+                        ByteBufInputStream is = new ByteBufInputStream(frame.content());
+                        MessageType type = frame instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
+                        listener.onMessage(this, type, is);
+                    }
+                }else if(frame instanceof PingWebSocketFrame)
+                    ctx.write(new PongWebSocketFrame(frame.content().retain()));
+                else if(frame instanceof CloseWebSocketFrame)
+                    handshaker.close(ctx.channel(), (CloseWebSocketFrame)frame.retain());
+            }finally{
+                frame.release();
             }
-        }else if(frame instanceof PingWebSocketFrame){
-            if(handshaker!=null)
-                ctx.write(new PongWebSocketFrame(frame.content().retain()));
-        }else if(frame instanceof CloseWebSocketFrame){
-            if(handshaker!=null)
-                handshaker.close(ctx.channel(), (CloseWebSocketFrame)frame.retain());
-        }
+        }else
+            ctx.fireChannelRead(msg);
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception{
         if(listener!=null)
             listener.onReadComplete(this);
-        super.channelReadComplete(ctx);
+        ctx.fireChannelReadComplete();
     }
 
     @Override
