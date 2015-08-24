@@ -28,7 +28,6 @@ import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.*;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -251,13 +250,13 @@ public class WAMPClient{
 
     private final ArrayNode array = JsonNodeFactory.instance.arrayNode();
     private void send(WAMPMessage message) throws WAMPException{
-        OutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = socket.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);
             serialization.mapper().writeValue(out, array);
         }catch(Throwable thr){
-            socket.release(out);
+            out.release();
             throw new SerializationFailedException(thr);
         }
         if(CLIENT)

@@ -16,20 +16,12 @@
 
 package jlibs.wamp4j.spi;
 
+import java.io.OutputStream;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
-public interface WAMPSocket{
-    public String subProtocol();
-    public void setListener(Listener listener);
-
-    public WAMPOutputStream createOutputStream();
-
-    public boolean isWritable();
-    public void send(MessageType type, WAMPOutputStream out);
-    public void flush();
-
-    public boolean isOpen();
-    public void close();
-    public void kill();
+public abstract class WAMPOutputStream extends OutputStream{
+    public abstract void release();
+    public abstract WAMPOutputStream duplicate();
 }

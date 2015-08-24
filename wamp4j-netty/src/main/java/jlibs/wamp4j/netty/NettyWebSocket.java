@@ -18,7 +18,6 @@ package jlibs.wamp4j.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,9 +26,9 @@ import io.netty.channel.nio.AbstractNioChannel;
 import io.netty.handler.codec.http.websocketx.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
+import jlibs.wamp4j.spi.WAMPOutputStream;
 import jlibs.wamp4j.spi.WAMPSocket;
 
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.channels.SocketChannel;
 
@@ -110,19 +109,13 @@ public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMP
     }
 
     @Override
-    public OutputStream createOutputStream(){
-        return new ByteBufOutputStream(ctx.alloc().buffer());
+    public WAMPOutputStream createOutputStream(){
+        return new NettyOutputStream(ctx.alloc().buffer());
     }
 
     @Override
-    public void release(OutputStream out){
-        ByteBuf buffer = ((ByteBufOutputStream)out).buffer();
-        buffer.release();
-    }
-
-    @Override
-    public void send(MessageType type, OutputStream out){
-        ByteBuf buffer = ((ByteBufOutputStream)out).buffer();
+    public void send(MessageType type, WAMPOutputStream out){
+        ByteBuf buffer = ((NettyOutputStream)out).buffer;
         WebSocketFrame frame = type==MessageType.text ? new TextWebSocketFrame(buffer) : new BinaryWebSocketFrame(buffer);
         ctx.write(frame, voidPromise);
     }

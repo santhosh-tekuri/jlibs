@@ -25,10 +25,10 @@ import jlibs.wamp4j.error.ErrorCode;
 import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
+import jlibs.wamp4j.spi.WAMPOutputStream;
 import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -218,7 +218,7 @@ class Session implements Listener{
             return false;
         if(message instanceof GoodbyeMessage)
             goodbyeSend = true;
-        OutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = socket.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);
@@ -227,7 +227,7 @@ class Session implements Listener{
             if(flushNeeded)
                 router.removeFromFlushList(this);
             router.listener.onError(router, thr);
-            socket.release(out);
+            out.release();
             cleanup();
             realm.removeSession(this);
             socket.close();
