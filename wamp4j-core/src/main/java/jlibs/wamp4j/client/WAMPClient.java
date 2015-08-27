@@ -243,8 +243,10 @@ public class WAMPClient{
         @Override
         public void onClose(WAMPSocket socket){
             assert !socket.isOpen();
-            if(sessionID!=-1)
+            if(sessionID!=-1){
                 cleanup();
+                disconnect();
+            }
         }
     };
 
