@@ -19,14 +19,22 @@ package jlibs.xml.xsd;
 import jlibs.core.graph.*;
 import jlibs.core.graph.navigators.FilteredTreeNavigator;
 import jlibs.core.graph.walkers.PreorderWalker;
+import jlibs.core.net.URLUtil;
 import jlibs.xml.Namespaces;
+import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.apache.xerces.xs.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.namespace.QName;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * @author Santhosh Kumar T
@@ -256,5 +264,48 @@ public class XSUtil{
         }
 
         return declaration[0];
+    }
+
+    public static void getNamespacePrefixes(final URL xsdURL, final Set<URL> crawled, final Properties prefixes) throws ParserConfigurationException, SAXException, IOException{
+        crawled.add(xsdURL);
+        SAXParser saxParser = SAXUtil.newSAXParser(true, false, false);
+        saxParser.parse(xsdURL.toString(), new DefaultHandler(){
+            @Override
+            public void startPrefixMapping(String prefix, String uri) throws SAXException{
+                if(Namespaces.suggestPrefix(uri)==null && !prefixes.containsKey(uri))
+                    prefixes.put(uri, prefix);
+            }
+
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
+                try{
+                    if(Namespaces.URI_XSD.equals(uri)){
+                        if("import".equals(localName) || "include".equals(localName)){
+                            String location = attributes.getValue("location");
+                            if(location!=null){
+                                URL url = URLUtil.toURI(xsdURL).resolve(location).toURL();
+                                if(!crawled.contains(url))
+                                    getNamespacePrefixes(url, crawled, prefixes);
+                            }
+                        }
+                    }
+                }catch(Exception ex){
+                    if(ex instanceof SAXException)
+                        throw (SAXException)ex;
+                    else
+                        throw new SAXException(ex);
+                }
+            }
+        });
+    }
+
+    public static void suggestNamespacePrefixes(URL xsdURL, XMLDocument xml) throws IOException, SAXException, ParserConfigurationException{
+        Properties prefixes = new Properties();
+        getNamespacePrefixes(xsdURL, new HashSet<URL>(), prefixes);
+        for(Map.Entry<Object, Object> entry : prefixes.entrySet()){
+            String uri = (String)entry.getKey();
+            String prefix = (String)entry.getValue();
+            xml.suggestPrefix(prefix, uri);
+        }
     }
 }

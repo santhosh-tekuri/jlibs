@@ -27,6 +27,7 @@ import jlibs.core.graph.walkers.PreorderWalker;
 import jlibs.core.io.IOUtil;
 import jlibs.core.lang.ImpossibleException;
 import jlibs.core.lang.OS;
+import jlibs.core.net.URLUtil;
 import jlibs.core.util.CollectionUtil;
 import jlibs.core.util.RandomUtil;
 import jlibs.xml.Namespaces;
@@ -866,7 +867,9 @@ public class XSInstance{
         InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("xsd-instance.properties");
         if(is!=null)
             xsInstance.loadOptions(CollectionUtil.readProperties(is, null));
-        xsInstance.generate(xsModel, rootElement, new XMLDocument(new StreamResult(System.out), true, 4, null));
+        XMLDocument xml = new XMLDocument(new StreamResult(System.out), true, 4, null);
+        XSUtil.suggestNamespacePrefixes(URLUtil.toURL(args[0]), xml);
+        xsInstance.generate(xsModel, rootElement, xml);
         System.out.println();
     }
 }
