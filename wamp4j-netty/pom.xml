@@ -75,6 +75,8 @@
                             <classpathScope>test</classpathScope>
                             <executable>java</executable>
                             <arguments>
+                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
+                                <argument>-XX:HeapDumpPath=router.hprof</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>jlibs.wamp4j.RPCBenchmark$Router</argument>
@@ -90,6 +92,8 @@
                             <classpathScope>test</classpathScope>
                             <executable>java</executable>
                             <arguments>
+                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
+                                <argument>-XX:HeapDumpPath=rpc_client.hprof</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>jlibs.wamp4j.RPCBenchmark$Client</argument>
@@ -105,6 +109,8 @@
                             <classpathScope>test</classpathScope>
                             <executable>java</executable>
                             <arguments>
+                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
+                                <argument>-XX:HeapDumpPath=rpc_benchmark.hprof</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>jlibs.wamp4j.RPCBenchmark</argument>
