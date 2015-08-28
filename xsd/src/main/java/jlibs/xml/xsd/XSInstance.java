@@ -117,7 +117,8 @@ public class XSInstance{
             XSNamespaceItemList namespaceItems = xsModel.getNamespaceItems();
             for(int i=0; i<namespaceItems.getLength(); i++){
                 XSNamespaceItem namespaceItem = namespaceItems.item(i);
-                doc.declarePrefix(namespaceItem.getSchemaNamespace());
+                if(!Namespaces.URI_XSD.equals(namespaceItem.getSchemaNamespace()))
+                    doc.declarePrefix(namespaceItem.getSchemaNamespace());
             }
 
             WalkerUtil.walk(new PreorderWalker(root, navigator), new XSSampleVisitor(doc, xsiSchemaLocation, xsiNoNamespaceSchemaLocation));
