@@ -16,12 +16,17 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.Peer;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.error.ErrorCode;
+import jlibs.wamp4j.error.InvalidMessageException;
 import jlibs.wamp4j.msg.*;
 import jlibs.wamp4j.spi.Listener;
 import jlibs.wamp4j.spi.MessageType;
@@ -70,112 +75,187 @@ class Session implements Listener{
             return;
         }
 
-        WAMPMessage message;
+        JsonParser parser = null;
         try{
-            ArrayNode array = serialization.mapper().readValue(is, ArrayNode.class);
-            message = WAMPMessageDecoder.decode(array);
+            parser = serialization.mapper().getFactory().createParser(is);
+            if(parser.nextToken()!=JsonToken.START_ARRAY)
+                throw new InvalidMessageException();
+            int id = parser.nextIntValue(-1);
+            switch(id){
+                case HelloMessage.ID:
+                    String uri = parser.nextTextValue();
+                    if(uri==null)
+                        throw new InvalidMessageException();
+                    realm = router.realms.get(uri);
+                    if(ROUTER)
+                        Debugger.println(this, "<- HelloMessage: [%d, \"%s\", ...]", id, uri);
+                    realm.addSession(this);
+                    send(welcomeMessage());
+                    break;
+                case AbortMessage.ID:
+                    if(ROUTER)
+                        Debugger.println(this, "<- AbortMessage: [%d, ...]", id);
+                    socket.close();
+                    break;
+                case GoodbyeMessage.ID:
+                    if(ROUTER)
+                        Debugger.println(this, "<- GoodbyeMessage: [%d, ...]", id);
+                    close();
+                    realm.removeSession(this);
+                    parser.close();
+                    break;
+                case RegisterMessage.ID:
+                    long requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(parser.nextToken()!=JsonToken.START_OBJECT)
+                        throw new InvalidMessageException();
+                    ObjectNode options = serialization.mapper().readTree(parser);
+                    uri = parser.nextTextValue();
+                    if(ROUTER)
+                        Debugger.println(this, "<- RegisterMessage: [%d, %d, %s, \"%s\", ...]", id, requestID, options, uri);
+                    if(realm.procedures.containsKey(uri))
+                        send(errorMessage(id, requestID, ErrorCode.procedureAlreadyExists(uri)));
+                    else{
+                        RegisterMessage register = new RegisterMessage(requestID, options, uri);
+                        RegisteredMessage registered = addProcedure(register);
+                        send(registeredMessage(requestID, registered.registrationID));
+                    }
+                    break;
+                case UnregisterMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    long registrationID = parser.nextLongValue(-1);
+                    if(registrationID==-1)
+                        throw new InvalidMessageException();
+                    Procedure procedure = procedures.remove(registrationID);
+                    if(ROUTER)
+                        Debugger.println(this, "<- UnregisterMessage: [%d, %d, ...]", id, requestID, registrationID);
+                    if(procedure==null)
+                        send(errorMessage(id, requestID, ErrorCode.noSuchRegistration(registrationID)));
+                    else{
+                        realm.procedures.remove(procedure.register.procedure);
+                        // notify waiting callers if any
+                        for(Map.Entry<Long, CallRequest> entry : procedure.requests.entrySet()){
+                            requests.remove(entry.getKey());
+                            CallRequest callRequest = entry.getValue();
+                            callRequest.callSession.send(callRequest.noSuchProcedure());
+                        }
+                        send(unregisteredMessage(requestID));
+                    }
+                    break;
+                case CallMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(parser.nextToken()!=JsonToken.START_OBJECT)
+                        throw new InvalidMessageException();
+                    options = serialization.mapper().readTree(parser);
+                    uri = parser.nextTextValue();
+                    if(ROUTER)
+                        Debugger.println(this, "<- CallMessage: [%d, %d, %s, \"%s\", ...]", id, requestID, options, uri);
+                    procedure = realm.procedures.get(uri);
+                    if(procedure==null){
+                        MetaProcedure metaProcedure = MetaProcedures.get(uri);
+                        if(metaProcedure==null)
+                            send(errorMessage(id, requestID, ErrorCode.noSuchProcedure(uri)));
+                        else{
+                            ArrayNode arguments = null;
+                            if(parser.nextToken()!=JsonToken.END_ARRAY)
+                                arguments = serialization.mapper().readTree(parser);
+                            ObjectNode argumentsKw = null;
+                            if(parser.nextToken()!=JsonToken.END_ARRAY)
+                                argumentsKw = serialization.mapper().readTree(parser);
+                            CallMessage call = new CallMessage(requestID, options, uri, arguments, argumentsKw);
+                            metaProcedure.reply(this, call);
+                        }
+                    }else{
+                        long invocationRequestId = procedure.session.addRequest(requestID, this, procedure);
+                        procedure.session.send(invocationMessage(invocationRequestId, procedure.registrationID.longValue(), options, parser));
+
+                    }
+                    break;
+                case YieldMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(ROUTER)
+                        Debugger.println(this, "<- YieldMessage: [%d, %d, ...]", id, requestID);
+                    CallRequest callRequest = requests.remove(requestID);
+                    if(callRequest==null)
+                        return;
+                    callRequest.reply(requestID, parser);
+                    break;
+                case ErrorMessage.ID:
+                    long requestType = parser.nextLongValue(-1);
+                    if(requestType!=InvocationMessage.ID)
+                        throw new InvalidMessageException();
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(ROUTER)
+                        Debugger.println(this, "<- ErrorMessage: [%d, %d, %d, ...]", id, requestType, requestID);
+                    callRequest = requests.remove(requestID);
+                    if(callRequest==null)
+                        return;
+                    callRequest.error(requestID, parser);
+                    break;
+                case SubscribeMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(parser.nextToken()!=JsonToken.START_OBJECT)
+                        throw new InvalidMessageException();
+                    options = serialization.mapper().readTree(parser);
+                    uri = parser.nextTextValue();
+                    if(ROUTER)
+                        Debugger.println(this, "<- SubscribeMessage: [%d, %d, %s, \"%s\", ...]", id, requestID, options, uri);
+                    long subscriptionID = realm.topics.subscribe(this, uri);
+                    send(subscribedMessage(requestID, subscriptionID));
+                    break;
+                case UnsubscribeMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    subscriptionID = parser.nextLongValue(-1);
+                    if(subscriptionID==-1)
+                        throw new InvalidMessageException();
+                    if(ROUTER)
+                        Debugger.println(this, "<- UnsubscribeMessage: [%d, %d, ...]", id, requestID, subscriptionID);
+                    if(realm.topics.unsubscribe(this, subscriptionID))
+                        send(unsubscribedMessage(requestID));
+                    else
+                        send(errorMessage(id, requestID, ErrorCode.noSuchSubscription(subscriptionID)));
+                    break;
+                case PublishMessage.ID:
+                    requestID = parser.nextLongValue(-1);
+                    if(requestID==-1)
+                        throw new InvalidMessageException();
+                    if(parser.nextToken()!=JsonToken.START_OBJECT)
+                        throw new InvalidMessageException();
+                    options = serialization.mapper().readTree(parser);
+                    if(ROUTER)
+                        Debugger.println(this, "<- PublishMessage: [%d, %d, %s, ...]", id, requestID, options);
+                    realm.topics.publish(this, options, parser);
+                    if(PublishMessage.needsAcknowledgement(options))
+                        send(publishedMessage(requestID, 0));
+                    break;
+                default:
+                    if(ROUTER)
+                        Debugger.println(this, "<- UnknownMessage: [%d, ...]", id);
+                    if(id==-1)
+                        throw new InvalidMessageException();
+            }
         }catch(Throwable thr){
             onError(socket, thr);
-            return;
-        }
-
-        if(ROUTER)
-            Debugger.println(this, "<- %s", message);
-        switch(message.getID()){
-            case HelloMessage.ID:
-                HelloMessage hello = (HelloMessage)message;
-                realm = router.realms.get(hello.realm);
-                realm.addSession(this);
-                WelcomeMessage welcome = new WelcomeMessage(sessionID, Peer.router.details);
-                send(welcome);
-                break;
-            case AbortMessage.ID:
-                socket.close();
-                break;
-            case GoodbyeMessage.ID:
-                close();
-                realm.removeSession(this);
-                break;
-            case RegisterMessage.ID:
-                RegisterMessage register = (RegisterMessage)message;
-                WAMPMessage reply;
-                if(realm.procedures.containsKey(register.procedure))
-                    reply = register.error(ErrorCode.procedureAlreadyExists(register.procedure));
-                else
-                    reply = addProcedure(register);
-                send(reply);
-                break;
-            case UnregisterMessage.ID:
-                UnregisterMessage unregister = (UnregisterMessage)message;
-                Procedure procedure = procedures.remove(unregister.registrationID);
-                if(procedure==null)
-                    reply = unregister.error(ErrorCode.noSuchRegistration(unregister.registrationID));
-                else{
-                    realm.procedures.remove(procedure.register.procedure);
-                    reply = new UnregisteredMessage(unregister.requestID);
-                    // notify waiting callers if any
-                    for(Map.Entry<Long, CallRequest> entry : procedure.requests.entrySet()){
-                        requests.remove(entry.getKey());
-                        CallRequest callRequest = entry.getValue();
-                        callRequest.callSession.send(callRequest.noSuchProcedure());
-                    }
-                }
-                send(reply);
-                break;
-            case CallMessage.ID:
-                CallMessage call = (CallMessage)message;
-                MetaProcedure metaProcedure = MetaProcedures.get(call.procedure);
-                if(metaProcedure==null){
-                    procedure = realm.procedures.get(call.procedure);
-                    if(procedure==null)
-                        send(call.error(ErrorCode.noSuchProcedure(call.procedure)));
-                    else{
-                        long invocationRequestId = procedure.session.addRequest(call.requestID, this, procedure);
-                        reply = new InvocationMessage(invocationRequestId, procedure.registrationID, call.options, call.arguments, call.argumentsKw);
-                        procedure.session.send(reply);
-                    }
-                }else
-                    metaProcedure.reply(this, call);
-                break;
-            case YieldMessage.ID:
-                YieldMessage yield = (YieldMessage)message;
-                CallRequest callRequest = requests.remove(yield.requestID);
-                if(callRequest ==null)
-                    return;
-                callRequest.reply(yield);
-                break;
-            case ErrorMessage.ID:
-                ErrorMessage error = (ErrorMessage)message;
-                callRequest = requests.remove(error.requestID);
-                if(callRequest ==null)
-                    return;
-                callRequest.reply(error);
-                break;
-            case SubscribeMessage.ID:
-                SubscribeMessage subscribe = (SubscribeMessage)message;
-                long subscriptionID = realm.topics.subscribe(this, subscribe.topic);
-                SubscribedMessage subscribed = new SubscribedMessage(subscribe.requestID, subscriptionID);
-                send(subscribed);
-                break;
-            case UnsubscribeMessage.ID:
-                UnsubscribeMessage unsubscribe = (UnsubscribeMessage)message;
-                if(realm.topics.unsubscribe(this, unsubscribe.subscriptionID))
-                    reply = new UnsubscribedMessage(unsubscribe.requestID);
-                else
-                    reply = unsubscribe.error(ErrorCode.noSuchSubscription(unsubscribe.subscriptionID));
-                send(reply);
-                break;
-            case PublishMessage.ID:
-                PublishMessage publish = (PublishMessage)message;
-                realm.topics.publish(this, publish);
-                if(publish.needsAcknowledgement()){
-                    PublishedMessage published = new PublishedMessage(publish.requestID, 0);
-                    send(published);
-                }
-                break;
-            default:
-                if(ROUTER)
-                    Debugger.println(this, "-- not yet implemented%n");
+        }finally{
+            try{
+                if(parser!=null)
+                    parser.close();
+            }catch(Throwable thr){
+                router.listener.onWarning(router, thr);
+            }
         }
     }
 
@@ -193,6 +273,7 @@ class Session implements Listener{
     public void onError(WAMPSocket socket, Throwable error){
         if(ROUTER)
             Debugger.println(this, "-- onError: "+error.getMessage());
+        router.listener.onWarning(router, error);
         cleanup();
         realm.removeSession(this);
         socket.close();
@@ -241,6 +322,14 @@ class Session implements Listener{
         return true;
     }
 
+    protected void send(WAMPOutputStream out){
+        if(!flushNeeded)
+            router.addToFlushList(this);
+        if(ROUTER)
+            Debugger.println(this, "%s", Debugger.temp);
+        socket.send(serialization.messageType(), out);
+    }
+
     protected RegisteredMessage addProcedure(RegisterMessage register){
         lastRegistrationID = Util.generateID(procedures, lastRegistrationID);
         Procedure procedure = new Procedure(register, lastRegistrationID, this);
@@ -286,5 +375,226 @@ class Session implements Listener{
     @Override
     public String toString(){
         return String.format("%s[%s|%d]", getClass().getSimpleName(), realm, sessionID);
+    }
+
+    protected WAMPOutputStream numbers(int id, long number1) throws Throwable{
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(id);
+            json.writeNumber(number1);
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream numbers(int id, long number1, long number2) throws Throwable{
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(id);
+            json.writeNumber(number1);
+            json.writeNumber(number2);
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream welcomeMessage() throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- WelcomeMessage: [%d, %d, %s]", WelcomeMessage.ID, sessionID, Peer.router.details);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(WelcomeMessage.ID);
+            json.writeNumber(sessionID);
+            json.writeTree(Peer.router.details);
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream registeredMessage(long requestID, long registrationID) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- RegisteredMessage: [%d, %d, %d,...]", RegisteredMessage.ID, requestID, registrationID);
+        return numbers(RegisteredMessage.ID, requestID, registrationID);
+    }
+
+    protected WAMPOutputStream unregisteredMessage(long requestID) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- UnregisteredMessage: [%d, %d, ...]", UnregisteredMessage.ID, requestID);
+        return numbers(UnregisteredMessage.ID, requestID);
+    }
+
+    protected WAMPOutputStream invocationMessage(long requestID, long registrationID, ObjectNode details, JsonParser call) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- InvocationMessage: [%d, %d, %s, ...]", InvocationMessage.ID, requestID, registrationID, details);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(InvocationMessage.ID);
+            json.writeNumber(requestID);
+            json.writeNumber(registrationID);
+            if(details==null){
+                json.writeStartObject();
+                json.writeEndObject();
+            }else
+                json.writeTree(details);
+            if(call.nextToken()!=JsonToken.END_ARRAY){
+                json.copyCurrentStructure(call); // arguments
+                if(call.nextToken()!=JsonToken.END_ARRAY)
+                    json.copyCurrentStructure(call); // argumentsKw
+            }
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream resultMessage(long requestID, JsonParser yield) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- ResultMessage: [%d, %d, ...]", ResultMessage.ID, requestID);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(ResultMessage.ID);
+            json.writeNumber(requestID);
+            if(yield.nextToken()!=JsonToken.START_OBJECT)
+                throw new InvalidMessageException();
+            json.copyCurrentStructure(yield); // details
+            if(yield.nextToken()!=JsonToken.END_ARRAY){
+                json.copyCurrentStructure(yield); // arguments
+                if(yield.nextToken()!=JsonToken.END_ARRAY)
+                    json.copyCurrentStructure(yield); // argumentsKw
+            }
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream errorMessage(int requestType, long requestID, ErrorCode errorCode) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- ErrorMessage: [%d, %d, %d, {}, \"%s\", %s, %s]", ErrorMessage.ID, requestType, requestID, errorCode.uri, errorCode.arguments, errorCode.argumentsKw);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(ErrorMessage.ID);
+            json.writeNumber(requestType);
+            json.writeNumber(requestID);
+            json.writeStartObject();
+            json.writeEndObject();
+            json.writeString(errorCode.uri);
+            json.writeTree(errorCode.arguments);
+            json.writeTree(errorCode.argumentsKw);
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream errorMessage(int requestType, long requestID, JsonParser error) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- ErrorMessage: [%d, %d, %d, ...]", ErrorMessage.ID, requestType, requestID);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(ErrorMessage.ID);
+            json.writeNumber(requestType);
+            json.writeNumber(requestID);
+            if(error.nextToken()!=JsonToken.START_OBJECT)
+                throw new InvalidMessageException();
+            json.copyCurrentStructure(error); // details
+            String uri = error.nextTextValue();
+            if(uri==null)
+                throw new InvalidMessageException();
+            json.writeString(uri);
+            if(error.nextToken()!=JsonToken.END_ARRAY){
+                json.copyCurrentStructure(error); // arguments
+                if(error.nextToken()!=JsonToken.END_ARRAY)
+                    json.copyCurrentStructure(error); // argumentsKw
+            }
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
+    }
+
+    protected WAMPOutputStream subscribedMessage(long requestID, long subscriptionID) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- SubscribedMessage: [%d, %d, %d, ...]", SubscribedMessage.ID, requestID, subscriptionID);
+        return numbers(SubscribedMessage.ID, requestID, subscriptionID);
+    }
+
+    protected WAMPOutputStream unsubscribedMessage(long requestID) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- UnsubscribedMessage: [%d, %d, ...]", UnsubscribedMessage.ID, requestID);
+        return numbers(UnsubscribedMessage.ID, requestID);
+    }
+
+    protected WAMPOutputStream publishedMessage(long requestID, long publicationID) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- PublishedMessage: [%d, %d, %d, ...]", PublishedMessage.ID, requestID, publicationID);
+        return numbers(PublishedMessage.ID, requestID, publicationID);
+    }
+
+    protected WAMPOutputStream eventMessage(long subscriptionID, long publicationID, ObjectNode options, JsonParser publish) throws Throwable{
+        if(ROUTER)
+            Debugger.temp("<- EventMessage: [%d, %d, %d, %s, ...]", EventMessage.ID, subscriptionID, publicationID, options);
+        WAMPOutputStream out = socket.createOutputStream();
+        try{
+            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+            json.writeStartArray();
+            json.writeNumber(EventMessage.ID);
+            json.writeNumber(subscriptionID);
+            json.writeNumber(publicationID);
+            if(options==null){
+                json.writeStartObject();
+                json.writeEndObject();
+            }else
+                json.writeTree(options);
+            if(publish.nextToken()!=JsonToken.END_ARRAY){
+                json.copyCurrentStructure(publish); // arguments
+                if(publish.nextToken()!=JsonToken.END_ARRAY)
+                    json.copyCurrentStructure(publish); // argumentsKw
+            }
+            json.writeEndArray();
+            json.close();
+            return out;
+        }catch(Throwable thr){
+            out.release();
+            throw thr;
+        }
     }
 }

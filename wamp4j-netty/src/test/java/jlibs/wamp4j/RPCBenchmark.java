@@ -186,6 +186,12 @@ public class RPCBenchmark{
                 }
 
                 @Override
+                public void onWarning(WAMPRouter router, Throwable error){
+                    System.out.println("RouterListener.onWarning");
+                    error.printStackTrace();
+                }
+
+                @Override
                 public void onClose(WAMPRouter router){
                     System.out.println("RouterListener.onClose");
                 }
@@ -277,7 +283,7 @@ public class RPCBenchmark{
             long end = System.nanoTime();
             double seconds = ((double)(end-begin))/ TimeUnit.SECONDS.toNanos(1);
             double throughput = (double)(replies+errors)/seconds;
-            double latency = (1.0*latencies/(replies+errors))/ TimeUnit.MILLISECONDS.toNanos(1);
+            double latency = (1.0*latencies/ (replies + errors)) / TimeUnit.MILLISECONDS.toNanos(1);
             System.out.println(" ------------------------------- "+seconds);
             System.out.println("   replies: "+replies);
             System.out.println("    errors: "+errors);

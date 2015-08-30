@@ -16,6 +16,7 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.core.JsonParser;
 import jlibs.wamp4j.error.ErrorCode;
 import jlibs.wamp4j.msg.*;
 
@@ -38,10 +39,22 @@ class CallRequest{
         callSession.send(new ResultMessage(callID, yield.options, yield.arguments, yield.argumentsKw));
     }
 
+    public void reply(long requestID, JsonParser yield) throws Throwable{
+        assert procedure.requests.get(requestID)==this;
+        procedure.requests.remove(requestID);
+        callSession.send(callSession.resultMessage(callID, yield));
+    }
+
     public void reply(ErrorMessage error){
         assert error.requestType== InvocationMessage.ID;
         procedure.requests.remove(error.requestID);
         callSession.send(new ErrorMessage(CallMessage.ID, callID, error.details, error.error, error.arguments, error.argumentsKw));
+    }
+
+    public void error(long requestID, JsonParser error) throws Throwable{
+        assert procedure.requests.get(requestID)==this;
+        procedure.requests.remove(requestID);
+        callSession.send(callSession.errorMessage(CallMessage.ID, callID, error));
     }
 
     public ErrorMessage error(ErrorCode errorCode){

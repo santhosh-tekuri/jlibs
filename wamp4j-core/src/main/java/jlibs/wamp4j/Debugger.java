@@ -33,4 +33,9 @@ public final class Debugger{
         list.addAll(Arrays.asList(args));
         System.err.printf("%20s "+message+"%n", list.toArray());
     }
+
+    public static String temp;
+    public static void temp(String message, Object... args){
+        temp = String.format(message, args);
+    }
 }

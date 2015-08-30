@@ -22,5 +22,6 @@ package jlibs.wamp4j.router;
 public interface RouterListener{
     public void onBind(WAMPRouter router);
     public void onError(WAMPRouter router, Throwable error);
+    public void onWarning(WAMPRouter router, Throwable error);
     public void onClose(WAMPRouter router);
 }

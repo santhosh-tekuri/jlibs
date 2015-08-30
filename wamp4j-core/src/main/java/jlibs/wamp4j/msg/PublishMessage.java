@@ -94,6 +94,10 @@ public class PublishMessage extends WAMPMessage{
     }
 
     public boolean needsAcknowledgement(){
+        return needsAcknowledgement(options);
+    }
+
+    public static boolean needsAcknowledgement(ObjectNode options){
         if(options!=null){
             JsonNode acknowledge = options.get("acknowledge");
             return acknowledge!=null && acknowledge.isBoolean() && acknowledge.booleanValue();
