@@ -121,6 +121,16 @@ public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMP
     }
 
     @Override
+    public boolean isAutoRead(){
+        return ctx.channel().config().isAutoRead();
+    }
+
+    @Override
+    public void setAutoRead(boolean autoRead){
+        ctx.channel().config().setAutoRead(autoRead);
+    }
+
+    @Override
     public boolean isWritable(){
         return ctx.channel().isWritable();
     }

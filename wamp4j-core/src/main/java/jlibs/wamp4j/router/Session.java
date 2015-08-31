@@ -68,6 +68,9 @@ class Session implements Listener{
         array = router.array;
     }
 
+    private int autoRead = 0;
+    private Map<Long, Session> blockedReaders = new HashMap<Long, Session>();
+
     @Override
     public void onMessage(WAMPSocket socket, MessageType type, InputStream is){
         if(type!=serialization.messageType()){
@@ -262,12 +265,28 @@ class Session implements Listener{
     @Override
     public void onReadComplete(WAMPSocket socket){
         Session session;
-        while((session=router.removeFromFlushList())!=null)
+        while((session=router.removeFromFlushList())!=null){
             session.socket.flush();
+            if(!session.socket.isWritable()){
+                ++autoRead;
+                session.blockedReaders.put(sessionID, this);
+            }
+        }
+        if(autoRead!=0)
+            socket.setAutoRead(false);
     }
 
     @Override
-    public void readyToWrite(WAMPSocket socket){}
+    public void readyToWrite(WAMPSocket socket){
+        if(!blockedReaders.isEmpty()){
+            for(Session session : blockedReaders.values()){
+                assert session.autoRead>0;
+                if(--session.autoRead==0)
+                    session.socket.setAutoRead(true);
+            }
+            blockedReaders.clear();
+        }
+    }
 
     @Override
     public void onError(WAMPSocket socket, Throwable error){
@@ -319,6 +338,8 @@ class Session implements Listener{
         if(ROUTER)
             Debugger.println(this, "-> %s", message);
         socket.send(serialization.messageType(), out);
+        if(!socket.isWritable())
+            socket.flush();
         return true;
     }
 
@@ -328,6 +349,8 @@ class Session implements Listener{
         if(ROUTER)
             Debugger.println(this, "%s", Debugger.temp);
         socket.send(serialization.messageType(), out);
+        if(!socket.isWritable())
+            socket.flush();
     }
 
     protected RegisteredMessage addProcedure(RegisterMessage register){

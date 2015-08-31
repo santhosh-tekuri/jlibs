@@ -25,6 +25,9 @@ public interface WAMPSocket{
 
     public WAMPOutputStream createOutputStream();
 
+    public boolean isAutoRead();
+    public void setAutoRead(boolean autoRead);
+
     public boolean isWritable();
     public void send(MessageType type, WAMPOutputStream out);
     public void flush();
