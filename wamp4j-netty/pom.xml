@@ -14,12 +14,6 @@
     <name>wamp4j-netty</name>
     <description>wamp4j netty implementation</description>
 
-    <properties>
-        <blocking>false</blocking>
-        <threads>1</threads>
-        <duration>60000</duration>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>
@@ -58,71 +52,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.4.0</version>
-                <executions>
-                    <execution>
-                        <id>router</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <classpathScope>test</classpathScope>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
-                                <argument>-XX:HeapDumpPath=router.hprof</argument>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>jlibs.wamp4j.RPCBenchmark$Router</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>rpc_client</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <classpathScope>test</classpathScope>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
-                                <argument>-XX:HeapDumpPath=rpc_client.hprof</argument>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>jlibs.wamp4j.RPCBenchmark$Client</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>rpc_benchmark</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <classpathScope>test</classpathScope>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-XX:+HeapDumpOnOutOfMemoryError</argument>
-                                <argument>-XX:HeapDumpPath=rpc_benchmark.hprof</argument>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>jlibs.wamp4j.RPCBenchmark</argument>
-                                <argument>${blocking}</argument>
-                                <argument>${threads}</argument>
-                                <argument>${duration}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-
-    </build>
 </project>
