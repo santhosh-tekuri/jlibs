@@ -62,6 +62,7 @@ public class XSInstance{
     public Boolean generateOptionalAttributes = Boolean.TRUE;
     public Boolean generateFixedAttributes = Boolean.TRUE;
     public Boolean generateDefaultAttributes = Boolean.TRUE;
+    public Boolean generateDefaultElementValues = Boolean.TRUE;
 
     public boolean generateAllChoices = false;
 
@@ -334,7 +335,7 @@ public class XSInstance{
                             doc.addText(elem.getValueConstraintValue().getNormalizedValue());
                             break;
                         case XSConstants.VC_DEFAULT:
-                            if(RandomUtil.randomBoolean()){
+                            if(RandomUtil.randomBoolean(generateDefaultElementValues)){
                                 doc.addText(elem.getValueConstraintValue().getNormalizedValue());
                                 break;
                             }
@@ -816,6 +817,9 @@ public class XSInstance{
         value = options.getProperty("generateDefaultAttributes");
         if(value!=null)
             generateDefaultAttributes = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
+        value = options.getProperty("generateDefaultElementValues");
+        if(value!=null)
+            generateDefaultElementValues = "always".equals(value) ? Boolean.TRUE : ("never".equals(value) ? Boolean.FALSE : null);
         value = options.getProperty("generateAllChoices");
         if(value!=null)
             generateAllChoices = Boolean.parseBoolean(value);
