@@ -107,9 +107,11 @@ public class WAMPClient{
         }
     };
 
+    boolean reading = false;
     private final Listener messageListener = new Listener(){
         @Override
         public void onMessage(WAMPSocket socket, MessageType type, InputStream is){
+            reading = true;
             if(type!=serialization.messageType()){
                 onError(socket, new RuntimeException("unexpected messageType: " + type));
                 return;
@@ -203,6 +205,7 @@ public class WAMPClient{
 
         @Override
         public void onReadComplete(WAMPSocket socket){
+            reading = false;
             socket.flush();
         }
 
@@ -213,6 +216,8 @@ public class WAMPClient{
         public void readyToWrite(WAMPSocket socket){
             if(writing.getAndSet(true))
                 return;
+            if(!socket.isAutoRead())
+                socket.setAutoRead(true);
             while(socket.isWritable()){
                 if(internalQueue.isEmpty()){
                     synchronized(WAMPClient.this){
@@ -264,8 +269,11 @@ public class WAMPClient{
         if(CLIENT)
             Debugger.println(this, "-> %s", message);
         socket.send(serialization.messageType(), out);
-        if(!socket.isWritable())
+        if(!socket.isWritable()){
             socket.flush();
+            if(reading && !socket.isWritable() && socket.isAutoRead())
+                socket.setAutoRead(false);
+        }
     }
 
     private boolean validate(WAMPListener listener){
