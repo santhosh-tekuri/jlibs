@@ -34,21 +34,10 @@ class CallRequest{
         this.callSession = callSession;
     }
 
-    public void reply(YieldMessage yield){
-        procedure.requests.remove(yield.requestID);
-        callSession.send(new ResultMessage(callID, yield.options, yield.arguments, yield.argumentsKw));
-    }
-
     public void reply(long requestID, JsonParser yield) throws Throwable{
         assert procedure.requests.get(requestID)==this;
         procedure.requests.remove(requestID);
         callSession.send(callSession.resultMessage(callID, yield));
-    }
-
-    public void reply(ErrorMessage error){
-        assert error.requestType== InvocationMessage.ID;
-        procedure.requests.remove(error.requestID);
-        callSession.send(new ErrorMessage(CallMessage.ID, callID, error.details, error.error, error.arguments, error.argumentsKw));
     }
 
     public void error(long requestID, JsonParser error) throws Throwable{

@@ -19,8 +19,6 @@ package jlibs.wamp4j.router;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jlibs.wamp4j.Util;
-import jlibs.wamp4j.msg.EventMessage;
-import jlibs.wamp4j.msg.PublishMessage;
 import jlibs.wamp4j.spi.WAMPOutputStream;
 
 import java.util.HashMap;
@@ -59,17 +57,6 @@ public class Topics{
         }
         session.subscriptions.remove(subscriptionID);
         return true;
-    }
-
-    public void publish(Session publisher, PublishMessage publish){
-        Topic topic = uris.get(publish.topic);
-        if(topic==null || topic.sessions.isEmpty())
-            return;
-        EventMessage event = new EventMessage(topic.subscriptionID, 0, publish.options, publish.arguments, publish.argumentsKw);
-        for(Session session : topic.sessions){
-            if(session!=publisher)
-                session.send(event);
-        }
     }
 
     public void publish(Session publisher, ObjectNode options, JsonParser publish) throws Throwable{
