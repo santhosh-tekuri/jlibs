@@ -62,7 +62,13 @@ public class NettyClientEndpoint implements WAMPClientEndpoint{
                         ch.pipeline().addLast(
                                 new HttpClientCodec(),
                                 new HttpObjectAggregator(8192),
-                                new WebSocketClientProtocolHandler(handshaker),
+                                new WebSocketClientProtocolHandler(handshaker){
+                                    @Override
+                                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
+                                        super.exceptionCaught(ctx, cause);
+                                        listener.onError(cause);
+                                    }
+                                },
                                 new HandshakeListener(handshaker, listener)
                         );
                     }

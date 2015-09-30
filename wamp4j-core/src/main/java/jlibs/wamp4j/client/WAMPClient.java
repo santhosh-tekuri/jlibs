@@ -97,13 +97,14 @@ public class WAMPClient{
                 send(new HelloMessage(realm, Peer.client.details));
                 socket.flush();
             }catch(WAMPException impossible){
-                impossible.printStackTrace();
+                sessionListener.onError(WAMPClient.this, impossible);
+                socket.close();
             }
         }
 
         @Override
         public void onError(Throwable error){
-            error.printStackTrace();
+            sessionListener.onError(WAMPClient.this, new UnexpectedException(error));
         }
     };
 

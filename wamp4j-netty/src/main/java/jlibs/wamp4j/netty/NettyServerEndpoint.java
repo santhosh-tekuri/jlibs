@@ -22,9 +22,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
@@ -101,20 +99,32 @@ public class NettyServerEndpoint implements WAMPServerEndPoint{
     }
 
     private static class Handshaker extends SimpleChannelInboundHandler<FullHttpRequest>{
-        private final URI uri;
+        private final String scheme;
+        private final String path;
         private final AcceptListener acceptListener;
         private final String subProtocols[];
 
         public Handshaker(URI uri, AcceptListener acceptListener, String subProtocols[]){
-            this.uri = uri;
+            scheme = uri.getScheme();
+            path = uri.getPath().isEmpty() ? "/" : uri.getPath();
             this.acceptListener = acceptListener;
             this.subProtocols = subProtocols;
         }
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception{
-            WebSocketServerHandshaker handshaker = new WebSocketServerHandshakerFactory(getWebSocketLocation(request),
-                    Util.toString(subProtocols), false).newHandshaker(request);
+            String host = request.headers().get("Host");
+            String connection = request.headers().get("Connection");
+            if(request.getMethod()!=HttpMethod.GET || !request.getUri().equals(path) || host==null || !"Upgrade".equals(connection)){
+                DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.getProtocolVersion(), HttpResponseStatus.NOT_FOUND);
+                HttpHeaders.setContentLength(response, 0);
+                ChannelFuture future = ctx.writeAndFlush(response);
+                if(!HttpHeaders.isKeepAlive(request))
+                    future.addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
+            String url = scheme+"://"+ host +path;
+            WebSocketServerHandshaker handshaker = new WebSocketServerHandshakerFactory(url,Util.toString(subProtocols), false).newHandshaker(request);
             if(handshaker==null){
                 WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
                 return;
@@ -133,12 +143,6 @@ public class NettyServerEndpoint implements WAMPServerEndPoint{
                 }
             }
             future.addListener(ChannelFutureListener.CLOSE);
-        }
-
-        private String getWebSocketLocation(FullHttpRequest req) {
-            String location =  req.headers().get("Host") + uri.getPath();
-            String protocol = uri.getScheme();
-            return ("https".equals(protocol)?"wss":"ws")+"://"+location;
         }
     }
 }
