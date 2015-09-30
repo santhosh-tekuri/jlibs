@@ -118,7 +118,7 @@ abstract class PublishThread extends Thread{
     final AtomicLong errors = new AtomicLong();
 
     public PublishThread(WAMPClient client, String topic, CountDownLatch latch){
-        super("RPCThread"+count++);
+        super("PublishThread"+count++);
         this.client = client;
         this.topic = topic;
         this.latch = latch;
