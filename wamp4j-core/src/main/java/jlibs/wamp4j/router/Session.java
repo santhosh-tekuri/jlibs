@@ -372,6 +372,7 @@ class Session implements Listener{
     private void cleanup(){
         if(ROUTER)
             Debugger.println(this, "-- notify waiting callers");
+        readyToWrite(socket); // wakeup blocked readers if any
         for(Map.Entry<Long, CallRequest> entry : requests.entrySet()){
             CallRequest callRequest = entry.getValue();
             callRequest.procedure.requests.remove(entry.getKey());
