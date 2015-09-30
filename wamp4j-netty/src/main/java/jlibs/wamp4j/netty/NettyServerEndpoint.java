@@ -52,6 +52,7 @@ public class NettyServerEndpoint implements WAMPServerEndPoint{
                 .group(eventLoopGroup)
                 .channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .childOption(ChannelOption.MAX_MESSAGES_PER_READ, 50000)
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception{

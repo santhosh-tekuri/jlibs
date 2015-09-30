@@ -108,6 +108,8 @@ public class WAMPRouter{
         return getClass().getSimpleName();
     }
 
+    protected Session readingSession;
+
     /*-------------------------------------------------[ Flush Chain ]---------------------------------------------------*/
 
     protected Session flushHead;

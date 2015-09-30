@@ -73,6 +73,7 @@ class Session implements Listener{
 
     @Override
     public void onMessage(WAMPSocket socket, MessageType type, InputStream is){
+        router.readingSession = this;
         if(type!=serialization.messageType()){
             onError(socket, new RuntimeException("unexpected messageType: " + type));
             return;
@@ -264,6 +265,8 @@ class Session implements Listener{
 
     @Override
     public void onReadComplete(WAMPSocket socket){
+        assert autoRead==0;
+        router.readingSession = null;
         Session session;
         while((session=router.removeFromFlushList())!=null){
             session.socket.flush();
@@ -272,8 +275,8 @@ class Session implements Listener{
                 session.blockedReaders.put(sessionID, this);
             }
         }
-        if(autoRead!=0)
-            socket.setAutoRead(false);
+        if(socket.isAutoRead()!=(autoRead==0))
+            socket.setAutoRead(autoRead==0);
     }
 
     @Override
@@ -338,8 +341,11 @@ class Session implements Listener{
         if(ROUTER)
             Debugger.println(this, "-> %s", message);
         socket.send(serialization.messageType(), out);
-        if(!socket.isWritable())
+        if(!socket.isWritable()){
             socket.flush();
+            if(router.readingSession!=null && socket.isWritable())
+                router.readingSession.socket.setAutoRead(false);
+        }
         return true;
     }
 
@@ -349,8 +355,11 @@ class Session implements Listener{
         if(ROUTER)
             Debugger.println(this, "%s", Debugger.temp);
         socket.send(serialization.messageType(), out);
-        if(!socket.isWritable())
+        if(!socket.isWritable()){
             socket.flush();
+            if(router.readingSession!=null && socket.isWritable())
+                router.readingSession.socket.setAutoRead(false);
+        }
     }
 
     protected RegisteredMessage addProcedure(RegisterMessage register){
