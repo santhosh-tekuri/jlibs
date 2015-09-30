@@ -58,7 +58,6 @@ public class ClientOperator{
 
             @Override
             public void onError(WAMPClient client, WAMPException error){
-                error.printStackTrace();
                 atomic.set(error);
             }
         });

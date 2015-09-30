@@ -46,7 +46,6 @@ public class RouterOperator{
 
             @Override
             public void onError(WAMPRouter router, Throwable error){
-                error.printStackTrace();
                 atomic.set(error);
             }
 
