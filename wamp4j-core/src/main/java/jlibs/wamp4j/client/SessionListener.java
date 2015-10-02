@@ -20,6 +20,7 @@ package jlibs.wamp4j.client;
  * @author Santhosh Kumar Tekuri
  */
 public interface SessionListener extends WAMPListener{
+    public void onConnecting(WAMPClient client);
     public void onOpen(WAMPClient client);
     public void onClose(WAMPClient client);
     public void onWarning(WAMPClient client, Throwable warning);

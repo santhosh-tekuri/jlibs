@@ -72,6 +72,7 @@ public class WAMPClient{
 
     public void connect(SessionListener listener){
         sessionListener = listener;
+        sessionListener.onConnecting(this);
         client.connect(uri, connectListener, subProtocols(serializations));
     }
 

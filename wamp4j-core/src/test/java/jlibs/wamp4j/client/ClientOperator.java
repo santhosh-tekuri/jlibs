@@ -42,6 +42,9 @@ public class ClientOperator{
         atomic.set(null);
         client.connect(new SessionListener(){
             @Override
+            public void onConnecting(WAMPClient client){}
+
+            @Override
             public void onOpen(WAMPClient client){
                 atomic.set(true);
             }

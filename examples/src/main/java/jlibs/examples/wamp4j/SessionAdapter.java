@@ -25,6 +25,9 @@ import jlibs.wamp4j.error.WAMPException;
  */
 public abstract class SessionAdapter implements SessionListener{
     @Override
+    public void onConnecting(WAMPClient client){}
+
+    @Override
     public void onClose(WAMPClient client){
         System.out.println("SessionAdapter.onClose");
     }
