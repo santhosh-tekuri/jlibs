@@ -1,51 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="jlibs-dependencies" default="download">
     <property name="central.repository" value="http://central.maven.org/maven2"/>
-    <property name="apache.repository" value="http://svn.apache.org/repos/asf/tuscany/maven"/>
 
     <macrodef name="dependency">
-        <attribute name="repository"/>
+        <attribute name="repository" default="${central.repository}"/>
         <attribute name="groupId"/>
         <attribute name="artifactId"/>
         <attribute name="version"/>
         <attribute name="packaging" default="jar"/>
         <sequential>
             <get src="@{repository}/@{groupId}/@{artifactId}/@{version}/@{artifactId}-@{version}.@{packaging}"
-                 dest="@{artifactId}.@{packaging}" usetimestamp="true"/> 
+                 dest="@{artifactId}-@{version}.@{packaging}" usetimestamp="true"/>
         </sequential>
     </macrodef>
     
-    <target name="download" depends="jlibs-examples" description="download all dependencies"/>
-
-    <target name="jlibs-core" description="download dependencies reqd by jibs-core"/>
-    <target name="jlibs-jdbc" description="download dependencies reqd by jibs-jdbc"/>
-    <target name="jlibs-nbp" description="download dependencies reqd by jibs-nbp"/>
-
-    <target name="jlibs-xml" depends="jlibs-core, jlibs-nbp" description="download dependencies reqd by jibs-xml">
-        <dependency repository="${central.repository}" groupid="xerces" artifactid="xercesImpl" version="2.11.0"/>
-        <dependency repository="${central.repository}" groupid="xml-apis" artifactid="xml-apis" version="1.4.01"/>
-    </target>
-
-    <target name="jlibs-swing" depends="jlibs-xml" description="download dependencies reqd by jibs-swing"/>
-
-    <target name="jlibs-xmldog" depends="jlibs-xml" description="download dependencies reqd by jibs-xmldog">
-        <dependency repository="${central.repository}" groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
-    </target>
-
-    <target name="jlibs-nblr" depends="jlibs-xml, jlibs-swing" description="download dependencies reqd by jibs-nblr"/>
-
-    <target name="jlibs-wadl" description="download dependencies reqd by jibs-wadl">
-        <dependency repository="${central.repository}" groupid="jline" artifactid="jline" version="1.0"/>
-        <dependency repository="${central.repository}" groupid="com/fifesoft" artifactid="rsyntaxtextarea" version="2.5.0"/>
-    </target>
-
-    <target name="jlibs-examples" depends="jlibs-jdbc, jlibs-swing, jlibs-xmldog, jlibs-nblr, jlibs-wadl" description="download dependencies reqd by jibs-xmldog">
-        <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon" version="9.0.0.2"/>
-        <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon-dom" version="9.0.0.2"/>
-        <dependency repository="${apache.repository}" groupid="net/sf/saxon" artifactid="saxon-xpath" version="9.0.0.2"/>
-        <dependency repository="${central.repository}" groupid="org/hsqldb" artifactid="hsqldb" version="2.0.0"/>
-        <dependency repository="${central.repository}" groupid="commons-dbcp" artifactid="commons-dbcp" version="1.4"/>
-        <dependency repository="${central.repository}" groupid="commons-pool" artifactid="commons-pool" version="1.5.4"/>
+    <target name="download" description="downloads external dependencies">
+        <dependency groupid="net/sf/saxon" artifactid="Saxon-HE" version="9.6.0-6"/>
+        <dependency groupid="commons-dbcp" artifactid="commons-dbcp" version="1.4"/>
+        <dependency groupid="commons-pool" artifactid="commons-pool" version="1.5.4"/>
+        <dependency groupid="org/hsqldb" artifactid="hsqldb" version="2.3.3"/>
+        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-annotations" version="2.6.0"/>
+        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-core" version="2.6.2"/>
+        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-databind" version="2.6.2"/>
+        <dependency groupid="org/msgpack" artifactid="jackson-dataformat-msgpack" version="0.7.0-M6"/>
+        <dependency groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
+        <dependency groupid="jline" artifactid="jline" version="1.0"/>
+        <dependency groupid="org/msgpack" artifactid="msgpack-core" version="0.7.0-M6"/>
+        <dependency groupid="io/netty" artifactid="netty-buffer" version="4.0.32.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-codec" version="4.0.32.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-codec-http" version="4.0.32.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-common" version="4.0.32.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-handler" version="4.0.32.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-transport" version="4.0.32.Final"/>
+        <dependency groupid="in/jlibs" artifactid="org-netbeans-api-visual" version="RELEASE65"/>
+        <dependency groupid="in/jlibs" artifactid="rg-netbeans-swing-outline" version="RELEASE65"/>
+        <dependency groupid="in/jlibs" artifactid="org-openide-util" version="RELEASE65"/>
+        <dependency groupid="com/fifesoft" artifactid="rsyntaxtextarea" version="2.5.0"/>
+        <dependency groupid="xerces" artifactid="xercesImpl" version="2.11.0"/>
+        <dependency groupid="xml-apis" artifactid="xml-apis" version="1.4.01"/>
     </target>
 </project>
 

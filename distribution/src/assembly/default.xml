@@ -32,7 +32,7 @@
                 <dependencySets>
                     <dependencySet>
                         <outputDirectory>lib/external</outputDirectory>
-                        <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                        <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
                         <excludes>
                             <exclude>in.jlibs:jlibs-*</exclude>
                         </excludes>
