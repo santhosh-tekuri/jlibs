@@ -489,12 +489,8 @@ class Session implements Listener{
                 json.writeEndObject();
             }else
                 json.writeTree(details);
-            if(call.nextToken()!=JsonToken.END_ARRAY){
-                json.copyCurrentStructure(call); // arguments
-                if(call.nextToken()!=JsonToken.END_ARRAY)
-                    json.copyCurrentStructure(call); // argumentsKw
-            }
-            json.writeEndArray();
+            while(call.nextToken()!=null)
+                json.copyCurrentEvent(call);
             json.close();
             return out;
         }catch(Throwable thr){
@@ -512,15 +508,8 @@ class Session implements Listener{
             json.writeStartArray();
             json.writeNumber(ResultMessage.ID);
             json.writeNumber(requestID);
-            if(yield.nextToken()!=JsonToken.START_OBJECT)
-                throw new InvalidMessageException();
-            json.copyCurrentStructure(yield); // details
-            if(yield.nextToken()!=JsonToken.END_ARRAY){
-                json.copyCurrentStructure(yield); // arguments
-                if(yield.nextToken()!=JsonToken.END_ARRAY)
-                    json.copyCurrentStructure(yield); // argumentsKw
-            }
-            json.writeEndArray();
+            while(yield.nextToken()!=null)
+                json.copyCurrentEvent(yield);
             json.close();
             return out;
         }catch(Throwable thr){
@@ -563,19 +552,8 @@ class Session implements Listener{
             json.writeNumber(ErrorMessage.ID);
             json.writeNumber(requestType);
             json.writeNumber(requestID);
-            if(error.nextToken()!=JsonToken.START_OBJECT)
-                throw new InvalidMessageException();
-            json.copyCurrentStructure(error); // details
-            String uri = error.nextTextValue();
-            if(uri==null)
-                throw new InvalidMessageException();
-            json.writeString(uri);
-            if(error.nextToken()!=JsonToken.END_ARRAY){
-                json.copyCurrentStructure(error); // arguments
-                if(error.nextToken()!=JsonToken.END_ARRAY)
-                    json.copyCurrentStructure(error); // argumentsKw
-            }
-            json.writeEndArray();
+            while(error.nextToken()!=null)
+                json.copyCurrentEvent(error);
             json.close();
             return out;
         }catch(Throwable thr){
@@ -617,12 +595,8 @@ class Session implements Listener{
                 json.writeEndObject();
             }else
                 json.writeTree(options);
-            if(publish.nextToken()!=JsonToken.END_ARRAY){
-                json.copyCurrentStructure(publish); // arguments
-                if(publish.nextToken()!=JsonToken.END_ARRAY)
-                    json.copyCurrentStructure(publish); // argumentsKw
-            }
-            json.writeEndArray();
+            while(publish.nextToken()!=null)
+                json.copyCurrentEvent(publish);
             json.close();
             return out;
         }catch(Throwable thr){
