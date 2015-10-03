@@ -59,24 +59,34 @@ public class Topics{
         return true;
     }
 
+    private final WAMPOutputStream out[] = new WAMPOutputStream[2];
+    private final Session prev[] = new Session[2];
     public void publish(Session publisher, ObjectNode options, JsonParser publish) throws Throwable{
         String uri = publish.nextTextValue();
         Topic topic = uris.get(uri);
         if(topic==null || topic.sessions.isEmpty())
             return;
 
-        Session prev = null;
-        WAMPOutputStream out = null;
-        for(Session session : topic.sessions){
-            if(session!=publisher){
-                if(out==null)
-                    out = session.eventMessage(topic.subscriptionID, 0, options, publish);
-                if(prev!=null)
-                    prev.send(out.duplicate());
-                prev = session;
+        try{
+            for(Session session : topic.sessions){
+                if(session!=publisher){
+                    int ordinal = session.serialization.ordinal();
+                    if(out[ordinal]==null)
+                        out[ordinal] = session.eventMessage(topic.subscriptionID, 0, options, publish);
+                    if(prev[ordinal]!=null)
+                        prev[ordinal].send(out[ordinal].duplicate());
+                    prev[ordinal] = session;
+                }
             }
+            if(prev[0]!=null)
+                prev[0].send(out[0]);
+            if(prev[1]!=null)
+                prev[1].send(out[1]);
+        }finally{
+            out[0] = null;
+            out[1] = null;
+            prev[0] = null;
+            prev[1] = null;
         }
-        if(prev!=null)
-            prev.send(out);
     }
 }

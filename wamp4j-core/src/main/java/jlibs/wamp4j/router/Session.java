@@ -45,7 +45,7 @@ import static jlibs.wamp4j.Debugger.ROUTER;
 class Session implements Listener{
     private final WAMPRouter router;
     private final WAMPSocket socket;
-    private final WAMPSerialization serialization;
+    protected final WAMPSerialization serialization;
 
     private Realm realm;
     long sessionID = -1;
