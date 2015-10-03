@@ -5,7 +5,7 @@
     <parent>
         <groupId>in.jlibs</groupId>
         <artifactId>jlibs-parent</artifactId>
-        <version>2.2-SNAPSHOT</version>
+        <version>2.2</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -13,5 +13,6 @@
     <packaging>jar</packaging>
 
     <name>apt</name>
+    <description>Utilities to create Annotation Processor</description>
 
 </project>
