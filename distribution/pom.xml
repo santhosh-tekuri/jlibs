@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jlibs-distribution</artifactId>
     <packaging>pom</packaging>
+    <version>2.2-SNAPSHOT</version>
 
     <name>distribution</name>
 
