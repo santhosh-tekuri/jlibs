@@ -37,11 +37,13 @@ import java.net.URI;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyServerEndpoint implements WAMPServerEndPoint{
-    private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, NamedThreadFactory.ROUTER_THREAD_FACTORY);
-
+public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndPoint{
     private static final AttributeKey<AcceptListener> ACCEPT_LISTENER = AttributeKey.newInstance(AcceptListener.class.getName());
     private Channel channel;
+
+    public NettyServerEndpoint(){
+        super(NamedThreadFactory.ROUTER_THREAD_FACTORY);
+    }
 
     @Override
     public void bind(final URI uri, final String subProtocols[], final AcceptListener listener){
@@ -74,16 +76,6 @@ public class NettyServerEndpoint implements WAMPServerEndPoint{
                     listener.onError(future.cause());
             }
         });
-    }
-
-    @Override
-    public boolean isEventLoop(){
-        return eventLoopGroup.next().inEventLoop();
-    }
-
-    @Override
-    public void submit(Runnable r){
-        eventLoopGroup.submit(r);
     }
 
     @Override

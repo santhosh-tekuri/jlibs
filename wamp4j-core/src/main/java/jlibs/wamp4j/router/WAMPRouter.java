@@ -37,15 +37,16 @@ import static jlibs.wamp4j.Util.subProtocols;
 public class WAMPRouter{
     protected final ArrayNode array = JsonNodeFactory.instance.arrayNode();
 
-    private final WAMPServerEndPoint server;
+    protected final WAMPServerEndPoint server;
     private final URI uri;
     private final WAMPSerialization serializations[];
-    protected final Realms realms = new Realms();
+    protected final Realms realms;
 
     public WAMPRouter(WAMPServerEndPoint server, URI uri, WAMPSerialization... serializations){
         this.server = server;
         this.uri = uri;
         this.serializations = serializations;
+        realms = new Realms(server);
     }
 
     public WAMPRouter(WAMPServerEndPoint server, URI uri){

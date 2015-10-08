@@ -16,21 +16,34 @@
 
 package jlibs.wamp4j.router;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.Util;
+import jlibs.wamp4j.WAMPSerialization;
+import jlibs.wamp4j.msg.EventMessage;
 import jlibs.wamp4j.spi.WAMPOutputStream;
+import jlibs.wamp4j.spi.WAMPServerEndPoint;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static jlibs.wamp4j.Debugger.ROUTER;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class Topics{
-    private Map<String, Topic> uris = new HashMap<String, Topic>();
-    private Map<Long, Topic> ids = new HashMap<Long, Topic>();
+    private final WAMPServerEndPoint server;
+    private final Map<String, Topic> uris = new HashMap<String, Topic>();
+    private final Map<Long, Topic> ids = new HashMap<Long, Topic>();
     private long lastID = -1;
+
+    public Topics(WAMPServerEndPoint server){
+        this.server = server;
+    }
 
     public long subscribe(Session session, String uri){
         Topic topic = uris.get(uri);
@@ -39,7 +52,7 @@ public class Topics{
             topic = new Topic(uri, lastID);
             uris.put(uri, topic);
             ids.put(lastID, topic);
-            topic.sessions.add(session);
+            topic.sessions[session.serialization.ordinal()].add(session);
             session.subscriptions.put(lastID, topic);
         }
         return topic.subscriptionID;
@@ -49,9 +62,9 @@ public class Topics{
         Topic topic = ids.get(subscriptionID);
         if(topic==null)
             return false;
-        if(!topic.sessions.remove(session))
+        if(!topic.sessions[session.serialization.ordinal()].remove(session))
             return false;
-        if(topic.sessions.isEmpty()){
+        if(topic.sessions[0].isEmpty() && topic.sessions[1].isEmpty()){
             uris.remove(topic.uri);
             ids.remove(topic.subscriptionID);
         }
@@ -59,34 +72,96 @@ public class Topics{
         return true;
     }
 
-    private final WAMPOutputStream out[] = new WAMPOutputStream[2];
-    private final Session prev[] = new Session[2];
     public void publish(Session publisher, ObjectNode options, JsonParser publish) throws Throwable{
         String uri = publish.nextTextValue();
         Topic topic = uris.get(uri);
-        if(topic==null || topic.sessions.isEmpty())
+        if(topic==null)
             return;
 
-        try{
-            for(Session session : topic.sessions){
-                if(session!=publisher){
-                    int ordinal = session.serialization.ordinal();
-                    if(out[ordinal]==null)
-                        out[ordinal] = session.eventMessage(topic.subscriptionID, 0, options, publish);
-                    if(prev[ordinal]!=null)
-                        prev[ordinal].send(out[ordinal].duplicate());
-                    prev[ordinal] = session;
-                }
-            }
-            if(prev[0]!=null)
-                prev[0].send(out[0]);
-            if(prev[1]!=null)
-                prev[1].send(out[1]);
-        }finally{
-            out[0] = null;
-            out[1] = null;
-            prev[0] = null;
-            prev[1] = null;
+        int jsonSubscribers = topic.sessions[0].size();
+        int messagePackSubscribers = topic.sessions[1].size();
+        if(publisher.subscriptions.get(topic.subscriptionID)!=null){
+            if(publisher.serialization.ordinal()==0)
+                --jsonSubscribers;
+            else
+                --messagePackSubscribers;
         }
+        if(jsonSubscribers==0 && messagePackSubscribers==0)
+            return;
+
+        if(ROUTER)
+            Debugger.temp("<- EventMessage: [%d, %d, %d, %s, ...]", EventMessage.ID, topic.subscriptionID, 0, options);
+        if(jsonSubscribers>0 && messagePackSubscribers>0){
+            WAMPOutputStream jsonOut = server.createOutputStream();
+            WAMPOutputStream messagePackOut = server.createOutputStream();
+            try{
+                JsonGenerator json = WAMPSerialization.json.mapper().getFactory().createGenerator(jsonOut);
+                JsonGenerator messagePack = WAMPSerialization.messagePack.mapper().getFactory().createGenerator(messagePackOut);
+                json.writeStartArray();
+                messagePack.writeStartArray();
+                json.writeNumber(EventMessage.ID);
+                messagePack.writeNumber(EventMessage.ID);
+                json.writeNumber(topic.subscriptionID);
+                messagePack.writeNumber(topic.subscriptionID);
+                json.writeNumber(0); // publicationID
+                messagePack.writeNumber(0); // publicationID
+                if(options==null){
+                    json.writeStartObject();
+                    messagePack.writeStartObject();
+                    json.writeEndObject();
+                    messagePack.writeEndObject();
+                }else{
+                    json.writeTree(options);
+                    messagePack.writeTree(options);
+                }
+                while(publish.nextToken()!=null){
+                    json.copyCurrentEvent(publish);
+                    messagePack.copyCurrentEvent(publish);
+                }
+                json.close();
+                messagePack.close();
+            }catch(Throwable thr){
+                jsonOut.release();
+                messagePackOut.release();
+                throw thr;
+            }
+            publish(publisher, topic.sessions[0], jsonOut);
+            publish(publisher, topic.sessions[1], messagePackOut);
+        }else{
+            WAMPOutputStream out = server.createOutputStream();
+            WAMPSerialization serialization = jsonSubscribers>0 ? WAMPSerialization.json : WAMPSerialization.messagePack;
+            try{
+                JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
+                json.writeStartArray();
+                json.writeNumber(EventMessage.ID);
+                json.writeNumber(topic.subscriptionID);
+                json.writeNumber(0); // publicationID
+                if(options==null){
+                    json.writeStartObject();
+                    json.writeEndObject();
+                }else
+                    json.writeTree(options);
+                while(publish.nextToken()!=null)
+                    json.copyCurrentEvent(publish);
+                json.close();
+            }catch(Throwable thr){
+                out.release();
+                throw thr;
+            }
+            publish(publisher, topic.sessions[serialization.ordinal()], out);
+        }
+    }
+
+    private void publish(Session publisher, List<Session> sessions, WAMPOutputStream out){
+        Session prev = null;
+        for(Session session : sessions){
+            if(session!=publisher){
+                if(prev!=null)
+                    prev.send(out.duplicate());
+                prev = session;
+            }
+        }
+        assert prev!=null;
+        prev.send(out);
     }
 }

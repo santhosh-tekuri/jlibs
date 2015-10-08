@@ -23,8 +23,6 @@ public interface WAMPSocket{
     public String subProtocol();
     public void setListener(Listener listener);
 
-    public WAMPOutputStream createOutputStream();
-
     public boolean isAutoRead();
     public void setAutoRead(boolean autoRead);
 

@@ -259,7 +259,7 @@ public class WAMPClient{
 
     private final ArrayNode array = JsonNodeFactory.instance.arrayNode();
     private void send(WAMPMessage message) throws WAMPException{
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = client.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);

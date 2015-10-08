@@ -25,7 +25,8 @@ import java.util.List;
 class Topic{
     public final String uri;
     public final long subscriptionID;
-    public final List<Session> sessions = new ArrayList<Session>();
+    @SuppressWarnings("unchecked")
+    public final List<Session> sessions[] = new List[]{new ArrayList(), new ArrayList()};
 
     public Topic(String uri, long subscriptionID){
         this.uri = uri;

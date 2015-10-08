@@ -22,4 +22,5 @@ package jlibs.wamp4j.spi;
 public interface WAMPEndpoint{
     public boolean isEventLoop();
     public void submit(Runnable r);
+    public WAMPOutputStream createOutputStream();
 }

@@ -321,7 +321,7 @@ class Session implements Listener{
             return false;
         if(message instanceof GoodbyeMessage)
             goodbyeSend = true;
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             array.removeAll();
             message.toArrayNode(array);
@@ -411,7 +411,7 @@ class Session implements Listener{
     }
 
     protected WAMPOutputStream numbers(int id, long number1) throws Throwable{
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -427,7 +427,7 @@ class Session implements Listener{
     }
 
     protected WAMPOutputStream numbers(int id, long number1, long number2) throws Throwable{
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -446,7 +446,7 @@ class Session implements Listener{
     protected WAMPOutputStream welcomeMessage() throws Throwable{
         if(ROUTER)
             Debugger.temp("<- WelcomeMessage: [%d, %d, %s]", WelcomeMessage.ID, sessionID, Peer.router.details);
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -477,7 +477,7 @@ class Session implements Listener{
     protected WAMPOutputStream invocationMessage(long requestID, long registrationID, ObjectNode details, JsonParser call) throws Throwable{
         if(ROUTER)
             Debugger.temp("<- InvocationMessage: [%d, %d, %s, ...]", InvocationMessage.ID, requestID, registrationID, details);
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -502,7 +502,7 @@ class Session implements Listener{
     protected WAMPOutputStream resultMessage(long requestID, JsonParser yield) throws Throwable{
         if(ROUTER)
             Debugger.temp("<- ResultMessage: [%d, %d, ...]", ResultMessage.ID, requestID);
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -521,7 +521,7 @@ class Session implements Listener{
     protected WAMPOutputStream errorMessage(int requestType, long requestID, ErrorCode errorCode) throws Throwable{
         if(ROUTER)
             Debugger.temp("<- ErrorMessage: [%d, %d, %d, {}, \"%s\", %s, %s]", ErrorMessage.ID, requestType, requestID, errorCode.uri, errorCode.arguments, errorCode.argumentsKw);
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -545,7 +545,7 @@ class Session implements Listener{
     protected WAMPOutputStream errorMessage(int requestType, long requestID, JsonParser error) throws Throwable{
         if(ROUTER)
             Debugger.temp("<- ErrorMessage: [%d, %d, %d, ...]", ErrorMessage.ID, requestType, requestID);
-        WAMPOutputStream out = socket.createOutputStream();
+        WAMPOutputStream out = router.server.createOutputStream();
         try{
             JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
             json.writeStartArray();
@@ -578,30 +578,5 @@ class Session implements Listener{
         if(ROUTER)
             Debugger.temp("<- PublishedMessage: [%d, %d, %d, ...]", PublishedMessage.ID, requestID, publicationID);
         return numbers(PublishedMessage.ID, requestID, publicationID);
-    }
-
-    protected WAMPOutputStream eventMessage(long subscriptionID, long publicationID, ObjectNode options, JsonParser publish) throws Throwable{
-        if(ROUTER)
-            Debugger.temp("<- EventMessage: [%d, %d, %d, %s, ...]", EventMessage.ID, subscriptionID, publicationID, options);
-        WAMPOutputStream out = socket.createOutputStream();
-        try{
-            JsonGenerator json = serialization.mapper().getFactory().createGenerator(out);
-            json.writeStartArray();
-            json.writeNumber(EventMessage.ID);
-            json.writeNumber(subscriptionID);
-            json.writeNumber(publicationID);
-            if(options==null){
-                json.writeStartObject();
-                json.writeEndObject();
-            }else
-                json.writeTree(options);
-            while(publish.nextToken()!=null)
-                json.copyCurrentEvent(publish);
-            json.close();
-            return out;
-        }catch(Throwable thr){
-            out.release();
-            throw thr;
-        }
     }
 }

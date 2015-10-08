@@ -19,7 +19,6 @@ package jlibs.wamp4j.netty;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
@@ -36,8 +35,10 @@ import java.net.URI;
 /**
  * @author Santhosh Kumar Tekuri
  */
-public class NettyClientEndpoint implements WAMPClientEndpoint{
-    private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1, NamedThreadFactory.CLIENT_THREAD_FACTORY);
+public class NettyClientEndpoint extends NettyEndpoint implements WAMPClientEndpoint{
+    public NettyClientEndpoint(){
+        super(NamedThreadFactory.CLIENT_THREAD_FACTORY);
+    }
 
     @Override
     public void connect(final URI uri, final ConnectListener listener, final String... subProtocols){
@@ -84,16 +85,6 @@ public class NettyClientEndpoint implements WAMPClientEndpoint{
         });
     }
 
-    @Override
-    public boolean isEventLoop(){
-        return eventLoopGroup.next().inEventLoop();
-    }
-
-    @Override
-    public void submit(Runnable r){
-        eventLoopGroup.submit(r);
-    }
-
     private static class HandshakeListener extends SimpleChannelInboundHandler<Object>{
         private final WebSocketClientHandshaker handshaker;
         private final ConnectListener connectListener;
@@ -108,9 +99,9 @@ public class NettyClientEndpoint implements WAMPClientEndpoint{
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception{
-            if(handshaker.isHandshakeComplete()){
+            if(handshaker.isHandshakeComplete())
                 super.exceptionCaught(ctx, cause);
-            }else{
+            else{
                 connectListener.onError(cause);
                 ctx.close();
             }
@@ -129,5 +120,4 @@ public class NettyClientEndpoint implements WAMPClientEndpoint{
                 ctx.fireUserEventTriggered(evt);
         }
     }
-
 }

@@ -16,6 +16,8 @@
 
 package jlibs.wamp4j.router;
 
+import jlibs.wamp4j.spi.WAMPServerEndPoint;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,12 +25,17 @@ import java.util.Map;
  * @author Santhosh Kumar Tekuri
  */
 class Realms{
+    private final WAMPServerEndPoint server;
     private Map<String, Realm> realms = new HashMap<String, Realm>();
+
+    public Realms(WAMPServerEndPoint server){
+        this.server = server;
+    }
 
     public Realm get(String name){
         Realm realm = realms.get(name);
         if(realm==null)
-            realms.put(name, realm=new Realm(name));
+            realms.put(name, realm=new Realm(server, name));
         return realm;
     }
 

@@ -109,11 +109,6 @@ public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMP
     }
 
     @Override
-    public WAMPOutputStream createOutputStream(){
-        return new NettyOutputStream(ctx.alloc().buffer());
-    }
-
-    @Override
     public void send(MessageType type, WAMPOutputStream out){
         ByteBuf buffer = ((NettyOutputStream)out).buffer;
         WebSocketFrame frame = type==MessageType.text ? new TextWebSocketFrame(buffer) : new BinaryWebSocketFrame(buffer);

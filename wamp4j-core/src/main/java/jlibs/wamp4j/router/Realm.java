@@ -18,6 +18,7 @@ package jlibs.wamp4j.router;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import jlibs.wamp4j.Util;
+import jlibs.wamp4j.spi.WAMPServerEndPoint;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +35,11 @@ class Realm{
     private long lastSessionID = -1;
 
     Map<String, Procedure> procedures = new HashMap<String, Procedure>();
-    public final Topics topics = new Topics();
+    public final Topics topics;
 
-    public Realm(String name){
+    public Realm(WAMPServerEndPoint server, String name){
         this.name = name;
+        topics = new Topics(server);
     }
 
     public void addSession(Session session){
