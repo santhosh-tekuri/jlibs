@@ -39,7 +39,7 @@ public class Topics{
     private final WAMPServerEndPoint server;
     private final Map<String, Topic> uris = new HashMap<String, Topic>();
     private final Map<Long, Topic> ids = new HashMap<Long, Topic>();
-    private long lastID = -1;
+    private Long lastID = -1L;
 
     public Topics(WAMPServerEndPoint server){
         this.server = server;
