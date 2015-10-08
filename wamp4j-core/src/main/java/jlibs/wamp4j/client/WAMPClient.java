@@ -91,10 +91,10 @@ public class WAMPClient{
     private final ConnectListener connectListener = new ConnectListener(){
         @Override
         public void onConnect(WAMPSocket socket){
-            WAMPClient.this.socket = socket;
-            WAMPClient.this.serialization = serialization(socket, serializations);
-            socket.setListener(messageListener);
             try{
+                WAMPClient.this.socket = socket;
+                WAMPClient.this.serialization = serialization(socket, serializations);
+                socket.setListener(messageListener);
                 send(new HelloMessage(realm, Peer.client.details));
                 socket.flush();
             }catch(WAMPException impossible){

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jlibs.wamp4j.Debugger;
 import jlibs.wamp4j.WAMPSerialization;
+import jlibs.wamp4j.error.UnsupportedSerializationException;
 import jlibs.wamp4j.spi.AcceptListener;
 import jlibs.wamp4j.spi.WAMPServerEndPoint;
 import jlibs.wamp4j.spi.WAMPSocket;
@@ -70,7 +71,12 @@ public class WAMPRouter{
             public void onAccept(WAMPSocket socket){
                 if(ROUTER)
                     Debugger.println(WAMPRouter.this, "-- accept");
-                WAMPSerialization serialization = serialization(socket, serializations);
+                WAMPSerialization serialization;
+                try{
+                    serialization = serialization(socket, serializations);
+                }catch(UnsupportedSerializationException e){
+                    throw new AssertionError(e);
+                }
                 socket.setListener(new Session(WAMPRouter.this, socket, serialization));
             }
 

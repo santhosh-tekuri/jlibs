@@ -269,4 +269,9 @@ public class ErrorCode{
     public static ErrorCode wrongThread(){
         return new ErrorCode(WRONG_THREAD);
     }
+
+    public static final String UNSUPPORTED_SERIALIZATION = "jlibs.wamp4j.error.unsupported_serialization";
+    public static ErrorCode unsupportedSerialization(String serialization){
+        return new ErrorCode(UNSUPPORTED_SERIALIZATION, "unsupported serialization {serialization}", serialization);
+    }
 }

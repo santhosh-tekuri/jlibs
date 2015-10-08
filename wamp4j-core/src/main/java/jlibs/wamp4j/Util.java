@@ -16,6 +16,9 @@
 
 package jlibs.wamp4j;
 
+import jlibs.wamp4j.error.UnexpectedException;
+import jlibs.wamp4j.error.UnsupportedSerializationException;
+import jlibs.wamp4j.error.WAMPException;
 import jlibs.wamp4j.spi.WAMPSocket;
 
 import java.util.Map;
@@ -47,13 +50,13 @@ public class Util{
         return subProtocols;
     }
 
-    public static WAMPSerialization serialization(WAMPSocket socket, WAMPSerialization... serializations){
+    public static WAMPSerialization serialization(WAMPSocket socket, WAMPSerialization... serializations) throws UnsupportedSerializationException{
         for(WAMPSerialization serialization : serializations){
             if(serialization.protocol().equals(socket.subProtocol())){
                 return serialization;
             }
         }
-        return null; //todo
+        throw new UnsupportedSerializationException(socket.subProtocol());
     }
 
     public static String toString(String... subProtocols){

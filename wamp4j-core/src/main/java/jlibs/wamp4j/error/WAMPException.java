@@ -73,6 +73,8 @@ public class WAMPException extends Exception{
             return new UnexpectedException(errorCode);
         else if(ErrorCode.WRONG_THREAD.equals(uri))
             return new WrongThreadException(errorCode);
+        else if(ErrorCode.UNSUPPORTED_SERIALIZATION.equals(uri))
+            return new UnsupportedSerializationException(errorCode);
         else
             return new WAMPException(errorCode);
     }
