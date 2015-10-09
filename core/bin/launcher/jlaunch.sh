@@ -189,5 +189,5 @@ else
     FILE=$1
     readFile
     shift;
-    exec $JAVA_CMD -Dpid=$$ $CMD $*
+    exec "$JAVA_CMD" -Dpid=$$ $CMD $*
 fi
