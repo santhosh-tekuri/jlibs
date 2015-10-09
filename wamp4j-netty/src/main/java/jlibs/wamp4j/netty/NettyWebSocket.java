@@ -61,6 +61,8 @@ public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMP
         super.channelInactive(ctx);
     }
 
+    private final NettyInputStream is = new NettyInputStream();
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception{
         if(msg instanceof WebSocketFrame){
@@ -68,8 +70,8 @@ public class NettyWebSocket extends ChannelInboundHandlerAdapter implements WAMP
             try{
                 if(frame instanceof TextWebSocketFrame || frame instanceof BinaryWebSocketFrame){
                     if(listener!=null){
-                        ByteBufInputStream is = new ByteBufInputStream(frame.content());
                         MessageType type = frame instanceof TextWebSocketFrame ? MessageType.text : MessageType.binary;
+                        is.reset(frame.content());
                         listener.onMessage(this, type, is);
                     }
                 }else if(frame instanceof PingWebSocketFrame)
