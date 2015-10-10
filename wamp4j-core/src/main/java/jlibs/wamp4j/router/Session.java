@@ -360,6 +360,10 @@ class Session implements Listener{
     }
 
     protected void send(WAMPOutputStream out){
+        if(sessionID==-1){
+            out.release();
+            return;
+        }
         if(!flushNeeded)
             router.addToFlushList(this);
         if(ROUTER)
