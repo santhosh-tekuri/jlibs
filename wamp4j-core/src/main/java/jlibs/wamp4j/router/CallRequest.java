@@ -46,11 +46,11 @@ class CallRequest{
         callSession.send(callSession.errorMessage(CallMessage.ID, callID, error));
     }
 
-    public ErrorMessage error(ErrorCode errorCode){
-        return new ErrorMessage(CallMessage.ID, callID, errorCode);
+    public void error(ErrorCode errorCode) throws Throwable{
+        callSession.send(callSession.errorMessage(CallMessage.ID, callID, errorCode));
     }
 
-    public ErrorMessage noSuchProcedure(){
-        return error(ErrorCode.noSuchProcedure(procedure.uri()));
+    public void noSuchProcedure() throws Throwable{
+        error(ErrorCode.noSuchProcedure(procedure.uri()));
     }
 }

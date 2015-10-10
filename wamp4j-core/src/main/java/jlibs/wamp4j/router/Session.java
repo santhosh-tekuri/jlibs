@@ -145,7 +145,7 @@ class Session implements Listener{
                         for(Map.Entry<Long, CallRequest> entry : procedure.requests.entrySet()){
                             requests.remove(entry.getKey());
                             CallRequest callRequest = entry.getValue();
-                            callRequest.callSession.send(callRequest.noSuchProcedure());
+                            callRequest.noSuchProcedure();
                         }
                         send(unregisteredMessage(requestID));
                     }
@@ -402,7 +402,11 @@ class Session implements Listener{
         for(Map.Entry<Long, CallRequest> entry : requests.entrySet()){
             CallRequest callRequest = entry.getValue();
             callRequest.procedure.requests.remove(entry.getKey());
-            callRequest.callSession.send(callRequest.noSuchProcedure());
+            try{
+                callRequest.noSuchProcedure();
+            }catch(Throwable thr){
+                router.listener.onWarning(router, thr);
+            }
         }
         for(Procedure procedure : procedures.values())
             realm.procedures.remove(procedure.uri());
