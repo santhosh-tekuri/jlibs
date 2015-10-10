@@ -36,6 +36,7 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static jlibs.wamp4j.Debugger.AUTOREAD;
 import static jlibs.wamp4j.Debugger.CLIENT;
 import static jlibs.wamp4j.Util.serialization;
 import static jlibs.wamp4j.Util.subProtocols;
@@ -218,8 +219,11 @@ public class WAMPClient{
         public void readyToWrite(WAMPSocket socket){
             if(writing.getAndSet(true))
                 return;
-            if(!socket.isAutoRead())
+            if(!socket.isAutoRead()){
+                if(CLIENT && AUTOREAD)
+                    Debugger.println(WAMPClient.this, "-- autoRead1: true");
                 socket.setAutoRead(true);
+            }
             while(socket.isWritable()){
                 if(internalQueue.isEmpty()){
                     synchronized(WAMPClient.this){
@@ -273,8 +277,11 @@ public class WAMPClient{
         socket.send(serialization.messageType(), out);
         if(!socket.isWritable()){
             socket.flush();
-            if(reading && !socket.isWritable() && socket.isAutoRead())
+            if(reading && !socket.isWritable() && socket.isAutoRead()){
+                if(CLIENT && AUTOREAD)
+                    Debugger.println(this, "-- autoRead2: false");
                 socket.setAutoRead(false);
+            }
         }
     }
 

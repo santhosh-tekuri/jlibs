@@ -26,6 +26,7 @@ import java.util.List;
 public final class Debugger{
     public static final boolean CLIENT = false;
     public static final boolean ROUTER = false;
+    public static final boolean AUTOREAD = false;
 
     public static void println(Object module, String message, Object... args){
         List<Object> list = new ArrayList<Object>(1+args.length);

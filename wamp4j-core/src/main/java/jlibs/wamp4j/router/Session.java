@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jlibs.wamp4j.Debugger.AUTOREAD;
 import static jlibs.wamp4j.Debugger.ROUTER;
 
 /**
@@ -275,8 +276,11 @@ class Session implements Listener{
                 session.blockedReaders.put(sessionID, this);
             }
         }
-        if(socket.isAutoRead()!=(autoRead==0))
+        if(socket.isAutoRead()!=(autoRead==0)){
+            if(ROUTER && AUTOREAD)
+                Debugger.println(this, "-- autoRead1: "+(autoRead==0));
             socket.setAutoRead(autoRead==0);
+        }
     }
 
     @Override
@@ -284,8 +288,11 @@ class Session implements Listener{
         if(!blockedReaders.isEmpty()){
             for(Session session : blockedReaders.values()){
                 assert session.autoRead>0;
-                if(--session.autoRead==0)
+                if(--session.autoRead==0){
+                    if(ROUTER && AUTOREAD)
+                        Debugger.println(session, "-- autoRead2: true");
                     session.socket.setAutoRead(true);
+                }
             }
             blockedReaders.clear();
         }
@@ -343,8 +350,11 @@ class Session implements Listener{
         socket.send(serialization.messageType(), out);
         if(!socket.isWritable()){
             socket.flush();
-            if(router.readingSession!=null && socket.isWritable())
+            if(router.readingSession!=null && socket.isWritable()){
+                if(ROUTER && AUTOREAD)
+                    Debugger.println(router.readingSession, "-- autoRead3: false");
                 router.readingSession.socket.setAutoRead(false);
+            }
         }
         return true;
     }
@@ -357,8 +367,11 @@ class Session implements Listener{
         socket.send(serialization.messageType(), out);
         if(!socket.isWritable()){
             socket.flush();
-            if(router.readingSession!=null && socket.isWritable())
+            if(router.readingSession!=null && socket.isWritable()){
+                if(ROUTER && AUTOREAD)
+                    Debugger.println(router.readingSession, "-- autoRead4: false");
                 router.readingSession.socket.setAutoRead(false);
+            }
         }
     }
 
