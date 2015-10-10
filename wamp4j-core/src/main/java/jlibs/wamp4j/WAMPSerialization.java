@@ -17,6 +17,8 @@
 package jlibs.wamp4j;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import jlibs.wamp4j.spi.MessageType;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
@@ -30,11 +32,15 @@ public enum WAMPSerialization{
     private final String protocol;
     private final MessageType messageType;
     private final ObjectMapper mapper;
+    private final ObjectReader reader;
+    private final ObjectWriter writer;
 
     WAMPSerialization(String protocol, MessageType messageType, ObjectMapper mapper){
         this.protocol = protocol;
         this.messageType = messageType;
         this.mapper = mapper;
+        reader = mapper.reader();
+        writer = mapper.writer();
     }
 
     public String protocol(){
@@ -47,5 +53,13 @@ public enum WAMPSerialization{
 
     public ObjectMapper mapper(){
         return mapper;
+    }
+
+    public ObjectReader reader(){
+        return reader;
+    }
+
+    public ObjectWriter writer(){
+        return writer;
     }
 }

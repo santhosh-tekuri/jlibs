@@ -121,7 +121,7 @@ public class WAMPClient{
 
             WAMPMessage message;
             try{
-                ArrayNode array = serialization.mapper().readValue(is, ArrayNode.class);
+                ArrayNode array = (ArrayNode)serialization.reader().readTree(is);
                 message = WAMPMessageDecoder.decode(array);
             }catch(Throwable thr){
                 onError(socket, thr);
@@ -263,7 +263,7 @@ public class WAMPClient{
         try{
             array.removeAll();
             message.toArrayNode(array);
-            serialization.mapper().writeValue(out, array);
+            serialization.writer().writeValue(out, array);
         }catch(Throwable thr){
             out.release();
             throw new SerializationFailedException(thr);
