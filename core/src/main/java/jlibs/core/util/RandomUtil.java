@@ -33,7 +33,8 @@ public class RandomUtil{
     }
 
     public static int random(int min, int max){
-        return (int)Math.round(min+Math.random()*(max-min));
+        Random r = new Random();
+        return r.nextInt(max);
     }
 
     public static short random(short min, short max){
