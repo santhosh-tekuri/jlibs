@@ -350,7 +350,7 @@ class Session implements Listener{
         socket.send(serialization.messageType(), out);
         if(!socket.isWritable()){
             socket.flush();
-            if(router.readingSession!=null && socket.isWritable()){
+            if(router.readingSession!=null && !socket.isWritable()){
                 if(ROUTER && AUTOREAD)
                     Debugger.println(router.readingSession, "-- autoRead3: false");
                 router.readingSession.socket.setAutoRead(false);
@@ -371,7 +371,7 @@ class Session implements Listener{
         socket.send(serialization.messageType(), out);
         if(!socket.isWritable()){
             socket.flush();
-            if(router.readingSession!=null && socket.isWritable()){
+            if(router.readingSession!=null && !socket.isWritable()){
                 if(ROUTER && AUTOREAD)
                     Debugger.println(router.readingSession, "-- autoRead4: false");
                 router.readingSession.socket.setAutoRead(false);
