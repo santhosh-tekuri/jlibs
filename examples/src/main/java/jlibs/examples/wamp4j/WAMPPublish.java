@@ -18,6 +18,7 @@ package jlibs.examples.wamp4j;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.client.CallListener;
 import jlibs.wamp4j.client.PublishListener;
 import jlibs.wamp4j.client.WAMPClient;
@@ -35,22 +36,23 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class WAMPPublish{
     public static void main(String[] args) throws Exception{
-        if(args.length!=6){
-            System.err.println("arguments: <uri> <realm> <topic> <blocking> <clients> <interval>");
+        if(args.length!=7){
+            System.err.println("arguments: <uri> <serialization> <realm> <topic> <blocking> <clients> <interval>");
             System.exit(1);
         }
         URI uri = URI.create(args[0]);
-        String realm = args[1];
-        final String topic = args[2];
-        final boolean blocking = Boolean.valueOf(args[3]);
-        int clients = Integer.parseInt(args[4]);
-        long interval = Long.parseLong(args[5]);
+        WAMPSerialization serialization = WAMPSerialization.valueOf(args[1]);
+        String realm = args[2];
+        final String topic = args[3];
+        final boolean blocking = Boolean.valueOf(args[4]);
+        int clients = Integer.parseInt(args[5]);
+        long interval = Long.parseLong(args[6]);
 
         final CountDownLatch latch = new CountDownLatch(1+clients);
         final PublishThread threads[] = new PublishThread[clients];
         for(int i=0; i<threads.length; i++){
             final int index = i;
-            new WAMPClient(new NettyClientEndpoint(), uri, realm).connect(new SessionAdapter(){
+            new WAMPClient(new NettyClientEndpoint(), uri, realm, serialization).connect(new SessionAdapter(){
                 @Override
                 public void onOpen(WAMPClient client){
                     System.out.println("client"+index+" connected to wamp-router");

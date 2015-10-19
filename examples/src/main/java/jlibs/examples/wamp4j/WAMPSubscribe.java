@@ -16,6 +16,7 @@
 
 package jlibs.examples.wamp4j;
 
+import jlibs.wamp4j.WAMPSerialization;
 import jlibs.wamp4j.client.Subscription;
 import jlibs.wamp4j.client.WAMPClient;
 import jlibs.wamp4j.error.WAMPException;
@@ -32,15 +33,16 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class WAMPSubscribe{
     public static void main(String[] args) throws Exception{
-        if(args.length!=4){
-            System.err.println("arguments: <uri> <realm> <topic> <interval>");
+        if(args.length!=5){
+            System.err.println("arguments: <uri> <serialization> <realm> <topic> <interval>");
             System.exit(1);
         }
         URI uri = URI.create(args[0]);
-        String realm = args[1];
-        final String topic = args[2];
-        long interval = Long.parseLong(args[3]);
-        WAMPClient client = new WAMPClient(new NettyClientEndpoint(), uri, realm);
+        WAMPSerialization serialization = WAMPSerialization.valueOf(args[1]);
+        String realm = args[2];
+        final String topic = args[3];
+        long interval = Long.parseLong(args[4]);
+        WAMPClient client = new WAMPClient(new NettyClientEndpoint(), uri, realm, serialization);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicLong events = new AtomicLong();
         client.connect(new SessionAdapter(){
