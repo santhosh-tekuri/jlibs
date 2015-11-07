@@ -25,6 +25,9 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.*;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.ConnectListener;
 import jlibs.wamp4j.spi.NamedThreadFactory;
@@ -42,12 +45,27 @@ public class NettyClientEndpoint extends NettyEndpoint implements WAMPClientEndp
 
     @Override
     public void connect(final URI uri, final ConnectListener listener, final String... subProtocols){
-        String protocol = uri.getScheme();
-        if(!protocol.equals("ws"))
-            throw new IllegalArgumentException("invalid protocol: "+protocol);
-        int port = uri.getPort();
-        if(port==-1)
-            port = 80;
+        final SslContext sslContext;
+        if("wss".equals(uri.getScheme())){
+            try{
+                if(sslSettings==null){
+                    sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+                }else{
+                    sslContext = SslContextBuilder.forClient()
+                            .trustManager(sslSettings.trustCertChainFile)
+                            .keyManager(sslSettings.certificateFile, sslSettings.keyFile, sslSettings.keyPassword)
+                            .build();
+                }
+            }catch(Throwable thr){
+                listener.onError(thr);
+                return;
+            }
+        }else if("ws".equals(uri.getScheme()))
+            sslContext = null;
+        else
+            throw new IllegalArgumentException("invalid protocol: "+uri.getScheme());
+
+        final int port = uri.getPort()==-1 ? (sslContext==null ? 80 : 443) : uri.getPort();
 
         Bootstrap bootstrap = new Bootstrap()
                 .group(eventLoopGroup)
@@ -58,6 +76,8 @@ public class NettyClientEndpoint extends NettyEndpoint implements WAMPClientEndp
                 .handler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception{
+                        if(sslContext!=null)
+                            ch.pipeline().addLast(sslContext.newHandler(ch.alloc(), uri.getHost(), port));
                         WebSocketClientHandshaker handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri,
                                 WebSocketVersion.V13, Util.toString(subProtocols),
                                 false, new DefaultHttpHeaders());

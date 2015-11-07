@@ -18,6 +18,7 @@ package jlibs.wamp4j.netty;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
+import jlibs.wamp4j.SSLSettings;
 import jlibs.wamp4j.spi.NamedThreadFactory;
 import jlibs.wamp4j.spi.WAMPEndpoint;
 import jlibs.wamp4j.spi.WAMPOutputStream;
@@ -30,6 +31,13 @@ public abstract class NettyEndpoint implements WAMPEndpoint{
 
     public NettyEndpoint(NamedThreadFactory threadFactory){
         eventLoopGroup = new NioEventLoopGroup(1, threadFactory);
+    }
+
+    protected SSLSettings sslSettings;
+
+    @Override
+    public void setSSLSettings(SSLSettings sslSettings){
+        this.sslSettings = sslSettings;
     }
 
     @Override

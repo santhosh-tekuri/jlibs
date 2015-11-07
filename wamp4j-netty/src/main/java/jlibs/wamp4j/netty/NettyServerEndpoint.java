@@ -19,14 +19,17 @@ package jlibs.wamp4j.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.util.AttributeKey;
+import jlibs.wamp4j.SSLSettings;
 import jlibs.wamp4j.Util;
 import jlibs.wamp4j.spi.AcceptListener;
 import jlibs.wamp4j.spi.NamedThreadFactory;
@@ -47,9 +50,28 @@ public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndP
 
     @Override
     public void bind(final URI uri, final String subProtocols[], final AcceptListener listener){
+        final SslContext sslContext;
+        if("wss".equals(uri.getScheme())){
+            try{
+                if(sslSettings==null){
+                    SelfSignedCertificate ssc = new SelfSignedCertificate();
+                    sslSettings = new SSLSettings().keyFile(ssc.privateKey()).certificateFile(ssc.certificate());
+                }
+                sslContext = SslContextBuilder.forServer(sslSettings.certificateFile, sslSettings.keyFile, sslSettings.keyPassword)
+                                              .trustManager(sslSettings.trustCertChainFile)
+                                              .build();
+            }catch(Throwable thr){
+                listener.onError(thr);
+                return;
+            }
+        }else if("ws".equals(uri.getScheme()))
+            sslContext = null;
+        else
+            throw new IllegalArgumentException("invalid protocol: "+uri.getScheme());
+
         int port = uri.getPort();
         if(port==-1)
-            port = 80;
+            port = sslContext==null ? 80 : 443;
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(eventLoopGroup)
                 .channel(NioServerSocketChannel.class)
@@ -59,6 +81,8 @@ public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndP
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception{
+                        if(sslContext!=null)
+                            ch.pipeline().addLast(sslContext.newHandler(ch.alloc()));
                         ch.pipeline().addLast(
                                 new HttpServerCodec(),
                                 new HttpObjectAggregator(65536),

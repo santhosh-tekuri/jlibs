@@ -16,10 +16,13 @@
 
 package jlibs.wamp4j.spi;
 
+import jlibs.wamp4j.SSLSettings;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
 public interface WAMPEndpoint{
+    public void setSSLSettings(SSLSettings sslSettings);
     public boolean isEventLoop();
     public void submit(Runnable r);
     public WAMPOutputStream createOutputStream();
