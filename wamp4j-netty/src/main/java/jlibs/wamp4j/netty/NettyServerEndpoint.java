@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -57,7 +58,9 @@ public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndP
                     SelfSignedCertificate ssc = new SelfSignedCertificate();
                     sslSettings = new SSLSettings().keyFile(ssc.privateKey()).certificateFile(ssc.certificate());
                 }
+                ClientAuth clientAuth = ClientAuth.values()[sslSettings.clientAuthentication.ordinal()];
                 sslContext = SslContextBuilder.forServer(sslSettings.certificateFile, sslSettings.keyFile, sslSettings.keyPassword)
+                                              .clientAuth(clientAuth)
                                               .trustManager(sslSettings.trustCertChainFile)
                                               .build();
             }catch(Throwable thr){

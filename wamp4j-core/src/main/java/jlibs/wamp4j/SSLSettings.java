@@ -26,6 +26,7 @@ public class SSLSettings{
     public String keyPassword;
     public File certificateFile;
     public File trustCertChainFile;
+    public ClientAuthentication clientAuthentication = ClientAuthentication.NONE;
 
     public SSLSettings keyFile(File keyFile){
         this.keyFile = keyFile;
@@ -44,6 +45,11 @@ public class SSLSettings{
 
     public SSLSettings trustCertChainFile(File trustCertChainFile){
         this.trustCertChainFile = trustCertChainFile;
+        return this;
+    }
+
+    public SSLSettings clientAuthentication(ClientAuthentication clientAuthentication){
+        this.clientAuthentication = clientAuthentication;
         return this;
     }
 }
