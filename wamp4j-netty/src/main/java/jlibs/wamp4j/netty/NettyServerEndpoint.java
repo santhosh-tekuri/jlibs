@@ -55,6 +55,7 @@ public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndP
                 .channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.MAX_MESSAGES_PER_READ, 50000)
+                .childOption(ChannelOption.WRITE_SPIN_COUNT, 50000)
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception{
