@@ -21,11 +21,18 @@ package jlibs.core.util;
  */
 public class RandomUtil{
     public static double random(double min, double max){
-        return min+Math.random()*(max-min);
+        // see http://stackoverflow.com/a/9724775
+        return Math.random()<0.5
+                ? ((1-Math.random()) * (max-min) + min)
+                : (Math.random() * (max-min) + min);
     }
 
     public static float random(float min, float max){
-        return (float)(min+Math.random()*(max-min));
+        // see http://stackoverflow.com/a/9724775
+        return Math.random()<0.5
+                ? (float)((1-Math.random()) * (max-min) + min)
+                : (float)(Math.random() * (max-min) + min);
+
     }
 
     public static long random(long min, long max){
