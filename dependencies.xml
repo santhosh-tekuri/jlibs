@@ -20,18 +20,18 @@
         <dependency groupid="commons-pool" artifactid="commons-pool" version="1.5.4"/>
         <dependency groupid="org/hsqldb" artifactid="hsqldb" version="2.3.3"/>
         <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-annotations" version="2.6.0"/>
-        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-core" version="2.6.2"/>
-        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-databind" version="2.6.2"/>
-        <dependency groupid="org/msgpack" artifactid="jackson-dataformat-msgpack" version="0.7.0-M6"/>
+        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-core" version="2.6.3"/>
+        <dependency groupid="com/fasterxml/jackson/core" artifactid="jackson-databind" version="2.6.3"/>
+        <dependency groupid="org/msgpack" artifactid="jackson-dataformat-msgpack" version="0.7.1"/>
         <dependency groupid="jaxen" artifactid="jaxen" version="1.1.1"/>
         <dependency groupid="jline" artifactid="jline" version="1.0"/>
-        <dependency groupid="org/msgpack" artifactid="msgpack-core" version="0.7.0-M6"/>
-        <dependency groupid="io/netty" artifactid="netty-buffer" version="4.0.32.Final"/>
-        <dependency groupid="io/netty" artifactid="netty-codec" version="4.0.32.Final"/>
-        <dependency groupid="io/netty" artifactid="netty-codec-http" version="4.0.32.Final"/>
-        <dependency groupid="io/netty" artifactid="netty-common" version="4.0.32.Final"/>
-        <dependency groupid="io/netty" artifactid="netty-handler" version="4.0.32.Final"/>
-        <dependency groupid="io/netty" artifactid="netty-transport" version="4.0.32.Final"/>
+        <dependency groupid="org/msgpack" artifactid="msgpack-core" version="0.7.1"/>
+        <dependency groupid="io/netty" artifactid="netty-buffer" version="4.0.33.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-codec" version="4.0.33.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-codec-http" version="4.0.33.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-common" version="4.0.33.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-handler" version="4.0.33.Final"/>
+        <dependency groupid="io/netty" artifactid="netty-transport" version="4.0.33.Final"/>
         <dependency groupid="in/jlibs" artifactid="org-netbeans-api-visual" version="RELEASE65"/>
         <dependency groupid="in/jlibs" artifactid="rg-netbeans-swing-outline" version="RELEASE65"/>
         <dependency groupid="in/jlibs" artifactid="org-openide-util" version="RELEASE65"/>
