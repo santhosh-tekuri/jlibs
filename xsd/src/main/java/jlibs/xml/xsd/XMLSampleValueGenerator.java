@@ -103,12 +103,12 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
     @Override
     public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType){
         List<String> values = elementValues.get(element);
-        return values==null ? null : values.get(RandomUtil.random(0, values.size()));
+        return values==null ? null : values.get(RandomUtil.random(0, values.size()-1));
     }
 
     @Override
     public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
         List<String> values = attributeValues.get(attribute);
-        return values==null ? null : values.get(RandomUtil.random(0, values.size()));
+        return values==null ? null : values.get(RandomUtil.random(0, values.size()-1));
     }
 }
