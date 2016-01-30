@@ -65,6 +65,15 @@ public class XSParser{
             config.setParameter(Constants.DOM_ERROR_HANDLER, errorHandler);
     }
 
+    /**
+     * for schema version "1.1", xerces 2.11.0-beta must be in classpath
+     */
+    public void enableSchema11(){
+        xsLoader.getConfig().setParameter(
+                Constants.XERCES_PROPERTY_PREFIX + "validation/schema/version",
+                "http://www.w3.org/XML/XMLSchema/v1.1");
+    }
+
     public XSModel parse(String uri){
         XSModel xsModel = xsLoader.loadURI(uri);
         if(xsModel==null)
