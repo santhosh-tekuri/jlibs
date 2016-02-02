@@ -4,13 +4,13 @@
     <parent>
         <groupId>in.jlibs</groupId>
         <artifactId>jlibs-parent</artifactId>
-        <version>2.2</version>
+        <version>2.2.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jlibs-wamp4j-netty</artifactId>
     <packaging>jar</packaging>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.2.1</version>
 
     <name>wamp4j-netty</name>
     <description>wamp4j netty implementation</description>
