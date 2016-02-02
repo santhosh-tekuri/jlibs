@@ -84,7 +84,7 @@ public class PubSubTest{
         atomic.set(null);
         jlibsClient1.publish(options, "t1", arguments, null);
         em = Await.getResult(atomic);
-        assertEquals(em.details, options);
+        assertEquals(em.details, instance.objectNode());
         assertEquals(em.arguments, arguments);
         assertEquals(em.argumentsKw, null);
 
@@ -92,7 +92,7 @@ public class PubSubTest{
         atomic.set(null);
         jlibsClient1.publish(options, "t1", arguments, argumentsKw);
         em = Await.getResult(atomic);
-        assertEquals(em.details, options);
+        assertEquals(em.details, instance.objectNode());
         assertEquals(em.arguments, arguments);
         assertEquals(em.argumentsKw, argumentsKw);
 

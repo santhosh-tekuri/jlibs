@@ -17,6 +17,7 @@
 package jlibs.wamp4j.router;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,6 +34,7 @@ import jlibs.wamp4j.spi.MessageType;
 import jlibs.wamp4j.spi.WAMPOutputStream;
 import jlibs.wamp4j.spi.WAMPSocket;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -239,11 +241,11 @@ class Session implements Listener{
                         throw new InvalidMessageException();
                     if(parser.nextToken()!=JsonToken.START_OBJECT)
                         throw new InvalidMessageException();
-                    options = serialization.mapper().readTree(parser);
+                    boolean needsAcknowledgement = needsAcknowledgement(parser);
                     if(ROUTER)
-                        Debugger.println(this, "<- PublishMessage: [%d, %d, %s, ...]", id, requestID, options);
-                    realm.topics.publish(this, options, parser);
-                    if(PublishMessage.needsAcknowledgement(options))
+                        Debugger.println(this, "<- PublishMessage: [%d, %d, %s, ...]", id, requestID, needsAcknowledgement);
+                    realm.topics.publish(this, null, parser);
+                    if(needsAcknowledgement)
                         send(publishedMessage(requestID, 0));
                     break;
                 default:
@@ -260,6 +262,34 @@ class Session implements Listener{
                     parser.close();
             }catch(Throwable thr){
                 router.listener.onWarning(router, thr);
+            }
+        }
+    }
+
+    private boolean needsAcknowledgement(JsonParser parser) throws IOException{
+        boolean acknowledge = false;
+        boolean readAcknowledge = false;
+
+        int open = 1;
+        while(true){
+            JsonToken t = parser.nextToken();
+            if(readAcknowledge){
+                readAcknowledge = false;
+                if(t==JsonToken.VALUE_TRUE)
+                    acknowledge = true;
+                else if(t==JsonToken.VALUE_FALSE)
+                    acknowledge = false;
+            }
+
+            if(t==null)
+                throw new JsonParseException("unexpected EOF", parser.getCurrentLocation());
+            else if(t.isStructStart())
+                open++;
+            else if(t.isStructEnd()){
+                if(--open==0)
+                    return acknowledge;
+            }else if(open==1 && t==JsonToken.FIELD_NAME && parser.getText().equals("acknowledge")){
+                readAcknowledge = true;
             }
         }
     }
