@@ -11,17 +11,17 @@ We give set of xpaths to `XMLDog` and ask to sniff some xml document. It uses SA
 
 Whether it is Xalan/XMLDog, first we need to define `javax.xml.namespace.NamespaceContext`. This interface defines the binding for prefix to uri.
 
-```java
+~~~java
 import jlibs.xml.DefaultNamespaceContext;
 import jlibs.xml.Namespaces;
 
 DefaultNamespaceContext nsContext = new DefaultNamespaceContext(); // an implementation of javax.xml.namespace.NamespaceContext
 nsContext.declarePrefix("xsd", Namespaces.URI_XSD);
-```
+~~~
 
 Now create an instance of `XMLDOG`, and add the xpaths that need to be evaluated. Note that `XMLDog` can evaluate multiple xpaths in single SAX parse of given xml document.
 
-```java
+~~~java
 import jlibs.xml.sax.dog.XMLDog;
 import jlibs.xml.sax.dog.expr.Expression;
 
@@ -30,42 +30,42 @@ XMLDog dog = new XMLDog(nsContext);
 Expression xpath1 = dog.addXPath("/xs:schema/@targetNamespace");
 Expression xpath2 = dog.addXPath("/xs:schema/xs:complexType/@name");
 Expression xpath3 = dog.addXPath("/xs:schema/xs:*/@name");
-```
+~~~
 
 When you add xpath to `XMLDog`, it returns `Expression` object. This object is the compiled xpath.
 
 you can get the original xpath using `Expression#getXPath()`:
 
-```java
+~~~java
 System.out.println(xpath1.getXPath()); // prints "/xs:schema/@targetNamespace"
-```
+~~~
 
 you can ask `Expression` about its result type;
 
-```java
+~~~java
 import javax.xml.namespace.QName;
 
 QName resultType = xpath1.resultType.qname;
 System.out.println(resultType); // prints "{http://www.w3.org/1999/XSL/Transform}NODESET"
-```
+~~~
 
 The `QName` returned will be one of constants in `javax.xml.xpath.XPathConstants`.
 
 To evaluate given xpaths on some xml document:
 
-```java
+~~~java
 import jlibs.xml.sax.dog.XPathResults;
 
 XPathResults results = dog.sniff(new InputSource("note.xml"));
-```
+~~~
 
 `XPathResults` object will contain the results of all xpath evaluations.
 
 to get result of particular xpath:
 
-```java
+~~~java
 object result = results.getResult(xpath1);
-```
+~~~
 
 The return type of `getResult(XPath)` will be `java.lang.Object`.
 
@@ -73,14 +73,14 @@ Depending on the `XPath.resultType()`, this result can be safely cased to a part
 
 Below is the actual result Type for each resultType returned by `XPath`:
 
-```
+~~~
 | XPath.resultType()     | result can be cast to          |
 |------------------------|--------------------------------|
 | XPathConstants.STRING  | java.lang.String               |
 | XPathConstants.BOOLEAN | java.lang.Boolean              |
 | XPathConstants.NUMBER  | java.lang.Double               |
 | XPathConstants.NODESET | java.util.Collection<NodeItem> |
-```
+~~~
 
 `NodeItem` represens an xml node in xml document; `NodeItem` has following properties.
 
@@ -103,13 +103,13 @@ return value/localName/namespaceURI/qualifiedName of the xml node it represens
 
 `XPathResults` has handy print method to print results to given `java.io.PrintStream`:
 
-```java
+~~~java
 results.print(dog.getExpressions(), System.out);
-```
+~~~
 
 will print:
 
-```java
+~~~java
 XPath: /xs:schema/@targetNamespace
       1: /xs:schema[1]/@targetNamespace
 
@@ -122,7 +122,7 @@ XPath: /xs:schema/xs:*/@name
       3: /xs:schema[1]/xs:element[3]/@name
       4: /xs:schema[1]/xs:element[4]/@name
       5: /xs:schema[1]/xs:complexType[1]/@name
-```
+~~~
 
 ## Multi Threading ##
 
@@ -150,15 +150,15 @@ it supports predicates and all operators.
 
 `XMLDog` will tell you clearly, if given xpath is not supprted; for example:
 
-```java
+~~~java
 XPath xpath = dog.add("/xs:schema/../@targetNamespace", 1);
-```
+~~~
 
 throws following exception:
 
-```
+~~~
 java.lang.UnsupportedOperationException: unsupported axis: parent
-```
+~~~
 
 This will be very useful. for example you can first try using `XMLDog` and if it throws `UnsupportedOperationException`,
 then you can fallback to use traditional xpath engine.
@@ -168,7 +168,7 @@ then you can fallback to use traditional xpath engine.
 By default `XMLDog` does not construct dom nodes for results.  
 You can configure for DOM results as follows:
 
-```java
+~~~java
 import package jlibs.xml.sax.dog.sniff.Event;
 
 Event event = dog.createEvent();
@@ -182,7 +182,7 @@ for(NodeItem item: items){
     org.w3c.dom.Node domNode = (org.w3c.dom.Node)item.xml;
     // do something with domNode
 }
-```
+~~~
 
 Note that, dom nodes are created only for portions of xml which are hit by xpaths. Thus you can run xpaths on large documents.
 
@@ -202,7 +202,7 @@ To solve this problem, you register your own `InstantEvaluationListener` with `E
 will be notified as soon as an employee with specified criteria is found. Thus you can process that employee
 and discard it.
 
-```java
+~~~java
 import jlibs.xml.sax.dog.expr.InstantEvaluationListener;
 
 Event event = dog.createEvent();
@@ -228,11 +228,11 @@ event.setListener(new InstantEvaluationListener(){
 });
 
 dog.sniff(event, new InputSource("note.xml"), false/*useSTAX*/); // this version sniff method returns void
-```
+~~~
 
 ## Variables and Custom Functions ##
 
-```java
+~~~java
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPathVariableResolver;
 import javax.xml.xpath.XPathFunctionResolver;
@@ -242,7 +242,7 @@ XPathVariableResolver variableResolver = ...;
 XPathFunctionResolver functionResolver = ...;
 
 XMLDog dog = new XMLDogContext(nsContext, variableResolver, functionResolver);
-```
+~~~
 
 Note that functions are not supposed to expect arguments of type `NodeSet`
 
@@ -268,7 +268,7 @@ This test reads configuration from [xpaths.xml](https://github.com/santhosh-teku
 
 Here is sample output of this performance test;
 
-```
+~~~
 Average Execution Time over 20 runs:
 --------------------------------------------------------------------------------
                                    File | XPaths XMLDog  SAXON   Diff Percentage
@@ -310,7 +310,7 @@ resources/xmlFiles/defaultNamespace.xml |     80      0      2     -1   -3.28
                resources/xmlFiles/t.xml |     10      0      0      0   -2.58
 --------------------------------------------------------------------------------
                                   Total |  11610    410    683   -273   -1.67
-```
+~~~
 
 It shows that XMLDog is faster than Saxon9(1.67 times).
 

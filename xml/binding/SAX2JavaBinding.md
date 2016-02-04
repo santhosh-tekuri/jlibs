@@ -9,7 +9,7 @@ the package `jlibs.xml.sax.binding` contains classes which help you to read xml 
 
 ## Dependencies ###
 
-```xml
+~~~xml
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-xml-binding</artifactId>
@@ -22,7 +22,7 @@ the package `jlibs.xml.sax.binding` contains classes which help you to read xml 
     <version>2.1</version>
     <optional>true</optional>
 </dependency> 
-```
+~~~
 
 `jlibs-xml-binding-apt` contains annotation processor and is required only at *compile time*
 
@@ -32,17 +32,17 @@ Before going into details, we will first go through the concepts. Then it will b
 
 we have employee.xml:
 
-```xml
+~~~xml
 <employee>                     
     <name>scott</name>         
     <age>20</age>              
     <experience>5</experience> 
 </employee>
-```
+~~~
 
 and Employee class:
 
-```java
+~~~java
 public class Employee{
     private String name;
     private int age;
@@ -50,12 +50,12 @@ public class Employee{
 
     // getter and setter methods
 }
-```
+~~~
 
 Each element in xml will create a java object.
 Let us see the java objects created for above xml:
 
-```
+~~~
         XML                     |     Java Object  
 --------------------------------|-----------------
 <employee>                      |   new Employee()
@@ -63,7 +63,7 @@ Let us see the java objects created for above xml:
     <age>20</age>               |   new String(#text) 
     <experience>5</experience>  |   new String(#text) 
 </employee>                     |
-```
+~~~
 
 From above table you can see that:
 
@@ -74,7 +74,7 @@ Now we have 4 java Objects ( one `Employee` object and four `String` objects)
 
 Now **relation** comes into picture. Each element has a relation, which tells how to relate current element's java object with parent element's java object.
 
-```
+~~~
         XML                     |     Java Object             |   Relation
 --------------------------------|--------------------------------------------------------
 <employee>                      |   emp = new Employee()      |   - No Relation -
@@ -82,7 +82,7 @@ Now **relation** comes into picture. Each element has a relation, which tells ho
     <age>20</age>               |   age = new String(#text)   | emp.setAge(age)
     <experience>5</experience>  |   exp = new String(#text)   | emp.setExperience(exp)
 </employee>                     |
-```
+~~~
 
 The above table shows how java objects created are related with each other.  
 To make understanding easier, we assigned each java object created into some variable.  
@@ -94,9 +94,9 @@ To make understanding easier, we assigned each java object created into some var
 
 Now you can see that relation of `<name>` element and its parent element `<employee>` in java is:
 
-```java
+~~~java
 emp.setName(name)
-```
+~~~
 
 Once Java-Object and Relation are defined for each element type, It is piece of cake to read xml document into java objects.
 
@@ -104,7 +104,7 @@ Once Java-Object and Relation are defined for each element type, It is piece of 
 
 Let us put the above concepts into implementation:
 
-```java
+~~~java
 import jlibs.xml.sax.binding.*;
 
 @Binding("employee")
@@ -134,39 +134,39 @@ public class EmployeeBinding{
         employee.setExperience(Integer.parseInt(experience));
     }
 }
-```
+~~~
 
 Let us walk through the code:
 
-```java
+~~~java
 import jlibs.xml.sax.binding.*;
-```
+~~~
 
 this package contains various annotations, which we use to define binding.
 
-```java
+~~~java
 @Binding("employee")
 public class EmployeeBinding{
-```
+~~~
 
 `@Binding("employee")` annotation says that, `EmployeeBinding` class defines binding for `<employee>` element
 
-```java
+~~~java
 @Binding.Start
 public static Employee onStart() throws SAXException{
     return new Employee();
 }
-```
+~~~
 
 `@Binding.Start` annotation says that, when `<employee>` element starts call this method.  
 this method returns new `Employee` object. i.e for each `<employee>` we create one `Employee` object.
 
-```java
+~~~java
 @Binding.Text({"name", "age", "experience"})
 public static String onText(String text){
     return text;
 }
-```
+~~~
 
 `@Binding.Text({"name", "age", "experience"})` annotation says that,  
 call this method for `<name>`, `<age>` and `<employee>` text content.  
@@ -174,12 +174,12 @@ The argument `text` will be the text content of that element.
 The java object created for these elements is their text  
 content, so we simply return the `text` argument.
 
-```java
+~~~java
 @Relation.Finish("name")
 public static void relateName(Employee employee, String name){
     employee.setName(name);
 }
-```
+~~~
 
 `@Relation.Finish("name")` annotation says that, call this method on `</name>`.  
 The first argument will be the java object created for `<name>`'s parent element (i,e `<employee>` element), which is `Employee` object created by `onStart()` method.  
@@ -191,12 +191,12 @@ similarly `relateAge(...)` and `relateExperience(...)` are called on `<age>` and
 
 Now we have finished coding `EmployeeBinding`. Now let us see how to read employee xml document using this binding.
 
-```java
+~~~java
 public static Employee read(File xmlFile) throws Exception{
     BindingHandler handler = new BindingHandler(EmployeeBinding.class);
     return (Employee)handler.parse(new InputSource(xmlFile.getPath()));
 }
-```
+~~~
 
 `BindingHandler` is an implementation of SAX `DefaultHandler`. It's constructor takes the binding calss as argument.
 
@@ -220,14 +220,14 @@ Because reflection is not used at runtime, the sax parsing will be faster.
 
 let us say employee.xml is:
 
-```xml
+~~~xml
 <employee>                     
     <name>scott</name>         
     <age>20</age>              
     <experience>5</experience> 
     <email>scott@email.com</email> 
 </employee>
-```
+~~~
 
 The above xml document has an unexpected element `<email>` for which we have not defined any binding.
 
@@ -236,21 +236,21 @@ i.e you will be able to create `Employee` object from the above xml document wit
 
 Suppose you want to issue an error for undefined elements then do:
 
-```java
+~~~java
 handler.setIgnoreUnresolved(false); // default is true
-```
+~~~
 
 now when you try to read the above xml document, you will get following exception:
 
-```
+~~~
 org.xml.sax.SAXException: can't find binding for /employee/email (line=5, col=12)
-```
+~~~
 
 ## Reusing Bindings ##
 
 Have a look at `Company` class:
 
-```java
+~~~java
 public class Company{
     private String name;
     private Employee manager;
@@ -258,11 +258,11 @@ public class Company{
     
     // getter and setter methods
 }
-```
+~~~
 
 and company.xml as below:
 
-```
+~~~
         XML                        |     Java Object                   |   Relation
 -----------------------------------|-------------------------------------------------------------------
 <company name="foo">               | company = new Company(@name)      |
@@ -282,7 +282,7 @@ and company.xml as below:
         <experience>4</experience> |                                   |
     </employee>                    |                                   | company.addEmployee(employee)
 </company>                         |                                   |
-```
+~~~
 
 on `<company>` element begin, we create `Company` object.  
 for `<manager>` and `<employee>` elements we will create `Employee` objects, using `EmployeeBinding` coded earlier.  
@@ -291,7 +291,7 @@ on `<employee>` element end, we relate `company` and `employee` objects using `a
 
 Let us implment `CompanyBinding`:
 
-```java
+~~~java
 @Binding("company")
 public class CompanyBinding{
     @Binding.Start
@@ -315,16 +315,16 @@ public class CompanyBinding{
         company.employees.add(employee);
     }
 }
-```
+~~~
 
 Let us walk through the code:
 
-```java
+~~~java
 @Binding.Start
 public static Company onStart(@Attr String name) throws SAXException{
     return new Company(name);
 }
-```
+~~~
 
 `@Attr` annotation is used to get attribute value.  
 the attribute name is derived from the parameter name.  
@@ -334,20 +334,20 @@ in some cases, attribute name may not be valid java identifier.
 for example `param-name` is a valid attribute name, but not a valid java identifier.  
 in such cases you can do:
 
-```java
+~~~java
 @Attr("param-name") String paramName
-```
+~~~
 
-```java
+~~~java
 @Binding.Element(element = "manager", clazz = EmployeeBinding.class)
 public static void onManager(){}
-```
+~~~
 
 `@Binding.Element(element = "manager", clazz = EmployeeBinding.class)` annotation says to reuse `EmployeeBinding` for `<manager>` element.
 
 ## Namespace Support ##
 
-```java
+~~~java
 @NamespaceContext({
     @Entry(prefix="foo", uri="http://www.foo.com"),
     @Entry(prefix="bar", uri="http://www.bar.com")
@@ -356,20 +356,20 @@ public static void onManager(){}
 public class EmployeeBinding{
     ...
 }
-```
+~~~
 
 `@NamespaceContext` annotation is used to define prefix to namespace mappings.  
 then you can use these prefixes in remaining annotations. for example:  
 
-```java
+~~~java
 @Binding("foo:employee")
-```
+~~~
 
 ## When no-arg constructor is missing ##
 
 Let us say our <code>Employee</code> has no default constructor:
 
-``` java
+~~~ java
 public class Employee{
     private String name;
     private int age;
@@ -383,11 +383,11 @@ public class Employee{
 
     // getter methods
 }
-```
+~~~
 
 Let us see how to handle this situation:
 
-```
+~~~
         XML                     |     Java Object                                                     |   Relation
 --------------------------------|---------------------------------------------------------------------|----------------------------
 <employee>                      |                                                                     |
@@ -395,7 +395,7 @@ Let us see how to handle this situation:
     <age>20</age>               | age = new String(#text)                                             | parent[<age>] = age
     <experience>5</experience>  | exp = new String(#text)                                             | parent[<experience>] = exp
 </employee>                     | emp = new Employee(current[<name>], current[<age>], [<experience>]) | 
-```
+~~~
 
 Notice that now we are creating `Employee` object at `</employee>`, rather than `<employee>` element begin.  
 This is because, the values of name, age and experience are available only on `<employee>` element end.
@@ -412,9 +412,9 @@ Other than that, `SAXContext` also has map, which you can use to store values te
 
 let us see the relation for `<name>` element:
 
-```
+~~~
 parent[<name>] = name
-```
+~~~
 
 here `parent` refers to parent element's (i,e `<employee>`) context;  
 we are storing the `String` object created for `<name>` element, in `<employee>`'s context.  
@@ -424,16 +424,16 @@ similarly we are saving the values of `<age>` and `<experience>` elements also i
 
 now on `</employee>` element end we do:
 
-```
+~~~
 emp = new Employee(current[<name>], current[<age>], [<experience>])
-```
+~~~
 
 here `current` refers to current element's (i.e `<employee>`) context;  
 we are retriving the values of `<name>`, `<age>` and `<experience>` stored earlier, and creating `Employee` object using them.
 
 Let us see what it looks like in java code:
 
-```java
+~~~java
 @Binding("employee")
 public class EmployeeBinding{
     @Binding.Text({"name", "age", "experience"})
@@ -454,16 +454,16 @@ public class EmployeeBinding{
         );
     }
 }
-```
+~~~
 
 Let us walk through the code;
 
-```
+~~~
 @Relation.Finish({"name", "age", "experience"})
 public static String relateWithEmployee(String value){
     return value;
 }
-```
+~~~
 
 `@Relation.Finish({"name", "age", "experience"})` annotation says that, call this method on
 `<name>`, `<age>` and `<experience>` element end.
@@ -476,7 +476,7 @@ When a method with relation annotation returns something:
 i.e <code>String value</code> is the <code>String</code> object created for current element.
 and the value returned is stored in <code><employee></code> element's temp.
 
-```java
+~~~java
 @Binding.Finish
 public static Employee onFinish(@Temp String name, @Temp String age, @Temp String experience) throws SAXException{
     return new Employee(name,
@@ -484,16 +484,16 @@ public static Employee onFinish(@Temp String name, @Temp String age, @Temp Strin
             Integer.parseInt(experience==null ? "0" : experience)
     );
 }
-```
+~~~
 
 `@Binding.Finish` annotation says that, call this method on `</employee>`.
 
 `@Temp String name` says that give me the value mapped to `name` in current element's temp.  
 similar to `@Attr` you can explicitly specify the qname as follows:  
 
-```java
+~~~java
 @Temp("name") String employeeName
-```
+~~~
 
 Here in `onFinish(...)` method, we are creating `Employee` object using the values that are stored earlier in temp, and returning it.
 
@@ -501,7 +501,7 @@ Here in `onFinish(...)` method, we are creating `Employee` object using the valu
 
 Let us say we have `Component` class:
 
-```java
+~~~java
 public class Component{
     public final String name;
     public Properties initParams = new Properties();
@@ -511,7 +511,7 @@ public class Component{
         this.name = name;
     }
 }
-```
+~~~
 
 each component has:
 
@@ -521,7 +521,7 @@ each component has:
 
 Let us see sample xml:
 
-```
+~~~
         XML                                               |     Java Object                                                     |   Relation
 ----------------------------------------------------------|---------------------------------------------------------------------|----------------------------
 <component name="comp1">                                  | comp = new Company(@name)                                           |
@@ -550,13 +550,13 @@ Let us see sample xml:
         </component>                                      |                                                                     | comp.dependencies.add(dependent)
     </dependencies>                                       |                                                                     |
 </component>                                              |                                                                     |
-```
+~~~
 
 here we have recursion. `comp1` depends on `comp2` which in turn depends on `comp3`
 
 let us see the Binding implementation:
 
-```java
+~~~java
 @Binding("component")
 public class ComponentBinding{
     @Binding.Start
@@ -587,12 +587,12 @@ public class ComponentBinding{
         comp.dependencies.add(dependent);
     }
 }
-```
+~~~
 
 ## Reading List of values ##
 
 
-```java
+~~~java
 public class Employee{
     public String name;
     public int age;
@@ -605,9 +605,9 @@ public class Employee{
         this.experience = experience;
     }
 }
-```
+~~~
 
-```
+~~~
         XML                                     |     Java Object                              |   Relation
 ------------------------------------------------|----------------------------------------------|----------------------------
 <employee name="scott" age="20" experience="5"> | emp = new Employee(@name, @age, @experience) |
@@ -617,28 +617,28 @@ public class Employee{
         <email>scott@msn.com</email>            | email = #text                                | parent[<email>] += email
     </contacts>                                 |                                              | emp.contacts = current[<email>]
 </employee>                                     |                                              |
-```
+~~~
 
 notice that the relation for `<email>` element end is:
 
-```
+~~~
 parent[<email>] += email
-```
+~~~
 
 here `+=` means add to temp (i.e don't replace existing value)  
 that is, `parent[<email>]` value is a list of strings rather than string
 
 the relation for `<contacts>` element end is:
 
-```
+~~~
 emp.contacts = parent[<email>]
-```
+~~~
 
 i.e we are assigning the list of emails from current element's temp int `emp.conctacts`
 
 Let us see the java code:
 
-```java
+~~~java
 @Binding("employee")
 public class EmployeeBinding{
     @Binding.Start
@@ -664,27 +664,27 @@ public class EmployeeBinding{
         emp.contacts = emails.toArray(new String[emails.size()]);
     }
 }
-```
+~~~
 
 let us walk through the code:
 
-```java
+~~~java
 @Relation.Finish("contacts/email")
 public static @Temp.Add String relateEmail(String email){
     return email;
 }
-```
+~~~
 
 `@Temp.Add` on return type says that, add the returned value to the existing value.  
 i.e we want to save it as list of emails
 
-```java
+~~~java
 @Binding.Finish("contacts")
 public static void onFinish(Employee emp, @Temp("email") List<String> emails){
     if(emails!=null)
         emp.contacts = emails.toArray(new String[emails.size()]);
 }
-```
+~~~
 
 notice the second argument. It is mapped to `@Temp("email")` and its type is `List<String>`
 

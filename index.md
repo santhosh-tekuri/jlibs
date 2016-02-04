@@ -7,14 +7,14 @@ This project is licensed under the terms of the [Apache License, Version 2.0](ht
 
 ## Maven
 
-```xml
+~~~xml
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-XXX</artifactId>
     <version>2.1</version>
 </dependency> 
 
-```
+~~~
 
 replace `jlibs-XXX` with the module you want to use. For example: `jlibs-xmldog`
 
@@ -22,7 +22,7 @@ replace `jlibs-XXX` with the module you want to use. For example: `jlibs-xmldog`
 
 the `toolchains.xml` file (see below) should be put in `$user.home/.m2` directory
 
-```xml
+~~~xml
 <?xml version="1.0" encoding="UTF8"?>
 <toolchains>
     <toolchain>
@@ -35,17 +35,17 @@ the `toolchains.xml` file (see below) should be put in `$user.home/.m2` director
         </configuration>
     </toolchain>
 </toolchains>
-```
+~~~
 
 modify `jdkPath` in above xml appropriately
 
 to build:
 
-```
+~~~
 $ git clone git@github.com:santhosh-tekuri/jlibs.git
 $ cd jlibs
 $ mvn
-```
+~~~
 
 after successful build, you can find distribution at `distribution/target/jlibs-2.1`
 

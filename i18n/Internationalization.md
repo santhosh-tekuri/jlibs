@@ -10,7 +10,7 @@ But with JLibs you create an interface and annotate it with `@ResourceBundle`
 
 ## Dependencies ###
 
-```xml
+~~~xml
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-i18n</artifactId>
@@ -23,7 +23,7 @@ But with JLibs you create an interface and annotate it with `@ResourceBundle`
     <version>2.1</version>
     <optional>true</optional>
 </dependency> 
-```
+~~~
 
 `jlibs-i18n-apt` contains annotation processor and is required only at *compile time*
 
@@ -46,7 +46,7 @@ So you need to manually configure this as below:
 
 ## Sample Code ##
 
-```java
+~~~java
 import jlibs.core.util.i18n.I18N;
 import jlibs.core.util.i18n.Message;
 import jlibs.core.util.i18n.ResourceBundle;
@@ -64,32 +64,32 @@ public interface DBBundle{
     @Message("executing {0}")
     public String executing(String query);
 }
-```
+~~~
 
 let us walk through code:
 
-```java
+~~~java
 @ResourceBundle
 public interface DBBundle{
-```
+~~~
 
 `@ResourceBundle` says that this interface is used for I18N purpose. This annotation can be applied only on interface.
 
 all methods in this interface should be annotated with `@Message`.  
 For each message you want, you will add a method in this interface
 
-```java
+~~~java
 @Message("SQL Execution completed in {0} seconds with {1} errors")
 public String executionFinished(long seconds, int errorCount);
-```
+~~~
 
 here the key of message is the name of the method. i.e, `executionFinished`  
 and the value of message is `SQL Execution completed in {0} seconds with {1} errors`
 
-```java
+~~~java
 @Message(key="SQLExecutionException", value="Encountered an exception while executing the following statement:\n{0}")
 public String executionException(String query);
-```
+~~~
 here we are explicitly specifying key as `SQLExecutionException`
 
 When you compile this interface with `jlibs-core.jar` in classpath, it will generate:
@@ -97,9 +97,9 @@ When you compile this interface with `jlibs-core.jar` in classpath, it will gene
 - `Bundle.properties` which contains the messages
 - `_Bundle.class` which implements your interface and each method implementation returns its corresponding message from `Bundle.properties`
 
-```java
+~~~java
 public static final DBBundle DB_BUNDLE = I18N.getImplementation(DBBundle.class);
-```
+~~~
 `I18N.getImplementation(DBBundle.class)` returns an instance of `_Bundle` class that is generated.
 
 You can have more than one interface with `@ResourceBundle` in a package. In such case:
@@ -110,7 +110,7 @@ You can have more than one interface with `@ResourceBundle` in a package. In suc
 i.e it would be easier to group messages based on the context they are used.
 Let us say I have UIBundle interface in same package, which contains messages used by UI:
 
-```java
+~~~java
 @ResourceBundle
 public interface UIBundle{
     public static final UIBundle UI_BUNDLE = I18N.getImplementation(UIBundle.class);
@@ -121,14 +121,14 @@ public interface UIBundle{
     @Message("File {0} already exists.  Do you really want to replace it?")
     public String confirmReplace(File file);
 }
-```
+~~~
 
 `DBBundle` contains all messages used in database interaction  
 `UIBundle` contains all messages used by UI classes
 
 let us see sample code using these bundles:
 
-```java
+~~~java
 import static i18n.DBBundle.DB_BUNDLE;
 import static i18n.UIBundle.UI_BUNDLE;
 
@@ -141,7 +141,7 @@ try{
 }catch(SQLException ex){
     System.out.println(DB_BUNDLE.executionException(query));
 }
-```
+~~~
 
 You can see that, the code looks clean without any hardcoded message keys.
 
@@ -152,23 +152,23 @@ dependencies on jlibs.
 
 ## Documentation ##
 
-```java
+~~~java
 @Message("SQL Execution completed in {0} seconds with {1} errors")
 public String executionFinished(long seconds, int errorCount);
-```
+~~~
 
 the message generated in `Bundle.properties` will be:
 
-```properties
+~~~properties
 # {0} seconds
 # {1} errorCount
 executionFinished=SQL Execution completed in {0} seconds with {1} errors
-```
+~~~
 
 the generated message tells what `{0}` and `{1}`` are referring to.  
 This makes the job of translator (who is translating to some other language) easier, because he/she now understand the message better.
 
-```java
+~~~java
 /**
   * thrown when failed to load application
   * because of network failure
@@ -178,24 +178,24 @@ This makes the job of translator (who is translating to some other language) eas
 */
 @Message(key = "cannotKillApplication", value="failed to kill application {0} with version {1}")
 public String cannotKillApplication(String application, String version);
-```
+~~~
 
 the message generated in `Bundle.properties` will be:
 
-```properties
+~~~properties
 # thrown when failed to load application
 # because of network failure
 # {0} application ==> UID of application
 # {1} version ==> version of the application
 cannotKillApplication=failed to kill application {0} with version {1}
-```
+~~~
 
 i.e, any additional javadoc specified is also made available in generated `Bundle.properties`.  
 This makes the job of translator more comfortable.
 
 `Bundle.properties` generated for DBBundle, UIBundle will look as below:
 
-```properties
+~~~properties
 # DON'T EDIT THIS FILE. THIS IS GENERATED BY JLIBS
 # @author Santhosh Kumar T
 
@@ -217,13 +217,13 @@ executeButton=Execute
 
 # {0} file
 confirmReplace=File {0} already exists.  Do you really want to replace it?
-```
+~~~
 
 You can see that the messages from each interface are clearly separated in genrated properties file
 
 ## Developer/IDE Friendly ##
 
-```java
+~~~java
 import static i18n.DBBundle.DB_BUNDLE;
 import static i18n.UIBundle.UI_BUNDLE;
 
@@ -236,7 +236,7 @@ try{
 }catch(SQLException ex){
     System.out.println(DB_BUNDLE.executionException(query));
 }
-```
+~~~
 
 the code using I18N messages is no longer cluttered with hardcoded strings. you never need to fear of:
 
@@ -248,75 +248,75 @@ i.e you get complete compile-time safety, and IDE help, because messages are now
 
 ## Invalid Messge Formats ##
 
-```java
+~~~java
 @Message("your lass successfull login is on {0, timee}")
 public String lastSucussfullLogin(Date date);<br>
-```
+~~~
 
 here we misspelled the format `time` as `timee`  
 this will give following compile time error:
 
-```
+~~~
 [javac] /jlibsuser/src/i18n/UIBundle.java:23: Invalid Message Format: unknown format type at 
 [javac]     @Message("your lass successfull login is on {0, timee}")
 [javac]     ^
-```
+~~~
 i.e any invalid message formats are caught at compile time
 
 ## Argument Count Mismatch ##
 
-```java
+~~~java
 @Message("SQL Execution completed in {0} seconds with {1} errors")
 public String executionFinished(long seconds);
-```
+~~~
 
 here the message requires two arguments `{0}` and `{1}`. but the java method is taking only one argument.  
 this will give following compile time error:
 
-```
+~~~
 [javac] /jlibsuser/src/i18n/DBBundle.java:15: no of args in message format doesn't match with the number of parameters this method accepts
 [javac]     public String executionFinished(long seconds);
 [javac]                   ^
-```
+~~~
 
 ## Missing Argument ##
 
-```java
+~~~java
 @Message("SQL Execution completed in {0} seconds with {2} errors and {2} warnings")
 public String executionFinished(long seconds, int errorCount, int warningCount);
-```
+~~~
 
 here we misspelled `{1} errros` as `{2} errors`.  
 this will give following compile time error:
 
-```
+~~~
 [javac] /jlibsuser/src/i18n/DBBundle.java:14: {1} is missing in message
 [javac]     @Message("SQL Execution completed in {0} seconds with {2} errors and {2} warnings")
 [javac]     ^
-```
+~~~
 
 ## Duplicate Key ##
 
-```java
+~~~java
 @Message(key="JLIBS015", value="SQL Execution completed in {0} seconds with {1} errors and {2} warnings")
 public String executionFinished(long seconds, int errorCount, int warningCount);
 
 @Message(key="JLIBS015", value="Encountered an exception while executing the following statement:\n{0}")
 public String executionException(String query);
-```
+~~~
 
 here we accidently used same key <code>JLIBS015</code> for both methods.  
 this will give following compile time error:
 
-```
+~~~
 [javac] /jlibsuser/src/i18n/DBBundle.java:18: key 'JLIBS015' is already used by "java.lang.String executionFinished(long, int, int)" in i18n.DBBundle interface
 [javac]     public String executionException(String query);
 [javac]                   ^
-```
+~~~
 
 ## Method Signature Clash ##
 
-```java
+~~~java
 public interface DBBundle{
     ...
     @Message(key="EXECUTING", value="executing {0}")
@@ -330,18 +330,18 @@ public interface UIBundle{
     public String executing(String query);
     ...
 }
-```
+~~~
 
 here both `DBBundle` and `UIBundle` are in same package and has methods with identical signature.  
 The generated `_Bundle` class implements both the interfaces `DBBundle` and `UIBundle`,  
 so it can't decide whether to use key `EXECUTING` or `EXECUTING_QUERY`  
 thus this will give following compile time error:
 
-```
+~~~
 [javac] /jlibsuser/src/i18n/UIBundle.java:27: clashes with similar method in i18n.DBBundle interface
 [javac]     public String executing(String query);
 [javac]                   ^
-```
+~~~
 
 ## Optimization ##
 
@@ -363,7 +363,7 @@ this will create `MyBundle.properties`
 
 If you application uses error codes, as below:
 
-```java
+~~~java
 package com.foo.myapp;
 
 public class UncheckedException extends RuntimeException{
@@ -385,13 +385,13 @@ public class UncheckedException extends RuntimeException{
         return (message != null) ? (s + ": " + message) : s;
     }
 }
-```
+~~~
 
 and in you application you always throw <code>UncheckedException</code> with different errorcode.
 
 In such case, you can internationalize errorcodes as below:
 
-```java
+~~~java
 package com.foo.myapp.controllers;
 
 public interface ErrorCodes{
@@ -403,14 +403,14 @@ public interface ErrorCodes{
     @Message("No book found titled {0} from author {1}")
     public UncheckedException noSuchBookFound(String title, String author);
 }
-```
+~~~
 
 now you can throw `UncheckedException` as follows:
 
-```java
+~~~java
 throw ErrorCodes.INSTANCE.connectionList(host);
 throw ErrorCodes.INSTANCE.noSuchBookFound(title, author);
-```
+~~~
 
 the exception class returned in `ErrorCodes` should have a constructor taking `errorCode` and `message` as arguments. The errorCode generated for `connectionLost` will be `myapp.controllers.ConnectionList`. i.e, the package and method name are joined. the top two packages are ignored and the first letter of method name is changed to uppercase.
 
@@ -427,7 +427,7 @@ Rather than internationalizing GUI, I would recomment internationalizing your do
 
 let us say your domain object is `Employee`:
 
-```java
+~~~java
 import jlibs.core.util.i18n.*;
 
 public class Employee{<
@@ -448,48 +448,48 @@ public class Employee{<
     
     // getter and setter methods<br>
 }
-```
+~~~
 
 here we are internationalizing each property of employee using `@Bundle` annotation.
 
-```java
+~~~java
 @Bundle({
     @Entry(hint=Hint.DISPLAY_NAME, rhs="User Name"),
     @Entry(hint=Hint.DESCRIPTION, rhs="Full Name of Employee")
 })
 private String name;
-```
+~~~
 
 this will create following in `Bundle.properties`:
 
-```properties
+~~~properties
 Employee.name.displayName=User Name
 Employee.name.descritpion=Full Name of Employee
-```
+~~~
 
 i.e each property generated is qualified by the class and field.
 
 now in Employee registration form, you can do:
 
-```java
+~~~java
 import jlibs.core.util.i18n.*;
 
 JLabel nameLabel = ...;
 JTextField nameField = ...;
 nameLabel.setText(Hint.DISPLAY_NAME.stringValue(Employee.class, Employee.PROP_NAME));
 nameField.setTooltipText(Hint.DESCRIPTION.stringValue(Employee.class, Employee.PROP_NAME));
-```
+~~~
 
 let us say you have a JTable listing all employees, then you can do:
 
-```java
+~~~java
 import jlibs.core.util.i18n.*;
 
 Vector columnNames = new Vector();
 columnNames.add(Hint.DISPLAY_NAME.stringValue(Employee.class, Employee.PROP_NAME));
 columnNames.add(Hint.DISPLAY_NAME.stringValue(Employee.class, Employee.PROP_AGE));
 JTable table = new JTable(employees, columnNames);
-```
+~~~
 
 Here we used same properties in two GUI Panes. We used same properties in both GUI to internationalize it.
 
@@ -504,21 +504,21 @@ Let us say if you want to have how own hint.
 For example, all values user specified are trimmed and then set into domain object.  
 but you don't want password field to be trimmed. then you can do:  
 
-```java
+~~~java
 public static final String PROP_PASSWD = "passwd";
 @Bundle({
     @Entry(hint=Hint.DISPLAY_NAME, rhs="Password"),
     @Entry(hintName="doNotTrim", rhs="true")
 })
 private String passwd;
-```
+~~~
 
-```java
+~~~java
 String value = passwdField.getText();
 if(Boolean.parseBoolean(I18n.getHint(Employee.class, Employee.PROP_PASSWD, "doNotTrim")))
     value = value.trim();
 employee.setPasswd(value);
-```
+~~~
 <b>NOTE:</b> currently `Hint` enum has very few hints, if you have any useful hints in your mind, then simply raise 
 an issue, I will add them.
 
@@ -526,7 +526,7 @@ an issue, I will add them.
 
 Let us say in Employee registration gui form, you ask user to enter his/her password twice.
 
-```java
+~~~java
 public class EmployeeForm extends JDialog{
     ...
     @Bundle(@Entry(lhs="PASSWORD_MISMATCH", rhs="Paswords specified doesn't math"))
@@ -542,14 +542,14 @@ public class EmployeeForm extends JDialog{
     }
     ...
 }
-```
+~~~
 
 The advantage of this is when you delete this method, the property is also deleted  
 i.e, you no longer need to worry about having unused properties.
 
 you can also add comments to properties as below:
 
-```java
+~~~java
 @Bundle({
     @Entry(" {0} applicationName ==> Name of Application"),
     @Entry(" {1} applicationVersion ==> Version of Application"),
@@ -559,4 +559,4 @@ public void launchApplication(String appName, int version){
     ...
     throw new RuntimeException(I18N.getMessage(Launcher.class, "APP_NOT_FOUND", appName, version));
 }
-```
+~~~

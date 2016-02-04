@@ -21,14 +21,14 @@ i.e each type of xml document has its own way of referring other xml documents.
 
 `XMLCrawler` is preconfigured to crawl xmlschema, wsdl and xsl documents.
 
-```java
+~~~java
 import jlibs.xml.sax.crawl.XMLCrawler;
 
 String dir = "d:\\crawl"; // directory where to save crawled documents
 String wsdl = "https://fps.amazonaws.com/doc/2007-01-08/AmazonFPS.wsdl"; // wsdl to be crawled
 
 new XMLCrawler().crawlInto(new InputSource(wsdl), new File(dir));
-```
+~~~
 
 After running above code, you will find following files in `d:\crawl` directory:
 
@@ -45,9 +45,9 @@ It never overwrites any existing file in that directory. So if you run the above
 
 you could also explicitly specify the target wsdl file to be created:
 
-```java
+~~~java
 new XMLCrawler().crawl(new InputSource(wsdl), new File("d:\\crawl\\target.wsdl"));
-```
+~~~
 
 in above code second argument is the file where to save the document specified in first argument.  
 It will save all referred documents in the containing directory of second argument.  
@@ -67,7 +67,7 @@ The no-arg constructor uses `CrawlingRules` configured for wsdl, xsd and xsl doc
 
 Let us see how to configure XMLCrawler for XMLSchema Documents using `CrawlingRules`
 
-```java
+~~~java
 import jlibs.xml.sax.crawl.XMLCrawler;
 import jlibs.xml.sax.crawl.CrawlingRules;
 import jlibs.xml.Namespaces;
@@ -88,20 +88,20 @@ XMLCrawler crawler = new XMLCrawler(rules);
 String xsd = "http://somesite.com/xsds/complex.xsd";
 String dir = "d:\\crawl";
 crawler.crawlInto(new InputSource(xsd), new File(dir));
-```
+~~~
 
 First we need to tell, how to recognize the extension of xml file.
 
-```java
+~~~java
 rules.addExtension("xsd", xsd_schema);
-```
+~~~
 
 the above line says that xml file with root element `{"http://www.w3.org/2001/XMLSchema"}schema` should be saved with file extension `xsd`.
 
-```java
+~~~java
 rules.addAttributeLink(xsd_schema, xsd_import, attr_schemaLocation);
 rules.addAttributeLink(xsd_schema, xsd_include, attr_schemaLocation);
-```
+~~~
 
 The above lines tell that `schemaLocation` attribute of `xsd:schema/xsd:import` and `xsd:schema/xsd:include` are used to refer other xml files.
 
@@ -109,10 +109,10 @@ The above lines tell that `schemaLocation` attribute of `xsd:schema/xsd:import` 
 
 `CrawlerListener` interface can be used to customize crawling behavior. It has two methods:
 
-```java
+~~~java
 public boolean doCrawl(URL url);
 public File toFile(URL url, String extension);
-```
+~~~
 
 The default implementation used is `DefaultCrawlerListener`.
 
@@ -122,9 +122,9 @@ The default implementation used is `DefaultCrawlerListener`.
 
 To use your implementation of `CrawlerListener`, you have to use following method in `XMLCrawler`
 
-```java
+~~~java
 public File crawl(InputSource document, CrawlerListener listener, File file) throws IOException
-```
+~~~
 
 the last argument `file` can be null, if you don't want to specify target file.  
 In such case, `listener.toFile(...)` is used to determine target file.

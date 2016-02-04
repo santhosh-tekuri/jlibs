@@ -10,11 +10,11 @@ layout: default
 
 First create a map specifying the namespaces to be replaced:
 
-```java
+~~~java
 Map<String, String> namespaces = new HashMap<String, String>();
 namespaces.put("http://schemas.xmlsoap.org/soap/envelope/", "http://www.w3.org/2003/05/soap-envelope");
 namespaces.put("http://jlibs.org", "");
-```
+~~~
 
 here we are trying to replace:
 
@@ -23,13 +23,13 @@ here we are trying to replace:
 
 Now create `NamespaceReplacer`:
 
-```java
+~~~java
 import jlibs.xml.sax.NamespaceReplacer;
 
 XMLReader reader = createNamespaceAwareSAXParser().getXMLReader();
 reader = new NamespaceReplacer(reader, namespaces);
 DefaultHandler myHandler = ...;
 reader.parse(xmlFile, myHandler);
-```
+~~~
 
 Now sax events recieved by `myHandler` will have namespaces replaced.

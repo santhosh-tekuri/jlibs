@@ -9,7 +9,7 @@ layout: default
 
 ## Usage ##
 
-```java
+~~~java
 import jlibs.core.lang;
 
 // we want to count the time
@@ -49,14 +49,14 @@ System.out.println(duration1); // prints "1 HOURS 48 MINUTES 20 SECONDS"
 Count<SizeUnit> size = Count.newInstance(SizeUnit.class);
 size.add(5000, SizeUnit.BYTES);
 System.out.println(size); // prints "4 KB 904 BYTES"
-```
+~~~
 
 You can count by any unit, by providing its definition.  
 `JLibs` comes with two units `DurationUnit` and `SizeUnit`.
 
 ## Writing Custom Unit ##
 
-```java
+~~~java
 public enum LengthUnit implements Count.Unit{
     MILLI_METERS(10), CENTI_METERS(100), METERS(1000), KILO_METERS(0);
 
@@ -71,7 +71,7 @@ public enum LengthUnit implements Count.Unit{
         return count;
     }
 }
-```
+~~~
 
 - define `enum` implementing `Count.Unit` interface
 - `enum` constants are ordered from lowest to highest
@@ -81,6 +81,6 @@ for example: `MILLI_METERS(10)` means, `10` millimeters should be promoted to `1
 
 now we are ready to count length:
 
-```java
+~~~java
 Count<LengthUnit> size = Count.newInstance(LengthUnit.class);
-```
+~~~
