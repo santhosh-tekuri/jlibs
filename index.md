@@ -56,43 +56,43 @@ after successful build, you can find distribution at `distribution/target/jlibs-
 
 ## User Guide
 
-###jlibs-core:###
+### jlibs-core: ###
 
 * [Garbage Collection & Finalization](core/GarbageCollection.html)
 * [Find OS on which jvm is running](core/OSInformation.html)
 * [Counting by Units](core/Counting.html)
 * [Simple Template Engine](core/TemplateMatcher.html)
 
-###jlibs-i18n:###
+### jlibs-i18n: ###
 
 * [Internationalization made easier](i18n/Internationalization.html)
 
-###jlibs-xml:###
+### jlibs-xml: ###
 
 * [Working with Namespaces](xml/Namespaces.html)
 * [Replacing XML Namespaces](xml/NamespaceReplacer.html)
 * [Creating XML using SAX](xml/XMLDocument.html)
 
-###jlibs-xml-nbp###
+### jlibs-xml-nbpi: ###
 
 * [NON-Blocking XMLReader](xml/nbp/AsyncXMLReader.html)
 
-###jlibs-xml-cralwer:###
+### jlibs-xml-cralwer: ###
 
 * [Crawl XML(wsdl, xsd, xsl) documents](xml/crawler/XMLCrawler.html)
 
-###jlibs-xml-binding:###
+### jlibs-xml-binding: ###
 
 * [SAX-JAVA Binding Made Easier](xml/binding/SAX2JavaBinding.html)
 
-###jlibs-xsd:###
+### jlibs-xsd: ###
 
 * [Generate sample XML from XML-Schema](xsd/XSInstance.html)
 
-###jlibs-xmldog:###
+### jlibs-xmldog: ###
 
 * [SAX based XPath 1.0 engine](xmldog/XMLDog.html)
 
-###jlibs-jdbc:###
+### jlibs-jdbc: ###
 
 * [J2EE DAO Pattern made easier](jdbc/DAOPattern.html)
