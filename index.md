@@ -11,7 +11,7 @@ This project is licensed under the terms of the [Apache License, Version 2.0](ht
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-XXX</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
 </dependency> 
 
 ~~~
@@ -47,7 +47,7 @@ $ cd jlibs
 $ mvn
 ~~~
 
-after successful build, you can find distribution at `distribution/target/jlibs-2.1`
+after successful build, you can find distribution at `distribution/target/jlibs-2.2.1`
 
 ## Feedback and Collaboration ##
 

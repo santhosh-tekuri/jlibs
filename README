@@ -10,5 +10,5 @@ if "bundle install" fails installing nokogiri
     bundle install
 
 to run website:
-    bundle exec jekyll serve
+    bundle exec jekyll serve --incremental
 

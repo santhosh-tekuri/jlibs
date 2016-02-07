@@ -14,13 +14,13 @@ But with JLibs you create an interface and annotate it with `@ResourceBundle`
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-i18n</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
 </dependency> 
 
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-i18n-apt</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
     <optional>true</optional>
 </dependency> 
 ~~~

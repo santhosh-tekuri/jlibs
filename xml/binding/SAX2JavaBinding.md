@@ -13,13 +13,13 @@ the package `jlibs.xml.sax.binding` contains classes which help you to read xml 
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-xml-binding</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
 </dependency> 
 
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-xml-binding-apt</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
     <optional>true</optional>
 </dependency> 
 ~~~

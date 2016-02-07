@@ -11,13 +11,13 @@ layout: default
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-jdbc</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
 </dependency> 
 
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-jdbc-apt</artifactId>
-    <version>2.1</version>
+    <version>2.2.1</version>
     <optional>true</optional>
 </dependency> 
 ~~~
