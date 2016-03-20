@@ -2,7 +2,7 @@ run following commands to install required software:
     sudo gem install jekyll
     sudo gem install bundler
     bundle install
-    gem install pygments.rb
+    sudo gem install pygments.rb
 
 if "bundle install" fails installing nokogiri
     brew install libxml2
