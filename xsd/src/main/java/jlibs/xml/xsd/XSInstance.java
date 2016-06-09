@@ -572,7 +572,7 @@ public class XSInstance{
                     || name.endsWith("long")
                     || name.endsWith("short")
                     || name.endsWith("byte"))
-                return new Range(simpleType).randomNumber();
+                return randomNumber(simpleType, name);
 
             if("date".equals(name))
                 return new SimpleDateFormat(XSD_DATE_FORMAT).format(new Date());
@@ -637,154 +637,120 @@ public class XSInstance{
             return null;
         }
 
-        class Range{
-            String minInclusive;
-            String minExclusive;
-            String maxInclusive;
-            String maxExclusive;
+        private String randomNumber(XSSimpleTypeDefinition simpleType, String builtinName){
+            boolean exponentAllowed = "double".equals(builtinName) || "float".equals(builtinName);
+
+            String minInclusive = null;
+            XSFacet facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MININCLUSIVE);
+            if(facet!=null)
+                minInclusive = facet.getLexicalFacetValue();
+
+            String minExclusive = null;
+            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MINEXCLUSIVE);
+            if(facet!=null)
+                minExclusive = facet.getLexicalFacetValue();
+
+            String maxInclusive = null;
+            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXINCLUSIVE);
+            if(facet!=null)
+                maxInclusive = facet.getLexicalFacetValue();
+
+            String maxExclusive = null;
+            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXEXCLUSIVE);
+            if(facet!=null)
+                maxExclusive = facet.getLexicalFacetValue();
+
             int totalDigits = -1;
+            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_TOTALDIGITS);
+            if(facet!=null)
+                totalDigits = Integer.parseInt(facet.getLexicalFacetValue());
+
             int fractionDigits = -1;
+            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_FRACTIONDIGITS);
+            if(facet!=null)
+                fractionDigits = Integer.parseInt(facet.getLexicalFacetValue());
 
-            Range(XSSimpleTypeDefinition simpleType){
-                XSFacet facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MININCLUSIVE);
-                if(facet!=null)
-                    minInclusive = facet.getLexicalFacetValue();
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MINEXCLUSIVE);
-                if(facet!=null)
-                    minExclusive = facet.getLexicalFacetValue();
+            Object randomNumber;
+            if(fractionDigits==0){
+                // NOTE: min/max facets can have fractional part even though fractionDigits is zero
+                Long min = null;
+                if(minInclusive!=null)
+                    min = Long.parseLong(minInclusive);
+                if(minExclusive!=null)
+                    min = Long.parseLong(minExclusive)+1;
 
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXINCLUSIVE);
-                if(facet!=null)
-                    maxInclusive = facet.getLexicalFacetValue();
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXEXCLUSIVE);
-                if(facet!=null)
-                    maxExclusive = facet.getLexicalFacetValue();
+                Long max = null;
+                if(maxInclusive!=null)
+                    max = Long.parseLong(maxInclusive);
+                if(maxExclusive!=null)
+                    max = Long.parseLong(maxExclusive)-1;
 
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_TOTALDIGITS);
-                if(facet!=null)
-                    totalDigits = Integer.parseInt(facet.getLexicalFacetValue());
+                if(min==null && max==null){
+                    min = -1000L;
+                    max = 1000L;
+                }else if(min==null)
+                    min = Math.max(Long.MIN_VALUE, max - 1000);
+                else if(max==null)
+                    max = Math.min(Long.MAX_VALUE, min+1000);
 
-                facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_FRACTIONDIGITS);
-                if(facet!=null)
-                    fractionDigits = Integer.parseInt(facet.getLexicalFacetValue());
+                randomNumber = RandomUtil.random(min, max);
+            }else{
+                Double min = null;
+                if(minInclusive!=null)
+                    min = Double.parseDouble(minInclusive);
+                if(minExclusive!=null)
+                    min = Double.parseDouble(minExclusive)+1;
+
+                Double max = null;
+                if(maxInclusive!=null)
+                    max = Double.parseDouble(maxInclusive);
+                if(maxExclusive!=null)
+                    max = Double.parseDouble(maxExclusive)-1;
+
+                if(min==null && max==null){
+                    min = -1000d;
+                    max = 1000d;
+                }else if(min==null)
+                    min = Math.max(Double.MIN_VALUE, max-1000);
+                else if(max==null)
+                    max = Math.min(Double.MAX_VALUE, min+1000);
+
+                randomNumber = RandomUtil.random(min, max);
             }
 
-            private String applyDigits(Object obj){
-//                String str = applyExponent(String.valueOf(obj));
-                String str = String.valueOf(obj);
-                String number, fraction;
-                int dot = str.indexOf(".");
-                if(dot==-1){
-                    number = str;
-                    fraction = "";
-                }else{
-                    number = str.substring(0, dot);
-                    fraction = str.substring(dot+1);
-                }
-                boolean negative = false;
-                if(number.startsWith("-")){
-                    negative = true;
-                    number = number.substring(1);
-                }
-                if(totalDigits>=0){
-                    if(number.length()>totalDigits)
-                        number = number.substring(0, totalDigits);
-                }
-                if(fractionDigits>=0){
-                    if(fraction.length()>fractionDigits)
-                        fraction = fraction.substring(0, fractionDigits);
-                }
-
-                str = negative ? "-" : "";
-                str += number;
-                if(fraction.length()>0)
-                    str += '.' + fraction;
-                return str;
+            String str;
+            if(randomNumber instanceof Double && !exponentAllowed)
+                str = String.format("%."+(fractionDigits>=0?fractionDigits:3)+"f", (Double)randomNumber);
+            else
+                str = String.valueOf(randomNumber);
+            String number, fraction;
+            int dot = str.indexOf(".");
+            if(dot==-1){
+                number = str;
+                fraction = "";
+            }else{
+                number = str.substring(0, dot);
+                fraction = str.substring(dot+1);
+            }
+            boolean negative = false;
+            if(number.startsWith("-")){
+                negative = true;
+                number = number.substring(1);
+            }
+            if(totalDigits>=0){
+                if(number.length()>totalDigits)
+                    number = number.substring(0, totalDigits);
+            }
+            if(fractionDigits>=0){
+                if(fraction.length()>fractionDigits)
+                    fraction = fraction.substring(0, fractionDigits);
             }
 
-            private String applyExponent(String str){
-                int index = str.indexOf('E');
-                if(index==-1)
-                    return str;
-
-                int exponent = Integer.parseInt(str.substring(index+(str.charAt(index+1)=='+'?2:1)));
-                str = str.substring(0, index);
-
-                boolean negative = false;
-                if(str.charAt(0)=='-'){
-                    negative = true;
-                    str = str.substring(1);
-                }
-
-                if(exponent!=0){
-                    int dot = str.indexOf('.');
-                    String beforeDot, afterDot;
-                    if(dot==-1){
-                        beforeDot = str;
-                        afterDot = "";
-                    }else{
-                        beforeDot = str.substring(0, dot);
-                        afterDot = str.substring(dot+1);
-                    }
-
-                    if(exponent<0){
-                        while(exponent!=0){
-                            if(beforeDot.length()==1)
-                                beforeDot = "0"+beforeDot;
-                            afterDot = beforeDot.substring(beforeDot.length()-1)+afterDot;
-                            beforeDot = beforeDot.substring(0, beforeDot.length()-1);
-                            exponent++;
-                        }
-                    }else{
-                        while(exponent!=0){
-                            if(afterDot.isEmpty())
-                                afterDot = "0";
-                            beforeDot = beforeDot+afterDot.substring(0, 1);
-                            afterDot = afterDot.substring(1);
-                            exponent--;
-                        }
-                    }
-                    str = afterDot.isEmpty() ? beforeDot : beforeDot+"."+afterDot;
-                }
-                if(negative)
-                    str = "-"+str;
-
-                return str;
-            }
-
-            public String randomNumber(){
-                if(fractionDigits==0){
-                    // NOTE: min/max facets can have fractional part
-                    //       even though fractionDigits is zero
-                    long min = Long.MIN_VALUE;
-                    if(minInclusive!=null)
-                        min = (long)Double.parseDouble(minInclusive);
-                    if(minExclusive!=null)
-                        min = (long)Double.parseDouble(minExclusive)+1;
-
-                    long max = Long.MAX_VALUE;
-                    if(maxInclusive!=null)
-                        max = (long)Double.parseDouble(maxInclusive);
-                    if(maxExclusive!=null)
-                        max = (long)Double.parseDouble(maxExclusive)-1;
-
-                    return applyDigits(RandomUtil.random(min, max));
-                }else{
-                    double min = Double.MIN_VALUE;
-                    if(minInclusive!=null)
-                        min = Double.parseDouble(minInclusive);
-                    if(minExclusive!=null)
-                        min = Double.parseDouble(minExclusive)+1;
-
-                    double max = Double.MAX_VALUE;
-                    if(maxInclusive!=null)
-                        max = Double.parseDouble(maxInclusive);
-                    if(maxExclusive!=null)
-                        max = Double.parseDouble(maxExclusive)-1;
-
-                    return applyDigits(RandomUtil.random(min, max));
-                }
-            }
+            str = negative ? "-" : "";
+            str += number;
+            if(fraction.length()>0)
+                str += '.' + fraction;
+            return str;
         }
     }
 
