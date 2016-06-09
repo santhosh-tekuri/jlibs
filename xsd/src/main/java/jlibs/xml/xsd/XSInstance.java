@@ -421,6 +421,8 @@ public class XSInstance{
         private Processor<XSWildcard> wildcardProcessor = new Processor<XSWildcard>(){
             @Override
             public boolean preProcess(XSWildcard wildcard, Path path){
+                if(wildcard.getProcessContents()==XSWildcard.PC_STRICT)
+                    return true;
                 try{
                     String uri;
                     switch(wildcard.getConstraintType()){
@@ -466,6 +468,8 @@ public class XSInstance{
 
             @Override
             public void postProcess(XSWildcard wildcard, Path path){
+                if(wildcard.getProcessContents()==XSWildcard.PC_STRICT)
+                    return;
                 try{
                     if(!isAttribute(wildcard, path))
                         doc.endElement();
