@@ -724,7 +724,7 @@ public class XSInstance{
 
             String str;
             if(randomNumber instanceof Double && !exponentAllowed)
-                str = String.format("%."+(fractionDigits>=0?fractionDigits:3)+"f", (Double)randomNumber);
+                str = String.format(Locale.US, "%."+(fractionDigits>=0?fractionDigits:3)+"f", (Double)randomNumber);
             else
                 str = String.valueOf(randomNumber);
             String number, fraction;
