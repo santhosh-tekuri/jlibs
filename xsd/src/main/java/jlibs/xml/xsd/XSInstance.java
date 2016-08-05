@@ -765,7 +765,7 @@ public class XSInstance{
         value = options.getProperty("maximumElementsGenerated");
         if(value!=null)
             maximumElementsGenerated = Integer.parseInt(value);
-        value = options.getProperty("minimumElementsGenerated");
+        value = options.getProperty("minimumListItemsGenerated");
         if(value!=null)
             minimumListItemsGenerated = Integer.parseInt(value);
         value = options.getProperty("maximumListItemsGenerated");
