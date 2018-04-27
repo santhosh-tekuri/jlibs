@@ -283,10 +283,6 @@ public final class EventID{
                     expire(Axis.NAMESPACE);
                     interestedInNamespaces = false;
                 }
-                if(interestedInAttributes){
-                    expire(Axis.ATTRIBUTE);
-                    interestedInAttributes = false;
-                }
                 inactivate(Axis.CHILD);
         }
         assert checkState();
@@ -314,10 +310,6 @@ public final class EventID{
                         expire(Axis.NAMESPACE);
                         interestedInNamespaces = false;
                     }
-                    if(interestedInAttributes){
-                        expire(Axis.ATTRIBUTE);
-                        interestedInAttributes = false;
-                    }
                     expire(Axis.CHILD);
                     expire(Axis.DESCENDANT);
 
@@ -331,6 +323,20 @@ public final class EventID{
                 if(!subTreeFinished)
                     activate(Axis.CHILD);
                 break;
+        }
+
+        assert checkState();
+        return axisEntryCount==0;
+    }
+
+    public boolean onEndAttributes() {
+        assert axisEntryCount!=0;
+
+        if(activeCount==0)
+            return false;
+        if(interestedInAttributes){
+            expire(Axis.ATTRIBUTE);
+            interestedInAttributes = false;
         }
 
         assert checkState();
@@ -369,11 +375,6 @@ public final class EventID{
                     }
                 }
             }else{
-                if(interestedInAttributes){
-                    expire(Axis.ATTRIBUTE);
-                    interestedInAttributes = false;
-                }
-
                 for(int i=2; i<6; i++){ // excluding namespace & attribute axisEntries
                     AxisEntry axisEntry = axisEntries[i];
                     if(axisEntry!=null && axisEntry.active){

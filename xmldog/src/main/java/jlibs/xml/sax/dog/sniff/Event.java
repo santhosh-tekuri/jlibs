@@ -222,6 +222,32 @@ public final class Event extends EvaluationListener implements NodeSetListener{
         this.interestedInText = interestedInText;
     }
 
+    private void fireEndAttributes(){
+        EventID id = current;
+
+        EventID firstID = null;
+        EventID activeID = null;
+
+        boolean interestedInAttributes = false;
+        do{
+            if(!id.onEndAttributes()){
+                if(firstID==null)
+                    firstID = id;
+                else
+                    activeID.previous = id;
+
+                activeID = id;
+                interestedInAttributes |= id.interestedInAttributes;
+            }
+            id = id.previous;
+        }while(id!=null);
+        if(activeID!=null)
+            activeID.previous = null;
+        current = firstID;
+
+        this.interestedInAttributes = interestedInAttributes;
+    }
+
     private void firePush(){
         EventID id = current;
         EventID firstID = null;
@@ -654,8 +680,11 @@ public final class Event extends EvaluationListener implements NodeSetListener{
                 onEvent(NodeType.ATTRIBUTE, attrs.getURI(i), attrs.getLocalName(i), attrs.getQName(i), attrs.getValue(i));
                 notifyXMLBuilder();
             }
-        }else if(xmlBuilder!=null && xmlBuilder.active)
+            fireEndAttributes();
+        }else if(xmlBuilder!=null && xmlBuilder.active) {
             xmlBuilder.onAttributes(this, attrs);
+            fireEndAttributes();
+        }
     }
 
     public void onAttributes(XMLStreamReader reader){
@@ -671,8 +700,11 @@ public final class Event extends EvaluationListener implements NodeSetListener{
                 onEvent(NodeType.ATTRIBUTE, uri, localName, qname, reader.getAttributeValue(i));
                 notifyXMLBuilder();
             }
-        }else if(xmlBuilder!=null && xmlBuilder.active)
+            fireEndAttributes();
+        }else if(xmlBuilder!=null && xmlBuilder.active) {
             xmlBuilder.onAttributes(this, reader);
+            fireEndAttributes();
+        }
     }
 
     public void onNamespaces(MyNamespaceSupport nsSupport){
