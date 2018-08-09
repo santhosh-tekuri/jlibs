@@ -78,10 +78,11 @@ public class XSUtil{
             if(item instanceof XSComplexTypeDefinition){
                 XSComplexTypeDefinition complexItem = (XSComplexTypeDefinition)item;
                 if(!complexItem.getAbstract()){
+                    XSTypeDefinition baseType = complexItem;
                     do{
-                        complexItem = (XSComplexTypeDefinition)complexItem.getBaseType();
-                    }while(complexItem!=anyType && complexItem!=complexType);
-                    if(complexItem==complexType)
+                        baseType = baseType.getBaseType();
+                    }while(baseType!=null && baseType!=anyType && baseType!=complexType);
+                    if(baseType==complexType)
                         subTypes.add((XSComplexTypeDefinition)item);
                 }
             }
