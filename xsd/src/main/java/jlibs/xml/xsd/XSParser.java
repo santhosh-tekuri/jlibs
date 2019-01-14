@@ -56,6 +56,7 @@ public class XSParser{
 
         xsLoader = xsImpl.createXSLoader(null);
         DOMConfiguration config = xsLoader.getConfig();
+
         config.setParameter(Constants.DOM_VALIDATE, Boolean.TRUE);
 
         if(entityResolver!=null)
@@ -63,6 +64,18 @@ public class XSParser{
 
         if(errorHandler!=null)
             config.setParameter(Constants.DOM_ERROR_HANDLER, errorHandler);
+    }
+
+    public void setParameter(String name, Object value){
+        xsLoader.getConfig().setParameter(name, value);
+    }
+
+    /**
+     * enables feature "http://apache.org/xml/features/honour-all-schemaLocations"
+     * see https://xerces.apache.org/xerces2-j/features.html
+     */
+    public void honourAllSchemaLocations(){
+        setParameter(Constants.XERCES_FEATURE_PREFIX + Constants.HONOUR_ALL_SCHEMALOCATIONS_FEATURE, true);
     }
 
     /**
