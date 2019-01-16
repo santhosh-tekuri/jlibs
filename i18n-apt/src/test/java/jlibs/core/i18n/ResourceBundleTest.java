@@ -98,7 +98,7 @@ public class ResourceBundleTest{
     @Test(description="invalid formats in message")
     public void invalidMessageFormat(){
         assertErrors(compile("/i18n/InvalidMessageFormatBundle.java"),
-            "Invalid Message Format: unknown format type at"
+            "Invalid Message Format: unknown format type"
         );
     }
 
