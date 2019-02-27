@@ -11,7 +11,7 @@ This project is licensed under the terms of the [Apache License, Version 2.0](ht
 <dependency>
     <groupId>in.jlibs</groupId>
     <artifactId>jlibs-XXX</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.2</version>
 </dependency> 
 
 ~~~
@@ -28,10 +28,10 @@ the `toolchains.xml` file (see below) should be put in `$user.home/.m2` director
     <toolchain>
         <type>jdk</type>
         <provides>
-            <version>1.6</version>
+            <version>1.8</version>
         </provides>
         <configuration>
-            <jdkHome>/path/to/jdk/1.6</jdkHome>
+            <jdkHome>/path/to/jdk/1.8</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>
@@ -47,7 +47,7 @@ $ cd jlibs
 $ mvn
 ~~~
 
-after successful build, you can find distribution at `distribution/target/jlibs-2.2.1`
+after successful build, you can find distribution at `distribution/target/jlibs-2.2.2`
 
 ## Feedback and Collaboration ##
 
