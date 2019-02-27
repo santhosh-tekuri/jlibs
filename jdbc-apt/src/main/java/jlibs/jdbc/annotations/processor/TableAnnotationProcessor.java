@@ -35,7 +35,7 @@ import java.util.Set;
  * @author Santhosh Kumar T
  */
 @SupportedAnnotationTypes({"jlibs.jdbc.annotations.Table", "jlibs.jdbc.annotations.Database"})
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @MetaInfServices(Processor.class)
 public class TableAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "DAO";

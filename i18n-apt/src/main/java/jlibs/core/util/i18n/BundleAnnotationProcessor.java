@@ -46,7 +46,7 @@ import static jlibs.core.util.i18n.PropertiesUtil.*;
  */
 @SuppressWarnings({"unchecked"})
 @SupportedAnnotationTypes({ "jlibs.core.util.i18n.ResourceBundle", "jlibs.core.util.i18n.Bundle" })
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions("ResourceBundle.basename")
 @MetaInfServices(Processor.class)
 public class BundleAnnotationProcessor extends AnnotationProcessor{

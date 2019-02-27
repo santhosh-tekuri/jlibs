@@ -46,7 +46,7 @@ import static jlibs.core.annotation.processing.Printer.PLUS;
  */
 @SuppressWarnings({"unchecked"})
 @SupportedAnnotationTypes("jlibs.xml.sax.binding.Binding")
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @MetaInfServices(Processor.class)
 public class BindingAnnotationProcessor extends AnnotationProcessor{
     private static final String SUFFIX = "Impl";

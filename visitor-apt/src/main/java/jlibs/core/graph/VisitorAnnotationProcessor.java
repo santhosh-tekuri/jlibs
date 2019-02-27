@@ -43,7 +43,7 @@ import static jlibs.core.annotation.processing.Printer.*;
  * @author Santhosh Kumar T
  */
 @SupportedAnnotationTypes("jlibs.core.graph.Visitor.Implement")
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @MetaInfServices(javax.annotation.processing.Processor.class)
 public class VisitorAnnotationProcessor extends AnnotationProcessor{
     private static final String METHOD_NAME = "accept";

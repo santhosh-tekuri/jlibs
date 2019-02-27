@@ -61,7 +61,7 @@ public class ResourceBundleTest{
             errors = errors.replace('\\', '/');
             errors = errors.replace("\r\n", "\n");
             for(String error: searchFor){
-                if(errors.indexOf(error)==-1)
+                if(!errors.contains(error))
                     Assert.fail("[Expected Error] "+error+"\n[Actual Error] "+errors);
             }
         }
@@ -70,7 +70,7 @@ public class ResourceBundleTest{
     @Test(description="@ResourceBundle can't be applied on class")
     public void classBundle(){
         assertErrors(compile("/i18n/ClassBundle.java"),
-            "i18n/ClassBundle.java:12: jlibs.core.util.i18n.ResourceBundle annotation can be applied only for interface\n" +
+            "jlibs.core.util.i18n.ResourceBundle annotation can be applied only for interface\n" +
                 "public abstract class ClassBundle{\n" +
                     "                ^"
         );
@@ -89,7 +89,7 @@ public class ResourceBundleTest{
     @Test(description="method with @Message must return String")
     public void invalidMethodReturn(){
         assertErrors(compile("/i18n/InvalidMethodReturnBundle.java"),
-            "i18n/InvalidMethodReturnBundle.java:14: method annotated with jlibs.core.util.i18n.Message must return java.lang.String or a subclass of java.lang.Throwable\n" +
+            "method annotated with jlibs.core.util.i18n.Message must return java.lang.String or a subclass of java.lang.Throwable\n" +
                     "    public Date lastSucussfullLogin(Date date);\n" +
                     "                ^"
         );
@@ -136,7 +136,7 @@ public class ResourceBundleTest{
     @Test(description="two methods in two interfaces can't have same signature")
     public void methodSignatureClash(){
         assertErrors(compile("/i18n/MethodSignatureClash1Bundle.java", "/i18n/MethodSignatureClash2Bundle.java"),
-        "i18n/MethodSignatureClash2Bundle.java:12: clashes with similar method in i18n.MethodSignatureClash1Bundle interface\n" +
+        "clashes with similar method in i18n.MethodSignatureClash1Bundle interface\n" +
         "    public String executing(String query);"
         );
     }
@@ -157,11 +157,11 @@ public class ResourceBundleTest{
     public void testDocumentation() throws IOException{
         String props = IOUtil.pump(Bundle1.class.getResourceAsStream("Bundle.properties"), true).toString();
         props = props.replace("\r\n", "\n");
-        if(props.indexOf("# {0} query\nexecuted=executed {0}")==-1)
+        if(!props.contains("# {0} query\nexecuted=executed {0}"))
             Assert.fail("documentation must be generated for method with no javadoc");
-        if(props.indexOf("# {0} time ==> time taken in seconds\ntimeTaken=execution took {0, number} seconds")==-1)
+        if(!props.contains("# {0} time ==> time taken in seconds\ntimeTaken=execution took {0, number} seconds"))
             Assert.fail("documentation must be generated for method with javadoc");
-        if(props.indexOf("# {0} query\nexecuting=executing {0}")==-1)
+        if(!props.contains("# {0} query\nexecuting=executing {0}"))
             Assert.fail("documentation must be generated for method with javadoc with no param description");
     }
 }
