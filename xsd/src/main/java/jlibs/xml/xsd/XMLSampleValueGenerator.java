@@ -17,7 +17,9 @@
 package jlibs.xml.xsd;
 
 import jlibs.core.util.RandomUtil;
+import jlibs.xml.Namespaces;
 import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
 import org.apache.xerces.xs.*;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -39,19 +41,48 @@ import java.util.Map;
  * @author Santhosh Kumar T
  */
 public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
+    private static final QName xsiType = new QName(Namespaces.URI_XSI, "type");
+
     private Map<XSElementDeclaration, List<String>> elementValues = new HashMap<XSElementDeclaration, List<String>>();
     private Map<XSAttributeDeclaration, List<String>> attributeValues = new HashMap<XSAttributeDeclaration, List<String>>();
+    private Map<XSElementDeclaration, List<XSTypeDefinition>> elementSubtypes = new HashMap<XSElementDeclaration, List<XSTypeDefinition>>();
 
     public XMLSampleValueGenerator(final XSModel schema, InputSource sampleInput) throws SAXException, ParserConfigurationException, IOException{
         DefaultHandler handler = new DefaultHandler(){
+            private MyNamespaceSupport nsSupport = new MyNamespaceSupport();
             private List<QName> xpath = new ArrayList<QName>();
             private CharArrayWriter contents = new CharArrayWriter();
 
             @Override
+            public void startDocument() throws SAXException{
+                nsSupport.startDocument();
+            }
+
+            public void startPrefixMapping(String prefix, String uri) throws SAXException{
+                nsSupport.startPrefixMapping(prefix, uri);
+            }
+
+            @Override
             public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
+                nsSupport.startElement();
                 xpath.add(new QName(uri, localName));
                 for(int i=0; i<attributes.getLength(); i++){
                     QName qname = new QName(attributes.getURI(i), attributes.getLocalName(i));
+                    if(qname.equals(xsiType)) {
+                        QName type = nsSupport.toQName(attributes.getValue(i));
+                        XSNamespaceItem nsItem = XSUtil.getNamespaceItem(schema, type.getNamespaceURI());
+                        if(nsItem!=null){
+                            XSTypeDefinition typeDef = nsItem.getTypeDefinition(type.getLocalPart());
+                            if(typeDef!=null){
+                                XSElementDeclaration elem = XSUtil.findElementDeclaration(schema, xpath);
+                                List<XSTypeDefinition> subtypes = elementSubtypes.get(elem);
+                                if(subtypes==null)
+                                    elementSubtypes.put(elem, subtypes=new ArrayList<XSTypeDefinition>());
+                                subtypes.add(typeDef);
+                            }
+                        }
+                        continue;
+                    }
                     xpath.add(qname);
                     XSAttributeDeclaration attr = XSUtil.findAttributeDeclaration(schema, xpath);
                     if(attr!=null){
@@ -73,6 +104,7 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
 
             @Override
             public void endElement(String uri, String localName, String qName) throws SAXException{
+                nsSupport.startElement();
                 if(contents.size()>0){
                     XSElementDeclaration elem = XSUtil.findElementDeclaration(schema, xpath);
                     if(elem!=null){
@@ -110,5 +142,11 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
     public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
         List<String> values = attributeValues.get(attribute);
         return values==null ? null : values.get(RandomUtil.random(0, values.size()-1));
+    }
+
+    @Override
+    public XSTypeDefinition selectSubType(XSElementDeclaration element) {
+        List<XSTypeDefinition> subTypes = elementSubtypes.get(element);
+        return subTypes==null ? null : subTypes.get(RandomUtil.random(0, subTypes.size()-1));
     }
 }

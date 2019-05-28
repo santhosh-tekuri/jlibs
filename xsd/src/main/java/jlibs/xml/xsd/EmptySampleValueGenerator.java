@@ -19,6 +19,7 @@ package jlibs.xml.xsd;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
+import org.apache.xerces.xs.XSTypeDefinition;
 
 /**
  * @author Santhosh Kumar Tekuri
@@ -36,5 +37,10 @@ public class EmptySampleValueGenerator implements XSInstance.SampleValueGenerato
     @Override
     public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
         return "";
+    }
+
+    @Override
+    public XSTypeDefinition selectSubType(XSElementDeclaration element) {
+        return null;
     }
 }

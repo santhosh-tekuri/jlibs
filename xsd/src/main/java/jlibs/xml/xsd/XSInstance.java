@@ -183,11 +183,17 @@ public class XSInstance{
             if(elem.getTypeDefinition() instanceof XSComplexTypeDefinition){
                 XSComplexTypeDefinition complexType = (XSComplexTypeDefinition)elem.getTypeDefinition();
                 if(complexType.getAbstract()){
-                    List<XSComplexTypeDefinition> subTypes = XSUtil.getSubTypes(xsModel, complexType);
-                    if(subTypes.isEmpty())
-                        return EmptySequence.getInstance();
-                    int rand = RandomUtil.random(0, subTypes.size() - 1);
-                    return new DuplicateSequence<XSTypeDefinition>(subTypes.get(rand));
+                    XSTypeDefinition subType = null;
+                    if(sampleValueGenerator!=null)
+                        subType = sampleValueGenerator.selectSubType(elem);
+                    if(subType==null){
+                        List<XSComplexTypeDefinition> subTypes = XSUtil.getSubTypes(xsModel, complexType);
+                        if(subTypes.isEmpty())
+                            return EmptySequence.getInstance();
+                        int rand = RandomUtil.random(0, subTypes.size() - 1);
+                        subType = subTypes.get(rand);
+                    }
+                    return new DuplicateSequence<XSTypeDefinition>(subType);
                 }
             }
             return new DuplicateSequence<XSTypeDefinition>(elem.getTypeDefinition());
@@ -803,6 +809,7 @@ public class XSInstance{
     public static interface SampleValueGenerator{
         public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType);
         public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType);
+        public XSTypeDefinition selectSubType(XSElementDeclaration element);
     }
 
     public static void main(String[] args) throws Exception{
