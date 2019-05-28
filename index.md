@@ -42,7 +42,7 @@ modify `jdkPath` in above xml appropriately
 to build:
 
 ~~~
-$ git clone git@github.com:santhosh-tekuri/jlibs.git
+$ git clone https://github.com/santhosh-tekuri/jlibs.git
 $ cd jlibs
 $ mvn
 ~~~
