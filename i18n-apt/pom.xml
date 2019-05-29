@@ -15,6 +15,10 @@
     <name>i18n-apt</name>
     <description>I18N annotation processor</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.i18n.apt</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

@@ -15,6 +15,10 @@
     <name>wamp4j-core</name>
     <description>Client and Router for the Web Application Messaging Protocol (WAMP) on the JVM</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.wamp4j.core</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.msgpack</groupId>

@@ -13,4 +13,8 @@
 
     <name>nbp</name>
     <description>Non-Blocking Parser Framework</description>
+
+    <properties>
+        <javaModuleName>in.jlibs.nbp</javaModuleName>
+    </properties>
 </project>

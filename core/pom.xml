@@ -23,6 +23,10 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <javaModuleName>in.jlibs.core</javaModuleName>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

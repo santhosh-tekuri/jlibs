@@ -15,6 +15,10 @@
     <name>visitor-apt</name>
     <description>Visitor annotation processor</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.visitor.apt</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

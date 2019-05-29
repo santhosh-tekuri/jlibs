@@ -14,6 +14,10 @@
     <name>xml-crawler</name>
     <description>Crawl XML(wsdl, xsd, xsl) documents</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.xml.crawler</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

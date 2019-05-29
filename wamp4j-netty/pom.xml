@@ -15,6 +15,10 @@
     <name>wamp4j-netty</name>
     <description>wamp4j netty implementation</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.wamp4j.netty</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

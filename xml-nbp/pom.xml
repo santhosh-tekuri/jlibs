@@ -14,6 +14,10 @@
     <name>xml-nbp</name>
     <description>Non-Blocking SAX Parser implementation</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.xml.nbp</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

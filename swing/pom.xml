@@ -14,6 +14,10 @@
     <name>swing</name>
     <description>Swing related Utilities</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.swing</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

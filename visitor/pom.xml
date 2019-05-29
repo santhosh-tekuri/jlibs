@@ -15,4 +15,7 @@
     <name>visitor</name>
     <description>Visitor Pattern using Annotations</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.visitor</javaModuleName>
+    </properties>
 </project>

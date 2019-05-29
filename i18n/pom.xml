@@ -15,4 +15,7 @@
     <name>i18n</name>
     <description>Internationalization made easier</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.i18n</javaModuleName>
+    </properties>
 </project>

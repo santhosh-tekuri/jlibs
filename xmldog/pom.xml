@@ -14,6 +14,10 @@
     <name>xmldog</name>
     <description>SAX based XPath 1.0 engine</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.xmldog</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

@@ -14,6 +14,10 @@
     <name>wadl</name>
     <description>Command line WADL client</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.wadl</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

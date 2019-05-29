@@ -14,6 +14,10 @@
     <name>xml-binding</name>
     <description>SAX-JAVA Binding Made Easier</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.xml.binding</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

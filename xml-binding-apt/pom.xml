@@ -14,6 +14,10 @@
     <name>xml-binding-apt</name>
     <description>XML Binding annotation processor</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.xml.binding.apt</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

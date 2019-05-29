@@ -15,6 +15,10 @@
     <name>greplog</name>
     <description>Grep Utility for log files</description>
 
+    <properties>
+        <javaModuleName>in.jlibs.greplog</javaModuleName>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
