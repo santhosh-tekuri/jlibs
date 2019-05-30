@@ -25,15 +25,28 @@ import jlibs.wamp4j.router.WAMPRouter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.URI;
 
 /**
  * @author Santhosh Kumar Tekuri
  */
 public class ConnectionTest{
+    private static int freePort() throws Throwable{
+        ServerSocket socket = null;
+        try {
+            socket = new ServerSocket(0, 0, InetAddress.getByName(null));
+            return socket.getLocalPort();
+        } finally {
+            if(socket!=null)
+                socket.close();
+        }
+    }
+
     @Test
     public void test1() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080");
+        URI uri = URI.create("ws://localhost:"+freePort());
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
@@ -44,10 +57,11 @@ public class ConnectionTest{
 
     @Test
     public void test2() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080");
+        int port = freePort();
+        URI uri = URI.create("ws://localhost:"+port);
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        uri = URI.create("ws://localhost:8080/");
+        uri = URI.create("ws://localhost:"+port+"/");
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         client.connect();
         client.close();
@@ -56,10 +70,11 @@ public class ConnectionTest{
 
     @Test
     public void test3() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080/");
+        int port = freePort();
+        URI uri = URI.create("ws://localhost:"+port+"/");
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        uri = URI.create("ws://localhost:8080");
+        uri = URI.create("ws://localhost:"+port);
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         client.connect();
         client.close();
@@ -68,10 +83,11 @@ public class ConnectionTest{
 
     @Test
     public void test4() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080");
+        int port = freePort();
+        URI uri = URI.create("ws://localhost:"+port);
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        uri = URI.create("ws://localhost:8080/junk");
+        uri = URI.create("ws://localhost:"+port+"/junk");
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         try{
             client.connect();
@@ -84,10 +100,11 @@ public class ConnectionTest{
 
     @Test
     public void test5() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080/wamp4j");
+        int port = freePort();
+        URI uri = URI.create("ws://localhost:"+port+"/wamp4j");
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        uri = URI.create("ws://localhost:8080/wamp4j");
+        uri = URI.create("ws://localhost:"+port+"/wamp4j");
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         client.connect();
         client.close();
@@ -96,10 +113,11 @@ public class ConnectionTest{
 
     @Test
     public void test6() throws Throwable{
-        URI uri = URI.create("ws://localhost:8080/wamp4j");
+        int port = freePort();
+        URI uri = URI.create("ws://localhost:"+port+"/wamp4j");
         RouterOperator router = new RouterOperator(new WAMPRouter(new NettyServerEndpoint(), uri));
         router.bind();
-        uri = URI.create("ws://localhost:8080/junk");
+        uri = URI.create("ws://localhost:"+port+"/junk");
         ClientOperator client = new ClientOperator(new WAMPClient(new NettyClientEndpoint(), uri, "jlibs"));
         try{
             client.connect();
