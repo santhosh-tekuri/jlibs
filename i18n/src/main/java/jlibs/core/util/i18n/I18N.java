@@ -17,6 +17,7 @@
 package jlibs.core.util.i18n;
 
 import java.text.MessageFormat;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -45,9 +46,21 @@ public class I18N{
         return ResourceBundle.getBundle(clazz.getPackage().getName().replace('.', '/')+"/"+BASENAME);
     }
 
+    public static ResourceBundle bundle(Class clazz, Locale locale){
+        return ResourceBundle.getBundle(clazz.getPackage().getName().replace('.', '/')+"/"+BASENAME, locale);
+    }
+
     public static String getValue(Class clazz, String key, Object... args){
         try{
             return MessageFormat.format(bundle(clazz).getString(key), args);
+        }catch(MissingResourceException ex){
+            return null;
+        }
+    }
+
+    public static String getValue(Class clazz, Locale locale, String key, Object... args){
+        try{
+            return MessageFormat.format(bundle(clazz, locale).getString(key), args);
         }catch(MissingResourceException ex){
             return null;
         }
@@ -57,7 +70,15 @@ public class I18N{
         return getValue(clazz, clazz.getSimpleName()+'.'+member+'.'+hint, args);
     }
 
+    public static String getHint(Class clazz, Locale locale, String member, String hint, Object... args){
+        return getValue(clazz, locale, clazz.getSimpleName()+'.'+member+'.'+hint, args);
+    }
+
     public static String getHint(Class clazz, String hint, Object... args){
         return getValue(clazz, clazz.getSimpleName()+'.'+hint, args);
+    }
+
+    public static String getHint(Class clazz, Locale locale, String hint, Object... args){
+        return getValue(clazz, locale, clazz.getSimpleName()+'.'+hint, args);
     }
 }
