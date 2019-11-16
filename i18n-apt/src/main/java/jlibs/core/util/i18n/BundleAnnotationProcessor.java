@@ -248,10 +248,13 @@ class Interfaces{
 
         printer.println("public static final "+printer.generatedClazz +" INSTANCE = new "+printer.generatedClazz +"();");
         printer.emptyLine(true);
+
+        printer.println("private final ResourceBundle _rBundle;");
+        printer.emptyLine();
         printer.printlns(
-            "private final ResourceBundle BUNDLE(){",
+            "private " + printer.generateClazz + "() {",
                 PLUS,
-                "return ResourceBundle.getBundle(\""+printer.generatedPakage.replace('.', '/')+"/"+basename+"\", LocaleContext.getLocale());",
+                "_rBundle = ResourceBundle.getBundle(\""+printer.generatedPakage.replace('.', '/')+"/"+basename+"\", LocaleContext.getLocale());",
                 MINUS,
             "}"
         );
@@ -292,7 +295,7 @@ class Interfaces{
                 printer.println("){");
                 printer.indent++;
 
-                final String message = "MessageFormat.format(BUNDLE().getString(\""+key+"\")"+params+")";
+                final String message = "MessageFormat.format(_rBundle.getString(\""+key+"\")"+params+")";
                 if(returnsException){
                     String prefix = printer.generatedPakage;
                     String option = Environment.get().getOptions().get("ResourceBundle.ignorePackageCount");
