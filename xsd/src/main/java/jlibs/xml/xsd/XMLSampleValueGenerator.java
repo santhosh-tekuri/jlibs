@@ -16,24 +16,33 @@
 
 package jlibs.xml.xsd;
 
-import jlibs.core.util.RandomUtil;
-import jlibs.xml.Namespaces;
-import jlibs.xml.sax.SAXUtil;
-import jlibs.xml.sax.helpers.MyNamespaceSupport;
-import org.apache.xerces.xs.*;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.namespace.QName;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSComplexTypeDefinition;
+import org.apache.xerces.xs.XSElementDeclaration;
+import org.apache.xerces.xs.XSModel;
+import org.apache.xerces.xs.XSNamespaceItem;
+import org.apache.xerces.xs.XSSimpleTypeDefinition;
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import jlibs.core.graph.Path;
+import jlibs.core.util.RandomUtil;
+import jlibs.xml.Namespaces;
+import jlibs.xml.sax.SAXUtil;
+import jlibs.xml.sax.helpers.MyNamespaceSupport;
 
 /**
  * Generates sample values from given XML
@@ -133,13 +142,13 @@ public class XMLSampleValueGenerator implements XSInstance.SampleValueGenerator{
     }
 
     @Override
-    public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType){
+    public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType, Path path){
         List<String> values = elementValues.get(element);
         return values==null ? null : values.get(RandomUtil.random(0, values.size()-1));
     }
 
     @Override
-    public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
+    public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType, Path path){
         List<String> values = attributeValues.get(attribute);
         return values==null ? null : values.get(RandomUtil.random(0, values.size()-1));
     }

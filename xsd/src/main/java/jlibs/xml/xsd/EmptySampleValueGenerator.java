@@ -21,6 +21,8 @@ import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTypeDefinition;
 
+import jlibs.core.graph.Path;
+
 /**
  * @author Santhosh Kumar Tekuri
  */
@@ -30,12 +32,12 @@ public class EmptySampleValueGenerator implements XSInstance.SampleValueGenerato
     private EmptySampleValueGenerator(){}
 
     @Override
-    public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType){
+    public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType, Path path){
         return "";
     }
 
     @Override
-    public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType){
+    public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType, Path path){
         return "";
     }
 

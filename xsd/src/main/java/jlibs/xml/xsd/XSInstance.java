@@ -357,7 +357,7 @@ public class XSInstance{
                             if(simpleType!=null){
                                 String sampleValue = null;
                                 if(sampleValueGenerator!=null)
-                                    sampleValue = sampleValueGenerator.generateSampleValue(elem, simpleType);
+                                    sampleValue = sampleValueGenerator.generateSampleValue(elem, simpleType, path);
                                 if(sampleValue==null)
                                     sampleValue = generateSampleValue(simpleType, elem.getName());
                                 doc.addText(sampleValue);
@@ -389,7 +389,7 @@ public class XSInstance{
                         default:
                             if(attr.getRequired() || RandomUtil.randomBoolean(generateOptionalAttributes)){
                                 if(sampleValueGenerator!=null)
-                                    sampleValue = sampleValueGenerator.generateSampleValue(decl, decl.getTypeDefinition());
+                                    sampleValue = sampleValueGenerator.generateSampleValue(decl, decl.getTypeDefinition(), path);
                                 if(sampleValue==null)
                                     sampleValue = generateSampleValue(decl.getTypeDefinition(), decl.getName());
                             }
@@ -807,8 +807,8 @@ public class XSInstance{
     public SampleValueGenerator sampleValueGenerator;
 
     public static interface SampleValueGenerator{
-        public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType);
-        public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType);
+        public String generateSampleValue(XSElementDeclaration element, XSSimpleTypeDefinition simpleType, Path path);
+        public String generateSampleValue(XSAttributeDeclaration attribute, XSSimpleTypeDefinition simpleType, Path path);
         public XSTypeDefinition selectSubType(XSElementDeclaration element);
     }
 
