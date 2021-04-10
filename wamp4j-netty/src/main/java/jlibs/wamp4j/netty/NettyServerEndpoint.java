@@ -136,7 +136,7 @@ public class NettyServerEndpoint extends NettyEndpoint implements WAMPServerEndP
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception{
             String host = request.headers().get("Host");
             String connection = request.headers().get("Connection");
-            if(request.getMethod()!=HttpMethod.GET || !request.getUri().equals(path) || host==null || !"Upgrade".equals(connection)){
+            if(request.getMethod()!=HttpMethod.GET || !request.getUri().equals(path) || host==null || !"Upgrade".equalsIgnoreCase(connection)){
                 DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.getProtocolVersion(), HttpResponseStatus.NOT_FOUND);
                 HttpHeaders.setContentLength(response, 0);
                 ChannelFuture future = ctx.writeAndFlush(response);
