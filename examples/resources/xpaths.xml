@@ -969,4 +969,10 @@
 
         <xpath>//following-sibling::node()</xpath>
     </testcase>
+
+    <testcase>
+        <file>xmlFiles/bookstore.xml</file>
+
+        <xpath>/bookstore/book[1]</xpath>
+    </testcase>
 </xpaths>

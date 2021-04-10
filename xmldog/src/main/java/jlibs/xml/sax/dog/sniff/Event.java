@@ -683,7 +683,6 @@ public final class Event extends EvaluationListener implements NodeSetListener{
             fireEndAttributes();
         }else if(xmlBuilder!=null && xmlBuilder.active) {
             xmlBuilder.onAttributes(this, attrs);
-            fireEndAttributes();
         }
     }
 
