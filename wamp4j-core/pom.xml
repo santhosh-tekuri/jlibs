@@ -4,13 +4,13 @@
     <parent>
         <groupId>in.jlibs</groupId>
         <artifactId>jlibs-parent</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.0.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jlibs-wamp4j-core</artifactId>
     <packaging>jar</packaging>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
 
     <name>wamp4j-core</name>
     <description>Client and Router for the Web Application Messaging Protocol (WAMP) on the JVM</description>
