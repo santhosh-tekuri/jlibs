@@ -623,7 +623,7 @@ public class XSInstance{
                         if(hint.length()>len)
                             hint = hint.substring(0, hint.length()-len);
                         else{
-                            hint = hint.substring(0, maxLen);
+                            hint = hint.length()>maxLen ? hint.substring(0, maxLen) : hint;
                             countStr = "";
                         }
                     }
