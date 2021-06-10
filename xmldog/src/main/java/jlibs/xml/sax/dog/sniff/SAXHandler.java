@@ -28,13 +28,24 @@ import org.xml.sax.ext.DefaultHandler2;
 public final class SAXHandler extends DefaultHandler2{
     final Event event;
     final boolean langInterested;
+    private boolean terminate = false;
 
     public SAXHandler(Event event, boolean langInterested){
         this.event = event;
         this.langInterested = langInterested;
     }
 
+    public void setTerminate(boolean terminate) {
+        this.terminate = terminate;
+    }
+
+    private void checkTerminate() throws SAXException {
+	   if (terminate)
+		   throw Event.STOP_PARSING;
+    }
+	
     public void startDocument() throws SAXException{
+        checkTerminate();
         nsSupport.startDocument();
         event.onStartDocument();
     }
@@ -48,6 +59,7 @@ public final class SAXHandler extends DefaultHandler2{
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException{
+        checkTerminate();
         nsSupport.startElement();
 
         Event event = this.event;
@@ -59,11 +71,13 @@ public final class SAXHandler extends DefaultHandler2{
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException{
+        checkTerminate();
         event.appendText(ch, start, length);
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException{
+        checkTerminate();
         nsSupport.endElement();
 
         event.onText();
@@ -72,17 +86,20 @@ public final class SAXHandler extends DefaultHandler2{
 
     @Override
     public void endDocument() throws SAXException{
+        checkTerminate();
         event.onEndDocument();
     }
 
     @Override
     public void processingInstruction(String target, String data) throws SAXException{
+        checkTerminate();
         event.onText();
         event.onPI(target, data);
     }
 
     @Override
     public void comment(char[] ch, int start, int length) throws SAXException{
+        checkTerminate();
         event.onText();
         event.onComment(ch, start, length);
     }
