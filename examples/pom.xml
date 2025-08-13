@@ -14,6 +14,10 @@
 
     <name>examples</name>
 
+    <properties>
+        <javaModuleName>in.jlibs.examples</javaModuleName>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>in.jlibs</groupId>

@@ -16,7 +16,11 @@
 
 package jlibs.xml.xsd;
 
-import jlibs.core.graph.*;
+import jlibs.core.graph.Navigator;
+import jlibs.core.graph.Path;
+import jlibs.core.graph.Processor;
+import jlibs.core.graph.Sequence;
+import jlibs.core.graph.WalkerUtil;
 import jlibs.core.graph.navigators.FilteredTreeNavigator;
 import jlibs.core.graph.sequences.DuplicateSequence;
 import jlibs.core.graph.sequences.EmptySequence;
@@ -34,17 +38,43 @@ import jlibs.xml.Namespaces;
 import jlibs.xml.XMLUtil;
 import jlibs.xml.sax.XMLDocument;
 import jlibs.xml.xsd.display.XSDisplayFilter;
-import org.apache.xerces.xs.*;
+import org.apache.xerces.xs.StringList;
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSAttributeUse;
+import org.apache.xerces.xs.XSComplexTypeDefinition;
+import org.apache.xerces.xs.XSConstants;
+import org.apache.xerces.xs.XSElementDeclaration;
+import org.apache.xerces.xs.XSFacet;
+import org.apache.xerces.xs.XSModel;
+import org.apache.xerces.xs.XSModelGroup;
+import org.apache.xerces.xs.XSNamespaceItem;
+import org.apache.xerces.xs.XSNamespaceItemList;
+import org.apache.xerces.xs.XSObjectList;
+import org.apache.xerces.xs.XSParticle;
+import org.apache.xerces.xs.XSSimpleTypeDefinition;
+import org.apache.xerces.xs.XSTerm;
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.apache.xerces.xs.XSWildcard;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamResult;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author Santhosh Kumar T
@@ -650,50 +680,38 @@ public class XSInstance{
         private String randomNumber(XSSimpleTypeDefinition simpleType, String builtinName){
             boolean exponentAllowed = "double".equals(builtinName) || "float".equals(builtinName);
 
-            String minInclusive = null;
-            XSFacet facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MININCLUSIVE);
-            if(facet!=null)
-                minInclusive = facet.getLexicalFacetValue();
+            XSFacet minInclusive = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MININCLUSIVE);
 
-            String minExclusive = null;
-            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MINEXCLUSIVE);
-            if(facet!=null)
-                minExclusive = facet.getLexicalFacetValue();
+            XSFacet minExclusive = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MINEXCLUSIVE);
 
-            String maxInclusive = null;
-            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXINCLUSIVE);
-            if(facet!=null)
-                maxInclusive = facet.getLexicalFacetValue();
+            XSFacet maxInclusive = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXINCLUSIVE);
 
-            String maxExclusive = null;
-            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXEXCLUSIVE);
-            if(facet!=null)
-                maxExclusive = facet.getLexicalFacetValue();
+            XSFacet maxExclusive = getFacet(simpleType, XSSimpleTypeDefinition.FACET_MAXEXCLUSIVE);
 
             int totalDigits = -1;
-            facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_TOTALDIGITS);
-            if(facet!=null)
-                totalDigits = Integer.parseInt(facet.getLexicalFacetValue());
+            XSFacet facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_TOTALDIGITS);
+            if (facet != null)
+                totalDigits = facet.getIntFacetValue();
 
             int fractionDigits = -1;
             facet = getFacet(simpleType, XSSimpleTypeDefinition.FACET_FRACTIONDIGITS);
-            if(facet!=null)
-                fractionDigits = Integer.parseInt(facet.getLexicalFacetValue());
+            if (facet != null)
+                fractionDigits = facet.getIntFacetValue();
 
             Object randomNumber;
             if(fractionDigits==0){
                 // NOTE: min/max facets can have fractional part even though fractionDigits is zero
                 Long min = null;
-                if(minInclusive!=null)
-                    min = Long.parseLong(minInclusive);
-                if(minExclusive!=null)
-                    min = Long.parseLong(minExclusive)+1;
+                if (minInclusive != null)
+                    min = new BigDecimal(minInclusive.getLexicalFacetValue()).longValue();
+                if (minExclusive != null)
+                    min = new BigDecimal(minExclusive.getLexicalFacetValue()).longValue() + 1;
 
                 Long max = null;
-                if(maxInclusive!=null)
-                    max = Long.parseLong(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Long.parseLong(maxExclusive)-1;
+                if (maxInclusive != null)
+                    max = new BigDecimal(maxInclusive.getLexicalFacetValue()).longValue();
+                if (maxExclusive != null)
+                    max = new BigDecimal(maxExclusive.getLexicalFacetValue()).longValue() - 1;
 
                 if(min==null && max==null){
                     min = -1000L;
@@ -706,16 +724,16 @@ public class XSInstance{
                 randomNumber = RandomUtil.random(min, max);
             }else{
                 Double min = null;
-                if(minInclusive!=null)
-                    min = Double.parseDouble(minInclusive);
-                if(minExclusive!=null)
-                    min = Double.parseDouble(minExclusive)+1;
+                if (minInclusive != null)
+                    min = Double.parseDouble(minInclusive.getLexicalFacetValue());
+                if (minExclusive != null)
+                    min = Double.parseDouble(minExclusive.getLexicalFacetValue()) + 1;
 
                 Double max = null;
-                if(maxInclusive!=null)
-                    max = Double.parseDouble(maxInclusive);
-                if(maxExclusive!=null)
-                    max = Double.parseDouble(maxExclusive)-1;
+                if (maxInclusive != null)
+                    max = Double.parseDouble(maxInclusive.getLexicalFacetValue());
+                if (maxExclusive != null)
+                    max = Double.parseDouble(maxExclusive.getLexicalFacetValue()) - 1;
 
                 if(min==null && max==null){
                     min = -1000d;
